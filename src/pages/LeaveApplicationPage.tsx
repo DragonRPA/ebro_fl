@@ -1,0 +1,788 @@
+// src/pages/LeaveApplicationPage.tsx
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import * as XLSX from 'xlsx';
+import { Calendar, Trash2, Download, Info, AlertCircle } from 'lucide-react';
+import { User as UserType, db } from '../services/db';
+import { calculateLeaveDaysInfo } from '../utils/holidayUtils';
+import { SortableTh } from '../components/SortableTh';
+import { useSortableData } from '../hooks/useSortableData';
+import { useApproval } from '../hooks/useApproval';
+
+export const LeaveApplicationPage: React.FC = () => {
+  const {
+    users,
+    annualLeaveQuotas,
+    leaveUsages,
+    currentUser,
+    showErrorModal,
+    addLeaveUsage,
+    deleteLeaveUsage
+  } = useApp();
+  const { isRuleEnabled, createApprovalRequest } = useApproval();
+
+  // 토스트 알림 상태 (헌장 5.2)
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+  const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // admin 판별 (헌장 2.1 R&R: admin 계정만 타 임직원 대리신청 및 전체조회 허용)
+  const isSystemAdmin = currentUser?.role === 'ADMIN' || currentUser?.loginId === 'admin' || currentUser?.id === 'sys-admin';
+
+  // 신청 대상 임직원 성명 정규화 헬퍼 (헌장 3.1)
+  const getApplicantDisplayName = (u?: UserType | null) => {
+    if (!u) return '임직원';
+    if (u.loginId === 'admin' || u.name === '최고관리자') return '개발자';
+    return u.name || '임직원';
+  };
+
+  // 신청 폼 상태 (admin 외에는 로그인된 본인 ID 고정)
+  const [targetUserId, setTargetUserId] = useState(currentUser?.id || '');
+  const [leaveType, setLeaveType] = useState<'ANNUAL' | 'HALF_AM' | 'HALF_PM'>('ANNUAL');
+  const [leaveStartDate, setLeaveStartDate] = useState(new Date().toISOString().substring(0, 10));
+  const [leaveEndDate, setLeaveEndDate] = useState(new Date().toISOString().substring(0, 10));
+  const [leaveReason, setLeaveReason] = useState('');
+
+  // 이력 대장 필터 (admin 외에는 'MY' 고정)
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'ANNUAL' | 'HALF_AM' | 'HALF_PM'>('ALL');
+  const [viewScope, setViewScope] = useState<'MY' | 'ALL'>('MY');
+
+  // admin 외 일반 임직원은 본인 ID 및 'MY' 스코프로 강제 동기화 (전체조회 및 타인신청 원천 차단)
+  React.useEffect(() => {
+    if (!isSystemAdmin && currentUser?.id) {
+      setTargetUserId(currentUser.id);
+      setViewScope('MY');
+    } else if (isSystemAdmin && !targetUserId && currentUser?.id) {
+      setTargetUserId(currentUser.id);
+    }
+  }, [currentUser, isSystemAdmin, targetUserId]);
+
+  // 1. 임직원 입사일 기준 갱신 주기 계산 헬퍼
+  const calculatePeriod = (joinDateStr?: string) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (!joinDateStr) {
+      return {
+        start: `${currentYear}-01-01`,
+        end: `${currentYear}-12-31`
+      };
+    }
+
+    const jDate = new Date(joinDateStr);
+    const mm = String(jDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(jDate.getDate()).padStart(2, '0');
+
+    const thisYearPeriodStart = new Date(`${currentYear}-${mm}-${dd}`);
+    let periodStart: string;
+    let periodEnd: string;
+
+    if (now >= thisYearPeriodStart) {
+      periodStart = `${currentYear}-${mm}-${dd}`;
+      periodEnd = `${currentYear + 1}-${mm}-${dd}`;
+    } else {
+      periodStart = `${currentYear - 1}-${mm}-${dd}`;
+      periodEnd = `${currentYear}-${mm}-${dd}`;
+    }
+
+    return { start: periodStart, end: periodEnd };
+  };
+
+  // 2. 임직원별 연차 현황 집계
+  const getUserLeaveSummary = (u: UserType) => {
+    const period = calculatePeriod(u.joinDate);
+    const quota = annualLeaveQuotas.find(q => q.userId === u.id && q.periodStart === period.start) || {
+      grantedDays: 15,
+      periodStart: period.start,
+      periodEnd: period.end
+    };
+
+    const userUsages = leaveUsages.filter(l => 
+      l.userId === u.id && 
+      l.startDate >= period.start && 
+      l.startDate <= period.end &&
+      l.status !== 'REJECTED'
+    );
+
+    const usedDays = userUsages.reduce((sum, l) => sum + (l.usedDays || 0), 0);
+    const remainingDays = quota.grantedDays - usedDays;
+
+    return {
+      periodStart: quota.periodStart,
+      periodEnd: quota.periodEnd,
+      grantedDays: quota.grantedDays,
+      usedDays,
+      remainingDays
+    };
+  };
+
+  // 유효 대상 사용자 ID (admin 외에는 로그인된 본인 ID 강제 고정)
+  const effectiveUserId = isSystemAdmin ? (targetUserId || currentUser?.id || '') : (currentUser?.id || '');
+  const activeApplicantUser = users.find(u => u.id === effectiveUserId) || (effectiveUserId === currentUser?.id ? currentUser : null);
+  const mySummary = activeApplicantUser ? getUserLeaveSummary(activeApplicantUser) : {
+    periodStart: '-',
+    periodEnd: '-',
+    grantedDays: 15,
+    usedDays: 0,
+    remainingDays: 15
+  };
+
+  // 신청 일수 계산 (주말 및 법정공휴일/대체공휴일 제외 SSOT 표준)
+  const calcResult = calculateLeaveDaysInfo(leaveType, leaveStartDate, leaveEndDate);
+  const requestedDays = calcResult.deductedDays;
+
+  // 3. 연차/반차 신청 제출 (가드 로직 적용)
+  const handleLeaveUsageSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const submitUserId = isSystemAdmin ? effectiveUserId : (currentUser?.id || '');
+    if (!submitUserId || !leaveReason.trim()) {
+      showErrorModal('신청 대상 임직원과 연차/반차 사유를 입력해 주십시오.');
+      return;
+    }
+
+    const targetUser = users.find(u => u.id === submitUserId) || (submitUserId === currentUser?.id ? currentUser : null);
+    if (!targetUser) {
+      showErrorModal('선택된 임직원 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!calcResult.isValid) {
+      showErrorModal(calcResult.errorMessage || '신청 일자 또는 기간이 올바르지 않습니다.');
+      return;
+    }
+
+    const usedDays = calcResult.deductedDays;
+    if (usedDays <= 0) {
+      showErrorModal('소진 대상 소정근로일수(평일)가 0일이므로 연차를 신청할 수 없습니다.');
+      return;
+    }
+
+    const summary = getUserLeaveSummary(targetUser);
+    if (usedDays > summary.remainingDays) {
+      showErrorModal(`잔여 연차(${summary.remainingDays}일)를 초과하여 신청할 수 없습니다. (신청 요구: ${usedDays}일)`);
+      return;
+    }
+
+    const actualEndDate = leaveType === 'ANNUAL' ? leaveEndDate : leaveStartDate;
+    const hasOverlap = leaveUsages.some(l => 
+      l.userId === submitUserId && 
+      l.status !== 'REJECTED' &&
+      ((leaveStartDate >= l.startDate && leaveStartDate <= l.endDate) ||
+       (actualEndDate >= l.startDate && actualEndDate <= l.endDate) ||
+       (leaveStartDate <= l.startDate && actualEndDate >= l.endDate))
+    );
+
+    if (hasOverlap) {
+      showErrorModal('해당 기간에 이미 등록된 연차 또는 반차 내역이 존재합니다. 중복 신청할 수 없습니다.');
+      return;
+    }
+
+    try {
+      const ruleActive = isRuleEnabled('LEAVE_APPLICATION');
+      await addLeaveUsage({
+        userId: submitUserId,
+        leaveType,
+        usedDays,
+        startDate: leaveStartDate,
+        endDate: actualEndDate,
+        reason: leaveReason.trim(),
+        status: ruleActive ? 'PENDING' : 'APPROVED'
+      });
+
+      if (ruleActive) {
+        const createdLeave = [...(db.leaveUsages || [])]
+          .reverse()
+          .find(l => l.userId === submitUserId && l.startDate === leaveStartDate && l.endDate === actualEndDate);
+        await createApprovalRequest({
+          eventCode: 'LEAVE_APPLICATION',
+          targetTable: 'leave_usages',
+          targetId: createdLeave?.id || `LV-${Date.now()}`,
+          amount: 0,
+          payload: {
+            actionType: 'LEAVE_APPLICATION',
+            reason: leaveReason.trim(),
+            toBe: {
+              userId: submitUserId,
+              userName: getApplicantDisplayName(targetUser),
+              leaveType,
+              startDate: leaveStartDate,
+              endDate: actualEndDate,
+              usedDays,
+              reason: leaveReason.trim()
+            }
+          }
+        });
+        setLeaveReason('');
+        showToast(`연차/반차 품의가 상신되었습니다. (전결권자 승인 후 확정됩니다)`);
+      } else {
+        setLeaveReason('');
+        showToast(`연차/반차 신청 내역(${usedDays}일 차감)이 정상 등록되었습니다.`);
+      }
+    } catch (err: any) {
+      showErrorModal(err?.message || '연차 신청 등록 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 4. 신청 취소 (삭제) - ADMIN 권한만 가능
+  const handleDelete = async (id: string, usedDays: number) => {
+    if (!isSystemAdmin) {
+      showErrorModal('연차/반차 신청 취소는 관리자 권한만 가능합니다.');
+      return;
+    }
+    try {
+      await deleteLeaveUsage(id);
+      showToast(`연차/반차 신청 내역(${usedDays}일 환원)이 정상 취소되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(err?.message || '신청 취소 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 유효 조회 스코프 (admin 외에는 무조건 'MY' 고정)
+  const effectiveScope = isSystemAdmin ? viewScope : 'MY';
+
+  // 5. 엑셀 다운로드 (admin 외에는 본인 내역만 다운로드)
+  const handleExportExcel = () => {
+    const ymd = new Date().toISOString().substring(0, 10).replace(/-/g, '');
+    const filtered = leaveUsages.filter(l => {
+      if (effectiveScope === 'MY' && l.userId !== currentUser?.id) return false;
+      if (historyTypeFilter !== 'ALL' && l.leaveType !== historyTypeFilter) return false;
+      return true;
+    });
+
+    const data = sortedUsages.map((l, idx) => {
+      const uObj = users.find(u => u.id === l.userId) || (l.userId === currentUser?.id ? currentUser : null);
+      const uName = getApplicantDisplayName(uObj);
+      const typeLabel = l.leaveType === 'ANNUAL' ? '연차' : l.leaveType === 'HALF_AM' ? '오전반차' : '오후반차';
+
+      return {
+        '번호': idx + 1,
+        '성명': uName,
+        '휴가 구분': typeLabel,
+        '차감 일수 (일)': l.usedDays,
+        '시작 일자': l.startDate,
+        '종료 일자': l.endDate,
+        '휴가 사유': l.reason,
+        '등록 일시': l.createdAt?.substring(0, 10)
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '연차신청내역');
+    XLSX.writeFile(wb, `연차_신청_내역_${ymd}.xlsx`);
+  };
+
+  // 표시할 이력 필터링 (admin 외에는 무조건 본인 내역만 필터링)
+  const displayedUsages = leaveUsages.filter(l => {
+    if (effectiveScope === 'MY' && l.userId !== currentUser?.id) return false;
+    if (historyTypeFilter !== 'ALL' && l.leaveType !== historyTypeFilter) return false;
+    return true;
+  });
+  const { sortedData: sortedUsages, sortKey: leaveSortKey, sortDirection: leaveSortDir, handleSort: handleLeaveSort } = useSortableData(displayedUsages);
+
+  return (
+    <div data-hs-observe="leaveapplicationpage" data-subview="leave_application" data-subview-title="Generated" style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+      
+      {/* 헤더 타이틀 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '12px', flexShrink: 0 }}>
+        <div>
+          <h2 data-mid="leave_application-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+            <Calendar size={18} style={{ color: 'var(--primary)' }} />
+            연차신청
+          </h2>
+        </div>
+
+        <button
+          onClick={handleExportExcel}
+          className="btn btn-secondary"
+          style={{ fontSize: '13px', whiteSpace: 'nowrap', backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 'bold' }}
+        >
+          <Download size={14} style={{ marginRight: '6px' }} />
+          엑셀 다운로드
+        </button>
+      </div>
+
+      {/* 📊 본인 연차 현황 카드 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '12px',
+        backgroundColor: 'var(--bg-card)',
+        padding: '14px 16px',
+        borderRadius: '8px',
+        border: '1px solid var(--border-color)',
+        flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>신청 대상 임직원</span>
+          <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>
+            {getApplicantDisplayName(activeApplicantUser)} ({activeApplicantUser?.department || '미지정'})
+          </strong>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>현재 1년 갱신 주기</span>
+          <strong style={{ fontSize: '13.5px', color: 'var(--text-main)', fontFamily: 'monospace' }}>
+            {mySummary.periodStart} ~ {mySummary.periodEnd}
+          </strong>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>1년 부여 연차</span>
+          <strong style={{ fontSize: '16px', color: 'var(--primary)' }}>
+            {mySummary.grantedDays}일
+          </strong>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>누적 소진 일수</span>
+          <strong style={{ fontSize: '16px', color: 'var(--warning)' }}>
+            {mySummary.usedDays}일
+          </strong>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>잔여 연차</span>
+          <strong style={{ fontSize: '18px', color: mySummary.remainingDays > 0 ? '#10b981' : '#ef4444' }}>
+            {mySummary.remainingDays}일
+          </strong>
+        </div>
+      </div>
+
+      {/* 2단 작업대 레이아웃 (좌: 신청 폼 / 우: 신청 이력) */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '340px 1fr', gap: '16px', overflow: 'hidden' }}>
+        
+        {/* 좌측: 연차/반차 신청 폼 (헌장 3.4 상하 세로 스택) */}
+        <div style={{
+          backgroundColor: 'var(--bg-surface)',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid var(--border-color)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          height: '100%',
+          minHeight: 0,
+          overflowY: 'auto',
+          boxSizing: 'border-box'
+        }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+            연차 / 반차 소진 등록
+          </h3>
+
+          {/* 주말·법정공휴일 자동 제외 및 임시공휴일 미제외 상신자 사전 안내 */}
+          <div style={{
+            padding: '9px 12px',
+            borderRadius: '6px',
+            backgroundColor: 'var(--bg-main)',
+            border: '1px solid var(--border-color)',
+            fontSize: '11.5px',
+            lineHeight: '1.5',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px'
+          }}>
+            <Info size={15} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ wordBreak: 'keep-all', overflowWrap: 'break-word', flex: 1, minWidth: 0 }}>
+              <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>안내: </span>
+              주말(토/일) 및 법정공휴일은 연차 소진 일수에서 <strong>자동 제외</strong>됩니다. 
+              정부 수시 지정 <strong>임시공휴일은 자동 제외되지 않으므로</strong>, 해당 일자 신청 시 확인 바랍니다.
+            </div>
+          </div>
+
+          <form data-mid="leave-form" onSubmit={handleLeaveUsageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            
+            {/* 임직원 선택 (admin만 타 임직원 대리신청 가능, 일반 임직원은 본인 고정 및 변경 불가) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                신청 임직원:
+              </label>
+              {isSystemAdmin ? (
+                <select
+                  required
+                  value={effectiveUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  className="form-control"
+                  style={{ fontSize: '13px' }}
+                >
+                  {/* 로그인된 관리자 본인이 users 목록에 없더라도 드롭다운 최상단에 본인 옵션 기본 노출 */}
+                  {currentUser && !users.some(u => u.id === currentUser.id) && (
+                    <option value={currentUser.id}>
+                      {getApplicantDisplayName(currentUser)} ({currentUser.department || '시스템'} / {currentUser.role}) - 본인
+                    </option>
+                  )}
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {getApplicantDisplayName(u)} ({u.department || '미지정'} / {u.position || '직원'}){u.id === currentUser?.id ? ' - 본인' : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{
+                  padding: '8px 12px',
+                  backgroundColor: 'var(--bg-app)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--text-main)'
+                }}>
+                  {getApplicantDisplayName(currentUser)} ({currentUser?.department || '미지정'} / {currentUser?.position || '직원'})
+                </div>
+              )}
+            </div>
+
+            {/* 휴가 구분 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                휴가 구분 (차감 일수):
+              </label>
+              <select data-mid="leave-type-select"
+                value={leaveType}
+                onChange={(e: any) => setLeaveType(e.target.value)}
+                className="form-control"
+                style={{ fontSize: '13px' }}
+              >
+                <option value="ANNUAL">연차 (1.0일 차감)</option>
+                <option value="HALF_AM">오전 반차 (0.5일 차감)</option>
+                <option value="HALF_PM">오후 반차 (0.5일 차감)</option>
+              </select>
+            </div>
+
+            {/* 시작 일자 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                시작 일자:
+              </label>
+              <input data-mid="leave-start-date"
+                type="date"
+                required
+                value={leaveStartDate}
+                onChange={(e) => {
+                  setLeaveStartDate(e.target.value);
+                  if (leaveType !== 'ANNUAL') setLeaveEndDate(e.target.value);
+                }}
+                className="form-control"
+                style={{ fontSize: '13px' }}
+              />
+            </div>
+
+            {/* 종료 일자 (연차인 경우만 표시) */}
+            {leaveType === 'ANNUAL' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  종료 일자:
+                </label>
+                <input
+ type="date"
+                  required
+                  min={leaveStartDate}
+                  value={leaveEndDate}
+                  onChange={(e) => setLeaveEndDate(e.target.value)}
+                  className="form-control"
+                  style={{ fontSize: '13px' }}
+                />
+              </div>
+            )}
+
+            {/* 소진 일수 안내 배너 */}
+            <div style={{
+              padding: '12px 14px',
+              borderRadius: '6px',
+              backgroundColor: !calcResult.isValid 
+                ? 'rgba(239, 68, 68, 0.1)' 
+                : requestedDays > mySummary.remainingDays 
+                  ? 'rgba(239, 68, 68, 0.1)' 
+                  : 'rgba(59, 130, 246, 0.08)',
+              border: `1px solid ${
+                !calcResult.isValid || requestedDays > mySummary.remainingDays 
+                  ? 'rgba(239, 68, 68, 0.3)' 
+                  : 'rgba(59, 130, 246, 0.2)'
+              }`,
+              fontSize: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              {!calcResult.isValid ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertCircle size={14} style={{ color: '#ef4444', flexShrink: 0 }} />
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                      {leaveType === 'ANNUAL' ? '연차 소진 일수 안내' : '반차 소진 일수 안내'}
+                    </span>
+                  </div>
+                  <div style={{ 
+                    color: '#ef4444', 
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    lineHeight: '1.45',
+                    wordBreak: 'keep-all',
+                    overflowWrap: 'break-word'
+                  }}>
+                    {calcResult.errorMessage || '선택한 기간에는 연차를 신청할 수 없습니다.'}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    {leaveType === 'ANNUAL' ? '연차 소진 일수:' : '반차 소진 일수:'}
+                  </span>
+                  <strong style={{ 
+                    color: requestedDays > mySummary.remainingDays ? '#ef4444' : 'var(--primary)', 
+                    fontSize: '13px',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {`${requestedDays}일 소진 (잔여: ${Math.round((mySummary.remainingDays - requestedDays) * 10) / 10}일)`}
+                  </strong>
+                </div>
+              )}
+
+              {/* 주말 및 법정공휴일 포함 여부 표시 뱃지 */}
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                fontSize: '11px',
+                fontWeight: 600
+              }}>
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: calcResult.hasWeekend ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-app)',
+                  color: calcResult.hasWeekend ? 'var(--primary)' : 'var(--text-muted)',
+                  border: `1px solid ${calcResult.hasWeekend ? 'rgba(59, 130, 246, 0.3)' : 'var(--border-color)'}`,
+                  whiteSpace: 'nowrap'
+                }}>
+                  주말: {calcResult.hasWeekend ? `포함 (${calcResult.weekendDays}일)` : '미포함'}
+                </span>
+
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: calcResult.hasHoliday ? 'rgba(239, 68, 68, 0.12)' : 'var(--bg-app)',
+                  color: calcResult.hasHoliday ? '#dc2626' : 'var(--text-muted)',
+                  border: `1px solid ${calcResult.hasHoliday ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`,
+                  whiteSpace: 'nowrap'
+                }}>
+                  법정공휴일: {calcResult.hasHoliday 
+                    ? `포함 (${calcResult.holidayDays}일: ${calcResult.holidayNamesList.join(', ')})` 
+                    : '미포함'}
+                </span>
+              </div>
+
+              {/* 주말 및 공휴일 차감(제외) 상세 안내문 */}
+              {calcResult.isValid && (
+                calcResult.excludedDays > 0 ? (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#2563eb', 
+                    borderTop: '1px dashed rgba(59, 130, 246, 0.3)', 
+                    paddingTop: '6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px'
+                  }}>
+                    <div>
+                      총 {calcResult.totalCalendarDays}일 중 <strong>주말 {calcResult.weekendDays}일</strong>
+                      {calcResult.holidayDays > 0 && <>, <strong>법정공휴일 {calcResult.holidayDays}일</strong></>}
+                      {' '}제외 ➔ <strong>실제 소정근로 {calcResult.workingDays}일만 차감</strong>
+                    </div>
+                    {calcResult.excludedBreakdownText && (
+                      <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                        {calcResult.excludedBreakdownText}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: 'var(--text-muted)', 
+                    borderTop: '1px dashed var(--border-color)', 
+                    paddingTop: '4px' 
+                  }}>
+                    기간 내 주말 및 법정공휴일이 포함되지 않아 신청 일수 전액({calcResult.deductedDays}일)이 소진됩니다.
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* 휴가 사유 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                휴가 사유:
+              </label>
+              <textarea data-mid="leave-reason-input"
+                required
+                rows={3}
+                placeholder="연차 / 반차 사유를 기입하세요"
+                value={leaveReason}
+                onChange={(e) => setLeaveReason(e.target.value)}
+                className="form-control"
+                style={{ fontSize: '13px', resize: 'vertical' }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ fontSize: '13px', marginTop: '6px' }}
+              disabled={!leaveReason.trim() || !calcResult.isValid || requestedDays <= 0 || requestedDays > mySummary.remainingDays}
+            >
+              {isRuleEnabled('LEAVE_APPLICATION') ? '상신' : '연차 / 반차 신청'}
+            </button>
+          </form>
+        </div>
+
+        {/* 우측: 신청 및 소진 이력 대장 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+          
+          {/* 서브 필터 바 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {(['ALL', 'ANNUAL', 'HALF_AM', 'HALF_PM'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setHistoryTypeFilter(t)}
+                  className={`btn ${historyTypeFilter === t ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '12px', padding: '4px 10px', whiteSpace: 'nowrap' }}
+                >
+                  {t === 'ALL' ? '전체 구분' : t === 'ANNUAL' ? '연차' : t === 'HALF_AM' ? '오전반차' : '오후반차'}
+                </button>
+              ))}
+            </div>
+
+            {isSystemAdmin && (
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  onClick={() => setViewScope('MY')}
+                  className={`btn ${viewScope === 'MY' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '11.5px', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                >
+                  내 신청 내역
+                </button>
+                <button
+                  onClick={() => setViewScope('ALL')}
+                  className={`btn ${viewScope === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '11.5px', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                >
+                  전체 임직원 내역
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 이력 테이블 */}
+          <div className="table-container" style={{ flex: 1, minHeight: 0, backgroundColor: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-color)', overflowX: 'auto', overflowY: 'auto' }}>
+            <table data-mid="leave-history-table" style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 2, backgroundColor: 'var(--bg-main)' }}>
+                <tr style={{ backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                  {isSystemAdmin && <th style={{ padding: '10px 14px', whiteSpace: 'nowrap', width: '70px', textAlign: 'center' }}>취소</th>}
+                  <SortableTh label="성명" sortKey="userId" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} />
+                  <SortableTh label="구분" sortKey="leaveType" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} />
+                  <SortableTh label="차감 일수" sortKey="usedDays" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} align="center" />
+                  <SortableTh label="사용 기간" sortKey="startDate" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} />
+                  <SortableTh label="휴가 사유" sortKey="reason" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} />
+                  <SortableTh label="등록일시" sortKey="createdAt" currentSortKey={leaveSortKey} currentDirection={leaveSortDir} onSort={handleLeaveSort} />
+                </tr>
+              </thead>
+              <tbody>
+                {sortedUsages.length === 0 ? (
+                  <tr>
+                    <td colSpan={isSystemAdmin ? 7 : 6} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      조회 조건에 해당하는 연차/반차 신청 내역이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  sortedUsages.map((l) => {
+                    const rawUser = users.find(u => u.id === l.userId);
+                    const uName = l.userId === currentUser?.id 
+                      ? getApplicantDisplayName(currentUser) 
+                      : (rawUser ? getApplicantDisplayName(rawUser) : (l.userId === 'sys-admin' ? '개발자' : '알 수 없음'));
+                    const typeLabel = l.leaveType === 'ANNUAL' ? '연차' : l.leaveType === 'HALF_AM' ? '오전반차' : '오후반차';
+
+                    return (
+                      <tr key={l.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        {isSystemAdmin && (
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                            <button
+                              onClick={() => handleDelete(l.id, l.usedDays)}
+                              className="btn btn-secondary"
+                              style={{ fontSize: '11px', padding: '3px 8px', color: 'var(--danger)' }}
+                              title="신청 취소"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        )}
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
+                          {uName}
+                        </td>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                          <span style={{
+                            padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
+                            backgroundColor: l.leaveType === 'ANNUAL' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            color: l.leaveType === 'ANNUAL' ? 'var(--primary)' : 'var(--warning)'
+                          }}>
+                            {typeLabel}
+                          </span>
+                          {l.status === 'PENDING' && (
+                            <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, backgroundColor: 'rgba(245, 158, 11, 0.16)', color: '#d97706' }}>
+                              결재대기
+                            </span>
+                          )}
+                          {l.status === 'REJECTED' && (
+                            <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}>
+                              반려
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--danger)' }}>
+                          -{l.usedDays} 일
+                        </td>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontSize: '12px' }}>
+                          {l.startDate} {l.startDate !== l.endDate ? `~ ${l.endDate}` : ''}
+                        </td>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
+                          {l.reason}
+                        </td>
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '12px' }}>
+                          {l.createdAt?.substring(0, 10)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* 토스트 알림 팝업 (헌장 5.2) */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          backgroundColor: toastMessage.type === 'error' ? '#ef4444' : toastMessage.type === 'warning' ? '#f59e0b' : '#10b981',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: '13px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          {toastMessage.text}
+        </div>
+      )}
+    </div>
+  );
+};

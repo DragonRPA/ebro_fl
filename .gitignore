@@ -1,0 +1,74 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.vercel
+
+# Agent Standalone Binary artifacts (Node.js SEA, over 90MB) - Git으로 추적 불필요
+agent/*.exe
+agent/KiyeunAgent.exe
+agent/eBroAgent.exe
+agent/*.blob
+agent/*bundle.js
+
+# public/downloads/ 내 실행 파일 및 바이너리 일체 제외 (e-bro 배포 번들 포함 방지)
+public/downloads/*.exe
+public/downloads/*.zip
+
+# Android 서명 키스토어 — 민감 정보, 절대 커밋 금지
+*.keystore
+
+# Scratch test scripts and temp data
+scratch/
+
+# Supabase CLI temp
+supabase/.temp/
+T T S / 
+ 
+ TTS/ 
+TTS/
+# ebro-agent-core 로컬 DB 및 캐시, env
+ebro-agent-core/.env
+ebro-agent-core/ebro_audit.db
+__pycache__/
+*.pyc
+/gemma-4-e4b-qlora-results/
+/ebro-gemma4-merged/
+/llama.cpp/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+Modelfile
+*.zip
+llama-bin/
+merge_adapter.py
+start_ebro_agent.bat
+
+agent/bin/*.exe
+public/downloads/bin/*.exe

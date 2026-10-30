@@ -1,0 +1,1838 @@
+@import url('./tailwind_polyfill.css');
+/* d:\Kiyeun_Lift\src\index.css */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+:root,
+[data-theme='light'] {
+  /* 🌟 라이트 테마 토큰: 완전한 웜 코튼 페이퍼(Warm Cotton Paper) 종이질감 및 무그림자 표준 */
+  --bg-app: #ebe5d8;              /* 차분하고 따뜻한 크라프트/한지 캔버스 배경 */
+  --bg-sidebar: #e2dbcd;          /* 가죽 바인더/장부 표지 톤 사이드바 */
+  --bg-card: #ebe5d8;             /* 눈부심 0%의 온화한 웜 코튼 서식지 표면 (완전한 종이질감 일체화) */
+  --bg-header: #e2dbcd;           /* 장부 상단 바인더 헤더 */
+  --border-color: #b5a894;        /* 확실하고 선명한 장부 테두리선 */
+  --table-border-color: #a89a84;  /* 표 외곽선 및 헤더 하단 경계선 */
+  --table-row-border: #c4b6a0;    /* 선명하게 눈에 들어오는 장부 횡선 (가로 행 구분선) */
+  
+  --scrollbar-track: #ded8cb;
+  --scrollbar-thumb: #928a7b;     /* 부드러운 먹색/흑연 썸 */
+  --scrollbar-thumb-hover: #504a3f;
+  --scrollbar-thumb-border: #ebe5d8;
+  
+  /* 5색 표준: 
+     1) 먹색 잉크 (Text): #0f172a
+     2) 블루 액션 (Primary): #1d4ed8
+     3) 에메랄드 플러스/수익 (Success): #047857
+     4) 크림슨 마이너스/위험 (Danger): #dc2626
+     5) 웜 페이퍼 캔버스 (Background): #ebe5d8
+  */
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-light: #eff6ff;
+  
+  --success: #047857;
+  --success-hover: #065f46;
+  --success-light: #ecfdf5;
+  
+  --warning: #b45309;
+  --warning-hover: #92400e;
+  --warning-light: #fffbeb;
+  
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-light: #fef2f2;
+
+  --info: #0284c7;
+  --info-light: #f0f9ff;
+  
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --text-on-primary: #ffffff;
+  
+  /* 📜 테두리 그림자 효과 전면 제거 (Zero Box-Shadow Standard) */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  
+  --font-sans: 'Outfit', 'Noto Sans KR', sans-serif;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  /* 📜 종이질감(Warm Cotton Paper Micro-grain) 노이즈 텍스처 (SVG 무손실 벡터 데이터 URI) */
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='paperNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0.038 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperNoise)'/%3E%3C/svg%3E");
+
+  /* 🎨 호환성 및 전사 통일 별칭 토큰 (라이트 테마: 종이질감 웜 페이퍼 계열) */
+  --text-primary: #0f172a;
+  --border: #b5a894;
+  --bg-body: #ebe5d8;
+  --bg-main: #ebe5d8;
+  --bg-secondary: #e2dbcd;
+  --bg-surface: #ebe5d8;
+  --card-bg: #ebe5d8;
+  --body-bg: #ebe5d8;
+  --bg-card-header: #e2dbcd;
+  --bg-active: #e0e7ff;
+  --primary-rgb: 29, 78, 216;
+  --primary-border: #1d4ed8;
+  --accent: #1d4ed8;
+  --accent-bg: #eff6ff;
+  --accent-border: #1d4ed8;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📜 [전사 테두리 그림자 효과 전면 제거 - Flat Paper Ledger Standard]
+   카드, 모달, 테이블, 컨테이너 테두리의 부자연스러운 그림자를 100% 제거하고
+   정갈한 1px 연필선 테두리로만 평면적으로 표현하여 눈의 피로를 최소화
+   ───────────────────────────────────────────────────────────── */
+[data-theme='light'] *,
+[data-theme='light'] *::before,
+[data-theme='light'] *::after,
+:root:not([data-theme='dark']) *,
+:root:not([data-theme='dark']) *::before,
+:root:not([data-theme='dark']) *::after {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📜 [전사 "밝은화면모드 모든배경" 단일 표준 SSOT (Light Mode All Backgrounds Standard)]
+   화면 전체의 모든 순백색/아이보리/밝은회색 면적을 100% 제거하고
+   온화한 웜 코튼 페이퍼(Warm Cotton Paper: #ebe5d8) 텍스처로 전사 일괄 일체화
+   카드, 모달, 패널, 컨테이너, 테이블, 입력창, 버튼 전체에 예외 없이 단일 적용
+   ───────────────────────────────────────────────────────────── */
+[data-theme='light'] .bg-white,
+[data-theme='light'] .bg-slate-50,
+[data-theme='light'] .bg-gray-50,
+[data-theme='light'] .bg-zinc-50,
+[data-theme='light'] .bg-neutral-50,
+[data-theme='light'] .bg-stone-50,
+[data-theme='light'] .bg-card,
+[data-theme='light'] .card,
+[data-theme='light'] .kpi-card,
+[data-theme='light'] .panel,
+:root:not([data-theme='dark']) .bg-white,
+:root:not([data-theme='dark']) .bg-slate-50,
+:root:not([data-theme='dark']) .bg-gray-50,
+:root:not([data-theme='dark']) .bg-zinc-50,
+:root:not([data-theme='dark']) .bg-neutral-50,
+:root:not([data-theme='dark']) .bg-stone-50,
+:root:not([data-theme='dark']) .bg-card,
+:root:not([data-theme='dark']) .card,
+:root:not([data-theme='dark']) .kpi-card,
+:root:not([data-theme='dark']) .panel {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 인라인 스타일로 유입되는 백색 및 밝은 회색 계열 배경 원천 차단 (배경만 타깃, 고유 유색은 보존) */
+[data-theme='light'] [style*="background: #ffffff"],
+[data-theme='light'] [style*="background: #fff"],
+[data-theme='light'] [style*="background: white"],
+[data-theme='light'] [style*="background:#ffffff"],
+[data-theme='light'] [style*="background:#fff"],
+[data-theme='light'] [style*="background:white"],
+[data-theme='light'] [style*="background-color: #ffffff"],
+[data-theme='light'] [style*="background-color: #fff"],
+[data-theme='light'] [style*="background-color: white"],
+[data-theme='light'] [style*="background-color:#ffffff"],
+[data-theme='light'] [style*="background-color:#fff"],
+[data-theme='light'] [style*="background-color:white"],
+[data-theme='light'] [style*="background: #fbf9f5"],
+[data-theme='light'] [style*="background:#fbf9f5"],
+[data-theme='light'] [style*="background-color: #fbf9f5"],
+[data-theme='light'] [style*="background-color:#fbf9f5"],
+[data-theme='light'] [style*="background: #f5f2eb"],
+[data-theme='light'] [style*="background:#f5f2eb"],
+[data-theme='light'] [style*="background-color: #f5f2eb"],
+[data-theme='light'] [style*="background-color:#f5f2eb"],
+[data-theme='light'] [style*="background: #f8fafc"],
+[data-theme='light'] [style*="background:#f8fafc"],
+[data-theme='light'] [style*="background-color: #f8fafc"],
+[data-theme='light'] [style*="background-color:#f8fafc"],
+[data-theme='light'] [style*="background: #f1f5f9"],
+[data-theme='light'] [style*="background:#f1f5f9"],
+[data-theme='light'] [style*="background-color: #f1f5f9"],
+[data-theme='light'] [style*="background-color:#f1f5f9"],
+[data-theme='light'] [style*="background: #f3f4f6"],
+[data-theme='light'] [style*="background:#f3f4f6"],
+[data-theme='light'] [style*="background-color: #f3f4f6"],
+[data-theme='light'] [style*="background-color:#f3f4f6"],
+[data-theme='light'] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme='light'] [style*="background: rgb(255, 255, 255)"],
+[data-theme='light'] [style*="background-color: rgb(251, 249, 245)"],
+[data-theme='light'] [style*="background: rgb(251, 249, 245)"],
+[data-theme='light'] [style*="background-color: rgb(245, 242, 235)"],
+[data-theme='light'] [style*="background: rgb(245, 242, 235)"],
+[data-theme='light'] [style*="background-color: rgb(248, 250, 252)"],
+[data-theme='light'] [style*="background: rgb(248, 250, 252)"],
+[data-theme='light'] [style*="background-color: rgb(241, 245, 249)"],
+[data-theme='light'] [style*="background: rgb(241, 245, 249)"],
+:root:not([data-theme='dark']) [style*="background: #ffffff"],
+:root:not([data-theme='dark']) [style*="background: #fff"],
+:root:not([data-theme='dark']) [style*="background: white"],
+:root:not([data-theme='dark']) [style*="background:#ffffff"],
+:root:not([data-theme='dark']) [style*="background:#fff"],
+:root:not([data-theme='dark']) [style*="background:white"],
+:root:not([data-theme='dark']) [style*="background-color: #ffffff"],
+:root:not([data-theme='dark']) [style*="background-color: #fff"],
+:root:not([data-theme='dark']) [style*="background-color: white"],
+:root:not([data-theme='dark']) [style*="background-color:#ffffff"],
+:root:not([data-theme='dark']) [style*="background-color:#fff"],
+:root:not([data-theme='dark']) [style*="background-color:white"],
+:root:not([data-theme='dark']) [style*="background: #fbf9f5"],
+:root:not([data-theme='dark']) [style*="background:#fbf9f5"],
+:root:not([data-theme='dark']) [style*="background-color: #fbf9f5"],
+:root:not([data-theme='dark']) [style*="background-color:#fbf9f5"],
+:root:not([data-theme='dark']) [style*="background: #f5f2eb"],
+:root:not([data-theme='dark']) [style*="background:#f5f2eb"],
+:root:not([data-theme='dark']) [style*="background-color: #f5f2eb"],
+:root:not([data-theme='dark']) [style*="background-color:#f5f2eb"],
+:root:not([data-theme='dark']) [style*="background: #f8fafc"],
+:root:not([data-theme='dark']) [style*="background:#f8fafc"],
+:root:not([data-theme='dark']) [style*="background-color: #f8fafc"],
+:root:not([data-theme='dark']) [style*="background-color:#f8fafc"],
+:root:not([data-theme='dark']) [style*="background: #f1f5f9"],
+:root:not([data-theme='dark']) [style*="background:#f1f5f9"],
+:root:not([data-theme='dark']) [style*="background-color: #f1f5f9"],
+:root:not([data-theme='dark']) [style*="background-color:#f1f5f9"],
+:root:not([data-theme='dark']) [style*="background: #f3f4f6"],
+:root:not([data-theme='dark']) [style*="background:#f3f4f6"],
+:root:not([data-theme='dark']) [style*="background-color: #f3f4f6"],
+:root:not([data-theme='dark']) [style*="background-color:#f3f4f6"],
+:root:not([data-theme='dark']) [style*="background-color: rgb(255, 255, 255)"],
+:root:not([data-theme='dark']) [style*="background: rgb(255, 255, 255)"],
+:root:not([data-theme='dark']) [style*="background-color: rgb(251, 249, 245)"],
+:root:not([data-theme='dark']) [style*="background: rgb(251, 249, 245)"],
+:root:not([data-theme='dark']) [style*="background-color: rgb(245, 242, 235)"],
+:root:not([data-theme='dark']) [style*="background: rgb(245, 242, 235)"],
+:root:not([data-theme='dark']) [style*="background-color: rgb(248, 250, 252)"],
+:root:not([data-theme='dark']) [style*="background: rgb(248, 250, 252)"],
+:root:not([data-theme='dark']) [style*="background-color: rgb(241, 245, 249)"],
+:root:not([data-theme='dark']) [style*="background: rgb(241, 245, 249)"] {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+}
+
+[data-theme='dark'] {
+  /* 다크 테마 토큰: 5색 고시인성 표준 (종이질감 제외: OLED 최적화 다크 캔버스) */
+  --paper-texture: none;
+  --bg-app: #0b0f19;
+  --bg-sidebar: #111827;
+  --bg-card: #1f2937;
+  --bg-header: #111827;
+  --border-color: #475569;        /* 선명한 슬레이트 테두리선 */
+  --table-border-color: #64748b;  /* 또렷한 표 외곽선 및 헤더 하단 경계선 */
+  --table-row-border: #3f4e64;    /* 확실하게 구분되는 다크모드 횡선 */
+  
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #64748b;
+  --scrollbar-thumb-hover: #60a5fa;
+  --scrollbar-thumb-border: #1f2937;
+  
+  /* 5색 표준: 
+     1) 백묵 잉크 (Text): #f1f5f9
+     2) 딥 오션 사파이어 액션 (Primary): #0284c7 (눈부심 0%, 순백 텍스트 100% 일치)
+     3) 에메랄드 플러스/수익 (Success): #34d399
+     4) 크림슨 마이너스/위험 (Danger): #f87171
+     5) 다크 슬레이트 캔버스 (Background): #0b0f19
+  */
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-light: #075985;
+  --primary-border: #0369a1;
+  --text-on-primary: #ffffff;
+  
+  --success: #34d399;
+  --success-hover: #059669;
+  --success-light: #064e3b;
+  
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --warning-light: #78350f;
+  
+  --danger: #f87171;
+  --danger-hover: #dc2626;
+  --danger-light: #7f1d1d;
+
+  --info: #0284c7;
+  --info-light: #075985;
+  
+  --text-main: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3af;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+
+  /* 🎨 호환성 및 전사 통일 별칭 토큰 (다크 테마) */
+  --text-primary: #f1f5f9;
+  --border: #374151;
+  --bg-body: #0b0f19;
+  --bg-main: #0b0f19;
+  --bg-secondary: #1e293b;
+  --bg-surface: #1f2937;
+  --card-bg: #1f2937;
+  --body-bg: #0b0f19;
+  --bg-card-header: #111827;
+  --bg-active: #0c4a6e;
+  --primary-rgb: 2, 132, 199;
+  --primary-border: #0369a1;
+  --accent: #0284c7;
+  --accent-bg: #0c4a6e;
+  --accent-border: #0369a1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📜 [전사 다크 모드 하드코딩 백색 차단 가드 (Anti-Light-Island Guard)]
+   다크 테마 환경에서 개발자의 라이트 색상 하드코딩(#f1f5f9, #f8fafc, #ffffff 등)으로
+   인한 눈부신 흰색 돌출 결함을 전역 CSS 수준에서 원천 차단
+   ───────────────────────────────────────────────────────────── */
+[data-theme='dark'] [style*="background: #f1f5f9"],
+[data-theme='dark'] [style*="background:#f1f5f9"],
+[data-theme='dark'] [style*="background-color: #f1f5f9"],
+[data-theme='dark'] [style*="background-color:#f1f5f9"],
+[data-theme='dark'] [style*="background: #f8fafc"],
+[data-theme='dark'] [style*="background:#f8fafc"],
+[data-theme='dark'] [style*="background-color: #f8fafc"],
+[data-theme='dark'] [style*="background-color:#f8fafc"],
+[data-theme='dark'] [style*="background: #f3f4f6"],
+[data-theme='dark'] [style*="background:#f3f4f6"],
+[data-theme='dark'] [style*="background-color: #f3f4f6"],
+[data-theme='dark'] [style*="background-color:#f3f4f6"],
+[data-theme='dark'] [style*="background: #e2e8f0"],
+[data-theme='dark'] [style*="background:#e2e8f0"],
+[data-theme='dark'] [style*="background-color: #e2e8f0"],
+[data-theme='dark'] [style*="background-color:#e2e8f0"] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-main) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📜 [전사 표준 세그먼트 컨트롤 / 필터 탭 바 (Segmented Tabs SSOT)]
+   라이트(종이질감) / 다크(OLED 슬레이트) 테마 100% 자동 동기화 표준 컴포넌트
+   ───────────────────────────────────────────────────────────── */
+.segmented-tab-group {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 2px;
+}
+.segmented-tab-item {
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--text-muted);
+  box-shadow: none !important;
+  transition: all 0.15s ease;
+}
+.segmented-tab-item:hover {
+  color: var(--text-main);
+}
+.segmented-tab-item.active {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: none !important;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  max-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden !important;
+}
+
+/* 터치 및 모바일 수동 스크롤 영역 호환성 설정 (가로 스크롤 완전 차단 및 100vw 밀착) */
+@media (max-width: 768px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative;
+  }
+}
+
+/* 📱 모바일 웹앱(.mobile-app-root) 상하 스크롤 100% 보장 및 다중 중첩 스크롤 잠김 원천 해제 */
+html:has(.mobile-app-root),
+body:has(.mobile-app-root) {
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+#root:has(.mobile-app-root) {
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.mobile-app-root {
+  min-height: 100dvh !important;
+  height: auto !important;
+  max-height: none !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
+/* 🌟 모바일 수평 슬라이드/스크롤바 숨김 유틸리티 */
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* 사이드바 독자 스크롤 영역 */
+.sidebar-nav {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 메인 작업 화면 독자 스크롤 영역 */
+.main-content-area {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  background-color: var(--bg-app);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
+}
+
+/* 표(테이블) 및 모달 독자 스크롤 */
+table, .table-container, .table-wrapper, .modal-content, .card {
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 🎨 도드라진 선명한 횡/종 커스텀 스크롤바 (전사 18px 통일) */
+::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.main-content-area::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar,
+.table-container::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar,
+div[style*="overflow"]::-webkit-scrollbar {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.main-content-area::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+.table-container::-webkit-scrollbar-track,
+.table-wrapper::-webkit-scrollbar-track,
+div[style*="overflow"]::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.main-content-area::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb,
+div[style*="overflow"]::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 6px;
+  border: 2px solid var(--scrollbar-thumb-border);
+  transition: background-color var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.main-content-area::-webkit-scrollbar-thumb:hover,
+.sidebar-nav::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover,
+.table-wrapper::-webkit-scrollbar-thumb:hover,
+div[style*="overflow"]::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
+  color: var(--text-main);
+  height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* 폼 스타일 */
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  font-family: inherit;
+  width: 100%;
+  padding: 10px 14px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  /* 브라우저 기본 배경/색상 오버라이드 강제 적용 */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+[data-theme='light']:not([data-mobile-view='true']) input:not([type="checkbox"]):not([type="radio"]):not(.system-error-terminal),
+[data-theme='light']:not([data-mobile-view='true']) select,
+[data-theme='light']:not([data-mobile-view='true']) textarea:not(.system-error-terminal),
+:root:not([data-theme='dark']):not([data-mobile-view='true']) input:not([type="checkbox"]):not([type="radio"]):not(.system-error-terminal),
+:root:not([data-theme='dark']):not([data-mobile-view='true']) select,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) textarea:not(.system-error-terminal) {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* 🚨 개발팀 제보용 시스템 오류 모달 다크 콘솔 터미널 (High-Impact Developer Crash Console) */
+.system-error-terminal,
+textarea.system-error-terminal,
+pre.system-error-terminal {
+  background-color: #0b0f19 !important;
+  background-image: none !important;
+  color: #f87171 !important;
+  border: 1px solid #334155 !important;
+  font-family: Consolas, Monaco, 'Courier New', monospace !important;
+  letter-spacing: -0.01em;
+}
+
+[data-theme='light']:not([data-mobile-view='true']) select option,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) select option {
+  background-color: #ebe5d8 !important;
+  color: #0f172a !important;
+}
+
+/* ───────────────────────────────────────────────────
+   전사 표준 체크박스 (Crisp "V" Checkmark Component)
+   박스 안에 V 표시가 선명하게 보이는 전사 통일 스타일
+─────────────────────────────────────────────────── */
+input[type="checkbox"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 2px solid #64748b !important;
+  border-radius: 4px !important;
+  background-color: var(--bg-card) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-theme='dark'] input[type="checkbox"] {
+  border-color: #64748b !important;
+  background-color: #1e293b !important;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--primary, #2563eb) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* 체크 시: 선명한 V (체크마크) 표시 */
+input[type="checkbox"]:checked {
+  background-color: var(--primary, #2563eb) !important;
+  border-color: var(--primary, #2563eb) !important;
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='3.5 8.5 6.5 11.5 12.5 5.5'/%3e%3c/svg%3e") !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 13px 13px !important;
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35) !important;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* select는 화살표 아이콘 유지를 위해 appearance 따로 처리 */
+select {
+  -webkit-appearance: auto;
+  appearance: auto;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--bg-app);
+}
+
+/* ───────────────────────────────────────────────────
+   다크 테마 - 입력폼 일관성 강제 오버라이드
+   브라우저가 기본적으로 날짜/선택박스에 흰색 배경을
+   강제 적용하는 것을 color-scheme으로 차단
+─────────────────────────────────────────────────── */
+[data-theme='dark'] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme='dark'] select,
+[data-theme='dark'] textarea,
+[data-theme='dark'] input[type="date"],
+[data-theme='dark'] input[type="month"],
+[data-theme='dark'] input[type="time"],
+[data-theme='dark'] input[type="datetime-local"],
+[data-theme='dark'] input[type="number"],
+[data-theme='dark'] input[type="text"],
+[data-theme='dark'] input[type="search"],
+[data-theme='dark'] input[type="email"],
+[data-theme='dark'] input[type="password"] {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
+  color-scheme: dark; /* 브라우저 날짜 피커 팝업도 다크 테마로 */
+}
+
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+[data-theme='dark'] input:disabled,
+[data-theme='dark'] select:disabled,
+[data-theme='dark'] textarea:disabled {
+  background-color: var(--bg-app) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
+/* 라이트 테마 - color-scheme 명시 */
+:root {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* 🌟 라이트 모드 고시인성 먹색(Deep Slate Ink) 표준: 회색 글씨 라이트 모드에서만 고대비 먹색 변환 (다크 모드 및 모바일 웹앱 침범 방지, 버튼/배경 라벨 제외) */
+[data-theme='light']:not([data-mobile-view='true']) label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
+:root:not([data-theme='dark']):not([data-mobile-view='true']) label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]) {
+  color: #0f172a !important;
+}
+
+[data-theme='light']:not([data-mobile-view='true']) th,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) th {
+  color: #0f172a !important;
+}
+
+[data-theme='light']:not([data-mobile-view='true']) .text-muted,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-muted,
+[data-theme='light']:not([data-mobile-view='true']) .text-secondary,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-secondary,
+[data-theme='light']:not([data-mobile-view='true']) .text-slate-300,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-300,
+[data-theme='light']:not([data-mobile-view='true']) .text-slate-400,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-400,
+[data-theme='light']:not([data-mobile-view='true']) .text-slate-500,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-500,
+[data-theme='light']:not([data-mobile-view='true']) .text-slate-600,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-600,
+[data-theme='light']:not([data-mobile-view='true']) .text-gray-300,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-300,
+[data-theme='light']:not([data-mobile-view='true']) .text-gray-400,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-400,
+[data-theme='light']:not([data-mobile-view='true']) .text-gray-500,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-500,
+[data-theme='light']:not([data-mobile-view='true']) .text-gray-600,
+:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-600 {
+  color: #0f172a !important;
+}
+
+/* 인라인 스타일로 지정된 흐린 회색 글씨: 오직 PC 라이트 모드에서만 먹색 변환 */
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #64748b"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #475569"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #94a3b8"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #334155"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #6b7280"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: #9ca3af"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(100, 116, 139)"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(71, 85, 105)"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(148, 163, 184)"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(51, 65, 85)"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(107, 114, 128)"],
+[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(156, 163, 175)"] {
+  color: #0f172a !important;
+}
+
+/* 🌙 다크 모드 고시인성 보장: 검은 글씨 오염 방지 및 명확한 라이트 슬레이트 가독성 */
+[data-theme='dark'] label {
+  color: #f1f5f9 !important;
+}
+
+[data-theme='dark'] th {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .text-slate-100,
+[data-theme='dark'] .text-gray-100 {
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .text-slate-200,
+[data-theme='dark'] .text-gray-200 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme='dark'] .text-slate-300,
+[data-theme='dark'] .text-gray-300,
+[data-theme='dark'] .text-secondary {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] .text-slate-400,
+[data-theme='dark'] .text-gray-400,
+[data-theme='dark'] .text-muted {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] .text-slate-500,
+[data-theme='dark'] .text-gray-500 {
+  color: #64748b !important;
+}
+
+
+/* 버튼 기본 및 엔터프라이즈 통합 버튼 시스템 */
+button {
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+/* 전사 엔터프라이즈 통합 버튼 시스템 (Enterprise Unified Button System) */
+.btn-action-base,
+.btn-query,
+.btn-search,
+.btn-save,
+.btn-submit,
+.btn-register,
+.btn-excel-upload,
+.btn-upload,
+.btn-excel-download,
+.btn-download,
+.btn-reset,
+.btn-cancel {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  line-height: 1 !important;
+}
+
+/* 1. 조회 기능 (Query / Search) : 전사 대표 액션 클래식 로열 블루 솔리드 (#1d4ed8) */
+.btn-query,
+.btn-search {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  border: 1px solid #1e40af !important;
+  font-weight: 700 !important;
+}
+.btn-query svg,
+.btn-search svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+.btn-query:hover,
+.btn-search:hover {
+  background-color: #1e40af !important;
+  border-color: #172554 !important;
+  color: #ffffff !important;
+}
+[data-theme='dark'] .btn-query,
+[data-theme='dark'] .btn-search {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme='dark'] .btn-query:hover,
+[data-theme='dark'] .btn-search:hover {
+  background-color: #334155 !important;
+}
+
+/* 2. 저장/등록 기능 (Save / Register / Submit) : 신뢰감 있는 Enterprise Cobalt Blue */
+.btn-save,
+.btn-submit,
+.btn-register {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  border: 1px solid #1e40af !important;
+}
+.btn-save:hover,
+.btn-submit:hover,
+.btn-register:hover {
+  background-color: #1e40af !important;
+  border-color: #172554 !important;
+}
+[data-theme='dark'] .btn-save,
+[data-theme='dark'] .btn-submit,
+[data-theme='dark'] .btn-register {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border: 1px solid #0369a1 !important;
+}
+[data-theme='dark'] .btn-save:hover,
+[data-theme='dark'] .btn-submit:hover,
+[data-theme='dark'] .btn-register:hover {
+  background-color: #0369a1 !important;
+  color: #ffffff !important;
+  border-color: #075985 !important;
+}
+
+/* 3. 엑셀 업로드 기능 (Excel Ingestion / Upload) : 차분한 Forest Emerald Solid */
+.btn-excel-upload,
+.btn-upload {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+  border: 1px solid #065f46 !important;
+}
+.btn-excel-upload:hover,
+.btn-upload:hover {
+  background-color: #065f46 !important;
+  border-color: #064e3b !important;
+}
+[data-theme='dark'] .btn-excel-upload,
+[data-theme='dark'] .btn-upload {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border-color: #047857 !important;
+}
+[data-theme='dark'] .btn-excel-upload:hover,
+[data-theme='dark'] .btn-upload:hover {
+  background-color: #047857 !important;
+}
+
+/* 4. 엑셀 다운로드 기능 (Excel Export / Download) : 단정하고 세련된 Emerald Outline/Subtle */
+.btn-excel-download,
+.btn-download {
+  background-color: var(--bg-card) !important;
+  color: #047857 !important;
+  border: 1px solid #059669 !important;
+}
+[data-theme='light'] .btn-excel-download,
+[data-theme='light'] .btn-download,
+:root:not([data-theme='dark']) .btn-excel-download,
+:root:not([data-theme='dark']) .btn-download {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  color: #047857 !important;
+  border: 1px solid #059669 !important;
+}
+.btn-excel-download:hover,
+.btn-download:hover {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #047857 !important;
+}
+[data-theme='light'] .btn-excel-download:hover,
+[data-theme='light'] .btn-download:hover,
+:root:not([data-theme='dark']) .btn-excel-download:hover,
+:root:not([data-theme='dark']) .btn-download:hover {
+  background-color: #e2dbcd !important;
+  color: #047857 !important;
+}
+[data-theme='dark'] .btn-excel-download,
+[data-theme='dark'] .btn-download {
+  background-color: #1e293b !important;
+  color: #34d399 !important;
+  border: 1px solid #059669 !important;
+}
+[data-theme='dark'] .btn-excel-download:hover,
+[data-theme='dark'] .btn-download:hover {
+  background-color: #0f172a !important;
+}
+
+/* 5. 초기화/취소/보조 기능 (Reset / Cancel / Secondary) : 단정한 Slate Border */
+.btn-reset,
+.btn-cancel {
+  background-color: var(--bg-card) !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+[data-theme='light'] .btn-reset,
+[data-theme='light'] .btn-cancel,
+:root:not([data-theme='dark']) .btn-reset,
+:root:not([data-theme='dark']) .btn-cancel {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  color: #0f172a !important;
+  border: 1px solid var(--border-color) !important;
+}
+.btn-reset:hover,
+.btn-cancel:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+[data-theme='light'] .btn-reset:hover,
+[data-theme='light'] .btn-cancel:hover,
+:root:not([data-theme='dark']) .btn-reset:hover,
+:root:not([data-theme='dark']) .btn-cancel:hover {
+  background-color: #e2dbcd !important;
+  color: #0f172a !important;
+}
+[data-theme='dark'] .btn-reset,
+[data-theme='dark'] .btn-cancel {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #475569 !important;
+}
+[data-theme='dark'] .btn-reset:hover,
+[data-theme='dark'] .btn-cancel:hover {
+  background-color: #334155 !important;
+}
+
+/* 6. 삭제/위험 기능 (Danger / Delete) : 차분하고 절제된 Crimson Red */
+.btn-danger {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #b91c1c !important;
+}
+.btn-danger:hover {
+  background-color: #b91c1c !important;
+}
+[data-theme='dark'] .btn-danger {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+[data-theme='dark'] .btn-danger:hover {
+  background-color: #dc2626 !important;
+}
+
+/* 소형 컴팩트 버튼 (.btn-sm) */
+.btn-sm {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+  gap: 4px !important;
+}
+
+/* 툴바 버튼 그룹 컨테이너 - 횡배치 표준 */
+.toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+.btn-primary,
+label.btn-primary,
+button.btn-primary {
+  background-color: var(--primary);
+  color: var(--text-on-primary) !important;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🌟 [전사 단일 표준] 파란계열 바탕색 UI 요소 글자색/아이콘 화이트(#ffffff) 절대 보장 (Light/Dark SSOT)
+   파란계열 바탕색(primary, #1d4ed8, #2563eb, #3b82f6, #0284c7, #0ea5e9, #0070c0 등)을 가진
+   모든 버튼, 라벨, 배지, 컨테이너 및 그 자식 텍스트와 SVG 아이콘은
+   라이트 모드/다크 모드 불문하고 100% 순백색(#ffffff)으로 렌더링되도록 절대 강제
+   ───────────────────────────────────────────────────────────── */
+:root [style*="background-color: var(--primary)"],
+:root [style*="background-color:var(--primary)"],
+:root [style*="background: var(--primary)"],
+:root [style*="background:var(--primary)"],
+:root [style*="background-color: var(--primary-hover)"],
+:root [style*="background-color:var(--primary-hover)"],
+:root [style*="background-color: #1d4ed8"],
+:root [style*="background-color:#1d4ed8"],
+:root [style*="background: #1d4ed8"],
+:root [style*="background:#1d4ed8"],
+:root [style*="background-color: #2563eb"],
+:root [style*="background-color:#2563eb"],
+:root [style*="background: #2563eb"],
+:root [style*="background:#2563eb"],
+:root [style*="background-color: #1e40af"],
+:root [style*="background-color:#1e40af"],
+:root [style*="background: #1e40af"],
+:root [style*="background:#1e40af"],
+:root [style*="background-color: #3b82f6"],
+:root [style*="background-color:#3b82f6"],
+:root [style*="background: #3b82f6"],
+:root [style*="background:#3b82f6"],
+:root [style*="background-color: #0284c7"],
+:root [style*="background-color:#0284c7"],
+:root [style*="background: #0284c7"],
+:root [style*="background:#0284c7"],
+:root [style*="background-color: #0ea5e9"],
+:root [style*="background-color:#0ea5e9"],
+:root [style*="background: #0ea5e9"],
+:root [style*="background:#0ea5e9"],
+:root [style*="background-color: #0070c0"],
+:root [style*="background-color:#0070c0"],
+:root [style*="background: #0070c0"],
+:root [style*="background:#0070c0"],
+:root [style*="background-color: #0070C0"],
+:root [style*="background-color:#0070C0"],
+:root [style*="background: #0070C0"],
+:root [style*="background:#0070C0"],
+:root [style*="background-color: rgb(29, 78, 216)"],
+:root [style*="background-color:rgb(29,78,216)"],
+:root [style*="background-color: rgb(29,78,216)"],
+:root [style*="background-color: rgb(37, 99, 235)"],
+:root [style*="background-color:rgb(37,99,235)"],
+:root [style*="background-color: rgb(37,99,235)"],
+:root [style*="background-color: rgb(59, 130, 246)"],
+:root [style*="background-color:rgb(59,130,246)"],
+:root [style*="background-color: rgb(2, 132, 199)"],
+:root [style*="background-color:rgb(2,132,199)"],
+:root [style*="background-color: rgb(0, 112, 192)"],
+:root [style*="background-color:rgb(0,112,192)"],
+[data-theme='light'] [style*="background-color: var(--primary)"],
+[data-theme='light'] [style*="background-color:var(--primary)"],
+[data-theme='light'] [style*="background: var(--primary)"],
+[data-theme='light'] [style*="background:var(--primary)"],
+[data-theme='light'] [style*="background-color: #1d4ed8"],
+[data-theme='light'] [style*="background-color:#1d4ed8"],
+[data-theme='light'] [style*="background: #1d4ed8"],
+[data-theme='light'] [style*="background:#1d4ed8"],
+[data-theme='light'] [style*="background-color: #2563eb"],
+[data-theme='light'] [style*="background-color:#2563eb"],
+[data-theme='light'] [style*="background: #2563eb"],
+[data-theme='light'] [style*="background:#2563eb"],
+[data-theme='light'] [style*="background-color: #1e40af"],
+[data-theme='light'] [style*="background-color:#1e40af"],
+[data-theme='light'] [style*="background: #1e40af"],
+[data-theme='light'] [style*="background:#1e40af"],
+[data-theme='light'] [style*="background-color: #3b82f6"],
+[data-theme='light'] [style*="background-color:#3b82f6"],
+[data-theme='light'] [style*="background: #3b82f6"],
+[data-theme='light'] [style*="background:#3b82f6"],
+[data-theme='light'] [style*="background-color: #0284c7"],
+[data-theme='light'] [style*="background-color:#0284c7"],
+[data-theme='light'] [style*="background: #0284c7"],
+[data-theme='light'] [style*="background:#0284c7"],
+[data-theme='light'] [style*="background-color: #0ea5e9"],
+[data-theme='light'] [style*="background-color:#0ea5e9"],
+[data-theme='light'] [style*="background: #0ea5e9"],
+[data-theme='light'] [style*="background:#0ea5e9"],
+[data-theme='light'] [style*="background-color: #0070c0"],
+[data-theme='light'] [style*="background-color:#0070c0"],
+[data-theme='light'] [style*="background: #0070c0"],
+[data-theme='light'] [style*="background:#0070c0"],
+[data-theme='light'] [style*="background-color: #0070C0"],
+[data-theme='light'] [style*="background-color:#0070C0"],
+[data-theme='light'] [style*="background: #0070C0"],
+[data-theme='light'] [style*="background:#0070C0"],
+[data-theme='light'] [style*="background-color: rgb(29, 78, 216)"],
+[data-theme='light'] [style*="background-color:rgb(29,78,216)"],
+[data-theme='light'] [style*="background-color: rgb(29,78,216)"],
+[data-theme='light'] [style*="background-color: rgb(37, 99, 235)"],
+[data-theme='light'] [style*="background-color:rgb(37,99,235)"],
+[data-theme='light'] [style*="background-color: rgb(37,99,235)"],
+[data-theme='light'] [style*="background-color: rgb(59, 130, 246)"],
+[data-theme='light'] [style*="background-color:rgb(59,130,246)"],
+[data-theme='light'] [style*="background-color: rgb(2, 132, 199)"],
+[data-theme='light'] [style*="background-color:rgb(2,132,199)"],
+[data-theme='light'] [style*="background-color: rgb(0, 112, 192)"],
+[data-theme='light'] [style*="background-color:rgb(0,112,192)"],
+.btn-primary,
+label.btn-primary,
+button.btn-primary,
+.btn-save,
+.btn-submit,
+.btn-register,
+.btn-query,
+.btn-search,
+.bg-primary,
+.bg-blue-600,
+.bg-blue-700,
+.bg-blue-500,
+.bg-sky-600,
+.bg-sky-700,
+.badge-primary,
+.badge-blue {
+  color: #ffffff !important;
+}
+
+/* 파란계열 배경 요소 내부의 텍스트 노드 및 자식 요소 전체 화이트 강제 */
+:root [style*="background-color: var(--primary)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:var(--primary)"] *:not(input):not(textarea):not(select),
+:root [style*="background: var(--primary)"] *:not(input):not(textarea):not(select),
+:root [style*="background:var(--primary)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #1d4ed8"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#1d4ed8"] *:not(input):not(textarea):not(select),
+:root [style*="background: #1d4ed8"] *:not(input):not(textarea):not(select),
+:root [style*="background:#1d4ed8"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #2563eb"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#2563eb"] *:not(input):not(textarea):not(select),
+:root [style*="background: #2563eb"] *:not(input):not(textarea):not(select),
+:root [style*="background:#2563eb"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #1e40af"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#1e40af"] *:not(input):not(textarea):not(select),
+:root [style*="background: #1e40af"] *:not(input):not(textarea):not(select),
+:root [style*="background:#1e40af"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #3b82f6"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#3b82f6"] *:not(input):not(textarea):not(select),
+:root [style*="background: #3b82f6"] *:not(input):not(textarea):not(select),
+:root [style*="background:#3b82f6"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #0284c7"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#0284c7"] *:not(input):not(textarea):not(select),
+:root [style*="background: #0284c7"] *:not(input):not(textarea):not(select),
+:root [style*="background:#0284c7"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #0ea5e9"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#0ea5e9"] *:not(input):not(textarea):not(select),
+:root [style*="background: #0ea5e9"] *:not(input):not(textarea):not(select),
+:root [style*="background:#0ea5e9"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #0070c0"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#0070c0"] *:not(input):not(textarea):not(select),
+:root [style*="background: #0070c0"] *:not(input):not(textarea):not(select),
+:root [style*="background:#0070c0"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: #0070C0"] *:not(input):not(textarea):not(select),
+:root [style*="background-color:#0070C0"] *:not(input):not(textarea):not(select),
+:root [style*="background: #0070C0"] *:not(input):not(textarea):not(select),
+:root [style*="background:#0070C0"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: rgb(29, 78, 216)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: rgb(37, 99, 235)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: rgb(59, 130, 246)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: rgb(2, 132, 199)"] *:not(input):not(textarea):not(select),
+:root [style*="background-color: rgb(0, 112, 192)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: var(--primary)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:var(--primary)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: var(--primary)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:var(--primary)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #1d4ed8"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#1d4ed8"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #1d4ed8"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#1d4ed8"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #2563eb"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#2563eb"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #2563eb"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#2563eb"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #1e40af"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#1e40af"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #1e40af"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#1e40af"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #3b82f6"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#3b82f6"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #3b82f6"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#3b82f6"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #0284c7"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#0284c7"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #0284c7"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#0284c7"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #0ea5e9"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#0ea5e9"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #0ea5e9"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#0ea5e9"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #0070c0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#0070c0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #0070c0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#0070c0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: #0070C0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color:#0070C0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background: #0070C0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background:#0070C0"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: rgb(29, 78, 216)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: rgb(37, 99, 235)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: rgb(59, 130, 246)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: rgb(2, 132, 199)"] *:not(input):not(textarea):not(select),
+[data-theme='light'] [style*="background-color: rgb(0, 112, 192)"] *:not(input):not(textarea):not(select),
+.btn-primary *:not(input):not(textarea):not(select),
+.btn-save *:not(input):not(textarea):not(select),
+.btn-submit *:not(input):not(textarea):not(select),
+.btn-register *:not(input):not(textarea):not(select),
+.btn-query *:not(input):not(textarea):not(select),
+.btn-search *:not(input):not(textarea):not(select),
+.bg-primary *:not(input):not(textarea):not(select),
+.bg-blue-600 *:not(input):not(textarea):not(select),
+.bg-blue-700 *:not(input):not(textarea):not(select),
+.bg-blue-500 *:not(input):not(textarea):not(select),
+.bg-sky-600 *:not(input):not(textarea):not(select),
+.bg-sky-700 *:not(input):not(textarea):not(select),
+.badge-primary *:not(input):not(textarea):not(select),
+.badge-blue *:not(input):not(textarea):not(select) {
+  color: #ffffff !important;
+}
+
+/* 파란계열 배경 요소 내부의 SVG 아이콘 화이트 스트로크/컬러 강제 */
+[style*="background-color: var(--primary)"] svg,
+[style*="background: var(--primary)"] svg,
+[style*="background-color: #1d4ed8"] svg,
+[style*="background: #1d4ed8"] svg,
+[style*="background-color: #2563eb"] svg,
+[style*="background: #2563eb"] svg,
+[style*="background-color: #1e40af"] svg,
+[style*="background: #1e40af"] svg,
+[style*="background-color: #3b82f6"] svg,
+[style*="background: #3b82f6"] svg,
+[style*="background-color: #0284c7"] svg,
+[style*="background: #0284c7"] svg,
+[style*="background-color: #0ea5e9"] svg,
+[style*="background: #0ea5e9"] svg,
+[style*="background-color: #0070c0"] svg,
+[style*="background: #0070c0"] svg,
+[style*="background-color: #0070C0"] svg,
+[style*="background: #0070C0"] svg,
+[style*="background-color: rgb(29, 78, 216)"] svg,
+[style*="background-color: rgb(37, 99, 235)"] svg,
+[style*="background-color: rgb(59, 130, 246)"] svg,
+[style*="background-color: rgb(2, 132, 199)"] svg,
+[style*="background-color: rgb(0, 112, 192)"] svg,
+.btn-primary svg,
+.btn-save svg,
+.btn-submit svg,
+.btn-register svg,
+.btn-query svg,
+.btn-search svg,
+.bg-primary svg,
+.badge-primary svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.btn-secondary {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+[data-theme='light'] .btn-secondary,
+:root:not([data-theme='dark']) .btn-secondary {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+.btn-secondary:hover {
+  background-color: var(--border-color);
+  color: var(--text-main);
+}
+[data-theme='light'] .btn-secondary:hover,
+:root:not([data-theme='dark']) .btn-secondary:hover {
+  background-color: var(--bg-header) !important;
+  color: var(--text-main) !important;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--text-on-primary);
+}
+.btn-success:hover {
+  background-color: var(--success-hover);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 테이블 공통 스타일 & 다이나믹 컴팩트 밀도 적용 (종/횡 스크롤바 완벽 지원: 헌장 3.2 & 3.6) */
+.table-container {
+  width: 100%;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--table-border-color) !important;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0;
+  position: relative;
+  max-height: calc(100vh - 260px);
+}
+
+[data-theme='light'] .table-container,
+:root:not([data-theme='dark']) .table-container,
+[data-theme='light'] .table-wrapper,
+:root:not([data-theme='dark']) .table-wrapper,
+[data-theme='light'] table,
+:root:not([data-theme='dark']) table {
+  background-color: var(--bg-card);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
+}
+
+/* 세로 스크롤 시 헤더 고정 (Sticky Thead) */
+.table-container thead th,
+table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: var(--bg-app);
+  border-bottom: 2px solid var(--table-border-color) !important;
+  box-shadow: 0 1px 0 var(--table-border-color);
+}
+
+[data-theme='light'] table thead th,
+:root:not([data-theme='dark']) table thead th,
+[data-theme='light'] .table-container thead th,
+:root:not([data-theme='dark']) .table-container thead th {
+  background-color: var(--bg-app);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+  background-color: var(--bg-card);
+}
+
+.table-container table {
+  min-width: 800px;
+}
+
+th {
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
+  font-weight: 700;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--table-border-color) !important;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--table-row-border) !important;
+  color: var(--text-main);
+  vertical-align: middle;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--table-row-border) !important;
+}
+
+tr:last-child td,
+tbody tr:last-child {
+  border-bottom: none !important;
+}
+
+[data-theme='light'] table tbody td,
+:root:not([data-theme='dark']) table tbody td {
+  background-color: transparent;
+}
+
+tr:hover td,
+.hover-row:hover td,
+.hover-row:hover {
+  background-color: rgba(29, 78, 216, 0.05) !important;
+  transition: background-color var(--transition-fast);
+}
+
+[data-theme='dark'] tr:hover td,
+[data-theme='dark'] .hover-row:hover td,
+[data-theme='dark'] .hover-row:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 카드 컴포넌트 */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   전사 엔터프라이즈 모달 표준 시스템 (Unified Enterprise Modal Standard)
+   5색 고시인성 & 웜 페이퍼/다크 모드 100% 자동 연동 (헌장 3.1, 3.6, 3.7)
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. 모달 오버레이/백드롭 (Modal Backdrop) */
+.modal-overlay,
+.modal-backdrop,
+div[style*="position: fixed"][style*="rgba(0,0,0"],
+div[style*="position: fixed"][style*="rgba(0, 0, 0"] {
+  backdrop-filter: blur(3px) !important;
+}
+
+/* 2. 모달 컨테이너 (Modal Surface - 서식지 일체화) */
+.modal-content,
+.modal-container,
+.modal-dialog,
+.modal-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+[data-theme='light'] .modal-content,
+[data-theme='light'] .modal-container,
+[data-theme='light'] .modal-dialog,
+[data-theme='light'] .modal-card,
+[data-theme='light'] .modal-body,
+[data-theme='light'] div[style*="position: fixed"] > div:not([style*="position: fixed"]):not(.modal-overlay):not(.modal-backdrop),
+[data-theme='light'] div[style*="position:fixed"] > div:not([style*="position:fixed"]):not(.modal-overlay):not(.modal-backdrop),
+:root:not([data-theme='dark']) .modal-content,
+:root:not([data-theme='dark']) .modal-container,
+:root:not([data-theme='dark']) .modal-dialog,
+:root:not([data-theme='dark']) .modal-card,
+:root:not([data-theme='dark']) .modal-body,
+:root:not([data-theme='dark']) div[style*="position: fixed"] > div:not([style*="position: fixed"]):not(.modal-overlay):not(.modal-backdrop),
+:root:not([data-theme='dark']) div[style*="position:fixed"] > div:not([style*="position:fixed"]):not(.modal-overlay):not(.modal-backdrop) {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* 3. 모달 헤더 (Modal Header - 바인더 일체화) */
+.modal-header {
+  background-color: var(--bg-header) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+[data-theme='light'] .modal-header,
+:root:not([data-theme='dark']) .modal-header {
+  background-color: var(--bg-header) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* 4. 모달 본문 (Modal Body) */
+.modal-body {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* 5. 모달 푸터 (Modal Footer) */
+.modal-footer {
+  background-color: var(--bg-header) !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+[data-theme='light'] .modal-footer,
+:root:not([data-theme='dark']) .modal-footer {
+  background-color: var(--bg-header) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+/* 6. 모달 닫기 버튼 (Modal Close Button) */
+.modal-close-btn,
+button.modal-close {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+  border-radius: 6px !important;
+  transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+.modal-close-btn:hover,
+button.modal-close:hover {
+  color: var(--text-main) !important;
+  background-color: var(--primary-light) !important;
+}
+
+/* 7. 모달 내부 폼 라벨 가독성 보장 */
+.modal-content label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
+.modal-container label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
+.modal-card label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]) {
+  color: var(--text-main) !important;
+  font-weight: 700 !important;
+}
+
+/* 🏷️ 전사 배지 표준화 (High-Contrast Bordered Badges SSOT) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+/* 1. Primary 배지 (파랑 / 자산 수량 / R2 문서 등) */
+.badge-primary {
+  background-color: rgba(29, 78, 216, 0.08) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #93c5fd !important;
+}
+[data-theme='dark'] .badge-primary {
+  background-color: rgba(2, 132, 199, 0.22) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.6) !important;
+}
+
+/* 2. Secondary 배지 (회색 / 미보유 / 기본 등) */
+.badge-secondary {
+  background-color: rgba(100, 116, 139, 0.08) !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  opacity: 1 !important;
+}
+[data-theme='dark'] .badge-secondary {
+  background-color: rgba(148, 163, 184, 0.15) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.4) !important;
+  opacity: 1 !important;
+}
+
+/* 3. Success 배지 (초록 / 정상 / 사용 / 활성 등) */
+.badge-success {
+  background-color: rgba(4, 120, 87, 0.08) !important;
+  color: #047857 !important;
+  border: 1px solid #86efac !important;
+}
+[data-theme='dark'] .badge-success {
+  background-color: rgba(52, 211, 153, 0.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.55) !important;
+}
+
+/* 4. Warning 배지 (주황/황색 / 주의 / 대기 등) */
+.badge-warning {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+  color: #b45309 !important;
+  border: 1px solid #fcd34d !important;
+}
+[data-theme='dark'] .badge-warning {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.55) !important;
+}
+
+/* 5. Danger 배지 (빨강 / 위험 / 오류 등) */
+.badge-danger {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+}
+[data-theme='dark'] .badge-danger {
+  background-color: rgba(248, 113, 113, 0.18) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.55) !important;
+}
+
+/* 6. Info 배지 */
+.badge-info {
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+  border: 1px solid #7dd3fc !important;
+}
+[data-theme='dark'] .badge-info {
+  background-color: rgba(2, 132, 199, 0.22) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.6) !important;
+}
+
+/* 7. Dark/Muted 배지 (폐기, 매각, 비활성 등) */
+.badge-dark {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+  border: 1px solid #94a3b8 !important;
+}
+[data-theme='dark'] .badge-dark {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+  color: #94a3b8 !important;
+  border: 1px solid #475569 !important;
+}
+
+.hover-row:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+
+
+/* 모바일 다이나믹 반응형 헬퍼 클래스 */
+@media (max-width: 640px) {
+  .mobile-grid-1col {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-grid-1col > * {
+    grid-column: span 1 !important;
+  }
+  .mobile-flex-col {
+    flex-direction: column !important;
+  }
+  .mobile-w-full {
+    width: 100% !important;
+  }
+  .mobile-p-sm {
+    padding: 12px !important;
+  }
+  .mobile-gap-sm {
+    gap: 8px !important;
+  }
+}
+
+/* Drag & Drop UX Animations */
+.drop-target-active {
+  background-color: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide-out Panel Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Table Container & Sticky Header Controls */
+.table-container {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+.table-container table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background-color: var(--bg-card) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.15s ease;
+}
+
+.table-container table thead th:hover {
+  background-color: var(--bg-app) !important;
+}
+
+/* ──────────────────────────────────────────────
+   Toggle Switch (토글 버튼) 디자인 시스템
+   ────────────────────────────────────────────── */
+.toggle-switch-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggle-switch-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .25s ease;
+  border-radius: 24px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fbf9f5;
+  transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-switch-slider {
+  background-color: var(--primary, #3b82f6);
+}
+
+.toggle-switch input:focus + .toggle-switch-slider {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.toggle-switch input:checked + .toggle-switch-slider:before {
+  transform: translateX(20px);
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 사이드바 메뉴 호환 호버 스타일 */
+.sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]) {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme='light'] .sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]),
+:root:not([data-theme='dark']) .sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]) {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}

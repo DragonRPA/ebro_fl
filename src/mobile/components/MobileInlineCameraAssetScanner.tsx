@@ -1,0 +1,891 @@
+// src/mobile/components/MobileInlineCameraAssetScanner.tsx
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { Flashlight, Upload, X, RefreshCw } from 'lucide-react';
+import { Asset } from '../../services/db';
+import {
+  analyzeAssetNumberFrame,
+  matchRecognizedAssetFromPool,
+  processImageFile,
+  AssetNumberOcrResult
+} from '../../services/visionOcrService';
+import { isModelMatch } from '../../utils/modelUtils';
+
+export interface UnfilledSlotInfo {
+  caId: string;
+  slotNumber: number;
+  expectedModel: string;
+}
+
+interface MobileInlineCameraAssetScannerProps {
+  isOpen: boolean;
+  onToggleOpen: () => void;
+  allAvailableAssets: Asset[];
+  unfilledSlots: UnfilledSlotInfo[];
+  focusedSlotCaId?: string | null;
+  mappedAssetIds: string[];
+  onSequentialFill: (asset: Asset, targetCaId: string, recognizedText: string) => void;
+}
+
+type DistanceZoomPreset = 1 | 1.5 | 2;
+
+/**
+ * 1~2m 거리의 AWP 차체 도색(스텐실) 관리번호 판독을 위한 오프스크린 대비·선명도 보정
+ * 원본 캔버스는 보존하고, 중앙 조준 영역의 휘도 분포를 기준으로 도색 글자와 철판 배경 간 대비를 극대화한다.
+ */
+function createPreprocessedCanvasForLocalOcr(sourceCanvas: HTMLCanvasElement): HTMLCanvasElement {
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = width;
+  offCanvas.height = height;
+  const ctx = offCanvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return sourceCanvas;
+
+  ctx.drawImage(sourceCanvas, 0, 0);
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  // 중앙 60% 핵심 영역의 휘도 분포를 기준으로 min/max 산출 (주기장 좌우 인접 장비·배경 노이즈 배제)
+  const xStart = Math.floor(width * 0.2);
+  const xEnd = Math.ceil(width * 0.8);
+  const yStart = Math.floor(height * 0.15);
+  const yEnd = Math.ceil(height * 0.85);
+
+  let minLum = 255;
+  let maxLum = 0;
+  for (let y = yStart; y < yEnd; y++) {
+    for (let x = xStart; x < xEnd; x++) {
+      const idx = (y * width + x) * 4;
+      const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+      if (lum < minLum) minLum = lum;
+      if (lum > maxLum) maxLum = lum;
+    }
+  }
+  const range = Math.max(18, maxLum - minLum);
+
+  // 1~2m 거리의 도색 페인트 번호(백색/흑색 스텐실)가 유색 철판 위에서도 선명히 분리되도록 대비 강화
+  for (let i = 0; i < data.length; i += 4) {
+    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const norm = Math.max(0, Math.min(255, ((lum - minLum) / range) * 255));
+    const contrasted = Math.max(0, Math.min(255, (norm - 128) * 1.5 + 128));
+    data[i] = contrasted;
+    data[i + 1] = contrasted;
+    data[i + 2] = contrasted;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  return offCanvas;
+}
+
+/**
+ * 아이폰/아이패드 iOS Safari 초기 카메라 구동 직후 발생하는 검은색(Black) 프레임 여부 검사
+ */
+function isBlankOrDarkFrame(ctx: CanvasRenderingContext2D, width: number, height: number): boolean {
+  try {
+    const sampleW = Math.min(64, width);
+    const sampleH = Math.min(24, height);
+    const sx = Math.max(0, Math.floor((width - sampleW) / 2));
+    const sy = Math.max(0, Math.floor((height - sampleH) / 2));
+    const data = ctx.getImageData(sx, sy, sampleW, sampleH).data;
+    let maxLum = 0;
+    for (let i = 0; i < data.length; i += 16) {
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum > maxLum) maxLum = lum;
+      if (maxLum >= 14) return false;
+    }
+    return maxLum < 14;
+  } catch {
+    return false;
+  }
+}
+
+function extractAlphanumericTokens(rawText: string): string[] {
+  if (!rawText) return [];
+  const cleaned = rawText
+    .toUpperCase()
+    .replace(/[^0-9A-Z-\s]/g, ' ')
+    .split(/\s+/)
+    .map(t => t.replace(/^-+|-+$/g, '').trim())
+    .filter(t => t.length >= 2 && /[0-9]/.test(t));
+  return Array.from(new Set(cleaned));
+}
+
+export const MobileInlineCameraAssetScanner: React.FC<MobileInlineCameraAssetScannerProps> = ({
+  isOpen,
+  onToggleOpen,
+  allAvailableAssets,
+  unfilledSlots,
+  focusedSlotCaId,
+  mappedAssetIds,
+  onSequentialFill
+}) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const localInFlightRef = useRef<boolean>(false);
+  const visionInFlightRef = useRef<boolean>(false);
+  const lastVisionCallAtRef = useRef<number>(0);
+  const cooldownUntilRef = useRef<number>(0);
+  const tesseractWorkerRef = useRef<any>(null);
+  const workerInitializingRef = useRef<boolean>(false);
+
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<boolean>(false);
+  const [torchSupported, setTorchSupported] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+  // 1~2m 거리의 AWP 도색 관리번호 촬영에 가장 적합한 기본 1.5배 중거리 화각 적용
+  const [zoomPreset, setZoomPreset] = useState<DistanceZoomPreset>(1.5);
+  const [cssZoomScale, setCssZoomScale] = useState<number>(1.5);
+  const [isVisionScanning, setIsVisionScanning] = useState(false);
+  const [lastDetectedHint, setLastDetectedHint] = useState<string>('');
+
+  const currentTargetSlot = useMemo(() => {
+    if (unfilledSlots.length === 0) return null;
+    if (focusedSlotCaId) {
+      const found = unfilledSlots.find(s => s.caId === focusedSlotCaId);
+      if (found) return found;
+    }
+    return unfilledSlots[0];
+  }, [unfilledSlots, focusedSlotCaId]);
+
+  const targetExpectedModels = useMemo(() => {
+    return Array.from(
+      new Set(unfilledSlots.map(s => s.expectedModel).filter(m => m && m !== '*'))
+    );
+  }, [unfilledSlots]);
+
+  const targetModelAvailableAssets = useMemo(() => {
+    if (unfilledSlots.length === 0) return [];
+    return allAvailableAssets.filter(
+      a =>
+        !mappedAssetIds.includes(a.id) &&
+        (targetExpectedModels.length === 0 ||
+          targetExpectedModels.some(m => isModelMatch(a.modelName, m)))
+    );
+  }, [allAvailableAssets, unfilledSlots.length, mappedAssetIds, targetExpectedModels]);
+
+  const resolveTargetSlotForAsset = useCallback(
+    (asset: Asset): UnfilledSlotInfo | null => {
+      if (
+        currentTargetSlot &&
+        (!currentTargetSlot.expectedModel ||
+          currentTargetSlot.expectedModel === '*' ||
+          isModelMatch(asset.modelName, currentTargetSlot.expectedModel))
+      ) {
+        return currentTargetSlot;
+      }
+      return (
+        unfilledSlots.find(
+          s =>
+            !s.expectedModel ||
+            s.expectedModel === '*' ||
+            isModelMatch(asset.modelName, s.expectedModel)
+        ) || null
+      );
+    },
+    [currentTargetSlot, unfilledSlots]
+  );
+
+  const ensureLocalOcrWorker = useCallback(async () => {
+    if (tesseractWorkerRef.current) return tesseractWorkerRef.current;
+    if (workerInitializingRef.current) return null;
+    workerInitializingRef.current = true;
+    try {
+      let createWorkerFn: any = (window as any)?.Tesseract?.createWorker;
+      if (!createWorkerFn) {
+        await new Promise<void>((resolve, reject) => {
+          const existing = document.querySelector('script[data-tesseract-cdn="1"]') as HTMLScriptElement | null;
+          if (existing) {
+            if ((window as any)?.Tesseract?.createWorker) {
+              resolve();
+              return;
+            }
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('CDN load error')), { once: true });
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          script.async = true;
+          script.setAttribute('data-tesseract-cdn', '1');
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('CDN load error'));
+          document.head.appendChild(script);
+        });
+        createWorkerFn = (window as any)?.Tesseract?.createWorker;
+      }
+      if (!createWorkerFn) return null;
+
+      const worker = await createWorkerFn('eng');
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-',
+        // PSM 7: 중앙 녹색 횡선에 맞춘 단일 라인 관리번호 인식 최적화
+        tessedit_pageseg_mode: '7' as any
+      });
+      tesseractWorkerRef.current = worker;
+      return worker;
+    } catch {
+      return null;
+    } finally {
+      workerInitializingRef.current = false;
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => {
+        try {
+          t.stop();
+        } catch {}
+      });
+      streamRef.current = null;
+    }
+    setCameraReady(false);
+    setTorchOn(false);
+    setTorchSupported(false);
+  }, []);
+
+  /**
+   * 1~2m 중거리 피사체(AWP 차체 도색 번호) 촬영 최적화 제약 적용:
+   * - 중앙점(0.5, 0.5) 자동초점(AF) 및 자동노출(AE) 측광 고정 (야외 역광 및 창고 암부 보정)
+   * - 하드웨어 줌 지원 기기는 광학/하드웨어 배율 적용, 미지원 기기는 고해상도 센서 중앙 크롭 배율 적용
+   */
+  const applyDistanceCameraConstraints = useCallback(
+    async (targetZoom: DistanceZoomPreset, track?: MediaStreamTrack | null) => {
+      const targetTrack = track || streamRef.current?.getVideoTracks()?.[0];
+      if (!targetTrack || typeof targetTrack.applyConstraints !== 'function') {
+        setCssZoomScale(targetZoom);
+        return;
+      }
+
+      let appliedHwZoom = 1;
+      try {
+        const caps =
+          typeof targetTrack.getCapabilities === 'function'
+            ? (targetTrack.getCapabilities() as any)
+            : {};
+        const advancedConstraint: Record<string, any> = {};
+
+        // 1. 연속 자동초점 (1~2m 이동 중 즉시 초점 추적)
+        if (Array.isArray(caps?.focusMode)) {
+          if (caps.focusMode.includes('continuous')) {
+            advancedConstraint.focusMode = 'continuous';
+          } else if (caps.focusMode.includes('single-shot')) {
+            advancedConstraint.focusMode = 'single-shot';
+          }
+        }
+
+        // 2. 야외 주기장 햇빛 반사 및 실내 창고 조도 대응 연속 자동노출·화이트밸런스
+        if (Array.isArray(caps?.exposureMode) && caps.exposureMode.includes('continuous')) {
+          advancedConstraint.exposureMode = 'continuous';
+        }
+        if (Array.isArray(caps?.whiteBalanceMode) && caps.whiteBalanceMode.includes('continuous')) {
+          advancedConstraint.whiteBalanceMode = 'continuous';
+        }
+
+        // 3. 중앙 녹색 횡선(0.5, 0.5)에 초점 및 노출 측광점 고정
+        if (caps?.pointsOfInterest !== undefined) {
+          advancedConstraint.pointsOfInterest = [{ x: 0.5, y: 0.5 }];
+        }
+
+        // 4. 1~2m 거리 피사체 확대용 하드웨어 줌 적용
+        if (caps?.zoom && typeof caps.zoom === 'object') {
+          const minZ = typeof caps.zoom.min === 'number' ? caps.zoom.min : 1;
+          const maxZ = typeof caps.zoom.max === 'number' ? caps.zoom.max : 1;
+          if (maxZ > 1) {
+            appliedHwZoom = Math.min(maxZ, Math.max(minZ, targetZoom));
+            advancedConstraint.zoom = appliedHwZoom;
+          }
+        }
+
+        if (Object.keys(advancedConstraint).length > 0) {
+          await targetTrack.applyConstraints({ advanced: [advancedConstraint as any] });
+        }
+      } catch {
+        appliedHwZoom = 1;
+        try {
+          await targetTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] });
+        } catch {}
+      }
+
+      const remainingCssScale = Math.max(1, Number((targetZoom / appliedHwZoom).toFixed(2)));
+      setCssZoomScale(remainingCssScale);
+    },
+    []
+  );
+
+  const startCamera = useCallback(async () => {
+    setCameraError(false);
+    setCameraReady(false);
+    stopCamera();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError(true);
+      return;
+    }
+
+    try {
+      // 1~2m 거리의 도색 번호 원거리 선명도 확보를 위해 QHD/FHD(2560x1440 -> 1920x1080) 고해상도 스트림 우선 요청
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 2560 },
+            height: { ideal: 1440 }
+          },
+          audio: false
+        });
+      } catch {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
+            },
+            audio: false
+          });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
+          });
+        }
+      }
+
+      streamRef.current = stream;
+      const videoEl = videoRef.current;
+      if (videoEl) {
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.setAttribute('playsinline', 'true');
+        videoEl.setAttribute('webkit-playsinline', 'true');
+        videoEl.srcObject = stream;
+
+        if (videoEl.readyState < 1) {
+          await new Promise<void>(resolve => {
+            const timeoutId = setTimeout(resolve, 700);
+            videoEl.onloadedmetadata = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+          });
+        }
+        await videoEl.play().catch(() => {});
+      }
+      setCameraReady(true);
+
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        if (typeof track.getCapabilities === 'function') {
+          try {
+            const caps = track.getCapabilities() as any;
+            if (caps && caps.torch) {
+              setTorchSupported(true);
+            }
+          } catch {}
+        }
+        await applyDistanceCameraConstraints(zoomPreset, track);
+      }
+    } catch {
+      setCameraError(true);
+    }
+  }, [stopCamera, applyDistanceCameraConstraints, zoomPreset]);
+
+  useEffect(() => {
+    if (isOpen && unfilledSlots.length > 0) {
+      startCamera();
+      ensureLocalOcrWorker();
+    } else {
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen, unfilledSlots.length > 0, startCamera, stopCamera, ensureLocalOcrWorker]);
+
+  useEffect(() => {
+    return () => {
+      if (tesseractWorkerRef.current) {
+        try {
+          tesseractWorkerRef.current.terminate();
+        } catch {}
+        tesseractWorkerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && unfilledSlots.length === 0) {
+      stopCamera();
+      onToggleOpen();
+    }
+  }, [isOpen, unfilledSlots.length, stopCamera, onToggleOpen]);
+
+  const toggleTorch = async () => {
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      const next = !torchOn;
+      await track.applyConstraints({ advanced: [{ torch: next } as any] });
+      setTorchOn(next);
+    } catch {}
+  };
+
+  const cycleDistanceZoom = async () => {
+    const nextZoom: DistanceZoomPreset = zoomPreset === 1.5 ? 2 : zoomPreset === 2 ? 1 : 1.5;
+    setZoomPreset(nextZoom);
+    await applyDistanceCameraConstraints(nextZoom);
+  };
+
+  const processRecognizedResult = useCallback(
+    (ocrResult: AssetNumberOcrResult, isFromServerVision = false): boolean => {
+      if (unfilledSlots.length === 0 || !ocrResult.success) return false;
+
+      const rawDisplay =
+        ocrResult.matchedCandidate ||
+        ocrResult.assetNo ||
+        ocrResult.serialNo ||
+        ocrResult.rawTokens?.[0] ||
+        '';
+      if (!rawDisplay) return false;
+
+      const targetMatches = matchRecognizedAssetFromPool(
+        ocrResult,
+        targetModelAvailableAssets,
+        mappedAssetIds
+      );
+
+      if (targetMatches.exactMatch) {
+        const matchedAsset = targetMatches.exactMatch;
+        const slot = resolveTargetSlotForAsset(matchedAsset);
+        if (slot) {
+          try {
+            if (navigator.vibrate) navigator.vibrate(70);
+          } catch {}
+          cooldownUntilRef.current = Date.now() + 1400;
+          setLastDetectedHint(`${matchedAsset.assetNo} 할당 완료`);
+          onSequentialFill(matchedAsset, slot.caId, rawDisplay);
+          return true;
+        }
+      }
+
+      if (targetMatches.candidates.length > 0 || (isFromServerVision && rawDisplay.length >= 3)) {
+        setLastDetectedHint(rawDisplay);
+      }
+
+      return false;
+    },
+    [
+      unfilledSlots.length,
+      targetModelAvailableAssets,
+      mappedAssetIds,
+      resolveTargetSlotForAsset,
+      onSequentialFill
+    ]
+  );
+
+  /**
+   * 1~2m 거리에서 촬영되는 AWP 도색 관리번호를 위해
+   * 130pt 카메라 뷰포트의 중앙 녹색 횡선(top: 50%) 주변 영역을
+   * 주기장 좌우 인접 장비가 섞이지 않도록 중앙 집중 크롭 및 원본 해상도(최대 1024px)로 추출
+   */
+  const cropCenterGreenLineToCanvas = useCallback((): {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    targetW: number;
+    targetH: number;
+  } | null => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < 2) return null;
+
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) return null;
+
+    const rect = video.getBoundingClientRect();
+    const baseCw = (rect.width ? rect.width / cssZoomScale : video.clientWidth) || 360;
+    const baseCh = (rect.height ? rect.height / cssZoomScale : video.clientHeight) || 130;
+
+    // object-fit: cover 스케일 + 중거리 줌 배율(cssZoomScale) 역산
+    const effectiveScale = Math.max(baseCw / vw, baseCh / vh) * cssZoomScale;
+
+    // 1~2m 거리에서 주기장 좌우에 나란히 주차된 타 장비 번호가 들어오지 않도록 중앙 76%(최대 460px) 집중 크롭
+    const guideCssW = Math.min(baseCw * 0.76, 460);
+    const guideCssH = Math.min(baseCh * 0.62, 82);
+
+    const cropW = Math.max(160, Math.min(vw, Math.round(guideCssW / effectiveScale)));
+    const cropH = Math.max(56, Math.min(vh, Math.round(guideCssH / effectiveScale)));
+    const cropX = Math.max(0, Math.round((vw - cropW) / 2));
+    const cropY = Math.max(0, Math.round((vh - cropH) / 2));
+
+    // 1~2m 원거리 도색 글자의 픽셀 디테일 보존을 위해 최대 1024px 유지 + 100% 원본 종횡비 보존
+    const targetW = Math.min(1024, cropW);
+    const targetH = Math.max(48, Math.round((cropH / cropW) * targetW));
+
+    canvas.width = targetW;
+    canvas.height = targetH;
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+
+    if (isBlankOrDarkFrame(ctx, targetW, targetH)) {
+      return null;
+    }
+
+    return { canvas, ctx, targetW, targetH };
+  }, [cssZoomScale]);
+
+  /**
+   * 아이폰/아이패드(iOS/iPadOS Safari) 등 브라우저 내장 TextDetector 미지원 환경을 위한
+   * 서버 Vision AI (/api/vision-ocr) 실시간 병행 판독
+   */
+  const triggerVisionAiFallback = useCallback(
+    async (base64Jpeg: string, forceImmediate = false) => {
+      if (!base64Jpeg || visionInFlightRef.current || unfilledSlots.length === 0) return;
+      if (Date.now() < cooldownUntilRef.current) return;
+
+      const now = Date.now();
+      if (!forceImmediate && now - lastVisionCallAtRef.current < 1200) return;
+
+      visionInFlightRef.current = true;
+      lastVisionCallAtRef.current = now;
+      setIsVisionScanning(true);
+
+      try {
+        const candidateAssetNos = targetModelAvailableAssets
+          .map(a => a.assetNo)
+          .filter(Boolean)
+          .slice(0, 100);
+
+        const ocrResult = await analyzeAssetNumberFrame(base64Jpeg, {
+          expectedModels: targetExpectedModels,
+          candidateAssetNos
+        });
+
+        if (Date.now() >= cooldownUntilRef.current) {
+          processRecognizedResult(ocrResult, true);
+        }
+      } catch {
+        // 네트워크 일시 오류 무시
+      } finally {
+        visionInFlightRef.current = false;
+        setIsVisionScanning(false);
+      }
+    },
+    [unfilledSlots.length, targetModelAvailableAssets, targetExpectedModels, processRecognizedResult]
+  );
+
+  const captureAndAnalyzeLocalFrame = useCallback(
+    async (forceVisionAi = false) => {
+      if (unfilledSlots.length === 0) return;
+      if (Date.now() < cooldownUntilRef.current) return;
+
+      const cropped = cropCenterGreenLineToCanvas();
+      if (!cropped) return;
+      const { canvas, targetH } = cropped;
+      const centerY = targetH / 2;
+      const cleanSnapshotBase64 = canvas.toDataURL('image/jpeg', 0.88);
+
+      // 아이폰/아이패드 Safari 등 TextDetector 미지원 기기이거나 수동 터치 시 즉시 Vision AI 병렬 호출
+      const hasNativeDetector = 'TextDetector' in window || 'BarcodeDetector' in window;
+      if (forceVisionAi || !hasNativeDetector) {
+        triggerVisionAiFallback(cleanSnapshotBase64, forceVisionAi);
+      }
+
+      if (localInFlightRef.current) return;
+      localInFlightRef.current = true;
+
+      try {
+        // 1. BarcodeDetector (지원 브라우저: 갤럭시/Android Chrome 등)
+        if ('BarcodeDetector' in window) {
+          try {
+            const BarcodeDetectorCls = (window as any).BarcodeDetector;
+            const detector = new BarcodeDetectorCls({
+              formats: ['qr_code', 'code_128', 'code_39', 'ean_13']
+            });
+            const barcodes = await detector.detect(canvas);
+            if (Array.isArray(barcodes) && barcodes.length > 0) {
+              const sortedBarcodes = [...barcodes].sort((a: any, b: any) => {
+                const ay = a?.boundingBox ? a.boundingBox.y + a.boundingBox.height / 2 : centerY;
+                const by = b?.boundingBox ? b.boundingBox.y + b.boundingBox.height / 2 : centerY;
+                return Math.abs(ay - centerY) - Math.abs(by - centerY);
+              });
+              const rawVals = sortedBarcodes
+                .map((b: any) => String(b?.rawValue || '').trim())
+                .filter(Boolean);
+              if (rawVals.length > 0) {
+                const matched = processRecognizedResult({
+                  success: true,
+                  assetNo: rawVals[0],
+                  rawTokens: rawVals
+                });
+                if (matched) return;
+              }
+            }
+          } catch {}
+        }
+
+        // 2. TextDetector (지원 브라우저: 갤럭시/Android Chrome 등)
+        if ('TextDetector' in window) {
+          try {
+            const TextDetectorCls = (window as any).TextDetector;
+            const textDetector = new TextDetectorCls();
+            const detectedBlocks = await textDetector.detect(canvas);
+            if (Array.isArray(detectedBlocks) && detectedBlocks.length > 0) {
+              const sortedBlocks = [...detectedBlocks].sort((a: any, b: any) => {
+                const ay = a?.boundingBox ? a.boundingBox.y + a.boundingBox.height / 2 : centerY;
+                const by = b?.boundingBox ? b.boundingBox.y + b.boundingBox.height / 2 : centerY;
+                return Math.abs(ay - centerY) - Math.abs(by - centerY);
+              });
+              const joined = sortedBlocks.map((b: any) => String(b.rawValue || '')).join(' ');
+              const tokens = extractAlphanumericTokens(joined);
+              if (tokens.length > 0) {
+                const matched = processRecognizedResult({
+                  success: true,
+                  assetNo: tokens[0],
+                  rawTokens: tokens
+                });
+                if (matched) return;
+              }
+            }
+          } catch {}
+        }
+
+        // 3. 로컬 Tesseract OCR (원본 캔버스를 보존한 채 오프스크린 캔버스에서 도색 대비 보정 후 판독)
+        const worker = await ensureLocalOcrWorker();
+        if (worker) {
+          const ocrCanvas = createPreprocessedCanvasForLocalOcr(canvas);
+          const { data } = await worker.recognize(ocrCanvas);
+          let orderedText = data?.text || '';
+          if (Array.isArray(data?.lines) && data.lines.length > 1) {
+            const sortedLines = [...data.lines].sort((a: any, b: any) => {
+              const ay = a?.bbox ? (a.bbox.y0 + a.bbox.y1) / 2 : centerY;
+              const by = b?.bbox ? (b.bbox.y0 + b.bbox.y1) / 2 : centerY;
+              return Math.abs(ay - centerY) - Math.abs(by - centerY);
+            });
+            orderedText = sortedLines.map((l: any) => String(l?.text || '')).join(' ');
+          }
+          const tokens = extractAlphanumericTokens(orderedText);
+          if (tokens.length > 0) {
+            const matched = processRecognizedResult({
+              success: true,
+              assetNo: tokens[0],
+              rawTokens: tokens
+            });
+            if (matched) return;
+          }
+        }
+
+        // 4. 내장 디텍터 보유 기기에서도 로컬 판독 미매칭 시 서버 Vision AI 폴백 수행
+        if (hasNativeDetector) {
+          triggerVisionAiFallback(cleanSnapshotBase64, false);
+        }
+      } catch {
+        // 프레임 무시
+      } finally {
+        localInFlightRef.current = false;
+      }
+    },
+    [
+      unfilledSlots.length,
+      cropCenterGreenLineToCanvas,
+      processRecognizedResult,
+      ensureLocalOcrWorker,
+      triggerVisionAiFallback
+    ]
+  );
+
+  useEffect(() => {
+    if (!isOpen || !cameraReady || unfilledSlots.length === 0) return;
+    const timer = setInterval(() => {
+      captureAndAnalyzeLocalFrame(false);
+    }, 750);
+    return () => clearInterval(timer);
+  }, [isOpen, cameraReady, unfilledSlots.length, captureAndAnalyzeLocalFrame]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    localInFlightRef.current = true;
+    setIsVisionScanning(true);
+    try {
+      const normalizedBase64 = await processImageFile(file, 1280);
+      const candidateAssetNos = targetModelAvailableAssets
+        .map(a => a.assetNo)
+        .filter(Boolean)
+        .slice(0, 100);
+      const ocrResult = await analyzeAssetNumberFrame(normalizedBase64, {
+        expectedModels: targetExpectedModels,
+        candidateAssetNos
+      });
+      if (processRecognizedResult(ocrResult, true)) return;
+
+      const worker = await ensureLocalOcrWorker();
+      if (worker) {
+        const { data } = await worker.recognize(normalizedBase64);
+        const tokens = extractAlphanumericTokens(data?.text || '');
+        if (tokens.length > 0) {
+          processRecognizedResult({
+            success: true,
+            assetNo: tokens[0],
+            rawTokens: tokens
+          });
+        }
+      }
+    } finally {
+      localInFlightRef.current = false;
+      setIsVisionScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  if (!isOpen || unfilledSlots.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="relative w-full rounded-lg overflow-hidden border border-emerald-500/80 bg-black select-none"
+      style={{ height: '130px', minHeight: '130px', maxHeight: '130px' }}
+      onClick={() => {
+        applyDistanceCameraConstraints(zoomPreset);
+        captureAndAnalyzeLocalFrame(true);
+      }}
+    >
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        autoPlay
+        style={{
+          width: '100%',
+          height: '130px',
+          objectFit: 'cover',
+          objectPosition: 'center center',
+          display: 'block',
+          transform: cssZoomScale > 1 ? `scale(${cssZoomScale})` : undefined,
+          transformOrigin: 'center center',
+          transition: 'transform 150ms ease-out'
+        }}
+      />
+      <canvas ref={canvasRef} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
+      {/* 상하단 비인식 외곽 음영 가이드 & 중앙 녹색 수평 초점 조준선 */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(to bottom, rgba(2,6,23,0.48) 0%, rgba(2,6,23,0) 20%, rgba(2,6,23,0) 80%, rgba(2,6,23,0.48) 100%)',
+          pointerEvents: 'none'
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: '12%',
+          right: '12%',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          height: '2px',
+          backgroundColor: isVisionScanning ? '#22d3ee' : '#10b981',
+          boxShadow: isVisionScanning
+            ? '0 0 8px rgba(34, 211, 238, 0.9)'
+            : '0 0 8px rgba(16, 185, 129, 0.9)',
+          pointerEvents: 'none'
+        }}
+      />
+
+      {/* 좌하단 판독 상태 표시 */}
+      {(isVisionScanning || lastDetectedHint) && (
+        <div
+          className="flex items-center gap-1"
+          style={{
+            position: 'absolute',
+            bottom: '5px',
+            left: '8px',
+            right: '8px',
+            zIndex: 10,
+            pointerEvents: 'none'
+          }}
+        >
+          <span className="max-w-full px-2 py-0.5 rounded bg-slate-950/80 border border-slate-700 text-[11px] font-bold text-emerald-300 flex items-center gap-1 whitespace-nowrap overflow-hidden">
+            {isVisionScanning && <RefreshCw className="w-3 h-3 text-cyan-400 animate-spin shrink-0" />}
+            <span className="truncate">
+              {lastDetectedHint ? `인식: ${lastDetectedHint}` : '관리번호 스캔 중'}
+            </span>
+          </span>
+        </div>
+      )}
+
+      {/* 우상단 1~2m 중거리 배율(기본 1.5배) 및 제어 버튼 */}
+      <div
+        className="flex items-center gap-1"
+        style={{ position: 'absolute', top: '5px', right: '6px', zIndex: 10 }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={cycleDistanceZoom}
+          className="px-1.5 py-1 rounded bg-slate-900/80 text-emerald-300 border border-slate-700 text-[11px] font-black whitespace-nowrap"
+          aria-label="거리 배율 전환"
+        >
+          {zoomPreset}배
+        </button>
+        {torchSupported && (
+          <button
+            type="button"
+            onClick={toggleTorch}
+            className={`p-1.5 rounded bg-slate-900/80 border ${
+              torchOn
+                ? 'text-amber-300 border-amber-400'
+                : 'text-slate-200 border-slate-700'
+            }`}
+            aria-label="조명"
+          >
+            <Flashlight className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onToggleOpen}
+          className="p-1.5 rounded bg-slate-900/80 text-slate-200 border border-slate-700"
+          aria-label="닫기"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {cameraError && (
+        <div
+          className="bg-slate-950/95 flex items-center justify-center"
+          style={{ position: 'absolute', inset: 0, zIndex: 20 }}
+          onClick={e => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold text-xs flex items-center gap-1.5"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>사진 촬영으로 관리번호 인식</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};

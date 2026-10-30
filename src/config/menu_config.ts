@@ -1,0 +1,301 @@
+// src/config/menu_config.ts
+export interface MenuItemConfig {
+  id: string;
+  name: string;
+}
+
+export interface MenuGroupConfig {
+  id: string;
+  name: string;
+  items: MenuItemConfig[];
+}
+
+// 전사 전체 메뉴 그룹 및 항목 통합 관리
+export const SYSTEM_MENU_CONFIG: MenuGroupConfig[] = [
+  {
+    id: 'grp_distribution',
+    name: '영업-유통',
+    items: [
+      { id: 'trade_products', name: '상품 등록 및 관리' },
+      { id: 'trade_purchases', name: '구매 및 입고' },
+      { id: 'trade_contracts', name: '유통 수주' },
+      { id: 'trade_outbounds', name: '유통 출고 관리' },
+      { id: 'courier_dispatch', name: '택배 배송 관리' },
+      { id: 'trade_billing', name: '유통 청구 및 명세' },
+      { id: 'trade_returns', name: '환입 및 반품' },
+      { id: 'trade_profitability', name: '수익성 관리' }
+    ]
+  },
+  {
+    id: 'grp_approval',
+    name: '결재 센터',
+    items: [
+      { id: 'approvalInbox', name: '내 결재함' },
+      { id: 'approvalRules', name: '결재선 규칙 설정' }
+    ]
+  },
+  {
+    id: 'grp_sales',
+    name: '영업관리',
+    items: [
+      { id: 'sales_journal', name: '영업일지' },
+      { id: 'customer', name: '고객 관리' },
+      { id: 'site_options', name: '현장별 옵션 관리' },
+      { id: 'contract', name: '계약 관리' },
+      { id: 'billing', name: '청구 수납 관리' },
+      { id: 'receivable', name: '외상미수금 대장' },
+      { id: 'smart_dispatch4', name: '출고 요청' },
+      { id: 'smart_return', name: '회수 요청' },
+      { id: 'smart_as_request', name: '현장 정비 요청' },
+      { id: 'delinquency', name: '미수 채권 연체 관리' },
+      { id: 'official_mail', name: '공식 메일 발송' },
+      { id: 'public_construction_permits', name: '인허가 건축공정 조회' }
+    ]
+  },
+  {
+    id: 'grp_product_asset',
+    name: '자산/재고관리',
+    items: [
+      { id: 'available_inventory', name: '가용재고조회' },
+      { id: 'product', name: '제품 관리' },
+      { id: 'asset', name: '자산 관리' },
+      { id: 'acquisition_disposal', name: '자산 취득 매각' },
+      { id: 'rent_asset', name: '임차 장비 관리' }
+    ]
+  },
+  {
+    id: 'grp_logistics',
+    name: '배차 운송관리',
+    items: [
+      { id: 'delivery', name: '배차 운송 관리' },
+      { id: 'transport_master', name: '운송 거래처 관리' }
+    ]
+  },
+  {
+    id: 'grp_inout',
+    name: '입출고관리',
+    items: [
+      { id: 'daily_inout', name: '일일 입출고 조회' },
+      { id: 'asset_inout_history', name: '입고등록/입출고조회' },
+      { id: 'dispatch_assign', name: '장비 할당' },
+      { id: 'outbound_inspections', name: '출고 검수 관리' },
+      { id: 'stocktaking', name: '재고 실사' },
+      { id: 'print_queue_monitor', name: '프린트 큐 모니터' }
+    ]
+  },
+  {
+    id: 'grp_maintenance',
+    name: '정비 소모품관리',
+    items: [
+      { id: 'consumable_purchase', name: '소모품 구매' },
+      { id: 'consumable_inout', name: '소모품 입출고' },
+      { id: 'consumable_stock', name: '소모품 재고' },
+      { id: 'field_as', name: '현장 정비 관리' },
+      { id: 'as_route_tracking', name: '현장정비 동선 관리' },
+      { id: 'repair', name: '주기장 정비 관리' },
+      { id: 'inspection_checklist_manage', name: '정비 항목 관리' }
+    ]
+  },
+  {
+    id: 'grp_management',
+    name: '경영관리',
+    items: [
+      { id: 'leave_application', name: '연차신청' },
+      { id: 'ot_management', name: '연장근무 관리' },
+      { id: 'vehicle_log', name: '차량 주유관리' },
+      { id: 'purchase_settlement', name: '월말 매입 정산' },
+      { id: 'vendors', name: '매입처 관리' },
+      { id: 'bank_matching', name: '은행 입출금 대장' },
+      { id: 'corporate_card', name: '법인카드 매입정산' },
+      { id: 'cash_flow', name: '자금 흐름 분석' },
+      { id: 'depreciation_execution', name: '감가상각 마감 실행' },
+      { id: 'regular_reports', name: '정기보고서 생성' },
+      { id: 'kiyeun_contract_status', name: '계약현황(기연전용)' }
+    ]
+  },
+  {
+    id: 'grp_management_special',
+    name: '경영관리 - 특수',
+    items: [
+      { id: 'organization', name: '조직 인사 관리' },
+      { id: 'permission', name: '사용자 및 권한' },
+      { id: 'manual_dictionary', name: '전사 업무 매뉴얼 사전' },
+      { id: 'payroll', name: '급여 정산' },
+      { id: 'leave_management', name: '연차관리' },
+      { id: 'privacy_audit', name: '개인정보 접속 감사' }
+    ]
+  },
+  {
+    id: 'grp_tools',
+    name: '도구 및 다운로드',
+    items: [
+      { id: 'operations_manual', name: '업무매뉴얼' },
+      { id: 'error_report', name: '오류 신고' }
+    ]
+  },
+  {
+    id: 'grp_system_dev',
+    name: '시스템관리 - 개발자',
+    items: [
+      { id: 'agentic_ai_lab', name: '지능형 실험실' },
+      { id: 'agentic_dispatch_studio', name: '배차 관제 스튜디오' },
+      { id: 'agentic_settlement_autopilot', name: '월말 대사 정산' },
+      { id: 'agentic_asset_lifecycle', name: '자산 라이프사이클 관제' },
+      { id: 'initial_db_upload', name: '초기 데이터 업로드' },
+      { id: 'dev_uploader', name: '데이터 업로더' },
+      { id: 'tenant_management', name: '테넌트 관리' }
+    ]
+  }
+];
+
+// 전사 모든 menuId 목록 추출 도우미
+export const getAllSystemMenuIds = (): string[] => {
+  const ids: string[] = [];
+  SYSTEM_MENU_CONFIG.forEach(grp => {
+    grp.items.forEach(item => {
+      ids.push(item.id);
+    });
+  });
+  return ids;
+};
+
+// 전사 복수형/변형 메뉴 ID를 단일 표준 단수형 ID로 정규화하는 별칭 맵
+export const CANONICAL_MENU_ALIASES: Record<string, string> = {
+  'consumables': 'consumable_stock',
+  'consumable': 'consumable_stock',
+  'consumable-purchase': 'consumable_purchase',
+  'consumable-purchases': 'consumable_purchase',
+  'consumable_purchases': 'consumable_purchase',
+  'consumable-inout': 'consumable_inout',
+  'consumable-stock': 'consumable_stock',
+  'repairs': 'repair',
+  'repairing': 'repair',
+  'as_route_tracking': 'as_route_tracking',
+  'asRouteTracking': 'as_route_tracking',
+  'billings': 'billing',
+  'contracts': 'contract',
+  'customers': 'customer',
+  'deliveries': 'delivery',
+  'products': 'product',
+  'assets': 'asset',
+  'sites': 'customer',
+  'organizations': 'organization',
+  'permissions': 'permission',
+  'dispatch': 'delivery',
+  'dispatches': 'delivery',
+  'truck_dispatch': 'delivery',
+  'truck-dispatch': 'delivery',
+  'delivery-dispatch': 'delivery',
+  'approvalinbox': 'approvalInbox',
+  'approval-inbox': 'approvalInbox',
+  'approval_inbox': 'approvalInbox',
+  'approvalInbox': 'approvalInbox',
+  'approvalrules': 'approvalRules',
+  'approval-rules': 'approvalRules',
+  'approval_rules': 'approvalRules',
+  'approvalRules': 'approvalRules',
+  'smart-dispatch': 'smart_dispatch4',
+  'smart_dispatch': 'smart_dispatch4',
+  'smart-dispatch4': 'smart_dispatch4',
+  'smart_dispatch4': 'smart_dispatch4',
+  'smart-return': 'smart_return',
+  'smart_return': 'smart_return',
+  'smart-as-request': 'smart_as_request',
+  'smart_as_request': 'smart_as_request',
+  'smart_as': 'smart_as_request',
+  'purchase_settlements': 'purchase_settlement',
+  'payrolls': 'payroll',
+  'corporate_cards': 'corporate_card',
+  'leave-ot': 'leave_ot',
+  'leave_application': 'leave_application',
+  'leave-application': 'leave_application',
+  'leave_apply': 'leave_application',
+  'leave-apply': 'leave_application',
+  'leave_applications': 'leave_application',
+  'leave_management': 'leave_management',
+  'leave-management': 'leave_management',
+  'ot_management': 'ot_management',
+  'ot-management': 'ot_management',
+  'overtime_management': 'ot_management',
+  'overtime-management': 'ot_management',
+  'overtime': 'ot_management',
+  'vehicle-log': 'vehicle_log',
+  'outbound_inspection': 'outbound_inspections',
+  'print_queue_monitor': 'print_queue_monitor',
+  'print-queue-monitor': 'print_queue_monitor',
+  'print_queue': 'print_queue_monitor',
+  'print-queue': 'print_queue_monitor',
+  'agent': 'agent_badge',
+  'agent-badge': 'agent_badge',
+  'agentbadge': 'agent_badge',
+  'privacy-audit': 'privacy_audit',
+  'privacy_access_logs': 'privacy_audit',
+  'privacy_access_log': 'privacy_audit',
+  'error_report': 'error_report',
+  'error-report': 'error_report',
+  'error_reports': 'error_report',
+  'error-reports': 'error_report',
+  'error': 'error_report',
+  'errors': 'error_report',
+  '오류신고': 'error_report',
+  'agentic-ai-lab': 'agentic_ai_lab',
+  'agentic-dispatch-studio': 'agentic_dispatch_studio',
+  'agentic-settlement-autopilot': 'agentic_settlement_autopilot',
+  'agentic-asset-lifecycle': 'agentic_asset_lifecycle',
+  'site_option': 'site_options',
+  'site-options': 'site_options',
+  'site-option': 'site_options',
+  'custom_billing': 'custom_billing',
+  'custom-billing': 'custom_billing',
+  'custom_statement': 'custom_billing',
+  'custom-statement': 'custom_billing',
+  '특수청구': 'custom_billing',
+  'tenant': 'tenant_management',
+  'tenants': 'tenant_management',
+  'tenant_management': 'tenant_management',
+  'tenant-management': 'tenant_management',
+  'tenantmanagement': 'tenant_management',
+  '테넌트': 'tenant_management',
+  '테넌트관리': 'tenant_management',
+  'data_formation': 'dev_uploader',
+  'data-formation': 'dev_uploader',
+  'dataformation': 'dev_uploader',
+  '초기자료형성': 'dev_uploader',
+  'contract_create': 'contract',
+  'contract-create': 'contract',
+  'billing_wizard': 'billing',
+  'billing-wizard': 'billing',
+  'billing_invoice': 'billing',
+  'billing-invoice': 'billing',
+  'billing_waiver': 'billing',
+  'billing-waiver': 'billing',
+  'sales_journals': 'sales_journal',
+  'sales-journal': 'sales_journal',
+  'salesjournal': 'sales_journal',
+  '영업일지': 'sales_journal',
+  'available-inventory': 'available_inventory',
+  'availableinventory': 'available_inventory',
+  '가용재고조회': 'available_inventory',
+  '가용재고': 'available_inventory',
+  'kiyeun-contract-status': 'kiyeun_contract_status',
+  'kiyeuncontractstatus': 'kiyeun_contract_status',
+  '계약현황': 'kiyeun_contract_status',
+  '계약현황(기연전용)': 'kiyeun_contract_status'
+};
+
+export function normalizeMenuId(menuId: string): string {
+  if (!menuId) return '';
+  const trimmed = menuId.trim();
+  const lower = trimmed.toLowerCase();
+  return CANONICAL_MENU_ALIASES[lower] || CANONICAL_MENU_ALIASES[trimmed] || (lower === 'approvalinbox' ? 'approvalInbox' : lower === 'approvalrules' ? 'approvalRules' : lower);
+}
+
+// menuId로 메뉴 한글 명칭 검색 도우미
+export const getMenuNameById = (menuId: string): string => {
+  const normId = normalizeMenuId(menuId);
+  for (const grp of SYSTEM_MENU_CONFIG) {
+    const item = grp.items.find(i => i.id === normId);
+    if (item) return item.name;
+  }
+  return menuId;
+};

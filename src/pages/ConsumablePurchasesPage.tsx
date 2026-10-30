@@ -1,0 +1,1043 @@
+// src/pages/ConsumablePurchasesPage.tsx
+import React, { useState, useMemo } from 'react';
+import { useApp } from '../context/AppContext';
+import { 
+  ShoppingCart, Plus, ClipboardList, Download, Search, RefreshCw, 
+  CheckCircle2, XCircle, Clock, FileText, Check, AlertCircle, AlertTriangle,
+  ExternalLink, FileSpreadsheet
+} from 'lucide-react';
+import { exportToExcel } from '../services/excel';
+import { Consumable, ConsumablePurchaseRequest, db } from '../services/db';
+import { ExcelUploadModal, ExcelColumnDef } from '../components/ExcelUploadModal';
+import { PurchaseStatementModal } from '../components/PurchaseStatementModal';
+import { SortableTh } from '../components/SortableTh';
+import { useSortableData } from '../hooks/useSortableData';
+import { createHangulMatcher } from '../utils/hangulSearch';
+import { useApproval } from '../hooks/useApproval';
+
+export const ConsumablePurchasesPage: React.FC = () => {
+  const {
+    consumables,
+    consumablePurchases,
+    vendors,
+    requestConsumablePurchase,
+    acceptConsumablePurchase,
+    completeConsumablePurchase,
+    updatePurchaseUnitPrice,
+    updateEvidenceFileUrls,
+    savePurchaseStatementFile,
+    hasPermission,
+    currentUser,
+    showErrorModal
+  } = useApp();
+  const { isRuleEnabled, createApprovalRequest } = useApproval();
+
+  const canSave = hasPermission('consumable_purchase', 'save') || hasPermission('consumable', 'save');
+
+  // O(1) 소모품 품목명 매핑
+  const { consumableByExactNameMap, consumableByLowerNameMap } = useMemo(() => {
+    const exactMap = new Map<string, Consumable>();
+    const lowerMap = new Map<string, Consumable>();
+    for (const c of consumables) {
+      if (c.modelName) {
+        exactMap.set(c.modelName, c);
+        lowerMap.set(c.modelName.toLowerCase(), c);
+      }
+    }
+    return { consumableByExactNameMap: exactMap, consumableByLowerNameMap: lowerMap };
+  }, [consumables]);
+
+  // 활성 탭: REQ_WRITE (구매신청등록) | REQ_LIST (구매신청대장)
+  const [activeTab, setActiveTab] = useState<'REQ_WRITE' | 'REQ_LIST'>('REQ_LIST');
+
+  // 엑셀 일괄 업로드 모달 상태
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
+  // 매입거래명세서 열람 및 파일 저장 모달 대상 구매건
+  const [statementTargetPurchaseId, setStatementTargetPurchaseId] = useState<string | null>(null);
+
+  // 엑셀 일괄 업로드 컬럼 정의
+  const consumableExcelColumns: ExcelColumnDef[] = [
+    { key: 'modelName', label: '품목명', required: true, sample: '유압작동유 46' },
+    { key: 'requestedQty', label: '신청수량', required: true, type: 'number', sample: 10 },
+    { key: 'unitPrice', label: '예상단가', required: true, type: 'number', sample: 45000 },
+    { key: 'sellerName', label: '공급처/구매처', required: true, sample: '삼화윤활유' },
+    { key: 'requestDate', label: '신청일자', type: 'date', sample: '2026-09-12' },
+    { key: 'purpose', label: '용도및비고', sample: '주기장 정비용' },
+  ];
+
+  // 엑셀 일괄 등록 처리 핸들러
+  const handleBatchUploadConsumables = async (rows: Record<string, any>[]) => {
+    let successCount = 0;
+    const today = new Date().toISOString().split('T')[0];
+
+    for (const row of rows) {
+      const modelName = String(row.modelName || '').trim();
+      if (!modelName) continue;
+      const qty = Math.max(1, Number(row.requestedQty) || 1);
+      const unitPrice = Math.max(0, Number(row.unitPrice) || 0);
+      const sellerName = String(row.sellerName || '일괄구매처').trim();
+      const requestDate = row.requestDate || today;
+
+      const matched = consumableByLowerNameMap.get(modelName.toLowerCase());
+
+      await requestConsumablePurchase({
+        consumableId: matched ? matched.id : undefined,
+        modelName,
+        qty,
+        unitPrice,
+        requestDate,
+        sellerName
+      });
+      successCount++;
+    }
+
+    await db.awaitPendingWrites();
+    showToast(`${successCount}건의 소모품 구매신청이 일괄 등록되었습니다.`);
+    return { successCount, message: '정상 등록 완료' };
+  };
+
+  // 토스트 알림 상태
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // --- 1. 구매신청 작성 폼 상태 ---
+  interface DraftReqItem {
+    id: string;
+    consumableId: string;
+    modelName: string;
+    qty: number;
+    unitPrice: number;
+    sellerName: string;
+    purchaseUrl: string;
+    vendorId?: string;
+    paymentMethod?: 'CARD' | 'CREDIT';
+  }
+  
+  const [reqItems, setReqItems] = useState<DraftReqItem[]>([
+    { id: Date.now().toString(), consumableId: 'NEW', modelName: '', qty: 1, unitPrice: 0, sellerName: '', purchaseUrl: '', vendorId: undefined, paymentMethod: undefined }
+  ]);
+  const [cartScreenshotUrl, setCartScreenshotUrl] = useState<string>('');
+  const [reqDate, setReqDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // 편집(인라인 단가 수정) 상태
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editPriceValue, setEditPriceValue] = useState<number>(0);
+
+  // --- 2. 구매신청 대장 필터 상태 ---
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'REQUESTED' | 'ACCEPTED' | 'COMPLETED'>('ALL');
+  const thisMonthStart = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`; })();
+  const thisMonthEnd = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()).padStart(2,'0')}`; })();
+  const [startDate, setStartDate] = useState(thisMonthStart);
+  const [endDate, setEndDate] = useState(thisMonthEnd);
+
+  // 구매 신청 통계 요약 (Z-패턴 상단 Scope - Single-pass)
+  const purchaseSummary = useMemo(() => {
+    const ym = new Date().toISOString().substring(0, 7);
+    let totalRequested = 0;
+    let pendingCount = 0;
+    let completedCount = 0;
+    let totalAmount = 0;
+    for (const p of consumablePurchases) {
+      if (!p.requestDate?.startsWith(ym)) continue;
+      totalRequested++;
+      if (p.status === 'REQUESTED') pendingCount++;
+      else if (p.status === 'COMPLETED') completedCount++;
+      totalAmount += p.requestedQty * (p.unitPrice || 0);
+    }
+    return { totalRequested, pendingCount, completedCount, totalAmount };
+  }, [consumablePurchases]);
+
+  // 필터링된 구매신청 목록
+  const filteredPurchases = useMemo(() => {
+    const matcher = searchTerm ? createHangulMatcher(searchTerm) : null;
+    return consumablePurchases.filter(p => {
+      const matchSearch = !matcher || matcher.testAny([
+        p.modelName,
+        p.sellerName,
+        p.requesterName,
+        p.id
+      ]);
+      
+      const matchStatus = statusFilter === 'ALL' || p.status === statusFilter;
+      const matchDate = (!startDate || p.requestDate >= startDate) && (!endDate || p.requestDate <= endDate);
+
+      return matchSearch && matchStatus && matchDate;
+    }).sort((a, b) => b.requestDate.localeCompare(a.requestDate));
+  }, [consumablePurchases, searchTerm, statusFilter, startDate, endDate]);
+
+  // 필터링된 구매신청 하단 합계
+  const filteredFooterTotals = useMemo(() => {
+    let totalQty = 0;
+    let totalAmount = 0;
+    for (const p of filteredPurchases) {
+      totalQty += p.requestedQty;
+      totalAmount += p.requestedQty * p.unitPrice;
+    }
+    return { totalQty, totalAmount };
+  }, [filteredPurchases]);
+
+  const { items: sortedPurchases, sortConfig, requestSort } = useSortableData<ConsumablePurchaseRequest>(
+    filteredPurchases,
+    { key: 'requestDate', direction: 'desc' },
+    (p, key) => {
+      switch (key) {
+        case 'id': return p.id;
+        case 'requestDate': return p.requestDate;
+        case 'modelName': return p.modelName;
+        case 'requestedQty': return p.requestedQty || 0;
+        case 'unitPrice': return p.unitPrice || 0;
+        case 'totalPrice': return (p.requestedQty || 0) * (p.unitPrice || 0);
+        case 'sellerName': return p.sellerName || p.purchaseUrl || '';
+        case 'requester': return p.requesterName || '';
+        case 'status': return p.status;
+        default: return (p as any)[key];
+      }
+    }
+  );
+
+  // 구매신청서 제출 핸들러
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reqItems.length === 0) {
+      showToast('최소 1개의 품목을 추가해 주세요.', 'error');
+      return;
+    }
+
+    for (const item of reqItems) {
+      if (!item.modelName.trim()) {
+        showToast('품목명을 입력해 주세요.', 'error');
+        return;
+      }
+      if (item.qty <= 0) {
+        showToast('수량은 1개 이상이어야 합니다.', 'error');
+        return;
+      }
+      if (!item.sellerName.trim() && !item.purchaseUrl.trim()) {
+        showToast('공급처 또는 구매 URL을 입력해 주세요.', 'error');
+        return;
+      }
+    }
+
+    try {
+      const ruleActive = isRuleEnabled('CONSUMABLE_PURCHASE_PAYMENT');
+      for (const item of reqItems) {
+        await requestConsumablePurchase({
+          consumableId: item.consumableId === 'NEW' ? undefined : item.consumableId,
+          modelName: item.modelName.trim(),
+          qty: item.qty,
+          unitPrice: item.unitPrice,
+          requestDate: reqDate,
+          sellerName: item.sellerName.trim() || '온라인 구매',
+          purchaseUrl: item.purchaseUrl.trim(),
+          requestAttachmentUrl: cartScreenshotUrl.trim() || undefined,
+          vendorId: item.vendorId,
+          paymentMethod: item.paymentMethod
+        });
+      }
+      await db.awaitPendingWrites();
+
+      if (ruleActive) {
+        const totalExpected = reqItems.reduce((acc, item) => acc + (item.qty * item.unitPrice), 0);
+        const latestReq = [...(db.consumablePurchases || [])].reverse()[0];
+        await createApprovalRequest({
+          eventCode: 'CONSUMABLE_PURCHASE_PAYMENT',
+          targetTable: 'consumable_purchases',
+          targetId: latestReq?.id || `CP-${Date.now()}`,
+          amount: totalExpected,
+          payload: {
+            actionType: 'CONSUMABLE_PURCHASE_PAYMENT',
+            reason: `소모품 매입 결제 품의 (${reqItems.map(i => `${i.modelName} ${i.qty}개`).join(', ')})`,
+            toBe: {
+              items: reqItems,
+              totalAmount: totalExpected,
+              requestDate: reqDate
+            }
+          }
+        });
+        showToast(`소모품 구매 품의가 상신되었습니다. (${reqItems.length}개 품목)`);
+      } else {
+        showToast(`구매 신청서가 제출되었습니다. (${reqItems.length}개 품목)`);
+      }
+      setActiveTab('REQ_LIST');
+      
+      // 폼 초기화
+      setReqItems([
+        { id: Date.now().toString(), consumableId: 'NEW', modelName: '', qty: 1, unitPrice: 0, sellerName: '', purchaseUrl: '', vendorId: undefined, paymentMethod: undefined }
+      ]);
+      setCartScreenshotUrl('');
+    } catch (err: any) {
+      showErrorModal(`구매 신청 등록 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 인라인 단가 수정 핸들러
+  const handleSavePrice = async (id: string) => {
+    try {
+      await updatePurchaseUnitPrice(id, editPriceValue);
+      await db.awaitPendingWrites();
+      showToast('단가가 성공적으로 변경되었습니다.');
+      setEditingPriceId(null);
+    } catch (e: any) {
+      showErrorModal(`단가 변경 실패:\n${e.message || e}`);
+    }
+  };
+
+  // 구매신청 접수/승인 핸들러
+  const handleAccept = async (id: string, modelName: string) => {
+    if (!canSave) return;
+    try {
+      await acceptConsumablePurchase(id);
+      await db.awaitPendingWrites();
+      showToast(`[${modelName}] 구매 신청이 승인/접수 처리되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(`승인 처리 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 구매완결 및 대금 지급요청 실행 핸들러
+  const handleCompleteAndRequestPayment = async (p: ConsumablePurchaseRequest) => {
+    try {
+      await completeConsumablePurchase(p.id);
+      await db.awaitPendingWrites();
+      showToast(`[${p.modelName}] 구매완결 및 월말 매입정산 대장에 지급요청이 등록되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(`구매 완결 및 지급요청 처리 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 엑셀 내보내기
+  const handleExportExcel = () => {
+    const excelData = sortedPurchases.map((p, idx) => ({
+      '순번': idx + 1,
+      '신청번호': p.id,
+      '신청일자': p.requestDate,
+      '품목명': p.modelName,
+      '신청수량': p.requestedQty,
+      '예상단가': `${(p.unitPrice || 0).toLocaleString()}원`,
+      '합계금액': `${((p.requestedQty || 0) * (p.unitPrice || 0)).toLocaleString()}원`,
+      '공급처/구매URL': p.sellerName,
+      '신청자': p.requesterName || '-',
+      '진행상태': p.status === 'COMPLETED' ? '구매완결(지급요청)' : (p.status === 'ACCEPTED' && (p.receivedQty || 0) > 0) ? '실물입고됨' : p.status === 'ACCEPTED' ? '승인접수' : '신청대기',
+      '입고수량': p.receivedQty || 0,
+      '완결일자': p.completedDate || '-',
+      '증빙링크': p.statementFileUrl || '-'
+    }));
+
+    exportToExcel(excelData, `소모품구매신청대장_${new Date().toISOString().split('T')[0]}`, '구매신청대장');
+  };
+
+  return (
+    <div data-hs-observe="consumablepurchasespage" data-mid="consumable_purchase-header" data-subview="consumable_purchase" data-subview-title="Generated" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* 🔔 인앱 토스트 알림 */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 9999,
+          padding: '10px 18px',
+          borderRadius: '6px',
+          backgroundColor: toastMessage.type === 'error' ? '#ef4444' : '#10b981',
+          color: '#ffffff',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          fontWeight: 600,
+          fontSize: '13px'
+        }}>
+          {toastMessage.text}
+        </div>
+      )}
+
+      {/* ── 1. 화면 헤더 (무수식어 건조 표준 3.1) ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div data-mid="consumable_purchase-header">
+          <h2 style={{ fontWeight: '800', margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingCart size={22} color="var(--primary)" />
+            <span>소모품 구매</span>
+          </h2>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '3px' }}>
+            소모품 구매 신청 등록 및 구매 신청 대장
+          </div>
+        </div>
+
+        {/* 우측 파이프라인 버튼군 - 표준 횡배치: 엑셀업로드 -> 엑셀다운로드 */}
+        <div className="toolbar-actions">
+          {canSave && (
+            <button
+              data-uia="btn-excel-upload-consumable"
+              data-hs-trigger="Register"
+              className="btn-excel-upload"
+              onClick={() => setExcelModalOpen(true)}
+            >
+              <FileSpreadsheet size={13} />
+              <span>엑셀 일괄 등록</span>
+            </button>
+          )}
+          {activeTab === 'REQ_LIST' && (
+            <button 
+              className="btn-excel-download" 
+              onClick={handleExportExcel} 
+            >
+              <Download size={13} />
+              <span>구매대장 엑셀</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── 2. 핵심 지표 카드 ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 총 구매신청</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--text-main)' }}>
+            {purchaseSummary.totalRequested}건
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>승인 대기 건수</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: purchaseSummary.pendingCount > 0 ? '#f59e0b' : 'var(--text-main)' }}>
+            {purchaseSummary.pendingCount}건
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>입고 완료 건수</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: '#10b981' }}>
+            {purchaseSummary.completedCount}건
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 예상 총 구매액</div>
+          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--primary)' }}>
+            ₩{purchaseSummary.totalAmount.toLocaleString()}원
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. 상단 2대 탭 바 (규격 3.1 명칭) ── */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '2px' }}>
+        <button
+          className={activeTab === 'REQ_LIST' ? 'btn-primary' : 'btn-secondary'}
+          onClick={() => setActiveTab('REQ_LIST')}
+          style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700' }}
+        >
+          <ClipboardList size={15} />
+          <span>구매신청대장</span>
+          <span style={{ fontSize: '11px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: '10px' }}>
+            {consumablePurchases.length}
+          </span>
+        </button>
+
+        {canSave && (
+          <button data-hs-trigger="Register"
+            className={activeTab === 'REQ_WRITE' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => setActiveTab('REQ_WRITE')}
+            style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700' }}
+          >
+            <Plus size={15} />
+            <span>구매신청등록</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── 4. 탭 1: 구매신청대장 ── */}
+      {activeTab === 'REQ_LIST' && (
+        <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* 필터 바 (3.4 상하 세로 스택 & 3.2 줄바꿈 방지) */}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', backgroundColor: 'var(--bg-app)', padding: '12px', borderRadius: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', whiteSpace: 'nowrap' }}>검색어</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="품목명, 공급처, 신청자, 신청번호"
+                style={{ padding: '6px 10px', fontSize: '12px', width: '220px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', whiteSpace: 'nowrap' }}>진행 상태</label>
+              <select 
+                value={statusFilter} 
+                onChange={e => setStatusFilter(e.target.value as any)} 
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', whiteSpace: 'nowrap' }}
+              >
+                <option value="ALL">전체 상태</option>
+                <option value="REQUESTED">신청대기</option>
+                <option value="ACCEPTED">승인접수</option>
+                <option value="COMPLETED">입고완료</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', whiteSpace: 'nowrap' }}>신청 기간</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={e => setStartDate(e.target.value)} 
+                  style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }} 
+                />
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>~</span>
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={e => setEndDate(e.target.value)} 
+                  style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }} 
+                />
+              </div>
+            </div>
+
+            {(searchTerm || statusFilter !== 'ALL' || startDate !== thisMonthStart || endDate !== thisMonthEnd) && (
+              <button
+                className="btn-secondary"
+                onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); setStartDate(thisMonthStart); setEndDate(thisMonthEnd); }}
+                style={{ padding: '6px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+              >
+                <RefreshCw size={12} />
+                <span>필터 초기화</span>
+              </button>
+            )}
+          </div>
+
+          {/* 고밀도 대사 그리드 (3.6 유형 B) */}
+          <div className="table-container" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
+            <table data-uia="table-consumable-purchases" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                  <SortableTh sortKey="id" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>신청번호</SortableTh>
+                  <SortableTh sortKey="requestDate" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>신청일자</SortableTh>
+                  <SortableTh sortKey="modelName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>품목명</SortableTh>
+                  <SortableTh sortKey="requestedQty" currentSort={sortConfig} onSort={requestSort} align="center" style={{ padding: '8px 10px' }}>수량</SortableTh>
+                  <SortableTh sortKey="unitPrice" currentSort={sortConfig} onSort={requestSort} align="right" style={{ padding: '8px 10px' }}>예상단가</SortableTh>
+                  <SortableTh sortKey="totalPrice" currentSort={sortConfig} onSort={requestSort} align="right" style={{ padding: '8px 10px' }}>합계금액</SortableTh>
+                  <SortableTh sortKey="sellerName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>공급처 / 구매 URL</SortableTh>
+                  <SortableTh sortKey="requester" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>신청자</SortableTh>
+                  <th style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>증빙</th>
+                  <SortableTh sortKey="status" currentSort={sortConfig} onSort={requestSort} align="center" style={{ padding: '8px 10px' }}>진행상태</SortableTh>
+                  <th style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>관리 / 조치</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPurchases.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+                      조회 조건에 해당하는 구매 신청 내역이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  sortedPurchases.map(p => {
+                    const isUrl = (p.sellerName || '').toLowerCase().startsWith('http://') || 
+                                  (p.sellerName || '').toLowerCase().startsWith('https://') || 
+                                  (p.sellerName || '').toLowerCase().startsWith('www.');
+                    const isInbounded = (p.receivedQty || 0) > 0;
+                    const isFullyInbounded = isInbounded && (p.receivedQty >= p.requestedQty);
+
+                    return (
+                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '8px 10px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {p.id}
+                        </td>
+                        <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>{p.requestDate}</td>
+                        <td style={{ padding: '8px 10px', fontWeight: '700', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                          {p.modelName}
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                          <span>{p.requestedQty}개</span>
+                          {isInbounded && (
+                            <span style={{ fontSize: '11px', color: isFullyInbounded ? '#059669' : '#0284c7', marginLeft: '4px', fontWeight: '600' }}>
+                              ({isFullyInbounded ? `입고: ${p.receivedQty}개` : `부분: ${p.receivedQty}/${p.requestedQty}`})
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {editingPriceId === p.id ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                              <input 
+                                type="number" 
+                                value={editPriceValue} 
+                                onChange={e => setEditPriceValue(Number(e.target.value))}
+                                style={{ width: '80px', padding: '2px 4px', fontSize: '11px' }}
+                              />
+                              <button data-hs-trigger="Save" onClick={() => handleSavePrice(p.id)} className="btn-primary" style={{ padding: '2px 6px', fontSize: '11px' }}>저장</button>
+                              <button onClick={() => setEditingPriceId(null)} className="btn-secondary" style={{ padding: '2px 6px', fontSize: '11px' }}>취소</button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                              <span>₩{(p.unitPrice || 0).toLocaleString()}원</span>
+                              {p.status !== 'COMPLETED' && canSave && (
+                                <button 
+                                  onClick={() => { setEditingPriceId(p.id); setEditPriceValue(p.unitPrice || 0); }}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)' }}
+                                  title="단가 수정"
+                                >
+                                  ✏️
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+                          ₩{((p.requestedQty || 0) * (p.unitPrice || 0)).toLocaleString()}원
+                        </td>
+                        <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <span>{p.sellerName || '-'}</span>
+                            {p.purchaseUrl && (
+                              <a 
+                                href={p.purchaseUrl.startsWith('http') ? p.purchaseUrl : `https://${p.purchaseUrl}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                style={{ 
+                                  color: 'var(--primary)', 
+                                  textDecoration: 'underline', 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: '3px', 
+                                  fontWeight: 700,
+                                  fontSize: '11px'
+                                }}
+                              >
+                                <span>구매 링크</span>
+                                <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>{p.requesterName || '-'}</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => setStatementTargetPurchaseId(p.id)}
+                            style={{
+                              padding: '3px 7px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              border: p.statementFileUrl ? '1px solid #10b981' : '1px solid var(--border-color)',
+                              backgroundColor: p.statementFileUrl ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-app)',
+                              color: p.statementFileUrl ? '#059669' : 'var(--text-secondary)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title="매입거래명세서 열람 및 원본 파일 저장"
+                          >
+                            <FileText size={11} />
+                            <span>{p.statementFileUrl ? '매입명세서 열람' : '명세서 저장/열람'}</span>
+                          </button>
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            backgroundColor: p.status === 'COMPLETED' ? 'rgba(16, 185, 129, 0.12)' : 
+                                             (p.status === 'ACCEPTED' && isInbounded) ? 'rgba(6, 182, 212, 0.12)' :
+                                             p.status === 'ACCEPTED' ? 'rgba(59, 130, 246, 0.12)' : 
+                                             'rgba(245, 158, 11, 0.12)',
+                            color: p.status === 'COMPLETED' ? '#059669' : 
+                                   (p.status === 'ACCEPTED' && isInbounded) ? '#0891b2' :
+                                   p.status === 'ACCEPTED' ? '#2563eb' : 
+                                   '#d97706'
+                          }}>
+                            {p.status === 'COMPLETED' ? '구매완결' : 
+                             (p.status === 'ACCEPTED' && isFullyInbounded) ? `실물입고됨` :
+                             (p.status === 'ACCEPTED' && isInbounded) ? `부분입고(${p.receivedQty})` :
+                             p.status === 'ACCEPTED' ? '승인접수' : '신청대기'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {/* 1. 신청대기: 승인 버튼 */}
+                          {p.status === 'REQUESTED' && canSave && (
+                            <button
+                              data-uia={`btn-accept-purchase-${p.id}`}
+                              data-hs-trigger="Approve"
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => handleAccept(p.id, p.modelName)}
+                              style={{ padding: '3px 8px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                            >
+                              승인
+                            </button>
+                          )}
+
+                          {/* 2. 승인접수 및 실물입고됨: 구매신청자의 최종 완결 및 지급요청 버튼 */}
+                          {p.status === 'ACCEPTED' && isInbounded && (
+                            <button data-hs-trigger="Confirm"
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => handleCompleteAndRequestPayment(p)}
+                              style={{ 
+                                padding: '3px 9px', 
+                                fontSize: '11px', 
+                                fontWeight: 700, 
+                                backgroundColor: 'var(--success)', 
+                                borderColor: 'var(--success)', 
+                                color: '#ffffff',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                whiteSpace: 'nowrap'
+                              }}
+                              title="실물 입고 확인 후 구매완결 및 월말 매입정산에 지급요청 생성"
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>구매완결 및 지급요청</span>
+                            </button>
+                          )}
+
+                          {/* 3. 승인접수 후 아직 실물 미입고: 입고대기 안내 (관리자는 즉시완결 가능) */}
+                          {p.status === 'ACCEPTED' && !isInbounded && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                              <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '600' }}>입고대기</span>
+                              {canSave && (
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  onClick={() => handleCompleteAndRequestPayment(p)}
+                                  style={{ padding: '2px 5px', fontSize: '10px', whiteSpace: 'nowrap' }}
+                                  title="실물 입고 없이 즉시 구매완결 및 지급요청"
+                                >
+                                  즉시완결
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 4. 구매완결: 완료 및 지급요청됨 표시 */}
+                          {p.status === 'COMPLETED' && (
+                            <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Check size={12} />
+                              <span>지급요청완료</span>
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 우하단 대차대조식 요약 (Gutenberg Z-패턴 4단계) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '10px', fontSize: '12px' }}>
+            <div style={{ display: 'flex', gap: '16px', fontWeight: '600' }}>
+              <span>조회 합계: <strong>{filteredPurchases.length}건</strong></span>
+              <span>총 수량: <strong>{filteredFooterTotals.totalQty}개</strong></span>
+              <span style={{ color: 'var(--primary)' }}>
+                총 예상 금액: <strong>₩{filteredFooterTotals.totalAmount.toLocaleString()}원</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 5. 탭 2: 구매신청등록 ── */}
+      {activeTab === 'REQ_WRITE' && (
+        <div className="card" style={{ maxWidth: '640px', margin: '0 auto', width: '100%', padding: '20px' }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+            소모품 구매 신청서 작성
+          </h3>
+
+          <form onSubmit={handleRequestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <datalist id="consumable-models">
+              {consumables.map(c => <option key={c.id} value={c.modelName} />)}
+            </datalist>
+
+            {reqItems.map((item, index) => (
+              <div key={item.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>품목 #{index + 1}</span>
+                  {reqItems.length > 1 && (
+                    <button data-hs-trigger="Delete"
+                      type="button"
+                      onClick={() => setReqItems(prev => prev.filter((_, i) => i !== index))}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                    >
+                      삭제 ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* 품목명 (스마트 콤보박스) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>품목명 *</label>
+                  <input
+                    type="text"
+                    list="consumable-models"
+                    value={item.modelName}
+                    onChange={e => {
+                      const val = e.target.value;
+                      const matched = consumableByExactNameMap.get(val);
+                      setReqItems(prev => {
+                        const newArr = [...prev];
+                        newArr[index] = { 
+                          ...newArr[index], 
+                          modelName: val, 
+                          consumableId: matched ? matched.id : 'NEW',
+                          unitPrice: matched ? matched.unitPrice : newArr[index].unitPrice,
+                          sellerName: matched && matched.supplier ? matched.supplier : newArr[index].sellerName
+                        };
+                        return newArr;
+                      });
+                    }}
+                    placeholder="품목명을 입력하거나 목록에서 선택 (신규 입력시 자동 등록)"
+                    required
+                    style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {/* 수량 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>신청 수량 *</label>
+                    <input
+                      type="number"
+                      value={item.qty}
+                      onChange={e => {
+                        const val = Math.max(1, parseInt(e.target.value) || 1);
+                        setReqItems(prev => {
+                          const newArr = [...prev];
+                          newArr[index].qty = val;
+                          return newArr;
+                        });
+                      }}
+                      min={1}
+                      required
+                      style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                    />
+                  </div>
+
+                  {/* 단가 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>예상 단가 (원) *</label>
+                    <input
+                      type="number"
+                      value={item.unitPrice}
+                      onChange={e => {
+                        const val = Math.max(0, parseInt(e.target.value) || 0);
+                        setReqItems(prev => {
+                          const newArr = [...prev];
+                          newArr[index].unitPrice = val;
+                          return newArr;
+                        });
+                      }}
+                      min={0}
+                      required
+                      style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* 판매처 & 구매 URL */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>판매처 (상호)</label>
+                    <input
+                      type="text"
+                      value={item.sellerName}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setReqItems(prev => {
+                          const newArr = [...prev];
+                          newArr[index].sellerName = val;
+                          return newArr;
+                        });
+                      }}
+                      placeholder="예: 세방상사"
+                      style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>구매 URL</label>
+                      {item.paymentMethod && (
+                        <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: item.paymentMethod === 'CARD' ? 'rgba(59, 130, 246, 0.12)' : 'rgba(16, 185, 129, 0.12)', color: item.paymentMethod === 'CARD' ? '#2563eb' : '#059669', fontWeight: 'bold' }}>
+                          {item.paymentMethod === 'CARD' ? '법인카드' : '외상매입'} 자동지정됨
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={item.purchaseUrl}
+                      onChange={e => {
+                        const val = e.target.value;
+                        
+                        let autoVendorId: string | undefined = undefined;
+                        let autoPaymentMethod: 'CARD' | 'CREDIT' | undefined = undefined;
+                        let autoSellerName: string | undefined = undefined;
+
+                        try {
+                          if (val.startsWith('http')) {
+                            const parsedUrl = new URL(val);
+                            const hostname = parsedUrl.hostname.toLowerCase();
+                            
+                            const matchedVendor = vendors.find(v => v.domainUrls?.some(domain => hostname.includes(domain.toLowerCase())));
+                            if (matchedVendor) {
+                              autoVendorId = matchedVendor.id;
+                              autoPaymentMethod = matchedVendor.defaultPaymentMethod;
+                              autoSellerName = matchedVendor.name;
+                            }
+                          }
+                        } catch (err) {
+                          // ignore URL parse errors
+                        }
+
+                        setReqItems(prev => {
+                          const newArr = [...prev];
+                          newArr[index].purchaseUrl = val;
+                          if (autoVendorId) {
+                            newArr[index].vendorId = autoVendorId;
+                            newArr[index].sellerName = autoSellerName || newArr[index].sellerName;
+                            newArr[index].paymentMethod = autoPaymentMethod;
+                          } else if (!val) {
+                            newArr[index].vendorId = undefined;
+                            newArr[index].paymentMethod = undefined;
+                          }
+                          return newArr;
+                        });
+                      }}
+                      placeholder="온라인 구매 링크"
+                      style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setReqItems(prev => [...prev, { id: Date.now().toString(), consumableId: 'NEW', modelName: '', qty: 1, unitPrice: 0, sellerName: '', purchaseUrl: '' }])}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px', fontSize: '12px', borderStyle: 'dashed' }}
+            >
+              <Plus size={14} />
+              <span>품목 추가</span>
+            </button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>신청 일자 *</label>
+                <input
+                  type="date"
+                  value={reqDate}
+                  onChange={e => setReqDate(e.target.value)}
+                  required
+                  style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>장바구니 캡처 URL (선택)</label>
+                <input
+                  type="text"
+                  value={cartScreenshotUrl}
+                  onChange={e => setCartScreenshotUrl(e.target.value)}
+                  placeholder="이미지 또는 파일 링크"
+                  style={{ padding: '8px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}
+                />
+              </div>
+            </div>
+
+            {/* 총 예상 비용 요약 카드 */}
+            <div style={{ padding: '14px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>예상 총 구매비용:</span>
+              <strong style={{ fontSize: '16px', color: 'var(--primary)' }}>
+                ₩{reqItems.reduce((acc, item) => acc + (item.qty * item.unitPrice), 0).toLocaleString()}원
+              </strong>
+            </div>
+
+            {/* 하단 액션 버튼 */}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setActiveTab('REQ_LIST')}
+                style={{ padding: '8px 16px', fontSize: '12.5px' }}
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={reqItems.length === 0 || reqItems.some(it => !it.modelName.trim() || it.qty <= 0 || (!it.sellerName.trim() && !it.purchaseUrl.trim()))}
+                style={{ padding: '8px 20px', fontSize: '12.5px', fontWeight: '700' }}
+              >
+                {isRuleEnabled('CONSUMABLE_PURCHASE_PAYMENT') ? '상신' : '구매 신청서 제출'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* 소모품 매입거래명세서 열람 및 파일 저장 모달 */}
+      {statementTargetPurchaseId && (() => {
+        const targetReq = consumablePurchases.find(p => p.id === statementTargetPurchaseId);
+        if (!targetReq) return null;
+        const effectiveQty = (targetReq.receivedQty && targetReq.receivedQty > 0) ? targetReq.receivedQty : targetReq.requestedQty;
+        const totalAmt = effectiveQty * (targetReq.unitPrice || 0);
+        const matchedVendor = vendors.find(v => v.id === targetReq.vendorId || v.name === targetReq.sellerName);
+        return (
+          <PurchaseStatementModal
+            isOpen={Boolean(statementTargetPurchaseId)}
+            onClose={() => setStatementTargetPurchaseId(null)}
+            settlementId={targetReq.settlementId || targetReq.id}
+            settlementType="CONSUMABLE"
+            settlementYm={(targetReq.completedDate || targetReq.requestDate || new Date().toISOString()).slice(0, 7)}
+            vendorName={targetReq.sellerName || '소모품 공급처'}
+            vendorBizNo={matchedVendor?.bizRegNo}
+            vendorRepName={matchedVendor?.representative}
+            vendorPhone={matchedVendor?.contact}
+            vendorAddress={matchedVendor?.address}
+            vendorBankAccount={matchedVendor?.bankAccount ? `${matchedVendor.bankName || ''} ${matchedVendor.bankAccount} (${matchedVendor.accountHolder || ''})` : undefined}
+            status={targetReq.status === 'COMPLETED' ? 'CONFIRMED' : 'PENDING'}
+            confirmedAt={targetReq.completedDate}
+            confirmedBy={targetReq.completerName || targetReq.requesterName}
+            totalAmount={totalAmt}
+            statementFileUrl={targetReq.statementFileUrl}
+            items={[
+              {
+                id: targetReq.id,
+                date: targetReq.requestDate,
+                description: `${targetReq.modelName} (${targetReq.requestDate})`,
+                quantity: effectiveQty,
+                unitPrice: targetReq.unitPrice || 0,
+                amount: totalAmt,
+                evidenceFileUrl: targetReq.statementFileUrl
+              }
+            ]}
+            onSaveStatementFile={async (fileUrl, fileName) => {
+              await updateEvidenceFileUrls([{ id: targetReq.id, url: fileUrl }]);
+              if (targetReq.settlementId) {
+                await savePurchaseStatementFile(targetReq.settlementId, fileUrl, fileName);
+              }
+              showToast(`[${targetReq.modelName}] 매입거래명세서 파일(${fileName})이 저장되었습니다.`);
+            }}
+          />
+        );
+      })()}
+
+      {/* 엑셀 일괄 업로드 모달 */}
+      <ExcelUploadModal
+        isOpen={excelModalOpen}
+        onClose={() => setExcelModalOpen(false)}
+        title="소모품 구매 신청 엑셀 일괄 등록"
+        templateFileName="소모품_구매신청_일괄등록"
+        columns={consumableExcelColumns}
+        onUpload={handleBatchUploadConsumables}
+      />
+    </div>
+  );
+};

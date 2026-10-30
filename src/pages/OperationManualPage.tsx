@@ -1,0 +1,1100 @@
+// src/pages/OperationManualPage.tsx
+// 전사 업무매뉴얼 — 존재하는 모든 메뉴 기능(51개)의 본질적 업무 목적 및 표준 업무 편람
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import {
+  Printer, BookOpen, Building2, Truck, Wrench, Briefcase, Search,
+  CheckCircle2, AlertCircle, ChevronRight, ChevronDown, ZoomIn, ZoomOut,
+  RotateCcw, Shield, Layers, TrendingUp, Settings, Terminal, CheckSquare,
+  Sparkles, ExternalLink, Filter, HelpCircle, ArrowRight, CornerDownRight, Workflow
+} from 'lucide-react';
+import { ALL_MENU_MANUALS, MenuManualDetail } from '../data/allMenuManuals';
+import { useManual } from '../hooks/useManual';
+import { useManualContext } from '../components/manual/ManualContext';
+import { useApp } from '../context/AppContext';
+import { fetchCentralSystemManuals, SystemManualItem } from '../services/centralDb';
+
+type DeptFilter = 'all' | 'sales' | 'inout' | 'maintenance' | 'logistics' | 'management' | 'special' | 'dev';
+
+export const OperationManualPage: React.FC = () => {
+  const { hasPermission, showErrorModal } = useApp();
+  const [selectedMenuId, setSelectedMenuId] = useState<string>('dashboard');
+  const [deptFilter, setDeptFilter] = useState<DeptFilter>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [viewMode, setViewMode] = useState<'single' | 'all'>('single');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    grp_top: true,
+    grp_approval: true,
+    grp_sales: true,
+    grp_product_asset: true,
+    grp_logistics: true,
+    grp_inout: true,
+    grp_maintenance: true,
+    grp_management: true,
+    grp_management_special: true,
+    grp_tools: true,
+    grp_system_dev: true,
+  });
+
+  const { seedAllManuals, saving } = useManual();
+  const { startGuidedTour } = useManualContext();
+  const [seedingSuccess, setSeedingSuccess] = useState<string | null>(null);
+
+  // 중앙 DB system_manuals 동적 로드 상태
+  const [centralManuals, setCentralManuals] = useState<SystemManualItem[]>([]);
+  const [loadingCentral, setLoadingCentral] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchCentralSystemManuals().then(items => {
+      if (isMounted && items && items.length > 0) {
+        setCentralManuals(items);
+      }
+    }).catch(err => {
+      console.warn('[OperationManualPage] Failed to load central system manuals:', err);
+    }).finally(() => {
+      if (isMounted) setLoadingCentral(false);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  // 중앙 DB system_manuals 우선 적용 + ALL_MENU_MANUALS 폴백 병합
+  const allManuals = useMemo<MenuManualDetail[]>(() => {
+    if (!centralManuals || centralManuals.length === 0) {
+      return ALL_MENU_MANUALS;
+    }
+
+    const centralMap = new Map<string, SystemManualItem>();
+    centralManuals.forEach(item => {
+      centralMap.set(item.menu_id, item);
+    });
+
+    // 1. 기존 ALL_MENU_MANUALS의 항목에 중앙 DB manual_url 병합 (개편된 최신 SSOT 명칭/목적 우선)
+    const merged = ALL_MENU_MANUALS.map(m => {
+      const c = centralMap.get(m.menuId);
+      if (!c) return m;
+      const isLatestSsot = (m.version || 1) >= 15;
+      return {
+        ...m,
+        menuName: isLatestSsot ? m.menuName : (c.title || m.menuName),
+        objective: isLatestSsot ? m.objective : (c.description || m.objective),
+        manualUrl: c.manual_url || m.manualUrl,
+      };
+    });
+
+    // 2. 중앙 DB에만 존재하는 신규 dynamic 메뉴 매뉴얼 추가 (폐기된 google_config 제외)
+    centralManuals.forEach(c => {
+      if (c.menu_id === 'google_config') return;
+      const exists = ALL_MENU_MANUALS.some(m => m.menuId === c.menu_id);
+      if (!exists) {
+        merged.push({
+          menuId: c.menu_id,
+          menuName: c.title || c.menu_id,
+          groupId: 'grp_tools',
+          groupName: '시스템/도구',
+          department: '전사 공통',
+          archetype: '유형 C: 대시보드 및 지식 포털 (대시보드 / 포털)',
+          objective: c.description || '중앙 플랫폼 등록 메뉴 매뉴얼입니다.',
+          scopeInfo: '중앙 SSOT 시스템 매뉴얼',
+          cognitiveSequence: ['1. 화면 접속 및 기본 안내 확인', '2. 업무 처리 및 결과 저장'],
+          auditResult: '정상 처리 및 이력 보존',
+          rulesCompliance: ['전사 시스템 개발 표준 헌장 준수'],
+          precautions: ['작업 전 데이터 검증 필수'],
+          version: 1,
+          annotations: [],
+          manualUrl: c.manual_url,
+        });
+      }
+    });
+
+    return merged;
+  }, [centralManuals]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleZoom = (delta: number) => {
+    setZoomLevel(prev => Math.min(Math.max(prev + delta, 80), 130));
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(100);
+  };
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const handleBatchSeed = async () => {
+    if (!window.confirm('전사 모든 메뉴의 표준 매뉴얼을 DB에 일괄 주입(동기화)하시겠습니까?')) return;
+    const res = await seedAllManuals();
+    setSeedingSuccess(`전사 매뉴얼 주입 완료! (성공: ${res.success}건, 실패: ${res.failed}건)`);
+    setTimeout(() => setSeedingSuccess(null), 5000);
+  };
+
+  // 권한 있는 메뉴만 사전 필터링 (SSOT 전사 단일 권한 체계 준수)
+  const permittedManuals = useMemo(() => {
+    return allManuals.filter(m => hasPermission(m.menuId, 'view'));
+  }, [allManuals, hasPermission]);
+
+  // 권한 없는 메뉴가 현재 선택되어 있는 경우 허가된 첫 번째 메뉴로 자동 전환
+  useEffect(() => {
+    if (permittedManuals.length > 0) {
+      const exists = permittedManuals.some(m => m.menuId === selectedMenuId);
+      if (!exists) {
+        setSelectedMenuId(permittedManuals[0].menuId);
+      }
+    }
+  }, [permittedManuals, selectedMenuId]);
+
+  // 가이드 투어 안전 시작 핸들러
+  const handleStartGuide = (menuId: string, processId?: string, menuName?: string) => {
+    if (!hasPermission(menuId, 'view')) {
+      showErrorModal(`'${menuName || menuId}' 메뉴에 대한 접근 권한이 없습니다.`, '접근 권한 제한');
+      return;
+    }
+    (startGuidedTour as any)?.(menuId, processId, menuName);
+  };
+
+  // 부서 매핑 필터 (권한 허가된 메뉴 대상)
+  const filteredManuals = useMemo(() => {
+    return permittedManuals.filter(m => {
+      // 1. 부서 필터
+      if (deptFilter === 'sales' && !m.groupId.includes('sales')) return false;
+      if (deptFilter === 'inout' && !m.groupId.includes('inout') && !m.groupId.includes('product_asset')) return false;
+      if (deptFilter === 'maintenance' && !m.groupId.includes('maintenance')) return false;
+      if (deptFilter === 'logistics' && !m.groupId.includes('logistics')) return false;
+      if (deptFilter === 'management' && !m.groupId.includes('management') && !m.groupId.includes('approval')) return false;
+      if (deptFilter === 'special' && !m.groupId.includes('special')) return false;
+      if (deptFilter === 'dev' && !m.groupId.includes('dev')) return false;
+
+      // 2. 검색어 필터
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const matchTitle = (m.menuName || '').toLowerCase().includes(q);
+        const matchObjective = (m.objective || '').toLowerCase().includes(q);
+        const matchDept = (m.department || '').toLowerCase().includes(q);
+        const matchSeq = (m.cognitiveSequence || []).some(s => typeof s === 'string' && s.toLowerCase().includes(q));
+        const matchRules = (m.rulesCompliance || []).some(r => typeof r === 'string' && r.toLowerCase().includes(q));
+        const matchProcesses = (m.processes || []).some(p =>
+          (p?.title || '').toLowerCase().includes(q) ||
+          (p?.description || '').toLowerCase().includes(q) ||
+          (p?.steps || []).some(s => (s?.label || '').toLowerCase().includes(q) || (s?.description || '').toLowerCase().includes(q))
+        );
+        return matchTitle || matchObjective || matchDept || matchSeq || matchRules || matchProcesses;
+      }
+
+      return true;
+    });
+  }, [permittedManuals, deptFilter, searchQuery]);
+
+  // 그룹별 묶음 계산 (비어있는 그룹은 사이드바에서 제외)
+  const groupedMenus = useMemo(() => {
+    const groups: { groupId: string; groupName: string; items: MenuManualDetail[] }[] = [];
+    filteredManuals.forEach(item => {
+      let grp = groups.find(g => g.groupId === item.groupId);
+      if (!grp) {
+        grp = { groupId: item.groupId, groupName: item.groupName, items: [] };
+        groups.push(grp);
+      }
+      grp.items.push(item);
+    });
+    return groups.filter(g => g.items.length > 0);
+  }, [filteredManuals]);
+
+  // 현재 선택된 메뉴 상세 (허가된 메뉴 중 선택)
+  const activeManual = useMemo(() => {
+    return permittedManuals.find(m => m.menuId === selectedMenuId) || permittedManuals[0] || null;
+  }, [permittedManuals, selectedMenuId]);
+
+  return (
+    <div data-hs-observe="operationmanualpage" data-mid="operations_manual-header" data-subview="operations_manual" data-subview-title="Generated" className="manual-page-root" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', overflow: 'hidden' }}>
+      
+      {/* ── 인쇄 전용 글로벌 스타일 ── */}
+      <style>{`
+        @media print {
+          header, nav, aside, .mobile-burger-btn, .sidebar, .no-print, .manual-toolbar, .manual-nav-sidebar {
+            display: none !important;
+          }
+          body, html, #root, .manual-page-root, .manual-content-scroll {
+            height: auto !important;
+            overflow: visible !important;
+            background-color: #f5f2eb !important;
+            color: #000000 !important;
+          }
+          .manual-page-root {
+            padding: 0 !important;
+          }
+          .manual-paper {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .manual-section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin-bottom: 24px !important;
+            border-bottom: 1px solid #E2E8F0 !important;
+            padding-bottom: 16px !important;
+          }
+          .print-break-before {
+            page-break-before: always;
+            break-before: always;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 15mm 12mm 15mm 12mm;
+          }
+        }
+      `}</style>
+
+      {/* ── 상단 툴바 (화면 표시용, 인쇄 시 숨김) ── */}
+      <div className="manual-toolbar no-print" style={{
+        padding: '10px 20px',
+        backgroundColor: 'var(--bg-card)',
+        borderBottom: '1px solid var(--border-color)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '10px',
+        flexShrink: 0,
+        zIndex: 20
+      }}>
+        {/* 타이틀 및 부서 필터 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <span style={{ fontSize: '15px', fontWeight: '900', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>전사 업무매뉴얼</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', whiteSpace: 'nowrap' }}>E-Bro ERP 실무 표준 가이드 (총 {permittedManuals.length}개 메뉴)</span>
+            </div>
+          </div>
+
+          {/* 검색바 */}
+          <div style={{ position: 'relative', width: '220px' }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              data-mid="operations_manual-scope" data-uia="input-search-manual"
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="메뉴/목표/헌장 검색..."
+              style={{
+                width: '100%',
+                padding: '6px 10px 6px 30px',
+                fontSize: '12.5px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-app)',
+                color: 'var(--text-main)',
+                boxSizing: 'border-box'
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '12px' }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* 부서 필터 버튼군 */}
+          <div style={{ display: 'flex', gap: '3px', backgroundColor: 'var(--bg-app)', padding: '2px', borderRadius: '8px', overflowX: 'auto' }}>
+            {[
+              { id: 'all', label: '전체' },
+              { id: 'sales', label: '영업부' },
+              { id: 'inout', label: '출고/자산' },
+              { id: 'maintenance', label: '정비/AS' },
+              { id: 'logistics', label: '배차' },
+              { id: 'management', label: '경영/재무' },
+              { id: 'special', label: '인사/특수' },
+              { id: 'dev', label: '시스템/개발' },
+            ].map(b => (
+              <button
+                data-uia="btn-quick-clause"
+                key={b.id}
+                onClick={() => setDeptFilter(b.id as DeptFilter)}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: deptFilter === b.id ? 'var(--primary)' : 'transparent',
+                  color: deptFilter === b.id ? '#FFFFFF' : 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 우측 조작 액션 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* 보기 모드 (선택 메뉴 1건 vs 전체 연속) */}
+          <div style={{ display: 'flex', backgroundColor: 'var(--bg-app)', borderRadius: '6px', padding: '2px' }}>
+            <button
+              onClick={() => setViewMode('single')}
+              style={{
+                padding: '4px 8px', fontSize: '11.5px', fontWeight: 700, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                backgroundColor: viewMode === 'single' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'single' ? '#fff' : 'var(--text-secondary)',
+              }}
+            >
+              선택 메뉴
+            </button>
+            <button
+              onClick={() => setViewMode('all')}
+              style={{
+                padding: '4px 8px', fontSize: '11.5px', fontWeight: 700, border: 'none', borderRadius: '4px', cursor: 'pointer',
+                backgroundColor: viewMode === 'all' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'all' ? '#fff' : 'var(--text-secondary)',
+              }}
+            >
+              전체 연속 보기
+            </button>
+          </div>
+
+          {/* 줌 컨트롤 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', backgroundColor: 'var(--bg-app)', padding: '2px 4px', borderRadius: '6px' }}>
+            <button
+              onClick={() => handleZoom(-10)}
+              style={{ padding: '3px 5px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+              title="축소"
+            >
+              <ZoomOut size={13} />
+            </button>
+            <span style={{ fontSize: '11.5px', fontWeight: '700', padding: '0 4px', minWidth: '35px', textAlign: 'center' }}>
+              {zoomLevel}%
+            </span>
+            <button
+              onClick={() => handleZoom(10)}
+              style={{ padding: '3px 5px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+              title="확대"
+            >
+              <ZoomIn size={13} />
+            </button>
+          </div>
+
+          {/* DB 일괄 주입 버튼 */}
+          <button
+            data-mid="operations_manual-pipeline-db" onClick={handleBatchSeed}
+            disabled={saving}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              border: 'none',
+              backgroundColor: 'var(--warning, #b45309)',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              whiteSpace: 'nowrap'
+            }}
+            title="51개 모든 메뉴의 표준 매뉴얼을 DB에 일괄 주입"
+          >
+            <Sparkles size={13} />
+            <span>{saving ? 'DB 주입중…' : 'DB 일괄 주입'}</span>
+          </button>
+
+          {/* 인쇄 버튼 */}
+          <button
+            data-mid="operations_manual-pipeline-print" onClick={handlePrint}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              border: 'none',
+              backgroundColor: '#2563EB',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Printer size={13} />
+            <span>A4 인쇄</span>
+          </button>
+        </div>
+      </div>
+
+      {seedingSuccess && (
+        <div style={{ padding: '8px 20px', backgroundColor: 'rgba(4, 120, 87, 0.12)', color: 'var(--success)', fontSize: '12.5px', fontWeight: 700, borderBottom: '1px solid var(--border-color)' }}>
+          ✓ {seedingSuccess}
+        </div>
+      )}
+
+      {/* ── 본문 레이아웃 (좌측 메뉴 네비게이션 + 우측 매뉴얼 상세 뷰어) ── */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        
+        {/* 좌측 메뉴 사이드바 (화면 표시용) */}
+        <div className="manual-nav-sidebar no-print" style={{
+          width: '260px',
+          borderRight: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-card)',
+          overflowY: 'auto',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '12px 8px',
+          gap: '4px'
+        }}>
+          <div style={{ padding: '0 8px 6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
+            메뉴 목록 ({filteredManuals.length}건)
+          </div>
+
+          {groupedMenus.map(grp => {
+            const isExp = expandedGroups[grp.groupId] !== false;
+            return (
+              <div key={grp.groupId} style={{ marginBottom: '4px' }}>
+                <button
+                  onClick={() => toggleGroup(grp.groupId)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {grp.groupName} ({grp.items.length})
+                  </span>
+                  {isExp ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </button>
+
+                {isExp && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginLeft: '8px', borderLeft: '1.5px solid var(--border-color)', paddingLeft: '6px', marginTop: '2px' }}>
+                    {grp.items.map(item => {
+                      const isActive = item.menuId === selectedMenuId;
+                      return (
+                        <div
+                          key={item.menuId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            borderRadius: '5px',
+                            backgroundColor: isActive ? 'rgba(37,99,235,0.1)' : 'transparent',
+                            transition: 'background-color 0.15s ease',
+                          }}
+                        >
+                          <button
+                            onClick={() => {
+                              setSelectedMenuId(item.menuId);
+                              if (viewMode === 'all') {
+                                const el = document.getElementById(`manual-${item.menuId}`);
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }}
+                            style={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 8px',
+                              borderRadius: '5px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: isActive ? 700 : 500,
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              backgroundColor: 'transparent',
+                              color: isActive ? 'var(--primary)' : 'var(--text-main)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                            title={item.menuName}
+                          >
+                            <span style={{ fontSize: '11px', opacity: 0.7 }}>•</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.menuName}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartGuide(item.menuId, undefined, item.menuName);
+                            }}
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              padding: '4px 6px',
+                              marginRight: '2px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              color: '#2563EB',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              opacity: isActive ? 1 : 0.65,
+                              flexShrink: 0,
+                              transition: 'opacity 0.15s ease, transform 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLElement).style.opacity = '1';
+                              (e.currentTarget as HTMLElement).style.transform = 'scale(1.15)';
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLElement).style.opacity = isActive ? '1' : '0.65';
+                              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                            }}
+                            title={`[${item.menuName}] 실무 화면으로 이동하여 가이드 시작`}
+                          >
+                            <BookOpen size={12} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 우측 매뉴얼 상세 컨텐츠 영역 */}
+        <div className="manual-content-scroll" style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          backgroundColor: 'var(--bg-app)'
+        }}>
+          <div
+            className="manual-paper"
+            style={{
+              width: '100%',
+              maxWidth: '920px',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              padding: '36px 40px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: 'top center',
+              transition: 'transform 0.15s ease'
+            }}
+          >
+            {viewMode === 'single' ? (
+              activeManual ? (
+                <ManualDetailCard item={activeManual} />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                  <BookOpen size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+                  <div style={{ fontSize: '16px', fontWeight: 700 }}>조회 가능한 업무 매뉴얼이 없습니다.</div>
+                  <div style={{ fontSize: '13px', marginTop: '6px' }}>접근 권한이 부여된 메뉴의 매뉴얼만 열람할 수 있습니다.</div>
+                </div>
+              )
+            ) : filteredManuals.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                {filteredManuals.map((item, idx) => (
+                  <div key={item.menuId} id={`manual-${item.menuId}`} className="manual-section print-break-before">
+                    <ManualDetailCard item={item} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                <BookOpen size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+                <div style={{ fontSize: '16px', fontWeight: 700 }}>조회 가능한 업무 매뉴얼이 없습니다.</div>
+                <div style={{ fontSize: '13px', marginTop: '6px' }}>검색 조건에 일치하거나 권한이 있는 매뉴얼이 없습니다.</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  );
+};
+
+/**
+ * 개별 메뉴 매뉴얼 상세 렌더링 카드 컴포넌트
+ */
+const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
+  const { startGuidedTour } = useManualContext();
+  const { hasPermission, showErrorModal } = useApp();
+
+  const handleStartGuide = (menuId: string, processId?: string | null, menuName?: string) => {
+    if (!hasPermission(menuId, 'view')) {
+      showErrorModal(`'${menuName || menuId}' 메뉴에 대한 접근 권한이 없습니다.`, '접근 권한 제한');
+      return;
+    }
+    (startGuidedTour as any)?.(menuId, processId, menuName);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+      
+      {/* ── 헤더: 메뉴명, 부서, 아키타입 ── */}
+      <div style={{ borderBottom: '2px solid var(--border-color)', paddingBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', fontSize: '11.5px', fontWeight: 700 }}>
+            {item.groupName}
+          </span>
+          <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-app)', color: 'var(--text-secondary)', fontSize: '11.5px', fontWeight: 700 }}>
+            담당: {item.department}
+          </span>
+          <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(180, 83, 9, 0.12)', color: 'var(--warning, #b45309)', fontSize: '11.5px', fontWeight: 700 }}>
+            {item.archetype}
+          </span>
+          {item.manualUrl && (
+            <a
+              href={item.manualUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+                border: '1px solid var(--border-color)',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                textDecoration: 'none'
+              }}
+              title="중앙 DB 연동 원문 매뉴얼 웹페이지 열기"
+            >
+              <ExternalLink size={12} />
+              <span>원문 매뉴얼</span>
+            </a>
+          )}
+          <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+            menuId: {item.menuId}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+            {item.menuName} 표준 업무 매뉴얼
+          </h2>
+          <button
+            className="no-print"
+            onClick={() => handleStartGuide(item.menuId, null, item.menuName)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 18px',
+              borderRadius: '8px',
+              background: 'var(--primary)',
+              color: '#FFFFFF',
+              border: 'none',
+              fontSize: '13.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(37,99,235,0.3)',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease',
+            }}
+            title={`${item.menuName} 실무 화면으로 이동하여 가이드 시작`}
+          >
+            <BookOpen size={16} />
+            <span>가이드 시작</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── 1. 최종 업무 목표 (Terminal Objective - Gutenberg 질문 1) ── */}
+      <div style={{ backgroundColor: 'var(--bg-card)', padding: '14px 18px', borderRadius: '8px', borderLeft: '4px solid var(--primary)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 900, color: '#1E40AF' }}>최종 업무 목표</span>
+        </div>
+        <div style={{ fontSize: '13.5px', lineHeight: '1.6', color: '#1E293B', fontWeight: 600 }}>
+          {item.objective}
+        </div>
+      </div>
+
+      {/* ── 2. 시작 정보 및 전제 조건 (Scope - Gutenberg 질문 2) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--success)' }}></span>
+          <span>1단계: 조회 범위 및 필수 데이터</span>
+        </div>
+        <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+          {item.scopeInfo}
+        </div>
+      </div>
+
+      {/* ── 3. 인지 및 조작 순서 1-Way 동선 (Cognitive Sequence - Gutenberg Z-패턴) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2563EB' }}></span>
+          <span>2단계: Z-패턴 4단계 조작 동선</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {item.cognitiveSequence.map((step, sIdx) => (
+            <div key={sIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px 14px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+              <span style={{ minWidth: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#2563EB', color: '#fff', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {sIdx + 1}
+              </span>
+              <span style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--text-main)', fontWeight: 500 }}>
+                {step}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 단위업무 Flow (Business Process Flows - 184개 단위업무 표준 절차) ── */}
+      {item.processes && item.processes.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Workflow size={15} color="var(--primary)" />
+            <span>단위업무 Flow ({item.processes.length}개 단위업무 표준 프로세스)</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {item.processes.map((proc, pIdx) => (
+              <div
+                key={proc.processId || pIdx}
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#2563EB', color: '#fff', fontSize: '11px', fontWeight: 800 }}>
+                      단위업무 #{pIdx + 1}
+                    </span>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)' }}>
+                      {proc.title}
+                    </span>
+                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 700, fontFamily: 'monospace' }}>
+                      {proc.processId}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>
+                      총 {proc.steps?.length || 0}단계 절차
+                    </span>
+                    <button
+                      className="no-print"
+                      onClick={() => handleStartGuide(item.menuId, proc.processId, item.menuName)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '5px 12px',
+                        borderRadius: '6px',
+                        backgroundColor: '#2563EB',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 4px rgba(37,99,235,0.25)',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title={`[${proc.title}] 실무 화면으로 이동하여 단계별 가이드 실행`}
+                    >
+                      <span style={{ fontSize: '10px' }}>▶</span>
+                      <span>가이드 실행</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: 500 }}>
+                  {proc.description}
+                </div>
+
+                {/* 단계별 절차 리스트 */}
+                {proc.steps && proc.steps.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>수행 절차 체크리스트:</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
+                      {proc.steps.map((st, sIdx) => (
+                        <div
+                          key={st.seq || sIdx}
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '6px',
+                            backgroundColor: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                              width: '18px',
+                              height: '18px',
+                              borderRadius: '50%',
+                              backgroundColor: st.badgeColor || 'var(--primary)',
+                              color: '#fff',
+                              fontSize: '10.5px',
+                              fontWeight: 900,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}>
+                              {st.seq}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: 800, color: '#1E293B' }}>
+                              {st.label}
+                            </span>
+                            {st.type && (
+                              <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#94A3B8' }}>
+                                {st.type}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: '#475569', lineHeight: 1.45 }}>
+                            {st.description}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 메뉴 내부 하위 탭 구성 및 역할 ── */}
+      {item.subTabs && item.subTabs.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Layers size={14} color="var(--primary)" />
+            <span>메뉴 내부 하위 탭 구성 및 역할 ({item.subTabs.length}개 탭)</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+            {item.subTabs.map((st, idx) => (
+              <div
+                key={st.tabId || idx}
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--bg-app)',
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    {st.tabName}
+                  </span>
+                  <span style={{ fontSize: '10.5px', fontFamily: 'monospace', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 700 }}>
+                    {st.tabId}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                  {st.purpose}
+                </div>
+                {st.keyActions && st.keyActions.length > 0 && (
+                  <div style={{ marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>주요 액션:</span>
+                    {st.keyActions.map((act, aIdx) => (
+                      <div key={aIdx} style={{ fontSize: '11.5px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: 'var(--primary)', fontSize: '10px' }}>▶</span>
+                        <span>{act}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 팝업(모달) 업무 흐름 가이드 ── */}
+      {item.modalWorkflows && item.modalWorkflows.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={14} color="var(--primary)" />
+            <span>팝업(모달) 업무 흐름 가이드 ({item.modalWorkflows.length}개 스튜디오)</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {item.modalWorkflows.map((mw, mIdx) => (
+              <div
+                key={mIdx}
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '11px', fontWeight: 800 }}>
+                      모달 #{mIdx + 1}
+                    </span>
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                      {mw.modalName}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-main)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>트리거:</span>
+                    <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--primary)', color: 'var(--primary)', fontFamily: 'monospace' }}>
+                      {mw.triggerButton}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3단계 스튜디오 파이프라인 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                  {/* ① 검토 및 입력 항목 */}
+                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)' }}>① 모달 내부 핵심 검토/입력 항목</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {mw.keyFields.map((kf, kIdx) => (
+                        <div key={kIdx} style={{ fontSize: '11.5px', color: '#334155', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                          <span style={{ color: 'var(--primary)', fontSize: '10px' }}>•</span>
+                          <span>{kf}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ② 완결 액션 */}
+                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)' }}>② 터미널 완결 액션 버튼</span>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', padding: '6px 8px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--border-color)' }}>
+                      {mw.terminalAction}
+                    </div>
+                  </div>
+
+                  {/* ③ 사후 상태 전이 */}
+                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669' }}>③ 사후 자산/DB 상태 전이</span>
+                    <div style={{ fontSize: '11.5px', color: '#065F46', lineHeight: '1.45', fontWeight: 600 }}>
+                      {mw.afterStateTransition}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 4. 최종 확정 및 대차대조 결과 (Audit Result - Gutenberg 질문 4) ── */}
+      <div style={{ backgroundColor: 'rgba(4, 120, 87, 0.08)', padding: '12px 16px', borderRadius: '8px', borderLeft: '4px solid var(--success)', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 900, color: '#065F46' }}>최종 감사 및 확정 결과</span>
+        </div>
+        <div style={{ fontSize: '13px', lineHeight: '1.6', color: '#064E3B', fontWeight: 600 }}>
+          {item.auditResult}
+        </div>
+      </div>
+
+      {/* ── 5. 전사 시스템 개발 표준 헌장 준수 수칙 (카테고리 I~VII) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Shield size={14} color="var(--primary)" />
+          <span>전사 시스템 개발 표준 헌장 준수 가이드</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px 12px', borderRadius: '6px', backgroundColor: '#FAF5FF', border: '1px solid var(--border-color)' }}>
+          {item.rulesCompliance.map((rule, rIdx) => (
+            <div key={rIdx} style={{ fontSize: '12.5px', color: 'var(--text-main)', lineHeight: '1.5', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>•</span>
+              <span>{rule}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 6. 현장 물리적 마찰 방지 주의사항 (WTT 스트레스 대비) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <AlertCircle size={14} color="var(--warning, #b45309)" />
+          <span>현장 실무 마찰 방지 주의사항 (WTT 대비)</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(180, 83, 9, 0.08)', border: '1px solid rgba(180, 83, 9, 0.25)' }}>
+          {item.precautions.map((prec, pIdx) => (
+            <div key={pIdx} style={{ fontSize: '12.5px', color: '#78350F', lineHeight: '1.5', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+              <span style={{ color: '#D97706', fontWeight: 700 }}></span>
+              <span>{prec}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 7. 인앱 오버레이 안내 스텝 ── */}
+      {item.annotations && item.annotations.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={14} color="var(--primary)" />
+            <span>화면 인앱 오버레이 안내 항목 (상단 [📖 매뉴얼 보기] 연동)</span>
+          </div>
+          <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '6px 10px', width: '50px' }}>순번</th>
+                  <th style={{ padding: '6px 10px', width: '80px' }}>유형</th>
+                  <th style={{ padding: '6px 10px', width: '140px' }}>레이블</th>
+                  <th style={{ padding: '6px 10px' }}>안내 내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                {item.annotations.map(ann => (
+                  <tr key={ann.seq} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '6px 10px', fontWeight: 700 }}>
+                      <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: ann.badgeColor, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>
+                        {ann.seq}
+                      </span>
+                    </td>
+                    <td style={{ padding: '6px 10px', color: 'var(--text-muted)' }}>{ann.type}</td>
+                    <td style={{ padding: '6px 10px', fontWeight: 700, color: 'var(--text-main)' }}>{ann.label}</td>
+                    <td style={{ padding: '6px 10px', color: 'var(--text-secondary)' }}>{ann.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};

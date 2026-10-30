@@ -1,0 +1,56 @@
+{
+  "menuId": "regular_reports",
+  "version": 5,
+  "annotations": [
+    {
+      "seq": 1,
+      "selector": "[data-mid=\"reports-header\"]",
+      "type": "stamp",
+      "label": "보고서 기준 연월 설정",
+      "description": "정기 경영보고서 집계 기준 연월을 선택하고 데이터 범위를 확정합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 2,
+      "selector": "[data-mid=\"reports-btn-refresh\"]",
+      "type": "stamp",
+      "label": "최신 실적 집계 갱신",
+      "description": "매출, 수납, 가동률, 회계 전표 데이터를 원천 DB에서 최신으로 재집계합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 3,
+      "selector": "[data-mid=\"reports-btn-print\"]",
+      "type": "stamp",
+      "label": "보고서 출력 인쇄",
+      "description": "A4 최적화 레이아웃으로 경영 실적 보고서를 인쇄합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 4,
+      "selector": "[data-mid=\"reports-btn-pdf\"]",
+      "type": "stamp",
+      "label": "공식 PDF 내보내기",
+      "description": "임원 보고용 정기 경영 분석 보고서를 고해상도 PDF 파일로 저장합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 5,
+      "selector": "[data-mid=\"reports-kpi\"]",
+      "type": "stamp",
+      "label": "경영 핵심 지표 요약",
+      "description": "월간 총매출, 영업이익, 장비 가동률, 채권 회수율 등 경영 실적을 조망합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    }
+  ]
+}

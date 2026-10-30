@@ -1,0 +1,764 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Bot, Download, RefreshCw, Shield, ChevronDown, CheckCircle2, AlertTriangle, X, Cloud, FolderCheck, HardDrive, Play } from 'lucide-react';
+import { EXPECTED_AGENT_VERSION, AGENT_CERT_URL, AGENT_INSTALL_BAT_URL, launchLocalAgentFromBrowser, restartLocalAgent, fetchWithAgentFallback, openAgentStudio, triggerAgentSelfUpdate, subscribeAgentStatus, isAgentOnlineGlobal, startGlobalAgentHealthMonitor, syncTenantPolicyToAgent, triggerTenantAgentDownload } from '../services/agentService';
+import { executeDriveMirrorSync, getLocalMirrorStatus, subscribeMirrorProgress, MirrorProgressState } from '../services/driveMirrorSync';
+import { useApp } from '../context/AppContext';
+
+interface Props {
+  currentUser?: {
+    loginId?: string;
+    name?: string;
+  } | null;
+}
+
+export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
+  const { officialMailConfigs, hasPermission, currentTenant, users, currentUser: appCurrentUser } = useApp();
+  const [agentStatus, setAgentStatus] = useState<'ONLINE' | 'OFFLINE'>(() => isAgentOnlineGlobal() ? 'ONLINE' : 'OFFLINE');
+  const [agentVersion, setAgentVersion] = useState<string>('');
+  const [agentCallsign, setAgentCallsign] = useState<string>('');
+  const [isRestarting, setIsRestarting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [isUpdatingSelf, setIsUpdatingSelf] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState('');
+  const [launchMsg, setLaunchMsg] = useState('');
+  const [isOpenMenu, setIsOpenMenu] = useState(false);
+
+  // 에이전트 배지 권한 없는 직무는 즉시 비노출 (영업·관리·경영 등)
+  const canShowAgentBadge = hasPermission('agent_badge', 'view');
+
+  // 미러링 상태
+  const [mirrorProgress, setMirrorProgress] = useState<MirrorProgressState>({
+    isActive: false,
+    phase: 'IDLE',
+    currentFile: '',
+    currentIndex: 0,
+    totalCount: 0,
+    percent: 0,
+    message: ''
+  });
+  const [mirrorFiles, setMirrorFiles] = useState<Array<{ name: string; size: number; modifiedTime: string }>>([]);
+  const [isSyncingDrive, setIsSyncingDrive] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 미러링 진행상황 구독
+  useEffect(() => {
+    return subscribeMirrorProgress(setMirrorProgress);
+  }, []);
+
+  // ── 전역 단일 에이전트 헬스체크 모니터 가동 및 실시간 상태 구독 ──
+  useEffect(() => {
+    const userCallsign = currentUser?.loginId || currentUser?.name || 'admin';
+    startGlobalAgentHealthMonitor(userCallsign);
+
+    const unsubscribe = subscribeAgentStatus((online, info) => {
+      if (online) {
+        setAgentStatus('ONLINE');
+        if (info?.version) setAgentVersion(info.version);
+        if (info?.callsign) setAgentCallsign(info.callsign);
+      } else {
+        setAgentStatus('OFFLINE');
+        setAgentVersion('');
+        setAgentCallsign('');
+        setMirrorFiles([]);
+      }
+    });
+
+    // 로컬 미러링 현황 경량 조회 (0.01초 로컬 질의)
+    getLocalMirrorStatus().then(mStatus => {
+      if (mStatus.success) setMirrorFiles(mStatus.files || []);
+    }).catch(() => {});
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUser]);
+
+  // ── 접속 테넌트 변경, 로그인 직원 변경, 백업 권한 변경 또는 에이전트 온라인 전환 시 정책 자동 핫 동기화 ──
+  const liveUserRecord = React.useMemo(() => {
+    const uid = appCurrentUser?.id || (currentUser as any)?.id;
+    const lid = appCurrentUser?.loginId || currentUser?.loginId;
+    if (!uid && !lid) return null;
+    return (users || []).find(u => (uid && u.id === uid) || (lid && u.loginId === lid)) || appCurrentUser || null;
+  }, [users, appCurrentUser, currentUser]);
+
+  useEffect(() => {
+    if (agentStatus === 'ONLINE' && (currentTenant || liveUserRecord)) {
+      syncTenantPolicyToAgent(
+        currentTenant,
+        liveUserRecord
+          ? {
+              autoBackupEnabled: Boolean(liveUserRecord.autoBackupEnabled),
+              autoBackupTime: liveUserRecord.autoBackupTime || '09:00',
+              autoBackupRetentionDays: liveUserRecord.autoBackupRetentionDays || 30,
+              backupUserId: liveUserRecord.id || '',
+              backupUserName: liveUserRecord.name || ''
+            }
+          : {
+              autoBackupEnabled: false,
+              autoBackupTime: '09:00',
+              autoBackupRetentionDays: 30,
+              backupUserId: '',
+              backupUserName: ''
+            }
+      ).catch(() => {});
+    }
+  }, [
+    agentStatus,
+    currentTenant?.id,
+    currentTenant?.tenantCode,
+    currentTenant?.displayName,
+    currentTenant?.corporateName,
+    currentTenant?.features?.agentAiEnabled,
+    liveUserRecord?.id,
+    liveUserRecord?.autoBackupEnabled,
+    liveUserRecord?.autoBackupTime,
+    liveUserRecord?.autoBackupRetentionDays
+  ]);
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpenMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isLatest = agentStatus === 'ONLINE' && agentVersion === EXPECTED_AGENT_VERSION;
+  const isOutdated = agentStatus === 'ONLINE' && !isLatest;
+
+  // 1단계: 인증서 다운로드
+  const handleDownloadCert = () => {
+    try {
+      const link1 = document.createElement('a');
+      link1.href = AGENT_CERT_URL;
+      link1.download = 'eBroAgent_Root.cer';
+      document.body.appendChild(link1);
+      link1.click();
+      document.body.removeChild(link1);
+
+      setTimeout(() => {
+        const link2 = document.createElement('a');
+        link2.href = AGENT_INSTALL_BAT_URL;
+        link2.download = 'install-cert.bat';
+        document.body.appendChild(link2);
+        link2.click();
+        document.body.removeChild(link2);
+      }, 300);
+    } catch (e) {
+      alert('인증서 다운로드 실패');
+    }
+  };
+
+  // 정식 에이전트 설치 프로그램 다운로드 (eBroAgent_Setup_*.exe)
+  const handleDownloadAgent = () => {
+    setIsDownloading(true);
+    try {
+      triggerTenantAgentDownload(currentTenant);
+    } catch (e) {
+      alert('에이전트 다운로드 실패');
+    } finally {
+      setTimeout(() => setIsDownloading(false), 1500);
+    }
+  };
+
+  // 사이트에서 로컬 에이전트 실행 트리거
+  const handleLaunchAgent = () => {
+    setIsLaunching(true);
+    setLaunchMsg('실행 명령 전송 중...');
+    launchLocalAgentFromBrowser();
+
+    let attempts = 0;
+    const maxAttempts = 12; // 6초간 0.5초 간격 폴링
+    const poller = setInterval(async () => {
+      attempts++;
+      try {
+        const userCallsign = currentUser?.loginId || currentUser?.name || 'admin';
+        const res = await fetchWithAgentFallback(`/health?callsign=${encodeURIComponent(userCallsign)}`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(1000),
+          cache: 'no-store'
+        });
+        if (res.ok) {
+          clearInterval(poller);
+          setIsLaunching(false);
+          setLaunchMsg('연결 완료');
+          setAgentStatus('ONLINE');
+          const data = await res.json();
+          setAgentVersion(data.version || '');
+          setAgentCallsign(data.callsign || userCallsign);
+          setTimeout(() => {
+            setLaunchMsg('');
+            setIsOpenMenu(false);
+          }, 1500);
+          return;
+        }
+      } catch (e) {}
+
+      if (attempts >= maxAttempts) {
+        clearInterval(poller);
+        setIsLaunching(false);
+        setLaunchMsg('미실행 시 실행 등록 파일(2단계) 1회 실행 필요');
+      }
+    }, 500);
+  };
+
+  // 핫 재시작
+  const handleRestart = async () => {
+    setIsRestarting(true);
+    await restartLocalAgent();
+    setTimeout(() => {
+      setIsRestarting(false);
+      setIsOpenMenu(false);
+    }, 2000);
+  };
+
+  // 🚀 무음 스마트 백그라운드 자동 업데이트 실행
+  const handleSelfUpdate = async () => {
+    setIsUpdatingSelf(true);
+    setUpdateMsg('최신 버전 백그라운드 다운로드 중...');
+    try {
+      const res = await triggerAgentSelfUpdate(true);
+      if (res.success) {
+        setUpdateMsg('무음 교체 설치 중... 잠시 후 자동 재연결됩니다.');
+        setTimeout(() => {
+          setIsUpdatingSelf(false);
+          setUpdateMsg('');
+          setIsOpenMenu(false);
+        }, 8000);
+      } else {
+        setUpdateMsg(res.message || '업데이트 요청 실패');
+        setIsUpdatingSelf(false);
+      }
+    } catch (e: any) {
+      setUpdateMsg(e.message || '통신 오류');
+      setIsUpdatingSelf(false);
+    }
+  };
+
+  // 버전 약식 변환 헬퍼 (예: v1.100.0.Build.217 -> v1.100)
+  const toShortVer = (ver: string) => {
+    if (!ver) return '';
+    const match = ver.match(/v\d+\.\d+/);
+    return match ? match[0] : ver.split('.Build')[0];
+  };
+
+  const shortCurrent = toShortVer(agentVersion);
+  const shortExpected = toShortVer(EXPECTED_AGENT_VERSION);
+
+  return (
+    // 에이전트 배지 권한 없는 직무(영업·관리·경영 등)는 전체 비노출
+    canShowAgentBadge ? (
+    <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
+      {/* 🟢 최신 정상 상태 배지 (콜사인 생략 & 약식 버전 & 미러링 진행 중 동적 표시) */}
+      {isLatest && (
+        <button
+          type="button"
+          onClick={() => setIsOpenMenu(!isOpenMenu)}
+          style={{
+            padding: '5px 10px',
+            borderRadius: '20px',
+            background: mirrorProgress.isActive && mirrorProgress.phase !== 'COMPLETED' ? 'rgba(37, 99, 235, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+            border: `1px solid ${mirrorProgress.isActive && mirrorProgress.phase !== 'COMPLETED' ? 'rgba(37, 99, 235, 0.4)' : 'rgba(34, 197, 94, 0.4)'}`,
+            color: mirrorProgress.isActive && mirrorProgress.phase !== 'COMPLETED' ? '#2563eb' : '#15803d',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '12px',
+            fontWeight: '800',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s ease'
+          }}
+          title={`에이전트 ${agentVersion} 정상 가동 중 (클릭 시 관리)`}
+        >
+          {mirrorProgress.isActive && mirrorProgress.phase !== 'COMPLETED' ? (
+            <>
+              <RefreshCw size={11} className="animate-spin" color="#2563eb" />
+              <span>미러링 ({mirrorProgress.currentIndex}/{mirrorProgress.totalCount || '?'})</span>
+            </>
+          ) : (
+            <>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }}></span>
+              <span>에이전트 {shortCurrent}</span>
+            </>
+          )}
+          <ChevronDown size={11} />
+        </button>
+      )}
+
+      {/* 🏢 에이전트 가동 & AI 활성 테넌트일 때만 데스크톱 스튜디오 원클릭 호출 버튼 노출 */}
+      {agentStatus === 'ONLINE' && !isOutdated && Boolean(currentTenant?.features?.agentAiEnabled) && (
+        <button
+          type="button"
+          onClick={() => openAgentStudio()}
+          style={{
+            padding: '4px 8px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            color: 'var(--primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '11px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s ease'
+          }}
+          title="eBro AI Agent 독립 데스크톱 스튜디오 창 열기"
+        >
+          <Bot size={12} color="var(--primary)" />
+          <span>스튜디오</span>
+        </button>
+      )}
+
+      {/* 🟡 구버전 가동 중 배지 & 1클릭 무음 자동 업데이트 버튼 */}
+      {isOutdated && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+          <button
+            type="button"
+            onClick={() => setIsOpenMenu(!isOpenMenu)}
+            style={{
+              padding: '5px 10px',
+              borderRadius: '20px',
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.5)',
+              color: 'var(--warning)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '12px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease'
+            }}
+            title={`에이전트 업데이트 필요 (현재: ${agentVersion} ➔ 최신: ${EXPECTED_AGENT_VERSION})`}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--warning)' }}></span>
+            <span>{shortCurrent || '구버전'} ➔ {shortExpected}</span>
+            <ChevronDown size={11} />
+          </button>
+
+          <button
+            type="button"
+            disabled={isUpdatingSelf}
+            onClick={handleSelfUpdate}
+            style={{
+              padding: '4px 9px',
+              borderRadius: '6px',
+              background: 'var(--warning)',
+              border: 'none',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: '800',
+              cursor: isUpdatingSelf ? 'wait' : 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: 'none'
+            }}
+            title="클릭 즉시 백그라운드 무음 자동 업데이트를 시작합니다."
+          >
+            <RefreshCw size={11} className={isUpdatingSelf ? 'animate-spin' : ''} />
+            <span>{isUpdatingSelf ? '업데이트 중...' : '자동 업데이트'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* 🔴 미실행 (오프라인) 상태 배지 */}
+      {agentStatus === 'OFFLINE' && (
+        <button
+          type="button"
+          onClick={() => setIsOpenMenu(!isOpenMenu)}
+          style={{
+            padding: '5px 10px',
+            borderRadius: '20px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: 'var(--danger)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '12px',
+            fontWeight: '800',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s ease'
+          }}
+          title={`로컬 에이전트 미실행 (최신: ${EXPECTED_AGENT_VERSION})`}
+        >
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--danger)' }}></span>
+          <span>에이전트 미실행</span>
+          <ChevronDown size={11} />
+        </button>
+      )}
+
+      {/* ═══ 클릭 시 열리는 미니 팝오버 메뉴 ═══ */}
+      {isOpenMenu && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 8px)',
+          right: 0,
+          zIndex: 9999,
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '12px',
+          padding: '16px',
+          width: '320px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
+          color: 'var(--text-primary)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800' }}>
+              <Bot size={16} color="var(--primary)" />
+              로컬 사이드카 에이전트 상태
+            </div>
+            <button type="button" onClick={() => setIsOpenMenu(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* 상태 정보 표기 */}
+          <div style={{ background: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-muted)' }}>연결 상태:</span>
+              <span style={{ fontWeight: '800', color: agentStatus === 'ONLINE' ? '#16a34a' : '#dc2626' }}>
+                {agentStatus === 'ONLINE' ? '🟢 가동중' : '🔴 미실행'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-muted)' }}>현재 버전:</span>
+              <span style={{ fontWeight: '700' }}>{agentVersion || '없음'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-muted)' }}>최신 요구 버전:</span>
+              <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{EXPECTED_AGENT_VERSION}</span>
+            </div>
+            {agentCallsign && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>작업자(콜사인):</span>
+                <span style={{ fontWeight: '700' }}>{agentCallsign}</span>
+              </div>
+            )}
+          </div>
+
+          {/* 🏢 AI 활성 시 스튜디오 열기 / 비활성 시 로컬 문서고 폴더 열기 */}
+          {agentStatus === 'ONLINE' && (
+            Boolean(currentTenant?.features?.agentAiEnabled) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  openAgentStudio();
+                  setIsOpenMenu(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: '#1e3a8a',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '7px',
+                  color: '#93c5fd',
+                  cursor: 'pointer',
+                  marginBottom: '12px'
+                }}
+              >
+                <Bot size={14} color="#60a5fa" />
+                eBro AI Agent 데스크톱 스튜디오 열기
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  fetchWithAgentFallback('/api/open-archive', { method: 'POST' }).catch(() => {});
+                  setIsOpenMenu(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: '#1e3a8a',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '7px',
+                  color: '#93c5fd',
+                  cursor: 'pointer',
+                  marginBottom: '12px'
+                }}
+              >
+                <FolderCheck size={14} color="#60a5fa" />
+                로컬 문서고 폴더 열기 (C:\eBroAgent\문서고)
+              </button>
+            )
+          )}
+
+          {/* ⚠️ 에이전트 콘솔 창이 켜져 있는데 미연결로 뜰 때 브라우저 보안 안내 */}
+          {agentStatus === 'OFFLINE' && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              marginBottom: '12px',
+              fontSize: '11px',
+              lineHeight: '1.55'
+            }}>
+              <div style={{ fontWeight: '800', color: 'var(--danger)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <AlertTriangle size={13} />
+                콘솔 창이 켜져 있는데 미연결로 표시될 때 조치법
+              </div>
+              <div style={{ color: 'var(--text-secondary)' }}>
+                Chrome/Edge 로컬 루프백 보안 차단 또는 콘솔 일시정지 상태입니다:
+                <div style={{ marginTop: '5px', color: 'var(--text-main)', fontSize: '11px', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '5px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div>
+                    <b>1.</b> 주소창 좌측 <b>[설정/조정 아이콘]</b> 클릭 ➔ <b>[기기의 앱]</b>을 <b>[허용]</b>으로 변경 (안 보이면 [사이트 설정] 클릭 후 허용)
+                  </div>
+                  <div>
+                    <b>2.</b> 검은색 콘솔 창 제목에 <b>'선택'</b> 글자가 있으면 마우스 클릭으로 일시정지된 상태입니다. 콘솔 창을 클릭 후 <b>[Enter]</b> 또는 <b>[Esc]</b>를 1회 누르세요.
+                  </div>
+                  <div style={{ color: 'var(--success)', fontWeight: '800' }}>
+                    <b>3.</b> <b>[F5]</b> 새로고침 시 즉시 🟢 정상 연결 완료!
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 📁 로컬 미러링(동기화) 현황 섹션 (ONLINE일 때) */}
+          {agentStatus === 'ONLINE' && (
+            <div style={{ background: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', marginBottom: '12px', fontSize: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--success)' }}>
+                  <HardDrive size={13} />
+                  CF 로컬 미러링 ({mirrorFiles.length}개)
+                </span>
+                <button
+                  type="button"
+                  disabled={isSyncingDrive}
+                  onClick={async () => {
+                    setIsSyncingDrive(true);
+                    setSyncMessage('CF 버킷 동기화 중...');
+                    try {
+                      const agentRes = await fetchWithAgentFallback('/api/trigger-sync', {
+                        method: 'POST'
+                      });
+                      if (agentRes.ok) {
+                        const data = await agentRes.json();
+                        const mStatus = await getLocalMirrorStatus();
+                        if (mStatus.success) setMirrorFiles(mStatus.files || []);
+                        setSyncMessage(data.message || '동기화 완료');
+                      } else {
+                        const activeTenantId = currentTenant?.id || import.meta.env.VITE_TENANT_ID || 'giyuen';
+                        const activeConfig = officialMailConfigs?.find(c => (c.tenantId || 'giyuen') === activeTenantId) || officialMailConfigs?.[0];
+                        const res = await executeDriveMirrorSync(activeConfig, (msg) => setSyncMessage(msg));
+                        const mStatus = await getLocalMirrorStatus();
+                        if (mStatus.success) setMirrorFiles(mStatus.files || []);
+                        setSyncMessage(res.message);
+                      }
+                    } catch (e: any) {
+                      const activeTenantId = currentTenant?.id || import.meta.env.VITE_TENANT_ID || 'giyuen';
+                      const activeConfig = officialMailConfigs?.find(c => (c.tenantId || 'giyuen') === activeTenantId) || officialMailConfigs?.[0];
+                      const res = await executeDriveMirrorSync(activeConfig, (msg) => setSyncMessage(msg));
+                      const mStatus = await getLocalMirrorStatus();
+                      if (mStatus.success) setMirrorFiles(mStatus.files || []);
+                      setSyncMessage(res.message);
+                    } finally {
+                      setIsSyncingDrive(false);
+                      setTimeout(() => setSyncMessage(''), 4000);
+                    }
+                  }}
+                  style={{
+                    padding: '3px 7px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    borderRadius: '4px',
+                    background: 'rgba(22,163,74,0.12)',
+                    color: 'var(--success)',
+                    border: '1px solid rgba(22,163,74,0.3)',
+                    cursor: isSyncingDrive ? 'wait' : 'pointer'
+                  }}
+                >
+                  {isSyncingDrive ? '동기화 중...' : '⚡ 지금 동기화'}
+                </button>
+              </div>
+
+              {syncMessage && (
+                <div style={{ fontSize: '11px', color: syncMessage.startsWith('⚠️') ? '#ef4444' : '#16a34a', fontWeight: '700', margin: '4px 0' }}>
+                  {syncMessage}
+                </div>
+              )}
+
+              {mirrorFiles.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '100px', overflowY: 'auto', marginTop: '4px' }}>
+                  {mirrorFiles.map((f, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>📄 {f.name}</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{(f.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  아직 미러링된 파일이 없습니다. [⚡ 지금 동기화]를 눌러주세요.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 액션 버튼 그룹 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {agentStatus === 'OFFLINE' && (
+              <>
+                {/* 🚀 브라우저(사이트)에서 로컬 에이전트 실행 */}
+                <button
+                  type="button"
+                  disabled={isLaunching}
+                  onClick={handleLaunchAgent}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    background: 'var(--primary)',
+                    border: 'none',
+                    borderRadius: '7px',
+                    color: '#fff',
+                    cursor: isLaunching ? 'wait' : 'pointer',
+                    boxShadow: '0 2px 6px rgba(37,99,235,0.35)'
+                  }}
+                >
+                  <Play size={14} fill="#fff" />
+                  {isLaunching ? '실행 명령 전송 중...' : '사이트에서 에이전트 실행'}
+                </button>
+                {launchMsg && (
+                  <div style={{ fontSize: '11px', textAlign: 'center', color: launchMsg.includes('완료') ? '#16a34a' : '#b45309', fontWeight: '700' }}>
+                    {launchMsg}
+                  </div>
+                )}
+
+                {/* 정식 통합 에이전트 설치 프로그램 다운로드 */}
+                <button
+                  type="button"
+                  disabled={isDownloading}
+                  onClick={handleDownloadAgent}
+                  style={{
+                    width: '100%',
+                    padding: '9px 10px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    background: 'var(--bg-app)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '7px',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <Download size={13} color="var(--primary)" />
+                  <span>eBro 통합 에이전트 설치 다운로드</span>
+                </button>
+              </>
+            )}
+
+            {isOutdated && (
+              <>
+                <button
+                  type="button"
+                  disabled={isUpdatingSelf}
+                  onClick={handleSelfUpdate}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    fontSize: '12.5px',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    background: 'var(--warning)',
+                    border: 'none',
+                    borderRadius: '7px',
+                    color: '#fff',
+                    cursor: isUpdatingSelf ? 'wait' : 'pointer',
+                    boxShadow: '0 2px 6px rgba(217,119,6,0.35)'
+                  }}
+                >
+                  <RefreshCw size={14} className={isUpdatingSelf ? 'animate-spin' : ''} />
+                  {isUpdatingSelf ? '무음 자동 업데이트 진행 중...' : `🚀 최신 버전(${EXPECTED_AGENT_VERSION}) 자동 업데이트`}
+                </button>
+                {updateMsg && (
+                  <div style={{ fontSize: '11px', textAlign: 'center', color: updateMsg.includes('실패') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
+                    {updateMsg}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  disabled={isDownloading}
+                  onClick={handleDownloadAgent}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    background: 'var(--bg-app)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Download size={12} />
+                  <span>수동 설치 파일 다운로드</span>
+                </button>
+              </>
+            )}
+
+
+            {agentStatus === 'ONLINE' && (
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={isRestarting}
+                onClick={handleRestart}
+                style={{ width: '100%', padding: '8px 10px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <RefreshCw size={13} className={isRestarting ? 'animate-spin' : ''} />
+                {isRestarting ? '에이전트 재기동 중...' : '🔄 에이전트 1초 핫 재시작'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+    ) : null
+  );
+};

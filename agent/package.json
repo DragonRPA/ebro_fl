@@ -1,0 +1,23 @@
+{
+  "name": "ebro-local-agent",
+  "version": "2.0.0",
+  "description": "e-Bro ERP 로컬 사이드카 에이전트 호스트 (eBroHost)",
+  "main": "eBroHost.js",
+  "bin": "eBroHost.js",
+  "pkg": {
+    "scripts": [],
+    "targets": [
+      "node18-win-x64"
+    ]
+  },
+  "scripts": {
+    "start": "node eBroHost.js",
+    "bundle:core": "node encrypt_core.cjs",
+    "build:exe": "npx pkg . --output eBroAgent.exe"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
+    "exceljs": "^4.4.0",
+    "pdf-lib": "^1.17.1"
+  }
+}

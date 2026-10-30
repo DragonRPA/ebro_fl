@@ -1,0 +1,4706 @@
+{
+  "metadata": {
+    "system": "기연리프트 ERP 시스템",
+    "title": "임직원 권한 마스터 데이터",
+    "exportedAt": "2026-09-08T15:50:55.304Z",
+    "exportedDateText": "2026-09-08",
+    "totalUsers": 20,
+    "totalDepartments": 5,
+    "totalPermissions": 890,
+    "description": "조정 완료된 20명 임직원의 메뉴별 조회(canView) 및 저장(canSave) 권한 정밀 스냅샷"
+  },
+  "departments": [
+    {
+      "id": "DEPT-0000001",
+      "name": "기연리프트"
+    },
+    {
+      "id": "DEPT-0000002",
+      "name": "관리부"
+    },
+    {
+      "id": "DEPT-0000003",
+      "name": "영업부"
+    },
+    {
+      "id": "DEPT-0000004",
+      "name": "출고팀"
+    },
+    {
+      "id": "DEPT-0000005",
+      "name": "AS팀"
+    }
+  ],
+  "users": [
+    {
+      "userId": "u-1",
+      "loginId": "admin",
+      "name": "시스템관리자",
+      "role": "ADMIN",
+      "departmentId": "DEPT-0000001",
+      "department": null,
+      "position": "D.RPA",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000002",
+      "loginId": "이수용",
+      "name": "이수용",
+      "role": "ADMIN",
+      "departmentId": "DEPT-0000001",
+      "department": null,
+      "position": "사장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-admin",
+      "loginId": "tester_admin",
+      "name": "테스터(총괄관리)",
+      "role": "ADMIN",
+      "departmentId": "DEPT-0000001",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000003",
+      "loginId": "강상안",
+      "name": "강상안",
+      "role": "MANAGER",
+      "departmentId": "DEPT-0000002",
+      "department": null,
+      "position": "부사장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000005",
+      "loginId": "김원진",
+      "name": "김원진",
+      "role": "USER",
+      "departmentId": "DEPT-0000002",
+      "department": null,
+      "position": "부장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000006",
+      "loginId": "정수아",
+      "name": "정수아",
+      "role": "ADMIN",
+      "departmentId": "DEPT-0000002",
+      "department": null,
+      "position": "차장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-purchase",
+      "loginId": "tester_purchase",
+      "name": "테스터(매입급여)",
+      "role": "USER",
+      "departmentId": "DEPT-0000002",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-billing",
+      "loginId": "tester_billing",
+      "name": "테스터(청구수납)",
+      "role": "USER",
+      "departmentId": "DEPT-0000002",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "billing",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000007",
+      "loginId": "김동우",
+      "name": "김동우",
+      "role": "USER",
+      "departmentId": "DEPT-0000003",
+      "department": null,
+      "position": "팀장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000004",
+      "loginId": "최수호",
+      "name": "최수호",
+      "role": "MANAGER",
+      "departmentId": "DEPT-0000003",
+      "department": null,
+      "position": "상무",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-sales",
+      "loginId": "tester_sales",
+      "name": "테스터(계약관리)",
+      "role": "USER",
+      "departmentId": "DEPT-0000003",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000008",
+      "loginId": "김관주",
+      "name": "김관주",
+      "role": "MANAGER",
+      "departmentId": "DEPT-0000004",
+      "department": null,
+      "position": "부장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000010",
+      "loginId": "김재현",
+      "name": "김재현",
+      "role": "USER",
+      "departmentId": "DEPT-0000004",
+      "department": null,
+      "position": "대리",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000009",
+      "loginId": "이민석",
+      "name": "이민석",
+      "role": "USER",
+      "departmentId": "DEPT-0000004",
+      "department": null,
+      "position": "과장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-dispatch",
+      "loginId": "tester_dispatch",
+      "name": "테스터(배차출고)",
+      "role": "USER",
+      "departmentId": "DEPT-0000004",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "delivery",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "field_as",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": false,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000014",
+      "loginId": "이규탁",
+      "name": "이규탁",
+      "role": "USER",
+      "departmentId": "DEPT-0000005",
+      "department": null,
+      "position": "주임",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000013",
+      "loginId": "장세현",
+      "name": "장세현",
+      "role": "USER",
+      "departmentId": "DEPT-0000005",
+      "department": null,
+      "position": "과장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000012",
+      "loginId": "최영석",
+      "name": "최영석",
+      "role": "USER",
+      "departmentId": "DEPT-0000005",
+      "department": null,
+      "position": "과장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": false
+        }
+      ]
+    },
+    {
+      "userId": "usr-tester-mechanic",
+      "loginId": "tester_mechanic",
+      "name": "테스터(정비관리)",
+      "role": "USER",
+      "departmentId": "DEPT-0000005",
+      "department": null,
+      "position": null,
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    },
+    {
+      "userId": "USR-0000011",
+      "loginId": "한상찬",
+      "name": "한상찬",
+      "role": "MANAGER",
+      "departmentId": "DEPT-0000005",
+      "department": null,
+      "position": "팀장",
+      "permissions": [
+        {
+          "menuId": "acquisition_disposal",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "agent_badge",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "asset_inout_history",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "bank_matching",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "billing",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "cash_flow",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "consumable",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "contract",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "corporate_card",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "customer",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "dashboard",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "delinquency",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "delivery",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "depreciation_execution",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dev_uploader",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "dispatch_assign",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "field_as",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "google_config",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "initial_db_upload",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "inspection_checklist_manage",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "leave_ot",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "organization",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "outbound_inspections",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "payroll",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "permission",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "print_queue_monitor",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "product",
+          "canView": true,
+          "canSave": false
+        },
+        {
+          "menuId": "purchase_settlement",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "receivable",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "regular_reports",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "rent_asset",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "repair",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_as_request",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "smart_dispatch",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_dispatch4",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "smart_return",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "transport_master",
+          "canView": false,
+          "canSave": false
+        },
+        {
+          "menuId": "vehicle_log",
+          "canView": true,
+          "canSave": true
+        },
+        {
+          "menuId": "vendors",
+          "canView": true,
+          "canSave": true
+        }
+      ]
+    }
+  ]
+}

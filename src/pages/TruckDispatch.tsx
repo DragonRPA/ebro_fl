@@ -1,0 +1,10369 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useApp } from '../context/AppContext';
+import { ToggleSwitch } from '../components/ToggleSwitch';
+import { 
+  Truck, Check, AlertCircle, Plus, Trash2, Clock, Layers, 
+  FileText, Copy, Lock, CreditCard, CheckCircle, RefreshCw, X,
+  Calendar, RotateCcw, ShieldCheck, CheckSquare, XCircle, Search, Save,
+  MessageSquare, User, Edit2, Upload, Download, FileSpreadsheet,
+  CheckCircle2, AlertTriangle, Filter, DollarSign, Send, Sun, MapPin, Printer,
+  UserCheck, FileAudio, Volume2, Sparkles, UploadCloud, Loader2,
+  ArrowUp, ArrowDown, Link2, Unlink
+} from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { exportToExcel } from '../services/excel';
+import { Delivery, TransportCompany, TransportDriver, TransportNegotiation, db, DeliveryStatus, Asset, Vendor, PurchaseSettlement, PurchaseSettlementItem, VEHICLE_TYPE_OPTIONS, isCustomerRestricted, logPrivacyAccess, Contract, ContractAsset, ContractHistory } from '../services/db';
+import { isPrivilegedPrivacyUser, maskPhoneNumber, maskName, maskAddress } from '../utils/privacyMasking';
+import { extractCategorizedSiteOptions } from '../types/siteOption';
+import { DestinationWeatherModal } from '../components/DestinationWeatherModal';
+import { ExcelUploadModal, ExcelColumnDef } from '../components/ExcelUploadModal';
+import { PurchaseStatementModal, uploadStatementFileSafe } from '../components/PurchaseStatementModal';
+import { matchHangul, createHangulMatcher } from '../utils/hangulSearch';
+import {
+  buildDispatchSmsText,
+  launchDispatchSms,
+  buildDispatchKakaoTalkText,
+  DispatchBundleStopParam,
+  copyToClipboard,
+  sanitizeDispatcherSpecialNote,
+  stripOptionsFromDispatchRawText,
+  resolveDispatchStaffContact
+} from '../utils/nativeLauncher';
+import { broadcastWorkNotification } from '../utils/workNotificationService';
+import { issueHandoverTask, clearHandoverTasks } from '../utils/taskHandoverPipeline';
+import { jobNotificationService } from '../services/jobNotificationService';
+import {
+  TransportCallQueueItem,
+  getTransportCallQueue,
+  saveTransportCallQueue,
+  processNewTransportCall,
+  markTransportCallConfirmed,
+  deleteTransportCall
+} from '../services/transportCallService';
+import { useSpecialFeature, SpecialFeatureGuard } from '../utils/specialFeatureGuard';
+import { useApproval } from '../hooks/useApproval';
+
+export { VEHICLE_TYPE_OPTIONS };
+
+export const CUSTOMER_DIRECT_TRANSPORT = '고객직접운송';
+
+export const isCustomerDirectTransport = (d?: Delivery | null): boolean => {
+  if (!d) return false;
+  if ((d.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT) return true;
+  if (Array.isArray(d.assignedVehicles) && d.assignedVehicles.some((v: any) => (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT)) return true;
+  if (d.vehicles) {
+    try {
+      const parsed = typeof d.vehicles === 'string' ? JSON.parse(d.vehicles) : d.vehicles;
+      if (Array.isArray(parsed) && parsed.some((v: any) => (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT)) {
+        return true;
+      }
+    } catch {}
+  }
+  return false;
+};
+
+interface VehicleReq {
+  vehicleType: string;
+  count: number;
+}
+
+interface CargoItem {
+  modelName: string;
+  count: number;
+}
+
+interface AssignedVehicleRow {
+  id: string;
+  transportCompany: string;
+  vehicleType: string;
+  vehicleNo: string;
+  driverName: string;
+  driverContact: string;
+  expectedCost: number; // 💰 예상 운송비 (원) - 필수
+  finalCost?: number;   // 💵 실제 운송비 (원) - 선택
+  deliveryCost: number; // 기존 호환용
+}
+
+export interface ReconPairRow {
+  pairId: string;
+  systemDelivery?: Delivery;
+  excelRow?: any;
+  matchStatus: 'MATCHED' | 'MISMATCH' | 'SYSTEM_ONLY' | 'EXCEL_ONLY' | 'PENDING' | 'PAYMENT_REQUESTED' | 'EXCLUDED';
+  systemCost: number;
+  excelCost: number;
+  diffCost: number;
+  memo?: string;
+  surchargeReason?: string;
+  isReconciled: boolean;
+  isExcluded?: boolean;
+}
+
+// 💡 [사장님 지시] 배차 운반비 0원 온전 보존 헬퍼 (하드코딩 70,000원 기본값 완전 제거 및 finalCost=0 미확정 시 deliveryCost 우선 평가)
+export const getEffectiveDeliveryCost = (d?: Delivery | null): number => {
+  if (!d) return 0;
+  // 1. 이미 정산/대사 완료되어 확정된 finalCost가 0보다 큰 경우 우선 반환
+  if (d.finalCost !== undefined && d.finalCost !== null && d.finalCost > 0) return d.finalCost;
+  // 2. 대사/정산 완료 상태이면서 명시적으로 finalCost가 0인 경우 0원 확정
+  if (d.isCostSettled && d.finalCost === 0) return 0;
+  // 3. 배차 원장의 등록/업로드 운송비가 존재하면 반환 (0원 포함)
+  if (d.deliveryCost !== undefined && d.deliveryCost !== null) return d.deliveryCost;
+  // 4. 예상 운송비가 존재하면 반환
+  if (d.expectedCost !== undefined && d.expectedCost !== null) return d.expectedCost;
+  // 5. 배정 차량별 운송비 합산
+  const vehicleCost = d.assignedVehicles?.reduce((acc: number, v: any) => acc + (v.deliveryCost || 0), 0);
+  if (vehicleCost !== undefined && vehicleCost > 0) return vehicleCost;
+  // 6. finalCost가 0인 경우 최종 fallback
+  if (d.finalCost !== undefined && d.finalCost !== null) return d.finalCost;
+  return 0;
+};
+
+// 1. 배차 4단계 진행 상태 판정 헬퍼 (컴포넌트 외부 배치로 TDZ 호이스팅 오류 원천 방어)
+// 💡 상차완료(loadingCompletedAt) 상태에서 하차 예정일이 도래(오늘 이하)한 경우 자동으로 운송완료(DELIVERED)로 판정
+export const getNormalizedDeliveryStatus = (d?: Delivery | null): 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED' => {
+  if (!d) return 'PENDING';
+  if (d.status === 'DELIVERED' || d.status === 'COMPLETED') return 'DELIVERED';
+  if (d.status === 'CANCELLED') return 'CANCELLED';
+  if (d.status === 'DISPATCHED') {
+    if (d.loadingCompletedAt) {
+      const nowObj = new Date();
+      const todayLocalStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
+      const effUnload = (d.unloadingDate || d.loadingDate || d.scheduledDate || '').slice(0, 10);
+      if (!effUnload || effUnload <= todayLocalStr) {
+        return 'DELIVERED';
+      }
+    }
+    return 'DISPATCHED';
+  }
+  return 'PENDING';
+};
+
+// 화물 품목 파싱 헬퍼 (컴포넌트 외부 배치로 TDZ 호이스팅 오류 원천 방어)
+export const parseCargoItems = (d?: Delivery | null): CargoItem[] => {
+  if (!d) return [{ modelName: '고소작업대 (장비 미지정)', count: 1 }];
+  if (d.cargoItems) {
+    try {
+      const parsed = JSON.parse(d.cargoItems);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return [{ modelName: '고소작업대 (장비 미지정)', count: 1 }];
+};
+
+export const TruckDispatch: React.FC = () => {
+  const { 
+    currentUser,
+    deliveries, contracts, customers, contacts, products, sites, siteMasters, standardOptions, users,
+    contractAssets, assets, vendors,
+    transportCompanies, transportDrivers, transportNegotiations, outboundInspections, hasPermission, 
+    refreshAllData, showErrorModal, showPrintSuccessModal, convertReconciledDeliveriesToSettlement,
+    currentTenant,
+    printStations, printQueue, enqueuePrintJob,
+    completeDelivery, completeInboundDelivery,
+    returnRentedAsset,
+    navigationPayload, setNavigationPayload
+  } = useApp();
+
+  const canSave = hasPermission('delivery', 'save');
+
+  // ⚡ [O(1) 룩업 맵] 필터링 및 카드/테이블 렌더링 시 O(N*M) 중첩 탐색 제거
+  const contractMap = useMemo(() => new Map(contracts.map(c => [c.id, c])), [contracts]);
+  const customerMap = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
+  const siteMap = useMemo(() => new Map((sites || []).map(s => [s.id, s])), [sites]);
+  const siteMasterMap = useMemo(() => new Map((siteMasters || []).map(m => [m.id, m])), [siteMasters]);
+  const assetMap = useMemo(() => new Map(assets.map(a => [a.id, a])), [assets]);
+  const userMap = useMemo(() => new Map((users || []).map(u => [u.id, u])), [users]);
+  const printStationMap = useMemo(() => new Map((printStations || []).map(s => [s.id, s])), [printStations]);
+
+  const contractAssetsByContractMap = useMemo(() => {
+    const map = new Map<string, typeof contractAssets>();
+    for (const ca of contractAssets) {
+      if (!ca.contractId) continue;
+      let list = map.get(ca.contractId);
+      if (!list) {
+        list = [];
+        map.set(ca.contractId, list);
+      }
+      list.push(ca);
+    }
+    return map;
+  }, [contractAssets]);
+
+  const outboundInspectionsByContractMap = useMemo(() => {
+    const map = new Map<string, typeof outboundInspections>();
+    for (const insp of outboundInspections) {
+      if (!insp.contractId) continue;
+      let list = map.get(insp.contractId);
+      if (!list) {
+        list = [];
+        map.set(insp.contractId, list);
+      }
+      list.push(insp);
+    }
+    return map;
+  }, [outboundInspections]);
+
+  // 출고 배차 건별 절차적 준비 상태(장비 할당 + 출고 검수 승인) 정밀 검증 헬퍼
+  const checkDeliveryOutboundReadiness = (delivery?: Delivery) => {
+    if (!delivery) {
+      return { isOutboundLike: false, ready: true, status: 'NONE' as const, reason: '' };
+    }
+    const isOutboundLike =
+      delivery.type === 'OUTBOUND' ||
+      delivery.type === 'EXCHANGE' ||
+      delivery.dispatchCategory === '출고' ||
+      delivery.dispatchCategory === '교환' ||
+      delivery.originalDispatchCategory === '출고' ||
+      delivery.originalDispatchCategory === '교환';
+
+    if (!isOutboundLike || !delivery.contractId) {
+      return { isOutboundLike, ready: true, status: 'NONE' as const, reason: '' };
+    }
+
+    let parsedCargo: any[] = [];
+    try {
+      if (delivery.cargoItems) {
+        const raw = typeof delivery.cargoItems === 'string' ? JSON.parse(delivery.cargoItems) : delivery.cargoItems;
+        if (Array.isArray(raw)) parsedCargo = raw;
+      }
+    } catch {
+      parsedCargo = [];
+    }
+
+    const deliveryCaIds: string[] = [];
+    let totalRequestedCount = 0;
+    parsedCargo.forEach(ci => {
+      totalRequestedCount += Number(ci?.count) || 0;
+      if (Array.isArray(ci?.contractAssetIds)) {
+        deliveryCaIds.push(...ci.contractAssetIds.filter(Boolean));
+      }
+    });
+
+    const contractCas = (contractAssetsByContractMap.get(delivery.contractId) || []).filter(ca => ca.status !== 'RETURNED');
+    let targetCas = deliveryCaIds.length > 0
+      ? contractCas.filter(ca => deliveryCaIds.includes(ca.id))
+      : [];
+
+    if (targetCas.length === 0) {
+      const unassignedCas = contractCas.filter(ca => !ca.assetId);
+      targetCas = unassignedCas.length > 0 ? unassignedCas : contractCas;
+    }
+
+    if (targetCas.length === 0 && totalRequestedCount > 0) {
+      return {
+        isOutboundLike: true,
+        ready: false,
+        status: 'UNASSIGNED' as const,
+        reason: `요구 수량(${totalRequestedCount}대)에 대한 계약 자산 슬롯이 미할당 상태입니다.`
+      };
+    }
+
+    const unassignedSlots = targetCas.filter(ca => !ca.assetId);
+    if (unassignedSlots.length > 0) {
+      const missingModels = unassignedSlots.map(ca => ca.expectedModel || '미지정').join(', ');
+      return {
+        isOutboundLike: true,
+        ready: false,
+        status: 'UNASSIGNED' as const,
+        reason: `장비 미할당 ${unassignedSlots.length}대 (${missingModels})`
+      };
+    }
+
+    const contractInsps = outboundInspectionsByContractMap.get(delivery.contractId) || [];
+    let hasRejected = false;
+    let hasInProgress = false;
+    const uninspectedAssets: string[] = [];
+
+    for (const ca of targetCas) {
+      const asset = ca.assetId ? assetMap.get(ca.assetId) : undefined;
+      const matchedInsps = contractInsps.filter(
+        ins =>
+          ins.contractAssetId === ca.id ||
+          (ins.deliveryId === delivery.id && ins.assetId === ca.assetId) ||
+          (ins.contractId === delivery.contractId && ins.assetId === ca.assetId)
+      );
+      if (matchedInsps.some(ins => ins.status === 'REJECTED')) hasRejected = true;
+      if (matchedInsps.some(ins => ins.status === 'IN_PROGRESS')) hasInProgress = true;
+
+      const isInspCompleted = matchedInsps.length > 0
+        ? matchedInsps.some(ins => ins.status === 'COMPLETED' || (ins.status as string) === 'APPROVED')
+        : ((asset?.status === 'AWAITING_TRANSPORT' || asset?.status === 'RENTED') && (ca.status === 'AWAITING_TRANSPORT' || ca.status === 'RENTED'));
+      const isAssetReady = asset?.status === 'AWAITING_TRANSPORT' || asset?.status === 'RENTED';
+
+      if (!isInspCompleted || !isAssetReady) {
+        const label = asset ? `${asset.modelName}(${asset.assetNo})` : (ca.expectedModel || ca.id);
+        uninspectedAssets.push(label);
+      }
+    }
+
+    if (uninspectedAssets.length > 0) {
+      return {
+        isOutboundLike: true,
+        ready: false,
+        status: (hasRejected ? 'REJECTED' : hasInProgress ? 'IN_PROGRESS' : 'PENDING') as 'REJECTED' | 'IN_PROGRESS' | 'PENDING',
+        reason: `출고검수 미완료 ${uninspectedAssets.length}대 (${uninspectedAssets.join(', ')})`
+      };
+    }
+
+    return {
+      isOutboundLike: true,
+      ready: true,
+      status: 'COMPLETED' as const,
+      reason: '장비 할당 및 출고 검수 승인 완료'
+    };
+  };
+
+  // 출고 검수 상태 파싱 헬퍼 (배차 단위 또는 계약 단위 조회)
+  const getOutboundInspectionStatus = (contractId?: string, delivery?: Delivery) => {
+    if (delivery) {
+      const readiness = checkDeliveryOutboundReadiness(delivery);
+      if (!readiness.isOutboundLike) return 'NONE';
+      return readiness.status;
+    }
+    if (!contractId) return 'NONE';
+    const insps = outboundInspectionsByContractMap.get(contractId);
+    if (!insps || insps.length === 0) return 'NONE';
+    if (insps.some(i => i.status === 'REJECTED')) return 'REJECTED';
+    if (insps.every(i => i.status === 'COMPLETED')) return 'COMPLETED';
+    if (insps.some(i => i.status === 'IN_PROGRESS')) return 'IN_PROGRESS';
+    return 'PENDING';
+  };
+
+  const deliveryCounts = useMemo(() => {
+    const counts = { today: 0, tomorrow: 0, pending: 0, dispatched: 0, delivered: 0, cancelled: 0, exchange: 0 };
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    for (const d of deliveries) {
+      const dt = d.loadingDate || d.scheduledDate;
+      if (dt === todayStr) counts.today++;
+      if (dt === tomorrowStr) counts.tomorrow++;
+      const st = getNormalizedDeliveryStatus(d);
+      if (st === 'PENDING') counts.pending++;
+      else if (st === 'DISPATCHED') counts.dispatched++;
+      else if (st === 'DELIVERED') counts.delivered++;
+      else if (st === 'CANCELLED') counts.cancelled++;
+      if (d.dispatchCategory === '교환' || d.type === 'EXCHANGE') counts.exchange++;
+    }
+    return counts;
+  }, [deliveries]);
+
+  const getOutboundInspectionBadge = (contractId?: string, delivery?: Delivery) => {
+    const status = getOutboundInspectionStatus(contractId, delivery);
+    switch (status) {
+      case 'UNASSIGNED':
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(245,158,11,0.15)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.35)', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <AlertCircle size={12} /> 🟠 장비할당 대기
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(239,68,68,0.15)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <AlertCircle size={12} /> 🔴 출고의뢰 반려됨
+          </span>
+        );
+      case 'COMPLETED':
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <CheckCircle size={12} /> 🟢 출고승인 완료
+          </span>
+        );
+      case 'IN_PROGRESS':
+      case 'PENDING':
+        return (
+          <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+            <Clock size={12} /> 🔵 출고검수 대기
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // 🖨️ 분산 인쇄 큐 상태 배지 헬퍼 (프린터1/프린터2 무인 출력 상태 표출)
+  const getPrintQueueBadge = (delivery: Delivery) => {
+    const c = delivery.contractId ? contractMap.get(delivery.contractId) : undefined;
+    const cNo = c?.contractNo;
+    let matchedJob: typeof printQueue[number] | undefined;
+    let latestTime = -Infinity;
+    for (const q of printQueue) {
+      if (!q.docNo) continue;
+      if ((cNo && q.docNo.includes(cNo)) || (delivery.id && q.docNo.includes(delivery.id))) {
+        const t = q.createdAt ? new Date(q.createdAt).getTime() : 0;
+        if (t > latestTime) {
+          latestTime = t;
+          matchedJob = q;
+        }
+      }
+    }
+
+    if (!matchedJob) return null;
+
+    const st = matchedJob.stationId ? printStationMap.get(matchedJob.stationId) : undefined;
+    const stationLabel = st?.stationName || (matchedJob.docType === 'DISPATCH_ORDER' ? '프린터1' : '프린터2');
+
+    switch (matchedJob.status) {
+      case 'COMPLETED':
+        return (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(34,197,94,0.15)',
+              color: 'var(--success)',
+              border: '1px solid rgba(34,197,94,0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap'
+            }}
+            title={`인쇄완료: ${matchedJob.completedAt ? new Date(matchedJob.completedAt).toLocaleTimeString('ko-KR') : ''}`}
+          >
+            🖨️ {stationLabel}: 🟢 출력완료
+          </span>
+        );
+      case 'PRINTING':
+        return (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(59,130,246,0.15)',
+              color: 'var(--primary)',
+              border: '1px solid rgba(59,130,246,0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            🖨️ {stationLabel}: 🔵 출력중
+          </span>
+        );
+      case 'FAILED':
+        return (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(239,68,68,0.15)',
+              color: 'var(--danger)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap'
+            }}
+            title={matchedJob.lastError || '출력 실패'}
+          >
+            🖨️ {stationLabel}: 🔴 오류
+          </span>
+        );
+      case 'PENDING':
+      default:
+        return (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(245,158,11,0.15)',
+              color: 'var(--warning)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            🖨️ {stationLabel}: 🟡 대기중
+          </span>
+        );
+    }
+  };
+
+  const getContract = (contractId?: string) => (contractId ? contractMap.get(contractId) : undefined);
+  const getCustomer = (customerId?: string) => (customerId ? customerMap.get(customerId) : undefined);
+
+  // 반납 배차건에 연결된 임차자산 ID 목록 추출 헬퍼 (cargoItems.returnAssetId 우선, assetIds 보조)
+  const extractReturnAssetIdsFromDelivery = (delivery?: Delivery | null): string[] => {
+    if (!delivery) return [];
+    const resultIds: string[] = [];
+    if (delivery.cargoItems) {
+      try {
+        const parsed = typeof delivery.cargoItems === 'string' ? JSON.parse(delivery.cargoItems) : delivery.cargoItems;
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (item?.returnAssetId && assetMap.has(String(item.returnAssetId))) {
+              const idStr = String(item.returnAssetId);
+              if (!resultIds.includes(idStr)) resultIds.push(idStr);
+            }
+          }
+        }
+      } catch {}
+    }
+    if (resultIds.length === 0 && delivery.assetIds) {
+      const rawIds = Array.isArray(delivery.assetIds)
+        ? (delivery.assetIds as any[])
+        : (typeof delivery.assetIds === 'string' ? delivery.assetIds.split(',') : []);
+      for (const rawId of rawIds) {
+        const idStr = String(rawId).trim();
+        const found = assetMap.get(idStr);
+        if (found && found.ownerType === 'RENTED' && !resultIds.includes(idStr)) {
+          resultIds.push(idStr);
+        }
+      }
+    }
+    return resultIds;
+  };
+
+  // 🏢 [반납 배차 전용] 임차자산 또는 임차처명으로 매입거래처(Vendor) 등록정보(주소·담당자·연락처) 조회 헬퍼
+  const normalizeVendorNameKey = (raw?: string): string =>
+    (raw || '')
+      .replace(/\(\s*주\s*\)|주식회사|유한회사|\(\s*유\s*\)/g, '')
+      .replace(/\s+/g, '')
+      .trim()
+      .toLowerCase();
+
+  const findSubleaseVendor = (asset?: Asset | null, fallbackRenterName?: string): Vendor | undefined => {
+    if (asset?.vendorId) {
+      const byId = (vendors || []).find(v => v.id === asset.vendorId);
+      if (byId) return byId;
+    }
+    const candidates = [asset?.renter, fallbackRenterName].filter(Boolean) as string[];
+    for (const cand of candidates) {
+      const trimmed = cand.trim();
+      if (!trimmed || trimmed === '임차처 미정') continue;
+      const exact = (vendors || []).find(v => (v.name || '').trim() === trimmed);
+      if (exact) return exact;
+      const normCand = normalizeVendorNameKey(trimmed);
+      if (normCand) {
+        const matched = (vendors || []).find(v => {
+          const nv = normalizeVendorNameKey(v.name);
+          return nv && (nv === normCand || normCand.includes(nv) || nv.includes(normCand));
+        });
+        if (matched) return matched;
+      }
+    }
+    return undefined;
+  };
+
+  const getSubleaseVendorInfoByAssets = (assetsOrIds: (string | Asset)[], destinationText?: string) => {
+    const selectedAssets = (assetsOrIds || [])
+      .map(item => (typeof item === 'string' ? assetMap.get(item) : item))
+      .filter(Boolean) as Asset[];
+    const firstAsset = selectedAssets[0];
+    const matchedVendor = findSubleaseVendor(firstAsset, destinationText);
+    const vendorName =
+      matchedVendor?.name ||
+      firstAsset?.renter ||
+      (destinationText && destinationText.trim() !== '임차처 미정' ? destinationText.trim() : '');
+    if (!vendorName && !matchedVendor) return null;
+    return {
+      vendor: matchedVendor,
+      vendorName,
+      name: vendorName,
+      address: matchedVendor?.address || '',
+      contactName: matchedVendor?.contactName || '',
+      contactPhone: matchedVendor?.contact || ''
+    };
+  };
+
+  const getDeliverySubleaseVendorInfo = (delivery?: Delivery | null, _fallbackAssets?: any[]) => {
+    if (!delivery) {
+      return null;
+    }
+    const returnIds = extractReturnAssetIdsFromDelivery(delivery);
+    let savedCargoVendor: any = null;
+    if (delivery.cargoItems) {
+      try {
+        const parsed = typeof delivery.cargoItems === 'string' ? JSON.parse(delivery.cargoItems) : delivery.cargoItems;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          savedCargoVendor = parsed.find((c: any) => c?.vendorName || c?.renter || c?.vendorAddress || c?.vendorContactName) || parsed[0];
+        }
+      } catch {}
+    }
+    const baseInfo = getSubleaseVendorInfoByAssets(returnIds, savedCargoVendor?.renter || delivery.destinationAddress);
+    const vendorName = baseInfo?.vendorName || savedCargoVendor?.vendorName || savedCargoVendor?.renter || '';
+    if (!vendorName && !baseInfo?.vendor) return null;
+    return {
+      vendor: baseInfo?.vendor,
+      vendorName,
+      name: vendorName,
+      address: baseInfo?.address || savedCargoVendor?.vendorAddress || '',
+      contactName: baseInfo?.contactName || savedCargoVendor?.vendorContactName || '',
+      contactPhone: baseInfo?.contactPhone || savedCargoVendor?.vendorContactPhone || ''
+    };
+  };
+
+  const isHqYardLabel = (label?: string): boolean => {
+    const trimmed = (label || '').trim();
+    const defaultYard = currentTenant?.yards?.find(y => y.isDefault) || currentTenant?.yards?.[0];
+    const hqAddr = currentTenant?.businessAddress || defaultYard?.address || currentTenant?.headOfficeAddress || currentTenant?.mainYardAddress || '';
+    return !trimmed || trimmed.includes('당사 보관소') || trimmed.includes('당사보관소') || trimmed.includes('당사 주기장') || trimmed.includes('본사 주기장') || (Boolean(hqAddr) && trimmed === hqAddr);
+  };
+
+  const getHqYardOriginInfo = (targetDelivery?: Delivery | null) => {
+    const defaultYard = currentTenant?.yards?.find(y => y.isDefault) || currentTenant?.yards?.[0];
+    const yardName = defaultYard?.name || '당사 보관소';
+    const address =
+      currentTenant?.businessAddress ||
+      defaultYard?.address ||
+      currentTenant?.headOfficeAddress ||
+      currentTenant?.mainYardAddress ||
+      '주소 미등록';
+    const staffInfo = resolveDispatchStaffContact({
+      delivery: targetDelivery,
+      currentUser,
+      users,
+      contracts,
+      currentTenant
+    });
+    return {
+      yardName,
+      name: yardName,
+      address,
+      contactName: staffInfo.name,
+      contactPhone: staffInfo.phone
+    };
+  };
+
+  // 회수/반납 배차 대상 자산 조회 (cargoItems.returnAssetId / delivery.assetIds 우선 매핑, 없으면 contractId 기준) - O(1) Map 조회
+  const getReturnAssets = (delivery: Delivery) => {
+    if (!delivery) return [];
+    const returnAssetIdsFromCargo = extractReturnAssetIdsFromDelivery(delivery);
+    if (returnAssetIdsFromCargo.length > 0) {
+      const found = returnAssetIdsFromCargo.map(id => assetMap.get(id)).filter(Boolean) as Asset[];
+      if (found.length > 0) {
+        return found.map(a => ({
+          modelName: a.modelName || '-',
+          assetNo: a.assetNo || '-',
+          id: a.id,
+          ownerType: a.ownerType,
+          antiEntrapmentOwnership: a.antiEntrapmentOwnership
+        }));
+      }
+    }
+    if (delivery.assetIds) {
+      const rawIds = Array.isArray(delivery.assetIds)
+        ? (delivery.assetIds as any[])
+        : (typeof delivery.assetIds === 'string' ? delivery.assetIds.split(',') : []);
+      const ids = rawIds.map((id: any) => String(id).trim()).filter(Boolean);
+      const found = ids.map(id => assetMap.get(id)).filter(Boolean) as Asset[];
+      if (found.length > 0) {
+        return found.map(a => ({
+          modelName: a.modelName || '-',
+          assetNo: a.assetNo || '-',
+          id: a.id,
+          ownerType: a.ownerType,
+          antiEntrapmentOwnership: a.antiEntrapmentOwnership
+        }));
+      }
+    }
+    if (delivery.contractId) {
+      const cas = contractAssetsByContractMap.get(delivery.contractId) || [];
+      return cas
+        .map(ca => {
+          const asset = ca.assetId ? assetMap.get(ca.assetId) : undefined;
+          return asset ? {
+            modelName: asset.modelName || ca.expectedModel || '-',
+            assetNo: asset.assetNo || '-',
+            id: asset.id,
+            ownerType: asset.ownerType,
+            antiEntrapmentOwnership: asset.antiEntrapmentOwnership
+          } : null;
+        })
+        .filter(Boolean) as {
+          modelName: string;
+          assetNo: string;
+          id: string;
+          ownerType?: Asset['ownerType'];
+          antiEntrapmentOwnership?: Asset['antiEntrapmentOwnership'];
+        }[];
+    }
+    return [];
+  };
+
+  // 🖨️ 출고/입고요청서 서식 생성기 (100% 전사 표준 5섹션 규격)
+  const buildDispatchDocHtml = (delivery: Delivery, docType: 'OUTBOUND' | 'INBOUND') => {
+    const contract = getContract(delivery.contractId);
+    const customer = contract ? getCustomer(contract.customerId) : null;
+    const site = sites?.find(s => s.id === contract?.siteId);
+    const cargoItems = parseCargoItems(delivery);
+    const returnAssets = getReturnAssets(delivery);
+    const isOutbound = docType === 'OUTBOUND';
+    const title = isOutbound ? '출고요청서' : '입고요청서';
+    const now = new Date();
+    const y = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const printTimeStr = `${y}.${mo}.${d} ${hh}:${mi}:${ss}`;
+
+    const salesRep = contract?.salespersonId ? users?.find(u => u.id === contract.salespersonId) : null;
+    const salesRepDisplay = salesRep ? `${salesRep.name} ${salesRep.phone ? `(${salesRep.phone})` : ''}` : `${currentUser?.name || '본사 담당자'} ${currentUser?.phone ? `(${currentUser.phone})` : ''}`;
+
+    // 현장담당자 추출 (1순위: 배차 의뢰 메모에 지정된 담당자, 2순위: site.contacts 활성 담당자, 3순위: site.contactName)
+    let siteContactName = '';
+    let siteContactPhone = '';
+    const memoSource = `${delivery.memo || ''} ${(delivery as any).rawText || ''}`;
+    const memoContactMatch =
+      memoSource.match(/\[고객담당자:\s*([^\(\]\|\n]+?)(?:\s*\(([^\)\]]+)\))?\]/) ||
+      memoSource.match(/(?:현장담당자?|방문지\s*담당자?):\s*([^\(\s\|,]+)(?:\s*\(([^\)]+)\))?/);
+    if (memoContactMatch) {
+      const parsedName = (memoContactMatch[1] || '').trim();
+      const parsedPhone = (memoContactMatch[2] || '').trim();
+      if (parsedName && parsedName !== '-' && parsedName !== '미상') siteContactName = parsedName;
+      if (parsedPhone && parsedPhone !== '-' && parsedPhone !== '미상') siteContactPhone = parsedPhone;
+    }
+    if (!siteContactName) {
+      const actContacts = (site?.contacts || []).filter((c: any) => c.isActive !== false && c.name && c.name !== '미상');
+      if (actContacts.length > 0) {
+        siteContactName = actContacts[0].name;
+        siteContactPhone = siteContactPhone || actContacts[0].contact || '';
+      } else {
+        siteContactName = (site?.contactName && site.contactName !== '미상') ? site.contactName : '';
+        siteContactPhone = siteContactPhone || ((site?.contact && site.contact !== '미상') ? site.contact : '');
+      }
+    }
+
+    // 반납 배차인 경우 매입거래처(임차처) 등록정보(주소·담당자·연락처) 우선 적용
+    const isReturnDispatch = delivery.type === 'RETURN' || delivery.dispatchCategory === '반납';
+    const returnVendorInfo = isReturnDispatch ? getDeliverySubleaseVendorInfo(delivery) : null;
+    if (returnVendorInfo) {
+      if (returnVendorInfo.contactName) siteContactName = returnVendorInfo.contactName;
+      if (returnVendorInfo.contactPhone) siteContactPhone = returnVendorInfo.contactPhone;
+    }
+
+    // 주소 결정
+    const destAddr =
+      (returnVendorInfo?.address
+        ? `${returnVendorInfo.vendorName ? `${returnVendorInfo.vendorName} — ` : ''}${returnVendorInfo.address}`
+        : '') ||
+      delivery.destinationAddress ||
+      site?.address ||
+      '-';
+
+    // 스케줄
+    const loadTimeStr = delivery.loadingTimeSlot ? `[${delivery.loadingTimeSlot}]` : '';
+    const loadingSchedule = delivery.loadingDate ? `${delivery.loadingDate} ${loadTimeStr}`.trim() : (delivery.requestDate || '-');
+    const unloadTimeStr = delivery.unloadingTimeSlot ? `[${delivery.unloadingTimeSlot}]` : '';
+    const unloadingSchedule = delivery.unloadingDate ? `${delivery.unloadingDate} ${unloadTimeStr}`.trim() : (delivery.scheduledDate || loadingSchedule);
+
+    // 운송 차량 목록 추출 (다수 차량 지원)
+    interface AssignedVehicleView {
+      no: string;
+      vehicleType: string;
+      transportCompany: string;
+      vehicleNo: string;
+      driverName: string;
+      driverContact: string;
+    }
+    const vehicleList: AssignedVehicleView[] = [];
+
+    if (Array.isArray(delivery.assignedVehicles) && delivery.assignedVehicles.length > 0) {
+      delivery.assignedVehicles.forEach((v: any, idx: number) => {
+        vehicleList.push({
+          no: `${idx + 1}호차`,
+          vehicleType: v.vehicleType || delivery.vehicleType || '5T',
+          transportCompany: v.transportCompany || delivery.transportCompany || '자사/협력운송',
+          vehicleNo: v.vehicleNo || (idx === 0 ? delivery.vehicleNo || '-' : '-'),
+          driverName: v.driverName || (idx === 0 ? delivery.driverName || '배차 대기중' : '배차 대기중'),
+          driverContact: v.driverContact || (idx === 0 ? delivery.driverContact || '-' : '-')
+        });
+      });
+    } else if (delivery.vehicles) {
+      try {
+        const parsed = JSON.parse(delivery.vehicles);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach((v: any, idx: number) => {
+            vehicleList.push({
+              no: `${idx + 1}호차`,
+              vehicleType: v.vehicleType || delivery.vehicleType || '5T',
+              transportCompany: v.transportCompany || delivery.transportCompany || '자사/협력운송',
+              vehicleNo: v.vehicleNo || (idx === 0 ? delivery.vehicleNo || '-' : '-'),
+              driverName: v.driverName || (idx === 0 ? delivery.driverName || '배차 대기중' : '배차 대기중'),
+              driverContact: v.driverContact || (idx === 0 ? delivery.driverContact || '-' : '-')
+            });
+          });
+        }
+      } catch (e) {}
+    }
+
+    if (vehicleList.length === 0) {
+      vehicleList.push({
+        no: '1호차',
+        vehicleType: delivery.vehicleType || '5T',
+        transportCompany: delivery.transportCompany || '자사/협력운송',
+        vehicleNo: delivery.vehicleNo || '-',
+        driverName: delivery.driverName || '배차 대기중',
+        driverContact: delivery.driverContact || '-'
+      });
+    }
+
+    // 수량 및 장비 목록 (50:50 대칭 균형 그리드)
+    const unitList: { no: number; modelName: string; assetNo: string }[] = [];
+    let uNo = 1;
+    if (isOutbound) {
+      for (const c of cargoItems) {
+        const count = Math.max(1, Number(c.count) || 1);
+        for (let i = 0; i < count; i++) {
+          unitList.push({ no: uNo++, modelName: c.modelName || '-', assetNo: '' });
+        }
+      }
+    } else {
+      if (returnAssets && returnAssets.length > 0) {
+        for (const a of returnAssets) {
+          unitList.push({ no: uNo++, modelName: a.modelName || '-', assetNo: a.assetNo || '' });
+        }
+      } else if (cargoItems && cargoItems.length > 0) {
+        for (const c of cargoItems) {
+          const count = Math.max(1, Number(c.count) || 1);
+          for (let i = 0; i < count; i++) {
+            unitList.push({ no: uNo++, modelName: c.modelName || '-', assetNo: '' });
+          }
+        }
+      }
+    }
+    const totalCount = unitList.length;
+
+    const halfCount = Math.max(1, Math.ceil(unitList.length / 2));
+    let assetRowsHtml = '';
+    for (let i = 0; i < halfCount; i++) {
+      const left = unitList[i];
+      const right = unitList[i + halfCount];
+      assetRowsHtml += `
+      <tr>
+        <td style="text-align:center;">${left ? left.no : '&nbsp;'}</td>
+        <td style="font-weight:700; padding-left:5px;">${left ? left.modelName : '&nbsp;'}</td>
+        <td style="text-align:center; font-weight:600;">${left && !isOutbound ? left.assetNo : '&nbsp;'}</td>
+        <td style="text-align:center; border-right:2px solid #000000; font-size:7.5pt;">${left ? '[ &nbsp; ]' : '&nbsp;'}</td>
+        <td style="text-align:center;">${right ? right.no : '&nbsp;'}</td>
+        <td style="font-weight:700; padding-left:5px;">${right ? right.modelName : '&nbsp;'}</td>
+        <td style="text-align:center; font-weight:600;">${right && !isOutbound ? right.assetNo : '&nbsp;'}</td>
+        <td style="text-align:center; font-size:7.5pt;">${right ? '[ &nbsp; ]' : '&nbsp;'}</td>
+      </tr>`;
+    }
+
+    // 옵션 항목 4대 구분 추출 (유상옵션[단가제외] / 무상옵션 / 부착물 / 현장요구사양)
+    const siteMaster = site?.siteMasterId ? siteMasters?.find(m => m.id === site.siteMasterId) : undefined;
+    const categorizedOpts = extractCategorizedSiteOptions({
+      site,
+      siteMaster,
+      customer,
+      closingMemo: delivery.closingMemo,
+      deliveryMemo: delivery.memo,
+      standardOptions,
+    });
+
+    // 특이사항 및 작업 요청 정제
+    let staggeredMemo = '';
+    if (delivery.memo && delivery.memo.includes('[시차출고]')) {
+      const stMatch = delivery.memo.match(/\[시차출고\]\s*([^\|]+)/);
+      if (stMatch) staggeredMemo = stMatch[1].trim();
+    }
+    let retrievalMemo = '';
+    if (delivery.memo && delivery.memo.includes('[대차회수대상]')) {
+      const retMatch = delivery.memo.match(/\[대차회수대상\]\s*([^\|]+)/);
+      if (retMatch) retrievalMemo = retMatch[1].trim();
+    }
+
+    let cleanNoteForPrint = (delivery.memo || '')
+      .replace(/\[스마트출고\]\s*/g, '')
+      .replace(/\[스마트[^\]]*\]\s*/g, '')
+      .replace(/청구담당:\s*[^\|]+(\|)?/g, '')
+      .replace(/계산서:\s*[^\|]+(\|)?/g, '')
+      .replace(/\[정산일정\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[차종\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[하차일정\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[현장상세주소\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[옵션\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[시차출고\]\s*[^\|]+(\|)?/g, '')
+      .replace(/\[대차회수대상\]\s*[^\|]+(\|)?/g, '')
+      .replace(/(당사부담|고객사부담|기본운임)/g, '');
+
+    if (cleanNoteForPrint.includes('특이사항:')) {
+      const parts = cleanNoteForPrint.split('특이사항:');
+      cleanNoteForPrint = parts[1] || '';
+    }
+
+    cleanNoteForPrint = cleanNoteForPrint
+      .split('|')
+      .map(s => s.trim())
+      .filter(s => s && s !== '-' && s !== '없음' && !s.startsWith('현장담당:') && !s.startsWith('상차:'))
+      .join(' | ')
+      .trim();
+
+    if (!cleanNoteForPrint) cleanNoteForPrint = '특이사항 없음';
+
+    const rawNoteList = cleanNoteForPrint === '특이사항 없음'
+      ? []
+      : cleanNoteForPrint.split(/\r?\n| \| /).map(s => s.trim()).filter(s => s && s !== '-' && s !== '없음');
+
+    const noteRowsHtml = rawNoteList.length === 0
+      ? `<tr><th class="nowrap">요청사항</th><td class="wrap-text" style="line-height: 1.35; padding: 3px 5px !important;">특이사항 없음</td></tr>`
+      : rawNoteList.map((line, idx) => `
+        <tr>
+          <th class="nowrap">${idx === 0 ? '요청사항' : `요청사항 (${idx + 1})`}</th>
+          <td class="wrap-text" style="line-height: 1.35; padding: 3px 5px !important; white-space: pre-wrap; word-break: break-all;">${line}</td>
+        </tr>
+      `).join('');
+
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>${title}_${customer?.name || '고객사'}_${site?.name || '현장'}</title>
+  <style>
+    @page { size: A4 portrait; margin: 7mm 10mm 7mm 10mm; }
+    @media print {
+      @page { size: A4 portrait; margin: 7mm 10mm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { color: #000000 !important; background-color: #f5f2eb !important; }
+      .no-print { display: none !important; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { font-family: 'Malgun Gothic', '맑은 고딕', Dotum, sans-serif; padding: 0; margin: 0 auto; color: #000000; background-color: #f5f2eb; width: 100%; max-width: 210mm; font-size: 8.5pt; line-height: 1.15; }
+    p, div, span, table, tr, td, th { margin: 0; padding: 0; line-height: 1.15; color: #000000; }
+    table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 3px; table-layout: fixed; }
+    th, td { border: 1px solid #000000; padding: 2.5px 5px !important; font-size: 8pt; vertical-align: middle; color: #000000; word-break: break-all; }
+    th { background-color: #f0f0f0 !important; font-weight: 700; color: #000000; text-align: left; }
+    .nowrap { white-space: nowrap; }
+    .wrap-text { white-space: normal; line-height: 1.25; }
+    .header-table { width: 100%; border: none; border-bottom: 2px solid #000000; margin-bottom: 3px; padding-bottom: 2px; }
+    .header-table td { border: none; padding: 0 !important; vertical-align: middle; color: #000000; }
+    .sec-title { font-size: 8.5pt; font-weight: 800; color: #000000; border-left: 3.5px solid #000000; padding-left: 4px; margin-top: 3px; margin-bottom: 1px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 2px 0;">
+    <table class="header-table">
+      <tr>
+        <td style="width: 25%; text-align: left; font-size: 7.5pt; color: #333333;">
+          문서: ${delivery.id}<br>
+          일시: ${printTimeStr}
+        </td>
+        <td style="width: 55%; text-align: center; font-size: 15pt; font-weight: 800; letter-spacing: 2px; color: #000000;">
+          ${(currentTenant?.displayName || currentTenant?.tradeName || '기연리프트').toUpperCase()} ${title}
+        </td>
+        <td style="width: 20%; text-align: right;">
+          <table style="width: 60px; border: 1px solid #000000; float: right; margin: 0; border-collapse: collapse;">
+            <tr><td style="background-color: #f0f0f0; border-bottom: 1px solid #000000; text-align: center; font-size: 7.5pt; font-weight: 700; padding: 1px 0;">${isOutbound ? '출고 확인' : '입고 확인'}</td></tr>
+            <tr><td style="height: 25px; text-align: center; font-size: 7.5pt; color: #777777;">(인)</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div class="sec-title">1. 고객사 및 현장 정보</div>
+    <table>
+      <colgroup><col style="width: 12%;"><col style="width: 38%;"><col style="width: 12%;"><col style="width: 38%;"></colgroup>
+      <tr>
+        <th class="nowrap">고객사명</th><td class="wrap-text" style="font-weight: 700;">${customer?.name || '-'}</td>
+        <th class="nowrap">${isOutbound ? '투입현장' : '현장명'}</th><td class="wrap-text" style="font-weight: 700;">${site?.name || '-'}</td>
+      </tr>
+      <tr>
+        <th class="nowrap">${isOutbound ? '납품주소' : '회수지(상차)'}</th><td colspan="3" class="wrap-text">${destAddr}</td>
+      </tr>
+      <tr>
+        <th class="nowrap">영업담당</th><td class="wrap-text">${salesRepDisplay}</td>
+        <th class="nowrap">현장담당</th><td class="wrap-text">${siteContactName || '-'} ${siteContactPhone ? `(${siteContactPhone})` : ''}</td>
+      </tr>
+    </table>
+
+    <div class="sec-title">2. 배송 배차 및 운송 정보</div>
+    <table>
+      <colgroup><col style="width: 12%;"><col style="width: 38%;"><col style="width: 12%;"><col style="width: 38%;"></colgroup>
+      <tr>
+        <th class="nowrap">상차스케줄</th><td class="wrap-text" style="font-weight: 700;">${loadingSchedule}</td>
+        <th class="nowrap">하차스케줄</th><td class="wrap-text" style="font-weight: 700;">${unloadingSchedule}</td>
+      </tr>
+      <tr>
+        <th class="nowrap">신청 총수량</th><td class="nowrap" style="font-weight: 700;">총 ${totalCount}대</td>
+        <th class="nowrap">배정 차량수</th><td class="nowrap" style="font-weight: 700;">총 ${vehicleList.length}대 차량</td>
+      </tr>
+    </table>
+
+    <table style="margin-top: 2px;">
+      <thead>
+        <tr>
+          <th style="width: 10%; text-align: center;" class="nowrap">차량</th>
+          <th style="width: 12%; text-align: center;" class="nowrap">차종</th>
+          <th style="width: 24%; text-align: center;" class="nowrap">운송사</th>
+          <th style="width: 20%; text-align: center;" class="nowrap">차량번호</th>
+          <th style="width: 14%; text-align: center;" class="nowrap">기사명</th>
+          <th style="width: 20%; text-align: center;" class="nowrap">기사연락처</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vehicleList.map(v => `
+          <tr>
+            <td style="text-align: center; font-weight: 700;" class="nowrap">${v.no}</td>
+            <td style="text-align: center;" class="nowrap">${v.vehicleType}</td>
+            <td style="text-align: center; font-weight: 600;" class="wrap-text">${v.transportCompany}</td>
+            <td style="text-align: center;" class="nowrap">${v.vehicleNo}</td>
+            <td style="text-align: center; font-weight: 700;" class="nowrap">${v.driverName}</td>
+            <td style="text-align: center;" class="nowrap">${v.driverContact}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <div class="sec-title">3. ${isOutbound ? `출고 대상 장비 목록 (총 ${totalCount}대 의뢰 - 주기장 실물 매핑용)` : `회수 대상 장비 목록 (총 ${unitList.length}대)`}</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 6%; text-align: center;" class="nowrap">순번</th>
+          <th style="width: 21%; text-align: center;" class="nowrap">모델명</th>
+          <th style="width: 17%; text-align: center;" class="nowrap">관리번호</th>
+          <th style="width: 6%; text-align: center; border-right: 2px solid #000000;" class="nowrap">확인</th>
+          <th style="width: 6%; text-align: center;" class="nowrap">순번</th>
+          <th style="width: 21%; text-align: center;" class="nowrap">모델명</th>
+          <th style="width: 17%; text-align: center;" class="nowrap">관리번호</th>
+          <th style="width: 6%; text-align: center;" class="nowrap">확인</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${assetRowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 10px 0;">의뢰된 장비 목록이 없습니다.</td></tr>'}
+      </tbody>
+    </table>
+
+    <div class="sec-title">4. ${isOutbound ? '장비 출하 스펙 요구사항 (현장 요청 검수 항목)' : '회수 대상 장비 장착 옵션 및 보양 회수/탈거 항목'}</div>
+    <table>
+      <colgroup><col style="width: 14%;"><col style="width: 86%;"></colgroup>
+      <tbody>
+        <tr>
+          <th class="nowrap">유상옵션</th>
+          <td class="wrap-text" style="font-weight: 700;">${categorizedOpts.paidOptionsText}</td>
+        </tr>
+        <tr>
+          <th class="nowrap">무상옵션</th>
+          <td class="wrap-text" style="font-weight: 700;">${categorizedOpts.protectionText}</td>
+        </tr>
+        <tr>
+          <th class="nowrap">부착물</th>
+          <td class="wrap-text" style="font-weight: 700;">${categorizedOpts.attachmentsText}</td>
+        </tr>
+        <tr>
+          <th class="nowrap">현장요구사양</th>
+          <td class="wrap-text" style="font-weight: 700;">${categorizedOpts.specsText}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="sec-title">5. 현장 특이사항 및 작업 요청</div>
+    <table>
+      <colgroup><col style="width: 12%;"><col style="width: 88%;"></colgroup>
+      ${staggeredMemo ? `<tr><th class="nowrap">시차출고</th><td class="wrap-text" style="font-weight: 700;">${staggeredMemo}</td></tr>` : ''}
+      ${retrievalMemo ? `<tr><th class="nowrap">대차 회수대상</th><td class="wrap-text" style="font-weight: 700;">${retrievalMemo}</td></tr>` : ''}
+      ${noteRowsHtml}
+      ${!isOutbound && returnAssets.some(a => a.ownerType === 'RENTED' && a.antiEntrapmentOwnership === 'VENDOR') ? `<tr><th class="nowrap" style="color: #dc2626; font-weight: 800;">옵션 주의</th><td class="wrap-text" style="color: #dc2626; font-weight: 800; background-color: #fee2e2;">[임차처 소유 협착방지봉 탈거 절대 금지] ${returnAssets.filter(a => a.ownerType === 'RENTED' && a.antiEntrapmentOwnership === 'VENDOR').map(a => `${a.assetNo}(${a.modelName})`).join(', ')} 장비는 임차거래처 소유 협착방지봉이 장착되어 있으므로 주기장 입고 시 절대 탈거(제거)하지 마십시오!</td></tr>` : ''}
+    </table>
+  </div>
+</body>
+</html>`;
+  };
+
+  // 🖨️ 원격 분산 인쇄 큐 전송 (출고: 프린터1, 입고: 프린터2 자동 라우팅 무인 출력)
+  const handleRemoteQueuePrintDispatchRequest = async (delivery: Delivery, docType: 'OUTBOUND' | 'INBOUND') => {
+    const contract = getContract(delivery.contractId);
+    const customer = contract ? getCustomer(contract.customerId) : null;
+    const site = sites?.find(s => s.id === contract?.siteId);
+    const isOutbound = docType === 'OUTBOUND';
+    const title = isOutbound ? '출고요청서' : '입고요청서';
+    const html = buildDispatchDocHtml(delivery, docType);
+
+    // 타겟 스테이션 결정 (선호 스테이션 우선 -> 출고: DISPATCH_ORDER/프린터1, 입고: RETURN_ORDER/프린터2)
+    const targetDocType = isOutbound ? 'DISPATCH_ORDER' : 'RETURN_ORDER';
+    const savedStationId = localStorage.getItem(isOutbound ? 'preferred_print_station_dispatch' : 'preferred_print_station_return');
+    const targetStation = (savedStationId && savedStationId !== 'BROWSER_DIRECT' && printStations.find(s => s.id === savedStationId)) ||
+      printStations.find(s => s.docTypeDefault === targetDocType) ||
+      (isOutbound
+        ? printStations.find(s => s.stationName.includes('출고') || s.stationName.includes('프린터1'))
+        : printStations.find(s => s.stationName.includes('입고') || s.stationName.includes('프린터2'))) ||
+      printStations[0];
+
+    const targetDocName = isOutbound ? '출고요청서' : '회수요청서';
+    const docNo = contract?.contractNo || delivery.id;
+    const docTitle = `${title}_${customer?.name || '고객사'}_${site?.name || delivery.id}`;
+    const stationName = targetStation?.stationName || (isOutbound ? '출고장 프린터' : '입고장 프린터');
+
+    try {
+      await enqueuePrintJob({
+        stationId: targetStation?.id,
+        docType: targetDocType,
+        docNo,
+        title: docTitle,
+        documentHtml: html,
+        requestedById: currentUser?.id,
+        requestedByName: currentUser?.name
+      });
+      showToast(`[${stationName}] 인쇄 큐 전송 완료`);
+      showPrintSuccessModal({
+        docType: targetDocName,
+        docTitle,
+        docNo,
+        stationName,
+        printerName: targetStation?.localPrinterName
+      });
+    } catch (err: any) {
+      showToast(`원격 인쇄 큐 전송 실패: ${err.message || err}`, 'error');
+    }
+  };
+
+  // 엑셀 날짜(시리얼 숫자 46174 등 또는 포맷팅 텍스트)를 YYYY-MM-DD로 변환하는 정규화 헬퍼
+  const formatExcelDateStr = (rawVal: any): string => {
+    if (!rawVal) return '-';
+    const str = String(rawVal).trim();
+    if (!str) return '-';
+
+    // 1. 엑셀 시리얼 숫자 (예: 46174)
+    if (!isNaN(Number(str)) && Number(str) > 30000 && Number(str) < 60000) {
+      const serial = Number(str);
+      const utcDays = Math.floor(serial - 25569);
+      const utcValue = utcDays * 86400;
+      const dateObj = new Date(utcValue * 1000);
+      const year = dateObj.getUTCFullYear();
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // 2. 06월 01일 포맷
+    const currentYear = new Date().getFullYear();
+    if (str.includes('월') && str.includes('일')) {
+      const mMatch = str.match(/(\d+)월\s*(\d+)일/);
+      if (mMatch) {
+        return `${currentYear}-${String(mMatch[1]).padStart(2, '0')}-${String(mMatch[2]).padStart(2, '0')}`;
+      }
+    }
+
+    // 3. 6/1 포맷
+    if (str.includes('/')) {
+      const parts = str.split('/');
+      if (parts.length === 2) {
+        return `${currentYear}-${String(parts[0]).padStart(2, '0')}-${String(parts[1]).padStart(2, '0')}`;
+      } else if (parts.length === 3) {
+        return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+      }
+    }
+
+    return str;
+  };
+
+  const isAuditSettleGranted = useSpecialFeature('tab:truck_dispatch:audit_settle');
+  const { isRuleEnabled, createApprovalRequest } = useApproval();
+
+  const [activeTab, setActiveTabState] = useState<'DISPATCH' | 'NEGOTIATION' | 'RECONCILIATION'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('truck_dispatch_active_tab') as any;
+      if (saved === 'DISPATCH' || saved === 'NEGOTIATION' || saved === 'RECONCILIATION') return saved;
+    }
+    return 'DISPATCH';
+  });
+  const setActiveTab = (tab: 'DISPATCH' | 'NEGOTIATION' | 'RECONCILIATION') => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('truck_dispatch_active_tab', tab);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuditSettleGranted && activeTab === 'RECONCILIATION') {
+      setActiveTab('DISPATCH');
+    }
+  }, [isAuditSettleGranted, activeTab]);
+
+  // 엑셀 일괄 배차 등록 모달 상태
+  const [dispatchExcelModalOpen, setDispatchExcelModalOpen] = useState(false);
+
+  // 배차 엑셀 일괄 업로드 컬럼 정의
+  const dispatchExcelColumns: ExcelColumnDef[] = [
+    { key: 'type', label: '배차유형', required: true, sample: '출고' },
+    { key: 'customerName', label: '고객사명', required: true, sample: '(주)기연건설' },
+    { key: 'siteName', label: '현장명', sample: '판교 테크노밸리 B동' },
+    { key: 'startAddress', label: '상차지주소', required: true, sample: '충북 청주시 흥덕구 직지대로 436' },
+    { key: 'endAddress', label: '하차지주소', required: true, sample: '경기 성남시 분당구 판교역로 166' },
+    { key: 'requestDate', label: '희망일시', required: true, type: 'date', sample: '2026-09-15' },
+    { key: 'modelName', label: '장비모델명', sample: 'S-0808' },
+    { key: 'deliveryCost', label: '운송비', type: 'number', sample: 120000 },
+    { key: 'billableToCustomer', label: '고객청구여부', sample: 'Y' },
+    { key: 'memo', label: '비고및특이사항', sample: '현장 진입로 협소' },
+  ];
+
+  // 배차 엑셀 일괄 등록 처리 핸들러 (헌장 2.3 단일 EXCHANGE 및 왕복할인 자동산정)
+  const handleBatchUploadDeliveries = async (rows: Record<string, any>[]) => {
+    let successCount = 0;
+    const today = new Date().toISOString().split('T')[0];
+    const tenantId = currentTenant?.id || 'giyeun';
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const typeRaw = String(row.type || '출고').trim();
+      const isExchange = typeRaw.includes('교환') || typeRaw.toUpperCase().includes('EXCHANGE');
+      const isInbound = typeRaw.includes('회수') || typeRaw.includes('입고') || typeRaw.toUpperCase().includes('INBOUND');
+      const deliveryType = isExchange ? 'EXCHANGE' : isInbound ? 'INBOUND' : 'OUTBOUND';
+      const dispatchCategory = isExchange ? '교환' : isInbound ? '회수' : '출고';
+
+      const customerName = String(row.customerName || '').trim();
+      if (!customerName) continue;
+
+      let deliveryCost = Number(row.deliveryCost) || 0;
+      // 💡 [전사 표준 헌장 2.3] 단일 EXCHANGE 1건 발행 및 왕복 운송비 할인 적용
+      if (isExchange && deliveryCost > 60000) {
+        deliveryCost = Math.max(0, deliveryCost);
+      }
+
+      const billableStr = String(row.billableToCustomer || 'Y').toUpperCase();
+      const billableToCustomer = !(billableStr === 'N' || billableStr === 'FALSE' || billableStr === '무상' || billableStr === '당사');
+
+      const deliveryOrderNo = `DEL-${today.replace(/-/g, '')}-${String(Date.now()).slice(-4)}${i}`;
+
+      const matchedCust = customers.find(c => c.name?.toLowerCase().includes(customerName.toLowerCase()));
+
+      await db.insertRow<Delivery>('deliveries', {
+        id: `del_xl_${Date.now()}_${i}`,
+        deliveryOrderNo,
+        type: deliveryType as any,
+        dispatchCategory: dispatchCategory as any,
+        status: 'PENDING',
+        customerId: matchedCust?.id || 'cust-manual',
+        customerName,
+        siteName: row.siteName || '',
+        originAddress: row.startAddress || '본사 주기장',
+        destinationAddress: row.endAddress || row.startAddress || '현장',
+        requestDate: row.requestDate || today,
+        scheduledDate: row.requestDate || today,
+        cargoItems: JSON.stringify([{ modelName: row.modelName || '고소작업대', count: 1 }]),
+        deliveryCost,
+        expectedCost: deliveryCost,
+        billableToCustomer,
+        memo: row.memo || '',
+        tenant_id: tenantId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as any);
+
+      successCount++;
+    }
+
+    await db.awaitPendingWrites();
+    refreshAllData();
+    showToast(`${successCount}건의 배차 의뢰가 일괄 등록되었습니다.`);
+    return { successCount, message: '배차 일괄 등록 완료' };
+  };
+
+  // 토스트 알림 상태 (헌장 5.2: 브라우저 alert/confirm 전면 퇴출)
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+  const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // 4단계 배차 진행 상태 탭 state ('ALL' | 'PENDING' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED')
+  // 💡 [사장님 지시] 기본값: 배차 전(대기) ('PENDING')
+  const [activeDispatchStatusTab, setActiveDispatchStatusTab] = useState<string>('PENDING');
+
+  // 📅 배차 요청/운송일 기간 조회 피커 state
+  // 💡 [사장님 지시] 데이터 누적 시 성능 저하 방지 — 기본값: 오늘부터 7일간
+  const getInitialDispatchDateRange = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const future = new Date(today);
+    future.setDate(today.getDate() + 7);
+    const fY = future.getFullYear();
+    const fM = String(future.getMonth() + 1).padStart(2, '0');
+    const fD = String(future.getDate()).padStart(2, '0');
+    const futureStr = `${fY}-${fM}-${fD}`;
+
+    return { todayStr, futureStr };
+  };
+
+  const initialRange = getInitialDispatchDateRange();
+  const [startDate, setStartDate] = useState<string>(initialRange.todayStr);
+  const [endDate, setEndDate] = useState<string>(initialRange.futureStr);
+
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const handleSetDateRange = (type: 'TODAY' | 'WEEK' | 'MONTH' | 'ALL') => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    if (type === 'TODAY') {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (type === 'WEEK') {
+      const future = new Date(today);
+      future.setDate(today.getDate() + 7);
+      const fY = future.getFullYear();
+      const fM = String(future.getMonth() + 1).padStart(2, '0');
+      const fD = String(future.getDate()).padStart(2, '0');
+      setStartDate(todayStr);
+      setEndDate(`${fY}-${fM}-${fD}`);
+    } else if (type === 'MONTH') {
+      const future = new Date(today);
+      future.setMonth(today.getMonth() + 1);
+      const fY = future.getFullYear();
+      const fM = String(future.getMonth() + 1).padStart(2, '0');
+      const fD = String(future.getDate()).padStart(2, '0');
+      setStartDate(todayStr);
+      setEndDate(`${fY}-${fM}-${fD}`);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  // ── 운송사 배차 협의 전용 상태 ──
+  const [selectedNegoDeliveryId, setSelectedNegoDeliveryId] = useState<string | null>(null);
+  const [negoCompanyId, setNegoCompanyId] = useState<string>('');
+  const [negoVehicleType, setNegoVehicleType] = useState<string>('5T');
+  const [negoProposedCost, setNegoProposedCost] = useState<number>(0);
+  const [negoTargetCost, setNegoTargetCost] = useState<number>(0);
+  const [negoCallSummary, setNegoCallSummary] = useState<string>('');
+  const [negoSpecialTerms, setNegoSpecialTerms] = useState<string>('');
+  const [negoFilterStatus, setNegoFilterStatus] = useState<'ALL' | 'PENDING' | 'IN_NEGOTIATION' | 'CONFIRMED'>('ALL');
+  const [negoSearchQuery, setNegoSearchQuery] = useState<string>('');
+
+  // ── 통화 협의 큐 상태 ──
+  const [callQueue, setCallQueue] = useState<TransportCallQueueItem[]>(() => getTransportCallQueue());
+  const [selectedCallQueueId, setSelectedCallQueueId] = useState<string | null>(() => {
+    const q = getTransportCallQueue();
+    return q.length > 0 ? q[0].id : null;
+  });
+  const [isUploadingCall, setIsUploadingCall] = useState<boolean>(false);
+  const [callUploadError, setCallUploadError] = useState<string | null>(null);
+  const callFileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedCall = useMemo(() => {
+    return callQueue.find(q => q.id === selectedCallQueueId) || null;
+  }, [callQueue, selectedCallQueueId]);
+
+  // 통화 큐 아이템 선택 시 폼 및 배차 건 자동 프리필
+  const handleSelectCallQueueItem = (call: TransportCallQueueItem) => {
+    setSelectedCallQueueId(call.id);
+    if (call.extracted.matchedDeliveryId) {
+      setSelectedNegoDeliveryId(call.extracted.matchedDeliveryId);
+    }
+    if (call.extracted.matchedCompanyId) {
+      setNegoCompanyId(call.extracted.matchedCompanyId);
+    }
+    if (call.extracted.vehicleType) {
+      setNegoVehicleType(call.extracted.vehicleType);
+    }
+    if (call.extracted.proposedCost) {
+      setNegoProposedCost(call.extracted.proposedCost);
+    }
+    if (call.extracted.targetCost) {
+      setNegoTargetCost(call.extracted.targetCost);
+    }
+    if (call.extracted.specialTerms) {
+      setNegoSpecialTerms(call.extracted.specialTerms);
+    }
+    if (call.extracted.callSummary) {
+      setNegoCallSummary(call.extracted.callSummary);
+    }
+  };
+
+  // 통화 녹음 파일 업로드 및 분석 핸들러
+  const handleUploadCallFile = async (file: File) => {
+    setIsUploadingCall(true);
+    setCallUploadError(null);
+    try {
+      const newItem = await processNewTransportCall(file, transportCompanies, deliveries);
+      const updatedQueue = getTransportCallQueue();
+      setCallQueue(updatedQueue);
+      handleSelectCallQueueItem(newItem);
+      showToast(`'${file.name}' 통화 녹음이 AI 분석되어 큐에 등록되었습니다.`);
+    } catch (err: any) {
+      console.error('Call upload error:', err);
+      setCallUploadError(err?.message || '통화 녹음 파일 분석에 실패했습니다.');
+    } finally {
+      setIsUploadingCall(false);
+    }
+  };
+
+  // 통화 큐 아이템 삭제
+  const handleDeleteCallQueueItem = (callId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteTransportCall(callId);
+    const updated = getTransportCallQueue();
+    setCallQueue(updated);
+    if (selectedCallQueueId === callId) {
+      setSelectedCallQueueId(updated.length > 0 ? updated[0].id : null);
+    }
+    showToast('통화 큐 항목이 삭제되었습니다.');
+  };
+
+  // 기존 배차 관리 상세 선택 상태
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const [isSavingDispatch, setIsSavingDispatch] = useState(false);
+
+  // 운송사 배차 협의 전용 선택 배차 건
+  const selectedNegoDelivery = useMemo(() => {
+    return deliveries.find(d => d.id === selectedNegoDeliveryId) || null;
+  }, [deliveries, selectedNegoDeliveryId]);
+
+  // 운송사 협의 이력 저장 핸들러
+  const handleSaveNegotiation = async () => {
+    if (!selectedNegoDeliveryId) {
+      showToast('배차 건을 먼저 선택하십시오.', 'error');
+      return;
+    }
+    if (!negoCompanyId) {
+      showToast('협의 운송사를 선택하십시오.', 'error');
+      return;
+    }
+    const company = transportCompanies.find(c => c.id === negoCompanyId);
+    const newNego: TransportNegotiation = {
+      id: `TN-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      deliveryId: selectedNegoDeliveryId,
+      transportCompanyId: negoCompanyId,
+      transportCompanyName: company?.name || '기타 운송사',
+      vehicleType: negoVehicleType,
+      proposedCost: Number(negoProposedCost) || 0,
+      targetCost: Number(negoTargetCost) || 0,
+      status: 'IN_NEGOTIATION',
+      negotiatorName: currentUser?.name || '배차담당자',
+      callSummary: negoCallSummary,
+      specialTerms: negoSpecialTerms,
+      negotiatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    db.insertRow<TransportNegotiation>('transportNegotiations', newNego);
+    await db.awaitPendingWrites();
+    refreshAllData();
+    showToast(`${company?.name || '운송사'} 협의 견적이 등록되었습니다.`);
+    setNegoCallSummary('');
+    setNegoSpecialTerms('');
+  };
+
+  // 협의 조건으로 배차 건 확정 승계 핸들러
+  const handleConfirmNegotiation = async (nego: TransportNegotiation) => {
+    if (!nego.deliveryId) return;
+    const targetDel = deliveries.find(d => d.id === nego.deliveryId);
+    if (!targetDel) return;
+
+    // 1. 배차 건에 운송사 및 비용 반영
+    const costToApply = nego.confirmedCost || nego.proposedCost || 0;
+    const memoAddition = `[협의확정] ${nego.transportCompanyName} ${nego.vehicleType} ₩${costToApply.toLocaleString()}`;
+    db.updateRow<Delivery>('deliveries', nego.deliveryId, {
+      transportCompany: nego.transportCompanyName,
+      vehicleType: nego.vehicleType,
+      deliveryCost: costToApply,
+      expectedCost: costToApply,
+      deliveryCostConfirmed: costToApply,
+      memo: targetDel.memo ? `${targetDel.memo} | ${memoAddition}` : memoAddition,
+      updatedAt: new Date().toISOString()
+    });
+
+    // 2. 협의 상태 CONFIRMED로 변경
+    db.updateRow<TransportNegotiation>('transportNegotiations', nego.id, {
+      status: 'CONFIRMED',
+      confirmedCost: costToApply,
+      updatedAt: new Date().toISOString()
+    });
+
+    // 기존 IN_NEGOTIATION인 항목들 REJECTED 처리
+    (db.transportNegotiations || []).forEach(n => {
+      if (n.id !== nego.id && n.deliveryId === nego.deliveryId && n.status === 'IN_NEGOTIATION') {
+        db.updateRow<TransportNegotiation>('transportNegotiations', n.id, {
+          status: 'REJECTED',
+          updatedAt: new Date().toISOString()
+        });
+      }
+    });
+
+    await db.awaitPendingWrites();
+    refreshAllData();
+
+    if (selectedCallQueueId) {
+      markTransportCallConfirmed(selectedCallQueueId);
+      setCallQueue(getTransportCallQueue());
+    }
+
+    showToast(`배차 조건이 [${nego.transportCompanyName} / ₩${costToApply.toLocaleString()}]으로 확정되었습니다.`);
+  };
+
+  // 폼 입력 조건(또는 통화 분석 추출 조건)으로 1클릭 즉시 배차 확정
+  const handleConfirmCurrentForm = async () => {
+    if (!selectedNegoDeliveryId) {
+      showToast('좌측에서 배차 대상을 먼저 선택하십시오.', 'error');
+      return;
+    }
+    if (!negoCompanyId) {
+      showToast('협의 운송사를 선택하십시오.', 'error');
+      return;
+    }
+    const company = transportCompanies.find(c => c.id === negoCompanyId);
+    const companyName = company?.name || '기타 운송사';
+    const costToApply = Number(negoProposedCost) || Number(negoTargetCost) || 0;
+
+    // 1. 배차 건에 운송사, 차종, 비용 즉시 확정 반영
+    const targetDel = deliveries.find(d => d.id === selectedNegoDeliveryId);
+    if (targetDel) {
+      const memoAddition = `[협의확정] ${companyName} ${negoVehicleType} ₩${costToApply.toLocaleString()}`;
+      db.updateRow<Delivery>('deliveries', selectedNegoDeliveryId, {
+        transportCompany: companyName,
+        vehicleType: negoVehicleType,
+        deliveryCost: costToApply,
+        expectedCost: costToApply,
+        deliveryCostConfirmed: costToApply,
+        status: targetDel.status === 'PENDING' ? 'DISPATCHED' : targetDel.status,
+        memo: targetDel.memo ? `${targetDel.memo} | ${memoAddition}` : memoAddition,
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    // 2. 협의 이력에 CONFIRMED 레코드 생성/저장
+    const newNego: TransportNegotiation = {
+      id: `TN-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      deliveryId: selectedNegoDeliveryId,
+      transportCompanyId: negoCompanyId,
+      transportCompanyName: companyName,
+      vehicleType: negoVehicleType,
+      proposedCost: costToApply,
+      targetCost: Number(negoTargetCost) || costToApply,
+      confirmedCost: costToApply,
+      status: 'CONFIRMED',
+      negotiatorName: currentUser?.name || '배차담당자',
+      callSummary: negoCallSummary,
+      specialTerms: negoSpecialTerms,
+      negotiatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+    db.insertRow<TransportNegotiation>('transportNegotiations', newNego);
+
+    // 3. 큐 항목 상태 변경
+    if (selectedCallQueueId) {
+      markTransportCallConfirmed(selectedCallQueueId);
+      setCallQueue(getTransportCallQueue());
+    }
+
+    await db.awaitPendingWrites();
+    refreshAllData();
+    showToast(`배차 조건이 [${companyName} / ₩${costToApply.toLocaleString()}]으로 즉시 확정되었습니다.`);
+  };
+  
+  // 배차 세부 유형 ('출고' | '입고' | '반납' | '정비' | '이동' | '교환' | '경유/합짐')
+  const [dispatchCategory, setDispatchCategory] = useState<'출고' | '입고' | '반납' | '정비' | '이동' | '교환' | '경유/합짐'>('출고');
+
+  // 🔗 경유/합짐 묶음 배차 다중 선택 및 추가 피커 state
+  const [selectedBundleCandidateIds, setSelectedBundleCandidateIds] = useState<string[]>([]);
+  const [showBundleAddPicker, setShowBundleAddPicker] = useState<boolean>(false);
+  const [bundlePickerSearch, setBundlePickerSearch] = useState<string>('');
+  
+  // 상차 일시 & 시간 지정
+  const [loadingDate, setLoadingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [loadingTimeSlot, setLoadingTimeSlot] = useState('오전');
+  const [loadingCustomTime, setLoadingCustomTime] = useState('');
+
+  // 하차 일시 & 시간 지정
+  const [unloadingDate, setUnloadingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [unloadingTimeSlot, setUnloadingTimeSlot] = useState('오전');
+  const [unloadingCustomTime, setUnloadingCustomTime] = useState('');
+
+  // --- 하차지 일기예보 모달 state ---
+  const [showDestWeatherModal, setShowDestWeatherModal] = useState(false);
+  const [destWeatherParams, setDestWeatherParams] = useState({
+    customerName: '',
+    siteName: '',
+    rawAddress: ''
+  });
+
+  const handleOpenDestWeatherForDelivery = (del?: Delivery | null, customAddress?: string) => {
+    let customerName = '-';
+    let siteName = '-';
+    let rawAddress = customAddress || destinationAddress || '';
+
+    if (del) {
+      const contract = contracts.find(c => c.id === del.contractId);
+      const customer = customers.find(cust => cust.id === contract?.customerId);
+      const site = sites?.find(s => s.id === contract?.siteId);
+
+      customerName = customer?.name || (del as any).customerName || '-';
+      siteName = site?.name || (typeof site === 'string' ? site : '현장미지정');
+      
+      if (!rawAddress) {
+        rawAddress = site?.address || customer?.address || '';
+        if (!rawAddress && del.memo) {
+          const match = del.memo.match(/주소:\s*(.*?)(?=\||$)/);
+          if (match) rawAddress = match[1].trim();
+        }
+      }
+    }
+
+    setDestWeatherParams({
+      customerName: customerName || '배차 하차지',
+      siteName: siteName || '현장',
+      rawAddress: rawAddress || '경기도 용인시'
+    });
+    setShowDestWeatherModal(true);
+  };
+
+  // 실무자 마감 비고
+  const [closingMemo, setClosingMemo] = useState('');
+
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [originAddress, setOriginAddress] = useState('');
+  const [destinationAddress, setDestinationAddress] = useState('');
+  const [billableToCust, setBillableToCust] = useState(false);
+  const [billableCustId, setBillableCustId] = useState('');
+  const [assignedVehicles, setAssignedVehicles] = useState<AssignedVehicleRow[]>([]);
+
+  // 수동 배차 모달 state
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualCategory, setManualCategory] = useState<'출고' | '입고' | '반납' | '정비' | '이동' | '교환'>('출고');
+  const [manualCustomerId, setManualCustomerId] = useState('');
+  const [manualContractId, setManualContractId] = useState('');
+  const [manualOrigin, setManualOrigin] = useState('당사 보관소');
+  const [manualDestination, setManualDestination] = useState('');
+  const [manualLoadingDate, setManualLoadingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manualLoadingTimeSlot, setManualLoadingTimeSlot] = useState('오전');
+  const [manualLoadingCustomTime, setManualLoadingCustomTime] = useState('');
+  const [manualUnloadingDate, setManualUnloadingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manualUnloadingTimeSlot, setManualUnloadingTimeSlot] = useState('오전');
+  const [manualUnloadingCustomTime, setManualUnloadingCustomTime] = useState('');
+  const [manualExpectedCost, setManualExpectedCost] = useState(0);
+  const [manualBillable, setManualBillable] = useState(false);
+  const [manualMemo, setManualMemo] = useState('');
+  const [manualClosingMemo, setManualClosingMemo] = useState('');
+
+  const [manualVehicles, setManualVehicles] = useState<VehicleReq[]>([{ vehicleType: '3.5T', count: 1 }]);
+  const [manualCargos, setManualCargos] = useState<CargoItem[]>([]);
+
+  // 🔄 배차구분이 "반납"인 조건에서 선택된 반납 대상 임차자산 ID 목록 (미결정 시 빈 배열 [])
+  const [selectedReturnAssetIds, setSelectedReturnAssetIds] = useState<string[]>([]);
+  const [manualReturnAssetIds, setManualReturnAssetIds] = useState<string[]>([]);
+
+  // 상세 스튜디오용: 자산상태가 임대가능(AVAILABLE)인 임차자산 목록 (+ 현재 배차에 이미 선택된 임차자산 포함)
+  const availableReturnSubleaseAssets = useMemo(() => {
+    return assets.filter(
+      a =>
+        a.ownerType === 'RENTED' &&
+        ((!a.actualRentReturnDate && a.status === 'AVAILABLE') || selectedReturnAssetIds.includes(a.id))
+    );
+  }, [assets, selectedReturnAssetIds]);
+
+  // 수동 배차 모달용: 자산상태가 임대가능(AVAILABLE)인 임차자산 목록
+  const manualAvailableReturnSubleaseAssets = useMemo(() => {
+    return assets.filter(
+      a =>
+        a.ownerType === 'RENTED' &&
+        ((!a.actualRentReturnDate && a.status === 'AVAILABLE') || manualReturnAssetIds.includes(a.id))
+    );
+  }, [assets, manualReturnAssetIds]);
+
+  // 📄 [월말 운송료 대사 탭 state & 1:1 Split Pair 파이프라인]
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 💡 [사장님 지시] 기본 조회: 당월 1일 ~ 말일 기준 (예: 2026년 10월)
+  const [reconStartDate, setReconStartDate] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [reconEndDate, setReconEndDate] = useState<string>(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  });
+  const [selectedReconCompany, setSelectedReconCompany] = useState<string>('ALL');
+  
+  // 💡 [사장님 지시] 지급 상태 필터: 기본값은 'UNPAID' (지급 미완료 / 미정산 건만 집중 대사)
+  const [reconPaymentFilter, setReconPaymentFilter] = useState<'UNPAID' | 'PAID' | 'ALL'>('UNPAID');
+  const [reconStatusFilter, setReconStatusFilter] = useState<'ALL' | 'PENDING' | 'MATCHED' | 'MISMATCH' | 'EXCEL_ONLY' | 'SYSTEM_ONLY' | 'EXCLUDED' | 'PAYMENT_REQUESTED'>('ALL');
+  const [reconSearchQuery, setReconSearchQuery] = useState<string>('');
+
+  // 1:1 Pair 행 배열 state 및 독립 듀얼 패널 선택 state
+  const [reconPairs, setReconPairs] = useState<ReconPairRow[]>([]);
+  const [uploadedFileName, setUploadedFileName] = useState<string>('');
+  const [uploadedStatementUrl, setUploadedStatementUrl] = useState<string>('');
+  const [showTransportStatementModal, setShowTransportStatementModal] = useState<boolean>(false);
+  const [selectedPairIds, setSelectedPairIds] = useState<Set<string>>(new Set());
+  const [reconNotificationMsg, setReconNotificationMsg] = useState<string>('');
+  const [selectedSystemDeliveryId, setSelectedSystemDeliveryId] = useState<string | null>(null);
+  const [selectedExcelRowIndex, setSelectedExcelRowIndex] = useState<number | null>(null);
+
+  // 매입 지급 요청 완료 성공 모달 state
+  const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
+    bundleCode: string;
+    totalCount: number;
+    totalAmount: number;
+    companyName: string;
+    reconMonth: string;
+  } | null>(null);
+  const [isBundleCopied, setIsBundleCopied] = useState(false);
+
+  const handleCopyBundleCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setIsBundleCopied(true);
+    setTimeout(() => setIsBundleCopied(false), 2000);
+  };
+
+  // 💬 카카오톡 배차 안내 메시지 모달 state
+  const [showKakaoModal, setShowKakaoModal] = useState(false);
+  const [kakaoText, setKakaoText] = useState('');
+  const [kakaoTargetDelivery, setKakaoTargetDelivery] = useState<Delivery | null>(null);
+  const [isKakaoCopied, setIsKakaoCopied] = useState(false);
+
+  // 💡 [사장님 지시] 대사 행 더블클릭 시 배차 상세 및 대사 비교 모달 state
+  const [selectedReconDetailPair, setSelectedReconDetailPair] = useState<ReconPairRow | null>(null);
+
+  // 💡 [사장님 지시] 금액 수정 모달 state & DB 반영 핸들러
+  const [showCostEditModal, setShowCostEditModal] = useState<boolean>(false);
+  const [editingDelivery, setEditingDelivery] = useState<Delivery | null>(null);
+  const [editingCostInput, setEditingCostInput] = useState<number>(0);
+
+  const handleOpenCostEdit = (d: Delivery, currentCost: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingDelivery(d);
+    setEditingCostInput(currentCost);
+    setShowCostEditModal(true);
+  };
+
+  const handleSaveDeliveryCost = async () => {
+    if (!editingDelivery) return;
+    const newCost = Number(editingCostInput);
+    if (isNaN(newCost) || newCost < 0) {
+      showErrorModal('유효한 금액을 입력해 주세요.');
+      return;
+    }
+
+    try {
+      // 1. DB (deliveries 테이블) 동기 업데이트 수행 (deliveryCost 및 assignedVehicles 차량 운송비 동시 동기화)
+      const updatedVehicles = editingDelivery.assignedVehicles && editingDelivery.assignedVehicles.length > 0
+        ? editingDelivery.assignedVehicles.map((v, i) => i === 0 ? { ...v, deliveryCost: newCost } : { ...v, deliveryCost: 0 })
+        : [];
+
+      const updateData: any = {
+        finalCost: newCost,
+        deliveryCost: newCost
+      };
+
+      if (updatedVehicles.length > 0) {
+        updateData.assignedVehicles = updatedVehicles;
+      }
+
+      if (editingDelivery.vehicles) {
+        try {
+          const parsed = JSON.parse(editingDelivery.vehicles);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            updateData.vehicles = JSON.stringify(
+              parsed.map((v: any, i: number) =>
+                i === 0 ? { ...v, finalCost: newCost, deliveryCost: newCost } : v
+              )
+            );
+          }
+        } catch {}
+      }
+
+      db.updateRow('deliveries', editingDelivery.id, updateData);
+
+      // 💡 [사장님 지시] 원격 Supabase DB 쓰기가 100% 완료될 때까지 동기 대기
+      await db.awaitPendingWrites();
+
+      // 💡 [사장님 지시] 단순 대기만 하지 않고, 실제 DB를 다시 SELECT 읽기조회하여 목표 금액으로 100% 정상 수정되었는지 검증
+      const verifiedDelivery = db.deliveries.find(d => d.id === editingDelivery.id);
+      const verifiedCost = verifiedDelivery ? (verifiedDelivery.deliveryCost || (verifiedDelivery.assignedVehicles && verifiedDelivery.assignedVehicles[0]?.deliveryCost) || 0) : 0;
+
+      if (!verifiedDelivery || verifiedCost !== newCost) {
+        throw new Error(`DB 반영 검증 실패 (목표 금액: ₩${newCost.toLocaleString()}원 vs 실제 DB 저장액: ₩${verifiedCost.toLocaleString()}원). DB 갱신이 정상적으로 처리되지 않았습니다.`);
+      }
+
+      // 2. 전체 데이터 및 state 갱신
+      await refreshAllData();
+
+      // 3. 1:1 대사 reconPairs 차액 및 자동 짝짓기 재계산
+      setReconPairs(prev => prev.map(p => {
+        if (p.systemDelivery?.id === editingDelivery.id) {
+          const excelCost = p.excelCost || 0;
+          const newDiff = excelCost > 0 ? (excelCost - newCost) : 0;
+          const isMatchedNow = p.excelRow ? (newDiff === 0 && excelCost > 0) : false;
+
+          return {
+            ...p,
+            systemCost: newCost,
+            diffCost: newDiff,
+            matchStatus: isMatchedNow ? 'MATCHED' : (newDiff !== 0 && excelCost > 0 ? 'MISMATCH' : p.matchStatus),
+            isReconciled: isMatchedNow,
+            memo: isMatchedNow ? '금액 수정 후 100% 일치 대사 완료' : `금액 수정 반영됨 (시스템 ₩${newCost.toLocaleString()}원)`
+          };
+        }
+        return p;
+      }));
+
+      setShowCostEditModal(false);
+      setEditingDelivery(null);
+      setReconNotificationMsg(`${editingDelivery.id} 배차 운송료가 ₩${newCost.toLocaleString()}원으로 수정되어 DB에 반영되었습니다.`);
+    } catch (err: any) {
+      showErrorModal('금액 수정 중 오류가 발생하였습니다: ' + err.message);
+    }
+  };
+
+  // 💡 [사장님 지시] 좌측 1개 행 + 우측 1개 행 수동 선택 1:1 대사완료 매칭
+  const handleManualPairMatch = () => {
+    if (!selectedSystemDeliveryId || selectedExcelRowIndex === null) {
+      showErrorModal('좌측 시스템 배차 1건과 우측 엑셀 항목 1건을 각각 선택해 주세요.');
+      return;
+    }
+
+    const sysD = deliveries.find(d => d.id === selectedSystemDeliveryId);
+    const excelRows = reconPairs.filter(p => p.excelRow);
+    const excelPair = excelRows[selectedExcelRowIndex];
+
+    if (!sysD || !excelPair) {
+      showErrorModal('선택한 배차 또는 엑셀 항목을 찾을 수 없습니다.');
+      return;
+    }
+
+    const sysCost = getEffectiveDeliveryCost(sysD);
+    const costKey = Object.keys(excelPair.excelRow).find(k => k.includes('합계') || k.includes('운송비') || k.includes('청구금액') || k.includes('금액'));
+    const excelCost = costKey ? Number(String(excelPair.excelRow[costKey]).replace(/[^0-9.-]+/g, '')) : 0;
+    const diff = excelCost - sysCost;
+
+    // 💡 [사장님 지시] 좌측/우측 금액 상이 시 대사 처리 거절
+    if (diff !== 0) {
+      showErrorModal(`[대사 처리 거절]\n\n• 좌측 시스템 금액: ₩${sysCost.toLocaleString()}원\n• 우측 엑셀 청구금액: ₩${excelCost.toLocaleString()}원\n• 차액: ₩${Math.abs(diff).toLocaleString()}원\n\n좌측과 우측 패널의 금액이 상이한 항목은 대사 처리가 불가능합니다.`);
+      return;
+    }
+
+    setReconPairs(prev => {
+      const filtered = prev.filter(p => p.systemDelivery?.id !== sysD.id && p.pairId !== excelPair.pairId);
+      return [
+        ...filtered,
+        {
+          pairId: `MANUAL-PAIR-${sysD.id}-${Date.now()}`,
+          systemDelivery: sysD,
+          excelRow: excelPair.excelRow,
+          matchStatus: 'MATCHED',
+          systemCost: sysCost,
+          excelCost,
+          diffCost: diff,
+          memo: '담당자 1:1 수동 선택 대사 완료',
+          isReconciled: true
+        }
+      ];
+    });
+
+    setSelectedSystemDeliveryId(null);
+    setSelectedExcelRowIndex(null);
+    setReconNotificationMsg(`${sysD.id} 배차건과 엑셀 행이 1:1 수동 대사 완료 처리되었습니다.`);
+  };
+
+  // 📅 기간 선택 피커 헬퍼 (월별 정산 지원)
+  const handleSetReconMonth = (year: number, month: number) => {
+    const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    setReconStartDate(startStr);
+    setReconEndDate(endStr);
+  };
+
+  const handleSetReconDatePreset = (preset: '2026-07' | '2026-08' | '2026-10' | 'THIS_MONTH' | 'LAST_MONTH' | '1M' | '3M' | 'ALL') => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    if (preset === '2026-07') {
+      handleSetReconMonth(2026, 7);
+    } else if (preset === '2026-08') {
+      handleSetReconMonth(2026, 8);
+    } else if (preset === '2026-10') {
+      handleSetReconMonth(2026, 10);
+    } else if (preset === 'THIS_MONTH') {
+      handleSetReconMonth(today.getFullYear(), today.getMonth() + 1);
+    } else if (preset === 'LAST_MONTH') {
+      const lm = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      handleSetReconMonth(lm.getFullYear(), lm.getMonth() + 1);
+    } else if (preset === '1M') {
+      const past = new Date();
+      past.setMonth(today.getMonth() - 1);
+      setReconStartDate(past.toISOString().split('T')[0]);
+      setReconEndDate(todayStr);
+    } else if (preset === '3M') {
+      const past = new Date();
+      past.setMonth(today.getMonth() - 3);
+      setReconStartDate(past.toISOString().split('T')[0]);
+      setReconEndDate(todayStr);
+    } else {
+      setReconStartDate('');
+      setReconEndDate('');
+    }
+  };
+
+  // 🏢 운송사별 미지급(대사 대상) 건수 및 금액 집계 (선택된 기간 기준)
+  const unpaidStatsByCompany = useMemo(() => {
+    const inPeriodDeliveries = deliveries.filter(d => {
+      if (getNormalizedDeliveryStatus(d) !== 'DELIVERED') return false;
+      if (isCustomerDirectTransport(d)) return false;
+      // 경유/합짐 묶음 배차의 후순위(2순위 이상)이고 운송비가 1순위 대표건에 통합(0원)된 경우 중복 대사 집계에서 제외
+      if (d.bundleGroupId && (d.bundleOrder || 1) > 1 && getEffectiveDeliveryCost(d) === 0) return false;
+      // 경유/합짐 묶음 배차의 1순위 대표건인 경우: 묶인 모든 경유지 건들이 전부 운송완료(DELIVERED)되어야 정산 대사 대상으로 집계
+      if (d.bundleGroupId) {
+        const groupAll = deliveries.filter(gd => gd.bundleGroupId === d.bundleGroupId && getNormalizedDeliveryStatus(gd) !== 'CANCELLED');
+        if (groupAll.length >= 2 && !groupAll.every(gd => getNormalizedDeliveryStatus(gd) === 'DELIVERED')) {
+          return false;
+        }
+      }
+      const dDate = d.loadingDate || d.requestDate || d.scheduledDate || d.createdAt?.substring(0, 10);
+      if (reconStartDate && dDate && dDate < reconStartDate) return false;
+      if (reconEndDate && dDate && dDate > reconEndDate) return false;
+      return true;
+    });
+
+    const stats: Record<string, { total: number; unpaid: number; unpaidCost: number }> = {
+      ALL: { total: 0, unpaid: 0, unpaidCost: 0 }
+    };
+
+    inPeriodDeliveries.forEach(d => {
+      const isPaid = (d as any).reconciliationStatus === 'PAYMENT_REQUESTED' || (d as any).reconciliationStatus === 'SETTLED' || d.isCostSettled === true;
+      const cost = getEffectiveDeliveryCost(d);
+
+      // 운송사명 파싱
+      const rawComp = d.assignedVehicles?.[0]?.transportCompany || d.transportCompany || '';
+      let matchedComp = '기타';
+      if (rawComp.includes('경기')) matchedComp = '경기';
+      else if (rawComp.includes('엘제이') || rawComp.toLowerCase().includes('lj')) matchedComp = '엘제이';
+      else if (rawComp.includes('자인') || rawComp.includes('엠제이') || rawComp.toLowerCase().includes('mj')) matchedComp = '자인';
+      else if (rawComp) matchedComp = rawComp;
+
+      stats.ALL.total++;
+      if (!isPaid) {
+        stats.ALL.unpaid++;
+        stats.ALL.unpaidCost += cost;
+      }
+
+      if (!stats[matchedComp]) {
+        stats[matchedComp] = { total: 0, unpaid: 0, unpaidCost: 0 };
+      }
+      stats[matchedComp].total++;
+      if (!isPaid) {
+        stats[matchedComp].unpaid++;
+        stats[matchedComp].unpaidCost += cost;
+      }
+    });
+
+    return stats;
+  }, [deliveries, reconStartDate, reconEndDate]);
+
+  // 🚚 운송 완료 건들 대사 대상 필터링 (지급 상태 및 운송사별 연동)
+  const completedDeliveriesForRecon = useMemo(() => {
+    const q = reconSearchQuery.trim();
+    const qLower = q.toLowerCase();
+    const matcher = q ? createHangulMatcher(q) : null;
+    const compFilterLower = selectedReconCompany !== 'ALL' ? selectedReconCompany.toLowerCase() : '';
+
+    return deliveries.filter(d => {
+      // 1. 운송 완료건만 대상 (고객직접운송 건은 월말 정산에서 제외)
+      if (getNormalizedDeliveryStatus(d) !== 'DELIVERED') return false;
+      if (isCustomerDirectTransport(d)) return false;
+      // 경유/합짐 묶음 배차의 후순위(2순위 이상)이고 운송비가 1순위 대표건에 통합(0원)된 경우 중복 대사에서 제외
+      if (d.bundleGroupId && (d.bundleOrder || 1) > 1 && getEffectiveDeliveryCost(d) === 0) return false;
+      // 경유/합짐 묶음 배차의 1순위 대표건인 경우: 묶인 모든 경유지 건들이 전부 운송완료(DELIVERED)되어야 정산 대사 대상으로 포함
+      if (d.bundleGroupId) {
+        const groupAll = deliveries.filter(gd => gd.bundleGroupId === d.bundleGroupId && getNormalizedDeliveryStatus(gd) !== 'CANCELLED');
+        if (groupAll.length >= 2 && !groupAll.every(gd => getNormalizedDeliveryStatus(gd) === 'DELIVERED')) {
+          return false;
+        }
+      }
+
+      // 2. 💡 [사장님 지시] 지급/정산 상태 필터 (기본: 지급 미완료 건만 대사 대상)
+      const isPaid = (d as any).reconciliationStatus === 'PAYMENT_REQUESTED' || (d as any).reconciliationStatus === 'SETTLED' || d.isCostSettled === true;
+      if (reconPaymentFilter === 'UNPAID' && isPaid) return false;
+      if (reconPaymentFilter === 'PAID' && !isPaid) return false;
+
+      // 3. 날짜 필터
+      const dDate = d.loadingDate || d.requestDate || d.scheduledDate || d.createdAt?.substring(0, 10);
+      if (reconStartDate && dDate && dDate < reconStartDate) return false;
+      if (reconEndDate && dDate && dDate > reconEndDate) return false;
+
+      // 4. 운송 거래처 필터
+      if (compFilterLower) {
+        const rawComp = d.assignedVehicles?.[0]?.transportCompany || d.transportCompany || '';
+        const match = rawComp.toLowerCase().includes(compFilterLower);
+        if (!match) return false;
+      }
+
+      // 5. 검색어 (배차ID, 기사명, 거래처, 고객사명)
+      if (matcher) {
+        const contract = d.contractId ? contractMap.get(d.contractId) : undefined;
+        const customer = contract?.customerId ? customerMap.get(contract.customerId) : undefined;
+        const match = Boolean(
+          (d.id && d.id.toLowerCase().includes(qLower)) ||
+          (d.driverName && matcher.test(d.driverName)) ||
+          (d.destinationAddress && matcher.test(d.destinationAddress)) ||
+          (contract && contract.contractNo.toLowerCase().includes(qLower)) ||
+          (customer && matcher.test(customer.name))
+        );
+        if (!match) return false;
+      }
+
+      return true;
+    }).sort((a, b) => {
+      const dateA = a.loadingDate || a.requestDate || a.scheduledDate || a.createdAt?.substring(0, 10) || '9999-99-99';
+      const dateB = b.loadingDate || b.requestDate || b.scheduledDate || b.createdAt?.substring(0, 10) || '9999-99-99';
+      if (dateA !== dateB) return dateA.localeCompare(dateB);
+      return (a.id || '').localeCompare(b.id || '');
+    });
+  }, [deliveries, reconPaymentFilter, reconStartDate, reconEndDate, selectedReconCompany, reconSearchQuery, contractMap, customerMap]);
+
+  // 💡 [사장님 지시] 조회 버튼 클릭 시 로딩된 대사 정보(엑셀 1:1 대사 pair, 업로드 파일, 선택 상태 등)를 완전 초기화하여 깨끗한 원장 조회 상태로 복귀
+  const handleReconSearch = () => {
+    setReconPairs([]);
+    setUploadedFileName('');
+    setSelectedPairIds(new Set());
+    setSelectedSystemDeliveryId(null);
+    setSelectedExcelRowIndex(null);
+    setReconStatusFilter('ALL');
+    setReconSearchQuery('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setReconNotificationMsg(`[${selectedReconCompany === 'ALL' ? '전체 거래처' : selectedReconCompany}] (${reconStartDate} ~ ${reconEndDate} / ${reconPaymentFilter === 'UNPAID' ? '미지급건' : reconPaymentFilter === 'PAID' ? '지급완료건' : '전체'}) 조회가 갱신되었습니다. (대사 정보 초기화됨)`);
+  };
+
+  // 거래명세서 엑셀 파싱 및 1:1 페어링 파이프라인 (다변형 서식/날짜 정규화 & 2단계 지능형 매칭 엔진)
+  const handleExcelFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFileName(file.name);
+    uploadStatementFileSafe(file, 'transport_statements', `TR_${reconStartDate.slice(0, 7)}`).then(res => {
+      if (res.fileUrl) setUploadedStatementUrl(res.fileUrl);
+    }).catch(() => {});
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        
+        // 1. 유효 데이터가 가장 많은 시트 자동 선택 (빈 시트 필터링)
+        let targetSheetName = workbook.SheetNames[0];
+        let maxRowCount = 0;
+        for (const sName of workbook.SheetNames) {
+          const ws = workbook.Sheets[sName];
+          const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+          if (raw && raw.length > maxRowCount) {
+            maxRowCount = raw.length;
+            targetSheetName = sName;
+          }
+        }
+
+        const sheet = workbook.Sheets[targetSheetName];
+        const rawRows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+        if (!rawRows || rawRows.length === 0) {
+          showErrorModal('업로드한 엑셀 파일에 데이터가 없습니다.');
+          return;
+        }
+
+        // 2. 동적 헤더 행 감지 (정밀 셀 단위 매칭: 최다 키워드 일치 행 선정)
+        const headerKeywords = ['일자', '날짜', '상차지', '하차지', '톤수', '차종', '운송비', '현장명', '업체명', '기사명', '비고', 'no', '단가', '금액', '합계', '장비명', '사용기간', '품명'];
+        let headerRowIndex = -1;
+        let maxMatchCount = 0;
+
+        for (let r = 0; r < Math.min(30, rawRows.length); r++) {
+          const cells = rawRows[r].map((c: any) => String(c).replace(/\s+/g, '').toLowerCase());
+          const fullRowTextClean = cells.join(' ');
+          // 명세서 상단 공급가액/합계금액 요약표 행은 명세서 본문 테이블 헤더가 아니므로 제외
+          if (fullRowTextClean.includes('공급가액') || fullRowTextClean.includes('사업장주소') || fullRowTextClean.includes('등록번호')) {
+            continue;
+          }
+          const matchCount = headerKeywords.filter(kw =>
+            cells.some((cell: string) => cell === kw || (cell.length <= 10 && cell.includes(kw)))
+          ).length;
+          if (matchCount > maxMatchCount && matchCount >= 3) {
+            maxMatchCount = matchCount;
+            headerRowIndex = r;
+          }
+        }
+
+        if (headerRowIndex === -1) {
+          headerRowIndex = 0;
+        }
+
+        // 3. 헤더 컬럼명 추출
+        const rawHeaderRow = rawRows[headerRowIndex] || [];
+        const headerNames: string[] = rawHeaderRow.map((col: any, cIdx: number) => {
+          const title = String(col).trim();
+          if (title) return title;
+          return `비고_${cIdx + 1}`;
+        });
+
+        const isMemoKey = (k: string) => {
+          const kl = k.replace(/\s+/g, '').toLowerCase();
+          // 날짜, 금액, 상차지, 번호 등 정규 컬럼은 비고에 넣지 않음
+          if (kl.includes('일자') || kl.includes('날짜') || kl.includes('운송일') || kl.includes('사용기간') ||
+              kl.includes('금액') || kl.includes('단가') || kl.includes('운송비') || kl.includes('청구') ||
+              kl.includes('no') || kl.includes('번호')) {
+            return false;
+          }
+          return kl.includes('현장') || kl.includes('업체') || kl.includes('비고') ||
+                 kl.includes('메모') || kl.includes('특이') || kl.includes('참고') || kl.includes('장비') || kl.includes('품명');
+        };
+
+        // 4. 데이터 행 구성 (디토 상속 & 날짜/금액 정규화 & 하단 서명/총액 방어)
+        const parsedRows: any[] = [];
+        let lastDate = '';
+        let lastOrigin = '';
+        let lastDest = '';
+
+        let activeYear = reconStartDate ? reconStartDate.split('-')[0] : String(new Date().getFullYear());
+        let activeMonth = reconStartDate ? reconStartDate.split('-')[1] : String(new Date().getMonth() + 1).padStart(2, '0');
+
+        // 상단 10행 내에서 제목이나 날짜 헤더("< 08월달 >", "2026년 8월") 감지하여 기본 연월 보정
+        for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+          const rowStr = (rawRows[r] || []).map((c: any) => String(c || '').trim()).join(' ');
+          const ymMatch = rowStr.match(/(\d{4})년\s*(\d{1,2})월/);
+          if (ymMatch) {
+            activeYear = ymMatch[1];
+            activeMonth = ymMatch[2].padStart(2, '0');
+            break;
+          }
+          const mOnlyMatch = rowStr.match(/<\s*(\d{1,2})월/);
+          if (mOnlyMatch) {
+            activeMonth = mOnlyMatch[1].padStart(2, '0');
+            break;
+          }
+        }
+
+        // 💡 [사장님 지시] "." 또는 따옴표/특수기호로 입력된 셀은 바로 윗행의 데이터와 동일한 것으로 처리
+        const isDitto = (val: string) => {
+          if (!val) return true;
+          const v = String(val).trim();
+          return (
+            v === '"' || v === '""' || v === "''" || v === "'" ||
+            v === '”' || v === '“' || v === '’' || v === '‘' ||
+            v === '.' || v === '..' || v === '...' ||
+            v === '·' || v === '〃' || v === '-' ||
+            v === '상동' || v === '동상' || v === '동일' || v === '상' || v === '동'
+          );
+        };
+
+        for (let r = headerRowIndex + 1; r < rawRows.length; r++) {
+          const rowArr = rawRows[r];
+          if (!rowArr || rowArr.every((cell: any) => String(cell || '').trim() === '')) continue;
+
+          const firstCellClean = String(rowArr[0] || '').replace(/\s+/g, '');
+          const fullRowTextClean = rowArr.map((cell: any) => String(cell || '').trim()).join(' ');
+          const cleanRowTextNoSpace = fullRowTextClean.replace(/\s+/g, '');
+
+          // 💡 [사장님 지시] 거래명세서 하단부 문서 서명, 날인, 결제계좌, 총계 등 비청구 데이터 철저 방어
+          const footerKeywords = [
+            '합계', '소계', '총계', '총액', '누계', '공급가액', '합계금액', '부가세', '세액',
+            '사업장주소', '등록번호', '상호:', '대표자', '대표:', '성명:', '입금계좌', '계좌번호',
+            '예금주', '청구합니다', '청구금액', '청구합계', '위와같이', '아래와같이', '서명',
+            '(인)', '(서명)', '확인자', '영수자', '수령자', '담당자날인', '귀하', '월달', '월분'
+          ];
+          if (footerKeywords.some(kw => cleanRowTextNoSpace.includes(kw))) continue;
+
+          // 셀 중 하나라도 합계/소계/총액/대표 등으로 시작하는 경우 제외
+          if (rowArr.some((c: any) => {
+            const s = String(c || '').replace(/\s+/g, '');
+            return s.startsWith('합계') || s.startsWith('소계') || s.startsWith('총계') || s.startsWith('총액');
+          })) continue;
+
+          // 누적 금액과 일치하는 행 방어 (문서 하단 Grand Total 요약 행 배제)
+          const runningSum = parsedRows.reduce((sum, pr) => sum + (Number(pr['정규금액']) || 0), 0);
+          if (parsedRows.length >= 2 && runningSum > 0) {
+            const hasTotalMatch = rowArr.some((c: any) => {
+              const num = Number(String(c || '').replace(/[^0-9.-]+/g, ''));
+              return num > 0 && Math.abs(num - runningSum) <= 50;
+            });
+            if (hasTotalMatch) continue;
+          }
+
+          const rowObj: any = {};
+          headerNames.forEach((hName, cIdx) => {
+            rowObj[hName] = String(rowArr[cIdx] !== undefined ? rowArr[cIdx] : '').trim();
+          });
+
+          // 금액 추출 (공백 제거 정규화 매칭):
+          let rawCost = 0;
+          const priorityCostKey = Object.keys(rowObj).find(k => {
+            const ck = k.replace(/\s+/g, '');
+            return (ck.includes('운송비') || ck.includes('청구') || ck.includes('단가')) && !ck.includes('일자') && !ck.includes('날짜') && !ck.toLowerCase().includes('no');
+          });
+          const generalCostKey = Object.keys(rowObj).find(k => {
+            const ck = k.replace(/\s+/g, '');
+            return (ck.includes('금액') || ck.includes('합계')) && !ck.includes('일자') && !ck.includes('날짜') && !ck.toLowerCase().includes('no');
+          });
+          const costKey = priorityCostKey || generalCostKey;
+
+          if (costKey && rowObj[costKey]) {
+            rawCost = Number(String(rowObj[costKey]).replace(/[^0-9.-]+/g, '')) || 0;
+          }
+          if (rawCost === 0) {
+            for (let c = rowArr.length - 1; c >= 0; c--) {
+              const num = Number(String(rowArr[c]).replace(/[^0-9.-]+/g, ''));
+              if (num >= 10000 && num <= 5000000 && !(num >= 40000 && num <= 50000 && c <= 2)) {
+                rawCost = num;
+                break;
+              }
+            }
+          }
+
+          const dateKey = Object.keys(rowObj).find(k => {
+            const ck = k.replace(/\s+/g, '');
+            return ck.includes('일자') || ck.includes('날짜') || ck.includes('운송일') || ck.includes('사용기간');
+          });
+          const originKey = Object.keys(rowObj).find(k => {
+            const ck = k.replace(/\s+/g, '');
+            return ck.includes('상차지') || ck.includes('출발지') || ck.includes('상차');
+          });
+          const destKey = Object.keys(rowObj).find(k => {
+            const ck = k.replace(/\s+/g, '');
+            return ck.includes('하차지') || ck.includes('도착지') || ck.includes('현장') || ck.includes('하차');
+          });
+
+          let rawDateCell = dateKey ? String(rowObj[dateKey]).trim() : '';
+          let rawOrigin = originKey ? String(rowObj[originKey]).trim() : '';
+          let rawDest = destKey ? String(rowObj[destKey]).trim() : '';
+
+          // 💡 서명/하단 요약란 방어: 상차지/하차지/현장명 및 차량정보가 전무하고 금액만 거액인 행 배제
+          const hasLocation = rawOrigin || rawDest || String(rowObj['현장명'] || '').trim() || String(rowObj['상차지'] || '').trim() || String(rowObj['하차지'] || '').trim();
+          const hasCargoType = String(rowObj['차종'] || '').trim() || String(rowObj['톤수'] || '').trim() || String(rowObj['품명'] || '').trim() || String(rowObj['장비명'] || '').trim();
+          if (!hasLocation && !hasCargoType && rawCost > 1500000) {
+            continue;
+          }
+
+          if (rawCost <= 0 && !rawDateCell && !rawOrigin && !rawDest) continue;
+
+          // 💡 "." 또는 디토 상속: 바로 윗행 데이터 동일 상속
+          if (isDitto(rawDateCell) && lastDate) rawDateCell = lastDate;
+          else if (rawDateCell && !isDitto(rawDateCell)) lastDate = rawDateCell;
+
+          if (isDitto(rawOrigin) && lastOrigin) rawOrigin = lastOrigin;
+          else if (rawOrigin && !isDitto(rawOrigin)) lastOrigin = rawOrigin;
+
+          if (isDitto(rawDest) && lastDest) rawDest = lastDest;
+          else if (rawDest && !isDitto(rawDest)) lastDest = rawDest;
+
+          // 📅 날짜 정규화: "08월 01일", "3일" (월 생략), "3", "8/1", "2026.08.01", 엑셀 시리얼 넘버 등 다변형 정규화
+          let normDate = rawDateCell;
+          if (rawDateCell) {
+            const cleanD = rawDateCell.trim();
+            const numVal = Number(cleanD);
+            if (!isNaN(numVal) && numVal > 30000 && numVal < 60000) {
+              const utcDays = Math.floor(numVal - 25569);
+              const d = new Date(utcDays * 86400 * 1000);
+              const y = String(d.getUTCFullYear());
+              const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(d.getUTCDate()).padStart(2, '0');
+              normDate = `${y}-${m}-${day}`;
+              activeYear = y;
+              activeMonth = m;
+            } else if (cleanD.match(/(\d{2,4})년\s*(\d{1,2})월\s*(\d{1,2})일?/)) {
+              const m = cleanD.match(/(\d{2,4})년\s*(\d{1,2})월\s*(\d{1,2})일?/);
+              if (m) {
+                let y = m[1];
+                if (y.length === 2) y = '20' + y;
+                const mo = m[2].padStart(2, '0');
+                const d = m[3].padStart(2, '0');
+                normDate = `${y}-${mo}-${d}`;
+                activeYear = y;
+                activeMonth = mo;
+              }
+            } else if (cleanD.match(/(\d{1,2})월\s*(\d{1,2})일?/)) {
+              const m = cleanD.match(/(\d{1,2})월\s*(\d{1,2})일?/);
+              if (m) {
+                const mo = m[1].padStart(2, '0');
+                const d = m[2].padStart(2, '0');
+                normDate = `${activeYear}-${mo}-${d}`;
+                activeMonth = mo;
+              }
+            } else if (cleanD.match(/^(\d{1,2})일$/)) {
+              // 💡 [사장님 지시] "3일" (월 생략)이라도 상위 활성 월(8월 3일)로 정상 처리
+              const d = cleanD.replace('일', '').trim().padStart(2, '0');
+              normDate = `${activeYear}-${activeMonth}-${d}`;
+            } else if (cleanD.match(/^\d{1,2}$/) && Number(cleanD) >= 1 && Number(cleanD) <= 31) {
+              // 일자 숫자만 단독 입력된 경우
+              const d = cleanD.padStart(2, '0');
+              normDate = `${activeYear}-${activeMonth}-${d}`;
+            } else if (cleanD.includes('.') && cleanD.includes('/')) {
+              const parts = cleanD.split(/[\.\/]/).map(p => p.trim());
+              if (parts.length >= 3) {
+                let y = parts[0];
+                if (y.length === 2) y = '20' + y;
+                const mo = parts[1].padStart(2, '0');
+                const d = parts[2].padStart(2, '0');
+                normDate = `${y}-${mo}-${d}`;
+                activeYear = y;
+                activeMonth = mo;
+              }
+            } else if (cleanD.includes('/')) {
+              const parts = cleanD.split('/').map(p => p.trim());
+              if (parts.length === 2) {
+                const mo = parts[0].padStart(2, '0');
+                const d = parts[1].padStart(2, '0');
+                normDate = `${activeYear}-${mo}-${d}`;
+                activeMonth = mo;
+              } else if (parts.length === 3) {
+                let y = parts[0];
+                if (y.length === 2) y = '20' + y;
+                const mo = parts[1].padStart(2, '0');
+                const d = parts[2].padStart(2, '0');
+                normDate = `${y}-${mo}-${d}`;
+                activeYear = y;
+                activeMonth = mo;
+              }
+            } else if (cleanD.includes('.')) {
+              const parts = cleanD.split('.').map(p => p.trim()).filter(Boolean);
+              if (parts.length === 2 && Number(parts[0]) <= 12 && Number(parts[1]) <= 31) {
+                const mo = parts[0].padStart(2, '0');
+                const d = parts[1].padStart(2, '0');
+                normDate = `${activeYear}-${mo}-${d}`;
+                activeMonth = mo;
+              } else if (parts.length === 3) {
+                let y = parts[0];
+                if (y.length === 2) y = '20' + y;
+                const mo = parts[1].padStart(2, '0');
+                const d = parts[2].padStart(2, '0');
+                normDate = `${y}-${mo}-${d}`;
+                activeYear = y;
+                activeMonth = mo;
+              }
+            } else if (cleanD.includes('-')) {
+              const parts = cleanD.split(' ')[0].split('-').map(p => p.trim());
+              if (parts.length === 3) {
+                let y = parts[0];
+                if (y.length === 2) y = '20' + y;
+                const mo = parts[1].padStart(2, '0');
+                const d = parts[2].padStart(2, '0');
+                normDate = `${y}-${mo}-${d}`;
+                activeYear = y;
+                activeMonth = mo;
+              } else if (parts.length === 2 && Number(parts[0]) <= 12) {
+                const mo = parts[0].padStart(2, '0');
+                const d = parts[1].padStart(2, '0');
+                normDate = `${activeYear}-${mo}-${d}`;
+                activeMonth = mo;
+              }
+            }
+          }
+
+          // 다음 행 ditto 상속을 위해 lastDate 업데이트
+          if (normDate && normDate.includes('-')) {
+            lastDate = normDate;
+          }
+
+          if (dateKey) rowObj[dateKey] = normDate;
+          rowObj['정규일자'] = normDate;
+          rowObj['정규금액'] = rawCost;
+          rowObj['정규상차지'] = rawOrigin;
+          rowObj['정규하차지'] = rawDest;
+
+          // 비고 병합
+          const memoParts: string[] = [];
+          Object.keys(rowObj).forEach(k => {
+            if (!isMemoKey(k) || k.startsWith('정규')) return;
+            const val = String(rowObj[k] || '').trim();
+            if (val && !isDitto(val) && val !== '-') {
+              memoParts.push(val);
+            }
+          });
+          rowObj['비고'] = memoParts.join(' | ');
+
+          parsedRows.push(rowObj);
+        }
+
+        if (parsedRows.length === 0) {
+          showErrorModal('엑셀 파싱 결과 데이터 행을 찾을 수 없습니다.');
+          return;
+        }
+
+        // 5. 지능형 1:1 대사 매칭 엔진 (날짜/금액 우선 매칭 & 업체명 다소 불일치 허용)
+        const remainingSystemDeliveries = [...completedDeliveriesForRecon];
+        const pairs: ReconPairRow[] = [];
+        let autoMatchedCount = 0;
+        let mismatchCount = 0;
+
+        // 텍스트 유사도 헬퍼 (상차지, 하차지, 고객사명, 현장명, 주소 등 포괄)
+        const isTextSimilar = (a: string, b: string) => {
+          if (!a || !b) return false;
+          const ca = a.replace(/\s+/g, '').toLowerCase();
+          const cb = b.replace(/\s+/g, '').toLowerCase();
+          if (ca.includes(cb) || cb.includes(ca)) return true;
+          const wordsA = a.split(/[\s\(\)\/\-\_\[\],]+/).filter(w => w.length >= 2);
+          if (wordsA.some(w => cb.includes(w.toLowerCase()))) return true;
+          const wordsB = b.split(/[\s\(\)\/\-\_\[\],]+/).filter(w => w.length >= 2);
+          if (wordsB.some(w => ca.includes(w.toLowerCase()))) return true;
+          return false;
+        };
+
+        const isExactDate = (d1: string, d2: string) => Boolean(d1 && d2 && d1 === d2);
+        const isDateNear = (d1: string, d2: string) => {
+          if (!d1 || !d2) return false;
+          if (d1 === d2) return true;
+          try {
+            const t1 = new Date(d1).getTime();
+            const t2 = new Date(d2).getTime();
+            return Math.abs(t1 - t2) <= 86400000 * 1.5;
+          } catch {
+            return false;
+          }
+        };
+
+        parsedRows.forEach((row, rIdx) => {
+          const excelCost = row['정규금액'] || 0;
+          const excelDate = row['정규일자'] || '';
+          const excelOrigin = row['정규상차지'] || row['상차지'] || '';
+          const excelDest = row['정규하차지'] || row['하차지'] || row['현장명'] || '';
+          const excelMemo = row['비고'] || '';
+
+          const excelFullText = [
+            excelOrigin, excelDest, excelMemo,
+            row['현장명'], row['업체명'], row['상차지'], row['하차지'], row['비고'], row['차종'], row['품명']
+          ].filter(Boolean).join(' ');
+
+          // 지능형 최적 후보 스코어링
+          let bestIdx = -1;
+          let bestScore = -1;
+
+          for (let i = 0; i < remainingSystemDeliveries.length; i++) {
+            const d = remainingSystemDeliveries[i];
+            const sysDate = d.loadingDate || d.requestDate || '';
+            const sysCost = getEffectiveDeliveryCost(d);
+            const contract = contracts.find(c => c.id === d.contractId);
+            const customer = contract ? customers.find(c => c.id === contract.customerId) : null;
+            const site = contract?.siteId ? sites.find(s => s.id === contract.siteId) : null;
+            const custName = customer?.name || '';
+            const siteName = site?.name || '';
+            const sysDest = d.destinationAddress || '';
+            const sysPickup = d.originAddress || '';
+
+            // 경유/합짐 묶음 배차인 경우, 묶인 모든 경유지 건의 고객사/현장명/하차지/메모까지 통합 매칭 텍스트에 포함
+            const bundleStops = d.bundleGroupId ? getBundleGroupDeliveries(d.bundleGroupId) : [];
+            const bundleTextParts: string[] = [];
+            if (bundleStops.length >= 2) {
+              bundleStops.forEach(bd => {
+                const bContract = contracts.find(c => c.id === bd.contractId);
+                const bCustomer = bContract ? customers.find(c => c.id === bContract.customerId) : null;
+                const bSite = bContract?.siteId ? sites.find(s => s.id === bContract.siteId) : null;
+                if (bCustomer?.name) bundleTextParts.push(bCustomer.name);
+                if (bSite?.name) bundleTextParts.push(bSite.name);
+                if (bd.destinationAddress) bundleTextParts.push(bd.destinationAddress);
+                if (bd.originAddress) bundleTextParts.push(bd.originAddress);
+                if (bd.memo) bundleTextParts.push(bd.memo);
+              });
+            }
+
+            const sysFullText = [custName, siteName, sysDest, sysPickup, d.driverName, d.transportCompany, d.memo, d.rawText, ...bundleTextParts].filter(Boolean).join(' ');
+
+            const dateExact = isExactDate(sysDate, excelDate);
+            const dateNear = isDateNear(sysDate, excelDate);
+            if (!dateNear) continue; // 날짜가 ±1일 이상 차이나면 후보 제외
+
+            const costExact = excelCost > 0 && (sysCost === excelCost || d.finalCost === excelCost);
+            const textOverlap = isTextSimilar(sysFullText, excelFullText);
+
+            let score = 0;
+            if (costExact) {
+              // 💡 [사장님 지시] 날짜와 금액이 맞으면 업체명 표기가 다소 불일치 하더라도 허용
+              score += 100;
+              if (dateExact) score += 50; // 당일 일치 우선
+              else score += 20; // ±1일 일치
+              if (textOverlap) score += 30; // 텍스트까지 일치 시 최우선 가산점
+            } else {
+              // 금액 불일치 (할증/차액 후보): 날짜 일치 + 텍스트 겹침이 있는 경우만 후보
+              if (textOverlap) {
+                score += 40;
+                if (dateExact) score += 20;
+              }
+            }
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestIdx = i;
+            }
+          }
+
+          if (bestIdx !== -1) {
+            const matchedDelivery = remainingSystemDeliveries.splice(bestIdx, 1)[0];
+            const sysCost = getEffectiveDeliveryCost(matchedDelivery);
+            const diff = excelCost - sysCost;
+
+            // 할증 사유 자동 감지 (대기, 경유, 회차 등)
+            let detectedReason = '';
+            if (excelMemo.includes('대기')) detectedReason = '현장 대기료';
+            else if (excelMemo.includes('상차') || excelMemo.includes('하차') || excelMemo.includes('2곳') || excelMemo.includes('경유')) detectedReason = '경유지 할증';
+            else if (excelMemo.includes('회차')) detectedReason = '회차비';
+            else if (diff > 0) detectedReason = `단가 차액 (+₩${diff.toLocaleString()})`;
+
+            const isMatched = (bestScore >= 120) || (diff === 0 && excelCost > 0);
+
+            if (!isMatched && diff !== 0) {
+              mismatchCount++;
+              pairs.push({
+                pairId: `PAIR-${matchedDelivery.id}-${rIdx}`,
+                systemDelivery: matchedDelivery,
+                excelRow: row,
+                matchStatus: 'MISMATCH',
+                systemCost: sysCost,
+                excelCost,
+                diffCost: diff,
+                surchargeReason: detectedReason,
+                memo: excelMemo || `시스템 ₩${sysCost.toLocaleString()}원 vs 엑셀 ₩${excelCost.toLocaleString()}원 (${detectedReason})`,
+                isReconciled: false
+              });
+            } else {
+              autoMatchedCount++;
+              const contract = contracts.find(c => c.id === matchedDelivery.contractId);
+              const customer = contract ? customers.find(c => c.id === contract.customerId) : null;
+              const custName = customer?.name || '';
+              const textOverlap = isTextSimilar([custName, matchedDelivery.destinationAddress, matchedDelivery.originAddress].filter(Boolean).join(' '), excelFullText);
+
+              pairs.push({
+                pairId: `PAIR-${matchedDelivery.id}-${rIdx}`,
+                systemDelivery: matchedDelivery,
+                excelRow: row,
+                matchStatus: 'MATCHED',
+                systemCost: sysCost,
+                excelCost,
+                diffCost: 0,
+                surchargeReason: detectedReason,
+                memo: excelMemo || (textOverlap ? '날짜/현장/금액 일치 (자동 매칭)' : '날짜/금액 일치 (업체명 표기 허용 자동 매칭)'),
+                isReconciled: true
+              });
+            }
+          } else {
+            // 엑셀 단독 항목
+            pairs.push({
+              pairId: `EXCEL-ONLY-${rIdx}`,
+              excelRow: row,
+              matchStatus: 'EXCEL_ONLY',
+              systemCost: 0,
+              excelCost,
+              diffCost: excelCost,
+              memo: row['비고'] || '시스템 배차 미존재 (전대 회수 또는 오청구)',
+              isReconciled: false,
+              isExcluded: false
+            });
+          }
+        });
+
+        // 남은 시스템 배차 (시스템 단독 항목)
+        remainingSystemDeliveries.forEach((sysD, sIdx) => {
+          const sysCost = getEffectiveDeliveryCost(sysD);
+          pairs.push({
+            pairId: `SYS-ONLY-${sysD.id}-${sIdx}`,
+            systemDelivery: sysD,
+            matchStatus: 'SYSTEM_ONLY',
+            systemCost: sysCost,
+            excelCost: 0,
+            diffCost: -sysCost,
+            memo: '명세서 엑셀 미기재 (미청구 또는 타 운송사 건)',
+            isReconciled: false
+          });
+        });
+
+        setReconPairs(pairs);
+        const excelOnlyCnt = pairs.filter(p => p.matchStatus === 'EXCEL_ONLY').length;
+        const msg = `2단계 지능형 대사 완료! [🟢 일치 ${autoMatchedCount}건] | [🟡 금액불일치/할증 ${mismatchCount}건] | [🔴 엑셀단독 ${excelOnlyCnt}건] | [⚪ 시스템단독 ${remainingSystemDeliveries.length}건]`;
+        setReconNotificationMsg(msg);
+      } catch (err: any) {
+        showErrorModal('엑셀 파싱 중 오류가 발생하였습니다: ' + err.message);
+      }
+    };
+
+    reader.readAsBinaryString(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // ⚡ 차액 승인 (MISMATCH -> MATCHED 확정)
+  const handleApproveMismatch = async (pairId: string) => {
+    const pair = reconPairs.find(p => p.pairId === pairId);
+    if (!pair || !pair.systemDelivery) return;
+
+    try {
+      await db.updateRow('deliveries', pair.systemDelivery.id, {
+        finalCost: pair.excelCost,
+        deliveryCost: pair.excelCost,
+        reconciliationStatus: 'RECONCILED',
+        memo: [pair.systemDelivery.memo, `[차액승인: ₩${pair.excelCost.toLocaleString()} (${pair.surchargeReason || '할증인정'})]`].filter(Boolean).join(' | ')
+      } as any);
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      setReconPairs(prev => prev.map(p => {
+        if (p.pairId === pairId) {
+          return {
+            ...p,
+            matchStatus: 'MATCHED',
+            systemCost: p.excelCost,
+            diffCost: 0,
+            isReconciled: true
+          };
+        }
+        return p;
+      }));
+    } catch (e: any) {
+      showErrorModal(`차액 승인 실패: ${e.message}`);
+    }
+  };
+
+  // ⚡ 모든 차액/할증 건 1클릭 일괄 승인
+  const handleApproveAllMismatches = async () => {
+    const mismatches = reconPairs.filter(p => p.matchStatus === 'MISMATCH' && p.systemDelivery);
+    if (mismatches.length === 0) return;
+
+    showToast(`금액 불일치 건 총 ${mismatches.length}건을 청구 금액으로 일괄 승인 처리합니다.`);
+
+    try {
+      for (const pair of mismatches) {
+        if (pair.systemDelivery) {
+          await db.updateRow('deliveries', pair.systemDelivery.id, {
+            finalCost: pair.excelCost,
+            deliveryCost: pair.excelCost,
+            reconciliationStatus: 'RECONCILED',
+            memo: [pair.systemDelivery.memo, `[할증일괄승인: ₩${pair.excelCost.toLocaleString()} (${pair.surchargeReason || '할증'})]`].filter(Boolean).join(' | ')
+          } as any);
+        }
+      }
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      setReconPairs(prev => prev.map(p => {
+        if (p.matchStatus === 'MISMATCH' && p.systemDelivery) {
+          return {
+            ...p,
+            matchStatus: 'MATCHED',
+            systemCost: p.excelCost,
+            diffCost: 0,
+            isReconciled: true
+          };
+        }
+        return p;
+      }));
+      setReconNotificationMsg(`할증 및 금액 불일치 ${mismatches.length}건이 일괄 승인되었습니다.`);
+    } catch (e: any) {
+      showErrorModal(`일괄 승인 오류: ${e.message}`);
+    }
+  };
+
+  // 🚫 엑셀 단독 건 오청구 제외 (반려 처리하여 데드락 해제)
+  const handleExcludeExcelOnly = (pairId: string) => {
+    setReconPairs(prev => prev.map(p => {
+      if (p.pairId === pairId) {
+        const nextExcluded = !p.isExcluded;
+        return {
+          ...p,
+          isExcluded: nextExcluded,
+          isReconciled: nextExcluded ? true : false,
+          matchStatus: nextExcluded ? 'EXCLUDED' : 'EXCEL_ONLY'
+        };
+      }
+      return p;
+    }));
+  };
+
+  // ➕ 엑셀 단독 건을 시스템 배차로 즉시 생성
+  const handleCreateDeliveryFromExcel = async (pairId: string) => {
+    const pair = reconPairs.find(p => p.pairId === pairId);
+    if (!pair || !pair.excelRow) return;
+
+    const row = pair.excelRow;
+    const cost = pair.excelCost;
+    const date = row['정규일자'] || reconStartDate;
+    const dest = row['정규하차지'] || row['현장명'] || '미기재 현장';
+    const memo = row['비고'] || '엑셀 거래명세서 기반 자동 배차 생성';
+
+    try {
+      const newDelivId = `DEL-${date.replace(/-/g, '').slice(2)}-${Math.floor(100 + Math.random() * 900)}`;
+      const newDeliv: any = {
+        id: newDelivId,
+        type: 'INBOUND',
+        status: 'DELIVERED',
+        requestDate: date,
+        loadingDate: date,
+        unloadingDate: date,
+        destinationAddress: dest,
+        transportCompany: selectedReconCompany === 'ALL' ? '기타운송' : selectedReconCompany,
+        deliveryCost: cost,
+        finalCost: cost,
+        expectedCost: cost,
+        isCostSettled: false,
+        dispatchCategory: '입고',
+        reconciliationStatus: 'RECONCILED',
+        memo: `[명세서 자동생성] ${memo}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      await db.insertRow('deliveries', newDeliv);
+
+      setReconPairs(prev => prev.map(p => {
+        if (p.pairId === pairId) {
+          return {
+            ...p,
+            systemDelivery: newDeliv,
+            systemCost: cost,
+            diffCost: 0,
+            matchStatus: 'MATCHED',
+            isReconciled: true,
+            memo: `신규 배차 생성 및 대사 완료 (${newDelivId})`
+          };
+        }
+        return p;
+      }));
+
+      await db.awaitPendingWrites();
+      await refreshAllData();
+      setReconNotificationMsg(`신규 배차(${newDelivId})가 생성되고 대사 완료되었습니다.`);
+    } catch (e: any) {
+      showErrorModal(`배차 생성 실패: ${e.message}`);
+    }
+  };
+
+  // 💡 [사장님 지시] 💳 대사 완료 1건의 통합 매입 지급요청 생성
+  const handleExecuteBundlePaymentRequest = async () => {
+    const excelPairs = reconPairs.filter(p => p.excelRow);
+
+    if (excelPairs.length === 0) {
+      showErrorModal('지급 요청을 작성하려면 먼저 상단의 [📄 엑셀 거래명세서 업로드]를 진행해 주세요.');
+      return;
+    }
+
+    // 오른쪽 패널(거래명세서 엑셀) 항목 중 대사 미완료건이 있는지 검사 (반려/제외 처리된 건은 통과)
+    const unreconciledExcelPairs = excelPairs.filter(p => !p.isReconciled && !p.isExcluded);
+
+    if (unreconciledExcelPairs.length > 0) {
+      showErrorModal(`업로드한 거래명세서 엑셀 항목 (${excelPairs.length}건) 중 아직 대사/승인되지 않은 항목이 ${unreconciledExcelPairs.length}건 남아있어 지급요청을 작성할 수 없습니다.\n\n불일치 건은 [차액 승인] 또는 [오청구 제외/반려]를 처리해 주세요.`);
+      return;
+    }
+
+    const reconciledPairs = reconPairs.filter(p => p.isReconciled && p.systemDelivery && !p.isExcluded);
+
+    const targetYm = reconStartDate ? reconStartDate.substring(0, 7) : new Date().toISOString().substring(0, 7);
+    const bundleCode = `PAY-BUNDLE-${targetYm.replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const totalBundleCost = reconciledPairs.reduce((acc, p) => acc + p.systemCost, 0);
+
+    const targetCompany = transportCompanies.find(tc => tc.id === selectedReconCompany || tc.name === selectedReconCompany);
+    const rawVendorName = targetCompany?.name || (selectedReconCompany !== 'ALL' ? selectedReconCompany : (reconciledPairs[0]?.systemDelivery?.transportCompany || '기타 운송사'));
+    const nowIso = new Date().toISOString();
+
+    try {
+      // 1. 월말 매입 정산 마스터 레코드 생성
+      const ruleActive = isRuleEnabled('DISPATCH_PAYMENT');
+      const settlementId = db.generateNextId('purchaseSettlements', db.purchaseSettlements);
+      const settlement = db.insertRow<PurchaseSettlement>('purchaseSettlements', {
+        id: settlementId,
+        settlementYm: targetYm,
+        settlementType: 'TRANSPORT',
+        vendorName: rawVendorName,
+        totalAmount: totalBundleCost,
+        paidAmount: 0,
+        status: ruleActive ? 'PENDING' : 'CONFIRMED',
+        confirmedAt: ruleActive ? undefined : nowIso,
+        confirmedBy: ruleActive ? undefined : (currentUser?.name || '운송대사담당'),
+        itemCount: reconciledPairs.length,
+        memo: `[운송료 대사 완결] ${bundleCode} | ${reconciledPairs.length}건 지급 요청`,
+        createdAt: nowIso,
+        updatedAt: nowIso
+      });
+
+      // 2. 1:1 매칭 상세 항목 생성 및 배차 레코드 갱신
+      const effectiveStatementFileUrl = uploadedStatementUrl || uploadedFileName || undefined;
+      for (const pair of reconciledPairs) {
+        if (pair.systemDelivery) {
+          db.insertRow<PurchaseSettlementItem>('purchaseSettlementItems', {
+            settlementId: settlement.id,
+            sourceType: 'DELIVERY',
+            sourceId: pair.systemDelivery.id,
+            itemDescription: `[배차 운반비] ${pair.systemDelivery.originAddress || '상차지'} ➔ ${pair.systemDelivery.destinationAddress || '하차지'} (${pair.systemDelivery.driverName || '기사'}) [요청:${bundleCode}]`,
+            quantity: 1,
+            unitPrice: pair.systemCost,
+            amount: pair.systemCost,
+            evidenceFileUrl: effectiveStatementFileUrl,
+            createdAt: nowIso
+          });
+
+          await db.updateRow('deliveries', pair.systemDelivery.id, {
+            reconciliationStatus: 'PAYMENT_REQUESTED',
+            paymentRequestedAt: nowIso,
+            deliveryCostConfirmed: pair.systemCost,
+            finalCost: pair.systemCost,
+            purchaseBillId: settlement.id,
+            ...(effectiveStatementFileUrl ? { statementFileUrl: effectiveStatementFileUrl } : {}),
+            memo: `[통합지급요청: ${bundleCode}] ${pair.memo || pair.systemDelivery.memo || ''}`
+          } as any);
+        }
+      }
+
+      if (ruleActive) {
+        await createApprovalRequest({
+          eventCode: 'DISPATCH_PAYMENT',
+          targetTable: 'purchase_settlements',
+          targetId: settlement.id,
+          amount: totalBundleCost,
+          payload: {
+            actionType: 'DISPATCH_PAYMENT',
+            reason: `[${rawVendorName}] ${targetYm} 운송료 대사 통합 지급 품의 (${reconciledPairs.length}건 / ₩${totalBundleCost.toLocaleString()}원)`,
+            toBe: {
+              settlementId: settlement.id,
+              vendorName: rawVendorName,
+              settlementType: 'TRANSPORT',
+              totalAmount: totalBundleCost,
+              itemCount: reconciledPairs.length,
+              bundleCode
+            }
+          }
+        });
+      }
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      setReconPairs(prev => prev.map(p => {
+        if (p.isReconciled && p.systemDelivery && !p.isExcluded) {
+          return { ...p, matchStatus: 'PAYMENT_REQUESTED' as any };
+        }
+        return p;
+      }));
+
+      // 💡 [사용자 편익] 지급 요청 완료 즉시 지급상태 필터를 'PAID'로 전환하여 등록된 건이 화면에서 즉시 확인되도록 보장
+      setReconPaymentFilter('PAID');
+
+      setReconNotificationMsg(`[통합 지급요청 완료] 요청번호: ${bundleCode} (정산ID: ${settlement.id}) | 총 ${reconciledPairs.length}건 (합계 ₩${totalBundleCost.toLocaleString()}원) 매입 지급 요청이 [월말 매입 정산] 대장에 등록되었습니다.`);
+      setPaymentSuccessInfo({
+        bundleCode,
+        totalCount: reconciledPairs.length,
+        totalAmount: totalBundleCost,
+        companyName: rawVendorName,
+        reconMonth: targetYm
+      });
+    } catch (err: any) {
+      showErrorModal('지급 요청 처리 중 오류가 발생하였습니다: ' + err.message);
+    }
+  };
+
+  // 대사 통계 집계 (Single-Pass O(N) 최적화)
+  const reconStats = useMemo(() => {
+    const isPairMode = reconPairs.length > 0;
+    
+    if (isPairMode) {
+      let excelTotalCount = 0;
+      let excelTotalCost = 0;
+      let matchedCount = 0;
+      let matchedCost = 0;
+      let mismatchCount = 0;
+      let mismatchCost = 0;
+      let excludedCount = 0;
+      let excludedCost = 0;
+      let paymentRequestedCount = 0;
+      let paymentRequestedCost = 0;
+      let excelOnlyCount = 0;
+      let systemOnlyCount = 0;
+
+      for (const p of reconPairs) {
+        if (p.excelRow) {
+          excelTotalCount++;
+          excelTotalCost += p.excelCost;
+        }
+        if (p.isReconciled && !p.isExcluded) {
+          matchedCount++;
+          matchedCost += p.systemCost;
+        }
+        if (p.matchStatus === 'MISMATCH') {
+          mismatchCount++;
+          mismatchCost += p.excelCost;
+        }
+        if (p.isExcluded) {
+          excludedCount++;
+          excludedCost += p.excelCost;
+        }
+        if (p.matchStatus === 'PAYMENT_REQUESTED') {
+          paymentRequestedCount++;
+          paymentRequestedCost += p.systemCost;
+        }
+        if (p.matchStatus === 'EXCEL_ONLY') {
+          excelOnlyCount++;
+        }
+        if (p.matchStatus === 'SYSTEM_ONLY') {
+          systemOnlyCount++;
+        }
+      }
+
+      return {
+        isPairMode: true,
+        totalCount: excelTotalCount,
+        totalCost: excelTotalCost,
+        matchedCount,
+        matchedCost,
+        mismatchCount,
+        mismatchCost,
+        excludedCount,
+        excludedCost,
+        paymentRequestedCount,
+        paymentRequestedCost,
+        excelOnlyCount,
+        systemOnlyCount,
+        systemCount: completedDeliveriesForRecon.length
+      };
+    }
+
+    const totalCount = completedDeliveriesForRecon.length;
+    let totalCost = 0;
+    let matchedCount = 0;
+    let matchedCost = 0;
+    let paymentRequestedCount = 0;
+    let paymentRequestedCost = 0;
+
+    for (const d of completedDeliveriesForRecon) {
+      const cost = getEffectiveDeliveryCost(d);
+      totalCost += cost;
+      const st = (d as any).reconciliationStatus;
+      if (st === 'PAYMENT_REQUESTED') {
+        paymentRequestedCount++;
+        paymentRequestedCost += cost;
+      }
+      if (st === 'MATCHED' || st === 'RECONCILED') {
+        matchedCount++;
+        matchedCost += cost;
+      }
+    }
+
+    return {
+      isPairMode: false,
+      totalCount,
+      totalCost,
+      matchedCount,
+      matchedCost,
+      mismatchCount: 0,
+      mismatchCost: 0,
+      excludedCount: 0,
+      excludedCost: 0,
+      paymentRequestedCount,
+      paymentRequestedCost,
+      excelOnlyCount: 0,
+      systemOnlyCount: 0,
+      systemCount: totalCount
+    };
+  }, [reconPairs, completedDeliveriesForRecon]);
+
+
+  // 💡 [사장님 지시] 건별 대사 완료 토글 및 [↩️ 대사 취소 (대기 원복)] 기능 (금액 상이 시 대사 거절)
+  const handleTogglePairReconciled = (pairId: string) => {
+    const targetPair = reconPairs.find(p => p.pairId === pairId);
+    if (!targetPair) return;
+
+    if (!targetPair.isReconciled) {
+      // 대사 완료 전환 시 금액 검증
+      if (targetPair.diffCost !== 0 || targetPair.systemCost !== targetPair.excelCost) {
+        showErrorModal(`[대사 처리 거절]\n\n• 좌측 시스템 금액: ₩${targetPair.systemCost.toLocaleString()}원\n• 우측 엑셀 청구금액: ₩${targetPair.excelCost.toLocaleString()}원\n• 차액: ₩${Math.abs(targetPair.diffCost).toLocaleString()}원\n\n좌측과 우측의 금액이 상이한 항목은 대사 처리가 불가능합니다.`);
+        return;
+      }
+    }
+
+    setReconPairs(prev => prev.map(p => {
+      if (p.pairId === pairId) {
+        const nextReconciled = !p.isReconciled;
+        return {
+          ...p,
+          isReconciled: nextReconciled,
+          matchStatus: nextReconciled ? 'MATCHED' : (p.diffCost !== 0 ? 'MISMATCH' : 'PENDING'),
+          memo: nextReconciled ? '담당자 수동 대사 완료' : '대사 취소됨 (대기 원복)'
+        };
+      }
+      return p;
+    }));
+  };
+
+  // 선택건 일괄 대사 완료 (금액 상이건 대사 거절)
+  const handleBatchReconcilePairs = () => {
+    if (selectedPairIds.size === 0) {
+      showErrorModal('대사 완료 처리할 항목을 1건 이상 체크해 주세요.');
+      return;
+    }
+
+    let rejectedCount = 0;
+    let successCount = 0;
+
+    setReconPairs(prev => prev.map(p => {
+      if (selectedPairIds.has(p.pairId)) {
+        if (p.diffCost !== 0 || p.systemCost !== p.excelCost) {
+          rejectedCount++;
+          return p; // 금액 상이 항목은 대사 처리 거절 (상태 유지)
+        }
+        successCount++;
+        return { ...p, isReconciled: true, matchStatus: 'MATCHED', memo: '선택 항목 일괄 대사 완료' };
+      }
+      return p;
+    }));
+
+    setSelectedPairIds(new Set());
+
+    if (rejectedCount > 0) {
+      showErrorModal(`선택한 항목 중 ${rejectedCount}건은 좌/우 금액이 상이하여 대사 처리가 거절되었습니다.\n\n(금액이 일치하는 ${successCount}건만 대사 완료 처리되었습니다.)`);
+    } else if (successCount > 0) {
+      setReconNotificationMsg(`선택한 Pair 항목 ${successCount}건이 '대사 완료'로 전환되었습니다.`);
+    }
+  };
+
+  // 💡 [사장님 지시] 선택건 일괄 대사 취소 (대기 원복)
+  const handleBatchCancelReconcilePairs = () => {
+    if (selectedPairIds.size === 0) {
+      showErrorModal('대사를 취소할 항목을 1건 이상 체크해 주세요.');
+      return;
+    }
+    setReconPairs(prev => prev.map(p => {
+      if (selectedPairIds.has(p.pairId)) {
+        return { ...p, isReconciled: false, matchStatus: 'PENDING', memo: '일괄 대사 취소 (대기 원복)' };
+      }
+      return p;
+    }));
+    setSelectedPairIds(new Set());
+    setReconNotificationMsg(`↩️ 선택한 Pair 항목들이 '대사 대기' 상태로 원복되었습니다.`);
+  };
+
+  // 엑셀 업로드 시 시스템 미등록 청구 항목 배열
+  const unmatchedExcelRows = useMemo(() => {
+    return reconPairs
+      .filter(p => p.matchStatus === 'EXCEL_ONLY' && p.excelRow)
+      .map(p => p.excelRow);
+  }, [reconPairs]);
+
+  // 엑셀 내보내기 다운로드
+  const handleExportReconciliationReport = () => {
+    if (reconPairs.length === 0 && completedDeliveriesForRecon.length === 0) {
+      showErrorModal('내보낼 대사 내역이 없습니다.');
+      return;
+    }
+
+    const exportRows = reconPairs.length > 0
+      ? reconPairs.map((p, i) => {
+          const sysD = p.systemDelivery;
+          const contract = sysD?.contractId ? contractMap.get(sysD.contractId) : null;
+          const customer = contract?.customerId ? customerMap.get(contract.customerId) : null;
+
+          return {
+            '순번': i + 1,
+            '대사 상태': p.isExcluded ? '반려(제외)' : p.isReconciled ? '대사완료(확정)' : p.matchStatus === 'MISMATCH' ? '금액불일치(할증)' : p.matchStatus === 'EXCEL_ONLY' ? '엑셀단독' : p.matchStatus === 'SYSTEM_ONLY' ? '시스템단독' : '대사대기',
+            '시스템 배차ID': sysD?.id || '미존재',
+            '운송일자': sysD?.loadingDate || sysD?.requestDate || p.excelRow?.['운송일자'] || p.excelRow?.['날짜'] || '',
+            '운송 거래처': sysD?.transportCompany || sysD?.assignedVehicles?.[0]?.transportCompany || '자사배차',
+            '고객사/현장': customer?.name ? `${customer.name} (${sysD?.destinationAddress || ''})` : p.excelRow?.['하차지'] || p.excelRow?.['도착지'] || '',
+            '운송 기사명': sysD?.driverName || p.excelRow?.['기사명'] || p.excelRow?.['운송기사'] || '',
+            '시스템 운송비(원)': p.systemCost,
+            '엑셀 청구액(원)': p.excelCost,
+            '차액(원)': p.diffCost,
+            '할증 사유': p.surchargeReason || '',
+            '비고 / 특이사항': p.memo || ''
+          };
+        })
+      : completedDeliveriesForRecon.map((d, i) => {
+          const contract = d.contractId ? contractMap.get(d.contractId) : null;
+          const customer = contract?.customerId ? customerMap.get(contract.customerId) : null;
+          const cost = getEffectiveDeliveryCost(d);
+
+          return {
+            '순번': i + 1,
+            '배차ID': d.id,
+            '운송일자': d.loadingDate || d.requestDate,
+            '운송 거래처': d.transportCompany || d.assignedVehicles?.[0]?.transportCompany || '자사배차',
+            '고객사명': customer?.name || '미지정',
+            '도착지(현장)': d.destinationAddress || '',
+            '운송 기사명': d.driverName || '기사미지정',
+            '차종': d.vehicleType || '3.5T',
+            '시스템 운송비(원)': cost,
+            '엑셀 청구액(원)': cost,
+            '차액(원)': 0,
+            '대사 상태': (d as any).reconciliationStatus === 'PAYMENT_REQUESTED' ? '지급요청완료' : '대사대기',
+            '비고 / 특이사항': d.memo || ''
+          };
+        });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '월말_운송료_1to1대사내역');
+    XLSX.writeFile(workbook, `월말_운송료_1to1대사내역_${reconStartDate}_${reconEndDate}.xlsx`);
+  };
+
+  // 엑셀 템플릿 다운로드 (운송료 대사 테스트용 경기화물운송 / 엘제이운송 2026년 10월 거래명세서 샘플)
+  const handleDownloadExcelTemplate = () => {
+    const isLj = selectedReconCompany.includes('엘제이');
+    if (isLj) {
+      const ljRows = [
+        ['[거래명세서] 엘제이운송 - 2026년 10월 운송료 청구 내역서'],
+        ['귀하: eBroAWP 렌탈', '', '사업자등록번호: 135-81-88990', '', '대표자: 이엘제이', '', '연락처: 031-681-4455'],
+        [],
+        ['일자', '업체명', '현장명', '상차지', '하차지', '차종', '기사명', '운송비', '비고'],
+        ['2026-10-06', '지에스건설', '인천 송도 바이오클러스터 2공구', '화성 남양 주기장', '인천광역시 연수구 송도동 첨단대로 305', '5T', '최동훈', 190000, '1230ES 2대 정상출고'],
+        ['2026-10-14', '삼성물산 / 현대엔지니어링', '평택 고덕 반도체 P4 외 화성 동탄 합짐', '화성 남양 주기장', '평택 고덕 반도체 P4 ➔ 화성 동탄 물류센터', '5T 축차', '강백호', 290000, '평택-동탄 2곳 하차 경유지 할증 (+30,000원)'],
+        [],
+        ['합계', '', '', '', '', '', '', 480000, '공급가액 합계 (부가세 별도)']
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ljRows);
+      ws['!cols'] = [{ wch: 13 }, { wch: 24 }, { wch: 32 }, { wch: 18 }, { wch: 36 }, { wch: 11 }, { wch: 10 }, { wch: 14 }, { wch: 42 }];
+      XLSX.utils.book_append_sheet(wb, ws, '2026년10월_거래명세서');
+      XLSX.writeFile(wb, '운송료대사_테스트_거래명세서_엘제이운송_2026년10월.xlsx');
+      return;
+    }
+
+    const gyeonggiRows = [
+      ['[거래명세서] 경기화물운송(주) - 2026년 10월 운송료 청구 내역서'],
+      ['귀하: eBroAWP 렌탈', '', '사업자등록번호: 124-86-11223', '', '대표자: 김경기', '', '연락처: 031-355-7700'],
+      [],
+      ['일자', '업체명', '현장명', '상차지', '하차지', '차종', '기사명', '운송비', '비고'],
+      ['2026-10-02', '삼성물산 건설부문', '평택 고덕 반도체 P4 신축현장', '화성 남양 주기장', '경기도 평택시 고덕면 고덕국제대로 77', '5T', '김철수', 180000, 'GS-1930 2대 정상출고'],
+      ['2026-10-05', '현대엔지니어링 / 대우건설', '화성 동탄 물류센터 외 수원 광교 2곳', '화성 남양 주기장', '화성 동탄 물류센터 ➔ 수원 광교 데이터센터', '5T 축차', '박영수', 290000, '동탄-광교 2곳 하차 경유지 할증 (+40,000원)'],
+      ['2026-10-08', '지에스건설', '인천 송도 바이오클러스터 2공구', '화성 남양 주기장', '인천광역시 연수구 송도동 첨단대로 305', '3.5T', '이민호', 200000, 'SJ3219 2대 출고'],
+      ['2026-10-12', '포스코이앤씨', '용인 원삼 반도체클러스터 1공구', '화성 남양 주기장', '경기도 용인시 처인구 원삼면 죽능리 500', '5T', '김철수', 250000, '보안게이트 출입 대기 2시간 (현장 대기료 +30,000원)'],
+      ['2026-10-15', '에스케이에코플랜트 / 삼성물산', '이천 하이닉스 M16 외 평택 고덕 합짐', '화성 남양 주기장', '이천 하이닉스 M16 ➔ 평택 고덕 반도체 P4', '5T 축차', '박영수', 320000, '이천-평택 합짐 운송 (JCPT0807AC 2대)'],
+      ['2026-10-18', '현대엔지니어링', '화성 동탄 물류센터 신축현장', '화성 남양 주기장', '경기도 화성시 동탄면 동탄산단로 120', '2.5T 셀프', '정우성', 280000, '장비 교환 왕복 운송 (출고+회수)'],
+      ['2026-10-20', '대림건설(타사오청구)', '안산 반월공단 물류창고', '화성 남양 주기장', '경기도 안산시 단원구 성곡동 600', '5T', '김철수', 170000, '전대 원사 직접회수건 또는 타사 오청구 건 (검토요망)'],
+      [],
+      ['합계', '', '', '', '', '', '', 1690000, '공급가액 합계 (부가세 별도)']
+    ];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(gyeonggiRows);
+    ws['!cols'] = [{ wch: 13 }, { wch: 24 }, { wch: 30 }, { wch: 18 }, { wch: 36 }, { wch: 11 }, { wch: 10 }, { wch: 14 }, { wch: 42 }];
+    XLSX.utils.book_append_sheet(wb, ws, '2026년10월_거래명세서');
+    XLSX.writeFile(wb, '운송료대사_테스트_거래명세서_경기화물운송_2026년10월.xlsx');
+  };
+
+
+  // 🔗 배차건의 원래 고유 업무구분('출고' | '입고' | '교환' | '반납' | '정비' | '이동') 판정 헬퍼 (경유/합짐 묶음 해제 시 복원 기준)
+  const getOriginalDeliveryCategoryLabel = (d?: Delivery | null): '출고' | '입고' | '교환' | '반납' | '정비' | '이동' => {
+    if (!d) return '출고';
+    if (d.originalDispatchCategory && ['출고', '입고', '교환', '반납', '정비', '이동'].includes(d.originalDispatchCategory)) {
+      return d.originalDispatchCategory;
+    }
+    if (d.dispatchCategory && ['출고', '입고', '교환', '반납', '정비', '이동'].includes(d.dispatchCategory)) {
+      return d.dispatchCategory as '출고' | '입고' | '교환' | '반납' | '정비' | '이동';
+    }
+    if (d.type === 'RETURN') return '반납';
+    if (d.type === 'INBOUND') return '입고';
+    if (d.type === 'EXCHANGE') return '교환';
+    if (d.type === 'MOVEMENT') return '이동';
+    return '출고';
+  };
+
+  // 🔗 특정 bundleGroupId에 속한 묶음 배차 목록을 처리 순서(bundleOrder 오름차순)대로 반환
+  const getBundleGroupDeliveries = (bundleGroupId?: string | null): Delivery[] => {
+    if (!bundleGroupId) return [];
+    return deliveries
+      .filter(d => d.bundleGroupId === bundleGroupId)
+      .sort((a, b) => ((a.bundleOrder || 999) - (b.bundleOrder || 999)) || (a.id || '').localeCompare(b.id || ''));
+  };
+
+  // 🔗 2건 이상의 배차의뢰를 묶어 "경유/합짐" 그룹 결성 핸들러
+  const handleCreateBundleFromIds = async (targetIds: string[]) => {
+    if (!canSave) {
+      showErrorModal('배차 수정 권한이 없습니다.');
+      return;
+    }
+    const uniqueIds = Array.from(new Set(targetIds.filter(Boolean)));
+    if (uniqueIds.length < 2) {
+      showErrorModal('경유/합짐으로 묶으려면 최소 2건 이상의 배차의뢰를 선택해 주세요.');
+      return;
+    }
+
+    const targetDeliveries = uniqueIds
+      .map(id => deliveries.find(d => d.id === id))
+      .filter(Boolean) as Delivery[];
+
+    if (targetDeliveries.length < 2) {
+      showErrorModal('선택한 배차의뢰 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      const nowIso = new Date().toISOString();
+      const dateTag = nowIso.slice(2, 10).replace(/-/g, '');
+      const existingBundleId = targetDeliveries.find(d => d.bundleGroupId)?.bundleGroupId;
+      const bundleGroupId = existingBundleId || `BND-${dateTag}-${Math.floor(100 + Math.random() * 900)}`;
+
+      // 이미 배정된 차량/기사 또는 운송비가 있는 건이 있다면 1순위 대표건으로 승계
+      const donorWithDriver = targetDeliveries.find(d => (d.driverName && d.driverName.trim()) || (d.transportCompany && d.transportCompany.trim()));
+      const maxExpectedCost = Math.max(0, ...targetDeliveries.map(d => Number(d.expectedCost) || Number(d.deliveryCost) || 0));
+      const maxFinalCost = Math.max(0, ...targetDeliveries.map(d => Number(d.finalCost) || 0));
+
+      for (let i = 0; i < targetDeliveries.length; i++) {
+        const d = targetDeliveries[i];
+        const origCat = getOriginalDeliveryCategoryLabel(d);
+        const isPrimary = i === 0;
+
+        const updatePayload: Partial<Delivery> = {
+          bundleGroupId,
+          bundleOrder: i + 1,
+          originalDispatchCategory: origCat,
+          dispatchCategory: '경유/합짐',
+          dropoffType: 'MULTI_STOP',
+          updatedAt: nowIso
+        };
+
+        if (donorWithDriver) {
+          updatePayload.transportCompany = donorWithDriver.transportCompany || d.transportCompany || '';
+          updatePayload.vehicleType = donorWithDriver.vehicleType || d.vehicleType || '3.5T';
+          updatePayload.vehicleNo = donorWithDriver.vehicleNo || d.vehicleNo || '';
+          updatePayload.driverName = donorWithDriver.driverName || d.driverName || '';
+          updatePayload.driverContact = donorWithDriver.driverContact || d.driverContact || '';
+        }
+
+        if (isPrimary) {
+          if (maxExpectedCost > 0 || maxFinalCost > 0) {
+            updatePayload.expectedCost = maxExpectedCost;
+            updatePayload.finalCost = maxFinalCost;
+            updatePayload.deliveryCost = maxFinalCost > 0 ? maxFinalCost : maxExpectedCost;
+          }
+        } else {
+          // 후순위 경유 건은 월말 정산 시 이중 지급 방지를 위해 운송비를 1순위 대표건에 통합(0원)
+          updatePayload.expectedCost = 0;
+          updatePayload.finalCost = 0;
+          updatePayload.deliveryCost = 0;
+        }
+
+        db.updateRow<Delivery>('deliveries', d.id, updatePayload);
+      }
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      setSelectedBundleCandidateIds([]);
+      setShowBundleAddPicker(false);
+      setBundlePickerSearch('');
+
+      const refreshedFirst = db.deliveries.find(d => d.id === targetDeliveries[0].id) || {
+        ...targetDeliveries[0],
+        bundleGroupId,
+        bundleOrder: 1,
+        originalDispatchCategory: getOriginalDeliveryCategoryLabel(targetDeliveries[0]),
+        dispatchCategory: '경유/합짐' as const,
+        dropoffType: 'MULTI_STOP' as const
+      };
+      handleSelectDelivery(refreshedFirst);
+      showToast(`총 ${targetDeliveries.length}건의 배차의뢰가 [경유/합짐]으로 묶였습니다. 우측 패널에서 처리 순서를 조정할 수 있습니다.`);
+    } catch (err: any) {
+      showErrorModal(`경유/합짐 묶기 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 🔗 현재 선택된 배차건(또는 기존 묶음)에 다른 배차의뢰 1건 추가
+  const handleAddDeliveryToCurrentBundle = async (addDeliveryId: string) => {
+    if (!selectedDelivery) return;
+    const currentGroup = selectedDelivery.bundleGroupId
+      ? getBundleGroupDeliveries(selectedDelivery.bundleGroupId).map(d => d.id)
+      : [selectedDelivery.id];
+    if (currentGroup.includes(addDeliveryId)) return;
+    await handleCreateBundleFromIds([...currentGroup, addDeliveryId]);
+  };
+
+  // 🔗 경유/합짐 묶음 내 처리 순서 변경 (▲ 위로 / ▼ 아래로)
+  const handleMoveBundleStopOrder = async (targetDeliveryId: string, direction: 'UP' | 'DOWN') => {
+    if (!canSave) return;
+    const target = deliveries.find(d => d.id === targetDeliveryId);
+    if (!target || !target.bundleGroupId) return;
+
+    const groupItems = getBundleGroupDeliveries(target.bundleGroupId);
+    const curIdx = groupItems.findIndex(d => d.id === targetDeliveryId);
+    if (curIdx === -1) return;
+
+    const swapIdx = direction === 'UP' ? curIdx - 1 : curIdx + 1;
+    if (swapIdx < 0 || swapIdx >= groupItems.length) return;
+
+    const reordered = [...groupItems];
+    const temp = reordered[curIdx];
+    reordered[curIdx] = reordered[swapIdx];
+    reordered[swapIdx] = temp;
+
+    try {
+      const nowIso = new Date().toISOString();
+      // 그룹 전체 통합 운송비 보존 (1순위 대표건이 바뀌어도 새 1순위로 운송비 자동 승계)
+      const groupExpectedCost = Math.max(0, ...groupItems.map(d => Number(d.expectedCost) || Number(d.deliveryCost) || 0));
+      const groupFinalCost = Math.max(0, ...groupItems.map(d => Number(d.finalCost) || 0));
+      const primaryVehiclesJson = groupItems[0]?.vehicles;
+
+      for (let i = 0; i < reordered.length; i++) {
+        const item = reordered[i];
+        const isNewPrimary = i === 0;
+        let updatedVehiclesStr = item.vehicles;
+        if (isNewPrimary && primaryVehiclesJson) {
+          updatedVehiclesStr = primaryVehiclesJson;
+        } else if (!isNewPrimary && item.vehicles) {
+          try {
+            const parsed = JSON.parse(item.vehicles);
+            if (Array.isArray(parsed)) {
+              updatedVehiclesStr = JSON.stringify(parsed.map((v: any) => ({ ...v, expectedCost: 0, finalCost: 0, deliveryCost: 0 })));
+            }
+          } catch {}
+        }
+
+        db.updateRow<Delivery>('deliveries', item.id, {
+          bundleOrder: i + 1,
+          expectedCost: isNewPrimary ? groupExpectedCost : 0,
+          finalCost: isNewPrimary ? groupFinalCost : 0,
+          deliveryCost: isNewPrimary ? (groupFinalCost > 0 ? groupFinalCost : groupExpectedCost) : 0,
+          ...(updatedVehiclesStr ? { vehicles: updatedVehiclesStr } : {}),
+          updatedAt: nowIso
+        });
+      }
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      if (selectedDelivery) {
+        const updatedSel = db.deliveries.find(d => d.id === selectedDelivery.id);
+        if (updatedSel) setSelectedDelivery(updatedSel);
+      }
+      showToast('경유/합짐 처리 순서가 변경되었습니다. (카톡 및 문자 안내문 순서 자동 반영)');
+    } catch (err: any) {
+      showErrorModal(`처리 순서 변경 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 🔗 경유/합짐 전체 묶음 해제 (원래의 개별 배차의뢰들로 100% 원복)
+  const handleUnbundleEntireGroup = async (bundleGroupId: string) => {
+    if (!canSave || !bundleGroupId) return;
+    const groupItems = getBundleGroupDeliveries(bundleGroupId);
+    if (groupItems.length === 0) return;
+
+    try {
+      const nowIso = new Date().toISOString();
+      for (const item of groupItems) {
+        const origCat = getOriginalDeliveryCategoryLabel(item);
+        db.updateRow<Delivery>('deliveries', item.id, {
+          dispatchCategory: origCat,
+          bundleGroupId: null,
+          bundleOrder: null,
+          dropoffType: 'SINGLE',
+          updatedAt: nowIso
+        });
+      }
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      if (selectedDelivery && selectedDelivery.bundleGroupId === bundleGroupId) {
+        const origCat = getOriginalDeliveryCategoryLabel(selectedDelivery);
+        setDispatchCategory(origCat);
+        setSelectedDelivery({
+          ...selectedDelivery,
+          dispatchCategory: origCat,
+          bundleGroupId: null,
+          bundleOrder: null,
+          dropoffType: 'SINGLE',
+          updatedAt: nowIso
+        });
+      }
+      showToast(`경유/합짐 묶음이 해제되어 총 ${groupItems.length}건의 개별 배차의뢰로 원복되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(`묶음 해제 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 🔗 묶음 중 특정 1건만 분리 (남은 건이 1건만 되면 전체 묶음 자동 해제)
+  const handleRemoveSingleFromBundle = async (targetDeliveryId: string) => {
+    if (!canSave) return;
+    const target = deliveries.find(d => d.id === targetDeliveryId);
+    if (!target || !target.bundleGroupId) return;
+
+    const groupItems = getBundleGroupDeliveries(target.bundleGroupId);
+    if (groupItems.length <= 2) {
+      // 2건 묶음에서 1건을 빼면 남은 건도 단독 1건이 되므로 전체 묶음 해제 수행
+      await handleUnbundleEntireGroup(target.bundleGroupId);
+      return;
+    }
+
+    try {
+      const nowIso = new Date().toISOString();
+      const origCat = getOriginalDeliveryCategoryLabel(target);
+      const groupExpectedCost = Math.max(0, ...groupItems.map(d => Number(d.expectedCost) || Number(d.deliveryCost) || 0));
+      const groupFinalCost = Math.max(0, ...groupItems.map(d => Number(d.finalCost) || 0));
+
+      // 1. 분리 대상 건 원복
+      db.updateRow<Delivery>('deliveries', target.id, {
+        dispatchCategory: origCat,
+        bundleGroupId: null,
+        bundleOrder: null,
+        dropoffType: 'SINGLE',
+        expectedCost: 0,
+        finalCost: 0,
+        deliveryCost: 0,
+        updatedAt: nowIso
+      });
+
+      // 2. 잔여 묶음 건들 순번 재정렬 및 1순위 운송비 보존
+      const remaining = groupItems.filter(d => d.id !== target.id);
+      for (let i = 0; i < remaining.length; i++) {
+        const rem = remaining[i];
+        const isPrimary = i === 0;
+        db.updateRow<Delivery>('deliveries', rem.id, {
+          bundleOrder: i + 1,
+          expectedCost: isPrimary ? groupExpectedCost : 0,
+          finalCost: isPrimary ? groupFinalCost : 0,
+          deliveryCost: isPrimary ? (groupFinalCost > 0 ? groupFinalCost : groupExpectedCost) : 0,
+          updatedAt: nowIso
+        });
+      }
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+
+      if (selectedDelivery?.id === target.id) {
+        setDispatchCategory(origCat);
+        setSelectedDelivery({
+          ...target,
+          dispatchCategory: origCat,
+          bundleGroupId: null,
+          bundleOrder: null,
+          dropoffType: 'SINGLE'
+        });
+      }
+      showToast(`선택한 배차의뢰가 묶음에서 분리되어 [${origCat}] 개별건으로 원복되었습니다. (잔여 묶음 ${remaining.length}건 유지)`);
+    } catch (err: any) {
+      showErrorModal(`개별 분리 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 🔗 경유/합짐 묶음 배차의 카톡/문자 안내문 조립용 경유지 배열(bundleStops) 생성 헬퍼
+  const buildBundleStopsForDelivery = (targetDelivery: Delivery): DispatchBundleStopParam[] | undefined => {
+    if (!targetDelivery.bundleGroupId) return undefined;
+    const groupItems = getBundleGroupDeliveries(targetDelivery.bundleGroupId);
+    if (groupItems.length < 2) return undefined;
+
+    return groupItems.map((item, idx) => {
+      const isSelected = selectedDelivery?.id === item.id;
+      const itemContract = item.contractId ? contracts.find(c => c.id === item.contractId) : null;
+      const itemCustomer = itemContract ? customers.find(c => c.id === itemContract.customerId) : (item.billableCustomerId ? customers.find(c => c.id === item.billableCustomerId) : null);
+      const itemSite = itemContract ? sites.find(s => s.id === itemContract.siteId) : null;
+      const origCat = getOriginalDeliveryCategoryLabel(item);
+
+      const effectiveItem: Delivery = isSelected
+        ? {
+            ...item,
+            originAddress: originAddress || item.originAddress,
+            destinationAddress: destinationAddress || item.destinationAddress,
+            loadingDate: loadingDate || item.loadingDate,
+            loadingTimeSlot: (loadingTimeSlot === '희망시간' ? loadingCustomTime : loadingTimeSlot) || item.loadingTimeSlot,
+            unloadingDate: unloadingDate || item.unloadingDate,
+            unloadingTimeSlot: (unloadingTimeSlot === '희망시간' ? unloadingCustomTime : unloadingTimeSlot) || item.unloadingTimeSlot,
+            closingMemo: sanitizeDispatcherSpecialNote(closingMemo)
+          }
+        : item;
+
+      // 장비 종류 문자열 생성
+      let cargoFormatted = '';
+      const parsedCargos = parseCargoItems(effectiveItem);
+      const validCargos = parsedCargos.filter(p => p.modelName && !p.modelName.includes('미지정'));
+      if (validCargos.length > 0) {
+        cargoFormatted = validCargos.map(p => `${p.modelName}*${p.count}`).join(' / ');
+      } else if (itemContract) {
+        const cAssets = contractAssets.filter(ca => ca.contractId === itemContract.id);
+        if (cAssets.length > 0) {
+          const counts: Record<string, number> = {};
+          cAssets.forEach(ca => {
+            const asset = assets.find(a => a.id === ca.assetId);
+            const mName = asset?.modelName || (ca as any).modelName || '고소작업대';
+            counts[mName] = (counts[mName] || 0) + 1;
+          });
+          cargoFormatted = Object.entries(counts).map(([m, cnt]) => `${m}*${cnt}`).join(' / ');
+        }
+      }
+
+      // 현장 담당자 추출
+      const memoSource = `${effectiveItem.memo || ''} ${item.memo || ''} ${(item as any).rawText || ''}`;
+      const memoMatch =
+        memoSource.match(/\[고객담당자:\s*([^\(\]\|\n]+?)(?:\s*\(([^\)\]]+)\))?\]/) ||
+        memoSource.match(/(?:현장담당자?|방문지\s*담당자?):\s*([^\(\s\|,]+)(?:\s*\(([^\)]+)\))?/);
+
+      const actContacts = (itemSite?.contacts || []).filter(c => c.isActive !== false && c.name && c.name !== '미상');
+      const contractContact = itemContract?.contactId ? contacts.find(c => c.id === itemContract.contactId) : undefined;
+
+      let siteContactName: string | undefined;
+      let siteContactPhone: string | undefined;
+      let siteContactPosition: string | undefined;
+
+      if (memoMatch && memoMatch[1]?.trim() && memoMatch[1].trim() !== '-' && memoMatch[1].trim() !== '미상') {
+        siteContactName = memoMatch[1].trim();
+        const mPhone = memoMatch[2]?.trim();
+        siteContactPhone = (mPhone && mPhone !== '-' && mPhone !== '미상')
+          ? mPhone
+          : (actContacts[0]?.contact || itemSite?.contact || contractContact?.contact);
+      } else if (actContacts.length > 0) {
+        siteContactName = actContacts[0].name;
+        siteContactPhone = (actContacts[0].contact && actContacts[0].contact !== '미상') ? actContacts[0].contact : undefined;
+        siteContactPosition = actContacts[0].position;
+      } else if (itemSite?.contactName && itemSite.contactName !== '미상') {
+        siteContactName = itemSite.contactName;
+        siteContactPhone = (itemSite.contact && itemSite.contact !== '미상') ? itemSite.contact : undefined;
+      } else if (contractContact && contractContact.name && contractContact.name !== '미상') {
+        siteContactName = contractContact.name;
+        siteContactPhone = (contractContact.contact && contractContact.contact !== '미상') ? contractContact.contact : undefined;
+        siteContactPosition = contractContact.position;
+      }
+
+      const isReturnStop = effectiveItem.type === 'RETURN' || origCat === '반납';
+      const stopVendorInfo = isReturnStop
+        ? (isSelected
+            ? getSubleaseVendorInfoByAssets(selectedReturnAssetIds, effectiveItem.destinationAddress)
+            : getDeliverySubleaseVendorInfo(effectiveItem))
+        : null;
+
+      if (stopVendorInfo) {
+        if (stopVendorInfo.contactName) siteContactName = stopVendorInfo.contactName;
+        if (stopVendorInfo.contactPhone) siteContactPhone = stopVendorInfo.contactPhone;
+      }
+
+      return {
+        order: item.bundleOrder || idx + 1,
+        delivery: effectiveItem,
+        originalCategoryLabel: origCat,
+        siteName: stopVendorInfo?.vendorName || itemSite?.name || effectiveItem.destinationAddress || '현장',
+        siteAddress: stopVendorInfo?.address || effectiveItem.destinationAddress || itemSite?.address,
+        siteContactName,
+        siteContactPhone,
+        siteContactPosition,
+        customerName: stopVendorInfo?.vendorName || itemCustomer?.name,
+        cargoFormattedString: cargoFormatted,
+        dispatcherNote: sanitizeDispatcherSpecialNote(effectiveItem.closingMemo)
+      };
+    });
+  };
+
+  // 2. 배차건 정밀 필터링 (상태 4단계 + 요청/운송일 기간 피커 + 검색어)
+  const filteredDeliveries = useMemo(() => {
+    const q = searchQuery.trim();
+    const qLower = q.toLowerCase();
+    const matcher = q ? createHangulMatcher(q) : null;
+
+    const list = deliveries.filter(d => {
+      const dStatus = getNormalizedDeliveryStatus(d);
+      if (activeDispatchStatusTab !== 'ALL' && dStatus !== activeDispatchStatusTab) return false;
+
+      const dDate = d.loadingDate || d.requestDate || d.scheduledDate || d.createdAt?.substring(0, 10);
+      if (startDate && dDate && dDate < startDate) return false;
+      if (endDate && dDate && dDate > endDate) return false;
+
+      if (!matcher) return true;
+      const contract = getContract(d.contractId);
+      const customer = contract ? getCustomer(contract.customerId) : null;
+
+      return Boolean(
+        (d.id && d.id.toLowerCase().includes(qLower)) ||
+        (d.bundleGroupId && d.bundleGroupId.toLowerCase().includes(qLower)) ||
+        (d.driverName && matcher(d.driverName)) ||
+        (d.transportCompany && matcher(d.transportCompany)) ||
+        (d.destinationAddress && matcher(d.destinationAddress)) ||
+        (contract && contract.contractNo.toLowerCase().includes(qLower)) ||
+        (customer && matcher(customer.name))
+      );
+    });
+
+    // 묶음 배차(bundleGroupId) 그룹별 대표 시간 맵 생성 (묶인 배차건들이 목록에서 서로 떨어지지 않고 순서대로 붙어 있도록 정렬)
+    const bundleGroupMaxTime = new Map<string, number>();
+    for (const d of list) {
+      if (d.bundleGroupId) {
+        const t = d.createdAt ? new Date(d.createdAt).getTime() : 0;
+        const cur = bundleGroupMaxTime.get(d.bundleGroupId) ?? -Infinity;
+        if (t > cur) bundleGroupMaxTime.set(d.bundleGroupId, t);
+      }
+    }
+
+    // 최신 등록순 정렬 + 동일 bundleGroupId 내에서는 bundleOrder(1 -> 2 -> 3) 오름차순 정렬
+    return list.sort((a, b) => {
+      if (a.bundleGroupId && b.bundleGroupId && a.bundleGroupId === b.bundleGroupId) {
+        return ((a.bundleOrder || 999) - (b.bundleOrder || 999)) || (a.id || '').localeCompare(b.id || '');
+      }
+      const timeA = a.bundleGroupId
+        ? (bundleGroupMaxTime.get(a.bundleGroupId) || 0)
+        : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const timeB = b.bundleGroupId
+        ? (bundleGroupMaxTime.get(b.bundleGroupId) || 0)
+        : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      if (timeA !== timeB) return timeB - timeA;
+      const dateA = a.loadingDate || a.requestDate || '';
+      const dateB = b.loadingDate || b.requestDate || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [deliveries, activeDispatchStatusTab, startDate, endDate, searchQuery, contractMap, customerMap]);
+
+  // 💡 배차 완료 상태에서 수정을 위해 임시 잠금 해제하는 모드 state
+  const [isEditUnlocked, setIsEditUnlocked] = useState<boolean>(false);
+
+  const handleSelectDelivery = (d: Delivery) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    setSelectedDelivery(d);
+    setIsEditUnlocked(false); // 💡 새로 선택 시 기본 잠금 적용!
+    setShowBundleAddPicker(false);
+
+    let defaultCat: '출고' | '입고' | '반납' | '정비' | '이동' | '교환' | '경유/합짐' =
+      (d.bundleGroupId || d.dispatchCategory === '경유/합짐')
+        ? '경유/합짐'
+        : getOriginalDeliveryCategoryLabel(d);
+    setDispatchCategory(defaultCat);
+    setSelectedReturnAssetIds(extractReturnAssetIdsFromDelivery(d));
+
+    setLoadingDate(d.loadingDate || todayStr);
+    const lSlot = d.loadingTimeSlot || '오전';
+    if (lSlot !== '오전' && lSlot !== '오후') {
+      setLoadingTimeSlot('희망시간');
+      setLoadingCustomTime(lSlot);
+    } else {
+      setLoadingTimeSlot(lSlot);
+      setLoadingCustomTime('');
+    }
+
+    setUnloadingDate(d.unloadingDate || todayStr);
+    const uSlot = d.unloadingTimeSlot || '오전';
+    if (uSlot !== '오전' && uSlot !== '오후') {
+      setUnloadingTimeSlot('희망시간');
+      setUnloadingCustomTime(uSlot);
+    } else {
+      setUnloadingTimeSlot(uSlot);
+      setUnloadingCustomTime('');
+    }
+
+    setClosingMemo(sanitizeDispatcherSpecialNote(d.closingMemo));
+    setScheduledDate(d.scheduledDate || todayStr);
+    setOriginAddress(d.originAddress || '당사 보관소');
+
+    const contract = getContract(d.contractId);
+    const cust = contract ? getCustomer(contract.customerId) : null;
+    setDestinationAddress(d.destinationAddress || (cust ? `${cust.name} 현장` : ''));
+
+    setBillableToCust(d.billableToCustomer || false);
+    setBillableCustId(d.billableCustomerId || (contract?.customerId || ''));
+
+    // 🔗 경유/합짐 묶음 배차인 경우 1순위 대표건의 차량/운송비 정보를 공유 표시
+    const costSourceDelivery = d.bundleGroupId
+      ? (getBundleGroupDeliveries(d.bundleGroupId)[0] || d)
+      : d;
+
+    if (costSourceDelivery.vehicles) {
+      try {
+        const parsed = JSON.parse(costSourceDelivery.vehicles);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (parsed.length === 1) {
+            const row0 = parsed[0];
+            const rowExp = Number(row0.expectedCost) || 0;
+            const rowFin = Number(row0.finalCost) || 0;
+            const dExp = Number(costSourceDelivery.expectedCost) || 0;
+            const dFin = Number(costSourceDelivery.finalCost) || 0;
+            const dCost = Number(costSourceDelivery.deliveryCost) || 0;
+            parsed[0] = {
+              ...row0,
+              expectedCost: rowExp > 0 ? rowExp : dExp,
+              finalCost: rowFin > 0 ? rowFin : (dFin > 0 ? dFin : (rowExp === 0 && dExp === 0 && dCost > 0 ? dCost : 0)),
+              deliveryCost: (rowFin > 0 ? rowFin : dFin) || (rowExp > 0 ? rowExp : dExp) || dCost || 0
+            };
+          }
+          setAssignedVehicles(parsed);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    setAssignedVehicles([{
+      id: 'v-' + Date.now(),
+      transportCompany: costSourceDelivery.transportCompany || d.transportCompany || '',
+      vehicleType: costSourceDelivery.vehicleType || d.vehicleType || '3.5T',
+      vehicleNo: costSourceDelivery.vehicleNo || d.vehicleNo || '',
+      driverName: costSourceDelivery.driverName || d.driverName || '',
+      driverContact: costSourceDelivery.driverContact || d.driverContact || '',
+      expectedCost: getEffectiveDeliveryCost(costSourceDelivery),
+      finalCost: costSourceDelivery.finalCost !== undefined && costSourceDelivery.finalCost !== null ? costSourceDelivery.finalCost : 0,
+      deliveryCost: getEffectiveDeliveryCost(costSourceDelivery)
+    }]);
+  };
+
+  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 배차건을 즉시 탐색·필터 동기화 후 스튜디오에 오픈
+  useEffect(() => {
+    if (!navigationPayload || deliveries.length === 0) return;
+    const targetDelivId = navigationPayload.deliveryId || (navigationPayload.entityType === 'DELIVERY' ? navigationPayload.entityId : '');
+    const targetContractId = navigationPayload.contractId || (navigationPayload.entityType === 'CONTRACT' ? navigationPayload.entityId : '');
+    if (!targetDelivId && !targetContractId) return;
+
+    let matched = targetDelivId
+      ? deliveries.find(d => d.id === targetDelivId)
+      : undefined;
+
+    if (!matched && targetContractId) {
+      const cDeliveries = deliveries
+        .filter(d => d.contractId === targetContractId && d.status !== 'CANCELLED')
+        .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      matched =
+        cDeliveries.find(d => getNormalizedDeliveryStatus(d) === 'PENDING') ||
+        cDeliveries.find(d => getNormalizedDeliveryStatus(d) === 'DISPATCHED') ||
+        cDeliveries[0];
+    }
+
+    if (matched) {
+      setActiveTab('DISPATCH');
+      const normSt = getNormalizedDeliveryStatus(matched);
+      setActiveDispatchStatusTab(normSt);
+      setSearchQuery('');
+
+      const dDate = (matched.loadingDate || matched.requestDate || matched.scheduledDate || matched.createdAt?.substring(0, 10) || '').slice(0, 10);
+      if (dDate) {
+        if ((startDate && dDate < startDate) || (endDate && dDate > endDate)) {
+          setStartDate('');
+          setEndDate('');
+        }
+      }
+
+      handleSelectDelivery(matched);
+      setTimeout(() => {
+        const el = document.querySelector(`[data-uia="card-delivery-item-${matched!.id}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 150);
+    }
+
+    if (setNavigationPayload) {
+      setNavigationPayload(null);
+    }
+  }, [navigationPayload, deliveries]);
+
+  const handleVehicleFieldChange = (index: number, field: keyof AssignedVehicleRow, value: any) => {
+    setAssignedVehicles(prev => {
+      const updated = [...prev];
+      let sanitizedValue = value;
+      if (field === 'expectedCost' || field === 'finalCost' || field === 'deliveryCost') {
+        sanitizedValue = Math.max(0, Number(value) || 0);
+      }
+      updated[index] = { ...updated[index], [field]: sanitizedValue };
+
+      if (field === 'expectedCost') {
+        const curFinal = Number(updated[index].finalCost) || 0;
+        if (curFinal <= 0) {
+          updated[index].deliveryCost = sanitizedValue;
+        }
+      } else if (field === 'finalCost') {
+        const curExpected = Number(updated[index].expectedCost) || 0;
+        updated[index].deliveryCost = sanitizedValue > 0 ? sanitizedValue : curExpected;
+      }
+
+      // 고객직접운송 선택 시 운송료 0원 자동 고정 및 기사명 미입력 시 '고객직접운송' 기본 세팅
+      if (field === 'transportCompany' && String(value || '').trim() === CUSTOMER_DIRECT_TRANSPORT) {
+        updated[index].expectedCost = 0;
+        updated[index].finalCost = 0;
+        updated[index].deliveryCost = 0;
+        if (!updated[index].driverName || updated[index].driverName.trim() === '') {
+          updated[index].driverName = CUSTOMER_DIRECT_TRANSPORT;
+        }
+      }
+
+      // 기사 선택 시 연락처, 차량번호, 차종(톤수) 및 운송사 자동 매핑
+      if (field === 'driverName' && value) {
+        const driverMatch = transportDrivers.find(d => d.driverName.trim() === value.trim());
+        if (driverMatch) {
+          if (driverMatch.driverContact) updated[index].driverContact = driverMatch.driverContact;
+          if (driverMatch.vehicleNo) updated[index].vehicleNo = driverMatch.vehicleNo;
+          if (driverMatch.vehicleType) updated[index].vehicleType = driverMatch.vehicleType;
+          const comp = transportCompanies.find(c => c.id === driverMatch.companyId);
+          if (comp) updated[index].transportCompany = comp.name;
+        }
+      }
+      return updated;
+    });
+  };
+
+  const handleAddVehicleRow = () => {
+    setAssignedVehicles(prev => [
+      ...prev,
+      {
+        id: 'v-' + Date.now(),
+        transportCompany: '',
+        vehicleType: '3.5T',
+        vehicleNo: '',
+        driverName: '',
+        driverContact: '',
+        expectedCost: 0,
+        finalCost: 0,
+        deliveryCost: 0
+      }
+    ]);
+  };
+
+  const handleRemoveVehicleRow = (index: number) => {
+    if (assignedVehicles.length <= 1) return;
+    setAssignedVehicles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 📲 기사 배차 안내 문자 발송 / 클립보드 복사
+  const handleSendDriverSms = (targetDelivery: Delivery) => {
+    const mainVeh = assignedVehicles.find(v => v.driverContact && v.driverContact.trim()) || assignedVehicles[0];
+    const contact = mainVeh?.driverContact || targetDelivery.driverContact;
+    const name = mainVeh?.driverName || targetDelivery.driverName;
+    const vNo = mainVeh?.vehicleNo || targetDelivery.vehicleNo;
+    const vType = mainVeh?.vehicleType || targetDelivery.vehicleType;
+    const cost = (mainVeh?.finalCost && mainVeh.finalCost > 0 ? mainVeh.finalCost : mainVeh?.expectedCost) || targetDelivery.finalCost || targetDelivery.deliveryCost;
+
+    if (!contact || !contact.trim()) {
+      showErrorModal('기사 연락처가 등록되지 않았습니다. 차량/기사 배정 란에 기사 연락처를 입력해 주세요.');
+      return;
+    }
+
+    const contract = contracts.find(c => c.id === targetDelivery.contractId);
+    const customer = customers.find(c => c.id === contract?.customerId || c.id === targetDelivery.billableCustomerId);
+    const site = sites.find(s => s.id === contract?.siteId || (targetDelivery.destinationAddress && s.name.includes(targetDelivery.destinationAddress)));
+
+    const dObj = {
+      ...targetDelivery,
+      driverName: name,
+      driverContact: contact,
+      vehicleNo: vNo,
+      vehicleType: vType,
+      finalCost: cost,
+      destinationAddress: destinationAddress || targetDelivery.destinationAddress,
+      originAddress: originAddress || targetDelivery.originAddress,
+      loadingDate: loadingDate || targetDelivery.loadingDate,
+      loadingTimeSlot: (loadingTimeSlot === '희망시간' ? loadingCustomTime : loadingTimeSlot) || targetDelivery.loadingTimeSlot,
+      closingMemo: sanitizeDispatcherSpecialNote(closingMemo || targetDelivery.closingMemo),
+      memo: targetDelivery.memo
+    };
+
+    const hqInfoForSms = getHqYardOriginInfo(dObj);
+    const hqYardAddress = hqInfoForSms.address || '본사 주기장';
+    const hqYardContactPerson = hqInfoForSms.contactName;
+    const hqYardPhone = hqInfoForSms.contactPhone;
+    const companyName = currentTenant?.displayName || currentTenant?.tradeName || currentTenant?.corporateName || '기연리프트';
+
+    // 배차 의뢰건의 지정 현장 담당자 추출 헬퍼 (1순위: 배차 메모 지정 담당자, 2순위: 현장 contacts/contactName, 3순위: 계약 담당자)
+    const resolveDeliverySiteContact = (deliv: any, siteObj: any, contractObj: any) => {
+      const memoText = `${deliv?.memo || ''} ${deliv?.rawText || ''}`;
+      const m =
+        memoText.match(/\[고객담당자:\s*([^\(\]\|\n]+?)(?:\s*\(([^\)\]]+)\))?\]/) ||
+        memoText.match(/(?:현장담당자?|방문지\s*담당자?):\s*([^\(\s\|,]+)(?:\s*\(([^\)]+)\))?/);
+      if (m) {
+        const pName = (m[1] || '').trim();
+        const pPhone = (m[2] || '').trim();
+        if (pName && pName !== '-' && pName !== '미상') {
+          return {
+            name: pName,
+            phone: (pPhone && pPhone !== '-' && pPhone !== '미상') ? pPhone : undefined,
+            position: undefined
+          };
+        }
+      }
+
+      const actContacts = (siteObj?.contacts || []).filter((c: any) => c.isActive !== false && c.name && c.name !== '미상');
+      if (actContacts.length > 0) {
+        return {
+          name: actContacts[0].name,
+          phone: (actContacts[0].contact && actContacts[0].contact !== '미상') ? actContacts[0].contact : undefined,
+          position: actContacts[0].position
+        };
+      }
+
+      if (siteObj?.contactName && siteObj.contactName !== '미상') {
+        return {
+          name: siteObj.contactName,
+          phone: (siteObj.contact && siteObj.contact !== '미상') ? siteObj.contact : undefined,
+          position: undefined
+        };
+      }
+
+      if (contractObj?.contactId) {
+        const ct = contacts.find((c: any) => c.id === contractObj.contactId);
+        if (ct && ct.name && ct.name !== '미상') {
+          return {
+            name: ct.name,
+            phone: (ct.contact && ct.contact !== '미상') ? ct.contact : undefined,
+            position: ct.position
+          };
+        }
+      }
+
+      return { name: undefined, phone: undefined, position: undefined };
+    };
+
+    const resolvedSmsContact = resolveDeliverySiteContact(dObj, site, contract);
+    const isReturnSms = dObj.type === 'RETURN' || dObj.dispatchCategory === '반납';
+    const smsVendorInfo = isReturnSms
+      ? (selectedDelivery?.id === targetDelivery.id
+          ? getSubleaseVendorInfoByAssets(selectedReturnAssetIds, dObj.destinationAddress)
+          : getDeliverySubleaseVendorInfo(dObj))
+      : null;
+
+    const bundleStopsForSms = buildBundleStopsForDelivery(targetDelivery);
+
+    const smsBody = buildDispatchSmsText({
+      delivery: dObj,
+      siteName: smsVendorInfo?.vendorName || site?.name || targetDelivery.destinationAddress,
+      siteAddress: smsVendorInfo?.address || targetDelivery.destinationAddress || site?.address,
+      siteContactName: smsVendorInfo?.contactName || resolvedSmsContact.name,
+      siteContactPhone: smsVendorInfo?.contactPhone || resolvedSmsContact.phone,
+      customerName: smsVendorInfo?.vendorName || customer?.name,
+      companyName,
+      hqYardAddress,
+      hqYardPhone,
+      hqYardContactPerson,
+      bundleStops: bundleStopsForSms
+    });
+
+    launchDispatchSms({
+      driverContact: contact,
+      smsBody
+    });
+  };
+
+  // 💬 카카오톡 배차 안내 메시지 생성 및 클립보드 복사 핸들러 (유형별 단일 표준 양식)
+  const handleCopyKakaoDispatchMessage = async (targetDelivery: Delivery) => {
+    // 🔒 [기능 플래그 가드] kakaoContract 비활성화 시 발송 차단 및 안내
+    if (currentTenant?.features?.kakaoContract === false) {
+      showToast('해당 기능(카카오 알림톡)은 현재 플랜에서 비활성화되어 있습니다. 관리자에게 문의하세요.', 'warning');
+      return;
+    }
+
+    const targetContract = targetDelivery.contractId ? contracts.find(c => c.id === targetDelivery.contractId) : null;
+    const customer = targetContract ? customers.find(c => c.id === targetContract.customerId) : null;
+    const site = targetContract ? sites.find(s => s.id === targetContract.siteId) : null;
+
+    // 현재 폼에 선택된 배차와 같으면 폼에 수정/입력 중인 최신 값을 우선 반영
+    const isSelected = selectedDelivery?.id === targetDelivery.id;
+    const currentVehType = assignedVehicles.length > 0 ? assignedVehicles[0].vehicleType : undefined;
+    const effectiveDispatcherNote = isSelected
+      ? sanitizeDispatcherSpecialNote(closingMemo)
+      : sanitizeDispatcherSpecialNote(targetDelivery.closingMemo);
+
+    const dObj = {
+      ...targetDelivery,
+      type: targetDelivery.type,
+      dispatchCategory: isSelected ? (dispatchCategory || targetDelivery.dispatchCategory) : targetDelivery.dispatchCategory,
+      vehicleType: isSelected ? (currentVehType || targetDelivery.vehicleType) : targetDelivery.vehicleType,
+      originAddress: isSelected ? (originAddress || targetDelivery.originAddress) : targetDelivery.originAddress,
+      destinationAddress: isSelected ? (destinationAddress || targetDelivery.destinationAddress) : targetDelivery.destinationAddress,
+      loadingDate: isSelected ? (loadingDate || targetDelivery.loadingDate) : targetDelivery.loadingDate,
+      loadingTimeSlot: isSelected ? ((loadingTimeSlot === '희망시간' ? loadingCustomTime : loadingTimeSlot) || targetDelivery.loadingTimeSlot) : targetDelivery.loadingTimeSlot,
+      unloadingDate: isSelected ? (unloadingDate || targetDelivery.unloadingDate) : targetDelivery.unloadingDate,
+      unloadingTimeSlot: isSelected ? ((unloadingTimeSlot === '희망시간' ? unloadingCustomTime : unloadingTimeSlot) || targetDelivery.unloadingTimeSlot) : targetDelivery.unloadingTimeSlot,
+      closingMemo: effectiveDispatcherNote,
+      memo: targetDelivery.memo
+    };
+
+    // 장비 종류 포맷팅 (모델명*수량 / 모델명*수량)
+    let cargoFormatted = '';
+    const parsedCargos = parseCargoItems(dObj);
+    const validCargos = parsedCargos.filter(p => p.modelName && !p.modelName.includes('미지정'));
+    if (validCargos.length > 0) {
+      cargoFormatted = validCargos.map(p => `${p.modelName}*${p.count}`).join(' / ');
+    } else if (targetContract) {
+      const cAssets = contractAssets.filter(ca => ca.contractId === targetContract.id);
+      if (cAssets.length > 0) {
+        const counts: Record<string, number> = {};
+        cAssets.forEach(ca => {
+          const asset = assets.find(a => a.id === ca.assetId);
+          const mName = asset?.modelName || (ca as any).modelName || '고소작업대';
+          counts[mName] = (counts[mName] || 0) + 1;
+        });
+        cargoFormatted = Object.entries(counts).map(([m, cnt]) => `${m}*${cnt}`).join(' / ');
+      }
+    }
+
+    const hqInfoForKakao = getHqYardOriginInfo(dObj);
+    const hqYardAddress = hqInfoForKakao.address || '본사 주기장';
+    const hqYardContactPerson = hqInfoForKakao.contactName;
+    const hqYardPhone = hqInfoForKakao.contactPhone;
+
+    // 현장 담당자 (1순위: 배차 의뢰 시 지정된 담당자 [고객담당자: ...] / 현장담당:, 2순위: site.contacts 활성 담당자, 3순위: site.contactName, 4순위: 계약 담당자)
+    const memoSource = `${dObj.memo || ''} ${targetDelivery.memo || ''} ${(targetDelivery as any).rawText || ''}`;
+    const memoMatch =
+      memoSource.match(/\[고객담당자:\s*([^\(\]\|\n]+?)(?:\s*\(([^\)\]]+)\))?\]/) ||
+      memoSource.match(/(?:현장담당자?|방문지\s*담당자?):\s*([^\(\s\|,]+)(?:\s*\(([^\)]+)\))?/);
+
+    const actContacts = (site?.contacts || []).filter(c => c.isActive !== false && c.name && c.name !== '미상');
+    const contractContact = targetContract?.contactId ? contacts.find(c => c.id === targetContract.contactId) : undefined;
+
+    let siteContactName: string | undefined;
+    let siteContactPhone: string | undefined;
+    let siteContactPosition: string | undefined;
+
+    if (memoMatch && memoMatch[1]?.trim() && memoMatch[1].trim() !== '-' && memoMatch[1].trim() !== '미상') {
+      siteContactName = memoMatch[1].trim();
+      const mPhone = memoMatch[2]?.trim();
+      siteContactPhone = (mPhone && mPhone !== '-' && mPhone !== '미상')
+        ? mPhone
+        : (actContacts[0]?.contact || site?.contact || contractContact?.contact);
+    } else if (actContacts.length > 0) {
+      siteContactName = actContacts[0].name;
+      siteContactPhone = (actContacts[0].contact && actContacts[0].contact !== '미상') ? actContacts[0].contact : undefined;
+      siteContactPosition = actContacts[0].position;
+    } else if (site?.contactName && site.contactName !== '미상') {
+      siteContactName = site.contactName;
+      siteContactPhone = (site.contact && site.contact !== '미상') ? site.contact : undefined;
+    } else if (contractContact && contractContact.name && contractContact.name !== '미상') {
+      siteContactName = contractContact.name;
+      siteContactPhone = (contractContact.contact && contractContact.contact !== '미상') ? contractContact.contact : undefined;
+      siteContactPosition = contractContact.position;
+    }
+
+    const isReturnKakao = dObj.type === 'RETURN' || dObj.dispatchCategory === '반납';
+    const kakaoVendorInfo = isReturnKakao
+      ? (isSelected
+          ? getSubleaseVendorInfoByAssets(selectedReturnAssetIds, dObj.destinationAddress)
+          : getDeliverySubleaseVendorInfo(dObj))
+      : null;
+
+    if (kakaoVendorInfo) {
+      if (kakaoVendorInfo.contactName) siteContactName = kakaoVendorInfo.contactName;
+      if (kakaoVendorInfo.contactPhone) siteContactPhone = kakaoVendorInfo.contactPhone;
+    }
+
+    const bundleStopsForKakao = buildBundleStopsForDelivery(targetDelivery);
+
+    const generatedText = buildDispatchKakaoTalkText({
+      delivery: dObj,
+      siteName: kakaoVendorInfo?.vendorName || site?.name || targetDelivery.destinationAddress || '현장',
+      siteAddress: kakaoVendorInfo?.address || targetDelivery.destinationAddress || site?.address,
+      siteContactName,
+      siteContactPhone,
+      siteContactPosition,
+      customerName: kakaoVendorInfo?.vendorName || customer?.name,
+      companyName: currentTenant?.displayName || currentTenant?.tradeName || currentTenant?.corporateName || '기연리프트',
+      hqYardAddress,
+      hqYardPhone,
+      hqYardContactPerson,
+      cargoFormattedString: cargoFormatted,
+      dispatcherNote: effectiveDispatcherNote,
+      bundleStops: bundleStopsForKakao
+    });
+
+    // 1. 클립보드에 선제 복사
+    await copyToClipboard(generatedText);
+
+    // 2. 모달 열어서 전문 표출 및 안내
+    setKakaoText(generatedText);
+    setKakaoTargetDelivery(targetDelivery);
+    setIsKakaoCopied(true);
+    setShowKakaoModal(true);
+    showToast('카카오톡 배차 안내 메시지가 클립보드에 복사되었습니다.\n(카카오톡에 Ctrl+V로 붙여넣기 하세요)');
+  };
+
+  // 3. 배차 배정 저장 (status: 'DISPATCHED' 배차 완료 전환!)
+  const handleSaveDispatch = async () => {
+    if (isSavingDispatch) return;
+    if (!selectedDelivery) return;
+    if (!canSave) {
+      showErrorModal('배차 수정 권한이 없습니다.');
+      return;
+    }
+
+    if (loadingDate && unloadingDate && loadingDate > unloadingDate) {
+      showErrorModal('상차일이 하차일보다 늦을 수 없습니다. 일자를 확인해 주십시오.');
+      return;
+    }
+
+    const validDrivers = assignedVehicles.filter(v => (v.driverName || '').trim() !== '' || (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT);
+    const origCategory = getOriginalDeliveryCategoryLabel(selectedDelivery);
+    const isReturnCategory = dispatchCategory === '반납' || origCategory === '반납' || selectedDelivery.type === 'RETURN';
+    const prevStatus = getNormalizedDeliveryStatus(selectedDelivery);
+    const finalLoadingSlotCheck = loadingTimeSlot === '희망시간' ? loadingCustomTime : loadingTimeSlot;
+    const finalUnloadingSlotCheck = unloadingTimeSlot === '희망시간' ? unloadingCustomTime : unloadingTimeSlot;
+    const isScheduleOnlySaveInPending =
+      validDrivers.length === 0 &&
+      prevStatus === 'PENDING' &&
+      (loadingDate !== (selectedDelivery.loadingDate || '') ||
+        finalLoadingSlotCheck !== (selectedDelivery.loadingTimeSlot || '') ||
+        unloadingDate !== (selectedDelivery.unloadingDate || selectedDelivery.loadingDate || '') ||
+        finalUnloadingSlotCheck !== (selectedDelivery.unloadingTimeSlot || selectedDelivery.loadingTimeSlot || ''));
+
+    if (validDrivers.length === 0 && prevStatus !== 'DELIVERED' && !(isReturnCategory && prevStatus === 'PENDING') && !isScheduleOnlySaveInPending) {
+      showErrorModal('배차 기사를 최소 1명 이상 입력하거나 운송거래처에서 [고객직접운송]을 선택해 주십시오.', '배차 기사 미입력');
+      return;
+    }
+
+    // 🔄 [반납 배차 전용] 선택된 임차자산의 반납일자(=하차일) 정합성 검증
+    const effectiveReturnDate = unloadingDate || loadingDate || new Date().toISOString().split('T')[0];
+    if (isReturnCategory && selectedReturnAssetIds.length > 0) {
+      for (const assetId of selectedReturnAssetIds) {
+        const targetAsset = assetMap.get(assetId);
+        if (targetAsset && targetAsset.rentStart && effectiveReturnDate < targetAsset.rentStart) {
+          showErrorModal(`임차자산 [${targetAsset.assetNo} · ${targetAsset.modelName}]의 반납일자(하차일: ${effectiveReturnDate})는 임차 시작일(${targetAsset.rentStart}) 이전일 수 없습니다.`);
+          return;
+        }
+      }
+    }
+
+    const isRestoringFromCancelled = prevStatus === 'CANCELLED';
+    const isModifyingDispatched = prevStatus === 'DISPATCHED';
+    const isModifyingDelivered = prevStatus === 'DELIVERED';
+    const nextStatus: Delivery['status'] = isModifyingDelivered
+      ? (selectedDelivery.status === 'COMPLETED' ? 'COMPLETED' : 'DELIVERED')
+      : (validDrivers.length === 0 && prevStatus === 'PENDING' && (isReturnCategory || isScheduleOnlySaveInPending))
+        ? (selectedDelivery.status === 'REQUESTED' ? 'REQUESTED' : 'PENDING')
+        : 'DISPATCHED';
+
+    // 🚨 출고 제한 거래처 출고 배차 원천 차단 (이미 운송 완료된 건의 운송료/정보 수정은 허용)
+    const targetContract = selectedDelivery.contractId ? contracts.find(c => c.id === selectedDelivery.contractId) : null;
+    const targetCustomer = targetContract ? customers.find(c => c.id === targetContract.customerId) : null;
+    const isOutboundOrExchange = selectedDelivery.type === 'OUTBOUND' || origCategory === '출고' || origCategory === '교환';
+    if (!isModifyingDelivered && isOutboundOrExchange && isCustomerRestricted(targetCustomer?.transactionStatus)) {
+      showErrorModal(`[출고제한] 거래처 [${targetCustomer?.name}]은(는) 연체 관리 또는 경영진 지시로 인해 신규 출고가 차단된 상태입니다. 배차 기사를 배정할 수 없습니다.`, '출고 차단');
+      return;
+    }
+
+    // ⚠️ 출고 의뢰가 반려된 상태인지 검사 및 예방적 경고 알림!
+    const inspStatus = getOutboundInspectionStatus(selectedDelivery.contractId);
+    if (!isModifyingDelivered && inspStatus === 'REJECTED') {
+      showToast('출고 검수 반려 이력이 있는 의뢰건의 배차 기사 배정을 진행합니다.', 'warning');
+    }
+
+    setIsSavingDispatch(true);
+    try {
+      const finalLoadingSlot = loadingTimeSlot === '희망시간' ? loadingCustomTime : loadingTimeSlot;
+      const finalUnloadingSlot = unloadingTimeSlot === '희망시간' ? unloadingCustomTime : unloadingTimeSlot;
+      const sanitizedVehicles = assignedVehicles.map(v => {
+        const isCustDirect = (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT;
+        const expCost = isCustDirect ? 0 : Math.max(0, Number(v.expectedCost) || 0);
+        const finCost = isCustDirect ? 0 : Math.max(0, Number(v.finalCost) || 0);
+        return {
+          ...v,
+          driverName: isCustDirect && !(v.driverName || '').trim() ? CUSTOMER_DIRECT_TRANSPORT : v.driverName,
+          expectedCost: expCost,
+          finalCost: finCost,
+          deliveryCost: isCustDirect ? 0 : (finCost > 0 ? finCost : expCost)
+        };
+      });
+      const totalExpectedCost = sanitizedVehicles.reduce((sum, v) => sum + (Number(v.expectedCost) || 0), 0);
+      const totalFinalCost = sanitizedVehicles.reduce((sum, v) => sum + (Number(v.finalCost) || 0), 0);
+      const isAllCustDirect = sanitizedVehicles.length > 0 && sanitizedVehicles.every(v => (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT);
+
+      const mainVeh = sanitizedVehicles[0] || {};
+      const selectedReturnAssets = isReturnCategory
+        ? (selectedReturnAssetIds.map(id => assetMap.get(id)).filter(Boolean) as Asset[])
+        : [];
+      const matchedSubleaseVendor = isReturnCategory
+        ? getSubleaseVendorInfoByAssets(selectedReturnAssets, destinationAddress)
+        : null;
+      const returnCargoJson = isReturnCategory
+        ? JSON.stringify(
+            selectedReturnAssets.map(a => {
+              const assetVendor = findSubleaseVendor(a, destinationAddress);
+              return {
+                modelName: `${a.modelName} (${a.assetNo})`,
+                count: 1,
+                returnAssetId: a.id,
+                assetNo: a.assetNo,
+                renter: assetVendor?.name || a.renter || '',
+                vendorId: assetVendor?.id || a.vendorId || '',
+                vendorName: assetVendor?.name || a.renter || '',
+                vendorAddress: assetVendor?.address || '',
+                vendorContactName: assetVendor?.contactName || '',
+                vendorContactPhone: assetVendor?.contact || ''
+              };
+            })
+          )
+        : undefined;
+
+      const resolvedDestination = isReturnCategory
+        ? ((destinationAddress || '').trim() || matchedSubleaseVendor?.name || selectedReturnAssets[0]?.renter || '임차처 미정')
+        : destinationAddress;
+
+      const updatedReturnMemo = (() => {
+        const baseMemo = (selectedDelivery.memo || '')
+          .replace(/\[임차처:[^\]]*\]\s*/g, '')
+          .replace(/\[고객담당자:[^\]]*\]\s*/g, '')
+          .replace(/\[배차담당자:[^\]]*\]\s*/g, '')
+          .trim();
+        const currentStaff = resolveDispatchStaffContact({ delivery: null, currentUser, users, contracts, currentTenant });
+        const staffTag = currentUser
+          ? `[배차담당자: ${currentStaff.name} (${currentStaff.phone}) | ${currentUser.id}]`
+          : '';
+        const vendorTag = (isReturnCategory && matchedSubleaseVendor)
+          ? `[임차처: ${matchedSubleaseVendor.name} | 주소: ${matchedSubleaseVendor.address || '미등록'} | 담당자: ${matchedSubleaseVendor.contactName || '미등록'} | 연락처: ${matchedSubleaseVendor.contactPhone || '미등록'}] [고객담당자: ${matchedSubleaseVendor.contactName || matchedSubleaseVendor.name} (${matchedSubleaseVendor.contactPhone || '미등록'})]`
+          : '';
+        return [baseMemo, vendorTag, staffTag].filter(Boolean).join(' ').trim();
+      })();
+
+      const bundleGroupItems = selectedDelivery.bundleGroupId
+        ? getBundleGroupDeliveries(selectedDelivery.bundleGroupId)
+        : [];
+      const isBundledGroup = bundleGroupItems.length >= 2;
+      const isPrimaryBundleStop = !isBundledGroup || (selectedDelivery.bundleOrder || 1) === 1 || bundleGroupItems[0]?.id === selectedDelivery.id;
+      const zeroCostVehicles = sanitizedVehicles.map(v => ({
+        ...v,
+        expectedCost: 0,
+        finalCost: 0,
+        deliveryCost: 0
+      }));
+
+      const payload: Partial<Delivery> = {
+        status: nextStatus,
+        type: isReturnCategory ? 'RETURN' : selectedDelivery.type,
+        dispatchCategory: isBundledGroup ? '경유/합짐' : dispatchCategory,
+        loadingDate: loadingDate,
+        loadingTimeSlot: finalLoadingSlot,
+        unloadingDate: unloadingDate,
+        unloadingTimeSlot: finalUnloadingSlot,
+        scheduledDate: scheduledDate || loadingDate,
+        originAddress: originAddress,
+        destinationAddress: resolvedDestination,
+        billableToCustomer: billableToCust,
+        billableCustomerId: billableCustId,
+        transportCompany: mainVeh.transportCompany || '',
+        vehicleType: mainVeh.vehicleType || '3.5T',
+        vehicleNo: mainVeh.vehicleNo || '',
+        driverName: mainVeh.driverName || '',
+        driverContact: mainVeh.driverContact || '',
+        expectedCost: isAllCustDirect || !isPrimaryBundleStop ? 0 : totalExpectedCost,
+        finalCost: isAllCustDirect || !isPrimaryBundleStop ? 0 : totalFinalCost,
+        deliveryCost: isAllCustDirect || !isPrimaryBundleStop ? 0 : (totalFinalCost > 0 ? totalFinalCost : totalExpectedCost),
+        deliveryCostConfirmed: isAllCustDirect || !isPrimaryBundleStop ? 0 : (totalFinalCost > 0 ? totalFinalCost : selectedDelivery.deliveryCostConfirmed),
+        isCostSettled: isAllCustDirect ? true : selectedDelivery.isCostSettled,
+        reconciliationStatus: isAllCustDirect
+          ? 'PAID'
+          : (selectedDelivery.reconciliationStatus === ('SETTLED' as any)
+              ? 'PAID'
+              : (!selectedDelivery.reconciliationStatus || selectedDelivery.reconciliationStatus === ('UNRECONCILED' as any) || selectedDelivery.reconciliationStatus === ('NONE' as any))
+                ? 'PENDING'
+                : selectedDelivery.reconciliationStatus),
+        vehicles: JSON.stringify(isPrimaryBundleStop ? sanitizedVehicles : zeroCostVehicles),
+        ...(returnCargoJson !== undefined ? { cargoItems: returnCargoJson } : {}),
+        closingMemo: (() => {
+          const cleanDispatcherNote = sanitizeDispatcherSpecialNote(closingMemo);
+          const proofMatch = (selectedDelivery.closingMemo || '').match(/\[(납품증 사진|전자 서명)\]:\s*(https?:\/\/[^\s|]+)/);
+          if (proofMatch) {
+            return cleanDispatcherNote ? `${cleanDispatcherNote} | ${proofMatch[0]}` : proofMatch[0];
+          }
+          return cleanDispatcherNote;
+        })(),
+        memo: updatedReturnMemo,
+        updatedAt: new Date().toISOString()
+      };
+
+      db.updateRow<Delivery>('deliveries', selectedDelivery.id, payload);
+
+      // 🔗 [출고 배차 하차일 변경 시 계약·청구 개시일 자동 동기화]
+      if (!isReturnCategory && isOutboundOrExchange && unloadingDate && /^\d{4}-\d{2}-\d{2}$/.test(unloadingDate)) {
+        const prevUnloadDate = (selectedDelivery.unloadingDate || selectedDelivery.loadingDate || '').trim();
+        const prevLoadDate = (selectedDelivery.loadingDate || '').trim();
+        let parsedCargoForSync: any[] = [];
+        try {
+          if (selectedDelivery.cargoItems) {
+            const raw = JSON.parse(selectedDelivery.cargoItems);
+            if (Array.isArray(raw)) parsedCargoForSync = raw;
+          }
+        } catch {
+          parsedCargoForSync = [];
+        }
+
+        if (parsedCargoForSync.length > 0) {
+          const updatedCargoForSync = parsedCargoForSync.map((ci, idx) => {
+            if (idx === 0 || ci?.requestMeta) {
+              return {
+                ...ci,
+                requestMeta: {
+                  ...(ci.requestMeta || {}),
+                  loadingTime: `${loadingDate} ${finalLoadingSlot}`.trim(),
+                  unloadingTime: `${unloadingDate} ${finalUnloadingSlot}`.trim()
+                }
+              };
+            }
+            return ci;
+          });
+          db.updateRow<Delivery>('deliveries', selectedDelivery.id, {
+            cargoItems: JSON.stringify(updatedCargoForSync)
+          });
+        }
+
+        if (unloadingDate && selectedDelivery.contractId && (selectedDelivery.type === 'OUTBOUND' || selectedDelivery.type === 'EXCHANGE' || selectedDelivery.dispatchCategory === '출고' || selectedDelivery.dispatchCategory === '교환')) {
+          const targetCaIds = new Set<string>();
+          parsedCargoForSync.forEach(ci => {
+            if (Array.isArray(ci?.contractAssetIds)) {
+              ci.contractAssetIds.forEach((id: string) => {
+                if (id) targetCaIds.add(id);
+              });
+            }
+          });
+          db.outboundInspections
+            .filter(ins => ins.deliveryId === selectedDelivery.id && (ins as any).contractAssetId)
+            .forEach(ins => targetCaIds.add((ins as any).contractAssetId));
+
+          if (targetCaIds.size === 0) {
+            db.contractAssets
+              .filter(ca =>
+                ca.contractId === selectedDelivery.contractId &&
+                ca.status !== 'RETURNED' &&
+                ca.status !== 'SOLD' &&
+                (!ca.startDate || ca.startDate === prevUnloadDate || ca.startDate === prevLoadDate || ca.startDate === loadingDate)
+              )
+              .forEach(ca => targetCaIds.add(ca.id));
+          }
+
+          targetCaIds.forEach(caId => {
+            const caObj = db.contractAssets.find(c => c.id === caId && c.contractId === selectedDelivery.contractId);
+            if (!caObj) return;
+            const shouldSyncFirstStart =
+              !caObj.firstStartDate ||
+              caObj.firstStartDate === caObj.startDate ||
+              caObj.firstStartDate === prevUnloadDate ||
+              caObj.firstStartDate === prevLoadDate ||
+              caObj.firstStartDate === loadingDate;
+            db.updateRow<ContractAsset>('contractAssets', caObj.id, {
+              startDate: unloadingDate,
+              ...(shouldSyncFirstStart ? { firstStartDate: unloadingDate } : {})
+            });
+            if (caObj.assetId) {
+              db.updateRow<Asset>('assets', caObj.assetId, {
+                contractStart: unloadingDate
+              });
+            }
+          });
+
+          db.assetInOutLogs
+            .filter(l => l.deliveryId === selectedDelivery.id && l.type === 'OUTBOUND')
+            .forEach(l => {
+              db.updateRow<any>('asset_inout_logs', l.id, {
+                eventDate: unloadingDate
+              });
+            });
+
+          const parentContract = db.contracts.find(c => c.id === selectedDelivery.contractId);
+          if (parentContract) {
+            const activeCas = db.contractAssets.filter(
+              c => c.contractId === parentContract.id && c.status !== 'RETURNED' && c.status !== 'SOLD' && c.startDate
+            );
+            const earliestStart = activeCas.map(c => c.startDate).filter(Boolean).sort()[0] || unloadingDate;
+            if (parentContract.startDate !== earliestStart) {
+              db.updateRow<Contract>('contracts', parentContract.id, {
+                startDate: earliestStart,
+                updatedAt: new Date().toISOString()
+              });
+            }
+            if (unloadingDate !== prevUnloadDate) {
+              db.insertRow<ContractHistory>('contractHistory', {
+                contractId: parentContract.id,
+                changeType: 'FEE_CHANGE',
+                changeDate: new Date().toISOString().split('T')[0],
+                description: `[배차/운송 일정 변경] 배차 ${selectedDelivery.id}: 하차일(계약개시일) [${prevUnloadDate || '-'} ➔ ${unloadingDate}] 자동 동기화 (처리자: ${currentUser?.name || '담당자'})`,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+
+      // 🔗 경유/합짐 묶음 배차일 경우: 묶인 모든 경유 건에 기사/차량 배정을 동기화하고, 운송비는 1순위 대표건에만 귀속!
+      if (isBundledGroup) {
+        const primaryStopId = bundleGroupItems[0]?.id;
+        for (const sibling of bundleGroupItems) {
+          if (sibling.id === selectedDelivery.id) continue;
+          const isSiblingPrimary = sibling.id === primaryStopId;
+          const siblingNormSt = getNormalizedDeliveryStatus(sibling);
+          const siblingNextStatus: Delivery['status'] = (siblingNormSt === 'DELIVERED')
+            ? sibling.status
+            : nextStatus;
+          db.updateRow<Delivery>('deliveries', sibling.id, {
+            status: siblingNextStatus,
+            dispatchCategory: '경유/합짐',
+            dropoffType: 'MULTI_STOP',
+            transportCompany: mainVeh.transportCompany || '',
+            vehicleType: mainVeh.vehicleType || '3.5T',
+            vehicleNo: mainVeh.vehicleNo || '',
+            driverName: mainVeh.driverName || '',
+            driverContact: mainVeh.driverContact || '',
+            expectedCost: isAllCustDirect || !isSiblingPrimary ? 0 : totalExpectedCost,
+            finalCost: isAllCustDirect || !isSiblingPrimary ? 0 : totalFinalCost,
+            deliveryCost: isAllCustDirect || !isSiblingPrimary ? 0 : (totalFinalCost > 0 ? totalFinalCost : totalExpectedCost),
+            deliveryCostConfirmed: isAllCustDirect || !isSiblingPrimary ? 0 : (totalFinalCost > 0 ? totalFinalCost : sibling.deliveryCostConfirmed),
+            vehicles: JSON.stringify(isSiblingPrimary ? sanitizedVehicles : zeroCostVehicles),
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+
+      await db.awaitPendingWrites();
+
+      // 🔄 [반납 배차 전용] 임차자산 반납 처리 (반납일자 = 하차일) 및 선택 해제 자산 원복
+      let returnedAssetCount = 0;
+      if (isReturnCategory) {
+        const prevReturnIds = extractReturnAssetIdsFromDelivery(selectedDelivery);
+        const deselectedIds = prevReturnIds.filter(id => !selectedReturnAssetIds.includes(id));
+        for (const deselectedId of deselectedIds) {
+          const prevAsset = assetMap.get(deselectedId);
+          if (prevAsset && prevAsset.ownerType === 'RENTED' && prevAsset.status === 'RENTED_RETURNED') {
+            db.updateRow<Asset>('assets', deselectedId, {
+              status: 'AVAILABLE',
+              actualRentReturnDate: '',
+              updatedAt: new Date().toISOString()
+            });
+          }
+        }
+        if (deselectedIds.length > 0) {
+          await db.awaitPendingWrites();
+        }
+
+        for (const assetId of selectedReturnAssetIds) {
+          const targetAsset = assetMap.get(assetId);
+          if (!targetAsset) continue;
+          if (targetAsset.status !== 'RENTED_RETURNED' || !targetAsset.actualRentReturnDate) {
+            await returnRentedAsset(assetId, effectiveReturnDate, {
+              memo: `[임차자산 반납 배차] 배차ID: ${selectedDelivery.id} / 반납일(하차일): ${effectiveReturnDate} / 임차처: ${resolvedDestination || targetAsset.renter || '임차처'}`
+            });
+            returnedAssetCount++;
+          } else if (targetAsset.actualRentReturnDate !== effectiveReturnDate) {
+            db.updateRow<Asset>('assets', assetId, {
+              actualRentReturnDate: effectiveReturnDate,
+              updatedAt: new Date().toISOString()
+            });
+            await db.awaitPendingWrites();
+            returnedAssetCount++;
+          }
+        }
+      }
+
+      // [업무 인계 파이프라인] 선행 배차 의뢰 ToDo 자동 상계 (기사 배정이 완료된 경우에만)
+      if (!isScheduleOnlySaveInPending) {
+        await clearHandoverTasks({
+          entityId: selectedDelivery.id,
+          category: 'DISPATCH_REQUEST',
+          completedByUserId: currentUser?.id,
+          completedByName: currentUser?.name,
+          completionAction: 'DISPATCH_ASSIGNED'
+        });
+      }
+
+      const curContract = selectedDelivery.contractId ? contracts.find(c => c.id === selectedDelivery.contractId) : null;
+      const curCust = curContract ? customers.find(c => c.id === curContract.customerId)?.name : '';
+      const curSite = curContract ? sites.find(s => s.id === curContract.siteId)?.name : '';
+
+      // [업무 인계 파이프라인] 출고 건인 경우 주기장 PDI 검수 ToDo 후속 발행 (단, 단순 정보 수정 시 중복 발행 방지)
+      if (selectedDelivery.type === 'OUTBOUND' && !isModifyingDispatched && !isModifyingDelivered && !isScheduleOnlySaveInPending) {
+        await issueHandoverTask({
+          category: 'OUTBOUND_PDI_INSPECTION',
+          title: `[출고 PDI 검수 요망] ${curCust || '고객사'} (${mainVeh.driverName || '기사'} 배정)`,
+          content: `차량 배정 완료 (${mainVeh.driverName || '기사'}, ${mainVeh.vehicleNo || '차량번호'}). 상차 전 PDI 기능검수를 완료해 주십시오.`,
+          targetDept: 'YARD',
+          priority: 'HIGH',
+          actionUrl: '/admin/outbound_inspections',
+          entityType: 'DELIVERY',
+          entityId: selectedDelivery.id,
+          senderId: currentUser?.id,
+          senderName: currentUser?.name
+        });
+      }
+
+      broadcastWorkNotification({
+        type: 'DISPATCH',
+        title: isRestoringFromCancelled ? '배차 재배정 완료' : (isModifyingDispatched || isModifyingDelivered) ? '배차 정보 수정' : '배차 완료 안내',
+        body: `${curCust || '현장'} (${curSite || '배차'}) ${mainVeh.driverName || '기사'} (${mainVeh.vehicleType || '차량'}) ${isRestoringFromCancelled ? '재배정 완료' : (isModifyingDispatched || isModifyingDelivered) ? '수정 완료' : '배정 완료'}`,
+        url: '/admin/dispatch',
+        targetDepts: ['SALES', 'YARD', 'ADMIN', 'EXECUTIVE']
+      }).catch(console.warn);
+
+      refreshAllData();
+
+      // 💡 선택된 배차 상세 객체도 최신으로 즉시 갱신 (화면 유지하여 바로 인쇄/문자 전송 지원)
+      const updatedDelivery: Delivery = {
+        ...selectedDelivery,
+        ...payload,
+        status: nextStatus
+      };
+      setSelectedDelivery(updatedDelivery);
+
+      if (isReturnCategory && returnedAssetCount > 0) {
+        showToast(`반납 배차 저장 및 선택된 임차자산 ${returnedAssetCount}대 반납 처리 완료 (반납일자: ${effectiveReturnDate})`);
+      } else if (isReturnCategory && nextStatus === 'PENDING') {
+        showToast('반납 배차 정보가 저장되었습니다. (반납할 임차자산은 추후 선택 가능)');
+      } else if (isModifyingDelivered) {
+        setIsEditUnlocked(false);
+        showToast('완료된 배차 정보가 수정 저장되었습니다. (완료 상태 유지)');
+      } else if (isRestoringFromCancelled) {
+        showToast('배차 정보가 수정되어 배차 완료 상태로 재배정되었습니다.');
+      } else if (isModifyingDispatched) {
+        showToast('배차 정보가 수정 저장되었습니다.');
+      } else {
+        showToast('배차 기사 배정 완료 (상태: 배차 완료)');
+      }
+    } catch (err: any) {
+      showErrorModal(`배차 저장 실패:\n${err?.message || err}`);
+    } finally {
+      setIsSavingDispatch(false);
+    }
+  };
+
+  // 4-A. 상차 완료 처리 (상차완료 = 하차 예정일 기준 운송완료 및 계약·청구 개시 확정) — 묶음 내 각 건별 개별 상차완료 지원
+  const handleCompleteLoadingStatus = async (deliveryId: string) => {
+    if (!canSave) return;
+
+    const targetDelivery = deliveries.find(d => d.id === deliveryId);
+    if (!targetDelivery) return;
+
+    const readiness = checkDeliveryOutboundReadiness(targetDelivery);
+    if (readiness.isOutboundLike && !readiness.ready) {
+      showErrorModal(
+        `출고 절차가 완료되지 않아 상차 완료 처리를 진행할 수 없습니다.\n\n` +
+        `• 사유: ${readiness.reason}\n\n` +
+        `반드시 [장비 할당] ➔ [출고 검수 승인]을 먼저 완료해 주십시오.`,
+        '상차 완료 처리 불가 (선행 절차 미완료)'
+      );
+      return;
+    }
+
+    try {
+      const nowObj = new Date();
+      const nowIso = nowObj.toISOString();
+      const todayLocalStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
+      const effectiveUnloadingDate = (
+        targetDelivery.unloadingDate ||
+        targetDelivery.loadingDate ||
+        targetDelivery.scheduledDate ||
+        todayLocalStr
+      ).slice(0, 10);
+      const nextStatus: Delivery['status'] = effectiveUnloadingDate <= todayLocalStr ? 'DELIVERED' : 'DISPATCHED';
+
+      const origCat = getOriginalDeliveryCategoryLabel(targetDelivery);
+      const isSimpleTransit = targetDelivery.type === 'INBOUND'
+        || targetDelivery.type === 'MOVEMENT'
+        || origCat === '입고'
+        || origCat === '반납'
+        || origCat === '이동';
+
+      if (isSimpleTransit) {
+        // [헌장 1.3] INBOUND/MOVEMENT 상차완료 = 하차예정일 기준 운송완료(DELIVERED) 처리.
+        // 자산 상태(RENTED → AVAILABLE) 전환은 입고검수 화면에서만 수행한다.
+        db.updateRow<Delivery>('deliveries', deliveryId, {
+          status: nextStatus,
+          loadingCompletedAt: nowIso,
+          unloadingCompletedAt: effectiveUnloadingDate,
+          updatedAt: nowIso
+        });
+        await db.awaitPendingWrites();
+      } else {
+        // OUTBOUND / EXCHANGE: completeDelivery 내부에서 하차예정일 = 계약개시일 = 청구개시일 100% 동기화 및 상태 전환 수행
+        await completeDelivery(deliveryId);
+      }
+
+      // [업무 인계 파이프라인] 운송 관련 ToDo 상계
+      await clearHandoverTasks({
+        entityId: deliveryId,
+        completionAction: 'DELIVERED',
+        completedByUserId: currentUser?.id,
+        completedByName: currentUser?.name
+      });
+
+      // [업무 인계 파이프라인] 영업담당자에게 상차 및 현장 하차 안착 안내 ToDo 발행
+      const targetContract = targetDelivery.contractId ? contracts.find(c => c.id === targetDelivery.contractId) : null;
+      await issueHandoverTask({
+        category: 'SITE_ARRIVAL_CONFIRM',
+        title: `[상차/운송 완료] ${targetDelivery.destinationAddress || '현장'} (${effectiveUnloadingDate} 하차)`,
+        content: `상차 완료 처리되어 하차예정일(${effectiveUnloadingDate}) 기준으로 운송 완료 및 계약·청구 개시가 확정되었습니다.`,
+        targetDept: 'SALES',
+        assignedUserId: targetContract?.salespersonId,
+        priority: 'HIGH',
+        actionUrl: '/admin/contract',
+        entityType: 'DELIVERY',
+        entityId: deliveryId,
+        senderId: currentUser?.id,
+        senderName: currentUser?.name
+      });
+
+      refreshAllData();
+      if (selectedDelivery && selectedDelivery.id === deliveryId) {
+        setSelectedDelivery({
+          ...selectedDelivery,
+          status: nextStatus,
+          loadingCompletedAt: nowIso,
+          unloadingCompletedAt: effectiveUnloadingDate,
+          updatedAt: nowIso
+        });
+      }
+      if (effectiveUnloadingDate <= todayLocalStr) {
+        showToast(`상차 완료 처리되어 하차예정일(${effectiveUnloadingDate}) 기준으로 운송완료 및 계약·청구 개시가 확정되었습니다.`);
+      } else {
+        showToast(`상차 완료 처리되었습니다. 하차예정일(${effectiveUnloadingDate})에 자동 운송완료되며 계약·청구 개시일이 ${effectiveUnloadingDate}로 확정되었습니다.`);
+      }
+    } catch (err: any) {
+      showErrorModal(`상차 완료 처리 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 4-B. 상차 완료 취소 처리 (loadingCompletedAt 해제 ➔ 배차 완료 상태로 원복 & 자산 RENTED ➔ AWAITING_TRANSPORT 롤백)
+  const handleRevertLoadingStatus = async (deliveryId: string) => {
+    if (!canSave) return;
+    const targetDelivery = deliveries.find(d => d.id === deliveryId);
+    if (!targetDelivery) return;
+
+    try {
+      const nowIso = new Date().toISOString();
+      db.updateRow<Delivery>('deliveries', deliveryId, {
+        status: 'DISPATCHED',
+        loadingCompletedAt: null as any,
+        unloadingCompletedAt: null as any,
+        updatedAt: nowIso
+      });
+
+      const isOutboundLike =
+        targetDelivery.type === 'OUTBOUND' ||
+        targetDelivery.type === 'EXCHANGE' ||
+        targetDelivery.dispatchCategory === '출고' ||
+        targetDelivery.dispatchCategory === '교환';
+
+      if (isOutboundLike && targetDelivery.contractId) {
+        const revertCaIds = new Set<string>();
+        if (targetDelivery.cargoItems) {
+          try {
+            const parsed = typeof targetDelivery.cargoItems === 'string' ? JSON.parse(targetDelivery.cargoItems) : targetDelivery.cargoItems;
+            if (Array.isArray(parsed)) {
+              parsed.forEach((ci: any) => {
+                if (Array.isArray(ci?.contractAssetIds)) {
+                  ci.contractAssetIds.forEach((id: string) => {
+                    if (id) revertCaIds.add(id);
+                  });
+                }
+              });
+            }
+          } catch {}
+        }
+        db.outboundInspections
+          .filter(ins => ins.deliveryId === deliveryId && ins.contractAssetId)
+          .forEach(ins => {
+            if (ins.contractAssetId) revertCaIds.add(ins.contractAssetId);
+          });
+        if (revertCaIds.size === 0) {
+          db.contractAssets
+            .filter(ca => ca.contractId === targetDelivery.contractId && ca.status === 'RENTED')
+            .forEach(ca => revertCaIds.add(ca.id));
+        }
+
+        revertCaIds.forEach(caId => {
+          const caObj = db.contractAssets.find(c => c.id === caId);
+          if (caObj && caObj.status === 'RENTED') {
+            db.updateRow<ContractAsset>('contractAssets', caObj.id, {
+              status: 'AWAITING_TRANSPORT'
+            });
+          }
+          if (caObj?.assetId) {
+            const assetObj = db.assets.find(a => a.id === caObj.assetId);
+            if (assetObj && assetObj.status === 'RENTED') {
+              db.updateRow<Asset>('assets', assetObj.id, {
+                status: 'AWAITING_TRANSPORT',
+                updatedAt: nowIso
+              });
+            }
+          }
+        });
+      }
+
+      await db.awaitPendingWrites();
+
+      refreshAllData();
+      if (selectedDelivery && selectedDelivery.id === deliveryId) {
+        setSelectedDelivery({
+          ...selectedDelivery,
+          status: 'DISPATCHED',
+          loadingCompletedAt: undefined,
+          unloadingCompletedAt: undefined,
+          updatedAt: nowIso
+        });
+      }
+      showToast('상차 완료가 취소되어 [배차 완료] 및 자산 [운송대기] 상태로 원복되었습니다.');
+    } catch (err: any) {
+      showErrorModal(`상차 완료 취소 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 4-C. 하위 호환용 운송 완료 호출 시 상차 완료(하차예정일 기준 운송완료)와 동일하게 처리
+  const handleCompleteDeliveryStatus = async (deliveryId: string) => {
+    await handleCompleteLoadingStatus(deliveryId);
+  };
+
+  // 5. 배차 취소 처리 (DISPATCHED ➔ REQUESTED 배차대기 원복 및 차량·기사 배정 해제)
+  const handleCancelDeliveryStatus = async (deliveryId: string) => {
+    if (!canSave) return;
+    const targetDelivery = deliveries.find(d => d.id === deliveryId);
+    if (!targetDelivery) return;
+
+    try {
+      const nowIso = new Date().toISOString();
+      const normSt = getNormalizedDeliveryStatus(targetDelivery);
+      const origCat = getOriginalDeliveryCategoryLabel(targetDelivery);
+      const isOutboundOrExchange =
+        targetDelivery.type === 'OUTBOUND' ||
+        targetDelivery.type === 'EXCHANGE' ||
+        origCat === '출고' ||
+        origCat === '교환';
+
+      // 배차완료(DISPATCHED) 상태이거나 출고/교환 건인 경우: 출고 요청 전체를 죽이지 않고 차량·기사 배정만 해제하여 [배차대기(REQUESTED)]로 원복
+      if (normSt === 'DISPATCHED' || normSt === 'CANCELLED' || isOutboundOrExchange) {
+        const revertPayload: Partial<Delivery> = {
+          status: 'REQUESTED',
+          transportCompany: '',
+          vehicleNo: '',
+          driverName: '',
+          driverContact: '',
+          expectedCost: 0,
+          finalCost: 0,
+          deliveryCost: 0,
+          vehicles: '[]',
+          updatedAt: nowIso
+        };
+        db.updateRow<Delivery>('deliveries', deliveryId, revertPayload);
+        await db.awaitPendingWrites();
+
+        await clearHandoverTasks({
+          entityId: deliveryId,
+          category: 'OUTBOUND_PDI_INSPECTION',
+          completedByUserId: currentUser?.id,
+          completedByName: currentUser?.name,
+          completionAction: 'DISPATCH_REVERTED'
+        });
+
+        refreshAllData();
+        setAssignedVehicles([
+          {
+            id: `v-${Date.now()}`,
+            transportCompany: '',
+            vehicleType: targetDelivery.vehicleType || '3.5T',
+            vehicleNo: '',
+            driverName: '',
+            driverContact: '',
+            expectedCost: 0,
+            finalCost: 0,
+            deliveryCost: 0
+          }
+        ]);
+        if (selectedDelivery && selectedDelivery.id === deliveryId) {
+          setSelectedDelivery({
+            ...selectedDelivery,
+            ...revertPayload,
+            status: 'REQUESTED'
+          });
+        }
+        showToast('차량·기사 배정이 취소되어 [배차 대기] 상태로 전환되었습니다.');
+        return;
+      }
+
+      db.updateRow<Delivery>('deliveries', deliveryId, {
+        status: 'CANCELLED',
+        updatedAt: nowIso
+      });
+      await db.awaitPendingWrites();
+
+      // [업무 인계 파이프라인] 배차 취소 시 관련 ToDo 자동 상계
+      await clearHandoverTasks({
+        entityId: deliveryId,
+        completionAction: 'CANCELLED',
+        completedByUserId: currentUser?.id,
+        completedByName: currentUser?.name
+      });
+
+      refreshAllData();
+      if (selectedDelivery && selectedDelivery.id === deliveryId) {
+        setSelectedDelivery({
+          ...selectedDelivery,
+          status: 'CANCELLED',
+          updatedAt: nowIso
+        });
+      }
+      showToast('배차가 취소되었습니다.');
+    } catch (err: any) {
+      showErrorModal(`배차 취소 처리 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 5-B. 운송 완료 취소 처리 (DELIVERED ➔ DISPATCHED 배차완료 원복)
+  const handleRevertDeliveredToDispatched = async (deliveryId: string) => {
+    if (!canSave) return;
+    const targetDelivery = deliveries.find(d => d.id === deliveryId);
+    if (!targetDelivery) return;
+
+    try {
+      const nowIso = new Date().toISOString();
+      db.updateRow<Delivery>('deliveries', deliveryId, {
+        status: 'DISPATCHED',
+        loadingCompletedAt: null as any,
+        unloadingCompletedAt: null as any,
+        updatedAt: nowIso
+      });
+      await db.awaitPendingWrites();
+
+      refreshAllData();
+      if (selectedDelivery && selectedDelivery.id === deliveryId) {
+        setSelectedDelivery({
+          ...selectedDelivery,
+          status: 'DISPATCHED',
+          loadingCompletedAt: undefined,
+          unloadingCompletedAt: undefined,
+          updatedAt: nowIso
+        });
+      }
+      showToast('상차/운송 완료가 취소되어 [배차 완료] 상태로 원복되었습니다.');
+    } catch (err: any) {
+      showErrorModal(`운송 완료 취소 실패:\n${err?.message || err}`);
+    }
+  };
+
+  const handleSaveManualDispatch = async () => {
+    const isManualReturn = manualCategory === '반납';
+    const selectedManualReturnAssets = isManualReturn
+      ? (manualReturnAssetIds.map(id => assetMap.get(id)).filter(Boolean) as Asset[])
+      : [];
+    const manualSubleaseVendorInfo = isManualReturn
+      ? getSubleaseVendorInfoByAssets(selectedManualReturnAssets, manualDestination)
+      : null;
+    const effectiveManualOrigin = (manualOrigin || '').trim() || (isManualReturn ? '당사 보관소' : '');
+    const effectiveManualDestination = (manualDestination || '').trim() || (
+      isManualReturn
+        ? (manualSubleaseVendorInfo?.name || selectedManualReturnAssets[0]?.renter || '임차처 미정')
+        : ''
+    );
+
+    if (!effectiveManualOrigin || !effectiveManualDestination) {
+      showErrorModal('상차지(출발지)와 하차지(도착지)를 작성해 주세요.');
+      return;
+    }
+
+    if (manualLoadingDate && manualUnloadingDate && manualLoadingDate > manualUnloadingDate) {
+      showErrorModal('상차일이 하차일보다 늦을 수 없습니다. 일자를 확인해 주십시오.');
+      return;
+    }
+
+    const effectiveManualReturnDate = manualUnloadingDate || manualLoadingDate || new Date().toISOString().split('T')[0];
+    if (isManualReturn && selectedManualReturnAssets.length > 0) {
+      for (const targetAsset of selectedManualReturnAssets) {
+        if (targetAsset.rentStart && effectiveManualReturnDate < targetAsset.rentStart) {
+          showErrorModal(`임차자산 [${targetAsset.assetNo} · ${targetAsset.modelName}]의 반납일자(하차일: ${effectiveManualReturnDate})는 임차 시작일(${targetAsset.rentStart}) 이전일 수 없습니다.`);
+          return;
+        }
+      }
+    }
+
+    if (manualCategory === '출고' || manualCategory === '교환') {
+      const targetCust = customers.find(c => c.id === manualCustomerId || (manualContractId && contracts.find(ct => ct.id === manualContractId)?.customerId === c.id));
+      if (isCustomerRestricted(targetCust?.transactionStatus)) {
+        showErrorModal(`[출고제한] 거래처 [${targetCust?.name}]은(는) 신규 장비 출고가 차단된 상태입니다. 신규 출고 배차를 생성할 수 없습니다.`, '출고 차단');
+        return;
+      }
+    }
+
+    try {
+      const finalLoadingSlot = manualLoadingTimeSlot === '희망시간' ? manualLoadingCustomTime : manualLoadingTimeSlot;
+      const finalUnloadingSlot = manualUnloadingTimeSlot === '희망시간' ? manualUnloadingCustomTime : manualUnloadingTimeSlot;
+      const nowIso = new Date().toISOString();
+
+      const cargoItemsPayload = isManualReturn
+        ? (selectedManualReturnAssets.length > 0
+            ? JSON.stringify(
+                selectedManualReturnAssets.map(a => {
+                  const assetVendor = findSubleaseVendor(a, effectiveManualDestination);
+                  return {
+                    modelName: `${a.modelName} (${a.assetNo})`,
+                    count: 1,
+                    returnAssetId: a.id,
+                    assetNo: a.assetNo,
+                    renter: assetVendor?.name || a.renter || '',
+                    vendorId: assetVendor?.id || a.vendorId || '',
+                    vendorName: assetVendor?.name || a.renter || '',
+                    vendorAddress: assetVendor?.address || '',
+                    vendorContactName: assetVendor?.contactName || '',
+                    vendorContactPhone: assetVendor?.contact || ''
+                  };
+                })
+              )
+            : '[]')
+        : (manualCargos.length > 0 ? JSON.stringify(manualCargos) : '[]');
+
+      const vendorMemoTag = isManualReturn && manualSubleaseVendorInfo
+        ? `[임차처: ${manualSubleaseVendorInfo.name} | 주소: ${manualSubleaseVendorInfo.address || '미등록'} | 담당자: ${manualSubleaseVendorInfo.contactName || '미등록'} | 연락처: ${manualSubleaseVendorInfo.contactPhone || '미등록'}] [고객담당자: ${manualSubleaseVendorInfo.contactName || manualSubleaseVendorInfo.name} (${manualSubleaseVendorInfo.contactPhone || '미등록'})]`
+        : '';
+
+      const autoReturnNote = isManualReturn
+        ? (selectedManualReturnAssets.length > 0
+            ? `반납 임차자산: ${selectedManualReturnAssets.map(a => `${a.modelName} (${a.assetNo})`).join(', ')} / 반납일자: ${effectiveManualReturnDate}`
+            : '반납 임차자산 미결정 (추후 선택)')
+        : '';
+      const manualStaff = resolveDispatchStaffContact({ currentUser, users, contracts, currentTenant });
+      const staffMemoTag = currentUser
+        ? `[배차담당자: ${manualStaff.name} (${manualStaff.phone}) | ${currentUser.id}]`
+        : '';
+      const rawUserMemo = (manualMemo || manualClosingMemo || '').trim();
+      const combinedMemo = [rawUserMemo || autoReturnNote, vendorMemoTag, staffMemoTag].filter(Boolean).join(' ');
+
+      db.insertRow<Delivery>('deliveries', {
+        type: manualCategory === '출고' ? 'OUTBOUND' : manualCategory === '교환' ? 'EXCHANGE' : manualCategory === '이동' ? 'MOVEMENT' : manualCategory === '반납' ? 'RETURN' : 'INBOUND',
+        status: 'PENDING',
+        dispatchCategory: manualCategory,
+        contractId: manualContractId || undefined,
+        requestDate: manualLoadingDate,
+        scheduledDate: manualLoadingDate,
+        loadingDate: manualLoadingDate,
+        loadingTimeSlot: finalLoadingSlot,
+        unloadingDate: manualUnloadingDate,
+        unloadingTimeSlot: finalUnloadingSlot,
+        originAddress: effectiveManualOrigin,
+        destinationAddress: effectiveManualDestination,
+        deliveryCost: manualExpectedCost,
+        expectedCost: manualExpectedCost,
+        finalCost: manualExpectedCost,
+        billableToCustomer: manualBillable,
+        billableCustomerId: manualCustomerId || undefined,
+        isCostSettled: false,
+        memo: combinedMemo,
+        closingMemo: manualClosingMemo || manualMemo || autoReturnNote,
+        vehicleRequirements: JSON.stringify(manualVehicles),
+        cargoItems: cargoItemsPayload,
+        createdAt: nowIso,
+        updatedAt: nowIso
+      });
+
+      await db.awaitPendingWrites();
+
+      // 🔄 [반납 배차 전용] 반납할 임차자산을 결정하여 선택한 경우 하차일(=반납일자) 기준으로 즉시 반납 처리
+      let returnedCount = 0;
+      if (isManualReturn && selectedManualReturnAssets.length > 0) {
+        for (const targetAsset of selectedManualReturnAssets) {
+          if (targetAsset.status !== 'RENTED_RETURNED' || !targetAsset.actualRentReturnDate) {
+            await returnRentedAsset(targetAsset.id, effectiveManualReturnDate, {
+              memo: `[임차자산 반납 배차 등록] 반납일(하차일): ${effectiveManualReturnDate} / 임차처: ${effectiveManualDestination || targetAsset.renter || '임차처'}`
+            });
+            returnedCount++;
+          }
+        }
+      }
+
+      // 🔔 주기장/공장 현장용 업무 알림 트리거 (소리 차임벨 및 확인 팝업 토스트)
+      const targetCust = customers.find(c => c.id === manualCustomerId || (manualContractId && contracts.find(ct => ct.id === manualContractId)?.customerId === c.id));
+      const targetContract = contracts.find(ct => ct.id === manualContractId);
+      jobNotificationService.triggerJobAlert({
+        type: manualCategory === '교환' ? 'EXCHANGE_REQUESTED' : (manualCategory === '반납' ? 'INBOUND_RETURN' : 'OUTBOUND_REQUESTED'),
+        title: manualCategory === '교환' ? '교환 의뢰 발생' : (manualCategory === '반납' ? '임차자산 반납 배차 등록' : '신규 출고의뢰 접수 (출고요청서 발행)'),
+        customerName: targetCust?.name || effectiveManualDestination || '고객사',
+        siteName: (targetContract as any)?.siteName || (targetContract?.siteId ? sites.find(s => s.id === targetContract.siteId)?.name : '') || effectiveManualDestination || '현장',
+        modelName: isManualReturn
+          ? (selectedManualReturnAssets.length > 0
+              ? selectedManualReturnAssets.map(a => `${a.modelName}(${a.assetNo})`).join(', ')
+              : '임차자산 미결정')
+          : (manualCargos[0]?.modelName || (manualMemo || manualClosingMemo || '수동 배차')),
+        quantity: isManualReturn
+          ? (selectedManualReturnAssets.length || 1)
+          : (manualCargos.length > 0 ? manualCargos.reduce((acc, c) => acc + (c.count || 1), 0) : 1),
+        deliveryDate: manualLoadingDate,
+        memo: combinedMemo || undefined,
+        actionMenuId: 'outbound_inspection'
+      });
+
+      refreshAllData();
+      if (isManualReturn && returnedCount > 0) {
+        showToast(`반납 배차 생성 및 임차자산 ${returnedCount}대 반납 처리 완료 (반납일자: ${effectiveManualReturnDate})`);
+      } else if (isManualReturn) {
+        showToast('임차자산 미선택 상태로 반납 배차가 등록되었습니다. (추후 배차 상세에서 선택 가능)');
+      } else {
+        showToast('신규 배차건이 생성되었습니다.');
+      }
+      setManualReturnAssetIds([]);
+      setShowManualModal(false);
+    } catch (err: any) {
+      showErrorModal(`수동 배차 생성 실패:\n${err?.message || err}`);
+    }
+  };
+
+  // 배차 운송 속성('출고' | '입고' | '교환' | '반납' | '정비' | '이동' | '경유/합짐') 판정 헬퍼
+  const getDeliveryCategoryLabel = (d?: Delivery | null): '출고' | '입고' | '교환' | '반납' | '정비' | '이동' | '경유/합짐' => {
+    if (!d) return '출고';
+    if (d.bundleGroupId || d.dispatchCategory === '경유/합짐') return '경유/합짐';
+    if (d.dispatchCategory && ['출고', '입고', '교환', '반납', '정비', '이동'].includes(d.dispatchCategory)) {
+      return d.dispatchCategory as '출고' | '입고' | '교환' | '반납' | '정비' | '이동';
+    }
+    if (d.type === 'RETURN') return '반납';
+    if (d.type === 'INBOUND') return '입고';
+    if (d.type === 'EXCHANGE') return '교환';
+    if (d.type === 'MOVEMENT') return '이동';
+    return '출고';
+  };
+
+  // 운송완료 처리 액션 버튼 명칭 헬퍼 (상차완료 후 최종 마감 단계)
+  const getDeliveryCompletionActionLabel = (d?: Delivery | null): string => {
+    const cat = getOriginalDeliveryCategoryLabel(d);
+    if (cat === '반납') return '반납완료';
+    if (cat === '입고') return '입고완료';
+    if (cat === '정비') return '정비운송완료';
+    if (cat === '이동') return '이동완료';
+    return '운송완료';
+  };
+
+  // 운송 속성 배지 헬퍼 ("출고/입고/교환/반납/정비/이동/경유·합짐")
+  const getDeliveryCategoryBadge = (d?: Delivery | null) => {
+    const cat = getDeliveryCategoryLabel(d);
+    const origCat = getOriginalDeliveryCategoryLabel(d);
+    const styles: Record<string, { bg: string; color: string; border: string }> = {
+      '출고': { bg: 'rgba(37,99,235,0.12)', color: '#2563eb', border: 'rgba(37,99,235,0.35)' },
+      '입고': { bg: 'rgba(217,119,6,0.12)', color: '#d97706', border: 'rgba(217,119,6,0.35)' },
+      '교환': { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.35)' },
+      '반납': { bg: 'rgba(225,29,72,0.12)', color: '#e11d48', border: 'rgba(225,29,72,0.35)' },
+      '정비': { bg: 'rgba(124,58,237,0.12)', color: '#7c3aed', border: 'rgba(124,58,237,0.35)' },
+      '이동': { bg: 'rgba(71,85,105,0.12)', color: '#475569', border: 'rgba(71,85,105,0.35)' },
+      '경유/합짐': { bg: 'rgba(79,70,229,0.14)', color: '#4f46e5', border: 'rgba(79,70,229,0.45)' }
+    };
+    const st = styles[cat] || styles['출고'];
+    const bundleStops = d?.bundleGroupId ? getBundleGroupDeliveries(d.bundleGroupId) : [];
+    const orderNum = d?.bundleOrder || 1;
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+        <span style={{
+          padding: '2px 8px',
+          borderRadius: '6px',
+          fontSize: '11.5px',
+          fontWeight: 800,
+          backgroundColor: st.bg,
+          color: st.color,
+          border: `1px solid ${st.border}`,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '3px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}>
+          {cat === '경유/합짐' && <Link2 size={11} />}
+          {cat}
+        </span>
+        {cat === '경유/합짐' && (
+          <span style={{
+            padding: '2px 6px',
+            borderRadius: '5px',
+            fontSize: '10.5px',
+            fontWeight: 800,
+            backgroundColor: 'rgba(15,23,42,0.06)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}>
+            순서 {orderNum}{bundleStops.length > 0 ? `/${bundleStops.length}` : ''} · {origCat}
+          </span>
+        )}
+      </span>
+    );
+  };
+
+  const getDeliveryStatusBadge = (status: string, delivery?: Delivery | null) => {
+    const cat = getDeliveryCategoryLabel(delivery);
+    switch (status) {
+      case 'PENDING':
+      case 'REQUESTED':
+        return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(245,158,11,0.15)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Clock size={12} /> 🟡 배차 전 (대기)</span>;
+      case 'DISPATCHED':
+        if (delivery?.loadingCompletedAt) {
+          const unloadShort = (delivery.unloadingDate || delivery.loadingDate || delivery.scheduledDate || '').slice(5, 10);
+          return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 800, backgroundColor: 'rgba(217,119,6,0.16)', color: '#d97706', border: '1px solid rgba(217,119,6,0.38)', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Truck size={12} /> 🟠 상차 완료 ({unloadShort ? `${unloadShort} 하차예정 자동완료` : '자동완료 대기'})</span>;
+        }
+        return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Truck size={12} /> 🔵 배차 완료 (기사배정)</span>;
+      case 'DELIVERED':
+      case 'COMPLETED':
+        return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><CheckCircle size={12} /> 🟢 {cat} 완료</span>;
+      case 'CANCELLED':
+        return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(239,68,68,0.15)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><XCircle size={12} /> 🔴 배차 취소</span>;
+      default:
+        return <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(148,163,184,0.15)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>미지정</span>;
+    }
+  };
+
+  const handleExportDispatchExcel = () => {
+    if (filteredDeliveries.length === 0) {
+      showToast('내보낼 배차 데이터가 없습니다.', 'warning');
+      return;
+    }
+    const isPrivileged = isPrivilegedPrivacyUser(currentUser);
+    const rows = filteredDeliveries.map((d, index) => {
+      const contract = getContract(d.contractId);
+      const customer = contract ? getCustomer(contract.customerId) : null;
+      const site = sites.find(s => s.id === contract?.siteId);
+      const cargoItems = parseCargoItems(d);
+      const cargoStr = cargoItems.map(c => `${c.modelName} ${c.count}대`).join(', ') || (d as any).equipmentSummary || '-';
+      const normStatus = getNormalizedDeliveryStatus(d);
+      const statusLabel = normStatus === 'PENDING' ? '배차대기'
+        : normStatus === 'DISPATCHED' ? '배차완료'
+        : normStatus === 'DELIVERED' ? '운송완료'
+        : normStatus === 'CANCELLED' ? '배차취소' : normStatus;
+      const effCost = getEffectiveDeliveryCost(d);
+      
+      return {
+        'No': index + 1,
+        '배차번호': d.id,
+        '구분': d.dispatchCategory || d.type || '출고',
+        '상태': statusLabel,
+        '요청일자': d.requestDate || '-',
+        '배차(상차)일': d.loadingDate || d.scheduledDate || '-',
+        '하차(도착)일': d.unloadingDate || '-',
+        '계약번호': contract?.contractNo || '-',
+        '고객사': customer?.name || (d as any).customerName || '-',
+        '현장명': site?.name || (d as any).siteName || '-',
+        '운송장비': cargoStr,
+        '출발지(상차지)': isPrivileged ? (d.originAddress || '당사 보관소') : maskAddress(d.originAddress || '당사 보관소'),
+        '도착지(하차지)': isPrivileged ? (d.destinationAddress || site?.address || '-') : maskAddress(d.destinationAddress || site?.address || '-'),
+        '운송사': d.transportCompany || '-',
+        '차종': d.vehicleType || '-',
+        '차량번호': d.vehicleNo || '-',
+        '기사명': isPrivileged ? (d.driverName || '-') : maskName(d.driverName),
+        '기사연락처': isPrivileged ? (d.driverContact || '-') : maskPhoneNumber(d.driverContact),
+        '예상운송비': d.expectedCost || 0,
+        '확정운송비': effCost,
+        '고객청구여부': d.billableToCustomer ? '청구' : '당사부담',
+        '청구대상고객사': d.billableCustomerId ? (getCustomer(d.billableCustomerId)?.name || '-') : '-',
+        '특이사항/메모': d.memo || '',
+        '마감비고': d.closingMemo || ''
+      };
+    });
+    const todayStr = new Date().toISOString().split('T')[0];
+    exportToExcel(rows, `배차대장_${todayStr}`, '배차목록');
+    logPrivacyAccess(
+      'EXCEL_DOWNLOAD',
+      'truck_dispatch',
+      `배차 대장 ${rows.length}건 엑셀 다운로드 (${isPrivileged ? '경영진/개발자 원본' : '기사/고객사 개인정보 마스킹'})`,
+      { isMasked: !isPrivileged }
+    ).catch(console.error);
+    showToast(`배차 대장 ${rows.length}건 엑셀 다운로드 완료 (${isPrivileged ? '전체 정보' : '마스킹 적용'})`);
+  };
+
+  return (
+    <div data-hs-observe="truckdispatch" style={{ padding: '0', maxWidth: '1400px', width: '100%', margin: '0 auto', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '10px', overflow: 'hidden', color: 'var(--text-primary)', position: 'relative' }}>
+      {/* 알림 토스트 배너 (헌장 5.2) */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '24px',
+          zIndex: 99999,
+          padding: '10px 18px',
+          borderRadius: '6px',
+          backgroundColor: toastMessage.type === 'success' ? 'var(--success)' : toastMessage.type === 'error' ? 'var(--danger)' : '#f59e0b',
+          color: '#ffffff',
+          fontWeight: 600,
+          fontSize: '13px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          animation: 'fadeIn 0.2s ease-in-out'
+        }}>
+          {toastMessage.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
+      {/* 헤더 영역 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '12px', flexShrink: 0 }}>
+        <div>
+          <h2 style={{ fontWeight: '800', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <Truck size={22} color="var(--primary)" /> 배차 / 운송 관리
+          </h2>
+        </div>
+        {activeTab === 'DISPATCH' && (
+          <div className="toolbar-actions">
+            {canSave && (
+              <>
+                <button
+                  className="btn-save"
+                  data-mid="btn-new-dispatch"
+                  onClick={() => {
+                    const todayIso = new Date().toISOString().split('T')[0];
+                    setManualCategory('출고');
+                    setManualOrigin('당사 보관소');
+                    setManualDestination('');
+                    setManualLoadingDate(todayIso);
+                    setManualUnloadingDate(todayIso);
+                    setManualMemo('');
+                    setManualClosingMemo('');
+                    setManualCargos([]);
+                    setManualReturnAssetIds([]);
+                    setShowManualModal(true);
+                  }}
+                >
+                  <Plus size={13} /> 수동 배차 등록
+                </button>
+                <button
+                  data-uia="btn-excel-upload-delivery"
+                  data-hs-trigger="Register"
+                  className="btn-excel-upload"
+                  onClick={() => setDispatchExcelModalOpen(true)}
+                >
+                  <FileSpreadsheet size={13} />
+                  <span>배차 엑셀 일괄 등록</span>
+                </button>
+              </>
+            )}
+            <button
+              className="btn-excel-download"
+              data-mid="btn-dispatch-export"
+              onClick={handleExportDispatchExcel}
+            >
+              <Download size={13} />
+              <span>엑셀 다운로드</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div data-mid="dispatch-mode-tabs" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', marginBottom: '8px', flexShrink: 0 }}>
+        <button
+          data-uia="tab-dispatch-ops"
+          onClick={() => setActiveTab('DISPATCH')}
+          style={{
+            padding: '10px 18px', fontSize: '14px', fontWeight: 700, backgroundColor: 'transparent', border: 'none',
+            borderBottom: activeTab === 'DISPATCH' ? '3px solid var(--primary)' : 'none',
+            color: activeTab === 'DISPATCH' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0
+          }}
+        >
+          <Truck size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+          배차 관리
+        </button>
+        {/* 운송사 배차 협의 메뉴는 사용자 요청으로 임시 숨김 처리 */}
+        {isAuditSettleGranted && (
+          <button
+            data-uia="tab-dispatch-settle"
+            onClick={() => setActiveTab('RECONCILIATION')}
+            style={{
+              padding: '10px 18px', fontSize: '14px', fontWeight: 700, backgroundColor: 'transparent', border: 'none',
+              borderBottom: activeTab === 'RECONCILIATION' ? '3px solid var(--primary)' : 'none',
+              color: activeTab === 'RECONCILIATION' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer',
+              whiteSpace: 'nowrap', flexShrink: 0
+            }}
+          >
+            <FileText size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+            운송료 대사
+          </button>
+        )}
+      </div>
+
+      {/* 탭 1: 배차 관리 */}
+      {activeTab === 'DISPATCH' && (
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+          {/* 📊 오늘/내일/이번주 상차 배차 통계 바 */}
+          {(() => {
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginBottom: '8px', flexShrink: 0 }}>
+                <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>오늘 상차 예정</span>
+                  <strong style={{ fontSize: '15px', color: deliveryCounts.today > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{deliveryCounts.today}건</strong>
+                </div>
+                <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>내일 상차 예정</span>
+                  <strong style={{ fontSize: '15px', color: deliveryCounts.tomorrow > 0 ? '#0070C0' : 'var(--text-muted)' }}>{deliveryCounts.tomorrow}건</strong>
+                </div>
+                <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>배차 대기 (미배정)</span>
+                  <strong style={{ fontSize: '15px', color: deliveryCounts.pending > 0 ? '#d97706' : 'var(--text-muted)' }}>{deliveryCounts.pending}건</strong>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 4단계 배차 진행 상태 카운트 탭 */}
+          <div data-mid="dispatch-status-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
+            {[
+              { key: 'ALL', label: '전체 보기', count: deliveries.length },
+              { key: 'PENDING', label: '배차 전 (대기)', count: deliveryCounts.pending },
+              { key: 'DISPATCHED', label: '🔵 배차 완료 (기사배정)', count: deliveryCounts.dispatched },
+              { key: 'DELIVERED', label: '운송 완료', count: deliveryCounts.delivered },
+              { key: 'CANCELLED', label: '배차 취소', count: deliveryCounts.cancelled },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveDispatchStatusTab(tab.key)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: activeDispatchStatusTab === tab.key ? 'var(--primary)' : 'var(--border-color)',
+                  backgroundColor: activeDispatchStatusTab === tab.key ? 'rgba(59,130,246,0.1)' : 'var(--bg-card)',
+                  color: activeDispatchStatusTab === tab.key ? 'var(--primary)' : 'var(--text-secondary)',
+                  fontWeight: activeDispatchStatusTab === tab.key ? 700 : 500,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {tab.label}
+                <span style={{
+                  backgroundColor: activeDispatchStatusTab === tab.key ? 'var(--primary)' : 'var(--bg-body)',
+                  color: activeDispatchStatusTab === tab.key ? '#fff' : 'var(--text-muted)',
+                  borderRadius: '12px',
+                  padding: '1px 7px',
+                  fontSize: '11px',
+                  fontWeight: 700
+                }}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* 2열 메인 레이아웃 (좌: 배차 목록 + 📅 기간조회 | 우: 기사 배정 폼) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 420px) 1fr', gap: '16px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            
+            {/* [좌측] 배차 목록 카드 + 📅 요청/운송일 기간 선택 폼 */}
+            <div data-mid="dispatch-dossier-card" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
+              
+              {/* 📅 배차 요청/운송일 기간 선택 폼 */}
+              <div data-mid="dispatch-date-filter" style={{ marginBottom: '12px', padding: '10px 12px', backgroundColor: 'var(--bg-body)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Calendar size={13} /> 배차 운송일/신청일 기간 조회
+                  </span>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[
+                      { label: '오늘', type: 'TODAY' },
+                      { label: '1주일', type: 'WEEK' },
+                      { label: '1개월', type: 'MONTH' },
+                      { label: '전체', type: 'ALL' }
+                    ].map(b => {
+                      const today = new Date();
+                      const yyyy = today.getFullYear();
+                      const mm = String(today.getMonth() + 1).padStart(2, '0');
+                      const dd = String(today.getDate()).padStart(2, '0');
+                      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+                      const weekEnd = new Date(today);
+                      weekEnd.setDate(today.getDate() + 7);
+                      const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
+
+                      const monthEnd = new Date(today);
+                      monthEnd.setMonth(today.getMonth() + 1);
+                      const monthEndStr = `${monthEnd.getFullYear()}-${String(monthEnd.getMonth() + 1).padStart(2, '0')}-${String(monthEnd.getDate()).padStart(2, '0')}`;
+
+                      const isSelected =
+                        (b.type === 'TODAY' && startDate === todayStr && endDate === todayStr) ||
+                        (b.type === 'WEEK' && startDate === todayStr && endDate === weekEndStr) ||
+                        (b.type === 'MONTH' && startDate === todayStr && endDate === monthEndStr) ||
+                        (b.type === 'ALL' && !startDate && !endDate);
+
+                      return (
+                        <button
+                          key={b.type}
+                          onClick={() => handleSetDateRange(b.type as any)}
+                          style={{
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            border: '1px solid',
+                            borderColor: isSelected ? 'var(--primary)' : 'var(--border-color)',
+                            backgroundColor: isSelected ? 'rgba(59,130,246,0.12)' : 'var(--bg-card)',
+                            fontSize: '10.5px',
+                            fontWeight: isSelected ? 800 : 600,
+                            color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {b.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '5px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--text-primary)',
+                      fontSize: '12px',
+                      outline: 'none'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>~</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '5px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--text-primary)',
+                      fontSize: '12px',
+                      outline: 'none'
+                    }}
+                  />
+                  {(startDate || endDate) && (
+                    <button
+                      onClick={() => handleSetDateRange('ALL')}
+                      title="기간 초기화"
+                      style={{
+                        padding: '5px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--bg-card)',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'flex'
+                      }}
+                    >
+                      <RotateCcw size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 검색창 */}
+              <div style={{ marginBottom: '10px', position: 'relative' }}>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="고객사 / 현장 / 계약 / 기사명 검색..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-body)',
+                    color: 'var(--text-primary)',
+                    fontSize: '12.5px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* 🔗 경유/합짐 묶음 다중 선택 컨트롤 바 */}
+              {canSave && (
+                <div style={{
+                  marginBottom: '10px',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  backgroundColor: selectedBundleCandidateIds.length >= 2 ? 'rgba(79,70,229,0.12)' : 'rgba(79,70,229,0.05)',
+                  border: selectedBundleCandidateIds.length >= 2 ? '1px solid #4f46e5' : '1px dashed rgba(79,70,229,0.35)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 800, color: '#4338ca' }}>
+                    <Link2 size={13} />
+                    <span>
+                      {selectedBundleCandidateIds.length === 0
+                        ? '경유/합짐 묶기: 각 카드 좌상단 체크박스를 2건 이상 선택'
+                        : `선택된 배차의뢰 ${selectedBundleCandidateIds.length}건`}
+                    </span>
+                  </div>
+                  {selectedBundleCandidateIds.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        type="button"
+                        disabled={selectedBundleCandidateIds.length < 2}
+                        onClick={() => handleCreateBundleFromIds(selectedBundleCandidateIds)}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          backgroundColor: selectedBundleCandidateIds.length >= 2 ? '#4f46e5' : '#94a3b8',
+                          color: '#ffffff',
+                          fontSize: '11.5px',
+                          fontWeight: 800,
+                          cursor: selectedBundleCandidateIds.length >= 2 ? 'pointer' : 'not-allowed',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <Link2 size={12} /> 경유/합짐 묶기 ({selectedBundleCandidateIds.length}건)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBundleCandidateIds([])}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border-color)',
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-secondary)',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        선택 해제
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 배차 목록 렌더링 */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
+                {filteredDeliveries.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                    조건에 일치하는 배차 요청건이 없습니다.
+                  </div>
+                ) : (
+                  filteredDeliveries.map(d => {
+                    const contract = getContract(d.contractId);
+                    const customer = contract ? getCustomer(contract.customerId) : null;
+                    const isSelected = selectedDelivery?.id === d.id;
+                    const isSameBundleWithSelected = Boolean(selectedDelivery?.bundleGroupId && d.bundleGroupId === selectedDelivery.bundleGroupId);
+                    const isCheckedForBundle = selectedBundleCandidateIds.includes(d.id);
+                    const cargoItems = parseCargoItems(d);
+                    const normStatus = getNormalizedDeliveryStatus(d);
+
+                    return (
+                      <div 
+                        data-uia={`card-delivery-item-${d.id}`}
+                        key={d.id}
+                        data-mid='delivery-queue-item' onClick={() => handleSelectDelivery(d)}
+                        style={{
+                          padding: '14px',
+                          borderRadius: '10px',
+                          border: isSelected
+                            ? '2px solid var(--primary)'
+                            : isSameBundleWithSelected
+                              ? '2px dashed #4f46e5'
+                              : isCheckedForBundle
+                                ? '2px solid #4f46e5'
+                                : d.bundleGroupId
+                                  ? '1px solid rgba(79,70,229,0.45)'
+                                  : '1px solid var(--border-color)',
+                          backgroundColor: isSelected
+                            ? 'rgba(59,130,246,0.05)'
+                            : isSameBundleWithSelected
+                              ? 'rgba(79,70,229,0.06)'
+                              : 'var(--bg-body)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          boxShadow: isSelected ? '0 4px 12px rgba(59,130,246,0.12)' : 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {canSave && (
+                              <input
+                                type="checkbox"
+                                checked={isCheckedForBundle}
+                                onClick={e => e.stopPropagation()}
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setSelectedBundleCandidateIds(prev =>
+                                    checked ? [...prev, d.id] : prev.filter(id => id !== d.id)
+                                  );
+                                }}
+                                title="경유/합짐 묶음 배차 대상 선택"
+                                style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: '#4f46e5', margin: 0, flexShrink: 0 }}
+                              />
+                            )}
+                            {getDeliveryCategoryBadge(d)}
+                            <span style={{
+                              fontSize: '12px',
+                              fontWeight: 800,
+                              color: 'var(--text-primary)',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {d.requestDate || d.loadingDate}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            {getOutboundInspectionBadge(d.contractId, d)}
+                            {getPrintQueueBadge(d)}
+                            {getDeliveryStatusBadge(normStatus, d)}
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {customer?.name || (d.billableCustomerId ? getCustomer(d.billableCustomerId)?.name : '') || d.destinationAddress || '고객사 미지정'}
+                          </span>
+                          {customer?.transactionStatus === 'RESTRICT_NEW' && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b', flexShrink: 0 }}>
+                              추가계약금지
+                            </span>
+                          )}
+                          {(customer?.transactionStatus === 'BLOCKED_ALL' || customer?.transactionStatus === 'BLOCKED') && (
+                            <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--danger)', color: '#fff', flexShrink: 0 }}>
+                              출고차단
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '6px' }}>
+                          <div
+                            title={d.destinationAddress || '목적지 미지정'}
+                            style={{
+                              fontSize: '12.5px',
+                              color: 'var(--text-secondary)',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              wordBreak: 'keep-all',
+                              lineHeight: 1.35,
+                              flex: 1,
+                              minWidth: 0
+                            }}
+                          >
+                            📍 {d.destinationAddress || '목적지 미지정'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDestWeatherForDelivery(d);
+                              }}
+                              style={{
+                                padding: '2px 6px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                borderRadius: '4px',
+                                border: '1px solid rgba(59, 130, 246, 0.4)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                color: 'var(--primary)',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                flexShrink: 0
+                              }}
+                              title="해당 하차지 날씨 및 주간 예보 보기"
+                            >
+                              <Sun size={11} color="#F59E0B" /> 날씨
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isInbound = d.type === 'INBOUND' || d.dispatchCategory === '입고' || d.dispatchCategory === '반납';
+                                handleRemoteQueuePrintDispatchRequest(d, isInbound ? 'INBOUND' : 'OUTBOUND');
+                              }}
+                              style={{
+                                padding: '3px 8px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                borderRadius: '5px',
+                                border: '1px solid rgba(79, 70, 229, 0.4)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                                color: '#4338ca',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                flexShrink: 0
+                              }}
+                              title={(d.type === 'INBOUND' || d.dispatchCategory === '입고' || d.dispatchCategory === '반납') ? '입고요청서 인쇄 큐 전송' : '출고요청서 인쇄 큐 전송'}
+                            >
+                              <Printer size={11} /> {(d.type === 'INBOUND' || d.dispatchCategory === '입고' || d.dispatchCategory === '반납') ? '입고요청서' : '출고요청서'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* 화물/자산 정보 표시 */}
+                        {(d.type === 'INBOUND' || d.type === 'RETURN' || d.dispatchCategory === '입고' || d.dispatchCategory === '반납') ? (() => {
+                          const returnAssetsList = getReturnAssets(d);
+                          const specialNoteText = sanitizeDispatcherSpecialNote(d.closingMemo);
+                          const isManualDispatch = !d.contractId && returnAssetsList.length === 0;
+                          const isSubleaseReturn = d.type === 'RETURN' || d.dispatchCategory === '반납';
+                          const cardSubleaseVendorInfo = isSubleaseReturn ? getDeliverySubleaseVendorInfo(d, returnAssetsList) : null;
+                          return (
+                            // 회수/반납 배차: 계약/회수/반납 자산 목록 표시
+                            <div style={{ padding: '6px 8px', backgroundColor: 'rgba(239,68,68,0.05)', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)', fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                                <span>
+                                  🔄 {isSubleaseReturn ? '반납 임차자산:' : '회수 대상:'}&nbsp;
+                                  {returnAssetsList.length > 0
+                                    ? `${returnAssetsList.map(a => `${a.modelName} {${a.assetNo}}`).join(' / ')}${isSubleaseReturn && (d.unloadingDate || d.loadingDate) ? ` · 반납일: ${d.unloadingDate || d.loadingDate}` : ''}`
+                                    : isSubleaseReturn
+                                      ? `미결정 (배차 상세에서 임차자산 선택)${specialNoteText ? ` · ${specialNoteText}` : ''}`
+                                      : isManualDispatch
+                                        ? (specialNoteText || '특기사항 없음')
+                                        : (specialNoteText || (cargoItems.length > 0 ? cargoItems.map(c => `${c.modelName} ${c.count}대`).join(', ') : '자산 정보 미확인'))}
+                                </span>
+                                {returnAssetsList.some(a => a.ownerType === 'RENTED' && a.antiEntrapmentOwnership === 'VENDOR') && (
+                                  <span style={{ fontSize: '9.5px', color: '#dc2626', fontWeight: 800, backgroundColor: 'rgba(220, 38, 38, 0.12)', padding: '1px 5px', borderRadius: '4px', border: '1px solid rgba(220,38,38,0.25)', whiteSpace: 'nowrap' }}>
+                                    🚨 원사협착봉 (탈거금지)
+                                  </span>
+                                )}
+                              </div>
+                              {isSubleaseReturn && cardSubleaseVendorInfo && (
+                                <div style={{ fontSize: '11px', color: 'var(--text-primary)', paddingTop: '3px', borderTop: '1px dashed rgba(239,68,68,0.2)', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                  <span><strong>임차처:</strong> {cardSubleaseVendorInfo.name}</span>
+                                  <span><strong>주소:</strong> {cardSubleaseVendorInfo.address || '미등록'}</span>
+                                  <span><strong>담당자:</strong> {cardSubleaseVendorInfo.contactName || '미등록'}</span>
+                                  <span><strong>담당자 연락처:</strong> {cardSubleaseVendorInfo.contactPhone || '미등록'}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })() : (
+                          // 출고/이동/정비 배차: 계약 화물 cargoItems 또는 수동 배차 특기사항 표시
+                          <div style={{ padding: '6px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                            📦 화물: {!d.contractId
+                              ? (sanitizeDispatcherSpecialNote(d.closingMemo) || stripOptionsFromDispatchRawText(d.memo) || '특기사항 없음')
+                              : cargoItems.map(c => `${c.modelName} ${c.count}대`).join(', ')}
+                          </div>
+                        )}
+
+                        {d.driverName && (
+                          <div style={{ marginTop: '6px', fontSize: '11.5px', fontWeight: 700, color: 'var(--success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>기사: {d.driverName} ({d.vehicleNo || '차량번호미상'})</span>
+                            {normStatus === 'DELIVERED' && canSave && (() => {
+                              const readiness = checkDeliveryOutboundReadiness(d);
+                              const hasProcError = readiness.isOutboundLike && !readiness.ready;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRevertDeliveredToDispatched(d.id);
+                                  }}
+                                  style={{
+                                    padding: '3px 8px',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    backgroundColor: hasProcError ? '#dc2626' : 'rgba(239,68,68,0.12)',
+                                    color: hasProcError ? '#ffffff' : 'var(--danger)',
+                                    border: hasProcError ? 'none' : '1px solid rgba(239,68,68,0.35)',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={hasProcError ? `절차 오류: ${readiness.reason} — 클릭하여 운송완료 취소(배차완료로 원복)` : '운송완료 취소 (배차완료 상태로 원복)'}
+                                >
+                                  <RotateCcw size={11} />
+                                  {hasProcError ? '🚨 절차오류 · 운송완료 취소' : '운송완료 취소'}
+                                </button>
+                              );
+                            })()}
+                            {normStatus === 'DISPATCHED' && canSave && (() => {
+                              const readiness = checkDeliveryOutboundReadiness(d);
+                              const isBlocked = readiness.isOutboundLike && !readiness.ready;
+                              const isLoaded = Boolean(d.loadingCompletedAt);
+                              return (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  {isLoaded ? (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRevertLoadingStatus(d.id);
+                                      }}
+                                      style={{
+                                        padding: '3px 7px',
+                                        fontSize: '10.5px',
+                                        fontWeight: 800,
+                                        backgroundColor: 'rgba(217,119,6,0.12)',
+                                        color: '#d97706',
+                                        border: '1px solid rgba(217,119,6,0.35)',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title="상차완료 취소 (배차완료 상태로 원복)"
+                                    >
+                                      <RotateCcw size={10} /> 상차취소
+                                    </button>
+                                  ) : (
+                                    <button data-hs-trigger="Process"
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCompleteLoadingStatus(d.id);
+                                      }}
+                                      style={{
+                                        padding: '3px 8px',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        backgroundColor: isBlocked ? '#64748b' : '#d97706',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                        opacity: isBlocked ? 0.65 : 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title={isBlocked ? `선행 절차 미완료 (${readiness.reason})` : '상차완료 처리 (하차 예정일에 자동 운송완료 및 계약·청구 개시 확정)'}
+                                    >
+                                      <CheckCircle size={11} />
+                                      {isBlocked ? '검수대기 (처리불가)' : '상차완료'}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* [우측] 배차 기사 배정 및 상세 폼 */}
+            <div data-mid="dispatch-assign-studio" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', height: '100%', minHeight: 0, overflowY: 'auto' }}>
+              {!selectedDelivery ? (
+                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                  <Truck size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                  <p style={{ fontSize: '14px', fontWeight: 600 }}>좌측에서 기사를 배정할 배차건을 선택해 주세요.</p>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>
+                        🚛 배차 운송 기사 배정 및 상하차 세부 설정
+                      </h3>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        배차 ID: {selectedDelivery.id} | 요청일: {selectedDelivery.requestDate}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {/* 🖨️ 현장 무인 인쇄 버튼 (출고: 프린터1, 입고: 프린터2 자동 라우팅) */}
+                      <button
+                        type="button"
+                        data-mid="btn-dispatch-print"
+                        onClick={() => handleRemoteQueuePrintDispatchRequest(selectedDelivery, (selectedDelivery.type === 'INBOUND' || selectedDelivery.dispatchCategory === '입고' || selectedDelivery.dispatchCategory === '반납') ? 'INBOUND' : 'OUTBOUND')}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '7px',
+                          backgroundColor: '#2563eb',
+                          color: '#ffffff',
+                          border: 'none',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 1px 3px rgba(37, 99, 235, 0.35)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}
+                        title="현장 로컬 PC 프린터(프린터1 또는 프린터2)로 자동 원격 출력합니다"
+                      >
+                        <Printer size={13} color="#ffffff" />
+                        <span>{(selectedDelivery.type === 'INBOUND' || selectedDelivery.dispatchCategory === '입고' || selectedDelivery.dispatchCategory === '반납') ? '입고요청서 인쇄' : '출고요청서 인쇄'}</span>
+                      </button>
+
+                      
+
+                      {/* 📲 기사 배차 안내 문자 발송 / 클립보드 복사 버튼 */}
+                      <button
+                        type="button"
+                        onClick={() => handleSendDriverSms(selectedDelivery)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '7px',
+                          backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                          color: '#0284c7',
+                          border: '1px solid rgba(56, 189, 248, 0.35)',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                        }}
+                      >
+                        <MessageSquare size={13} color="#0284c7" />
+                        기사 배차문자
+                      </button>
+
+                      {/* 💬 카카오톡 배차 안내 메시지 생성 및 클립보드 복사 버튼 */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentTenant?.features?.kakaoContract === false) {
+                            showToast('해당 기능(카카오 알림톡)은 현재 플랜에서 비활성화되어 있습니다. 관리자에게 문의하세요.', 'warning');
+                            return;
+                          }
+                          handleCopyKakaoDispatchMessage(selectedDelivery);
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '7px',
+                          backgroundColor: currentTenant?.features?.kakaoContract === false ? '#f3f4f6' : '#FEE500',
+                          color: currentTenant?.features?.kakaoContract === false ? '#9ca3af' : '#191919',
+                          border: currentTenant?.features?.kakaoContract === false ? '1px solid #d1d5db' : '1px solid #E6CF00',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                        }}
+                        title={currentTenant?.features?.kakaoContract === false ? '해당 기능(카카오 알림톡)은 현재 플랜에서 비활성화되어 있습니다. 관리자에게 문의하세요.' : '영업사원 및 배차 기사용 카카오톡 배차 메시지 생성 및 클립보드 복사'}
+                      >
+                        <MessageSquare size={13} color={currentTenant?.features?.kakaoContract === false ? '#9ca3af' : '#191919'} />
+                        카톡 메시지 복사
+                      </button>
+
+
+
+                      {/* 닫기 버튼 */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDelivery(null)}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '7px',
+                          backgroundColor: 'transparent',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border-color)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center'
+                        }}
+                        title="배차 상세 닫기"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const normStatus = getNormalizedDeliveryStatus(selectedDelivery);
+                    // 💡 [사장님 지시: 배차 수정 기능 전면 지원]
+                    // 배차 대기, 배차 완료, 배차 취소 모두 운송사, 기사, 차종, 단가, 일정 즉시 수정 가능!
+                    // 운송 완료 마감 건만 회계 정산 보호를 위해 기본 잠금(Unlock 필요)
+                    const isFormDisabled = !canSave || (normStatus === 'DELIVERED' && !isEditUnlocked);
+
+                    return (
+                      <div>
+                        {(() => {
+                          const curContract = getContract(selectedDelivery.contractId);
+                          const curCustomer = curContract ? getCustomer(curContract.customerId) : null;
+                          const isOutOrEx = selectedDelivery.type === 'OUTBOUND' || selectedDelivery.dispatchCategory === '출고' || selectedDelivery.dispatchCategory === '교환';
+                          if (isOutOrEx && isCustomerRestricted(curCustomer?.transactionStatus)) {
+                            const isTotal = curCustomer?.transactionStatus === 'BLOCKED_ALL' || curCustomer?.transactionStatus === 'BLOCKED';
+                            return (
+                              <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: 'var(--danger)', fontWeight: 800, fontSize: '13px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertTriangle size={18} color="#ef4444" />
+                                <span>[출고차단 거래처] 거래처 [{curCustomer?.name}]은(는) {isTotal ? '전면 거래차단(장비회수)' : '추가계약 및 출고금지'} 처분으로 인해 신규 장비 출고가 차단되었습니다. 배차를 확정할 수 없습니다.</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                        {/* 🔗 경유/합짐 묶음 배차 관리 및 처리 순서 스튜디오 */}
+                        {(() => {
+                          const bundleGroupItems = selectedDelivery.bundleGroupId
+                            ? getBundleGroupDeliveries(selectedDelivery.bundleGroupId)
+                            : [];
+                          const isBundled = bundleGroupItems.length >= 2;
+                          const candidateDeliveries = deliveries
+                            .filter(d => {
+                              if (d.id === selectedDelivery.id) return false;
+                              if (selectedDelivery.bundleGroupId && d.bundleGroupId === selectedDelivery.bundleGroupId) return false;
+                              const st = getNormalizedDeliveryStatus(d);
+                              if (st === 'CANCELLED') return false;
+                              if (!bundlePickerSearch.trim()) return true;
+                              const q = bundlePickerSearch.trim().toLowerCase();
+                              const c = getContract(d.contractId);
+                              const cust = c ? getCustomer(c.customerId)?.name : '';
+                              const site = c ? sites.find(s => s.id === c.siteId)?.name : '';
+                              return (
+                                (cust || '').toLowerCase().includes(q) ||
+                                (site || '').toLowerCase().includes(q) ||
+                                (d.destinationAddress || '').toLowerCase().includes(q) ||
+                                (d.originAddress || '').toLowerCase().includes(q) ||
+                                (d.loadingDate || '').includes(q)
+                              );
+                            })
+                            .slice(0, 15);
+
+                          return (
+                            <div style={{
+                              marginBottom: '16px',
+                              padding: '12px 14px',
+                              borderRadius: '10px',
+                              backgroundColor: isBundled ? 'rgba(79,70,229,0.06)' : 'var(--bg-body)',
+                              border: isBundled ? '1px solid rgba(79,70,229,0.4)' : '1px solid var(--border-color)'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    backgroundColor: isBundled ? '#4f46e5' : 'rgba(100,116,139,0.15)',
+                                    color: isBundled ? '#ffffff' : 'var(--text-secondary)',
+                                    fontSize: '11.5px',
+                                    fontWeight: 800,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    <Link2 size={12} />
+                                    {isBundled ? `경유/합짐 묶음 배차 · 총 ${bundleGroupItems.length}건` : '단독 배차 의뢰'}
+                                  </span>
+                                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                    {isBundled
+                                      ? `원래 구분: ${getOriginalDeliveryCategoryLabel(selectedDelivery)} | 현재 처리 순서: ${selectedDelivery.bundleOrder || 1}순위`
+                                      : '다른 배차 의뢰와 묶어서 경유/합짐 1건으로 통합 배차할 수 있습니다.'}
+                                  </span>
+                                </div>
+
+                                {canSave && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowBundleAddPicker(prev => !prev)}
+                                      style={{
+                                        padding: '5px 10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid rgba(79,70,229,0.45)',
+                                        backgroundColor: showBundleAddPicker ? '#4f46e5' : 'rgba(79,70,229,0.1)',
+                                        color: showBundleAddPicker ? '#ffffff' : '#4338ca',
+                                        fontSize: '11.5px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      <Plus size={12} />
+                                      {isBundled ? '경유 건 추가' : '다른 배차의뢰와 경유/합짐 묶기'}
+                                    </button>
+                                    {isBundled && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUnbundleEntireGroup(selectedDelivery.bundleGroupId!)}
+                                        style={{
+                                          padding: '5px 10px',
+                                          borderRadius: '6px',
+                                          border: '1px solid rgba(239,68,68,0.4)',
+                                          backgroundColor: 'rgba(239,68,68,0.1)',
+                                          color: 'var(--danger)',
+                                          fontSize: '11.5px',
+                                          fontWeight: 800,
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          whiteSpace: 'nowrap'
+                                        }}
+                                      >
+                                        <Unlink size={12} /> 전체 묶음 해제 · 개별건 원복
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 묶음에 추가할 배차의뢰 검색/선택 피커 */}
+                              {showBundleAddPicker && canSave && (
+                                <div style={{
+                                  marginTop: '10px',
+                                  padding: '10px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--bg-card)',
+                                  border: '1px solid rgba(79,70,229,0.35)'
+                                }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
+                                    <input
+                                      type="text"
+                                      placeholder="묶을 배차의뢰 검색: 고객사 / 현장 / 상하차지 / 상차일..."
+                                      value={bundlePickerSearch}
+                                      onChange={e => setBundlePickerSearch(e.target.value)}
+                                      style={{
+                                        flex: 1,
+                                        padding: '6px 10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-body)',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '12px'
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowBundleAddPicker(false)}
+                                      style={{
+                                        padding: '5px 10px',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        backgroundColor: 'var(--bg-body)',
+                                        color: 'var(--text-secondary)',
+                                        fontSize: '11.5px',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      닫기
+                                    </button>
+                                  </div>
+                                  <div style={{ maxHeight: '190px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {candidateDeliveries.length === 0 ? (
+                                      <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                        추가할 수 있는 배차 의뢰가 없습니다.
+                                      </div>
+                                    ) : (
+                                      candidateDeliveries.map(cand => {
+                                        const cContract = getContract(cand.contractId);
+                                        const cCust = cContract ? getCustomer(cContract.customerId)?.name : '';
+                                        const origCat = getOriginalDeliveryCategoryLabel(cand);
+                                        const cCargo = parseCargoItems(cand).map(ci => `${ci.modelName} ${ci.count}대`).join(', ') || sanitizeDispatcherSpecialNote(cand.closingMemo) || '장비 정보';
+                                        return (
+                                          <div
+                                            key={cand.id}
+                                            style={{
+                                              padding: '7px 10px',
+                                              borderRadius: '6px',
+                                              border: '1px solid var(--border-color)',
+                                              backgroundColor: 'var(--bg-body)',
+                                              display: 'flex',
+                                              justifyContent: 'space-between',
+                                              alignItems: 'center',
+                                              gap: '8px',
+                                              fontSize: '12px'
+                                            }}
+                                          >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', flex: 1 }}>
+                                              <span style={{
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                backgroundColor: 'rgba(79,70,229,0.12)',
+                                                color: '#4338ca',
+                                                fontWeight: 800,
+                                                fontSize: '11px',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                              }}>
+                                                {origCat}
+                                              </span>
+                                              <span style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                {cand.loadingDate || cand.requestDate}
+                                              </span>
+                                              <span style={{ fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                {cCust || '고객사'}
+                                              </span>
+                                              <span style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {cand.originAddress || '상차지'} ➔ {cand.destinationAddress || '하차지'} · {cCargo}
+                                              </span>
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleAddDeliveryToCurrentBundle(cand.id)}
+                                              style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '5px',
+                                                border: 'none',
+                                                backgroundColor: '#4f46e5',
+                                                color: '#ffffff',
+                                                fontSize: '11px',
+                                                fontWeight: 800,
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                              }}
+                                            >
+                                              + 합짐 추가
+                                            </button>
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 묶인 경유/합짐 처리 순서 리스트 */}
+                              {isBundled && (
+                                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  {bundleGroupItems.map((stopItem, idx) => {
+                                    const sContract = getContract(stopItem.contractId);
+                                    const sCust = sContract ? getCustomer(sContract.customerId)?.name : '';
+                                    const sOrigCat = getOriginalDeliveryCategoryLabel(stopItem);
+                                    const sCargo = parseCargoItems(stopItem).map(ci => `${ci.modelName} ${ci.count}대`).join(', ') || sanitizeDispatcherSpecialNote(stopItem.closingMemo) || '장비 확인';
+                                    const isCurrentStop = stopItem.id === selectedDelivery.id;
+                                    const sNormSt = getNormalizedDeliveryStatus(stopItem);
+                                    const sIsLoaded = Boolean(stopItem.loadingCompletedAt);
+                                    const sReadiness = checkDeliveryOutboundReadiness(stopItem);
+                                    const sIsBlocked = sReadiness.isOutboundLike && !sReadiness.ready;
+                                    return (
+                                      <div
+                                        key={stopItem.id}
+                                        onClick={() => handleSelectDelivery(stopItem)}
+                                        style={{
+                                          padding: '8px 10px',
+                                          borderRadius: '8px',
+                                          border: isCurrentStop ? '2px solid #4f46e5' : '1px solid var(--border-color)',
+                                          backgroundColor: isCurrentStop ? 'rgba(79,70,229,0.1)' : 'var(--bg-card)',
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center',
+                                          gap: '8px',
+                                          cursor: 'pointer'
+                                        }}
+                                      >
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', minWidth: 0 }}>
+                                            <span style={{
+                                              padding: '2px 8px',
+                                              borderRadius: '5px',
+                                              backgroundColor: idx === 0 ? '#4f46e5' : 'rgba(79,70,229,0.15)',
+                                              color: idx === 0 ? '#ffffff' : '#4338ca',
+                                              fontSize: '11px',
+                                              fontWeight: 800,
+                                              whiteSpace: 'nowrap',
+                                              flexShrink: 0
+                                            }}>
+                                              순서 {idx + 1} · {sOrigCat}
+                                            </span>
+                                            {/* 경유지 개별 진행 상태 배지 */}
+                                            {sNormSt === 'DELIVERED' ? (
+                                              <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.35)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                🟢 {getDeliveryCompletionActionLabel(stopItem)}
+                                              </span>
+                                            ) : sNormSt === 'DISPATCHED' && sIsLoaded ? (
+                                              <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(217,119,6,0.16)', color: '#d97706', border: '1px solid rgba(217,119,6,0.38)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                🟠 상차완료
+                                              </span>
+                                            ) : sNormSt === 'DISPATCHED' ? (
+                                              <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.35)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                🔵 배차완료
+                                              </span>
+                                            ) : (
+                                              <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, backgroundColor: 'rgba(245,158,11,0.15)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.35)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                🟡 배차대기
+                                              </span>
+                                            )}
+                                            <span style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                              {sCust || stopItem.destinationAddress || '현장'}
+                                            </span>
+                                          </div>
+                                          <div
+                                            title={`[${stopItem.loadingTimeSlot || '시간미정'}] ${stopItem.originAddress || '상차지'} ➔ ${stopItem.destinationAddress || '하차지'} (${sCargo})`}
+                                            style={{ fontSize: '11.5px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                          >
+                                            [{stopItem.loadingTimeSlot || '시간미정'}] {stopItem.originAddress || '상차지'} ➔ {stopItem.destinationAddress || '하차지'} ({sCargo})
+                                          </div>
+                                        </div>
+
+                                        {canSave && (
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                                            {/* 묶음 경유지 개별 상차완료 인라인 버튼 (하차 예정일 자동 운송완료) */}
+                                            {sNormSt === 'DISPATCHED' && !sIsLoaded && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleCompleteLoadingStatus(stopItem.id)}
+                                                style={{
+                                                  padding: '3px 8px',
+                                                  borderRadius: '5px',
+                                                  border: 'none',
+                                                  backgroundColor: sIsBlocked ? '#64748b' : '#d97706',
+                                                  color: '#ffffff',
+                                                  fontSize: '11px',
+                                                  fontWeight: 800,
+                                                  cursor: sIsBlocked ? 'not-allowed' : 'pointer',
+                                                  opacity: sIsBlocked ? 0.65 : 1,
+                                                  whiteSpace: 'nowrap'
+                                                }}
+                                                title={sIsBlocked ? `선행 절차 미완료 (${sReadiness.reason})` : '이 경유지 건만 상차완료 처리 (하차 예정일 자동 운송완료)'}
+                                              >
+                                                {sIsBlocked ? '검수대기' : '상차완료'}
+                                              </button>
+                                            )}
+                                            {sNormSt === 'DISPATCHED' && sIsLoaded && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRevertLoadingStatus(stopItem.id)}
+                                                style={{
+                                                  padding: '3px 7px',
+                                                  borderRadius: '5px',
+                                                  border: '1px solid rgba(217,119,6,0.35)',
+                                                  backgroundColor: 'rgba(217,119,6,0.12)',
+                                                  color: '#d97706',
+                                                  fontSize: '10.5px',
+                                                  fontWeight: 800,
+                                                  cursor: 'pointer',
+                                                  whiteSpace: 'nowrap'
+                                                }}
+                                                title="이 경유지 건만 상차완료 취소"
+                                              >
+                                                상차취소
+                                              </button>
+                                            )}
+                                            {sNormSt === 'DELIVERED' && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRevertDeliveredToDispatched(stopItem.id)}
+                                                style={{
+                                                  padding: '3px 7px',
+                                                  borderRadius: '5px',
+                                                  border: '1px solid rgba(239,68,68,0.35)',
+                                                  backgroundColor: 'rgba(239,68,68,0.1)',
+                                                  color: 'var(--danger)',
+                                                  fontSize: '10.5px',
+                                                  fontWeight: 800,
+                                                  cursor: 'pointer',
+                                                  whiteSpace: 'nowrap'
+                                                }}
+                                                title="이 경유지 건만 운송완료 취소"
+                                              >
+                                                완료취소
+                                              </button>
+                                            )}
+                                            <button
+                                              type="button"
+                                              disabled={idx === 0}
+                                              onClick={() => handleMoveBundleStopOrder(stopItem.id, 'UP')}
+                                              title="처리 순서 위로 이동"
+                                              style={{
+                                                padding: '3px 6px',
+                                                borderRadius: '5px',
+                                                border: '1px solid var(--border-color)',
+                                                backgroundColor: 'var(--bg-body)',
+                                                color: idx === 0 ? 'var(--text-muted)' : 'var(--text-primary)',
+                                                cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                                                opacity: idx === 0 ? 0.45 : 1,
+                                                display: 'inline-flex',
+                                                alignItems: 'center'
+                                              }}
+                                            >
+                                              <ArrowUp size={12} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              disabled={idx === bundleGroupItems.length - 1}
+                                              onClick={() => handleMoveBundleStopOrder(stopItem.id, 'DOWN')}
+                                              title="처리 순서 아래로 이동"
+                                              style={{
+                                                padding: '3px 6px',
+                                                borderRadius: '5px',
+                                                border: '1px solid var(--border-color)',
+                                                backgroundColor: 'var(--bg-body)',
+                                                color: idx === bundleGroupItems.length - 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                                                cursor: idx === bundleGroupItems.length - 1 ? 'not-allowed' : 'pointer',
+                                                opacity: idx === bundleGroupItems.length - 1 ? 0.45 : 1,
+                                                display: 'inline-flex',
+                                                alignItems: 'center'
+                                              }}
+                                            >
+                                              <ArrowDown size={12} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleRemoveSingleFromBundle(stopItem.id)}
+                                              title="이 배차건만 묶음에서 분리하여 개별건으로 원복"
+                                              style={{
+                                                padding: '3px 8px',
+                                                borderRadius: '5px',
+                                                border: '1px solid rgba(239,68,68,0.35)',
+                                                backgroundColor: 'rgba(239,68,68,0.08)',
+                                                color: 'var(--danger)',
+                                                fontSize: '11px',
+                                                fontWeight: 800,
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                            >
+                                              개별 분리
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                  <div style={{ fontSize: '11.5px', color: '#4338ca', fontWeight: 700, paddingTop: '2px' }}>
+                                    💡 처리 순서대로 기사 배차문자 및 카카오톡 안내 메시지에 [순서 1], [순서 2]... 경유지 정보와 완료 링크가 자동 생성됩니다.
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {/* 배차 세부 설정 폼 (3컬럼: 배차 구분 | 상차일자 & 시간 | 하차일자 & 시간) */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr 1.25fr', gap: '14px', marginBottom: '16px' }}>
+                          <div>
+                            <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', display: 'block', color: 'var(--text-secondary)' }}>배차 구분</label>
+                            <select
+                              value={dispatchCategory}
+                              disabled={isFormDisabled || Boolean(selectedDelivery.bundleGroupId)}
+                              onChange={e => setDispatchCategory(e.target.value as any)}
+                              style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: (isFormDisabled || Boolean(selectedDelivery.bundleGroupId)) ? 'var(--bg-card)' : 'var(--bg-body)', fontSize: '12.5px', color: 'var(--text-primary)', opacity: (isFormDisabled || Boolean(selectedDelivery.bundleGroupId)) ? 0.75 : 1, cursor: (isFormDisabled || Boolean(selectedDelivery.bundleGroupId)) ? 'not-allowed' : 'default' }}
+                            >
+                              <option value="출고">출고</option>
+                              <option value="입고">입고</option>
+                              <option value="교환">교환</option>
+                              <option value="반납">반납</option>
+                              <option value="정비">정비</option>
+                              <option value="이동">이동</option>
+                              <option value="경유/합짐">경유/합짐</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', display: 'block', color: 'var(--text-secondary)' }}>상차일자 & 시간</label>
+                            <div style={{ display: 'flex', gap: '6px', position: 'relative', height: '34px' }}>
+                              <input
+                                type="date"
+                                value={loadingDate}
+                                disabled={isFormDisabled}
+                                onChange={e => setLoadingDate(e.target.value)}
+                                style={{ flex: 1, padding: '7px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)', fontSize: '12.5px', color: 'var(--text-primary)', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default', marginRight: '106px' }}
+                              />
+                              <select
+                                value={loadingTimeSlot}
+                                disabled={isFormDisabled}
+                                onChange={e => {
+                                  setLoadingTimeSlot(e.target.value);
+                                  (e.target as HTMLSelectElement).blur();
+                                }}
+                                onFocus={e => { (e.target as HTMLSelectElement).size = 10; }}
+                                onBlur={e => { (e.target as HTMLSelectElement).size = 1; }}
+                                style={{
+                                  width: '100px',
+                                  padding: '6px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--border-color)',
+                                  backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)',
+                                  fontSize: '12.5px',
+                                  color: 'var(--text-primary)',
+                                  opacity: isFormDisabled ? 0.75 : 1,
+                                  cursor: isFormDisabled ? 'not-allowed' : 'default',
+                                  position: 'absolute',
+                                  right: 0,
+                                  top: 0,
+                                  zIndex: 30,
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                }}
+                              >
+                                <option value="오전">오전</option>
+                                <option value="오후">오후</option>
+                                <option value="수시">수시</option>
+                                <option value="06시">06시</option>
+                                <option value="07시">07시</option>
+                                <option value="08시">08시</option>
+                                <option value="09시">09시</option>
+                                <option value="10시">10시</option>
+                                <option value="11시">11시</option>
+                                <option value="12시">12시</option>
+                                <option value="13시">13시</option>
+                                <option value="14시">14시</option>
+                                <option value="15시">15시</option>
+                                <option value="16시">16시</option>
+                                <option value="17시">17시</option>
+                                <option value="18시">18시</option>
+                                <option value="19시">19시</option>
+                                <option value="20시">20시</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', display: 'block', color: dispatchCategory === '반납' ? '#e11d48' : 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                              {dispatchCategory === '반납' ? '하차일자 & 시간 (임차자산 반납일자)' : '하차일자 & 시간'}
+                            </label>
+                            <div style={{ display: 'flex', gap: '6px', position: 'relative', height: '34px' }}>
+                              <input
+                                type="date"
+                                value={unloadingDate}
+                                disabled={isFormDisabled}
+                                onChange={e => setUnloadingDate(e.target.value)}
+                                style={{ flex: 1, padding: '7px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)', fontSize: '12.5px', color: 'var(--text-primary)', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default', marginRight: '106px' }}
+                              />
+                              <select
+                                value={unloadingTimeSlot}
+                                disabled={isFormDisabled}
+                                onChange={e => {
+                                  setUnloadingTimeSlot(e.target.value);
+                                  (e.target as HTMLSelectElement).blur();
+                                }}
+                                onFocus={e => { (e.target as HTMLSelectElement).size = 10; }}
+                                onBlur={e => { (e.target as HTMLSelectElement).size = 1; }}
+                                style={{
+                                  width: '100px',
+                                  padding: '6px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--border-color)',
+                                  backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)',
+                                  fontSize: '12.5px',
+                                  color: 'var(--text-primary)',
+                                  opacity: isFormDisabled ? 0.75 : 1,
+                                  cursor: isFormDisabled ? 'not-allowed' : 'default',
+                                  position: 'absolute',
+                                  right: 0,
+                                  top: 0,
+                                  zIndex: 30,
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                }}
+                              >
+                                <option value="오전">오전</option>
+                                <option value="오후">오후</option>
+                                <option value="수시">수시</option>
+                                <option value="06시">06시</option>
+                                <option value="07시">07시</option>
+                                <option value="08시">08시</option>
+                                <option value="09시">09시</option>
+                                <option value="10시">10시</option>
+                                <option value="11시">11시</option>
+                                <option value="12시">12시</option>
+                                <option value="13시">13시</option>
+                                <option value="14시">14시</option>
+                                <option value="15시">15시</option>
+                                <option value="16시">16시</option>
+                                <option value="17시">17시</option>
+                                <option value="18시">18시</option>
+                                <option value="19시">19시</option>
+                                <option value="20시">20시</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        {(() => {
+                          const selectedDetailReturnAssets = dispatchCategory === '반납'
+                            ? (selectedReturnAssetIds.map(id => assetMap.get(id)).filter(Boolean) as Asset[])
+                            : [];
+                          const detailSubleaseVendorInfo = dispatchCategory === '반납'
+                            ? getSubleaseVendorInfoByAssets(selectedDetailReturnAssets, destinationAddress)
+                            : null;
+                          const detailHqOriginInfo = getHqYardOriginInfo(selectedDelivery);
+                          const isOriginHqYard = !originAddress || isHqYardLabel(originAddress);
+                          const isDestHqYard = Boolean(destinationAddress && isHqYardLabel(destinationAddress));
+
+                          return (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                              <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', display: 'block', color: 'var(--text-secondary)' }}>상차지 (출발지)</label>
+                                <input
+                                  type="text"
+                                  value={originAddress}
+                                  disabled={isFormDisabled}
+                                  onChange={e => setOriginAddress(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)', fontSize: '12.5px', color: 'var(--text-primary)', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                />
+                                {(isOriginHqYard || dispatchCategory === '반납') && (
+                                  <div style={{
+                                    marginTop: '6px',
+                                    padding: '8px 10px',
+                                    borderRadius: '7px',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                                    fontSize: '11.5px',
+                                    color: 'var(--text-primary)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '3px'
+                                  }}>
+                                    <div style={{ fontWeight: 800, color: '#2563eb', fontSize: '11px' }}>
+                                      출발지 등록정보 ({isOriginHqYard ? detailHqOriginInfo.name : originAddress})
+                                    </div>
+                                    <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {isOriginHqYard ? detailHqOriginInfo.address : originAddress}</div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                      <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {detailHqOriginInfo.contactName}</span>
+                                      <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {detailHqOriginInfo.contactPhone}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, marginBottom: '4px', display: 'block', color: dispatchCategory === '반납' ? '#e11d48' : 'var(--text-secondary)' }}>
+                                  {dispatchCategory === '반납' ? '하차지 (도착지 · 임차처)' : '하차지 (도착지)'}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={destinationAddress}
+                                  disabled={isFormDisabled}
+                                  onChange={e => setDestinationAddress(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)', fontSize: '12.5px', color: 'var(--text-primary)', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                />
+                                {dispatchCategory === '반납' ? (
+                                  <div style={{
+                                    marginTop: '6px',
+                                    padding: '8px 10px',
+                                    borderRadius: '7px',
+                                    border: '1px solid rgba(225, 29, 72, 0.35)',
+                                    backgroundColor: 'rgba(225, 29, 72, 0.05)',
+                                    fontSize: '11.5px',
+                                    color: 'var(--text-primary)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '3px'
+                                  }}>
+                                    {detailSubleaseVendorInfo ? (
+                                      <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                                          <span style={{ fontWeight: 800, color: '#e11d48', fontSize: '11px' }}>
+                                            임차처 (매입거래처 등록정보): {detailSubleaseVendorInfo.name}
+                                          </span>
+                                          {!detailSubleaseVendorInfo.vendor && (
+                                            <span style={{ fontSize: '10.5px', color: '#d97706', fontWeight: 700 }}>매입거래처 미매칭</span>
+                                          )}
+                                        </div>
+                                        <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {detailSubleaseVendorInfo.address || '매입거래처 주소 미등록'}</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {detailSubleaseVendorInfo.contactName || '미등록'}</span>
+                                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {detailSubleaseVendorInfo.contactPhone || '미등록'}</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                                        반납할 임차자산을 선택하면 해당 임차처(매입거래처)의 주소, 담당자, 담당자 연락처가 자동으로 표시됩니다.
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : isDestHqYard ? (
+                                  <div style={{
+                                    marginTop: '6px',
+                                    padding: '8px 10px',
+                                    borderRadius: '7px',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                                    fontSize: '11.5px',
+                                    color: 'var(--text-primary)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '3px'
+                                  }}>
+                                    <div style={{ fontWeight: 800, color: '#2563eb', fontSize: '11px' }}>
+                                      하차지 등록정보 ({detailHqOriginInfo.name})
+                                    </div>
+                                    <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {detailHqOriginInfo.address}</div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                      <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {detailHqOriginInfo.contactName}</span>
+                                      <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {detailHqOriginInfo.contactPhone}</span>
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 🔄 [배차구분 === "반납" 전용] 임대가능 임차자산 버튼 선택 및 반납 처리 패널 */}
+                        {dispatchCategory === '반납' && (
+                          <div style={{
+                            marginBottom: '18px',
+                            padding: '12px 14px',
+                            borderRadius: '10px',
+                            border: '1.5px solid rgba(225, 29, 72, 0.35)',
+                            backgroundColor: 'rgba(225, 29, 72, 0.04)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 800, color: '#e11d48', whiteSpace: 'nowrap' }}>
+                                  🔄 반납 대상 임차자산 선택 (자산상태: 임대가능)
+                                </span>
+                                <span style={{
+                                  padding: '2px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 800,
+                                  backgroundColor: selectedReturnAssetIds.length > 0 ? 'rgba(225, 29, 72, 0.14)' : 'rgba(100, 116, 139, 0.14)',
+                                  color: selectedReturnAssetIds.length > 0 ? '#e11d48' : 'var(--text-secondary)',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {selectedReturnAssetIds.length > 0 ? `${selectedReturnAssetIds.length}대 선택됨` : '미결정 · 미선택'}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                반납 처리 기준일자 (하차일): <strong style={{ color: '#e11d48' }}>{unloadingDate || loadingDate || '-'}</strong>
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', alignItems: 'center' }}>
+                              {/* 미결정 (선택 안 함) 버튼 */}
+                              <button
+                                type="button"
+                                disabled={isFormDisabled}
+                                onClick={() => {
+                                  setSelectedReturnAssetIds([]);
+                                  setDestinationAddress('임차처 미정');
+                                }}
+                                style={{
+                                  padding: '6px 12px',
+                                  borderRadius: '7px',
+                                  fontSize: '12px',
+                                  fontWeight: selectedReturnAssetIds.length === 0 ? 800 : 600,
+                                  border: selectedReturnAssetIds.length === 0 ? '2px solid #475569' : '1px solid var(--border-color)',
+                                  backgroundColor: selectedReturnAssetIds.length === 0 ? 'rgba(71, 85, 105, 0.14)' : 'var(--bg-body)',
+                                  color: selectedReturnAssetIds.length === 0 ? 'var(--text-primary)' : 'var(--text-muted)',
+                                  cursor: isFormDisabled ? 'not-allowed' : 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  whiteSpace: 'nowrap',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {selectedReturnAssetIds.length === 0 ? '✓ ' : ''}미결정 · 선택 안 함
+                              </button>
+
+                              {/* 임대가능 상태인 임차자산 버튼 목록 */}
+                              {availableReturnSubleaseAssets.length === 0 ? (
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px 6px' }}>
+                                  현재 임대가능 상태인 임차자산이 없습니다. (미결정 상태로 반납 배차를 먼저 등록할 수 있습니다)
+                                </span>
+                              ) : (
+                                availableReturnSubleaseAssets.map(asset => {
+                                  const isSelectedAsset = selectedReturnAssetIds.includes(asset.id);
+                                  const isAlreadyReturned = asset.status === 'RENTED_RETURNED' || Boolean(asset.actualRentReturnDate);
+                                  const matchedVendor = findSubleaseVendor(asset);
+                                  return (
+                                    <button
+                                      key={asset.id}
+                                      type="button"
+                                      disabled={isFormDisabled}
+                                      onClick={() => {
+                                        setSelectedReturnAssetIds(prev => {
+                                          const exists = prev.includes(asset.id);
+                                          const next = exists ? prev.filter(id => id !== asset.id) : [...prev, asset.id];
+                                          if (!exists) {
+                                            const vendorLabel = matchedVendor?.name || asset.renter || '';
+                                            if (vendorLabel) {
+                                              setDestinationAddress(vendorLabel);
+                                            }
+                                            if (!originAddress) {
+                                              setOriginAddress('당사 보관소');
+                                            }
+                                          } else if (next.length > 0) {
+                                            const firstRemaining = assetMap.get(next[0]);
+                                            const remainingVendor = firstRemaining ? findSubleaseVendor(firstRemaining) : null;
+                                            const remainingLabel = remainingVendor?.name || firstRemaining?.renter || '';
+                                            if (remainingLabel) {
+                                              setDestinationAddress(remainingLabel);
+                                            }
+                                          }
+                                          return next;
+                                        });
+                                      }}
+                                      style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '7px',
+                                        fontSize: '12px',
+                                        fontWeight: isSelectedAsset ? 800 : 600,
+                                        border: isSelectedAsset ? '2px solid #e11d48' : '1px solid var(--border-color)',
+                                        backgroundColor: isSelectedAsset ? 'rgba(225, 29, 72, 0.14)' : 'var(--bg-body)',
+                                        color: isSelectedAsset ? '#e11d48' : 'var(--text-primary)',
+                                        cursor: isFormDisabled ? 'not-allowed' : 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        whiteSpace: 'nowrap',
+                                        flexShrink: 0,
+                                        transition: 'all 0.15s ease'
+                                      }}
+                                    >
+                                      <span>{isSelectedAsset ? '✓' : '◻'}</span>
+                                      <span style={{ fontWeight: 800 }}>{asset.assetNo}</span>
+                                      <span>· {asset.modelName}</span>
+                                      {asset.renter && (
+                                        <span style={{ fontSize: '11px', color: isSelectedAsset ? '#be123c' : 'var(--text-secondary)' }}>
+                                          ({asset.renter})
+                                        </span>
+                                      )}
+                                      <span style={{
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        fontSize: '10.5px',
+                                        fontWeight: 800,
+                                        backgroundColor: isAlreadyReturned ? 'rgba(16, 185, 129, 0.16)' : 'rgba(59, 130, 246, 0.14)',
+                                        color: isAlreadyReturned ? '#059669' : '#2563eb'
+                                      }}>
+                                        {isAlreadyReturned ? `반납완료 (${asset.actualRentReturnDate || '-'})` : '임대가능'}
+                                      </span>
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+
+                            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                              <span>
+                                {selectedReturnAssetIds.length > 0
+                                  ? `선택된 임차자산 ${selectedReturnAssetIds.length}대가 저장 시 하차일(${unloadingDate || loadingDate})을 반납일자로 하여 즉시 반납 처리됩니다.`
+                                  : '반납할 임차자산이 아직 결정되지 않은 경우 [미결정 · 선택 안 함] 상태로 반납 배차를 먼저 저장하고 추후 선택할 수 있습니다.'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ────────────────────────────────────────────────────────────────── */}
+                        {/* 🚚 배정 운송 기사 및 운송 거래처 목록 (운송 완료 건도 운송비는 상시 수정 가능) */}
+                        {/* ────────────────────────────────────────────────────────────────── */}
+                        <div style={{ marginBottom: '20px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px', flexWrap: 'wrap' }}>
+                            <label style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>🚚 배정 운송 기사 목록</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {!isFormDisabled && (
+                                <button type="button" onClick={handleAddVehicleRow} style={{ padding: '4px 10px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--primary)', color: 'var(--primary)', backgroundColor: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                  + 차량 추가
+                                </button>
+                              )}
+                              {canSave && (normStatus === 'DELIVERED' || normStatus === 'DISPATCHED') && (
+                                <button
+                                  type="button"
+                                  onClick={handleSaveDispatch}
+                                  disabled={isSavingDispatch}
+                                  style={{
+                                    padding: '4px 12px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 800,
+                                    borderRadius: '5px',
+                                    border: 'none',
+                                    backgroundColor: '#2563eb',
+                                    color: '#ffffff',
+                                    cursor: isSavingDispatch ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 1px 3px rgba(37,99,235,0.25)',
+                                    opacity: isSavingDispatch ? 0.7 : 1
+                                  }}
+                                >
+                                  <Save size={12} />
+                                  {isSavingDispatch ? '저장 중...' : '운송비 저장'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 컬럼 헤더 (사장님 지시: 예상 운송비 필수, 실제 운송비 선택적 입력 2열로 분리) */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.1fr 0.9fr 0.8fr 1.1fr 1fr 1fr 30px', gap: '6px', padding: '6px 10px', backgroundColor: 'var(--bg-body)', borderRadius: '6px', fontSize: '11px', fontWeight: 800, color: 'var(--primary)', marginBottom: '6px', border: '1px solid var(--border-color)' }}>
+                            <div>운송사</div>
+                            <div>기사명</div>
+                            <div>차량번호</div>
+                            <div>차종</div>
+                            <div>연락처</div>
+                            <div>예상운송비</div>
+                            <div>실제운송비</div>
+                            <div></div>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {assignedVehicles.map((veh, idx) => {
+                              const isCustDirect = (veh.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT;
+                              const isCostDisabled = !canSave || isCustDirect;
+                              const matchedComp = transportCompanies.find(c => c.name.trim() === veh.transportCompany.trim());
+                              const filteredDrivers = matchedComp
+                                ? transportDrivers.filter(d => d.companyId === matchedComp.id)
+                                : transportDrivers;
+
+                              return (
+                                <div key={veh.id || idx} style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', display: 'grid', gridTemplateColumns: '1.2fr 1.1fr 0.9fr 0.8fr 1.1fr 1fr 1fr 30px', gap: '6px', alignItems: 'center' }}>
+                                  
+                                  {/* 1. 운송사 셀렉트 */}
+                                  <select
+                                    value={veh.transportCompany}
+                                    disabled={isFormDisabled}
+                                    onChange={e => handleVehicleFieldChange(idx, 'transportCompany', e.target.value)}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                  >
+                                    <option value="">-- 운송사 선택 --</option>
+                                    <option value={CUSTOMER_DIRECT_TRANSPORT}>{CUSTOMER_DIRECT_TRANSPORT} (운송료 0원)</option>
+                                    {veh.transportCompany && veh.transportCompany.trim() !== CUSTOMER_DIRECT_TRANSPORT && !transportCompanies.some(c => c.name.trim() === veh.transportCompany.trim()) && (
+                                      <option value={veh.transportCompany}>{veh.transportCompany}</option>
+                                    )}
+                                    {transportCompanies.map(c => (
+                                      <option key={c.id} value={c.name}>{c.name}</option>
+                                    ))}
+                                  </select>
+
+                                  {/* 2. 기사명 셀렉트 */}
+                                  <select
+                                    value={veh.driverName}
+                                    disabled={isFormDisabled}
+                                    onChange={e => {
+                                      handleVehicleFieldChange(idx, 'driverName', e.target.value);
+                                    }}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                  >
+                                    <option value="">-- 기사 선택 --</option>
+                                    {isCustDirect && (
+                                      <option value={CUSTOMER_DIRECT_TRANSPORT}>{CUSTOMER_DIRECT_TRANSPORT}</option>
+                                    )}
+                                    {veh.driverName && veh.driverName.trim() !== CUSTOMER_DIRECT_TRANSPORT && !filteredDrivers.some(d => d.driverName.trim() === veh.driverName.trim()) && (
+                                      <option value={veh.driverName}>{veh.driverName} ({veh.vehicleNo || '차량미상'})</option>
+                                    )}
+                                    {filteredDrivers.map(drv => (
+                                      <option key={drv.id} value={drv.driverName}>
+                                        {drv.driverName} ({drv.vehicleNo || '차량미상'})
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  {/* 2.5 차량번호 */}
+                                  <input
+                                    type="text"
+                                    placeholder="차량번호"
+                                    value={veh.vehicleNo || ''}
+                                    disabled={isFormDisabled}
+                                    onChange={e => handleVehicleFieldChange(idx, 'vehicleNo', e.target.value)}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                  />
+
+                                  {/* 3. 차종 셀렉트 */}
+                                  <select
+                                    value={veh.vehicleType}
+                                    disabled={isFormDisabled}
+                                    onChange={e => handleVehicleFieldChange(idx, 'vehicleType', e.target.value)}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                  >
+                                    {veh.vehicleType && !VEHICLE_TYPE_OPTIONS.includes(veh.vehicleType) && (
+                                      <option value={veh.vehicleType}>{veh.vehicleType}</option>
+                                    )}
+                                    {VEHICLE_TYPE_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                                  </select>
+
+                                  {/* 4. 연락처 */}
+                                  <input
+                                    type="text"
+                                    placeholder="연락처"
+                                    value={veh.driverContact}
+                                    disabled={isFormDisabled}
+                                    onChange={e => handleVehicleFieldChange(idx, 'driverContact', e.target.value)}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                                  />
+
+                                  {/* 5. 💰 예상 운송비 (운송 완료 건에서도 상시 수정 가능) */}
+                                  <input
+                                    data-uia="input-delivery-cost"
+                                    type="number"
+                                    min={0}
+                                    placeholder="예상 운송비"
+                                    value={isCustDirect ? 0 : (veh.expectedCost !== undefined ? veh.expectedCost : '')}
+                                    disabled={isCostDisabled}
+                                    onChange={e => {
+                                      const val = isCustDirect ? 0 : Math.max(0, Number(e.target.value) || 0);
+                                      handleVehicleFieldChange(idx, 'expectedCost', val);
+                                    }}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveDispatch();
+                                      }
+                                    }}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid var(--primary)', backgroundColor: 'var(--bg-card)', color: 'var(--primary)', fontSize: '11.5px', fontWeight: 800, textAlign: 'right', outline: 'none', opacity: isCostDisabled ? 0.65 : 1, cursor: isCostDisabled ? 'not-allowed' : 'text' }}
+                                  />
+
+                                  {/* 6. 💵 실제 운송비 (운송 완료 건에서도 상시 수정 가능) */}
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    placeholder="0 (알면 입력)"
+                                    value={isCustDirect ? 0 : (veh.finalCost !== undefined && veh.finalCost !== null ? veh.finalCost : 0)}
+                                    disabled={isCostDisabled}
+                                    onChange={e => {
+                                      const val = isCustDirect ? 0 : (e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0));
+                                      handleVehicleFieldChange(idx, 'finalCost', val);
+                                    }}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveDispatch();
+                                      }
+                                    }}
+                                    style={{ padding: '6px 6px', borderRadius: '6px', border: '1px solid #16a34a', backgroundColor: isCostDisabled ? 'var(--bg-card)' : 'rgba(34,197,94,0.05)', color: 'var(--success)', fontSize: '11.5px', fontWeight: 800, textAlign: 'right', outline: 'none', opacity: isCostDisabled ? 0.65 : 1, cursor: isCostDisabled ? 'not-allowed' : 'text' }}
+                                  />
+
+                                  {!isFormDisabled && (
+                                    <button onClick={() => handleRemoveVehicleRow(idx)} style={{ color: 'var(--danger)', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                                      <Trash2 size={16} />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 마감 비고 메모 */}
+                        <div style={{ marginBottom: '16px' }}>
+                          
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>배차 특이사항 및 마감 메모</label>
+  {(() => {
+    const match = (selectedDelivery.closingMemo || closingMemo).match(/\[(납품증 사진|전자 서명)\]:\s*(https?:\/\/[^\s]+)/);
+    const receiptUrl = match ? match[2] : null;
+    if (receiptUrl) {
+      return (
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); window.open(receiptUrl, '_blank', 'noopener,noreferrer'); }}
+          style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 800, backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
+          🧾 납품증 보기
+        </button>
+      );
+    }
+    return null;
+  })()}
+</div>
+
+                          <textarea
+                            value={closingMemo}
+                            disabled={isFormDisabled}
+                            onChange={e => setClosingMemo(e.target.value)}
+                            placeholder="배차 기사 전달사항, 현장 특이사항 기록..."
+                            style={{ width: '100%', height: '65px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: isFormDisabled ? 'var(--bg-card)' : 'var(--bg-body)', color: 'var(--text-primary)', fontSize: '12.5px', boxSizing: 'border-box', opacity: isFormDisabled ? 0.75 : 1, cursor: isFormDisabled ? 'not-allowed' : 'default' }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* 💬 최하단: (영업)배차 및 특이사항 메모 박스 */}
+                  <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: 'rgba(59,130,246,0.06)', border: '1.5px solid rgba(59,130,246,0.25)', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <MessageSquare size={16} /> (영업)배차 및 특이사항 메모
+                    </div>
+                    <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontFamily: 'Consolas, Monaco, monospace', backgroundColor: 'var(--bg-card)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      {stripOptionsFromDispatchRawText(selectedDelivery.rawText, selectedDelivery.cargoItems, selectedDelivery.memo) || '-'}
+                    </div>
+                  </div>
+
+                  {/* ⚖️ 우하단 터미널 액션 바 (Z-패턴 4단계 최종 완결, 헌장 3.5) */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '14px 18px',
+                    backgroundColor: 'var(--bg-body)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    marginBottom: '16px'
+                  }}>
+                    {canSave && (
+                      <>
+                        {getNormalizedDeliveryStatus(selectedDelivery) === 'CANCELLED' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleCancelDeliveryStatus(selectedDelivery.id)}
+                              style={{
+                                padding: '8px 14px',
+                                fontWeight: 800,
+                                fontSize: '12.5px',
+                                borderRadius: '7px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: 'rgba(245,158,11,0.12)',
+                                color: '#d97706',
+                                border: '1px solid rgba(245,158,11,0.35)',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <RotateCcw size={14} /> 배차대기로 복원
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSaveDispatch}
+                              disabled={isSavingDispatch}
+                              className="btn-primary"
+                              style={{
+                                padding: '8px 18px',
+                                fontWeight: 800,
+                                fontSize: '13px',
+                                borderRadius: '7px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#2563eb',
+                                color: '#ffffff',
+                                border: 'none',
+                                cursor: isSavingDispatch ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                                opacity: isSavingDispatch ? 0.7 : 1
+                              }}
+                            >
+                              <RotateCcw size={15} /> {isSavingDispatch ? '처리 중...' : '배차 수정 및 배차완료로 재배정'}
+                            </button>
+                          </>
+                        ) : getNormalizedDeliveryStatus(selectedDelivery) === 'DISPATCHED' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleCancelDeliveryStatus(selectedDelivery.id)}
+                              title="배정된 차량·기사를 해제하고 배차대기 상태로 되돌립니다 (출고 요청 자체는 유지됨)"
+                              style={{ padding: '7px 12px', borderRadius: '6px', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              🚫 배차 취소 (배차대기로 원복)
+                            </button>
+
+                            {(() => {
+                              const readiness = checkDeliveryOutboundReadiness(selectedDelivery);
+                              const isBlocked = readiness.isOutboundLike && !readiness.ready;
+                              const isLoaded = Boolean(selectedDelivery.loadingCompletedAt);
+                              const unloadDateText = (selectedDelivery.unloadingDate || selectedDelivery.loadingDate || selectedDelivery.scheduledDate || '').slice(0, 10);
+                              return (
+                                <>
+                                  {isLoaded ? (
+                                    <>
+                                      <span style={{
+                                        padding: '7px 12px',
+                                        borderRadius: '6px',
+                                        backgroundColor: 'rgba(16,185,129,0.12)',
+                                        color: '#059669',
+                                        border: '1px solid rgba(16,185,129,0.35)',
+                                        fontSize: '12px',
+                                        fontWeight: 800,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        whiteSpace: 'nowrap'
+                                      }}>
+                                        <CheckCircle size={13} /> 하차예정일({unloadDateText}) 자동 운송완료 대기
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRevertLoadingStatus(selectedDelivery.id)}
+                                        style={{
+                                          padding: '7px 12px',
+                                          borderRadius: '6px',
+                                          backgroundColor: 'rgba(217,119,6,0.12)',
+                                          color: '#d97706',
+                                          border: '1px solid rgba(217,119,6,0.35)',
+                                          fontSize: '12px',
+                                          fontWeight: 800,
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          whiteSpace: 'nowrap'
+                                        }}
+                                        title="상차완료 취소 (배차완료 상태로 원복)"
+                                      >
+                                        <RotateCcw size={13} /> 상차완료 취소
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button data-hs-trigger="Process"
+                                      type="button"
+                                      onClick={() => {
+                                        handleCompleteLoadingStatus(selectedDelivery.id);
+                                      }}
+                                      style={{
+                                        padding: '7px 14px',
+                                        backgroundColor: isBlocked ? '#64748b' : '#d97706',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        fontWeight: 800,
+                                        fontSize: '12.5px',
+                                        cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                        opacity: isBlocked ? 0.65 : 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title={isBlocked ? `선행 절차 미완료 (${readiness.reason})` : '상차완료 처리 (하차 예정일 기준 운송완료 및 계약·청구 개시 확정)'}
+                                    >
+                                      <CheckCircle size={14} />
+                                      {isBlocked ? '출고검수 미완료 (처리 불가)' : '상차완료'}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+
+                            <button data-hs-trigger="Save"
+                              type="button"
+                              onClick={handleSaveDispatch}
+                              disabled={isSavingDispatch}
+                              className="btn-primary"
+                              style={{
+                                padding: '8px 18px',
+                                fontWeight: 800,
+                                fontSize: '13px',
+                                borderRadius: '7px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#2563eb',
+                                color: '#ffffff',
+                                border: 'none',
+                                cursor: isSavingDispatch ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                                opacity: isSavingDispatch ? 0.7 : 1
+                              }}
+                            >
+                              <Save size={15} /> {isSavingDispatch ? '저장 중...' : '배차 정보 수정 저장'}
+                            </button>
+                          </>
+                        ) : getNormalizedDeliveryStatus(selectedDelivery) === 'DELIVERED' ? (
+                          <>
+                            {(() => {
+                              const readiness = checkDeliveryOutboundReadiness(selectedDelivery);
+                              const hasProcError = readiness.isOutboundLike && !readiness.ready;
+                              if (hasProcError) {
+                                return (
+                                  <>
+                                    <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--danger)', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', padding: '6px 10px', borderRadius: '6px' }}>
+                                      🚨 절차 오류: {readiness.reason} 상태에서 운송완료 처리되었습니다. [운송완료 취소] 후 장비할당·출고검수를 먼저 진행하세요.
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRevertDeliveredToDispatched(selectedDelivery.id)}
+                                      style={{
+                                        padding: '7px 14px',
+                                        borderRadius: '6px',
+                                        backgroundColor: '#dc2626',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        fontSize: '12.5px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      <RotateCcw size={14} /> 운송완료 취소 (배차완료로 원복)
+                                    </button>
+                                  </>
+                                );
+                              }
+                              return (
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', padding: '6px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
+                                  취소/수정 불가 (운송비만 수정 가능)
+                                </span>
+                              );
+                            })()}
+                            <button data-hs-trigger="Save"
+                              type="button"
+                              onClick={handleSaveDispatch}
+                              disabled={isSavingDispatch}
+                              className="btn-primary"
+                              style={{
+                                padding: '8px 18px',
+                                fontWeight: 800,
+                                fontSize: '13px',
+                                borderRadius: '7px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                backgroundColor: '#2563eb',
+                                color: '#ffffff',
+                                border: 'none',
+                                cursor: isSavingDispatch ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                                opacity: isSavingDispatch ? 0.7 : 1,
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <Save size={15} /> {isSavingDispatch ? '저장 중...' : (isEditUnlocked ? '배차 정보 수정 저장' : '운송비 저장')}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {(selectedDelivery.type === 'OUTBOUND' || selectedDelivery.type === 'EXCHANGE' || selectedDelivery.dispatchCategory === '출고' || selectedDelivery.dispatchCategory === '교환') ? (
+                              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                ※ 출고 요청 취소는 [출고 요청 내역]에서 진행합니다.
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleCancelDeliveryStatus(selectedDelivery.id)}
+                                style={{ padding: '7px 12px', borderRadius: '6px', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                🚫 배차 취소
+                              </button>
+                            )}
+
+                            <button
+                              data-uia="btn-assign-driver"
+                              type="button"
+                              onClick={handleSaveDispatch}
+                              disabled={isSavingDispatch}
+                              className="btn-primary"
+                              style={{ padding: '7px 16px', fontWeight: 800, fontSize: '12.5px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '5px', opacity: isSavingDispatch ? 0.7 : 1, cursor: isSavingDispatch ? 'not-allowed' : 'pointer' }}
+                            >
+                              <ShieldCheck size={15} />{' '}
+                              {isSavingDispatch
+                                ? '저장 중...'
+                                : dispatchCategory === '반납'
+                                  ? (assignedVehicles.some(v => (v.driverName || '').trim() !== '' || (v.transportCompany || '').trim() === CUSTOMER_DIRECT_TRANSPORT)
+                                      ? (selectedReturnAssetIds.length > 0 ? `배차 기사 배정 및 임차자산 ${selectedReturnAssetIds.length}대 반납 처리` : '배차 기사 배정 완료 (임차자산 미결정)')
+                                      : (selectedReturnAssetIds.length > 0 ? `반납 배차 저장 및 임차자산 ${selectedReturnAssetIds.length}대 반납 처리` : '반납 배차 저장 (임차자산 미결정)'))
+                                  : '배차 기사 배정 완료'}
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
+          {(() => {
+            const pendingDeliveries = deliveries.filter(d => d.status === 'PENDING').length;
+            const dispatchedDeliveries = deliveries.filter(d => d.status === 'DISPATCHED').length;
+            const deliveredDeliveries = deliveries.filter(d => d.status === 'DELIVERED').length;
+            const cancelledDeliveries = deliveries.filter(d => d.status === 'CANCELLED').length;
+            const exchangeCount = deliveries.filter(d => d.dispatchCategory === '교환' || d.type === 'EXCHANGE').length;
+
+            return (
+              <div style={{
+                padding: '8px 14px',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '8px',
+                fontSize: '11.5px',
+                borderRadius: '6px',
+                marginTop: '8px',
+                flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  <span>배차 대기: <strong style={{ color: 'var(--warning)' }}>총 {pendingDeliveries}건</strong></span>
+                  <span>|</span>
+                  <span>배차 완료: <strong style={{ color: 'var(--primary)' }}>총 {dispatchedDeliveries}건</strong></span>
+                  <span>|</span>
+                  <span>운송 완료: <strong style={{ color: 'var(--success)' }}>총 {deliveredDeliveries}건</strong></span>
+                  <span>|</span>
+                  <span>대차 왕복배차: <strong style={{ color: 'var(--primary)' }}>총 {exchangeCount}건</strong></span>
+                  <span>|</span>
+                  <span>취소: <strong style={{ color: 'var(--danger)' }}>총 {cancelledDeliveries}건</strong></span>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* 탭 2: 운송사 배차 협의 (통화파일 업로드 ➔ 큐 처리 ➔ AI 분석 ➔ 배차 매핑 ➔ 확정) */}
+      {activeTab === 'NEGOTIATION' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* ── [Step 1] 최상단: 통화 파일 업로드 및 협의 큐 ── */}
+          <div style={{
+            backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px',
+            padding: '16px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileAudio size={18} style={{ color: 'var(--primary)' }} />
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    배차 협의 통화 큐
+                  </span>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800,
+                    backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', border: '1px solid rgba(59,130,246,0.3)'
+                  }}>
+                    대기 {callQueue.filter(q => q.status !== 'CONFIRMED').length}건
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  폰 또는 PC에서 녹음된 통화 파일을 업로드하면 AI가 운송사, 차종, 운송비, 특약을 자동 추출합니다.
+                </div>
+              </div>
+
+              {/* 통화 파일 업로드 액션 버튼 & 히든 인풋 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="file"
+                  ref={callFileInputRef}
+                  accept="audio/*,.m4a,.mp3,.wav,.aac,.amr"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleUploadCallFile(e.target.files[0]);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={isUploadingCall}
+                  onClick={() => callFileInputRef.current?.click()}
+                  style={{
+                    padding: '8px 16px', borderRadius: '6px', backgroundColor: 'var(--primary)',
+                    color: '#ffffff', border: 'none', fontWeight: 800, fontSize: '12.5px',
+                    cursor: isUploadingCall ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    opacity: isUploadingCall ? 0.7 : 1
+                  }}
+                >
+                  {isUploadingCall ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      <span>AI STT & 분석 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={15} />
+                      <span>통화 녹음 파일 직접 업로드</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {callUploadError && (
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--danger)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={14} /> {callUploadError}
+              </div>
+            )}
+
+            {/* 통화 큐 카드 가로 리스트 */}
+            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {callQueue.length === 0 ? (
+                <div style={{ padding: '16px', textAlign: 'center', width: '100%', color: 'var(--text-muted)', fontSize: '12px', backgroundColor: 'var(--bg-body)', borderRadius: '6px' }}>
+                  등록된 배차 통화 녹음이 없습니다. [통화 녹음 파일 직접 업로드] 버튼을 눌러 새 통화 파일을 등록하십시오.
+                </div>
+              ) : (
+                callQueue.map(item => {
+                  const isSelected = selectedCallQueueId === item.id;
+                  const isConfirmed = item.status === 'CONFIRMED';
+                  const isAnalyzing = item.status === 'ANALYZING';
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelectCallQueueItem(item)}
+                      style={{
+                        minWidth: '270px', maxWidth: '300px', flexShrink: 0,
+                        padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                        backgroundColor: isSelected ? 'rgba(59,130,246,0.12)' : 'var(--bg-body)',
+                        border: isSelected ? '2px solid var(--primary)' : isConfirmed ? '1px solid #10b981' : '1px solid var(--border-color)',
+                        display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{
+                          fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
+                          backgroundColor: isConfirmed ? 'rgba(16,185,129,0.15)' : isAnalyzing ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)',
+                          color: isConfirmed ? '#10b981' : isAnalyzing ? '#d97706' : '#2563eb'
+                        }}>
+                          {isConfirmed ? '배차확정됨' : isAnalyzing ? 'AI 분석중' : '분석완료'}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                            {item.durationSec ? `${item.durationSec}초` : ''}
+                          </span>
+                          <button data-hs-trigger="Delete"
+                            type="button"
+                            onClick={e => handleDeleteCallQueueItem(item.id, e)}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                            title="큐에서 삭제"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.fileName}
+                      </div>
+
+                      {/* 추출 하이라이트 배지 */}
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        {item.extracted.transportCompanyName && (
+                          <span style={{ fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', padding: '1px 5px', borderRadius: '4px' }}>
+                            {item.extracted.transportCompanyName}
+                          </span>
+                        )}
+                        {item.extracted.vehicleType && (
+                          <span style={{ fontSize: '10.5px', fontWeight: 800, backgroundColor: 'var(--primary-light)', color: 'var(--primary)', padding: '1px 5px', borderRadius: '4px' }}>
+                            {item.extracted.vehicleType}
+                          </span>
+                        )}
+                        {item.extracted.proposedCost ? (
+                          <span style={{ fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '1px 5px', borderRadius: '4px' }}>
+                            ₩{item.extracted.proposedCost.toLocaleString()}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {item.extracted.matchedDeliverySummary && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          매칭: {item.extracted.matchedDeliverySummary}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* ── [Step 2 & 3] 2분할 마스터-디테일 스튜디오 (좌측 배차 대상 + 우측 AI 협의 데스크) ── */}
+          <div style={{ display: 'flex', gap: '16px', minHeight: '650px', alignItems: 'flex-start' }}>
+            {/* ── 좌측 Master: 배차 대상 건 리스트 (너비 400px 고정) ── */}
+            <div style={{
+              width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '10px',
+              backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px',
+              padding: '14px', boxSizing: 'border-box'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                  <Truck size={16} /> 배차 대상 목록
+                </h3>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                  총 {deliveries.filter(d => d.status !== 'CANCELLED').length}건
+                </span>
+              </div>
+
+              {/* 통화 AI 추천 배차 상단 배너 카드 */}
+              {selectedCall?.extracted.matchedDeliveryId && (() => {
+                const matchedDel = deliveries.find(d => d.id === selectedCall.extracted.matchedDeliveryId);
+                if (!matchedDel) return null;
+                const mContract = contracts.find(c => c.id === matchedDel.contractId);
+                const mCust = customers.find(c => c.id === mContract?.customerId);
+                const mSite = sites?.find(s => s.id === mContract?.siteId);
+                const isCurrentSelected = selectedNegoDeliveryId === matchedDel.id;
+                return (
+                  <div
+                    onClick={() => setSelectedNegoDeliveryId(matchedDel.id)}
+                    style={{
+                      padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                      backgroundColor: isCurrentSelected ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.08)',
+                      border: '1.5px dashed #10b981',
+                      display: 'flex', flexDirection: 'column', gap: '4px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Sparkles size={12} /> 🎯 통화 AI 추천 매칭 배차
+                      </span>
+                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                        #{matchedDel.id.slice(-6)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {mCust?.name || '(고객사)'} · {mSite?.name || '현장'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      {matchedDel.destinationAddress || matchedDel.originAddress || '현장 주소'}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 필터 & 검색 */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <select
+                  value={negoFilterStatus}
+                  onChange={e => setNegoFilterStatus(e.target.value as any)}
+                  style={{
+                    padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700
+                  }}
+                >
+                  <option value="ALL">전체 상태</option>
+                  <option value="PENDING">배차 대기</option>
+                  <option value="IN_NEGOTIATION">협의 중</option>
+                  <option value="CONFIRMED">협의 완료</option>
+                </select>
+                <input
+                  type="text"
+                  value={negoSearchQuery}
+                  onChange={e => setNegoSearchQuery(e.target.value)}
+                  placeholder="고객/현장/주소 검색..."
+                  style={{
+                    flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', fontSize: '12px'
+                  }}
+                />
+              </div>
+
+              {/* 배차 건 스크롤 리스트 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '580px', overflowY: 'auto' }}>
+                {(() => {
+                  const filtered = deliveries.filter(d => {
+                    if (d.status === 'CANCELLED') return false;
+                    const negos = (transportNegotiations || []).filter(n => n.deliveryId === d.id);
+                    const hasConfirmed = negos.some(n => n.status === 'CONFIRMED');
+                    const hasNegotiating = negos.some(n => n.status === 'IN_NEGOTIATION');
+
+                    if (negoFilterStatus === 'PENDING' && d.status !== 'PENDING') return false;
+                    if (negoFilterStatus === 'IN_NEGOTIATION' && !hasNegotiating) return false;
+                    if (negoFilterStatus === 'CONFIRMED' && !hasConfirmed) return false;
+
+                    if (negoSearchQuery) {
+                      const q = negoSearchQuery.toLowerCase();
+                      const contract = contracts.find(c => c.id === d.contractId);
+                      const customer = customers.find(c => c.id === contract?.customerId);
+                      const site = sites?.find(s => s.id === contract?.siteId);
+                      const match = (customer?.name || '').toLowerCase().includes(q) ||
+                                    (site?.name || '').toLowerCase().includes(q) ||
+                                    (d.destinationAddress || '').toLowerCase().includes(q) ||
+                                    (d.originAddress || '').toLowerCase().includes(q);
+                      if (!match) return false;
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                        해당 조건의 배차 건이 없습니다.
+                      </div>
+                    );
+                  }
+
+                  return filtered.map(del => {
+                    const isSelected = selectedNegoDeliveryId === del.id;
+                    const isAiMatched = selectedCall?.extracted.matchedDeliveryId === del.id;
+                    const contract = contracts.find(c => c.id === del.contractId);
+                    const customer = customers.find(c => c.id === contract?.customerId);
+                    const site = sites?.find(s => s.id === contract?.siteId);
+                    const negos = (transportNegotiations || []).filter(n => n.deliveryId === del.id);
+                    const confirmedNego = negos.find(n => n.status === 'CONFIRMED');
+
+                    const typeLabel = del.type === 'OUTBOUND' ? '출고' : del.type === 'INBOUND' ? '회수' : del.type === 'EXCHANGE' ? '교환' : '이동';
+                    const typeColor = del.type === 'OUTBOUND' ? '#2563eb' : del.type === 'INBOUND' ? '#dc2626' : del.type === 'EXCHANGE' ? 'var(--primary)' : '#6b7280';
+
+                    return (
+                      <div
+                        key={del.id}
+                        onClick={() => setSelectedNegoDeliveryId(del.id)}
+                        style={{
+                          padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease',
+                          backgroundColor: isSelected ? 'rgba(59,130,246,0.12)' : 'var(--bg-body)',
+                          border: isSelected ? '1.5px solid var(--primary)' : isAiMatched ? '1.5px solid #10b981' : '1px solid var(--border-color)',
+                          display: 'flex', flexDirection: 'column', gap: '5px', position: 'relative'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                              padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 800,
+                              backgroundColor: `${typeColor}20`, color: typeColor, border: `1px solid ${typeColor}40`, whiteSpace: 'nowrap'
+                            }}>
+                              {typeLabel}
+                            </span>
+                            {isAiMatched && (
+                              <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 800, backgroundColor: 'rgba(16,185,129,0.15)', padding: '1px 5px', borderRadius: '4px' }}>
+                                🎯 매칭
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            {del.loadingDate || del.scheduledDate || del.requestDate}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {customer?.name || '(고객사 미지정)'} · {site?.name || '현장'}
+                        </div>
+
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <MapPin size={11} /> {del.destinationAddress || del.originAddress || '주소 미입력'}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#10b981' }}>
+                            ₩{del.deliveryCost ? del.deliveryCost.toLocaleString() : '미정'}
+                          </span>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            {confirmedNego ? (
+                              <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981', fontWeight: 800 }}>
+                                확정: {confirmedNego.transportCompanyName}
+                              </span>
+                            ) : negos.length > 0 ? (
+                              <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', fontWeight: 800 }}>
+                                견적 {negos.length}건
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                협의대기
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* ── 우측 Detail Studio: 선택된 배차의 운송사 협의 데스크 ── */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column', gap: '14px',
+              backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px',
+              padding: '16px', boxSizing: 'border-box', minWidth: 0
+            }}>
+              {!selectedNegoDelivery ? (
+                <div style={{ textAlign: 'center', padding: '100px 20px', color: 'var(--text-muted)' }}>
+                  <Truck size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 6px 0' }}>선택된 배차 건이 없습니다</h4>
+                  <p style={{ fontSize: '12px', margin: 0 }}>상단 통화 큐에서 통화를 선택하거나, 좌측 목록에서 협의할 배차 건을 선택하십시오.</p>
+                </div>
+              ) : (
+                (() => {
+                  const contract = contracts.find(c => c.id === selectedNegoDelivery.contractId);
+                  const customer = customers.find(c => c.id === contract?.customerId);
+                  const site = sites?.find(s => s.id === contract?.siteId);
+                  const currentNegos = (transportNegotiations || []).filter(n => n.deliveryId === selectedNegoDelivery.id);
+
+                  return (
+                    <>
+                      {/* 선택된 통화 음성 플레이어 & STT 전사문 카드 (큐에서 선택된 경우) */}
+                      {selectedCall && (
+                        <div style={{
+                          backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '8px',
+                          padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Sparkles size={15} style={{ color: 'var(--primary)' }} />
+                              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                AI 통화 분석: {selectedCall.fileName}
+                              </span>
+                              <span style={{
+                                fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', fontWeight: 800,
+                                backgroundColor: selectedCall.extracted.confidence === 'HIGH' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                color: selectedCall.extracted.confidence === 'HIGH' ? '#10b981' : '#d97706'
+                              }}>
+                                신뢰도 {selectedCall.extracted.confidence}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSelectCallQueueItem(selectedCall)}
+                              style={{
+                                fontSize: '11px', fontWeight: 800, padding: '4px 8px', borderRadius: '4px',
+                                backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', border: 'none', cursor: 'pointer'
+                              }}
+                            >
+                              ⚡ 폼에 다시 자동 채우기
+                            </button>
+                          </div>
+
+                          {/* 오디오 플레이어 */}
+                          {selectedCall.audioUrl && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Volume2 size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                              <audio controls src={selectedCall.audioUrl} style={{ width: '100%', height: '32px' }} />
+                            </div>
+                          )}
+
+                          {/* STT 음성 전사문 */}
+                          {selectedCall.transcript && (
+                            <div style={{
+                              fontSize: '12px', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-body)',
+                              padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                              lineHeight: 1.5, maxHeight: '80px', overflowY: 'auto'
+                            }}>
+                              <strong style={{ color: 'var(--text-primary)', marginRight: '6px' }}>[음성 전사]</strong>
+                              "{selectedCall.transcript}"
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 1. 배차 기본 정보 카드 */}
+                      <div style={{
+                        backgroundColor: 'var(--bg-body)', border: '1px solid var(--border-color)', borderRadius: '8px',
+                        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                              배차 번호 #{selectedNegoDelivery.id.slice(-6)} · {selectedNegoDelivery.type}
+                            </span>
+                            {selectedCall?.extracted.matchedDeliveryId === selectedNegoDelivery.id && (
+                              <span style={{ fontSize: '10.5px', color: '#10b981', fontWeight: 800, backgroundColor: 'rgba(16,185,129,0.15)', padding: '1px 6px', borderRadius: '4px' }}>
+                                🎯 통화 매칭 대상
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
+                            {customer?.name || '고객사'} — {site?.name || '현장'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                            <span><strong>상차:</strong> {selectedNegoDelivery.originAddress || '본사 주기장'} ({selectedNegoDelivery.loadingDate || '-'})</span>
+                            <span>➔</span>
+                            <span><strong>하차:</strong> {selectedNegoDelivery.destinationAddress || '현장 주소'} ({selectedNegoDelivery.unloadingDate || '-'})</span>
+                          </div>
+                          {selectedNegoDelivery.memo && (
+                            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                              메모: {selectedNegoDelivery.memo}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>현재 등록 운송비</div>
+                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#10b981' }}>
+                            ₩{selectedNegoDelivery.deliveryCost ? selectedNegoDelivery.deliveryCost.toLocaleString() : '0'}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            차종: {selectedNegoDelivery.vehicleType || '미지정'} | 운송사: {selectedNegoDelivery.transportCompany || '미지정'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 2. 기 접수된 운송사 협의 내역 */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                            <FileText size={14} /> 운송사별 견적 및 협의 현황 ({currentNegos.length}건)
+                          </h4>
+                        </div>
+
+                        {currentNegos.length === 0 ? (
+                          <div style={{ padding: '20px', textAlign: 'center', backgroundColor: 'var(--bg-body)', borderRadius: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                            아직 등록된 운송사 협의 내역이 없습니다. 아래 폼에서 첫 견적을 등록하거나 통화를 확정하십시오.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+                            {currentNegos.map(n => {
+                              const isConfirmed = n.status === 'CONFIRMED';
+                              const isRejected = n.status === 'REJECTED';
+                              return (
+                                <div
+                                  key={n.id}
+                                  style={{
+                                    padding: '12px', borderRadius: '8px', border: isConfirmed ? '2px solid #10b981' : isRejected ? '1px solid rgba(239,68,68,0.3)' : '1px solid var(--border-color)',
+                                    backgroundColor: isConfirmed ? 'rgba(16,185,129,0.08)' : isRejected ? 'rgba(239,68,68,0.03)' : 'var(--bg-body)',
+                                    display: 'flex', flexDirection: 'column', gap: '6px'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                      {n.transportCompanyName}
+                                    </span>
+                                    <span style={{
+                                      fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px', fontWeight: 800,
+                                      backgroundColor: isConfirmed ? '#10b981' : isRejected ? '#ef4444' : '#2563eb',
+                                      color: '#ffffff'
+                                    }}>
+                                      {isConfirmed ? '확정/낙찰' : isRejected ? '결렬' : '협의중'}
+                                    </span>
+                                  </div>
+
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                                    <span>차종: <strong>{n.vehicleType}</strong></span>
+                                    <span>제시: <strong style={{ color: 'var(--danger)' }}>₩{n.proposedCost.toLocaleString()}</strong></span>
+                                    <span>목표: <strong style={{ color: '#10b981' }}>₩{n.targetCost.toLocaleString()}</strong></span>
+                                  </div>
+
+                                  {n.specialTerms && (
+                                    <div style={{ fontSize: '11px', color: 'var(--warning)', backgroundColor: 'rgba(217,119,6,0.1)', padding: '4px 6px', borderRadius: '4px' }}>
+                                      특약: {n.specialTerms}
+                                    </div>
+                                  )}
+
+                                  {n.callSummary && (
+                                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                                      {n.callSummary}
+                                    </div>
+                                  )}
+
+                                  {!isConfirmed && (
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                                      <button
+                                        type="button"
+                                        className="btn-primary"
+                                        onClick={() => handleConfirmNegotiation(n)}
+                                        style={{ padding: '6px 12px', fontSize: '11.5px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      >
+                                        <Check size={13} /> 이 조건으로 배차 확정
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 3. 신규 운송사 견적 및 통화 협의 기록 폼 (헌장 3.4 상하 세로 스택 레이아웃) */}
+                      <div style={{
+                        backgroundColor: 'var(--bg-body)', border: '1px solid var(--border-color)', borderRadius: '8px',
+                        padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Plus size={14} /> 운송사 통화 견적 및 협의 조건
+                          </h4>
+                          {selectedCall && (
+                            <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
+                              AI 추출 내용 자동 입력됨
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+                          {/* 1. 협의 운송사 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>협의 운송사 *</label>
+                            <select
+                              value={negoCompanyId}
+                              onChange={e => setNegoCompanyId(e.target.value)}
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700
+                              }}
+                            >
+                              <option value="">운송사 선택</option>
+                              {transportCompanies.map(c => (
+                                <option key={c.id} value={c.id}>{c.name} ({(c as any).contact || '연락처없음'})</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* 2. 제안 차종 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>제안 차종</label>
+                            <select
+                              value={negoVehicleType}
+                              onChange={e => setNegoVehicleType(e.target.value)}
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700
+                              }}
+                            >
+                              {VEHICLE_TYPE_OPTIONS.map(v => (
+                                <option key={v} value={v}>{v}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* 3. 운송사 제시가 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>운송사 제시 금액 (원)</label>
+                            <input
+                              type="number"
+                              value={negoProposedCost || ''}
+                              onChange={e => setNegoProposedCost(Number(e.target.value))}
+                              placeholder="예: 120000"
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700
+                              }}
+                            />
+                          </div>
+
+                          {/* 4. 당사 목표가 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>당사 목표 금액 (원)</label>
+                            <input
+                              type="number"
+                              value={negoTargetCost || ''}
+                              onChange={e => setNegoTargetCost(Number(e.target.value))}
+                              placeholder="예: 100000"
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
+                          {/* 특약 사항 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>할증/회차 특약 메모</label>
+                            <input
+                              type="text"
+                              value={negoSpecialTerms}
+                              onChange={e => setNegoSpecialTerms(e.target.value)}
+                              placeholder="예: 회차비 50%, 야간 2만원 할증..."
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px'
+                              }}
+                            />
+                          </div>
+
+                          {/* 통화 내용 요약 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>통화 및 협의 내용 요약</label>
+                            <input
+                              type="text"
+                              value={negoCallSummary}
+                              onChange={e => setNegoCallSummary(e.target.value)}
+                              placeholder="예: 내일 오전 08시 상차 가능하다고 회신받음..."
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px'
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* 우하단 등록 및 1클릭 배차 확정 버튼군 */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                          <button data-hs-trigger="Save"
+                            type="button"
+                            className="btn-secondary"
+                            onClick={handleSaveNegotiation}
+                            style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <Check size={14} /> 협의 내용만 저장
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={handleConfirmCurrentForm}
+                            style={{
+                              padding: '8px 20px', fontSize: '12.5px', fontWeight: 800,
+                              backgroundColor: 'var(--success)', borderColor: '#10b981', color: '#ffffff',
+                              display: 'inline-flex', alignItems: 'center', gap: '6px'
+                            }}
+                          >
+                            <CheckCircle size={15} /> ⭐ 이 조건으로 배차 반영 및 확정
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 탭 3: 월말 운송료 대사 및 매입 지급 요청 (Z-패턴 4단계 직무 완결 동선) */}
+      {isAuditSettleGranted && activeTab === 'RECONCILIATION' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          
+          {/* ────────────── ① 좌상단 & ② 우상단 Z-패턴 2단 레이아웃 ────────────── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(520px, 1.4fr) minmax(360px, 1fr)',
+            gap: '14px',
+            alignItems: 'stretch',
+            flexShrink: 0
+          }}>
+            
+            {/* ① 좌측 상단 [START / SCOPE]: 정산 대상 범위 설정 */}
+            <div style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '10px',
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}>
+              {/* 스코프 헤더 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={15} color="var(--primary)" /> 정산 범위 설정
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  기간 및 운송사 스코프 지정
+                </span>
+              </div>
+
+              {/* 1. 정산 연월 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  정산 연월:
+                </label>
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {[
+                    { label: '26년 10월', key: '2026-10' },
+                    { label: '26년 8월', key: '2026-08' },
+                    { label: '26년 7월', key: '2026-07' },
+                    { label: '당월', key: 'THIS_MONTH' },
+                    { label: '전월', key: 'LAST_MONTH' },
+                    { label: '전체', key: 'ALL' }
+                  ].map(b => (
+                    <button
+                      key={b.key}
+                      onClick={() => handleSetReconDatePreset(b.key as any)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        borderRadius: '4px',
+                        border: '1px solid',
+                        borderColor: (b.key === '2026-10' && reconStartDate === '2026-10-01' && reconEndDate === '2026-10-31') ||
+                                     (b.key === '2026-07' && reconStartDate === '2026-07-01' && reconEndDate === '2026-07-31') ||
+                                     (b.key === '2026-08' && reconStartDate === '2026-08-01' && reconEndDate === '2026-08-31')
+                                      ? 'var(--primary)' : 'var(--border-color)',
+                        backgroundColor: (b.key === '2026-10' && reconStartDate === '2026-10-01' && reconEndDate === '2026-10-31') ||
+                                         (b.key === '2026-07' && reconStartDate === '2026-07-01' && reconEndDate === '2026-07-31') ||
+                                         (b.key === '2026-08' && reconStartDate === '2026-08-01' && reconEndDate === '2026-08-31')
+                                          ? 'rgba(59,130,246,0.12)' : 'var(--bg-body)',
+                        color: (b.key === '2026-10' && reconStartDate === '2026-10-01' && reconEndDate === '2026-10-31') ||
+                               (b.key === '2026-07' && reconStartDate === '2026-07-01' && reconEndDate === '2026-07-31') ||
+                               (b.key === '2026-08' && reconStartDate === '2026-08-01' && reconEndDate === '2026-08-31')
+                                ? 'var(--primary)' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', backgroundColor: 'var(--bg-body)', padding: '2px 5px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                    <input
+                      type="date"
+                      value={reconStartDate}
+                      onChange={e => setReconStartDate(e.target.value)}
+                      style={{ padding: '2px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11px' }}
+                    />
+                    <span style={{ fontSize: '11px' }}>~</span>
+                    <input
+                      type="date"
+                      value={reconEndDate}
+                      onChange={e => setReconEndDate(e.target.value)}
+                      style={{ padding: '2px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '11px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. 정산 운송사 선택 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  정산 운송사:
+                </label>
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setSelectedReconCompany('ALL')}
+                    style={{
+                      padding: '4px 9px',
+                      borderRadius: '5px',
+                      border: '1px solid',
+                      borderColor: selectedReconCompany === 'ALL' ? 'var(--primary)' : 'var(--border-color)',
+                      backgroundColor: selectedReconCompany === 'ALL' ? 'rgba(59,130,246,0.12)' : 'var(--bg-body)',
+                      color: selectedReconCompany === 'ALL' ? 'var(--primary)' : 'var(--text-primary)',
+                      fontWeight: selectedReconCompany === 'ALL' ? 800 : 500,
+                      fontSize: '11.5px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <span>전체 운송사</span>
+                    <span style={{ padding: '1px 4px', borderRadius: '8px', fontSize: '10px', fontWeight: 800, backgroundColor: 'rgba(59,130,246,0.2)', color: 'var(--primary)' }}>
+                      미지급 {unpaidStatsByCompany.ALL?.unpaid || 0}건
+                    </span>
+                  </button>
+
+                  {[
+                    { name: '경기', label: '경기' },
+                    { name: '엘제이', label: '엘제이' },
+                    { name: '자인', label: '자인 (엠제이)' }
+                  ].map(comp => {
+                    const stat = unpaidStatsByCompany[comp.name] || { total: 0, unpaid: 0, unpaidCost: 0 };
+                    const isSelected = selectedReconCompany === comp.name;
+                    return (
+                      <button
+                        key={comp.name}
+                        onClick={() => setSelectedReconCompany(comp.name)}
+                        style={{
+                          padding: '4px 9px',
+                          borderRadius: '5px',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'var(--primary)' : 'var(--border-color)',
+                          backgroundColor: isSelected ? 'rgba(59,130,246,0.12)' : 'var(--bg-body)',
+                          color: isSelected ? 'var(--primary)' : 'var(--text-primary)',
+                          fontWeight: isSelected ? 800 : 500,
+                          fontSize: '11.5px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <span>{comp.label}</span>
+                        <span style={{
+                          padding: '1px 4px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          backgroundColor: stat.unpaid > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)',
+                          color: stat.unpaid > 0 ? '#dc2626' : '#16a34a'
+                        }}>
+                          {stat.unpaid}건
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <select
+                    value={selectedReconCompany}
+                    onChange={e => setSelectedReconCompany(e.target.value)}
+                    style={{ padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', fontSize: '11px', height: '26px' }}
+                  >
+                    <option value="ALL">기타 운송사...</option>
+                    {transportCompanies.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 3. 지급 상태 & 조회 버튼 */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px dashed var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>지급 상태:</span>
+                  {(() => {
+                    const companyStats = unpaidStatsByCompany[selectedReconCompany] || unpaidStatsByCompany.ALL;
+                    const unpaidCount = companyStats?.unpaid || 0;
+                    const paidCount = (companyStats?.total || 0) - unpaidCount;
+                    const totalCount = companyStats?.total || 0;
+
+                    return [
+                      { key: 'UNPAID', label: `미완료 (${unpaidCount}건)` },
+                      { key: 'PAID', label: `지급요청/완료 (${paidCount}건)` },
+                      { key: 'ALL', label: `전체 (${totalCount}건)` }
+                    ].map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => setReconPaymentFilter(p.key as any)}
+                        style={{
+                          padding: '3px 8px',
+                          fontSize: '11px',
+                          fontWeight: reconPaymentFilter === p.key ? 800 : 500,
+                          borderRadius: '4px',
+                          border: '1px solid',
+                          borderColor: reconPaymentFilter === p.key ? (p.key === 'UNPAID' ? '#dc2626' : 'var(--primary)') : 'var(--border-color)',
+                          backgroundColor: reconPaymentFilter === p.key ? (p.key === 'UNPAID' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)') : 'var(--bg-body)',
+                          color: reconPaymentFilter === p.key ? (p.key === 'UNPAID' ? '#dc2626' : 'var(--primary)') : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    ));
+                  })()}
+                </div>
+
+                <button
+                  onClick={handleReconSearch}
+                  className="btn-query"
+                >
+                  <Search size={13} /> 조회
+                </button>
+              </div>
+            </div>
+
+            {/* ② 우측 상단 [INPUT / PIPELINE]: 데이터 유입 파이프라인 */}
+            <div style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '10px',
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Upload size={15} color="var(--primary)" /> 거래명세서 데이터 유입
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  거래명세서 ➔ 1:1 자동 대사
+                </span>
+              </div>
+
+              {/* 메인 액션 버튼: 거래명세서 업로드 & 자동대사 */}
+              <input type="file" ref={fileInputRef} onChange={handleExcelFileUpload} accept=".xlsx, .xls, .csv" style={{ display: 'none' }} />
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-excel-upload"
+                style={{ height: '42px', fontSize: '13.5px', fontWeight: 700 }}
+              >
+                <Upload size={15} /> 거래명세서 업로드 & 자동 대사
+              </button>
+
+              {/* 하단 파이프라인 보조 버튼군 */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                <button
+                  onClick={handleDownloadExcelTemplate}
+                  className="btn-reset btn-sm"
+                >
+                  <FileSpreadsheet size={12} /> 양식 다운로드
+                </button>
+
+                <button
+                  onClick={handleExportReconciliationReport}
+                  className="btn-excel-download btn-sm"
+                >
+                  <Download size={12} /> 대사 리포트
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowTransportStatementModal(true)}
+                  style={{
+                    padding: '6px 8px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    borderRadius: '5px',
+                    border: '1px solid rgba(16,185,129,0.5)',
+                    backgroundColor: 'rgba(16,185,129,0.1)',
+                    color: '#059669',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <FileText size={12} /> 매입거래명세서
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const targetYm = reconStartDate.slice(0, 7);
+                    const compId = selectedReconCompany === 'ALL' ? undefined : transportCompanies.find(c => c.name === selectedReconCompany)?.id;
+                    try {
+                      const count = await convertReconciledDeliveriesToSettlement(targetYm, compId);
+                      if (count > 0) {
+                        showToast(`대사 완료 배차 ${count}건이 월말 매입 정산 대장으로 이관되었습니다.`);
+                      } else {
+                        showToast(`[${targetYm}] 연월에 대사 완료 상태인 미이관 배차건이 없습니다.`, 'warning');
+                      }
+                    } catch (err: any) {
+                      showErrorModal(`매입 정산 이관 실패: ${err?.message || err}`);
+                    }
+                  }}
+                  style={{
+                    padding: '6px 8px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    borderRadius: '5px',
+                    border: '1px solid rgba(99,102,241,0.4)',
+                    backgroundColor: 'var(--primary-light)',
+                    color: 'var(--primary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  매입정산 이관
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+
+          {/* ────────────── ③ 중앙 본문: 고밀도 1:1 대사 작업대 그리드 (화면의 85% 확보) ────────────── */}
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            
+            {/* 상태 필터 배지 바 + 일괄 승인 버튼 + 검색창 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {[
+                  { key: 'ALL', label: '전체', count: reconPairs.length || completedDeliveriesForRecon.length, color: 'var(--text-primary)', bg: 'var(--bg-body)' },
+                  { key: 'MATCHED', label: '대사 일치', count: reconStats.matchedCount, color: 'var(--success)', bg: 'rgba(34,197,94,0.1)' },
+                  { key: 'MISMATCH', label: '금액 불일치', count: reconStats.mismatchCount, color: '#ca8a04', bg: 'rgba(234,179,8,0.12)' },
+                  { key: 'EXCEL_ONLY', label: '청구 단독', count: reconStats.excelOnlyCount, color: 'var(--danger)', bg: 'rgba(239,68,68,0.1)' },
+                  { key: 'SYSTEM_ONLY', label: '시스템 단독', count: reconStats.systemOnlyCount, color: 'var(--text-muted)', bg: 'var(--bg-body)' },
+                  { key: 'EXCLUDED', label: '오청구 제외', count: reconStats.excludedCount, color: 'var(--text-muted)', bg: 'rgba(100,116,139,0.1)' },
+                  { key: 'PAYMENT_REQUESTED', label: '지급요청 완료', count: reconStats.paymentRequestedCount, color: 'var(--primary)', bg: 'rgba(37,99,235,0.1)' }
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setReconStatusFilter(t.key as any)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: reconStatusFilter === t.key ? t.color : 'var(--border-color)',
+                      backgroundColor: reconStatusFilter === t.key ? t.bg : 'var(--bg-body)',
+                      color: reconStatusFilter === t.key ? t.color : 'var(--text-secondary)',
+                      fontWeight: reconStatusFilter === t.key ? 800 : 500,
+                      fontSize: '11.5px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <span>{t.label}</span>
+                    <strong style={{ fontSize: '11px', opacity: 0.9 }}>{t.count}</strong>
+                  </button>
+                ))}
+
+                {/* 금액 불일치 / 할증 건 일괄 승인 버튼 */}
+                {reconStats.mismatchCount > 0 && (
+                  <button data-hs-trigger="Approve"
+                    onClick={handleApproveAllMismatches}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #ca8a04',
+                      backgroundColor: 'rgba(234,179,8,0.18)',
+                      color: '#a16207',
+                      fontSize: '11.5px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    할증 {reconStats.mismatchCount}건 일괄 승인
+                  </button>
+                )}
+              </div>
+
+              {/* 검색창 */}
+              <div style={{ position: 'relative', width: '220px' }}>
+                <Search size={13} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="배차ID / 현장 / 업체 / 기사 검색..."
+                  value={reconSearchQuery}
+                  onChange={e => setReconSearchQuery(e.target.value)}
+                  style={{ width: '100%', padding: '4px 8px 4px 26px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', fontSize: '11.5px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* 알림 메시지 */}
+            {reconNotificationMsg && (
+              <div style={{ fontSize: '12px', padding: '6px 10px', backgroundColor: 'rgba(59,130,246,0.08)', borderRadius: '6px', color: 'var(--primary)', fontWeight: 600, flexShrink: 0 }}>
+                {reconNotificationMsg}
+              </div>
+            )}
+
+            {/* 1:1 대사 그리드 테이블 (고정 레이아웃으로 횡스크롤 및 컬럼 밀림 원천 차단) */}
+            <div className="table-container" style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+              <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+                  {/* 1행: 대분류 영역 헤더 (상태 | 배차정보 3열 | 비교 | 청구정보 3열 | 차액 | 조치) */}
+                  <tr style={{ backgroundColor: 'var(--bg-body)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', fontSize: '11.5px' }}>
+                    <th rowSpan={2} style={{ padding: '6px 8px', width: '68px', textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid var(--border-color)', fontWeight: 800 }}>
+                      상태
+                    </th>
+                    <th colSpan={3} style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 800, backgroundColor: 'rgba(59, 130, 246, 0.08)', color: 'var(--primary)', borderRight: '1px solid var(--border-color)' }}>
+                      배차정보
+                    </th>
+                    <th rowSpan={2} style={{ padding: '6px 4px', width: '36px', textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid var(--border-color)', fontWeight: 800, color: 'var(--text-muted)' }}>
+                      비교
+                    </th>
+                    <th colSpan={3} style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 800, backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', borderRight: '1px solid var(--border-color)' }}>
+                      청구정보
+                    </th>
+                    <th rowSpan={2} style={{ padding: '6px 8px', width: '110px', textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid var(--border-color)', fontWeight: 800 }}>
+                      차액
+                    </th>
+                    <th rowSpan={2} style={{ padding: '6px 8px', width: '120px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 800 }}>
+                      조치
+                    </th>
+                  </tr>
+
+                  {/* 2행: 세부 필드 헤더 (배차정보 3열 + 청구정보 3열) */}
+                  <tr style={{ backgroundColor: 'var(--bg-body)', borderBottom: '1.5px solid var(--border-color)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', fontSize: '11px' }}>
+                    {/* 배차정보 하위 */}
+                    <th style={{ padding: '6px 8px', width: '90px', backgroundColor: 'rgba(59, 130, 246, 0.03)' }}>
+                      일자
+                    </th>
+                    <th style={{ padding: '6px 8px', width: '28%', backgroundColor: 'rgba(59, 130, 246, 0.03)' }}>
+                      내역 (고객사 / 현장 / 기사)
+                    </th>
+                    <th style={{ padding: '6px 8px', width: '92px', textAlign: 'right', backgroundColor: 'rgba(59, 130, 246, 0.03)', borderRight: '1px solid var(--border-color)' }}>
+                      금액
+                    </th>
+
+                    {/* 청구정보 하위 */}
+                    <th style={{ padding: '6px 8px', width: '90px', backgroundColor: 'rgba(16, 185, 129, 0.03)' }}>
+                      청구서 일자
+                    </th>
+                    <th style={{ padding: '6px 8px', width: '24%', backgroundColor: 'rgba(16, 185, 129, 0.03)' }}>
+                      청구 내역 (현장명 / 비고)
+                    </th>
+                    <th style={{ padding: '6px 8px', width: '92px', textAlign: 'right', backgroundColor: 'rgba(16, 185, 129, 0.03)', borderRight: '1px solid var(--border-color)' }}>
+                      청구금액
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reconPairs.length === 0 ? (
+                    completedDeliveriesForRecon.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} style={{ textAlign: 'center', padding: '50px 10px', color: 'var(--text-muted)' }}>
+                          {(() => {
+                            const companyStats = unpaidStatsByCompany[selectedReconCompany] || unpaidStatsByCompany.ALL;
+                            const unpaidCount = companyStats?.unpaid || 0;
+                            const paidCount = (companyStats?.total || 0) - unpaidCount;
+                            if (reconPaymentFilter === 'UNPAID' && paidCount > 0) {
+                              return `조회된 기간 내 미완료(대사대상) 배차 내역이 없습니다. (지급요청 완료된 배차 ${paidCount}건은 상단 [지급요청/완료] 필터에서 확인하실 수 있습니다.)`;
+                            }
+                            return '조회된 기간 내 배차 내역이 없습니다.';
+                          })()}
+                        </td>
+                      </tr>
+                    ) : (
+                      completedDeliveriesForRecon
+                        .filter(d => {
+                          if (reconStatusFilter === 'ALL') return true;
+                          if (reconStatusFilter === 'PAYMENT_REQUESTED') return (d as any).reconciliationStatus === 'PAYMENT_REQUESTED';
+                          if (reconStatusFilter === 'MATCHED') return (d as any).reconciliationStatus === 'MATCHED' || (d as any).reconciliationStatus === 'RECONCILED';
+                          if (reconStatusFilter === 'SYSTEM_ONLY' || reconStatusFilter === 'PENDING') {
+                            return !(d as any).reconciliationStatus || (d as any).reconciliationStatus === 'PENDING' || (d as any).reconciliationStatus === 'UNRECONCILED';
+                          }
+                          return false;
+                        })
+                        .map(d => {
+                          const contract = d.contractId ? contractMap.get(d.contractId) : null;
+                          const customer = contract?.customerId ? customerMap.get(contract.customerId) : null;
+                          const memoCustomer = d.memo && d.memo.includes('업체:') ? d.memo.split('업체:')[1].split('|')[0].trim() : '';
+                          const displayCustomer = customer?.name || memoCustomer || '고객사미지정';
+                          const bundleStops = d.bundleGroupId ? getBundleGroupDeliveries(d.bundleGroupId) : [];
+                          const isBundledRow = bundleStops.length >= 2;
+                          const bundleStopLines = isBundledRow
+                            ? bundleStops.map((bd, idx) => {
+                                const bCon = bd.contractId ? contractMap.get(bd.contractId) : null;
+                                const bCus = bCon?.customerId ? customerMap.get(bCon.customerId) : null;
+                                const bSite = bCon?.siteId ? siteMap.get(bCon.siteId) : null;
+                                const cName = bCus?.name || '';
+                                let cleanDest = bd.destinationAddress || bSite?.name || '-';
+                                if (cName && cleanDest.startsWith(cName)) {
+                                  cleanDest = cleanDest.slice(cName.length).trim();
+                                  if (cleanDest.startsWith('(') && cleanDest.endsWith(')')) {
+                                    cleanDest = cleanDest.slice(1, -1).trim();
+                                  }
+                                }
+                                return `${idx + 1}차: ${cName ? `${cName} · ` : ''}${cleanDest}`;
+                              })
+                            : [];
+                          const bundleSummaryText = bundleStopLines.join(' ➔ ');
+                          const cost = getEffectiveDeliveryCost(d);
+                          const isPaymentReq = (d as any).reconciliationStatus === 'PAYMENT_REQUESTED';
+                          const isPaidSettled = (d as any).reconciliationStatus === 'PAID' || (d as any).reconciliationStatus === 'SETTLED' || d.isCostSettled === true;
+                          const isMatched = (d as any).reconciliationStatus === 'MATCHED' || (d as any).reconciliationStatus === 'RECONCILED';
+
+                          return (
+                            <tr key={d.id} style={{ borderBottom: '1px solid var(--border-color)', height: isBundledRow ? 'auto' : '40px' }}>
+                              <td style={{ textAlign: 'center', padding: '6px', verticalAlign: 'middle' }}>
+                                {isPaymentReq ? (
+                                  <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(37,99,235,0.12)', color: 'var(--primary)', border: '1px solid rgba(37,99,235,0.35)', whiteSpace: 'nowrap' }}>
+                                    지급요청
+                                  </span>
+                                ) : isPaidSettled ? (
+                                  <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.35)', whiteSpace: 'nowrap' }}>
+                                    지급완료
+                                  </span>
+                                ) : isMatched ? (
+                                  <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(34,197,94,0.12)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.35)', whiteSpace: 'nowrap' }}>
+                                    대사일치
+                                  </span>
+                                ) : (
+                                  <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--bg-body)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
+                                    대사대기
+                                  </span>
+                                )}
+                              </td>
+                              <td style={{ padding: '6px 8px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{d.loadingDate || d.requestDate}</td>
+                              <td style={{ padding: '6px 10px', overflow: 'hidden', verticalAlign: 'middle' }} title={isBundledRow ? bundleSummaryText : (d.destinationAddress || '')}>
+                                {isBundledRow ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                                      <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, backgroundColor: 'rgba(217,119,6,0.14)', color: '#d97706', border: '1px solid rgba(217,119,6,0.35)', flexShrink: 0 }}>
+                                        경유/합짐 {bundleStops.length}건
+                                      </span>
+                                      <strong style={{ color: 'var(--text-primary)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {bundleStops.map(bd => {
+                                          const bCon = bd.contractId ? contractMap.get(bd.contractId) : null;
+                                          const bCus = bCon?.customerId ? customerMap.get(bCon.customerId) : null;
+                                          return bCus?.name || '';
+                                        }).filter(Boolean).join(' · ') || displayCustomer}
+                                      </strong>
+                                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                                        ({d.driverName || '기사미배정'})
+                                      </span>
+                                    </div>
+                                    {bundleStopLines.slice(0, 2).map((lineText, lIdx) => (
+                                      <div
+                                        key={lIdx}
+                                        style={{
+                                          fontSize: '11px',
+                                          color: 'var(--text-secondary)',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                          lineHeight: 1.35
+                                        }}
+                                      >
+                                        {lineText}
+                                        {lIdx === 1 && bundleStopLines.length > 2 ? ` 외 ${bundleStopLines.length - 2}곳` : ''}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    wordBreak: 'keep-all',
+                                    lineHeight: 1.35
+                                  }}>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{displayCustomer}</strong> | {d.destinationAddress || '도착지미지정'} ({d.driverName || '기사미배정'})
+                                  </div>
+                                )}
+                              </td>
+                              <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
+                                ₩{cost.toLocaleString()}
+                              </td>
+                              <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>-</td>
+                              {isPaymentReq ? (
+                                <td colSpan={4} style={{ textAlign: 'center', padding: '6px 10px', fontSize: '11.5px', backgroundColor: 'rgba(37,99,235,0.03)' }}>
+                                  <span style={{ color: 'var(--primary)', fontWeight: 800 }}>
+                                    {d.memo && d.memo.includes('[통합지급요청:') ? d.memo.split(']')[0].replace('[', '') : '매입 지급요청 완료'}
+                                  </span>
+                                  <span style={{ color: 'var(--text-secondary)', marginLeft: '8px' }}>
+                                    {d.paymentRequestedAt ? `(요청일: ${d.paymentRequestedAt.slice(0, 10)})` : ''} | 확정 운송료 ₩{(d.deliveryCostConfirmed || cost).toLocaleString()}원 (월말 매입 정산 대장 등록됨)
+                                  </span>
+                                </td>
+                              ) : isPaidSettled ? (
+                                <td colSpan={4} style={{ textAlign: 'center', padding: '6px 10px', fontSize: '11.5px', color: '#10b981', fontWeight: 700, backgroundColor: 'rgba(16,185,129,0.03)' }}>
+                                  회계 정산 및 지급 집행 완료 (매입 정산 대장 반영됨)
+                                </td>
+                              ) : (
+                                <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11.5px' }}>
+                                  상단 [엑셀 거래명세서 업로드] 시 1:1 대사가 진행됩니다.
+                                </td>
+                              )}
+                              <td style={{ textAlign: 'center', padding: '6px' }}>
+                                {isPaymentReq || isPaidSettled ? (
+                                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                    대사 마감됨
+                                  </span>
+                                ) : (
+                                  <button onClick={(e) => handleOpenCostEdit(d, cost, e)} style={{ padding: '2px 6px', fontSize: '11px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', cursor: 'pointer' }}>
+                                    금액수정
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                    )
+                  ) : (
+                    reconPairs
+                      .filter(p => {
+                        if (reconStatusFilter === 'ALL') return true;
+                        if (reconStatusFilter === 'MATCHED') return p.isReconciled && !p.isExcluded;
+                        if (reconStatusFilter === 'MISMATCH') return p.matchStatus === 'MISMATCH';
+                        if (reconStatusFilter === 'EXCEL_ONLY') return p.matchStatus === 'EXCEL_ONLY' && !p.isExcluded;
+                        if (reconStatusFilter === 'SYSTEM_ONLY') return p.matchStatus === 'SYSTEM_ONLY';
+                        if (reconStatusFilter === 'EXCLUDED') return p.isExcluded || p.matchStatus === 'EXCLUDED';
+                        if (reconStatusFilter === 'PAYMENT_REQUESTED') return p.matchStatus === 'PAYMENT_REQUESTED';
+                        return true;
+                      })
+                      .sort((a, b) => {
+                        // 💡 [사장님 지시] 운송료 대사 결과 항상 날짜순(오름차순: 과거 ➔ 최신) 정렬 보장
+                        const dateA = a.excelRow?.['정규일자'] || a.systemDelivery?.loadingDate || a.systemDelivery?.requestDate || '9999-99-99';
+                        const dateB = b.excelRow?.['정규일자'] || b.systemDelivery?.loadingDate || b.systemDelivery?.requestDate || '9999-99-99';
+                        if (dateA !== dateB) return dateA.localeCompare(dateB);
+                        return (a.pairId || '').localeCompare(b.pairId || '');
+                      })
+                      .map((pair, pIdx) => {
+                        const sys = pair.systemDelivery;
+                        const excel = pair.excelRow;
+                        const contract = sys?.contractId ? contractMap.get(sys.contractId) : null;
+                        const customer = contract?.customerId ? customerMap.get(contract.customerId) : null;
+                        const memoCustomer = sys?.memo && sys.memo.includes('업체:') ? sys.memo.split('업체:')[1].split('|')[0].trim() : '';
+                        const displayCustomer = customer?.name || memoCustomer || '고객사미지정';
+                        const bundleStops = sys?.bundleGroupId ? getBundleGroupDeliveries(sys.bundleGroupId) : [];
+                        const isBundledRow = bundleStops.length >= 2;
+                        const bundleStopLines = isBundledRow
+                          ? bundleStops.map((bd, idx) => {
+                              const bCon = bd.contractId ? contractMap.get(bd.contractId) : null;
+                              const bCus = bCon?.customerId ? customerMap.get(bCon.customerId) : null;
+                              const bSite = bCon?.siteId ? siteMap.get(bCon.siteId) : null;
+                              const cName = bCus?.name || '';
+                              let cleanDest = bd.destinationAddress || bSite?.name || '-';
+                              if (cName && cleanDest.startsWith(cName)) {
+                                cleanDest = cleanDest.slice(cName.length).trim();
+                                if (cleanDest.startsWith('(') && cleanDest.endsWith(')')) {
+                                  cleanDest = cleanDest.slice(1, -1).trim();
+                                }
+                              }
+                              return `${idx + 1}차: ${cName ? `${cName} · ` : ''}${cleanDest}`;
+                            })
+                          : [];
+                        const bundleSummaryText = bundleStopLines.join(' ➔ ');
+
+                        const isMatched = pair.isReconciled && !pair.isExcluded;
+                        const isMismatch = pair.matchStatus === 'MISMATCH';
+                        const isExcelOnly = pair.matchStatus === 'EXCEL_ONLY' && !pair.isExcluded;
+                        const isSysOnly = pair.matchStatus === 'SYSTEM_ONLY';
+                        const isExcluded = pair.isExcluded || pair.matchStatus === 'EXCLUDED';
+
+                        return (
+                          <tr
+                            key={pair.pairId || pIdx}
+                            onDoubleClick={() => setSelectedReconDetailPair(pair)}
+                            title="더블클릭 시 배차 상세 및 청구 대조 모달이 열립니다."
+                            style={{
+                              borderBottom: '1px solid var(--border-color)',
+                              backgroundColor: isExcluded ? 'rgba(100,116,139,0.06)' : isMismatch ? 'rgba(234,179,8,0.05)' : isMatched ? 'rgba(34,197,94,0.03)' : isExcelOnly ? 'rgba(239,68,68,0.04)' : 'transparent',
+                              height: isBundledRow ? 'auto' : '42px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {/* 상태 배지 */}
+                            <td style={{ textAlign: 'center', padding: '6px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                              {isExcluded ? (
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(100,116,139,0.15)', color: 'var(--text-muted)' }}>
+                                  🚫 제외
+                                </span>
+                              ) : isMatched ? (
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--success)' }}>
+                                  🟢 일치
+                                </span>
+                              ) : isMismatch ? (
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(234,179,8,0.18)', color: '#a16207' }}>
+                                  🟡 차액
+                                </span>
+                              ) : isExcelOnly ? (
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(239,68,68,0.15)', color: 'var(--danger)' }}>
+                                  🔴 청구
+                                </span>
+                              ) : (
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--bg-body)', color: 'var(--text-muted)' }}>
+                                  ⚪ 배차
+                                </span>
+                              )}
+                            </td>
+
+                            {/* [배차정보] 일자 */}
+                            <td style={{ padding: '6px 8px', whiteSpace: 'nowrap', color: sys ? 'var(--text-primary)' : 'var(--text-muted)', verticalAlign: 'middle' }}>
+                              {sys ? (sys.loadingDate || sys.requestDate) : '(미기재)'}
+                            </td>
+
+                            {/* [배차정보] 내역 */}
+                            <td style={{ padding: '6px 10px', overflow: 'hidden', verticalAlign: 'middle' }} title={isBundledRow ? bundleSummaryText : (sys?.destinationAddress || '')}>
+                              {sys ? (
+                                isBundledRow ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                                      <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, backgroundColor: 'rgba(217,119,6,0.14)', color: '#d97706', border: '1px solid rgba(217,119,6,0.35)', flexShrink: 0 }}>
+                                        경유/합짐 {bundleStops.length}건
+                                      </span>
+                                      <strong style={{ color: 'var(--text-primary)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {bundleStops.map(bd => {
+                                          const bCon = bd.contractId ? contractMap.get(bd.contractId) : null;
+                                          const bCus = bCon?.customerId ? customerMap.get(bCon.customerId) : null;
+                                          return bCus?.name || '';
+                                        }).filter(Boolean).join(' · ') || displayCustomer}
+                                      </strong>
+                                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                                        ({sys.driverName || '기사미배정'})
+                                      </span>
+                                    </div>
+                                    {bundleStopLines.slice(0, 2).map((lineText, lIdx) => (
+                                      <div
+                                        key={lIdx}
+                                        style={{
+                                          fontSize: '11px',
+                                          color: 'var(--text-secondary)',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                          lineHeight: 1.35
+                                        }}
+                                      >
+                                        {lineText}
+                                        {lIdx === 1 && bundleStopLines.length > 2 ? ` 외 ${bundleStopLines.length - 2}곳` : ''}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    wordBreak: 'keep-all',
+                                    lineHeight: 1.35
+                                  }}>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{displayCustomer}</strong> | {sys.destinationAddress || '도착지미지정'}
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px' }}>({sys.driverName || '기사미배정'})</span>
+                                  </div>
+                                )
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>-</span>
+                              )}
+                            </td>
+
+                            {/* [배차정보] 금액 */}
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 800, color: sys ? 'var(--primary)' : 'var(--text-muted)', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                              {sys ? `₩${pair.systemCost.toLocaleString()}` : '-'}
+                            </td>
+
+                            {/* VS 기호 */}
+                            <td style={{ textAlign: 'center', color: isMatched ? '#16a34a' : isMismatch ? '#ca8a04' : 'var(--text-muted)', fontWeight: 800, verticalAlign: 'middle' }}>
+                              {isMatched ? '=' : isMismatch ? '≠' : 'VS'}
+                            </td>
+
+                            {/* [청구정보] 일자 */}
+                            <td style={{ padding: '6px 8px', whiteSpace: 'nowrap', color: excel ? 'var(--text-primary)' : 'var(--text-muted)', verticalAlign: 'middle' }}>
+                              {excel ? (excel['정규일자'] || excel['일자'] || excel['날짜'] || excel['운송일자']) : '(미기재)'}
+                            </td>
+
+                            {/* [청구정보] 청구 내역 */}
+                            <td style={{ padding: '6px 10px', overflow: 'hidden', verticalAlign: 'middle' }} title={excel ? `${excel['정규하차지'] || excel['현장명'] || excel['업체명'] || ''} ${excel['비고'] ? `[${excel['비고']}]` : ''}` : undefined}>
+                              {excel ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                                  <div style={{
+                                    fontWeight: 700,
+                                    color: 'var(--text-primary)',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    lineHeight: 1.35
+                                  }}>
+                                    {excel['정규하차지'] || excel['현장명'] || excel['업체명'] || '현장미상'}
+                                  </div>
+                                  {excel['비고'] && (
+                                    <div style={{
+                                      fontSize: '11px',
+                                      color: 'var(--text-muted)',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      lineHeight: 1.35
+                                    }}>
+                                      [{excel['비고']}]
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>-</span>
+                              )}
+                            </td>
+
+                            {/* [청구정보] 청구금액 */}
+                            <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 800, color: excel ? (isMismatch ? '#ca8a04' : '#16a34a') : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                              {excel ? `₩${pair.excelCost.toLocaleString()}` : '-'}
+                            </td>
+
+                            {/* 차액 */}
+                            <td style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                              {isMismatch ? (
+                                <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#ca8a04' }}>
+                                  {pair.diffCost > 0 ? `+₩${pair.diffCost.toLocaleString()}` : `-₩${Math.abs(pair.diffCost).toLocaleString()}`}
+                                  {pair.surchargeReason && <span style={{ fontSize: '10.5px', display: 'block', color: '#a16207' }}>({pair.surchargeReason})</span>}
+                                </span>
+                              ) : isExcelOnly ? (
+                                <span style={{ fontSize: '11px', color: 'var(--danger)' }}>청구 단독</span>
+                              ) : isSysOnly ? (
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>배차 미청구</span>
+                              ) : (
+                                <span style={{ fontSize: '11px', color: 'var(--success)' }}>₩0 (완전일치)</span>
+                              )}
+                            </td>
+
+                            {/* 인라인 조치 버튼군 */}
+                            <td style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
+                                {isMismatch && (
+                                  <button data-hs-trigger="Approve"
+                                    onClick={() => handleApproveMismatch(pair.pairId)}
+                                    title="청구 금액으로 확정하고 대사 완료 처리"
+                                    style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 800, borderRadius: '4px', border: '1px solid #ca8a04', backgroundColor: 'rgba(234,179,8,0.15)', color: '#a16207', cursor: 'pointer' }}
+                                  >
+                                    ₩{pair.excelCost.toLocaleString()} 승인
+                                  </button>
+                                )}
+
+                                {isExcelOnly && (
+                                  <>
+                                    <button
+                                      onClick={() => handleCreateDeliveryFromExcel(pair.pairId)}
+                                      title="청구 내역으로 신규 배차를 생성하고 대사 완료"
+                                      style={{ padding: '3px 6px', fontSize: '10.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid #2563eb', backgroundColor: 'rgba(37,99,235,0.1)', color: 'var(--primary)', cursor: 'pointer' }}
+                                    >
+                                      배차생성
+                                    </button>
+                                    <button
+                                      onClick={() => handleExcludeExcelOnly(pair.pairId)}
+                                      title="오청구 건으로 판단하여 지급요청 대상에서 제외"
+                                      style={{ padding: '3px 6px', fontSize: '10.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid #dc2626', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--danger)', cursor: 'pointer' }}
+                                    >
+                                      반려제외
+                                    </button>
+                                  </>
+                                )}
+
+                                {isExcluded && (
+                                  <button
+                                    onClick={() => handleExcludeExcelOnly(pair.pairId)}
+                                    style={{ padding: '3px 6px', fontSize: '10.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                                  >
+                                    제외취소
+                                  </button>
+                                )}
+
+                                {isMatched && (
+                                  <button
+                                    onClick={() => handleTogglePairReconciled(pair.pairId)}
+                                    title="대사 완료 취소 (대기 원복)"
+                                    style={{ padding: '3px 6px', fontSize: '10.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                  >
+                                    취소
+                                  </button>
+                                )}
+
+                                <button
+                                  onClick={() => setSelectedReconDetailPair(pair)}
+                                  title="배차 상세 및 대사 검토 모달 열기"
+                                  style={{ padding: '3px 6px', fontSize: '10.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                                >
+                                  상세
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ────────────── ④ 우하단: 대차대조 합계 검증 및 최종 완결 바 (화면 최하단 고정) ────────────── */}
+          <div style={{
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 10,
+            flexShrink: 0,
+            backgroundColor: 'var(--bg-card)',
+            border: '1.5px solid var(--border-color)',
+            borderRadius: '10px',
+            padding: '12px 18px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            {/* 좌측: 4대 대차대조 검증 합계식 (대사 전/후 분기) */}
+            {!reconStats.isPairMode ? (
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', fontSize: '12.5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>배차 운송료 합계:</span>
+                  <strong style={{ fontSize: '14px', color: 'var(--primary)' }}>₩{reconStats.totalCost.toLocaleString()}</strong>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({reconStats.totalCount}건)</span>
+                </div>
+                <div style={{ padding: '3px 10px', borderRadius: '4px', backgroundColor: 'rgba(100,116,139,0.1)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '11.5px', fontWeight: 600 }}>
+                  대사 대기 (우상단 거래명세서 업로드 시 1:1 대사 시작)
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', fontSize: '12.5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>청구총액:</span>
+                  <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>₩{reconStats.totalCost.toLocaleString()}</strong>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({reconStats.totalCount}건)</span>
+                </div>
+
+                <span style={{ color: 'var(--text-muted)' }}>=</span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--success)', fontWeight: 700 }}>지급 확정:</span>
+                  <strong style={{ fontSize: '14px', color: 'var(--success)' }}>₩{reconStats.matchedCost.toLocaleString()}</strong>
+                  <span style={{ fontSize: '11px', color: 'var(--success)' }}>({reconStats.matchedCount}건)</span>
+                </div>
+
+                <span style={{ color: 'var(--text-muted)' }}>+</span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>반려·제외:</span>
+                  <strong style={{ fontSize: '13px', color: 'var(--text-muted)' }}>₩{reconStats.excludedCost.toLocaleString()}</strong>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({reconStats.excludedCount}건)</span>
+                </div>
+
+                {(() => {
+                  const balanceDiff = reconStats.totalCost - (reconStats.matchedCost + reconStats.excludedCost);
+                  if (balanceDiff === 0) return null;
+                  return (
+                    <div style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', fontSize: '11px', fontWeight: 800 }}>
+                      대차 차액 ₩{Math.abs(balanceDiff).toLocaleString()} ({balanceDiff > 0 ? '미확정 잔액' : '초과 확정'})
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* 우측: ④ 최종 완결 버튼 (통합 매입 지급요청 생성) */}
+            <SpecialFeatureGuard featureId="btn:truck_dispatch:bulk_approve">
+              <button
+                onClick={handleExecuteBundlePaymentRequest}
+                disabled={reconStats.matchedCount === 0}
+                style={{
+                  padding: '10px 22px',
+                  fontSize: '13.5px',
+                  fontWeight: 900,
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: reconStats.matchedCount > 0 ? '#2563eb' : '#94a3b8',
+                  color: '#fff',
+                  cursor: reconStats.matchedCount > 0 ? 'pointer' : 'not-allowed',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: reconStats.matchedCount > 0 ? '0 4px 14px rgba(37,99,235,0.35)' : 'none',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Send size={15} /> {isRuleEnabled('DISPATCH_PAYMENT') ? '상신' : `대사 완료 ${reconStats.matchedCount}건 통합 지급요청 생성 ➔`}
+              </button>
+            </SpecialFeatureGuard>
+          </div>
+
+        </div>
+      )}
+
+      {/* 수동 배차 모달 */}
+      {showManualModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 16px 0' }}>수동 배차 신규 생성</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', whiteSpace: 'nowrap' }}>배차 구분</label>
+                <select
+                  value={manualCategory}
+                  onChange={e => {
+                    const nextCat = e.target.value as any;
+                    setManualCategory(nextCat);
+                    if (nextCat !== '반납') {
+                      setManualReturnAssetIds([]);
+                    }
+                  }}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)' }}
+                >
+                  <option value="출고">출고</option>
+                  <option value="입고">입고</option>
+                  <option value="교환">교환</option>
+                  <option value="반납">반납</option>
+                  <option value="정비">정비</option>
+                  <option value="이동">이동</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', whiteSpace: 'nowrap' }}>운송(상차)일자</label>
+                <input
+                  type="date"
+                  value={manualLoadingDate}
+                  onChange={e => {
+                    const nextLoadDate = e.target.value;
+                    setManualLoadingDate(nextLoadDate);
+                    if (!manualUnloadingDate || manualUnloadingDate < nextLoadDate) {
+                      setManualUnloadingDate(nextLoadDate);
+                    }
+                  }}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', color: manualCategory === '반납' ? '#e11d48' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                  {manualCategory === '반납' ? '하차일자 (반납일자)' : '하차일자'}
+                </label>
+                <input
+                  type="date"
+                  value={manualUnloadingDate}
+                  onChange={e => setManualUnloadingDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: manualCategory === '반납' ? '1.5px solid #e11d48' : '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* 🔄 [배차구분 === "반납" 전용] 임대가능 임차자산 버튼 선택 영역 */}
+            {manualCategory === '반납' && (
+              <div style={{
+                marginBottom: '12px',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1.5px solid rgba(225, 29, 72, 0.35)',
+                backgroundColor: 'rgba(225, 29, 72, 0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                  <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#e11d48', whiteSpace: 'nowrap' }}>
+                    🔄 반납 대상 임차자산 선택 (자산상태: 임대가능)
+                  </span>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    반납일자(하차일): <strong style={{ color: '#e11d48' }}>{manualUnloadingDate || manualLoadingDate}</strong>
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualReturnAssetIds([]);
+                      setManualDestination('');
+                    }}
+                    style={{
+                      padding: '6px 11px',
+                      borderRadius: '6px',
+                      fontSize: '11.5px',
+                      fontWeight: manualReturnAssetIds.length === 0 ? 800 : 600,
+                      border: manualReturnAssetIds.length === 0 ? '2px solid #475569' : '1px solid var(--border-color)',
+                      backgroundColor: manualReturnAssetIds.length === 0 ? 'rgba(71, 85, 105, 0.14)' : 'var(--bg-body)',
+                      color: manualReturnAssetIds.length === 0 ? 'var(--text-primary)' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {manualReturnAssetIds.length === 0 ? '✓ ' : ''}미결정 · 선택 안 함 (배차 먼저 등록)
+                  </button>
+
+                  {manualAvailableReturnSubleaseAssets.length === 0 ? (
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', padding: '4px' }}>
+                      임대가능 상태인 임차자산이 없습니다.
+                    </span>
+                  ) : (
+                    manualAvailableReturnSubleaseAssets.map(asset => {
+                      const isSel = manualReturnAssetIds.includes(asset.id);
+                      const matchedVendor = findSubleaseVendor(asset);
+                      return (
+                        <button
+                          key={asset.id}
+                          type="button"
+                          onClick={() => {
+                            setManualReturnAssetIds(prev => {
+                              const exists = prev.includes(asset.id);
+                              const next = exists ? prev.filter(id => id !== asset.id) : [...prev, asset.id];
+                              if (!exists) {
+                                const vendorLabel = matchedVendor?.name || asset.renter || '';
+                                if (vendorLabel) {
+                                  setManualDestination(vendorLabel);
+                                }
+                              } else if (next.length > 0) {
+                                const firstRemaining = assetMap.get(next[0]);
+                                const remainingVendor = firstRemaining ? findSubleaseVendor(firstRemaining) : null;
+                                const remainingLabel = remainingVendor?.name || firstRemaining?.renter || '';
+                                if (remainingLabel) {
+                                  setManualDestination(remainingLabel);
+                                }
+                              } else {
+                                setManualDestination('');
+                              }
+                              return next;
+                            });
+                          }}
+                          style={{
+                            padding: '6px 11px',
+                            borderRadius: '6px',
+                            fontSize: '11.5px',
+                            fontWeight: isSel ? 800 : 600,
+                            border: isSel ? '2px solid #e11d48' : '1px solid var(--border-color)',
+                            backgroundColor: isSel ? 'rgba(225, 29, 72, 0.14)' : 'var(--bg-body)',
+                            color: isSel ? '#e11d48' : 'var(--text-primary)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          <span>{isSel ? '✓' : '◻'}</span>
+                          <span style={{ fontWeight: 800 }}>{asset.assetNo}</span>
+                          <span>· {asset.modelName}</span>
+                          {asset.renter && <span style={{ fontSize: '11px', color: isSel ? '#be123c' : 'var(--text-secondary)' }}>({asset.renter})</span>}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  {manualReturnAssetIds.length > 0
+                    ? `선택된 임차자산 ${manualReturnAssetIds.length}대는 배차 생성 저장 즉시 하차일(${manualUnloadingDate || manualLoadingDate}) 기준으로 반납 처리됩니다.`
+                    : '무엇을 반납할지 아직 결정하지 못한 경우, 임차자산을 선택하지 않고 반납 배차를 먼저 등록한 뒤 배차 상세에서 선택할 수 있습니다.'}
+                </div>
+              </div>
+            )}
+
+            {(() => {
+              const selectedManualReturnAssetsForModal = manualCategory === '반납'
+                ? (manualReturnAssetIds.map(id => assetMap.get(id)).filter(Boolean) as Asset[])
+                : [];
+              const modalSubleaseVendorInfo = manualCategory === '반납'
+                ? getSubleaseVendorInfoByAssets(selectedManualReturnAssetsForModal, manualDestination)
+                : null;
+              const modalHqOriginInfo = getHqYardOriginInfo(null);
+              const isManualOriginHq = !manualOrigin || isHqYardLabel(manualOrigin);
+              const isManualDestHq = Boolean(manualDestination && isHqYardLabel(manualDestination));
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', whiteSpace: 'nowrap' }}>출발지 (상차지)</label>
+                    <input type="text" value={manualOrigin} onChange={e => setManualOrigin(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
+                    {(isManualOriginHq || manualCategory === '반납') && (
+                      <div style={{
+                        marginTop: '6px',
+                        padding: '8px 10px',
+                        borderRadius: '7px',
+                        border: '1px solid rgba(59, 130, 246, 0.35)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        fontSize: '11.5px',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '3px'
+                      }}>
+                        <div style={{ fontWeight: 800, color: '#2563eb', fontSize: '11px' }}>
+                          출발지 정보 ({isManualOriginHq ? modalHqOriginInfo.name : manualOrigin})
+                        </div>
+                        <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {isManualOriginHq ? modalHqOriginInfo.address : manualOrigin}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {modalHqOriginInfo.contactName}</span>
+                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {modalHqOriginInfo.contactPhone}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', whiteSpace: 'nowrap', color: manualCategory === '반납' ? '#e11d48' : 'var(--text-primary)' }}>
+                      {manualCategory === '반납' ? '도착지 (하차지 · 임차처)' : '도착지 (하차지)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={manualDestination}
+                      onChange={e => setManualDestination(e.target.value)}
+                      placeholder={manualCategory === '반납' ? '임차처명 또는 하차지 입력 (미입력 시 자동 지정)' : '고객사명 또는 하차지 입력'}
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+                    />
+                    {manualCategory === '반납' ? (
+                      <div style={{
+                        marginTop: '6px',
+                        padding: '8px 10px',
+                        borderRadius: '7px',
+                        border: '1px solid rgba(225, 29, 72, 0.35)',
+                        backgroundColor: 'rgba(225, 29, 72, 0.05)',
+                        fontSize: '11.5px',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '3px'
+                      }}>
+                        {modalSubleaseVendorInfo ? (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontWeight: 800, color: '#e11d48', fontSize: '11px' }}>
+                                임차처 (매입거래처 등록정보): {modalSubleaseVendorInfo.name}
+                              </span>
+                              {!modalSubleaseVendorInfo.vendor && (
+                                <span style={{ fontSize: '10.5px', color: '#d97706', fontWeight: 700 }}>매입거래처 미매칭</span>
+                              )}
+                            </div>
+                            <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {modalSubleaseVendorInfo.address || '매입거래처 주소 미등록'}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {modalSubleaseVendorInfo.contactName || '미등록'}</span>
+                              <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {modalSubleaseVendorInfo.contactPhone || '미등록'}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                            위에서 반납할 임차자산을 선택하면 매입거래처 등록정보의 주소, 담당자, 담당자 연락처가 자동으로 표시됩니다.
+                          </div>
+                        )}
+                      </div>
+                    ) : isManualDestHq ? (
+                      <div style={{
+                        marginTop: '6px',
+                        padding: '8px 10px',
+                        borderRadius: '7px',
+                        border: '1px solid rgba(59, 130, 246, 0.35)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        fontSize: '11.5px',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '3px'
+                      }}>
+                        <div style={{ fontWeight: 800, color: '#2563eb', fontSize: '11px' }}>
+                          도착지 정보 ({modalHqOriginInfo.name})
+                        </div>
+                        <div><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주소:</span> {modalHqOriginInfo.address}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자:</span> {modalHqOriginInfo.contactName}</span>
+                          <span><span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>담당자 연락처:</span> {modalHqOriginInfo.contactPhone}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '4px', display: 'block', whiteSpace: 'nowrap' }}>특기사항 (회수대상 / 배차 메모)</label>
+              <input
+                type="text"
+                value={manualMemo}
+                onChange={e => {
+                  setManualMemo(e.target.value);
+                  setManualClosingMemo(e.target.value);
+                }}
+                placeholder="회수대상 내역 또는 배차 특기사항 입력"
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
+              <button onClick={() => setShowManualModal(false)} className="btn-secondary">취소</button>
+              <button data-hs-trigger="Save" onClick={handleSaveManualDispatch} className="btn-primary" style={{ fontWeight: 800 }}>
+                {manualCategory === '반납'
+                  ? (manualReturnAssetIds.length > 0 ? `반납 배차 생성 및 임차자산 ${manualReturnAssetIds.length}대 반납 처리` : '반납 배차 등록 (임차자산 미선택)')
+                  : '배차 생성 저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💡 [사장님 지시] 배차 운송료 금액 수정 모달 (DB 동기화) */}
+      {showCostEditModal && editingDelivery && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '420px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 900, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                💰 배차 운송료 금액 수정
+              </h3>
+              <button onClick={() => setShowCostEditModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-body)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '16px', fontSize: '12.5px' }}>
+              <div style={{ fontWeight: 800, color: 'var(--primary)', marginBottom: '4px' }}>배차ID: {editingDelivery.id}</div>
+              <div>하차지: {editingDelivery.destinationAddress || '미지정'}</div>
+              <div>기사명: {editingDelivery.driverName || '미지정'}</div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 800, marginBottom: '6px', display: 'block', color: 'var(--text-primary)' }}>
+                변경할 운송료 금액 (원)
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="number"
+                  value={editingCostInput}
+                  onChange={e => setEditingCostInput(Number(e.target.value))}
+                  placeholder="예: 0"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px 10px 30px',
+                    borderRadius: '8px',
+                    border: '2px solid var(--primary)',
+                    backgroundColor: 'var(--bg-body)',
+                    color: 'var(--text-primary)',
+                    fontSize: '15px',
+                    fontWeight: 900,
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 900, color: 'var(--primary)' }}>₩</span>
+              </div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                💡 변경 즉시 원격 DB(Supabase) `deliveries` 테이블의 `deliveryCost`에 저장되고 반영됩니다.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                onClick={() => setShowCostEditModal(false)}
+                style={{ padding: '8px 14px', borderRadius: '7px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-body)', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 700, fontSize: '12.5px' }}
+              >
+                취소
+              </button>
+              <button data-hs-trigger="Save"
+                onClick={handleSaveDeliveryCost}
+                style={{ padding: '8px 18px', borderRadius: '7px', border: 'none', backgroundColor: 'var(--primary)', color: '#fff', cursor: 'pointer', fontWeight: 900, fontSize: '13px', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}
+              >
+                💾 DB 금액 수정 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💡 [사장님 지시] 운송료 대사 상세 및 불일치 검토 모달 (행 더블클릭 시 표출) */}
+      {selectedReconDetailPair && (() => {
+        const pair = selectedReconDetailPair;
+        const sys = pair.systemDelivery;
+        const excel = pair.excelRow;
+        const contract = sys ? contracts.find(c => c.id === sys.contractId) : null;
+        const customer = contract ? customers.find(c => c.id === contract.customerId) : null;
+        const site = contract ? sites.find(s => s.id === contract.siteId) : null;
+        const memoCustomer = sys?.memo && sys.memo.includes('업체:') ? sys.memo.split('업체:')[1].split('|')[0].trim() : '';
+        const displayCustomer = customer?.name || memoCustomer || (excel ? excel['업체명'] : '고객사미지정');
+
+        const isMatched = pair.isReconciled && !pair.isExcluded;
+        const isMismatch = pair.matchStatus === 'MISMATCH';
+        const isExcelOnly = pair.matchStatus === 'EXCEL_ONLY' && !pair.isExcluded;
+        const isSysOnly = pair.matchStatus === 'SYSTEM_ONLY';
+
+        return (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 99999, padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '14px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '840px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '18px'
+            }}>
+              {/* 모달 헤더 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 900, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🚚 배차 상세 및 운송료 대사 검토
+                  </h3>
+                  {isMismatch && (
+                    <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, backgroundColor: 'rgba(234,179,8,0.18)', color: '#ca8a04' }}>
+                      🟡 차액 불일치 ({pair.diffCost > 0 ? `+₩${pair.diffCost.toLocaleString()}` : `-₩${Math.abs(pair.diffCost).toLocaleString()}`})
+                    </span>
+                  )}
+                  {isMatched && (
+                    <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--success)' }}>
+                      🟢 대사 일치 (₩0 완전일치)
+                    </span>
+                  )}
+                  {isExcelOnly && (
+                    <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, backgroundColor: 'rgba(239,68,68,0.15)', color: 'var(--danger)' }}>
+                      🔴 청구서 단독 (배차 미발견)
+                    </span>
+                  )}
+                  {isSysOnly && (
+                    <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, backgroundColor: 'var(--bg-body)', color: 'var(--text-muted)' }}>
+                      ⚪ 시스템 배차 단독 (청구 미도착)
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedReconDetailPair(null)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', padding: '4px' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 상단 대차대조 비교 바 */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                gap: '12px',
+                alignItems: 'center',
+                backgroundColor: 'var(--bg-body)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '14px 20px'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 700 }}>시스템 등록 배차 금액</span>
+                  <span style={{ fontSize: '20px', fontWeight: 900, color: sys ? 'var(--primary)' : 'var(--text-muted)' }}>
+                    {sys ? `₩${pair.systemCost.toLocaleString()}원` : '배차 없음'}
+                  </span>
+                </div>
+                <div style={{ textAlign: 'center', padding: '0 16px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 900, color: isMatched ? '#16a34a' : isMismatch ? '#ca8a04' : 'var(--text-muted)' }}>
+                    {isMatched ? '=' : isMismatch ? '≠' : 'VS'}
+                  </span>
+                  {isMismatch && (
+                    <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#ca8a04', marginTop: '2px' }}>
+                      차액: {pair.diffCost > 0 ? `+₩${pair.diffCost.toLocaleString()}` : `-₩${Math.abs(pair.diffCost).toLocaleString()}`}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 700 }}>운송사 청구 운송비</span>
+                  <span style={{ fontSize: '20px', fontWeight: 900, color: excel ? (isMismatch ? '#ca8a04' : '#16a34a') : 'var(--text-muted)' }}>
+                    {excel ? `₩${pair.excelCost.toLocaleString()}원` : '청구 없음'}
+                  </span>
+                </div>
+              </div>
+
+              {pair.surchargeReason && (
+                <div style={{
+                  padding: '8px 14px',
+                  backgroundColor: 'rgba(234,179,8,0.1)',
+                  border: '1px solid rgba(234,179,8,0.3)',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  color: '#a16207',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span></span>
+                  <span>할증 및 차액 사유 분석: <strong>{pair.surchargeReason}</strong></span>
+                </div>
+              )}
+
+              {/* 2열 비교 본문 (좌측: 시스템 배차 원장 / 우측: 운송사 청구 내역) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {/* 좌측: 시스템 배차 내역 */}
+                <div style={{
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  padding: '16px',
+                  backgroundColor: 'var(--bg-body)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                    📋 시스템 배차 원장
+                  </div>
+                  {sys ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>배차 번호 / ID</span>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{sys.id}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>배차 일자</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {sys.loadingDate || sys.requestDate} {sys.loadingTimeSlot ? `(${sys.loadingTimeSlot})` : ''}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>배차 구분 / 상태</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {sys.type === 'OUTBOUND' ? '출고' : sys.type === 'INBOUND' ? '회수' : sys.type === 'EXCHANGE' ? '교환' : sys.type} ({sys.status === 'DELIVERED' ? '운송완료' : sys.status})
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>고객사 (거래처)</span>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{displayCustomer}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>현장명</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{site?.name || sys.destinationAddress || '-'}</span>
+                      </div>
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>상차지 (출발)</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{sys.originAddress || '본사 주기장'}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>하차지 (도착)</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{sys.destinationAddress || '-'}</div>
+                      </div>
+                      {sys.bundleGroupId && getBundleGroupDeliveries(sys.bundleGroupId).length >= 2 && (
+                        <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)' }}>
+                          <div style={{ color: '#d97706', fontWeight: 800, fontSize: '11.5px', marginBottom: '4px' }}>
+                            🔗 경유/합짐 묶음 내역 ({getBundleGroupDeliveries(sys.bundleGroupId).length}건 통합 정산)
+                          </div>
+                          {getBundleGroupDeliveries(sys.bundleGroupId).map((bd, bIdx) => {
+                            const bCon = bd.contractId ? contractMap.get(bd.contractId) : null;
+                            const bCus = bCon?.customerId ? customerMap.get(bCon.customerId) : null;
+                            return (
+                              <div key={bd.id} style={{ fontSize: '11.5px', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                • {bIdx + 1}순위 [{bd.id}]: <strong>{bCus?.name || '고객사'}</strong> ({bd.destinationAddress || '-'}) — {bd.status === 'DELIVERED' ? '운송완료' : '진행중'}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {sys.viaDropoffAddress && (
+                        <div>
+                          <div style={{ color: '#a16207', fontWeight: 600, marginBottom: '2px' }}>경유지</div>
+                          <div style={{ fontWeight: 700, color: '#ca8a04' }}>{sys.viaDropoffAddress} {sys.viaDropoffName ? `(${sys.viaDropoffName})` : ''}</div>
+                        </div>
+                      )}
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>배정 기사 / 차량</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {sys.driverName || '기사미배정'} {sys.driverContact ? `(${sys.driverContact})` : ''} | {sys.vehicleNo || '-'} ({sys.vehicleType || '-'})
+                        </span>
+                      </div>
+                      {sys.memo && (
+                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                          <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>배차 메모</div>
+                          <div style={{ color: 'var(--text-secondary)', wordBreak: 'break-all' }}>{sys.memo}</div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                      시스템에 일치하는 배차 내역이 없습니다. (청구 단독)
+                    </div>
+                  )}
+                </div>
+
+                {/* 우측: 운송사 청구 내역 */}
+                <div style={{
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  padding: '16px',
+                  backgroundColor: 'var(--bg-body)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                    📄 운송사 거래명세서 청구 내역
+                  </div>
+                  {excel ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>명세서 일자</span>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
+                          {excel['정규일자'] || excel['일자'] || excel['날짜'] || excel['운송일자'] || '-'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>청구 업체명</span>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{excel['업체명'] || '-'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>청구 현장명</span>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{excel['현장명'] || '-'}</span>
+                      </div>
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>상차지 (출발)</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{excel['상차지'] || '-'}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: '2px' }}>하차지 (도착)</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{excel['정규하차지'] || excel['하차지'] || '-'}</div>
+                      </div>
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>톤수 / 차종</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{excel['톤수'] || excel['차종'] || '-'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>청구 운송비</span>
+                        <span style={{ fontWeight: 900, color: 'var(--success)', fontSize: '14px' }}>₩{pair.excelCost.toLocaleString()}원</span>
+                      </div>
+                      {excel['비고'] && (
+                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                          <div style={{ color: '#ca8a04', fontWeight: 700, marginBottom: '2px' }}>명세서 비고 / 특이사항</div>
+                          <div style={{ fontWeight: 700, color: '#a16207', backgroundColor: 'rgba(234,179,8,0.1)', padding: '6px 8px', borderRadius: '4px' }}>
+                            {excel['비고']}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                      운송사 청구서에 해당 건의 내역이 없습니다. (배차 단독)
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 하단 액션 버튼군 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+                <button
+                  onClick={() => setSelectedReconDetailPair(null)}
+                  style={{
+                    padding: '9px 18px',
+                    borderRadius: '7px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-body)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '13px'
+                  }}
+                >
+                  닫기
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {isMismatch && (
+                    <>
+                      <button data-hs-trigger="Approve"
+                        onClick={async () => {
+                          await handleApproveMismatch(pair.pairId);
+                          setSelectedReconDetailPair(null);
+                        }}
+                        style={{
+                          padding: '9px 18px',
+                          borderRadius: '7px',
+                          border: 'none',
+                          backgroundColor: '#ca8a04',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: '13px',
+                          boxShadow: '0 2px 8px rgba(202,138,4,0.3)'
+                        }}
+                      >
+                        ⚡ 엑셀 청구액 ₩{pair.excelCost.toLocaleString()} 승인 (대사 완료)
+                      </button>
+                    </>
+                  )}
+
+                  {isExcelOnly && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          await handleCreateDeliveryFromExcel(pair.pairId);
+                          setSelectedReconDetailPair(null);
+                        }}
+                        style={{
+                          padding: '9px 16px',
+                          borderRadius: '7px',
+                          border: 'none',
+                          backgroundColor: 'var(--primary)',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: '13px'
+                        }}
+                      >
+                        ➕ 이 내역으로 신규 배차 생성
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleExcludeExcelOnly(pair.pairId);
+                          setSelectedReconDetailPair(null);
+                        }}
+                        style={{
+                          padding: '9px 16px',
+                          borderRadius: '7px',
+                          border: '1px solid #dc2626',
+                          backgroundColor: 'rgba(239,68,68,0.1)',
+                          color: 'var(--danger)',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: '13px'
+                        }}
+                      >
+                        🚫 오청구 반려 및 제외
+                      </button>
+                    </>
+                  )}
+
+                  {isMatched && (
+                    <button
+                      onClick={() => {
+                        handleTogglePairReconciled(pair.pairId);
+                        setSelectedReconDetailPair(null);
+                      }}
+                      style={{
+                        padding: '9px 16px',
+                        borderRadius: '7px',
+                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--bg-body)',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '13px'
+                      }}
+                    >
+                      대사 완료 취소 (대기 원복)
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 💳 매입 지급 요청 완료 성공 모달 (전용 완료 카드 UI) */}
+      {paymentSuccessInfo && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '20px'
+          }}
+          onClick={() => setPaymentSuccessInfo(null)}
+        >
+          <div 
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              borderRadius: '16px',
+              padding: '26px',
+              width: '100%',
+              maxWidth: '480px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '18px'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 모달 헤더: 녹색 성공 아이콘 + 건조한 명사 타이틀 + 닫기 버튼 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}>
+                  <CheckCircle2 size={22} style={{ color: '#10b981' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '17px', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
+                    매입 지급 요청 완료
+                  </h3>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    운송료 대사 승인 및 회계 지급 요청 등록
+                  </div>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setPaymentSuccessInfo(null)} 
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 본문 1: 식별 번호 & 상태 배지 */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '10px'
+            }}>
+              <div style={{
+                backgroundColor: 'var(--bg-body)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>지급요청 번호</span>
+                <span style={{ fontSize: '13px', fontWeight: 900, color: 'var(--primary)', fontFamily: 'monospace' }}>
+                  {paymentSuccessInfo.bundleCode}
+                </span>
+              </div>
+              <div style={{
+                backgroundColor: 'var(--bg-body)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>처리 상태</span>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: 900,
+                  color: '#10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <CheckCircle2 size={13} /> 지급 요청 등록됨
+                </span>
+              </div>
+            </div>
+
+            {/* 본문 2: 집계 상세 카드 */}
+            <div style={{
+              backgroundColor: 'var(--bg-body)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              fontSize: '12.5px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>운송 거래처</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{paymentSuccessInfo.companyName}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>정산 대상월</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'monospace' }}>{paymentSuccessInfo.reconMonth}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>대사 완결 배차 건수</span>
+                <span style={{ color: 'var(--primary)', fontWeight: 900 }}>{paymentSuccessInfo.totalCount}건</span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: '10px',
+                borderTop: '1px dashed var(--border-color)',
+                marginTop: '2px'
+              }}>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '13px' }}>총 매입 지급금액</span>
+                <span style={{ color: '#10b981', fontWeight: 900, fontSize: '18px' }}>
+                  ₩{paymentSuccessInfo.totalAmount.toLocaleString()}원
+                </span>
+              </div>
+            </div>
+
+            {/* 본문 3: 업무 프로세스 이관 안내 (건조한 텍스트) */}
+            <div style={{
+              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              borderRadius: '10px',
+              padding: '11px 14px',
+              fontSize: '11.5px',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5
+            }}>
+              운송료 대사 내역이 [월말 매입 정산] 대장에 정상 등록되었습니다. 관리부 검토 및 결재 후 최종 지급 집행 단계로 연계됩니다.
+              <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                ※ 현재 화면에서 재조회 시, 상단 범위 설정의 [지급 상태: 지급요청/완료] 필터를 선택하시면 등록된 지급요청 건들을 언제든지 확인하실 수 있습니다.
+              </div>
+            </div>
+
+            {/* 모달 하단 버튼군 */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+              <button
+                type="button"
+                onClick={() => handleCopyBundleCode(paymentSuccessInfo.bundleCode)}
+                style={{
+                  padding: '9px 15px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-body)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '12.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {isBundleCopied ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
+                {isBundleCopied ? '복사됨' : '요청번호 복사'}
+              </button>
+              <button data-hs-trigger="Confirm"
+                type="button"
+                onClick={() => setPaymentSuccessInfo(null)}
+                className="btn-primary"
+                style={{
+                  padding: '9px 22px',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '13px',
+                  backgroundColor: 'var(--success)',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💬 카카오톡 배차 안내 메시지 확인 및 재복사 모달 */}
+      {showKakaoModal && (
+        <div
+          data-mid="kakao-dispatch-modal"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+          onClick={() => setShowKakaoModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '12px',
+              width: '100%',
+              maxWidth: '560px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '90vh'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 모달 헤더 */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--border-color, #e5e7eb)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#FEE500'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageSquare size={18} color="#191919" />
+                <span style={{ fontSize: '15px', fontWeight: 800, color: '#191919' }}>
+                  카카오톡 배차 메시지
+                </span>
+                {kakaoTargetDelivery && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(0,0,0,0.08)',
+                      color: '#191919'
+                    }}
+                  >
+                    {kakaoTargetDelivery.dispatchCategory || kakaoTargetDelivery.type || '배차'}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowKakaoModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  lineHeight: 1,
+                  color: '#191919',
+                  cursor: 'pointer',
+                  padding: '2px 6px',
+                  fontWeight: 700
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 모달 본문 */}
+            <div style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {currentTenant?.features?.kakaoContract === false && (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#b91c1c',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <AlertTriangle size={15} color="#dc2626" />
+                  해당 기능(카카오 알림톡)은 현재 플랜에서 비활성화되어 있습니다. 관리자에게 문의하세요.
+                </div>
+              )}
+
+              {isKakaoCopied && (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#065f46',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <CheckCircle size={15} color="#059669" />
+                  클립보드에 복사되었습니다. 카카오톡 창에 바로 붙여넣기 하실 수 있습니다.
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary, #6b7280)' }}>
+                    메시지 전문 (필요 시 수정 가능)
+                  </label>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted, #9ca3af)' }}>
+                    총 {kakaoText.length}자
+                  </span>
+                </div>
+                <textarea
+                  value={kakaoText}
+                  onChange={(e) => setKakaoText(e.target.value)}
+                  rows={15}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #d1d5db)',
+                    backgroundColor: 'var(--bg-app)',
+                    color: 'var(--text-primary, #111827)',
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    fontSize: '12.5px',
+                    lineHeight: '1.6',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 모달 하단 액션 버튼 */}
+            <div
+              style={{
+                padding: '14px 20px',
+                borderTop: '1px solid var(--border-color, #e5e7eb)',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: 'var(--bg-app)'
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowKakaoModal(false)}
+                className="btn-secondary"
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '7px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (currentTenant?.features?.kakaoContract === false) {
+                    showToast('해당 기능(카카오 알림톡)은 현재 플랜에서 비활성화되어 있습니다. 관리자에게 문의하세요.', 'warning');
+                    return;
+                  }
+                  await copyToClipboard(kakaoText);
+                  setIsKakaoCopied(true);
+                  showToast('클립보드에 다시 복사되었습니다.');
+                }}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '7px',
+                  backgroundColor: currentTenant?.features?.kakaoContract === false ? '#f3f4f6' : '#FEE500',
+                  color: currentTenant?.features?.kakaoContract === false ? '#9ca3af' : '#191919',
+                  border: currentTenant?.features?.kakaoContract === false ? '1px solid #d1d5db' : '1px solid #E6CF00',
+                  fontSize: '12.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Copy size={14} color="#191919" />
+                다시 복사
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ☀️ 운송 하차지 날씨 및 주간 예보 모달 */}
+      <DestinationWeatherModal
+        isOpen={showDestWeatherModal}
+        onClose={() => setShowDestWeatherModal(false)}
+        customerName={destWeatherParams.customerName}
+        siteName={destWeatherParams.siteName}
+        rawAddress={destWeatherParams.rawAddress}
+      />
+
+      {/* 🚚 운송료 매입거래명세서 보관 및 열람 모달 */}
+      {showTransportStatementModal && (() => {
+        const targetYm = reconStartDate ? reconStartDate.slice(0, 7) : new Date().toISOString().slice(0, 7);
+        const targetTc = transportCompanies.find(tc => tc.id === selectedReconCompany || tc.name === selectedReconCompany);
+        const effectiveVendorName = targetTc?.name || (selectedReconCompany !== 'ALL' ? selectedReconCompany : '전체 운송사');
+        const matchedSettlement = (db.purchaseSettlements || []).find(
+          s => s.settlementType === 'TRANSPORT' && s.settlementYm === targetYm && (selectedReconCompany === 'ALL' || s.vendorName === effectiveVendorName || s.vendorId === targetTc?.id)
+        );
+        const settlementItems = matchedSettlement
+          ? (db.purchaseSettlementItems || []).filter(i => i.settlementId === matchedSettlement.id)
+          : [];
+
+        const displayItems = settlementItems.length > 0
+          ? settlementItems.map(it => ({
+              id: it.id,
+              description: it.itemDescription,
+              quantity: it.quantity,
+              unitPrice: it.unitPrice,
+              amount: it.amount,
+              evidenceFileUrl: it.evidenceFileUrl
+            }))
+          : completedDeliveriesForRecon.map(d => {
+              const cost = getEffectiveDeliveryCost(d);
+              return {
+                id: d.id,
+                date: d.unloadingDate || d.loadingDate || d.scheduledDate || d.requestDate,
+                description: `[${d.dispatchCategory || d.type}] ${d.originAddress || '상차지'} ➔ ${d.destinationAddress || '하차지'} (${d.driverName || d.transportCompany || '운송'})`,
+                quantity: 1,
+                unitPrice: cost,
+                amount: cost,
+                evidenceFileUrl: d.statementFileUrl || uploadedStatementUrl || undefined
+              };
+            });
+
+        const totalAmt = matchedSettlement
+          ? matchedSettlement.totalAmount
+          : displayItems.reduce((s, i) => s + (i.amount || 0), 0);
+
+        const savedStmtUrl =
+          uploadedStatementUrl ||
+          settlementItems.find(i => i.evidenceFileUrl)?.evidenceFileUrl ||
+          completedDeliveriesForRecon.find(d => d.statementFileUrl)?.statementFileUrl ||
+          uploadedFileName ||
+          undefined;
+
+        return (
+          <PurchaseStatementModal
+            isOpen={showTransportStatementModal}
+            onClose={() => setShowTransportStatementModal(false)}
+            settlementId={matchedSettlement?.id}
+            settlementType="TRANSPORT"
+            settlementYm={targetYm}
+            vendorName={effectiveVendorName}
+            vendorBizNo={targetTc?.businessNo}
+            vendorPhone={targetTc?.contact}
+            vendorBankAccount={targetTc?.bankAccount ? `${targetTc.bankName || ''} ${targetTc.bankAccount} (${targetTc.bankHolder || ''})` : matchedSettlement?.bankAccount}
+            status={matchedSettlement?.status || 'PENDING'}
+            confirmedAt={matchedSettlement?.confirmedAt}
+            confirmedBy={matchedSettlement?.confirmedBy}
+            paymentDate={matchedSettlement?.paymentDate}
+            paidAmount={matchedSettlement?.paidAmount || 0}
+            totalAmount={totalAmt}
+            memo={matchedSettlement?.memo}
+            statementFileUrl={savedStmtUrl}
+            statementFileName={uploadedFileName || undefined}
+            items={displayItems}
+            onSaveStatementFile={async (fileUrl, fileName) => {
+              setUploadedStatementUrl(fileUrl);
+              setUploadedFileName(fileName);
+              for (const d of completedDeliveriesForRecon) {
+                db.updateRow<Delivery>('deliveries', d.id, { statementFileUrl: fileUrl });
+              }
+              if (matchedSettlement) {
+                const itemsToUpdate = (db.purchaseSettlementItems || []).filter(i => i.settlementId === matchedSettlement.id);
+                itemsToUpdate.forEach(it => {
+                  db.updateRow<PurchaseSettlementItem>('purchaseSettlementItems', it.id, { evidenceFileUrl: fileUrl });
+                });
+              }
+              await db.awaitPendingWrites();
+              await refreshAllData();
+              showToast(`운송료 매입거래명세서 파일(${fileName})이 저장되었습니다.`);
+            }}
+          />
+        );
+      })()}
+
+      {/* 🚚 배차 의뢰 엑셀 일괄 등록 모달 */}
+      <ExcelUploadModal
+        isOpen={dispatchExcelModalOpen}
+        onClose={() => setDispatchExcelModalOpen(false)}
+        title="배차 의뢰 엑셀 일괄 등록 (단일 교환 및 왕복할인 자동 적용)"
+        templateFileName="배차의뢰_일괄등록"
+        columns={dispatchExcelColumns}
+        onUpload={handleBatchUploadDeliveries}
+      />
+    </div>
+  );
+};

@@ -1,0 +1,928 @@
+/* src/pages/smart_dispatch4.css */
+/* ─────────────────────────────────────────────────────────────────────────────
+   출고의뢰 (통합 스튜디오) smart_dispatch4 전용 레이아웃 & 고밀도 스타일
+   - 전사 표준 헌장 3.1, 3.2, 3.4, 3.5, 3.6 완벽 준수
+   - PC 와이드 100% 핏 좌우 2분할 (57% : 43%) 마스터-디테일 스튜디오
+   - 좌측 독립 스크롤 & 우측 실시간 서식/스키마 실드/우하단 완결 바 상시 고정
+   - 라이트/다크 모드 전사 통일 배색 토큰 적용
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.dispatch4-container {
+  width: 100%;
+  /* 부모 main(overflow-y:auto)의 전체 스크롤 차단 → 컨테이너가 직접 높이 관리 */
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-app);
+}
+
+/* 상단 통합 슬림 툴바 (타이틀 + 탭 + 녹음 업로드) */
+.dispatch4-toolbar {
+  flex-shrink: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+.dispatch4-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dispatch4-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.dispatch4-tab-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dispatch4-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.dispatch4-tab-btn:hover {
+  color: var(--text-main);
+  background-color: var(--bg-card);
+}
+
+.dispatch4-tab-btn.active {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+/* 메인 스튜디오 2열 바디 — flex:1로 남은 높이 전부 차지, overflow:hidden */
+.dispatch4-studio-row {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow: hidden; /* 자식이 이 경계 밖으로 나가지 않도록 */
+  box-sizing: border-box;
+  align-items: stretch; /* 좌우 패널 동일 높이로 늘어남 */
+}
+
+/* 좌측 마스터 입력 폼 — overflow-y:auto로 좌측만 독립 스크롤 */
+.dispatch4-left-pane {
+  flex: 5.7;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;  /* ← 좌측만 스크롤 */
+  overflow-x: hidden;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.dispatch4-left-pane > * {
+  flex-shrink: 0;
+}
+
+/* 우측 디테일 & 터미널 인스펙터 — sticky 제거, height:100%로 항상 고정 */
+.dispatch4-right-pane {
+  flex: 4.3;
+  min-width: 440px;
+  max-width: 580px;
+  height: 100%;        /* ← studio-row 높이와 동일 */
+  position: relative;  /* sticky 제거 */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+/* 우측 스크롤 내부 영역 (스키마 실드 + 정형화 서식) */
+.dispatch4-right-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.dispatch4-right-scroll > * {
+  flex-shrink: 0;
+}
+
+/* 우측 최하단 완결 바 (Z-Pattern Terminal Action 영구 고정) */
+.dispatch4-terminal-bar {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  background-color: var(--bg-header);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+/* 9대 필수 스키마 실드 2열 슬림 그리드 */
+.dispatch4-shield-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* ── 상하 스크롤바: 시인성 극대화 (전사 표준 헌장 1.1 준수) ── */
+.dispatch4-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scroll-behavior: smooth;
+}
+
+.dispatch4-scrollbar::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.dispatch4-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track) !important;
+  border-radius: 4px;
+}
+
+.dispatch4-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb) !important;
+  border-radius: 4px;
+}
+
+.dispatch4-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover) !important;
+}
+
+/* 모바일/태블릿 반응형 폴백 (화면 폭 1023px 이하 시 세로 스택 전환) */
+@media (max-width: 1023px) {
+  .dispatch4-studio-row {
+    flex-direction: column;
+  }
+  .dispatch4-left-pane {
+    padding-right: 0;
+  }
+  .dispatch4-right-pane {
+    position: static;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: none;
+  }
+  .dispatch4-right-scroll {
+    overflow-y: visible;
+  }
+}
+
+/* 화면 높이가 낮은 환경 대응 */
+@media (max-height: 720px) {
+  .dispatch4-right-pane {
+    max-height: calc(100vh - 80px);
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   고밀도 입력 폼 전용 규격
+   ───────────────────────────────────────────────────────────────────────────── */
+.dispatch4-left-pane input:not([type="checkbox"]):not([type="radio"]):not(.dispatch4-qty-input),
+.dispatch4-left-pane select {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  background-color: var(--bg-app) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  color: var(--text-main) !important;
+  box-sizing: border-box !important;
+}
+
+/* 🌟 수량 조절 전용 고밀도 인풋 & 컨트롤러 규격 (선택된 장비 목록 완벽 방어) */
+.dispatch4-left-pane input.dispatch4-qty-input,
+.dispatch4-qty-input {
+  width: 44px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 2px 4px !important;
+  font-size: 13px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  background-color: var(--bg-app) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  color: var(--success) !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  -moz-appearance: textfield !important;
+}
+
+.dispatch4-qty-input:focus {
+  border-color: var(--success) !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+  outline: none !important;
+}
+
+.dispatch4-qty-input::-webkit-outer-spin-button,
+.dispatch4-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+/* 수량 조절 버튼군 [-], [+] 공통 규격 */
+.dispatch4-qty-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-app) !important;
+  color: var(--text-main) !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.dispatch4-qty-btn:hover:not(:disabled) {
+  background-color: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.dispatch4-qty-btn:active:not(:disabled) {
+  background-color: var(--bg-card) !important;
+  transform: scale(0.95);
+}
+
+.dispatch4-qty-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 삭제 액션 버튼 [휴지통] — 고시인성 위험 피드백 */
+.dispatch4-delete-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-app) !important;
+  color: var(--text-muted) !important;
+  padding: 0 !important;
+}
+
+.dispatch4-delete-btn:hover {
+  background-color: var(--danger-light) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}
+
+.dispatch4-delete-btn:active {
+  background-color: var(--danger) !important;
+  color: #ffffff !important;
+  transform: scale(0.95);
+}
+
+.dispatch4-left-pane input:focus,
+.dispatch4-left-pane select:focus,
+.dispatch4-left-pane textarea:focus {
+  border-color: var(--primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+}
+
+.dispatch4-left-pane textarea {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  background-color: var(--bg-app) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  color: var(--text-main) !important;
+  box-sizing: border-box !important;
+}
+
+/* 블록 헤더 */
+.dispatch4-block-header {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+  color: var(--text-main);
+}
+
+.dispatch4-block-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--bg-card);
+}
+
+.dispatch4-block-body > * {
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   상차/하차 시간 구분 슬롯 버튼군 & 대차 다수 회수 자산 스타일
+   ───────────────────────────────────────────────────────────────────────────── */
+.dispatch4-slot-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dispatch4-slot-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dispatch4-slot-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.dispatch4-slot-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+}
+
+.dispatch4-slot-btn.active-amber {
+  background-color: var(--warning);
+  border-color: var(--warning);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.dispatch4-exchange-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   처리 대기 좌우 2열 분할 스튜디오 & 고밀도 마스터 그리드 (헌장 3.2, 3.6)
+   ───────────────────────────────────────────────────────────────────────────── */
+.dispatch4-master-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row; /* 좌우 2열 분할 */
+  gap: 10px;
+  padding: 6px 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dispatch4-grid-section {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dispatch4-grid-section.left-panel {
+  flex: 4.8;
+}
+
+.dispatch4-grid-section.right-panel {
+  flex: 5.2;
+}
+
+.dispatch4-section-header {
+  flex-shrink: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.dispatch4-table-container {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.dispatch4-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dispatch4-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 32px;
+  background-color: var(--bg-app);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: left;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+.dispatch4-table td {
+  height: 36px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.dispatch4-table tr:hover td {
+  background-color: var(--primary-light);
+}
+
+.dispatch4-table tr.selected td {
+  background-color: var(--primary-light);
+}
+
+.dispatch4-col-sticky-0 {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background-color: var(--bg-card) !important;
+  width: 58px;
+  min-width: 58px;
+  text-align: center;
+  border-right: 2px solid var(--border-color) !important;
+}
+
+/* 좌우 패널 하단 내장형 상세 인스펙터 */
+.dispatch4-panel-inspector {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-app);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dispatch4-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.dispatch4-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+.dispatch4-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+.dispatch4-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   출고 장비 모델 칩 및 가용수량 배지 고시인성/눈부심 방지 테마 배색 표준
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* 모델 선택 칩 (무볼드 표준 준수: font-weight 500) */
+.dispatch4-model-chip {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dispatch4-model-chip:hover {
+  border-color: var(--primary);
+  background-color: var(--bg-secondary);
+}
+
+.dispatch4-model-chip.selected {
+  background-color: var(--primary) !important;
+  border-color: var(--primary-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3) !important;
+}
+
+/* 장비 가용 수량 배지: 눈부심 방지 & 다크/라이트 모드 최적 배색 (무볼드 표준) */
+.dispatch4-qty-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.3;
+}
+
+/* 가용 재고 있음 (초록/에메랄드 차분한 톤) */
+[data-theme='light'] .dispatch4-qty-badge.available,
+:root:not([data-theme='dark']) .dispatch4-qty-badge.available {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+[data-theme='dark'] .dispatch4-qty-badge.available {
+  background-color: rgba(6, 78, 59, 0.55);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* 가용 0대 / 임차필요 (눈부신 쨍한 노랑 제거 -> 부드럽고 차분한 웜앰버 톤) */
+[data-theme='light'] .dispatch4-qty-badge.shortage,
+:root:not([data-theme='dark']) .dispatch4-qty-badge.shortage {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+[data-theme='dark'] .dispatch4-qty-badge.shortage {
+  background-color: rgba(120, 53, 15, 0.5);
+  color: #fcd34d;
+  border: 1px solid rgba(217, 119, 6, 0.45);
+}
+
+/* 선택된 칩 내부 배지: 순백 캡슐 & 짙은 텍스트로 최고 시인성 확보 */
+.dispatch4-model-chip.selected .dispatch4-qty-badge.available,
+.dispatch4-model-chip.selected .dispatch4-qty-badge.shortage {
+  background-color: #f5f2eb !important;
+  color: #1e1b4b !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. 출고 장비 규격 블록 전용: 볼드 전면 배제 (Zero-Bold Font Standard)
+   ───────────────────────────────────────────────────────────────────────────── */
+[data-mid="dispatch4-block-equipments"],
+[data-mid="dispatch4-block-equipments"] * {
+  font-weight: 400 !important;
+}
+
+[data-mid="dispatch4-block-equipments"] .dispatch4-block-header span,
+[data-mid="dispatch4-block-equipments"] .dispatch4-ft-tab,
+[data-mid="dispatch4-block-equipments"] .dispatch4-ft-name,
+[data-mid="dispatch4-block-equipments"] .dispatch4-ft-count,
+[data-mid="dispatch4-block-equipments"] .dispatch4-model-chip,
+[data-mid="dispatch4-block-equipments"] .dispatch4-qty-badge {
+  font-weight: 500 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   출고 장비 규격 피트 탭 및 수량 배지 (고시인성 색대비 & 무볼드 표준)
+   ───────────────────────────────────────────────────────────────────────────── */
+.dispatch4-ft-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  flex: 1;
+}
+
+.dispatch4-ft-tab {
+  padding: 5px 12px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+.dispatch4-ft-tab:hover {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.dispatch4-ft-tab .dispatch4-ft-name {
+  color: var(--text-main) !important;
+  font-weight: 500 !important;
+}
+
+.dispatch4-ft-tab .dispatch4-ft-count {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 1px 7px !important;
+  border-radius: 9999px !important;
+  background-color: var(--bg-app) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+}
+
+/* 🌟 활성(선택) 피트 탭: 보라/블루 바탕에서 최고 대비를 보장하는 화이트 텍스트 & 화이트 캡슐 배지 */
+.dispatch4-ft-tab.active {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25) !important;
+}
+
+.dispatch4-ft-tab.active .dispatch4-ft-name {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.dispatch4-ft-tab.active .dispatch4-ft-count {
+  /* 보라색 바탕 속에서 검은 글자가 묻히는 문제를 완벽 해결:
+     배경은 순백색(#ffffff), 숫자는 진한 네이비/인디고(#1e1b4b)로 대비비 14:1 극대화 */
+  background-color: #f5f2eb !important;
+  color: #1e1b4b !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  font-weight: 500 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   출고 요청 내역 (HISTORY 탭) 전용 고정 폭 2열 그리드 (유동 폭 흔들림 원천 차단)
+   ───────────────────────────────────────────────────────────────────────────── */
+.dispatch4-history-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 480px;
+  gap: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dispatch4-history-left {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dispatch4-history-right {
+  width: 480px;
+  min-width: 480px;
+  max-width: 480px;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dispatch4-section-header {
+  white-space: nowrap !important;
+  gap: 8px;
+}
+
+@media (max-width: 1220px) {
+  .dispatch4-history-stage {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+  .dispatch4-history-right {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+  }
+}
+
+/* 🔴 유상옵션 칩 및 배지 (빨간색/Rose 고대비 단색 강조 - 헌장 3.7 준수) */
+.dispatch4-model-chip.paid-option {
+  border-color: rgba(244, 63, 94, 0.65) !important;
+  background-color: rgba(136, 19, 55, 0.18) !important;
+  color: #ffe4e6 !important;
+}
+[data-theme='light'] .dispatch4-model-chip.paid-option,
+:root:not([data-theme='dark']) .dispatch4-model-chip.paid-option {
+  border-color: #f43f5e !important;
+  background-color: #fff1f2 !important;
+  color: #881337 !important;
+}
+.dispatch4-model-chip.paid-option:hover {
+  border-color: #f43f5e !important;
+  background-color: rgba(159, 18, 57, 0.32) !important;
+}
+[data-theme='light'] .dispatch4-model-chip.paid-option:hover,
+:root:not([data-theme='dark']) .dispatch4-model-chip.paid-option:hover {
+  border-color: #e11d48 !important;
+  background-color: #ffe4e6 !important;
+}
+.dispatch4-model-chip.selected.paid-option {
+  background-color: #be123c !important;
+  border-color: #f43f5e !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.35) !important;
+}
+.dispatch4-qty-badge.paid {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  border: 1px solid #fb7185 !important;
+  font-weight: 700 !important;
+}
+.dispatch4-model-chip.selected.paid-option .dispatch4-qty-badge.paid {
+  background-color: #ffffff !important;
+  color: #be123c !important;
+  border: 1px solid #ffe4e6 !important;
+  font-weight: 800 !important;
+}
+
+/* 🟣 부착물 칩 및 배지 (보라색/Violet 고대비 단색 강조) */
+.dispatch4-model-chip.attachment-option {
+  border-color: rgba(139, 92, 246, 0.65) !important;
+  background-color: rgba(76, 29, 149, 0.18) !important;
+  color: #ede9fe !important;
+}
+[data-theme='light'] .dispatch4-model-chip.attachment-option,
+:root:not([data-theme='dark']) .dispatch4-model-chip.attachment-option {
+  border-color: #8b5cf6 !important;
+  background-color: #f5f3ff !important;
+  color: #4c1d95 !important;
+}
+.dispatch4-model-chip.attachment-option:hover {
+  border-color: #8b5cf6 !important;
+  background-color: rgba(91, 33, 182, 0.32) !important;
+}
+[data-theme='light'] .dispatch4-model-chip.attachment-option:hover,
+:root:not([data-theme='dark']) .dispatch4-model-chip.attachment-option:hover {
+  border-color: #7c3aed !important;
+  background-color: #ede9fe !important;
+}
+.dispatch4-model-chip.selected.attachment-option {
+  background-color: #6d28d9 !important;
+  border-color: #8b5cf6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(109, 40, 217, 0.35) !important;
+}
+.dispatch4-qty-badge.attachment {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  border: 1px solid #a78bfa !important;
+  font-weight: 700 !important;
+}
+.dispatch4-model-chip.selected.attachment-option .dispatch4-qty-badge.attachment {
+  background-color: #ffffff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ede9fe !important;
+  font-weight: 800 !important;
+}
+
+/* 🟠 요구사양 칩 및 배지 (앰버/Amber 고대비 단색 강조 — 옵션 품목 마스터 '요구사양' 배지 색감 일치) */
+.dispatch4-model-chip.spec-option {
+  border-color: rgba(245, 158, 11, 0.65) !important;
+  background-color: rgba(120, 53, 15, 0.2) !important;
+  color: #fef3c7 !important;
+}
+[data-theme='light'] .dispatch4-model-chip.spec-option,
+:root:not([data-theme='dark']) .dispatch4-model-chip.spec-option {
+  border-color: #d97706 !important;
+  background-color: #fffbeb !important;
+  color: #78350f !important;
+}
+.dispatch4-model-chip.spec-option:hover {
+  border-color: #f59e0b !important;
+  background-color: rgba(146, 64, 14, 0.32) !important;
+}
+[data-theme='light'] .dispatch4-model-chip.spec-option:hover,
+:root:not([data-theme='dark']) .dispatch4-model-chip.spec-option:hover {
+  border-color: #b45309 !important;
+  background-color: #fef3c7 !important;
+}
+.dispatch4-model-chip.selected.spec-option {
+  background-color: #b45309 !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.35) !important;
+}
+.dispatch4-qty-badge.spec {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+  border: 1px solid #fbbf24 !important;
+  font-weight: 700 !important;
+}
+.dispatch4-model-chip.selected.spec-option .dispatch4-qty-badge.spec {
+  background-color: #ffffff !important;
+  color: #b45309 !important;
+  border: 1px solid #fef3c7 !important;
+  font-weight: 800 !important;
+}
+
+
+

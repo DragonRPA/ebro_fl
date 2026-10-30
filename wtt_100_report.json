@@ -1,0 +1,1019 @@
+{
+  "timestamp": "2026-09-06T10:21:11.200Z",
+  "summary": {
+    "total": 100,
+    "passed": 100,
+    "failed": 0,
+    "successRate": "100%"
+  },
+  "checks": [
+    "초기 제로 기본값 검증 (0/9 실드 차단)",
+    "고객사 미지정 시 현장 격리 은폐",
+    "상차/하차 듀얼 일정 및 시간 슬롯 (ASAP/오전/오후/시간지정)",
+    "대차(EXCHANGE) 복수 회수자산 매핑 및 누락 차단",
+    "과거 배차 및 현장 마스터 안전옵션 자동 승계",
+    "헌장 3.1 무수식어 건조 표준: 불필요 부연설명 문구 완전 제거"
+  ],
+  "scenarios": [
+    {
+      "id": "WTT-001",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "STANDARD",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-002",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "STANDARD",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-003",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "STANDARD",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "CUSTOMER_100",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-004",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "STANDARD",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-005",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-006",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-007",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-008",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-009",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "SPLIT_50_50",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-010",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-011",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-012",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-013",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "SPLIT_50_50",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-014",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "OURS_WAIVED",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-015",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-016",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-017",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-018",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "OURS_WAIVED",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-019",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "CUSTOMER_100",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-020",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-021",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "STANDARD",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-022",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "STANDARD",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-023",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "STANDARD",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "CUSTOMER_100",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-024",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "STANDARD",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-025",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-026",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-027",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-028",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-029",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "SPLIT_50_50",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-030",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-031",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-032",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-033",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "SPLIT_50_50",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-034",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "OURS_WAIVED",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-035",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-036",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-037",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-038",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "OURS_WAIVED",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-039",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "CUSTOMER_100",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-040",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-041",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "STANDARD",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-042",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "STANDARD",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-043",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "STANDARD",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "CUSTOMER_100",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-044",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "STANDARD",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-045",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-046",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-047",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-048",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-049",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "SPLIT_50_50",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-050",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-051",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-052",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-053",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "SPLIT_50_50",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-054",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "OURS_WAIVED",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-055",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-056",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-057",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-058",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "OURS_WAIVED",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-059",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "CUSTOMER_100",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-060",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-061",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "STANDARD",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-062",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "STANDARD",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-063",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "STANDARD",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "CUSTOMER_100",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-064",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "STANDARD",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-065",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-066",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-067",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-068",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-069",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "SPLIT_50_50",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-070",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-071",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-072",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-073",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "SPLIT_50_50",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-074",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "OURS_WAIVED",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-075",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-076",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-077",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-078",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "OURS_WAIVED",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-079",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "CUSTOMER_100",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-080",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-081",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "STANDARD",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-082",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "STANDARD",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-083",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "STANDARD",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "CUSTOMER_100",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-084",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "STANDARD",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-085",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-086",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-087",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-088",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BOLTED_SAFETY",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-089",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "SPLIT_50_50",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-090",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "OURS_WAIVED",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-091",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-092",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "SHEET_PROTECTION",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-093",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "SPLIT_50_50",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-094",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "OURS_WAIVED",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-095",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "CUSTOMER_100",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-096",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "HYDRAULIC_LEAK",
+      "temporal": "MORNING_AFTERNOON",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_MULTI_2",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-097",
+      "spatial": "DIRECT_SITE_TO_SITE",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "EXACT_SCHEDULE",
+      "cost": "SPLIT_50_50",
+      "quantity": "EXCHANGE_MULTI_5",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-098",
+      "spatial": "HQ_DEPOT_TRANSIT",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "MONTH_END_STAGGERED",
+      "cost": "OURS_WAIVED",
+      "quantity": "SINGLE_1",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-099",
+      "spatial": "THIRD_PARTY_YARD",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "ASAP_EMERGENCY",
+      "cost": "CUSTOMER_100",
+      "quantity": "STAGGERED_3",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "WTT-100",
+      "spatial": "REMOTE_ISLAND",
+      "physical": "BATTERY_DISCHARGE",
+      "temporal": "NEXT_DAY_DELIVERY",
+      "cost": "VENDOR_DEDUCTION",
+      "quantity": "EXCHANGE_1",
+      "passed": true,
+      "errors": []
+    }
+  ]
+}

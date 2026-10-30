@@ -1,0 +1,261 @@
+// src/components/AgentRequiredModal.tsx
+// 에이전트가 작동해야 할 시점에 반응하지 않을 때 표출되는 안내 모달
+
+import React, { useState } from 'react';
+import { Monitor, X, RefreshCw, Download, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { triggerTenantAgentDownload, fetchWithAgentFallback } from '../services/agentService';
+import { useApp } from '../context/AppContext';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  actionName?: string; // 실패한 작업명 (예: '라벨 인쇄', '계약서패키지 조립')
+  onRetry?: () => Promise<boolean> | void;
+}
+
+export const AgentRequiredModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  actionName = '로컬 연동 작업',
+  onRetry
+}) => {
+  const { currentTenant } = useApp();
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryResult, setRetryResult] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setRetryResult(null);
+      setIsRetrying(false);
+    }
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (isOpen && retryResult === 'SUCCESS') {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, retryResult, onClose]);
+
+  if (!isOpen) return null;
+
+  const handleDownload = () => {
+    triggerTenantAgentDownload(currentTenant);
+  };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    setRetryResult(null);
+    try {
+      // 로컬 에이전트 헬스체크 핑 (5175 포트)
+      const res = await fetchWithAgentFallback('/health', { method: 'GET', timeout: 2500 }).catch(() => null);
+      if (res && res.ok) {
+        setRetryResult('SUCCESS');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ebro:agent_connected'));
+        }
+        if (onRetry) {
+          try { await onRetry(); } catch {}
+        }
+      } else {
+        setRetryResult('FAILED');
+      }
+    } catch {
+      setRetryResult('FAILED');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.55)',
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      zIndex: 10005,
+      backdropFilter: 'blur(2px)'
+    }}>
+      <div style={{
+        width: '460px',
+        backgroundColor: 'var(--bg-card)',
+        borderRadius: '10px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        border: '1px solid #cbd5e1'
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          padding: '14px 18px',
+          backgroundColor: 'var(--bg-app)',
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Monitor size={18} color="var(--primary)" />
+            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+              PC 에이전트 실행 안내
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* 본문 */}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12px' }}>
+          {retryResult === 'SUCCESS' ? (
+            <div style={{
+              padding: '24px 16px',
+              borderRadius: '8px',
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#166534',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              textAlign: 'center'
+            }}>
+              <CheckCircle2 size={32} color="#16a34a" />
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#15803d' }}>
+                에이전트 연결 완료
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534' }}>
+                로컬 에이전트(포트 5175)와 정상 연결되었습니다. 잠시 후 창이 닫힙니다.
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                background: '#fffbeb',
+                border: '1px solid #fef3c7',
+                padding: '12px',
+                borderRadius: '6px'
+              }}>
+                <AlertTriangle size={20} color="#d97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ lineHeight: 1.5, color: '#92400e' }}>
+                  <b>[{actionName}]</b> 처리를 위해 PC의 <b>eBro 에이전트</b> 연결이 필요합니다. 에이전트가 실행 중인지 확인해 주세요.
+                </div>
+              </div>
+
+              <div style={{
+                padding: '12px',
+                background: 'var(--bg-app)',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>조치 방법:</div>
+                <ol style={{ margin: 0, paddingLeft: '18px', color: '#475569', lineHeight: 1.6, fontSize: '11.5px' }}>
+                  <li>PC 바탕화면 또는 시작프로그램의 <b>eBroAgent</b>를 실행해 주세요.</li>
+                  <li>프로그램이 설치되어 있지 않다면 아래 <b>[설치 프로그램 다운로드]</b>를 진행해 주세요.</li>
+                  <li>실행 후 아래 <b>[재연결 시도]</b> 버튼을 누르면 작업이 계속됩니다.</li>
+                </ol>
+              </div>
+
+              {retryResult === 'FAILED' && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '5px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#991b1b',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  fontWeight: 600
+                }}>
+                  아직 에이전트가 응답하지 않습니다. 프로그램을 실행한 후 다시 시도해 주세요.
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 푸터 */}
+        <div style={{
+          padding: '12px 18px',
+          backgroundColor: 'var(--bg-app)',
+          borderTop: '1px solid var(--border-color)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <button
+            type="button"
+            onClick={handleDownload}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '5px',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-secondary)',
+              fontSize: '11.5px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            <Download size={13} color="var(--primary)" />
+            통합 설치 프로그램 다운로드
+          </button>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '5px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
+                fontSize: '11.5px',
+                cursor: 'pointer'
+              }}
+            >
+              닫기
+            </button>
+            <button
+              type="button"
+              onClick={handleRetry}
+              disabled={isRetrying}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                cursor: isRetrying ? 'not-allowed' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <RefreshCw size={12} className={isRetrying ? 'animate-spin' : ''} />
+              재연결 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

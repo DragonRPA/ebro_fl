@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ebro web agent</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="agent-panel">
+    <!-- 헤더 -->
+    <header class="panel-header">
+      <div class="brand">
+        <span class="brand-title">ebro web agent</span>
+        <span class="brand-version">v1.0.0</span>
+      </div>
+      <div id="pcStatusBadge" class="status-badge status-offline">
+        <span class="status-dot"></span>
+        <span id="pcStatusText">PC 오프라인</span>
+        <span id="pcPortTag" class="port-tag">포트 5175</span>
+      </div>
+    </header>
+
+    <!-- 탭 네비게이션 (무수식어 건조 표준 3.1) -->
+    <nav class="nav-tabs">
+      <button type="button" id="tabBtnControl" class="nav-tab active">작업 제어</button>
+      <button type="button" id="tabBtnConfig" class="nav-tab">환경설정</button>
+    </nav>
+
+    <!-- 탭 1: 작업 제어 패널 -->
+    <main id="tabPanelControl" class="tab-panel active">
+      <!-- 현재 ERP 상태 카드 -->
+      <section class="info-card">
+        <div class="info-row">
+          <span class="info-label">ERP 시스템 상태</span>
+          <span id="erpStatusValue" class="info-value">확인 중...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">에이전트 연결 포트</span>
+          <span id="pcPortValue" class="info-value font-mono">포트 5175 (확인 중)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">활성 메뉴</span>
+          <span id="erpMenuValue" class="info-value font-mono">-</span>
+        </div>
+      </section>
+
+      <!-- 자연어 지시 입력 폼 (상하 세로 스택) -->
+      <section class="form-stack">
+        <label for="commandInput" class="field-label">작업 지시 입력</label>
+        <div class="input-action-row">
+          <input 
+            type="text" 
+            id="commandInput" 
+            class="text-input" 
+            placeholder="예: 계약 관리 이동 / 배차 대장 조회" 
+            autocomplete="off"
+          />
+          <button type="button" id="btnSendCommand" class="btn btn-primary">실행</button>
+        </div>
+      </section>
+
+      <!-- 퀵 제어 버튼군 -->
+      <section class="quick-actions-section">
+        <div class="field-label">빠른 제어</div>
+        <div class="btn-grid">
+          <button type="button" id="btnToggleSom" class="btn btn-outline">SoM 번호표</button>
+          <button type="button" id="btnReadDom" class="btn btn-outline">DOM 정보 추출</button>
+          <button type="button" id="btnNavContract" class="btn btn-outline">계약 관리</button>
+          <button type="button" id="btnNavDispatch" class="btn btn-outline">배차 관리</button>
+          <button type="button" id="btnNavInspection" class="btn btn-outline">출고 검수</button>
+          <button type="button" id="btnNavDashboard" class="btn btn-outline">대시보드</button>
+        </div>
+      </section>
+
+      <!-- 실행 로그 모니터 -->
+      <section class="log-section">
+        <div class="log-header">
+          <span class="field-label">실행 로그</span>
+          <button type="button" id="btnClearLog" class="btn-text">지우기</button>
+        </div>
+        <div id="logViewer" class="log-viewer font-mono">
+          <div class="log-item info">[준비] ebro web agent 초기화 완료</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 탭 2: 환경설정 패널 (PC 에이전트 IP:포트 연결 설정 전용) -->
+    <main id="tabPanelConfig" class="tab-panel">
+      <!-- PC 에이전트 통신 주소 설정 -->
+      <section class="config-section">
+        <div class="config-title">PC 에이전트 연결 주소</div>
+        <div class="form-stack">
+          <label for="cfgWsUrl" class="field-label">WebSocket 주소 (IP:포트)</label>
+          <input 
+            type="text" 
+            id="cfgWsUrl" 
+            class="text-input font-mono" 
+            value="ws://127.0.0.1:5175" 
+          />
+        </div>
+        <div class="form-stack">
+          <label for="cfgHttpUrl" class="field-label">HTTP API 주소 (IP:포트)</label>
+          <input 
+            type="text" 
+            id="cfgHttpUrl" 
+            class="text-input font-mono" 
+            value="http://127.0.0.1:5175" 
+          />
+        </div>
+      </section>
+
+      <!-- 아키텍처 역할 안내 카드 -->
+      <section class="info-card" style="margin-top: 4px; font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
+        <div>ℹ️ 텔레그램 모바일 원격 제어 및 Ollama AI 추론 엔진 설정은 24시간 백그라운드로 구동되는 <b>eBro AI Agent 스튜디오</b>에서 통합 관리됩니다.</div>
+      </section>
+
+      <!-- 설정 저장 액션 -->
+      <button type="button" id="btnSaveConfig" class="btn btn-primary" style="width: 100%; padding: 8px; margin-top: 6px;">
+        연결 주소 저장
+      </button>
+      <div id="configFeedbackMsg" class="feedback-msg"></div>
+    </main>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

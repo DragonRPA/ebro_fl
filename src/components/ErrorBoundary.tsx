@@ -1,0 +1,313 @@
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Radio, LogOut } from 'lucide-react';
+
+interface Props {
+  children: ReactNode;
+  fallbackTitle?: string;
+  isModal?: boolean;
+  onClose?: () => void;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null
+  };
+
+  public static getDerivedStateFromError(error: Error): Partial<State> {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an unhandled error:', error, errorInfo);
+    this.setState({ errorInfo });
+
+    // 🛡️ [무한 새로고침 루프 방지 & 배포 청크 불일치 안전 복구]
+    const msg = error?.message || String(error);
+    const isChunkLoadError =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('Failed to load module script');
+
+    if (isChunkLoadError) {
+      try {
+        const reloadKey = 'ebro_chunk_retry_attempted';
+        const alreadyRetried = sessionStorage.getItem(reloadKey);
+        // 단 1회만 캐시 삭제 후 안전 재접속 (반복 새로고침 루프 원천 봉쇄)
+        if (!alreadyRetried) {
+          sessionStorage.setItem(reloadKey, String(Date.now()));
+          if ('caches' in window) {
+            caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              for (const reg of regs) reg.unregister();
+            }).catch(() => {});
+          }
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set('_v', String(Date.now()));
+          window.location.replace(nextUrl.toString());
+          return;
+        }
+      } catch (e) {
+        console.error('Safe chunk reload attempt failed:', e);
+      }
+    }
+  }
+
+  private handleReload = () => {
+    try {
+      sessionStorage.removeItem('ebro_chunk_retry_attempted');
+      // 오염된 대행 세션 토큰으로 인한 렌더링 루프 방어
+      sessionStorage.removeItem('original_admin_user');
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (const reg of regs) reg.unregister();
+        }).catch(() => {});
+      }
+    } catch {}
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('_t', String(Date.now()));
+    window.location.replace(nextUrl.toString());
+  };
+
+  private handleResetAuthAndReload = () => {
+    try {
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('original_admin_user');
+      sessionStorage.removeItem('ebro_chunk_retry_attempted');
+      localStorage.removeItem('auto_user');
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+      }
+    } catch {}
+    const nextUrl = new URL(window.location.origin + window.location.pathname);
+    nextUrl.searchParams.set('_t', String(Date.now()));
+    window.location.replace(nextUrl.toString());
+  };
+
+  private handleCloseModal = () => {
+    this.setState({ hasError: false, error: null });
+    if (this.props.onClose) {
+      this.props.onClose();
+    }
+  };
+
+  private handleResetWalkieAndReload = () => {
+    try {
+      localStorage.removeItem('walkie_power_on');
+      localStorage.removeItem('walkie_today_history');
+      localStorage.removeItem('walkie_channel');
+      localStorage.removeItem('walkie_channels_v2');
+      localStorage.removeItem('walkie_show_debug');
+      sessionStorage.removeItem('ebro_chunk_retry_attempted');
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => {});
+      }
+    } catch {}
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('_t', String(Date.now()));
+    window.location.replace(nextUrl.toString());
+  };
+
+  public render() {
+    if (this.state.hasError) {
+      const isModal = Boolean(this.props.isModal);
+      return (
+        <div style={{
+          position: isModal ? 'fixed' : 'relative',
+          inset: isModal ? 0 : undefined,
+          zIndex: isModal ? 99999 : undefined,
+          minHeight: isModal ? '100dvh' : '100dvh',
+          width: '100%',
+          backgroundColor: isModal ? 'rgba(2, 6, 23, 0.92)' : '#090d16',
+          backdropFilter: isModal ? 'blur(10px)' : undefined,
+          color: '#f8fafc',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px 16px',
+          fontFamily: 'sans-serif'
+        }}>
+          <div style={{
+            maxWidth: '420px',
+            width: '100%',
+            backgroundColor: 'var(--bg-app)',
+            border: '1px solid #ef4444',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.7)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <AlertTriangle size={20} color="#f87171" />
+              </div>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#f8fafc' }}>
+                  {this.props.fallbackTitle || '화면 일시 오류 복구'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  작업 상태 보호를 위해 화면을 안전하게 복원합니다.
+                </div>
+              </div>
+            </div>
+
+            {this.state.error && (() => {
+              const rawMsg = this.state.error.message || String(this.state.error);
+              let decodedNote = '';
+              if (rawMsg.includes('310')) {
+                decodedNote = ' [진단: React Hook 호출 순서/개수 불일치 오류]';
+              } else if (rawMsg.includes('300')) {
+                decodedNote = ' [진단: React Hook 조건부 호출 오류]';
+              } else if (rawMsg.includes('185')) {
+                decodedNote = ' [진단: 무한 재렌더링 오류]';
+              } else if (rawMsg.includes('dynamically imported module') || rawMsg.includes('module script')) {
+                decodedNote = ' [진단: 신규 배포에 따른 페이지 모듈 캐시 불일치. 최신 버전 자동 동기화 실패]';
+              }
+
+              return (
+                <div style={{
+                  padding: '10px',
+                  borderRadius: '8px',
+                  backgroundColor: '#020617',
+                  border: '1px solid #334155',
+                  fontSize: '11px',
+                  color: '#f87171',
+                  fontFamily: 'monospace',
+                  wordBreak: 'break-all',
+                  marginBottom: '16px',
+                  maxHeight: '120px',
+                  overflowY: 'auto'
+                }}>
+                  <div>{rawMsg}{decodedNote}</div>
+                  {this.state.errorInfo?.componentStack && (
+                    <details style={{ marginTop: '6px', color: 'var(--text-muted)', fontSize: '10px' }}>
+                      <summary style={{ cursor: 'pointer', color: '#cbd5e1' }}>컴포넌트 호출 스택</summary>
+                      <pre style={{ margin: '4px 0 0 0', whiteSpace: 'pre-wrap' }}>
+                        {this.state.errorInfo.componentStack.slice(0, 500)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={this.handleReload}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  backgroundColor: 'var(--primary)',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <RefreshCw size={14} />
+                <span>화면 새로고침</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={this.handleResetAuthAndReload}
+                style={{
+                  width: '100%',
+                  padding: '9px',
+                  borderRadius: '10px',
+                  border: '1px solid #475569',
+                  backgroundColor: 'var(--bg-card)',
+                  color: '#f8fafc',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <LogOut size={13} color="#38bdf8" />
+                <span>인증 초기화 및 로그인</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={this.handleResetWalkieAndReload}
+                style={{
+                  width: '100%',
+                  padding: '9px',
+                  borderRadius: '10px',
+                  border: '1px solid #334155',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-muted)',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Radio size={13} />
+                <span>무전기 캐시 초기화 및 재접속</span>
+              </button>
+
+              {isModal && (
+                <button
+                  type="button"
+                  onClick={this.handleCloseModal}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'transparent',
+                    color: '#cbd5e1',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  모달 닫기
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}

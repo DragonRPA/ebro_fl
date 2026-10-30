@@ -1,0 +1,793 @@
+{
+  "total": 1100,
+  "correct": 1023,
+  "incorrect": 77,
+  "errors": 0,
+  "accuracy": 93.0,
+  "total_time_seconds": 3201.452932357788,
+  "failed_cases": [
+    {
+      "index": 625,
+      "prompt": "OT 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: ot_management",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "ot_management"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.150302648544312,
+      "error": null
+    },
+    {
+      "index": 626,
+      "prompt": "초기DB 업로드의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: initial_db_upload",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "initial_db_upload"
+        }
+      },
+      "is_correct": false,
+      "latency": 13.50291109085083,
+      "error": null
+    },
+    {
+      "index": 926,
+      "prompt": "SK하이닉스 이천공장 현장에 기연직영트럭 기사님 배차해줘. 단가는 60000원이고 OUTBOUND 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "현장명": "SK하이닉스 이천공장",
+          "차량유형": "기연직영트럭",
+          "단가": "60000원",
+          "작업구분": "OUTBOUND"
+        }
+      },
+      "is_correct": false,
+      "latency": 15.484603643417358,
+      "error": null
+    },
+    {
+      "index": 927,
+      "prompt": "삼성전기 수원현장 현장에 전국24시콜화물 기사님 배차해줘. 단가는 200000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "삼성전기 수원현장",
+          "driver_type": "전국24시콜화물",
+          "unit_price": 200000,
+          "job_type": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 14.816354513168335,
+      "error": null
+    },
+    {
+      "index": 268,
+      "prompt": "SK하이닉스 이천공장 현장에 로지스틱스K 기사님 배차해줘. 단가는 60000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "현장명": "SK하이닉스 이천공장",
+          "배차_기사": "로지스틱스K",
+          "단가": 60000,
+          "작업_유형": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 17.041760444641113,
+      "error": null
+    },
+    {
+      "index": 389,
+      "prompt": "SK하이닉스 이천공장 현장에 로지스틱스K 기사님 배차해줘. 단가는 150000원이고 OUTBOUND 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "현장명": "SK하이닉스 이천공장",
+          "배차_기사": "로지스틱스K",
+          "단가": 150000,
+          "작업_유형": "OUTBOUND"
+        }
+      },
+      "is_correct": false,
+      "latency": 16.571449279785156,
+      "error": null
+    },
+    {
+      "index": 510,
+      "prompt": "회수 요청의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: smart_return",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "smart_return"
+        }
+      },
+      "is_correct": false,
+      "latency": 9.83547830581665,
+      "error": null
+    },
+    {
+      "index": 511,
+      "prompt": "AS 요청의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: smart_as_request",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "smart_as_request"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.156970500946045,
+      "error": null
+    },
+    {
+      "index": 1052,
+      "prompt": "에이전틱 배차 관제 스튜디오의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: agentic_dispatch_studio",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "agentic_dispatch_studio"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.506681680679321,
+      "error": null
+    },
+    {
+      "index": 273,
+      "prompt": "출고 요청의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: smart_dispatch4",
+      "expected": "",
+      "actual": "DISPATCH_CREATE_ORDER",
+      "parsed_json": {
+        "intent": "dispatch_create_order",
+        "parameters": {
+          "menu_identifier": "smart_dispatch4"
+        }
+      },
+      "is_correct": false,
+      "latency": 9.959370136260986,
+      "error": null
+    },
+    {
+      "index": 34,
+      "prompt": "주기장 정비 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: repair",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "repair"
+        }
+      },
+      "is_correct": false,
+      "latency": 14.41936182975769,
+      "error": null
+    },
+    {
+      "index": 814,
+      "prompt": "당사자산 취득 / 매각의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: acquisition_disposal",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "acquisition_disposal"
+        }
+      },
+      "is_correct": false,
+      "latency": 8.565095663070679,
+      "error": null
+    },
+    {
+      "index": 934,
+      "prompt": "평택 고덕 2공장 현장에 호남고속화물 기사님 배차해줘. 단가는 150000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "평택 고덕 2공장",
+          "driver_company": "호남고속화물",
+          "unit_price": 150000,
+          "job_type": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 13.099005937576294,
+      "error": null
+    },
+    {
+      "index": 517,
+      "prompt": "연차관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: leave_management",
+      "expected": "",
+      "actual": "VACATION_CREATE",
+      "parsed_json": {
+        "intent": "vacation_create",
+        "parameters": {
+          "menu_id": "leave_management"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.256347417831421,
+      "error": null
+    },
+    {
+      "index": 159,
+      "prompt": "정기보고서 생성의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: regular_reports",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "regular_reports"
+        }
+      },
+      "is_correct": false,
+      "latency": 8.272510051727295,
+      "error": null
+    },
+    {
+      "index": 1058,
+      "prompt": "감가상각 마감 실행의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: depreciation_execution",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "depreciation_execution"
+        }
+      },
+      "is_correct": false,
+      "latency": 16.841851472854614,
+      "error": null
+    },
+    {
+      "index": 279,
+      "prompt": "평택 고덕 2공장 현장에 호남고속화물 기사님 배차해줘. 단가는 60000원이고 OUTBOUND 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "평택 고덕 2공장",
+          "driver_name": "호남고속화물",
+          "unit_price": 60000,
+          "job_type": "OUTBOUND"
+        }
+      },
+      "is_correct": false,
+      "latency": 15.873643636703491,
+      "error": null
+    },
+    {
+      "index": 819,
+      "prompt": "오류 신고의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: error_report",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "error_report"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.539091110229492,
+      "error": null
+    },
+    {
+      "index": 161,
+      "prompt": "정비 항목 관리에서 점검 항목 마스터 탭 열어줘. 현재 위치: 정비 항목 관리 (inspection_checklist_manage), 하위 탭: 점검 항목 마스터, 장비군별 점검표 템플릿, 점검표 개정 이력",
+      "expected": "CLICK_ELEMENT",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "target_tab": "점검 항목 마스터"
+        }
+      },
+      "is_correct": false,
+      "latency": 13.207359790802002,
+      "error": null
+    },
+    {
+      "index": 941,
+      "prompt": "결재선 규칙 설정의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: approvalRules",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "approvalRules"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.88788366317749,
+      "error": null
+    },
+    {
+      "index": 287,
+      "prompt": "신규 계약 등록의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: contract_create",
+      "expected": "",
+      "actual": "CONTRACT_CREATE",
+      "parsed_json": {
+        "intent": "contract_create",
+        "parameters": {}
+      },
+      "is_correct": false,
+      "latency": 8.469866752624512,
+      "error": null
+    },
+    {
+      "index": 288,
+      "prompt": "일일 입출고 조회의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: daily_inout",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "daily_inout"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.01335859298706,
+      "error": null
+    },
+    {
+      "index": 289,
+      "prompt": "조직 / 인사 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: organization",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "organization"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.494253158569336,
+      "error": null
+    },
+    {
+      "index": 950,
+      "prompt": "외상미수금 대장에서 미수금 / 부분입금 현황 탭 열어줘. 현재 위치: 외상미수금 대장 (receivable), 하위 탭: 미수금 / 부분입금 현황, 수납 완결 대장, 연체 채권 관리",
+      "expected": "CLICK_ELEMENT",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "target_tab": "미수금 / 부분입금 현황"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.521821737289429,
+      "error": null
+    },
+    {
+      "index": 413,
+      "prompt": "법인카드 매입정산의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: corporate_card",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "corporate_card"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.025813341140747,
+      "error": null
+    },
+    {
+      "index": 54,
+      "prompt": "운송 거래처 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: transport_master",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "transport_master"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.521569728851318,
+      "error": null
+    },
+    {
+      "index": 56,
+      "prompt": "주기장 소모품 재고의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: consumable_stock",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "consumable_stock"
+        }
+      },
+      "is_correct": false,
+      "latency": 15.013454675674438,
+      "error": null
+    },
+    {
+      "index": 57,
+      "prompt": "청구 면제 대장의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: billing_waiver",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "billing_waiver"
+        }
+      },
+      "is_correct": false,
+      "latency": 15.413793087005615,
+      "error": null
+    },
+    {
+      "index": 177,
+      "prompt": "삼성전기 수원현장 현장에 로지스틱스K 기사님 배차해줘. 단가는 200000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "현장명": "삼성전기 수원현장",
+          "기사명": "로지스틱스K",
+          "단가": 200000,
+          "건종류": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 15.95451831817627,
+      "error": null
+    },
+    {
+      "index": 537,
+      "prompt": "청구 / 수납 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: billing",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "billing"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.686689138412476,
+      "error": null
+    },
+    {
+      "index": 838,
+      "prompt": "판교 카카오 신사옥 현장에 전국24시콜화물 기사님 배차해줘. 단가는 150000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "판교 카카오 신사옥",
+          "unit_price": 150000,
+          "job_type": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 14.294196367263794,
+      "error": null
+    },
+    {
+      "index": 539,
+      "prompt": "장비 할당 / 매핑의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: dispatch_assign",
+      "expected": "",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "menu_identifier": "dispatch_assign"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.474748611450195,
+      "error": null
+    },
+    {
+      "index": 1083,
+      "prompt": "현장별 옵션 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: site_options",
+      "expected": "",
+      "actual": "SITE_OPTION_UPDATE",
+      "parsed_json": {
+        "intent": "site_option_update",
+        "parameters": {
+          "menu_identifier": "site_options"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.665537595748901,
+      "error": null
+    },
+    {
+      "index": 425,
+      "prompt": "청구서통합의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: billing_invoice",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "billing_invoice"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.166188955307007,
+      "error": null
+    },
+    {
+      "index": 545,
+      "prompt": "미청구 정산의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: billing_wizard",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "billing_wizard"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.523825645446777,
+      "error": null
+    },
+    {
+      "index": 69,
+      "prompt": "은행 입출금 대장의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: bank_matching",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "bank_matching"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.231945037841797,
+      "error": null
+    },
+    {
+      "index": 70,
+      "prompt": "자금 흐름 분석의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: cash_flow",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "cash_flow"
+        }
+      },
+      "is_correct": false,
+      "latency": 9.921955585479736,
+      "error": null
+    },
+    {
+      "index": 670,
+      "prompt": "ERP 대시보드의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: dashboard",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "dashboard"
+        }
+      },
+      "is_correct": false,
+      "latency": 7.954612493515015,
+      "error": null
+    },
+    {
+      "index": 550,
+      "prompt": "소모품 구매의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: consumable_purchase",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "consumable_purchase"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.788129568099976,
+      "error": null
+    },
+    {
+      "index": 970,
+      "prompt": "급여 정산의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: payroll",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "payroll"
+        }
+      },
+      "is_correct": false,
+      "latency": 17.146059036254883,
+      "error": null
+    },
+    {
+      "index": 191,
+      "prompt": "평택 고덕 2공장 현장에 전국24시콜화물 기사님 배차해줘. 단가는 150000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "현장명": "평택 고덕 2공장",
+          "배차_요청_유형": "전국24시콜화물",
+          "단가": 150000,
+          "작업_유형": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 16.982800006866455,
+      "error": null
+    },
+    {
+      "index": 313,
+      "prompt": "매입처 (공급자 / 외주처) 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: vendors",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "vendors"
+        }
+      },
+      "is_correct": false,
+      "latency": 13.993611812591553,
+      "error": null
+    },
+    {
+      "index": 14,
+      "prompt": "소모품 입출고의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: consumable_inout",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "consumable_inout"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.456254959106445,
+      "error": null
+    },
+    {
+      "index": 558,
+      "prompt": "외상미수금 대장의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: receivable",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "receivable"
+        }
+      },
+      "is_correct": false,
+      "latency": 11.825841903686523,
+      "error": null
+    },
+    {
+      "index": 439,
+      "prompt": "평택 고덕 2공장 현장에 로지스틱스K 기사님 배차해줘. 단가는 60000원이고 EXCHANGE 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "평택 고덕 2공장",
+          "driver_name": "로지스틱스K",
+          "unit_price": 60000,
+          "job_type": "EXCHANGE"
+        }
+      },
+      "is_correct": false,
+      "latency": 14.253068685531616,
+      "error": null
+    },
+    {
+      "index": 680,
+      "prompt": "고객 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: customer",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_identifier": "customer"
+        }
+      },
+      "is_correct": false,
+      "latency": 10.52857756614685,
+      "error": null
+    },
+    {
+      "index": 203,
+      "prompt": "판교 카카오 신사옥 현장에 로지스틱스K 기사님 배차해줘. 단가는 150000원이고 OUTBOUND 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "판교 카카오 신사옥",
+          "driver_company": "로지스틱스K",
+          "unit_price": 150000,
+          "job_type": "OUTBOUND"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.003432512283325,
+      "error": null
+    },
+    {
+      "index": 325,
+      "prompt": "에이전틱 자산 라이프사이클 관제의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: agentic_asset_lifecycle",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "agentic_asset_lifecycle"
+        }
+      },
+      "is_correct": false,
+      "latency": 12.38409686088562,
+      "error": null
+    },
+    {
+      "index": 689,
+      "prompt": "현장 AS 관리의 업무 목적과 기본 조작 순서는 어떻게 됩니까? 메뉴 식별자: field_as",
+      "expected": "",
+      "actual": "NAVIGATE_MENU",
+      "parsed_json": {
+        "intent": "navigate_menu",
+        "parameters": {
+          "menu_id": "field_as"
+        }
+      },
+      "is_correct": false,
+      "latency": 17.933188438415527,
+      "error": null
+    },
+    {
+      "index": 91,
+      "prompt": "판교 카카오 신사옥 현장에 호남고속화물 기사님 배차해줘. 단가는 200000원이고 OUTBOUND 건이야.",
+      "expected": "DISPATCH_CREATE_ORDER",
+      "actual": "DISPATCH_ASSIGN_DRIVER",
+      "parsed_json": {
+        "intent": "dispatch_assign_driver",
+        "parameters": {
+          "site_name": "판교 카카오 신사옥",
+          "driver_company": "호남고속화물",
+          "unit_price": 200000,
+          "job_type": "OUTBOUND"
+        }
+      },
+      "is_correct": false,
+      "latency": 14.292548894882202,
+      "error": null
+    }
+  ]
+}

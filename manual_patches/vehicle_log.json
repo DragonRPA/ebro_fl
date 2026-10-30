@@ -1,0 +1,86 @@
+{
+  "menuId": "vehicle_log",
+  "version": 5,
+  "annotations": [
+    {
+      "seq": 1,
+      "selector": "[data-mid=\"vehicle_log-header\"]",
+      "type": "stamp",
+      "label": "차량 운용 현황 요약",
+      "description": "보유 차량 수, 당월 총 주행거리, 총 주유비, 유류대 정산 현황을 모니터링합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 2,
+      "selector": "[data-mid=\"vehicle_log-export-nts\"]",
+      "type": "stamp",
+      "label": "국세청 양식 내보내기",
+      "description": "국세청 업무용 승용차 운행기록부 법정 서식으로 엑셀을 즉시 내려받습니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 3,
+      "selector": "[data-mid=\"vehicle_log-upload-excel\"]",
+      "type": "stamp",
+      "label": "주유 내역 엑셀 업로드",
+      "description": "법인카드 주유 전표 및 전자세금계산서 주유 데이터를 일괄 업로드합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 4,
+      "selector": "[data-mid=\"vehicle_log-export-fuel\"]",
+      "type": "stamp",
+      "label": "주유 대장 내보내기",
+      "description": "기간별 차량 주유 집계 및 정산 내역을 엑셀로 다운로드합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 5,
+      "selector": "[data-mid=\"vehicle_log-tab-fuel\"]",
+      "type": "stamp",
+      "label": "주유 정산 대장 탭",
+      "description": "차량별 주유 일자, 주유량(L), 금액, 주유소를 1:1 대사합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 6,
+      "selector": "[data-mid=\"vehicle_log-tab-fleet\"]",
+      "type": "stamp",
+      "label": "차량 마스터 관리 탭",
+      "description": "회사 보유 차량 번호, 차종, 배정 임직원, 보험 만기일을 관리합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 7,
+      "selector": "[data-mid=\"vehicle_log-filter\"]",
+      "type": "stamp",
+      "label": "운행 기록 검색 조건",
+      "description": "조회 기간, 차량 번호, 운전자, 업무용/비업무용 구분별로 필터링합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    },
+    {
+      "seq": 8,
+      "selector": "[data-mid=\"vehicle_log-grid-fuel\"]",
+      "type": "stamp",
+      "label": "운행 및 주유 데이터 대장",
+      "description": "일자별 출발/도착지, 주행거리, 유류대 실지출 내역을 검토 및 수정합니다.",
+      "badgeColor": "#1D4ED8",
+      "positionHint": "bottom",
+      "spotlight": false
+    }
+  ]
+}
