@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { createClient } from '@supabase/supabase-js';
 import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
@@ -4696,7 +4696,7 @@ export const SEED_TENANTS: Tenant[] = [
         name: 'eBroFL 평택 메인 주기장',
         isDefault: true,
         address: '경기도 평택시 포승읍 평택항만길 100',
-        addressDetail: 'A창고(메인) 및 주기장',
+        addressDetail: 'A창고 및 주기장',
         operatingCapacity: 300,
         managerName: '야드운영팀',
         managerPhone: '031-681-8899',
@@ -6295,6 +6295,14 @@ class LocalDB {
 
     if (list.length === 0) {
       list = [...SEED_TENANTS];
+      modified = true;
+    } else {
+      for (const seedTenant of SEED_TENANTS) {
+        if (!list.some(t => t.id === seedTenant.id || t.tenantCode === seedTenant.tenantCode || t.subdomain === seedTenant.subdomain)) {
+          list.push(seedTenant);
+          modified = true;
+        }
+      }
       modified = true;
     }
     const patched = list.map(t => {
