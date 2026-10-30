@@ -72,3 +72,4 @@ start_ebro_agent.bat
 
 agent/bin/*.exe
 public/downloads/bin/*.exe
+.env*

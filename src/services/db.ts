@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { createClient } from '@supabase/supabase-js';
 import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
@@ -270,7 +270,7 @@ export function getTenantSubscriptionInfo(tenant: Tenant): {
   };
 }
 
-export type SolutionType = 'AWP' | 'IT' | 'MULTI';
+export type SolutionType = 'AWP' | 'IT' | 'FL' | 'MULTI';
 
 export interface Tenant {
   id: string;                          // 테넌트 고유 ID (예: 'tenant-1' 또는 'tenant-giyeun')
@@ -4627,6 +4627,128 @@ const mockDataAssets = generateMockAssets(mockDataProducts);
 const mockDataCont = generateMockContracts(mockDataCust.customers, mockDataCust.contacts, mockDataCust.sites, mockDataAssets);
 export const SEED_TENANTS: Tenant[] = [
   {
+    id: 'tenant-ebro-fl',
+    tenantCode: 'EBRO_FL',
+    solutionType: 'FL',
+    systemName: 'e-Bro FL ERP',
+    displayName: 'eBroFL 렌탈',
+    corporateName: '주식회사 이브로지게차렌탈',
+    tradeName: 'eBroFL 렌탈',
+    businessNumber: '108-86-99999',
+    corporateRegistrationNumber: '110111-7777777',
+    representativeName: '이정용',
+    openingDate: '2026-01-01',
+    businessAddress: '경기도 평택시 포승읍 평택항만길 100 (eBro FL 주기장)',
+    headOfficeAddress: '경기도 평택시 포승읍 평택항만길 100',
+    businessCategory: '사업지원 및 임대서비스업 / 도소매업',
+    businessItem: '지게차 임대·매매·부품 및 정비업',
+    businessTypes: [
+      { bizType: '사업지원 및 임대서비스업', bizItem: '지게차 및 물류장비 임대업' },
+      { bizType: '도매 및 소매업', bizItem: '지게차·건설기계 매매 및 수입 부품 유통업' }
+    ],
+    isUnitTaxation: false,
+    taxEmail: 'fl-demo@ebro.run',
+    taxOffice: '평택세무서장',
+    certificateIssueDate: '2026-01-01',
+    tel: '031-681-8899',
+    fax: '031-681-8898',
+    salesPhone: '010-3344-5566',
+    email: 'fl-demo@ebro.run',
+    websiteUrl: 'https://fl-demo.ebro.run',
+    subdomain: 'fl-demo',
+    targetRepo: 'DragonRPA/ebro_fl',
+    privacyOfficer: {
+      name: '이정용',
+      position: '대표이사 / 개인정보보호책임자',
+      department: '경영지원본부',
+      phone: '031-681-8899',
+      email: 'fl-demo@ebro.run',
+      updatedAt: '2026-01-01T00:00:00.000Z'
+    },
+    privacyOfficerName: '이정용',
+    privacyOfficerPosition: '대표이사 / 개인정보보호책임자',
+    privacyOfficerDepartment: '경영지원본부',
+    privacyOfficerPhone: '031-681-8899',
+    privacyOfficerEmail: 'fl-demo@ebro.run',
+    workplaces: [
+      {
+        id: 'wp-fl-01',
+        workplaceCode: 'HQ-FL',
+        name: '평택 본점 (FL)',
+        isHeadquarter: true,
+        businessNumber: '108-86-99999',
+        subBizNumber: '0000',
+        address: '경기도 평택시 포승읍 평택항만길 100',
+        addressDetail: '본관 2층',
+        tel: '031-681-8899',
+        fax: '031-681-8898',
+        managerName: '이정용',
+        managerPhone: '010-3344-5566',
+        managerEmail: 'fl-demo@ebro.run',
+        memo: 'eBro FL 지게차 렌탈·유통 본사 및 관제센터',
+        createdAt: '2026-01-01T00:00:00.000Z'
+      }
+    ],
+    yards: [
+      {
+        id: 'yard-fl-01',
+        yardCode: 'YARD-FL-01',
+        name: 'eBroFL 평택 메인 주기장 (A창고/야드)',
+        isDefault: true,
+        address: '경기도 평택시 포승읍 평택항만길 100',
+        addressDetail: 'A창고(메인) 및 주기장',
+        operatingCapacity: 300,
+        managerName: '야드운영팀',
+        managerPhone: '031-681-8899',
+        tel: '031-681-8899',
+        operatingHours: '08:00 ~ 18:00',
+        memo: '지게차(전동/디젤/LPG) 및 수입 부품 메인 주기장',
+        createdAt: '2026-01-01T00:00:00.000Z'
+      }
+    ],
+    mainYardAddress: '경기도 평택시 포승읍 평택항만길 100 (eBro FL 주기장)',
+    bankAccounts: [
+      {
+        bankName: '우리은행',
+        accountNumber: '1002-123-777777',
+        accountHolder: '주식회사 이브로지게차렌탈',
+        isDefault: true
+      }
+    ],
+    logoUrl: '/favicon.svg',
+    ciUrl: '/favicon.svg',
+    features: {
+      telegramBot: true,
+      callRecordingStt: true,
+      kakaoContract: true,
+      autoTaxInvoice: true,
+      voiceAssistance: true,
+      agentAiEnabled: true
+    },
+    subscription: {
+      plan: 'ENTERPRISE',
+      status: 'ACTIVE',
+      startDate: '2026-01-01',
+      endDate: '2029-12-31',
+      gracePeriodDays: 30,
+      billingCycle: 'YEARLY',
+      monthlyFee: 0,
+      autoRenew: true,
+      maxAssets: 0,
+      maxUsers: 0,
+      licenseKey: 'EBR-DEMO-FL-20291231-LIVE',
+      memo: '공식 FL 데모 시연 및 테스트 전용 테넌트'
+    },
+    stampImageUrl: OFFICIAL_STAMP_BASE64,
+    status: 'ACTIVE',
+    isDefault: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    allowCustomBillingStatement: true,
+    allowContractTradeOutbound: true,
+    specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound']
+  },
+  {
     id: 'tenant-giyeonlift',
     tenantCode: 'GIYEONLIFT',
     solutionType: 'AWP',
@@ -6274,7 +6396,7 @@ class LocalDB {
         const code = (t.tenantCode || '').toLowerCase();
         const subField = (t.subdomain || '').toLowerCase();
         const dName = (t.displayName || '').toLowerCase();
-        return code === 'ebro_awp' || subField === 'awp-demo' || dName.includes('e-bro') || dName.includes('ebro') || t.id === 'giyeun';
+        return code === 'ebro_fl' || subField === 'fl-demo' || code === 'ebro_awp' || subField === 'awp-demo' || dName.includes('e-bro') || dName.includes('ebro') || t.id === 'giyeun';
       });
       if (demoTenant) return demoTenant;
     }
@@ -6294,7 +6416,7 @@ class LocalDB {
                  code === sub ||
                  sub.startsWith(code) ||
                  code.startsWith(sub) ||
-                 (sub.includes('demo') && (code === 'ebro_awp' || subField === 'awp-demo') ||
+                 (sub.includes('fl-demo') && (code === 'ebro_fl' || subField === 'fl-demo')) || (sub.includes('demo') && (code === 'ebro_fl' || subField === 'fl-demo' || code === 'ebro_awp' || subField === 'awp-demo')) || (
                  sub.includes('giyeon') && (code === 'giyeonlift' || code === 'giyeon')) ||
                  (sub.includes('giyeonlift') && (code === 'giyeonlift' || code === 'giyeon')) ||
                  (sub.includes('giyeun') && (code === 'giyeonlift' || code === 'giyeun')) ||

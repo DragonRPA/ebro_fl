@@ -38,18 +38,13 @@ export function isProductionDomain(): boolean {
   if (typeof window === 'undefined') return false;
   const hostname = window.location.hostname.toLowerCase();
   
-  // demo가 포함된 도메인은 절대 프로덕션 도메인이 아님
-  if (hostname.includes('demo')) return false;
-
-  // 실운영 도메인 (기연리프트 메인, Vercel 기본 주소 등)
+  // fl-demo.ebro.run 및 FL 관련 도메인은 정식 서비스 모드로 동작
   return (
-    hostname === 'ebro.run' ||
-    hostname === 'giyuenlift.ebro.run' ||
-    hostname === 'giyeun-lift.vercel.app' ||
-    hostname === 'giyuen-lift.vercel.app' ||
-    hostname === 'ebro_awp.vercel.app' ||
-    hostname === 'ebro-awp.vercel.app' ||
-    (hostname.endsWith('.ebro.run') && !hostname.includes('demo'))
+    hostname === 'fl-demo.ebro.run' ||
+    hostname === 'fl.ebro.run' ||
+    hostname === 'ebro_fl.vercel.app' ||
+    hostname === 'ebro-fl.vercel.app' ||
+    (hostname.endsWith('.ebro.run') && !hostname.includes('awp-demo'))
   );
 }
 

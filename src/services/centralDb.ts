@@ -1,4 +1,4 @@
-// src/services/centralDb.ts
+﻿// src/services/centralDb.ts
 // 🌐 eBro Platform Central Database Service (ebro-platform-core)
 // Tier 1: Control Plane & Global Knowledge Base SSOT
 
@@ -68,7 +68,7 @@ export async function fetchCentralTenants(): Promise<Tenant[]> {
       if (Array.isArray(rawAllowedPages) && rawAllowedPages.length > 0 && !rawAllowedPages.includes('as_route_tracking')) {
         rawAllowedPages.push('as_route_tracking');
       }
-      if (row.id === 'tenant-giyeonlift' || row.id === 'tenant-ebro-awp') {
+      if (row.id === 'tenant-giyeonlift' || row.id === 'tenant-ebro-awp' || row.id === 'tenant-ebro-fl') {
         const exposedTradeMenus = ['trade_products', 'trade_purchases'];
         const hiddenTradeMenus = [
           'trade_contracts',
@@ -278,7 +278,7 @@ export interface EquipmentManualItem {
   id: string;
   modelName: string;
   category: string;
-  solution_type: 'AWP' | 'IT' | 'ALL';
+  solution_type: 'AWP' | 'IT' | 'FL' | 'ALL';
   manufacturer?: string;
   specifications?: any;
   manualUrl?: string;
@@ -345,7 +345,7 @@ export async function fetchCentralManualAnnotations(solutionType: 'AWP' | 'IT' =
 export interface SystemManualItem {
   id?: string;
   menu_id: string;
-  solution_type?: 'AWP' | 'IT' | 'ALL';
+  solution_type?: 'AWP' | 'IT' | 'FL' | 'ALL';
   manual_url: string;
   title?: string;
   description?: string;
@@ -408,7 +408,7 @@ export interface LegalNoticeTemplateItem {
   id: string;
   template_code: string;
   template_name: string;
-  solution_type: 'AWP' | 'IT' | 'ALL';
+  solution_type: 'AWP' | 'IT' | 'FL' | 'ALL';
   content_template: string;
   title?: string;
   content?: string;

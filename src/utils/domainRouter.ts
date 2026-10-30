@@ -1,4 +1,4 @@
-// src/utils/domainRouter.ts
+﻿// src/utils/domainRouter.ts
 // 🌐 멀티테넌트 도메인 라우팅 엔진 (전사 표준 헌장 1.1, 7.1)
 // 1. ebro.run (루트) ➔ 공식 홍보 및 마케팅 랜딩 페이지
 // 2. admin.ebro.run ➔ 플랫폼 최고관리자 전용 테넌트 관리 센터
@@ -96,12 +96,14 @@ export function getMultiSolutionTenantUrls(subdomain: string): { awpUrl: string;
 /**
  * 현재 브라우저의 URL 쿼리 파라미터 및 호스트명을 기반으로 활성 솔루션을 판정합니다.
  */
-export function detectActiveSolution(): 'AWP' | 'IT' | 'ALL' {
+export function detectActiveSolution(): 'AWP' | 'IT' | 'FL' | 'ALL' {
   if (typeof window === 'undefined') return 'AWP';
   const search = window.location.search.toLowerCase();
+  if (search.includes('solution=fl') || search.includes('app=fl')) return 'FL';
   if (search.includes('solution=it') || search.includes('app=it')) return 'IT';
   if (search.includes('solution=awp') || search.includes('app=awp')) return 'AWP';
   const host = window.location.hostname.toLowerCase();
+  if (host.includes('.fl.') || host.startsWith('fl-') || host.startsWith('fl.')) return 'FL';
   if (host.includes('.it.') || host.startsWith('it.')) return 'IT';
   if (host.includes('.awp.') || host.startsWith('awp.')) return 'AWP';
   try {
