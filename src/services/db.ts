@@ -4638,7 +4638,7 @@ export const SEED_TENANTS: Tenant[] = [
     corporateRegistrationNumber: '110111-7777777',
     representativeName: '이정용',
     openingDate: '2026-01-01',
-    businessAddress: '경기도 평택시 포승읍 평택항만길 100 (eBro FL 주기장)',
+    businessAddress: '경기도 평택시 포승읍 평택항만길 100',
     headOfficeAddress: '경기도 평택시 포승읍 평택항만길 100',
     businessCategory: '사업지원 및 임대서비스업 / 도소매업',
     businessItem: '지게차 임대·매매·부품 및 정비업',
@@ -4674,7 +4674,7 @@ export const SEED_TENANTS: Tenant[] = [
       {
         id: 'wp-fl-01',
         workplaceCode: 'HQ-FL',
-        name: '평택 본점 (FL)',
+        name: '평택 본점',
         isHeadquarter: true,
         businessNumber: '108-86-99999',
         subBizNumber: '0000',
@@ -4693,7 +4693,7 @@ export const SEED_TENANTS: Tenant[] = [
       {
         id: 'yard-fl-01',
         yardCode: 'YARD-FL-01',
-        name: 'eBroFL 평택 메인 주기장 (A창고/야드)',
+        name: 'eBroFL 평택 메인 주기장',
         isDefault: true,
         address: '경기도 평택시 포승읍 평택항만길 100',
         addressDetail: 'A창고(메인) 및 주기장',
@@ -4702,11 +4702,11 @@ export const SEED_TENANTS: Tenant[] = [
         managerPhone: '031-681-8899',
         tel: '031-681-8899',
         operatingHours: '08:00 ~ 18:00',
-        memo: '지게차(전동/디젤/LPG) 및 수입 부품 메인 주기장',
+        memo: '지게차 및 수입 부품 메인 주기장',
         createdAt: '2026-01-01T00:00:00.000Z'
       }
     ],
-    mainYardAddress: '경기도 평택시 포승읍 평택항만길 100 (eBro FL 주기장)',
+    mainYardAddress: '경기도 평택시 포승읍 평택항만길 100',
     bankAccounts: [
       {
         bankName: '우리은행',
