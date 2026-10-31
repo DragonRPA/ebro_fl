@@ -1218,13 +1218,45 @@ export const TradePurchasesPage: React.FC = () => {
               {/* 해외수입 선택 시: 외화 환율 및 통관·운임 부대비용 산출 박스 */}
               {formPurchaseType === 'IMPORT' && (
                 <div style={{ padding: '14px 16px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#1e40af' }}>
                       해외수입 외화 환율 및 부대비용 안분 계산기 (품목별 금액 비례 자동 배부)
                     </span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#1d4ed8' }}>
-                      부대비용 합계: ₩{totalIncidentalCost.toLocaleString()}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/exchange-rate?currency=${formCurrency}&date=${formOrderDate || ''}`);
+                            const json = await res.json();
+                            if (json?.success && json?.data?.baseRate) {
+                              setFormExchangeRate(Number(json.data.baseRate));
+                              showToast(
+                                `[${json.data.baseDate}] ${formCurrency} 매매기준율 ${json.data.baseRate}원 (송금환율 ${json.data.ttsRate}원 · ${json.data.source})이 자동 적용되었습니다.`
+                              );
+                            }
+                          } catch {
+                            showToast('기준환율 조회 중 일시적 오류가 발생하여 기본 환율을 유지합니다.', 'error');
+                          }
+                        }}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '5px',
+                          border: '1px solid #2563eb',
+                          backgroundColor: '#ffffff',
+                          color: '#1d4ed8',
+                          fontSize: '11.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        일일 기준환율 자동불러오기
+                      </button>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#1d4ed8' }}>
+                        부대비용 합계: ₩{totalIncidentalCost.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

@@ -47,7 +47,7 @@ export function getAgingBucket(days: number): {
 }
 
 export const TradeProductsPage: React.FC = () => {
-  const { showErrorModal } = useApp();
+  const { showErrorModal, setActiveTab: setGlobalActiveTab } = useApp();
   const {
     products,
     inventoryLots,
@@ -747,6 +747,23 @@ export const TradeProductsPage: React.FC = () => {
               }}
             >
               창고별·부품 재고현황
+            </button>
+            <button
+              type="button"
+              onClick={() => setGlobalActiveTab && setGlobalActiveTab('fl_doc_archive')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                borderRadius: '6px',
+                border: '1px solid #93c5fd',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                backgroundColor: '#eff6ff',
+                color: '#1d4ed8'
+              }}
+            >
+              제조사 공식제원·매뉴얼 아카이브 ➔
             </button>
           </div>
         </div>

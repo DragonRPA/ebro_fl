@@ -133,6 +133,7 @@ const AssetHistory = React.lazy(() => import('./pages/asset_history').then(modul
 
 const PublicConstructionPermitsPage = React.lazy(() => import('./pages/PublicConstructionPermitsPage').then(module => ({ default: module.PublicConstructionPermitsPage })));
 const SalesJournalPage = React.lazy(() => import('./pages/SalesJournalPage').then(module => ({ default: module.SalesJournalPage })));
+const ForkliftDocArchivePage = React.lazy(() => import('./pages/distribution/ForkliftDocArchivePage').then(module => ({ default: module.ForkliftDocArchivePage })));
 
 export interface SubMenuItem {
   id: string;
@@ -676,6 +677,7 @@ const App: React.FC = () => {
         icon: <Package size={18} />,
         items: [
           { id: 'trade_products', name: '제품·차대번호·재고경과', icon: <Package size={16} />, component: <TradeProductsPage /> },
+          { id: 'fl_doc_archive', name: '제조사 제원·매뉴얼 아카이브', icon: <BookOpen size={16} />, component: <ForkliftDocArchivePage /> },
           { id: 'stocktaking', name: '창고별 재고 실사', icon: <ClipboardList size={16} />, component: <StocktakingPage /> },
         ]
       },
@@ -1024,6 +1026,7 @@ const App: React.FC = () => {
     if (tabId === 'manual_dictionary') return <ManualDictionaryPage />;
     if (tabId === 'consumable' || tabId === 'consumables') return <ConsumableStockPage />;
     if (tabId === 'leave_ot') return <LeaveOtPage />;
+    if (tabId === 'fl_doc_archive') return <ForkliftDocArchivePage />;
     if (tabId === 'trade_products') return <TradeProductsPage />;
     if (tabId === 'trade_purchases') return <TradePurchasesPage />;
     if (tabId === 'trade_contracts') return <TradeContractsPage />;
