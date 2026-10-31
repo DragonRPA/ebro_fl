@@ -1,28 +1,67 @@
 import React, { useState, useMemo } from 'react';
 import {
   Package, Plus, Download, Search, RefreshCw, Edit2, Trash2,
-  SlidersHorizontal, CheckCircle2, Ban, AlertTriangle, X, Layers
+  SlidersHorizontal, CheckCircle2, Ban, X, Layers, Clock, Building2, ShieldCheck
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
-import { TradeProduct } from '../../services/db';
+import { TradeProduct, TradeInventoryLot } from '../../services/db';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
 
-const CATEGORIES = ['소모품', '안전용품', '전장부품', '유압부품', '타이어/휠', '배터리/충전기', '기타'];
-const UNITS = ['EA', 'SET', 'BOX', '켤레', 'L', 'M', '롤'];
+const CATEGORIES = ['전동지게차', '리치트럭', '디젤지게차', '배터리/충전기', '전장부품', '유압부품', '타이어/휠', '소모품', '기타'];
+const WAREHOUSES = ['A창고', 'B창고', '부품창고'];
+const UNITS = ['대', 'EA', 'SET', 'BOX', '조', '본'];
+
+export type AgingBucket = 'ALL' | 'UNDER_30' | 'DAYS_31_60' | 'DAYS_61_90' | 'DAYS_91_180' | 'OVER_180';
+
+export function calculateAgingDays(inboundDate?: string, createdAt?: string): number {
+  const ref = inboundDate || (createdAt ? createdAt.split('T')[0] : '');
+  if (!ref) return 0;
+  const inTime = new Date(ref).getTime();
+  if (Number.isNaN(inTime)) return 0;
+  // 기준일: 2026-10-31 또는 현재일 중 큰 값으로 일관된 체화일수 산출
+  const nowTime = Math.max(Date.now(), new Date('2026-10-31T00:00:00.000Z').getTime());
+  return Math.max(0, Math.floor((nowTime - inTime) / 86400000));
+}
+
+export function getAgingBucket(days: number): {
+  bucket: Exclude<AgingBucket, 'ALL'>;
+  label: string;
+  bg: string;
+  color: string;
+} {
+  if (days <= 30) {
+    return { bucket: 'UNDER_30', label: '30일 이내', bg: '#dcfce7', color: '#166534' };
+  }
+  if (days <= 60) {
+    return { bucket: 'DAYS_31_60', label: '31~60일', bg: '#dbeafe', color: '#1d4ed8' };
+  }
+  if (days <= 90) {
+    return { bucket: 'DAYS_61_90', label: '61~90일', bg: '#fef3c7', color: '#b45309' };
+  }
+  if (days <= 180) {
+    return { bucket: 'DAYS_91_180', label: '91~180일', bg: '#ffedd5', color: '#c2410c' };
+  }
+  return { bucket: 'OVER_180', label: '180일 이상', bg: '#fee2e2', color: '#b91c1c' };
+}
 
 export const TradeProductsPage: React.FC = () => {
   const { showErrorModal } = useApp();
   const {
     products,
     inventoryLots,
+    purchases,
+    getVendorName,
     getProductStock,
     addProduct,
     updateProduct,
     deleteProduct,
     adjustProductStock
   } = useTrade();
+
+  // 메인 탭: MASTER (제품·부품 마스터) | SERIAL_AGING (차대번호별 입출고 및 재고 경과일수) | WAREHOUSE_PARTS (창고별·부품 재고현황)
+  const [activeViewTab, setActiveViewTab] = useState<'MASTER' | 'SERIAL_AGING' | 'WAREHOUSE_PARTS'>('MASTER');
 
   // Toast state
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -31,67 +70,99 @@ export const TradeProductsPage: React.FC = () => {
     setTimeout(() => setToast(null), 3200);
   };
 
-  // 다음 SKU 코드 자동 채번 계산
+  // 다음 품목코드 자동 채번 계산
   const nextAutoSku = useMemo(() => {
     const maxNum = products.reduce((max, p) => {
-      const m = /^SKU(\d+)$/i.exec((p.skuCode || '').trim());
+      const m = /(\d+)$/.exec((p.skuCode || '').trim());
       return m ? Math.max(max, parseInt(m[1], 10)) : max;
     }, 0);
-    return `SKU${String(maxNum + 1).padStart(3, '0')}`;
+    return `FL-${String(maxNum + 1).padStart(4, '0')}`;
   }, [products]);
 
-  // Quick inline registration state (UIA SSOT compatibility)
+  // Quick inline registration state
   const [name, setName] = useState('');
   const [cost, setCost] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
 
-  // Filter states (기간, 카테고리, 품명/SKU, 재고상태, 거래상태)
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Filter states (품목구분, 제조사, 카테고리, 창고, 품명/코드, 재고상태, 거래상태)
+  const [itemTypeFilter, setItemTypeFilter] = useState<'ALL' | 'EQUIPMENT' | 'PART'>('ALL');
+  const [manufacturerFilter, setManufacturerFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [warehouseFilter, setWarehouseFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'NORMAL' | 'LOW' | 'OUT'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DISCONTINUED'>('ALL');
+
+  // 탭 2 전용 필터: 차대번호 보유상태, 입고 경과일수 구간
+  const [lotStatusFilter, setLotStatusFilter] = useState<'ALL' | 'IN_STOCK' | 'SOLD'>('ALL');
+  const [agingBucketFilter, setAgingBucketFilter] = useState<AgingBucket>('ALL');
 
   // Product Create/Edit Modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<TradeProduct | null>(null);
   const [formSku, setFormSku] = useState('');
+  const [formItemType, setFormItemType] = useState<'EQUIPMENT' | 'PART'>('EQUIPMENT');
+  const [formManufacturer, setFormManufacturer] = useState('');
+  const [formModelName, setFormModelName] = useState('');
+  const [formOriginCountry, setFormOriginCountry] = useState('중국 수입');
+  const [formDefaultWarehouse, setFormDefaultWarehouse] = useState('A창고');
   const [formName, setFormName] = useState('');
-  const [formCategory, setFormCategory] = useState('소모품');
+  const [formCategory, setFormCategory] = useState('전동지게차');
   const [formSpec, setFormSpec] = useState('');
-  const [formUnit, setFormUnit] = useState('EA');
+  const [formUnit, setFormUnit] = useState('대');
   const [formStandardCost, setFormStandardCost] = useState<number>(0);
+  const [formDealerPrice, setFormDealerPrice] = useState<number>(0);
   const [formStandardPrice, setFormStandardPrice] = useState<number>(0);
-  const [formSafetyStock, setFormSafetyStock] = useState<number>(10);
+  const [formSafetyStock, setFormSafetyStock] = useState<number>(3);
+  const [formWarrantyMonths, setFormWarrantyMonths] = useState<number>(12);
   const [formCogsMethod, setFormCogsMethod] = useState<'FIFO' | 'MOVING_AVG'>('FIFO');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'DISCONTINUED'>('ACTIVE');
   const [formInitialStock, setFormInitialStock] = useState<number>(0);
+  const [formInitialSerial, setFormInitialSerial] = useState<string>('');
   const [formMemo, setFormMemo] = useState('');
 
   // Stock Adjustment Modal state
   const [adjustTarget, setAdjustTarget] = useState<TradeProduct | null>(null);
   const [adjustType, setAdjustType] = useState<'ADD' | 'SUB'>('ADD');
-  const [adjustQty, setAdjustQty] = useState<number>(10);
+  const [adjustQty, setAdjustQty] = useState<number>(1);
   const [adjustUnitCost, setAdjustUnitCost] = useState<number>(0);
+  const [adjustWarehouse, setAdjustWarehouse] = useState<string>('A창고');
+  const [adjustSerialNumber, setAdjustSerialNumber] = useState<string>('');
+  const [adjustInboundDate, setAdjustInboundDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [adjustReason, setAdjustReason] = useState('정기 재고실사 수량 보정');
+
+  // 제조사 목록 추출
+  const manufacturerOptions = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach(p => {
+      if (p.manufacturer) set.add(p.manufacturer);
+    });
+    return Array.from(set);
+  }, [products]);
 
   // Quick Add handler
   const handleQuickAdd = async () => {
     if (!name.trim() || cost <= 0 || price <= 0) {
-      showErrorModal('상품명, 기준 매입단가(0원 초과), 판매단가(0원 초과)를 모두 입력해 주세요.');
+      showErrorModal('제품명, 기준 매입단가, 판매단가를 모두 입력해 주세요.');
       return;
     }
     try {
       const created = await addProduct({
         skuCode: nextAutoSku,
         name: name.trim(),
-        category: '소모품',
+        itemType: 'EQUIPMENT',
+        manufacturer: '이피이큅먼트',
+        modelName: name.trim().split(' ')[0] || nextAutoSku,
+        originCountry: '중국 수입',
+        defaultWarehouse: 'A창고',
+        category: '전동지게차',
         spec: '표준규격',
-        unit: 'EA',
+        unit: '대',
         standardCost: cost,
+        dealerPrice: Math.round((cost + price) / 2),
         standardPrice: price,
-        safetyStock: 10,
+        safetyStock: 3,
+        warrantyMonths: 12,
         status: 'ACTIVE',
         cogsMethod: 'FIFO',
         memo: ''
@@ -99,9 +170,9 @@ export const TradeProductsPage: React.FC = () => {
       setName('');
       setCost(0);
       setPrice(0);
-      showToast(`[${created.skuCode}] ${name.trim()} 상품이 등록되었습니다.`);
+      showToast(`[${created.skuCode}] ${name.trim()} 제품이 등록되었습니다.`);
     } catch (err: any) {
-      showErrorModal(err.message || '상품 등록 중 오류가 발생했습니다.');
+      showErrorModal(err.message || '제품 등록 중 오류가 발생했습니다.');
     }
   };
 
@@ -109,16 +180,24 @@ export const TradeProductsPage: React.FC = () => {
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormSku(nextAutoSku);
+    setFormItemType('EQUIPMENT');
+    setFormManufacturer('이피이큅먼트');
+    setFormModelName('');
+    setFormOriginCountry('중국 수입');
+    setFormDefaultWarehouse('A창고');
     setFormName('');
-    setFormCategory('소모품');
+    setFormCategory('전동지게차');
     setFormSpec('');
-    setFormUnit('EA');
+    setFormUnit('대');
     setFormStandardCost(0);
+    setFormDealerPrice(0);
     setFormStandardPrice(0);
-    setFormSafetyStock(10);
+    setFormSafetyStock(3);
+    setFormWarrantyMonths(12);
     setFormCogsMethod('FIFO');
     setFormStatus('ACTIVE');
     setFormInitialStock(0);
+    setFormInitialSerial('');
     setFormMemo('');
     setIsProductModalOpen(true);
   };
@@ -126,16 +205,24 @@ export const TradeProductsPage: React.FC = () => {
   const openEditModal = (p: TradeProduct) => {
     setEditingProduct(p);
     setFormSku(p.skuCode);
+    setFormItemType(p.itemType || (p.unit === '대' ? 'EQUIPMENT' : 'PART'));
+    setFormManufacturer(p.manufacturer || '');
+    setFormModelName(p.modelName || '');
+    setFormOriginCountry(p.originCountry || '중국 수입');
+    setFormDefaultWarehouse(p.defaultWarehouse || 'A창고');
     setFormName(p.name);
-    setFormCategory(p.category || '소모품');
+    setFormCategory(p.category || '전동지게차');
     setFormSpec(p.spec || '');
-    setFormUnit(p.unit || 'EA');
+    setFormUnit(p.unit || '대');
     setFormStandardCost(p.standardCost ?? 0);
+    setFormDealerPrice(p.dealerPrice ?? Math.round(((p.standardCost ?? 0) + p.standardPrice) / 2));
     setFormStandardPrice(p.standardPrice);
-    setFormSafetyStock(p.safetyStock ?? 10);
+    setFormSafetyStock(p.safetyStock ?? 3);
+    setFormWarrantyMonths(p.warrantyMonths ?? 12);
     setFormCogsMethod(p.cogsMethod || 'FIFO');
     setFormStatus(p.status);
     setFormInitialStock(0);
+    setFormInitialSerial('');
     setFormMemo(p.memo || '');
     setIsProductModalOpen(true);
   };
@@ -143,7 +230,7 @@ export const TradeProductsPage: React.FC = () => {
   const handleSaveProductModal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      showErrorModal('상품명은 필수 입력 항목입니다.');
+      showErrorModal('제품명은 필수 입력 항목입니다.');
       return;
     }
     if (formStandardCost <= 0) {
@@ -151,53 +238,55 @@ export const TradeProductsPage: React.FC = () => {
       return;
     }
     if (formStandardPrice <= 0) {
-      showErrorModal('기준 판매단가는 0원보다 커야 합니다.');
+      showErrorModal('최종고객 판매단가는 0원보다 커야 합니다.');
       return;
     }
 
     try {
+      const payload = {
+        skuCode: formSku.trim() || nextAutoSku,
+        itemType: formItemType,
+        manufacturer: formManufacturer.trim() || '기타제조사',
+        modelName: formModelName.trim() || formSku.trim(),
+        originCountry: formOriginCountry,
+        defaultWarehouse: formDefaultWarehouse,
+        name: formName.trim(),
+        category: formCategory,
+        spec: formSpec.trim() || '-',
+        unit: formUnit,
+        standardCost: formStandardCost,
+        dealerPrice: formDealerPrice > 0 ? formDealerPrice : formStandardPrice,
+        standardPrice: formStandardPrice,
+        safetyStock: formSafetyStock,
+        warrantyMonths: formWarrantyMonths,
+        cogsMethod: formCogsMethod,
+        status: formStatus,
+        memo: formMemo.trim()
+      };
+
       if (editingProduct) {
-        await updateProduct(editingProduct.id, {
-          skuCode: formSku.trim() || editingProduct.skuCode,
-          name: formName.trim(),
-          category: formCategory,
-          spec: formSpec.trim() || '-',
-          unit: formUnit,
-          standardCost: formStandardCost,
-          standardPrice: formStandardPrice,
-          safetyStock: formSafetyStock,
-          cogsMethod: formCogsMethod,
-          status: formStatus,
-          memo: formMemo.trim()
-        });
-        showToast(`[${formName.trim()}] 상품 정보가 수정되었습니다.`);
+        await updateProduct(editingProduct.id, payload);
+        showToast(`[${formName.trim()}] 제품 마스터 정보가 수정되었습니다.`);
       } else {
-        const created = await addProduct({
-          skuCode: formSku.trim() || nextAutoSku,
-          name: formName.trim(),
-          category: formCategory,
-          spec: formSpec.trim() || '-',
-          unit: formUnit,
-          standardCost: formStandardCost,
-          standardPrice: formStandardPrice,
-          safetyStock: formSafetyStock,
-          cogsMethod: formCogsMethod,
-          status: formStatus,
-          memo: formMemo.trim()
-        });
+        const created = await addProduct(payload);
         if (formInitialStock > 0) {
           await adjustProductStock(
             created.id,
             formInitialStock,
             formStandardCost,
-            '신규 상품 등록 기초 재고 입고'
+            '신규 제품 등록 기초 재고 입고',
+            {
+              warehouseName: formDefaultWarehouse,
+              serialNumber: formInitialSerial.trim() || undefined,
+              inboundDate: new Date().toISOString().split('T')[0]
+            }
           );
         }
-        showToast(`[${created.skuCode}] ${formName.trim()} 신규 상품이 등록되었습니다.`);
+        showToast(`[${created.skuCode}] ${formName.trim()} 신규 제품이 등록되었습니다.`);
       }
       setIsProductModalOpen(false);
     } catch (err: any) {
-      showErrorModal(err.message || '상품 저장 실패');
+      showErrorModal(err.message || '제품 저장 실패');
     }
   };
 
@@ -206,7 +295,7 @@ export const TradeProductsPage: React.FC = () => {
     try {
       await updateProduct(p.id, { status: nextStatus });
       showToast(
-        `[${p.name}] 상태가 ${nextStatus === 'ACTIVE' ? '판매중' : '단종'}(으)로 변경되었습니다.`
+        `[${p.name}] 상태가 ${nextStatus === 'ACTIVE' ? '판매중' : '단종'} 상태로 변경되었습니다.`
       );
     } catch (err: any) {
       showErrorModal(err.message || '상태 변경 실패');
@@ -214,12 +303,12 @@ export const TradeProductsPage: React.FC = () => {
   };
 
   const handleDeleteProduct = async (p: TradeProduct) => {
-    if (!window.confirm(`[${p.skuCode}] ${p.name} 상품을 삭제하시겠습니까?`)) return;
+    if (!window.confirm(`[${p.skuCode}] ${p.name} 제품을 삭제하시겠습니까?`)) return;
     try {
       await deleteProduct(p.id);
-      showToast(`[${p.name}] 상품이 삭제되었습니다.`);
+      showToast(`[${p.name}] 제품이 삭제되었습니다.`);
     } catch (err: any) {
-      showErrorModal(err.message || '상품 삭제 실패');
+      showErrorModal(err.message || '제품 삭제 실패');
     }
   };
 
@@ -227,8 +316,11 @@ export const TradeProductsPage: React.FC = () => {
     const st = getProductStock(p.id);
     setAdjustTarget(p);
     setAdjustType('ADD');
-    setAdjustQty(10);
+    setAdjustQty(1);
     setAdjustUnitCost(st.avgUnitCost || p.standardCost || 0);
+    setAdjustWarehouse(p.defaultWarehouse || 'A창고');
+    setAdjustSerialNumber('');
+    setAdjustInboundDate(new Date().toISOString().split('T')[0]);
     setAdjustReason('정기 재고실사 수량 보정');
   };
 
@@ -241,7 +333,11 @@ export const TradeProductsPage: React.FC = () => {
     }
     try {
       const signedQty = adjustType === 'ADD' ? adjustQty : -adjustQty;
-      await adjustProductStock(adjustTarget.id, signedQty, adjustUnitCost, adjustReason);
+      await adjustProductStock(adjustTarget.id, signedQty, adjustUnitCost, adjustReason, {
+        warehouseName: adjustWarehouse,
+        serialNumber: adjustSerialNumber.trim() || undefined,
+        inboundDate: adjustInboundDate
+      });
       showToast(
         `[${adjustTarget.name}] 재고가 ${adjustType === 'ADD' ? `+${adjustQty}` : `-${adjustQty}`}${adjustTarget.unit || 'EA'} 조정되었습니다.`
       );
@@ -251,36 +347,57 @@ export const TradeProductsPage: React.FC = () => {
     }
   };
 
-  // Enriched products with stock metrics
+  // Enriched products with stock & warehouse metrics
   const enrichedProducts = useMemo(() => {
     return products.map(p => {
       const st = getProductStock(p.id);
-      const costVal = p.standardCost ?? 0;
-      const safety = p.safetyStock ?? 10;
+      const activeLots = inventoryLots.filter(l => l.productId === p.id && l.remainingQty > 0);
+      const costVal = st.avgUnitCost || p.standardCost || 0;
+      const safety = p.safetyStock ?? 3;
+      const dealerP = p.dealerPrice ?? Math.round((costVal + p.standardPrice) / 2);
       const marginAmt = p.standardPrice - costVal;
       const marginRate = p.standardPrice > 0 ? (marginAmt / p.standardPrice) * 100 : 0;
       const regDate = (p.createdAt || '').split('T')[0];
+      const maxAgingDays = activeLots.reduce(
+        (max, l) => Math.max(max, calculateAgingDays(l.inboundDate, l.createdAt)),
+        0
+      );
+      const warehouses = Array.from(
+        new Set(activeLots.map(l => l.warehouseName || p.defaultWarehouse || 'A창고'))
+      );
+
       return {
         ...p,
+        resolvedItemType: p.itemType || (p.unit === '대' ? 'EQUIPMENT' : 'PART'),
         availableQty: st.availableQty,
-        avgUnitCost: st.avgUnitCost || costVal,
+        avgUnitCost: costVal,
         stockValue: st.stockValue,
-        standardCost: costVal,
+        standardCost: p.standardCost ?? 0,
+        dealerPrice: dealerP,
         safetyStock: safety,
         marginAmt,
         marginRate,
-        regDate
+        regDate,
+        maxAgingDays,
+        warehouses
       };
     });
   }, [products, inventoryLots, getProductStock]);
 
-  // Filtered products
+  // Filtered products for Tab 1 & Tab 3
   const filteredProducts = useMemo(() => {
     const matcher = searchTerm.trim() ? createHangulMatcher(searchTerm.trim()) : null;
     return enrichedProducts.filter(p => {
-      if (startDate && p.regDate && p.regDate < startDate) return false;
-      if (endDate && p.regDate && p.regDate > endDate) return false;
+      if (itemTypeFilter !== 'ALL' && p.resolvedItemType !== itemTypeFilter) return false;
+      if (manufacturerFilter !== 'ALL' && p.manufacturer !== manufacturerFilter) return false;
       if (categoryFilter !== 'ALL' && p.category !== categoryFilter) return false;
+      if (
+        warehouseFilter !== 'ALL' &&
+        p.defaultWarehouse !== warehouseFilter &&
+        !p.warehouses.includes(warehouseFilter)
+      ) {
+        return false;
+      }
       if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
 
       if (stockFilter === 'OUT' && p.availableQty > 0) return false;
@@ -291,6 +408,8 @@ export const TradeProductsPage: React.FC = () => {
         const hit =
           matcher(p.name) ||
           matcher(p.skuCode) ||
+          matcher(p.manufacturer || '') ||
+          matcher(p.modelName || '') ||
           matcher(p.category || '') ||
           matcher(p.spec || '') ||
           matcher(p.memo || '');
@@ -298,63 +417,226 @@ export const TradeProductsPage: React.FC = () => {
       }
       return true;
     });
-  }, [enrichedProducts, startDate, endDate, categoryFilter, statusFilter, stockFilter, searchTerm]);
+  }, [
+    enrichedProducts,
+    itemTypeFilter,
+    manufacturerFilter,
+    categoryFilter,
+    warehouseFilter,
+    statusFilter,
+    stockFilter,
+    searchTerm
+  ]);
+
+  // Enriched Serial / Lot rows for Tab 2 (차대번호별 입출고 및 재고 경과일수)
+  const enrichedLots = useMemo(() => {
+    return inventoryLots
+      .map(lot => {
+        const prod = products.find(p => p.id === lot.productId);
+        const po = purchases.find(pu => pu.id === lot.purchaseId);
+        const inboundDate = lot.inboundDate || po?.receivedDate || (lot.createdAt || '').split('T')[0];
+        const agingDays = calculateAgingDays(inboundDate, lot.createdAt);
+        const agingInfo = getAgingBucket(agingDays);
+        const isSold = lot.remainingQty === 0 || lot.lotStatus === 'SOLD';
+        const warehouseName = lot.warehouseName || prod?.defaultWarehouse || 'A창고';
+        const vendorName = po ? getVendorName(po.vendorId) : '기초재고/수동입고';
+
+        return {
+          lot,
+          prod,
+          po,
+          serialNumber: lot.serialNumber || lot.id,
+          itemType: prod?.itemType || (prod?.unit === '대' ? 'EQUIPMENT' : 'PART'),
+          manufacturer: prod?.manufacturer || '-',
+          modelName: prod?.modelName || prod?.skuCode || '-',
+          productName: prod?.name || '미지정 품목',
+          warehouseName,
+          inboundDate,
+          agingDays,
+          agingInfo,
+          isSold,
+          vendorName,
+          purchaseTypeLabel: po?.purchaseType === 'IMPORT' ? '해외수입' : '국내매입',
+          currency: lot.foreignCurrency || po?.currency || 'KRW',
+          foreignUnitPrice: lot.foreignUnitPrice ?? lot.unitCost,
+          exchangeRate: lot.exchangeRate ?? po?.exchangeRate ?? 1,
+          incidentalCostPerUnit: lot.incidentalCostPerUnit ?? 0,
+          landedUnitCost: lot.unitCost,
+          soldDate: lot.soldDate || '-',
+          soldCustomerName: lot.soldCustomerName || '-',
+          warrantyEndDate: lot.warrantyEndDate || '-'
+        };
+      })
+      .sort((a, b) => b.agingDays - a.agingDays);
+  }, [inventoryLots, products, purchases, getVendorName]);
+
+  const filteredLots = useMemo(() => {
+    const matcher = searchTerm.trim() ? createHangulMatcher(searchTerm.trim()) : null;
+    return enrichedLots.filter(row => {
+      if (itemTypeFilter !== 'ALL' && row.itemType !== itemTypeFilter) return false;
+      if (manufacturerFilter !== 'ALL' && row.manufacturer !== manufacturerFilter) return false;
+      if (warehouseFilter !== 'ALL' && row.warehouseName !== warehouseFilter) return false;
+      if (lotStatusFilter === 'IN_STOCK' && row.isSold) return false;
+      if (lotStatusFilter === 'SOLD' && !row.isSold) return false;
+      if (agingBucketFilter !== 'ALL' && row.agingInfo.bucket !== agingBucketFilter) return false;
+
+      if (matcher) {
+        const hit =
+          matcher(row.serialNumber) ||
+          matcher(row.productName) ||
+          matcher(row.manufacturer) ||
+          matcher(row.modelName) ||
+          matcher(row.warehouseName) ||
+          matcher(row.vendorName) ||
+          matcher(row.soldCustomerName);
+        if (!hit) return false;
+      }
+      return true;
+    });
+  }, [
+    enrichedLots,
+    itemTypeFilter,
+    manufacturerFilter,
+    warehouseFilter,
+    lotStatusFilter,
+    agingBucketFilter,
+    searchTerm
+  ]);
+
+  // Aging 요약 집계 (현재고 보유중 기준)
+  const agingSummary = useMemo(() => {
+    const active = enrichedLots.filter(r => !r.isSold);
+    const counts = {
+      ALL: active.length,
+      UNDER_30: active.filter(r => r.agingInfo.bucket === 'UNDER_30').length,
+      DAYS_31_60: active.filter(r => r.agingInfo.bucket === 'DAYS_31_60').length,
+      DAYS_61_90: active.filter(r => r.agingInfo.bucket === 'DAYS_61_90').length,
+      DAYS_91_180: active.filter(r => r.agingInfo.bucket === 'DAYS_91_180').length,
+      OVER_180: active.filter(r => r.agingInfo.bucket === 'OVER_180').length
+    };
+    const values = {
+      OVER_90_VALUE: active
+        .filter(r => r.agingDays > 90)
+        .reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0)
+    };
+    return { counts, values };
+  }, [enrichedLots]);
+
+  // 창고별 집계 (탭 3)
+  const warehouseSummary = useMemo(() => {
+    return WAREHOUSES.map(wh => {
+      const whLots = enrichedLots.filter(r => !r.isSold && r.warehouseName === wh);
+      const equipUnits = whLots
+        .filter(r => r.itemType === 'EQUIPMENT')
+        .reduce((s, r) => s + r.lot.remainingQty, 0);
+      const partQty = whLots
+        .filter(r => r.itemType === 'PART')
+        .reduce((s, r) => s + r.lot.remainingQty, 0);
+      const totalValue = whLots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0);
+      const over90Count = whLots.filter(r => r.agingDays > 90).length;
+      return {
+        warehouseName: wh,
+        lotCount: whLots.length,
+        equipUnits,
+        partQty,
+        totalValue,
+        over90Count
+      };
+    });
+  }, [enrichedLots]);
 
   // KPI Summary
   const kpi = useMemo(() => {
-    const totalCount = enrichedProducts.length;
-    const activeCount = enrichedProducts.filter(p => p.status === 'ACTIVE').length;
-    const totalStockQty = enrichedProducts.reduce((s, p) => s + p.availableQty, 0);
+    const equipProducts = enrichedProducts.filter(p => p.resolvedItemType === 'EQUIPMENT');
+    const partProducts = enrichedProducts.filter(p => p.resolvedItemType === 'PART');
+    const equipStockUnits = equipProducts.reduce((s, p) => s + p.availableQty, 0);
+    const partStockQty = partProducts.reduce((s, p) => s + p.availableQty, 0);
     const lowStockCount = enrichedProducts.filter(p => p.status === 'ACTIVE' && p.availableQty < p.safetyStock).length;
     const totalStockValue = enrichedProducts.reduce((s, p) => s + p.stockValue, 0);
-    return { totalCount, activeCount, totalStockQty, lowStockCount, totalStockValue };
-  }, [enrichedProducts]);
+    const longAgingCount = agingSummary.counts.DAYS_91_180 + agingSummary.counts.OVER_180;
+    return {
+      equipCount: equipProducts.length,
+      partCount: partProducts.length,
+      equipStockUnits,
+      partStockQty,
+      lowStockCount,
+      totalStockValue,
+      longAgingCount
+    };
+  }, [enrichedProducts, agingSummary]);
 
-  // Excel Export
+  // Excel Export (현재 활성 탭 기준 맞춤형 다운로드)
   const handleExportExcel = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (activeViewTab === 'SERIAL_AGING') {
+      const rows = filteredLots.map((r, idx) => ({
+        순번: idx + 1,
+        상태: r.isSold ? '출고완료' : '현재고보유',
+        차대및로트번호: r.serialNumber,
+        구분: r.itemType === 'EQUIPMENT' ? '지게차' : '부품',
+        제조사: r.manufacturer,
+        모델명: r.modelName,
+        품명: r.productName,
+        보관창고: r.warehouseName,
+        입고일자: r.inboundDate,
+        보유경과일수: `${r.agingDays}일`,
+        경과일수구간: r.agingInfo.label,
+        매입구분: r.purchaseTypeLabel,
+        수입통화: r.currency,
+        외화단가: r.foreignUnitPrice,
+        적용환율: r.exchangeRate,
+        부대비용배부액: r.incidentalCostPerUnit,
+        입고도착원가: r.landedUnitCost,
+        현재고수량: r.lot.remainingQty,
+        출고일자: r.soldDate,
+        출고거래처: r.soldCustomerName,
+        보증만료일: r.warrantyEndDate
+      }));
+      exportToExcel(rows, `차대번호별_입출고_재고보유일수_${todayStr}`, '차대번호별재고');
+      showToast('차대번호별 입출고 및 재고 경과일수 엑셀 파일이 다운로드되었습니다.');
+      return;
+    }
+
     const rows = filteredProducts.map((p, idx) => ({
       순번: idx + 1,
-      SKU코드: p.skuCode,
+      품목코드: p.skuCode,
+      품목구분: p.resolvedItemType === 'EQUIPMENT' ? '지게차 완제품' : '부품/소모품',
+      제조사: p.manufacturer || '-',
+      모델명: p.modelName || '-',
+      제품명: p.name,
       카테고리: p.category,
-      상품명: p.name,
+      원산지: p.originCountry || '-',
+      기본창고: p.defaultWarehouse || 'A창고',
       규격: p.spec || '-',
       단위: p.unit || 'EA',
-      기준매입단가: p.standardCost,
-      기준판매단가: p.standardPrice,
+      평균매입원가: p.avgUnitCost,
+      대리점공급단가: p.dealerPrice,
+      최종고객판매단가: p.standardPrice,
       예상마진율: `${p.marginRate.toFixed(1)}%`,
       현재가용재고: p.availableQty,
       안전재고기준: p.safetyStock,
       재고자산금액: p.stockValue,
-      원가산정방식: p.cogsMethod,
-      상태: p.status === 'ACTIVE' ? '판매중' : '단종',
-      등록일자: p.regDate,
-      비고: p.memo || ''
+      최대보유경과일수: `${p.maxAgingDays}일`,
+      상태: p.status === 'ACTIVE' ? '판매중' : '단종'
     }));
-    exportToExcel(
-      rows,
-      `유통상품마스터_${new Date().toISOString().split('T')[0]}`,
-      '유통상품목록'
-    );
-    showToast('유통 상품 마스터 엑셀 파일이 다운로드되었습니다.');
+    exportToExcel(rows, `지게차_부품_재고현황_${todayStr}`, '제품및재고현황');
+    showToast('제품 및 재고현황 엑셀 파일이 다운로드되었습니다.');
   };
 
   const resetFilters = () => {
-    setStartDate('');
-    setEndDate('');
+    setItemTypeFilter('ALL');
+    setManufacturerFilter('ALL');
     setCategoryFilter('ALL');
+    setWarehouseFilter('ALL');
     setSearchTerm('');
     setStockFilter('ALL');
     setStatusFilter('ALL');
+    setLotStatusFilter('ALL');
+    setAgingBucketFilter('ALL');
   };
 
-  const hasActiveFilter =
-    Boolean(startDate || endDate || searchTerm) ||
-    categoryFilter !== 'ALL' ||
-    stockFilter !== 'ALL' ||
-    statusFilter !== 'ALL';
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '14px', backgroundColor: 'var(--bg-app)', padding: '16px 20px', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '12px', backgroundColor: 'var(--bg-app)', padding: '16px 20px', overflow: 'hidden' }}>
       {toast && (
         <div
           style={{
@@ -375,10 +657,10 @@ export const TradeProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* 1. 상단 헤더 및 파이프라인 액션 바 (헌장 3.5 Gutenberg Z-Pattern Start/Pipeline) */}
+      {/* 1. 상단 헤더 및 파이프라인 액션 바 */}
       <div
         style={{
-          padding: '14px 18px',
+          padding: '12px 18px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
@@ -390,25 +672,82 @@ export const TradeProductsPage: React.FC = () => {
           flexShrink: 0
         }}
       >
-        <div>
-          <h2
-            data-mid="trade_products-header"
-            style={{
-              fontSize: '18px',
-              fontWeight: 800,
-              margin: 0,
-              color: 'var(--text-main)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Package size={20} color="var(--primary)" />
-            <span>상품 등록 및 관리</span>
-          </h2>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
-            유통 품목 마스터, 기준 매입·판매단가, 안전재고 및 LOT 가용 재고 관리
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div>
+            <h2
+              data-mid="trade_products-header"
+              style={{
+                fontSize: '18px',
+                fontWeight: 800,
+                margin: 0,
+                color: 'var(--text-main)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Package size={20} color="var(--primary)" />
+              <span>제품 및 재고 관리</span>
+            </h2>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+              제조사·모델별 지게차 및 부품 등록, 차대번호별 입출고 내역, 입고일 기준 재고 경과일수 및 창고별 재고 조회
+            </div>
+          </div>
+
+          {/* 3대 핵심 뷰 전환 탭 */}
+          <div style={{ display: 'inline-flex', backgroundColor: 'var(--bg-app)', padding: '3px', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '4px' }}>
+            <button
+              type="button"
+              onClick={() => setActiveViewTab('MASTER')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                backgroundColor: activeViewTab === 'MASTER' ? 'var(--primary)' : 'transparent',
+                color: activeViewTab === 'MASTER' ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              제조사·모델별 제품 및 현재고
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveViewTab('SERIAL_AGING')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                backgroundColor: activeViewTab === 'SERIAL_AGING' ? 'var(--primary)' : 'transparent',
+                color: activeViewTab === 'SERIAL_AGING' ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              차대번호별 입출고 및 재고 경과일수
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveViewTab('WAREHOUSE_PARTS')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                backgroundColor: activeViewTab === 'WAREHOUSE_PARTS' ? 'var(--primary)' : 'transparent',
+                color: activeViewTab === 'WAREHOUSE_PARTS' ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              창고별·부품 재고현황
+            </button>
           </div>
         </div>
 
@@ -421,8 +760,8 @@ export const TradeProductsPage: React.FC = () => {
             value={nextAutoSku}
             title="자동 채번 품목코드"
             style={{
-              width: '92px',
-              padding: '6px 10px',
+              width: '86px',
+              padding: '6px 8px',
               fontSize: '12px',
               fontWeight: 700,
               fontFamily: 'monospace',
@@ -435,11 +774,11 @@ export const TradeProductsPage: React.FC = () => {
           <input
             type="text"
             data-mid="trade_products-name-input"
-            placeholder="상품명 입력"
+            placeholder="모델·제품명 입력"
             value={name}
             onChange={e => setName(e.target.value)}
             style={{
-              width: '150px',
+              width: '140px',
               padding: '6px 10px',
               fontSize: '12px',
               border: '1px solid var(--border-color)',
@@ -451,11 +790,11 @@ export const TradeProductsPage: React.FC = () => {
           <input
             type="number"
             data-mid="trade_products-cost-input"
-            placeholder="기준 매입단가"
+            placeholder="기준 매입원가"
             value={cost || ''}
             onChange={e => setCost(Number(e.target.value))}
             style={{
-              width: '110px',
+              width: '105px',
               padding: '6px 10px',
               fontSize: '12px',
               border: '1px solid var(--border-color)',
@@ -471,7 +810,7 @@ export const TradeProductsPage: React.FC = () => {
             value={price || ''}
             onChange={e => setPrice(Number(e.target.value))}
             style={{
-              width: '110px',
+              width: '105px',
               padding: '6px 10px',
               fontSize: '12px',
               border: '1px solid var(--border-color)',
@@ -516,7 +855,7 @@ export const TradeProductsPage: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            <Layers size={14} /> 상세 등록 모달
+            <Layers size={14} /> 제품·부품 상세 등록
           </button>
 
           <button
@@ -541,38 +880,122 @@ export const TradeProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. KPI 요약 카드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>등록 상품 수 (판매중)</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-            {kpi.totalCount}종 <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>({kpi.activeCount}종 활성)</span>
+      {/* 2. 상단 요약 카드: 탭에 따라 맞춤형 표시 */}
+      {activeViewTab === 'SERIAL_AGING' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(140px, 1fr))', gap: '10px', flexShrink: 0 }}>
+          {[
+            { id: 'ALL' as AgingBucket, title: '전체 보유 차대·로트', count: agingSummary.counts.ALL, desc: '현재고 보유 전체', color: 'var(--text-main)', bg: 'var(--bg-card)' },
+            { id: 'UNDER_30' as AgingBucket, title: '30일 이내 입고', count: agingSummary.counts.UNDER_30, desc: '신규 정상 재고', color: '#166534', bg: '#f0fdf4' },
+            { id: 'DAYS_31_60' as AgingBucket, title: '31일 ~ 60일 경과', count: agingSummary.counts.DAYS_31_60, desc: '정상 회전 구간', color: '#1d4ed8', bg: '#eff6ff' },
+            { id: 'DAYS_61_90' as AgingBucket, title: '61일 ~ 90일 경과', count: agingSummary.counts.DAYS_61_90, desc: '판촉 관심 구간', color: '#b45309', bg: '#fffbeb' },
+            { id: 'DAYS_91_180' as AgingBucket, title: '91일 ~ 180일 경과', count: agingSummary.counts.DAYS_91_180, desc: '체화 주의 구간', color: '#c2410c', bg: '#fff7ed' },
+            { id: 'OVER_180' as AgingBucket, title: '180일 이상 경과', count: agingSummary.counts.OVER_180, desc: '장기체화 집중관리', color: '#b91c1c', bg: '#fef2f2' }
+          ].map(card => {
+            const selected = agingBucketFilter === card.id;
+            return (
+              <div
+                key={card.id}
+                onClick={() => {
+                  setLotStatusFilter('IN_STOCK');
+                  setAgingBucketFilter(card.id);
+                }}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: card.bg,
+                  border: selected ? `2px solid ${card.color}` : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <div style={{ fontSize: '11px', fontWeight: 700, color: card.color }}>{card.title}</div>
+                <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '3px', color: card.color }}>
+                  {card.count}건 <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>({card.desc})</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : activeViewTab === 'WAREHOUSE_PARTS' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
+          {warehouseSummary.map(w => (
+            <div
+              key={w.warehouseName}
+              onClick={() => setWarehouseFilter(warehouseFilter === w.warehouseName ? 'ALL' : w.warehouseName)}
+              style={{
+                padding: '12px 16px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-card)',
+                border: warehouseFilter === w.warehouseName ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{w.warehouseName} 재고현황</span>
+                <span style={{ fontSize: '11px', color: w.over90Count > 0 ? '#dc2626' : '#059669' }}>
+                  90일초과 {w.over90Count}건
+                </span>
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)' }}>
+                지게차 {w.equipUnits}대 / 부품 {w.partQty.toLocaleString()}개
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                재고원가 합계: ₩{w.totalValue.toLocaleString()}
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>부품 안전재고 미달 품목</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: kpi.lowStockCount > 0 ? '#dc2626' : '#059669' }}>
+              {kpi.lowStockCount}종
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              총 재고자산: ₩{kpi.totalStockValue.toLocaleString()}
+            </div>
           </div>
         </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 가용 재고 수량</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-            {kpi.totalStockQty.toLocaleString()}개
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
+          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>등록 모델 및 부품 수</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              지게차 {kpi.equipCount}종 / 부품 {kpi.partCount}종
+            </div>
+          </div>
+          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>현재 가용 재고 수량</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+              지게차 {kpi.equipStockUnits}대 / 부품 {kpi.partStockQty.toLocaleString()}개
+            </div>
+          </div>
+          <div
+            className="card"
+            onClick={() => {
+              setActiveViewTab('SERIAL_AGING');
+              setLotStatusFilter('IN_STOCK');
+              setAgingBucketFilter('OVER_180');
+            }}
+            style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>90일 이상 장기보유 재고 (클릭 시 조회)</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: kpi.longAgingCount > 0 ? '#dc2626' : '#059669', whiteSpace: 'nowrap' }}>
+              {kpi.longAgingCount}건 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>(180일 이상 {agingSummary.counts.OVER_180}건)</span>
+            </div>
+          </div>
+          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 재고자산 금액 (수입 부대비용 반영 도착원가)</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              ₩{kpi.totalStockValue.toLocaleString()}
+            </div>
           </div>
         </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>안전재고 미달 품목</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: kpi.lowStockCount > 0 ? '#dc2626' : '#059669', whiteSpace: 'nowrap' }}>
-            {kpi.lowStockCount}종
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 재고자산 금액 (선입선출 원가)</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-            ₩{kpi.totalStockValue.toLocaleString()}
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* 3. 통합 조회 필터 바 (헌장 3.4 상하 스택 배치 & 기간/품명/카테고리/상태별 조회) */}
+      {/* 3. 통합 조회 필터 바 (헌장 3.4 상하 스택 배치) */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: '10px 16px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
@@ -584,92 +1007,134 @@ export const TradeProductsPage: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>등록 기간</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-            />
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-            />
-          </div>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>품목 구분</label>
+          <select
+            value={itemTypeFilter}
+            onChange={e => setItemTypeFilter(e.target.value as any)}
+            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+          >
+            <option value="ALL">전체 구분</option>
+            <option value="EQUIPMENT">지게차 완제품</option>
+            <option value="PART">부품 및 소모품</option>
+          </select>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>카테고리</label>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>제조사</label>
           <select
-            value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
+            value={manufacturerFilter}
+            onChange={e => setManufacturerFilter(e.target.value)}
             style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
           >
-            <option value="ALL">전체 카테고리</option>
-            {CATEGORIES.map(c => (
-              <option key={c} value={c}>{c}</option>
+            <option value="ALL">전체 제조사</option>
+            {manufacturerOptions.map(m => (
+              <option key={m} value={m}>{m}</option>
             ))}
           </select>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>품명 / 품목코드 검색</label>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>보관 창고</label>
+          <select
+            value={warehouseFilter}
+            onChange={e => setWarehouseFilter(e.target.value)}
+            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+          >
+            <option value="ALL">전체 창고</option>
+            {WAREHOUSES.map(w => (
+              <option key={w} value={w}>{w}</option>
+            ))}
+          </select>
+        </div>
+
+        {activeViewTab === 'SERIAL_AGING' ? (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>입출고 상태</label>
+              <select
+                value={lotStatusFilter}
+                onChange={e => setLotStatusFilter(e.target.value as any)}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+              >
+                <option value="ALL">전체 (현재고 + 출고완료)</option>
+                <option value="IN_STOCK">현재고 보유중</option>
+                <option value="SOLD">판매 출고완료</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>입고일 기준 경과일수</label>
+              <select
+                value={agingBucketFilter}
+                onChange={e => setAgingBucketFilter(e.target.value as AgingBucket)}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+              >
+                <option value="ALL">전체 경과일수 구간</option>
+                <option value="UNDER_30">30일 이내</option>
+                <option value="DAYS_31_60">31일 ~ 60일</option>
+                <option value="DAYS_61_90">61일 ~ 90일</option>
+                <option value="DAYS_91_180">91일 ~ 180일</option>
+                <option value="OVER_180">180일 이상</option>
+              </select>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>카테고리</label>
+              <select
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+              >
+                <option value="ALL">전체 카테고리</option>
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>재고 상태</label>
+              <select
+                value={stockFilter}
+                onChange={e => setStockFilter(e.target.value as any)}
+                style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+              >
+                <option value="ALL">전체 재고상태</option>
+                <option value="NORMAL">정상 재고</option>
+                <option value="LOW">안전재고 미달</option>
+                <option value="OUT">품절</option>
+              </select>
+            </div>
+          </>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>통합 검색</label>
           <div style={{ position: 'relative' }}>
             <Search size={13} style={{ position: 'absolute', left: '9px', top: '8px', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="품명, 품목코드, 규격 검색"
+              placeholder="차대번호, 모델명, 제조사, 품명 검색"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ padding: '6px 10px 6px 28px', fontSize: '12px', width: '200px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+              style={{ padding: '6px 10px 6px 28px', fontSize: '12px', width: '220px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>재고 상태</label>
-          <select
-            value={stockFilter}
-            onChange={e => setStockFilter(e.target.value as any)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
-          >
-            <option value="ALL">전체 재고상태</option>
-            <option value="NORMAL">정상 재고</option>
-            <option value="LOW">안전재고 미달</option>
-            <option value="OUT">품절 (재고 0)</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>거래 상태</label>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as any)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
-          >
-            <option value="ALL">전체 상태</option>
-            <option value="ACTIVE">판매중</option>
-            <option value="DISCONTINUED">단종</option>
-          </select>
-        </div>
-
-        {hasActiveFilter && (
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
-          >
-            <RefreshCw size={12} /> 필터 초기화
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="btn-secondary"
+          style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+        >
+          <RefreshCw size={12} /> 초기화
+        </button>
       </div>
 
-      {/* 4. 고밀도 상품 마스터 그리드 (헌장 3.2 & 3.6 유형 B) */}
+      {/* 4. 메인 본문 그리드 */}
       <div
         className="card"
         style={{
@@ -684,191 +1149,361 @@ export const TradeProductsPage: React.FC = () => {
         }}
       >
         <div style={{ flex: 1, overflow: 'auto' }}>
-          <table
-            data-mid="trade_products-table"
-            style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '210px' }}>관리 / 조치</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>품목코드</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>카테고리</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>상품명</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>규격 / 단위</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>기준 매입단가</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>기준 판매단가</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>예상 마진율</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재 가용재고</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>재고자산 금액</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>원가방식</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>상태</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>등록일자</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan={13} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    조건에 해당하는 유통 상품 데이터가 없습니다.
-                  </td>
+          {activeViewTab === 'SERIAL_AGING' ? (
+            <table
+              data-mid="trade_serial_aging-table"
+              style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}
+            >
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>입출고 상태</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>차대·로트번호</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제조사 / 모델명</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제품명</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>보관창고</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>입고일자</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>입고 경과일수</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>수입·매입처</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>외화단가 / 환율</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>부대비용 배부액</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>최종 도착원가</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재고</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고일 / 출고거래처</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>보증만료일</th>
                 </tr>
-              ) : (
-                filteredProducts.map(p => {
-                  const isLowStock = p.availableQty < p.safetyStock;
-                  return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px' }}>
-                      {/* 1열 액션 버튼 (헌장 3.2) */}
-                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(p)}
-                            style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                          >
-                            <Edit2 size={11} /> 수정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openAdjustModal(p)}
-                            style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #0284c7', backgroundColor: '#f0f9ff', color: '#0369a1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                          >
-                            <SlidersHorizontal size={11} /> 재고조정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(p)}
-                            style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: p.status === 'ACTIVE' ? '#fff7ed' : '#ecfdf5', color: p.status === 'ACTIVE' ? '#c2410c' : '#047857', cursor: 'pointer' }}
-                          >
-                            {p.status === 'ACTIVE' ? '단종처리' : '판매재개'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteProduct(p)}
-                            style={{ padding: '4px 6px', fontSize: '11px', borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-                            title="상품 삭제"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>
-                        {p.skuCode}
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                          {p.category || '일반'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
-                        {p.name}
-                      </td>
-                      <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>
-                        {p.spec || '-'} <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>({p.unit || 'EA'})</span>
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                        ₩{p.standardCost.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>
-                        ₩{p.standardPrice.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: p.marginRate >= 20 ? '#059669' : '#d97706' }}>
-                        {p.marginRate.toFixed(1)}%
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>
-                        <span style={{ color: p.availableQty === 0 ? '#dc2626' : isLowStock ? '#d97706' : '#059669' }}>
-                          {p.availableQty.toLocaleString()} {p.unit || 'EA'}
-                        </span>
-                        {isLowStock && (
-                          <span title={`안전재고(${p.safetyStock}) 미달`} style={{ marginLeft: '5px', color: '#dc2626', fontSize: '10px', fontWeight: 700 }}>
-                            [부족]
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--text-main)' }}>
-                        ₩{p.stockValue.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {p.cogsMethod}
-                      </td>
+              </thead>
+              <tbody>
+                {filteredLots.length === 0 ? (
+                  <tr>
+                    <td colSpan={15} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      조건에 해당하는 차대번호 및 로트 내역이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLots.map(r => (
+                    <tr key={r.lot.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px', backgroundColor: r.isSold ? 'var(--bg-app)' : 'transparent' }}>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span
                           style={{
-                            padding: '2px 8px',
-                            borderRadius: '10px',
+                            padding: '3px 8px',
+                            borderRadius: '999px',
                             fontSize: '11px',
-                            fontWeight: 700,
-                            backgroundColor: p.status === 'ACTIVE' ? '#dcfce7' : '#fee2e2',
-                            color: p.status === 'ACTIVE' ? '#166534' : '#991b1b',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px'
+                            fontWeight: 800,
+                            backgroundColor: r.isSold ? '#e2e8f0' : '#dcfce7',
+                            color: r.isSold ? '#475569' : '#166534'
                           }}
                         >
-                          {p.status === 'ACTIVE' ? <CheckCircle2 size={11} /> : <Ban size={11} />}
-                          {p.status === 'ACTIVE' ? '판매중' : '단종'}
+                          {r.isSold ? '출고완료' : '현재고보유'}
                         </span>
                       </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        {p.regDate || '-'}
+                      <td style={{ padding: '8px 12px', fontWeight: 800, fontFamily: 'monospace', color: 'var(--primary)' }}>
+                        {r.serialNumber}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: r.itemType === 'EQUIPMENT' ? '#eff6ff' : '#f3e8ff', color: r.itemType === 'EQUIPMENT' ? '#1d4ed8' : '#7e22ce' }}>
+                          {r.itemType === 'EQUIPMENT' ? '지게차' : '부품'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                        {r.manufacturer} · <span style={{ fontFamily: 'monospace' }}>{r.modelName}</span>
+                      </td>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-main)', fontWeight: 600 }}>
+                        {r.productName}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                        {r.warehouseName}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+                        {r.inboundDate}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        {r.isSold ? (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>출고마감</span>
+                        ) : (
+                          <span
+                            style={{
+                              padding: '3px 9px',
+                              borderRadius: '999px',
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              backgroundColor: r.agingInfo.bg,
+                              color: r.agingInfo.color
+                            }}
+                          >
+                            {r.agingDays}일 경과 · {r.agingInfo.label}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
+                        <span style={{ fontWeight: 700, color: r.purchaseTypeLabel === '해외수입' ? '#0284c7' : '#059669', marginRight: '5px' }}>
+                          [{r.purchaseTypeLabel}]
+                        </span>
+                        {r.vendorName}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+                        {r.currency === 'KRW'
+                          ? `₩${r.foreignUnitPrice.toLocaleString()}`
+                          : `${r.currency} ${r.foreignUnitPrice.toLocaleString()} / 환율 ${r.exchangeRate}`}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                        {r.incidentalCostPerUnit > 0 ? `+₩${r.incidentalCostPerUnit.toLocaleString()}` : '-'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>
+                        ₩{r.landedUnitCost.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: r.isSold ? 'var(--text-muted)' : '#059669' }}>
+                        {r.lot.remainingQty.toLocaleString()} {r.prod?.unit || 'EA'}
+                      </td>
+                      <td style={{ padding: '8px 12px', color: r.isSold ? 'var(--text-main)' : 'var(--text-muted)', fontWeight: r.isSold ? 700 : 400 }}>
+                        {r.isSold ? `${r.soldDate} · ${r.soldCustomerName}` : '미출고'}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center', fontFamily: 'monospace', color: r.warrantyEndDate !== '-' ? '#0369a1' : 'var(--text-muted)' }}>
+                        {r.warrantyEndDate}
                       </td>
                     </tr>
-                  );
-                })
+                  ))
+                )}
+              </tbody>
+              {filteredLots.length > 0 && (
+                <tfoot>
+                  <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
+                    <td colSpan={11} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
+                      조회 합계 ({filteredLots.length}건 로트 / 현재고 보유 {filteredLots.filter(l => !l.isSold).length}건)
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
+                      현재고 원가합계 ₩{filteredLots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
+                      잔여 {filteredLots.reduce((s, r) => s + r.lot.remainingQty, 0).toLocaleString()}
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
               )}
-            </tbody>
-            {filteredProducts.length > 0 && (
-              <tfoot>
-                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-                  <td colSpan={5} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
-                    조회 합계 ({filteredProducts.length}종 품목)
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                    평균 ₩{Math.round(filteredProducts.reduce((s, p) => s + p.standardCost, 0) / filteredProducts.length).toLocaleString()}
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
-                    평균 ₩{Math.round(filteredProducts.reduce((s, p) => s + p.standardPrice, 0) / filteredProducts.length).toLocaleString()}
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: '#059669' }}>
-                    {(filteredProducts.reduce((s, p) => s + p.marginRate, 0) / filteredProducts.length).toFixed(1)}%
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
-                    {filteredProducts.reduce((s, p) => s + p.availableQty, 0).toLocaleString()} 개
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
-                    ₩{filteredProducts.reduce((s, p) => s + p.stockValue, 0).toLocaleString()}
-                  </td>
-                  <td colSpan={3} />
+            </table>
+          ) : (
+            <table
+              data-mid="trade_products-table"
+              style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}
+            >
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '200px' }}>관리 / 조치</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>품목코드</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제조사 / 모델명</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제품명 및 규격</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>조달구분 / 창고</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>평균 매입원가</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>대리점 공급가</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>최종고객 판매가</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>예상 마진율</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재 가용재고</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>재고자산 금액</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>최장 보유일수</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>상태</th>
                 </tr>
-              </tfoot>
-            )}
-          </table>
+              </thead>
+              <tbody>
+                {filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={14} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      조건에 해당하는 제품 및 부품 데이터가 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map(p => {
+                    const isLowStock = p.availableQty < p.safetyStock;
+                    const agingBadge = getAgingBucket(p.maxAgingDays);
+                    return (
+                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', height: '42px' }}>
+                        <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(p)}
+                              style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            >
+                              <Edit2 size={11} /> 수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openAdjustModal(p)}
+                              style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #0284c7', backgroundColor: '#f0f9ff', color: '#0369a1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            >
+                              <SlidersHorizontal size={11} /> 재고조정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(p)}
+                              style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: p.status === 'ACTIVE' ? '#fff7ed' : '#ecfdf5', color: p.status === 'ACTIVE' ? '#c2410c' : '#047857', cursor: 'pointer' }}
+                            >
+                              {p.status === 'ACTIVE' ? '단종' : '재개'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(p)}
+                              style={{ padding: '4px 6px', fontSize: '11px', borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                              title="제품 삭제"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </td>
+
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>
+                          {p.skuCode}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: p.resolvedItemType === 'EQUIPMENT' ? '#dbeafe' : '#f3e8ff', color: p.resolvedItemType === 'EQUIPMENT' ? '#1d4ed8' : '#7e22ce' }}>
+                            {p.resolvedItemType === 'EQUIPMENT' ? '지게차' : '부품'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {p.manufacturer || '-'} · <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{p.modelName || '-'}</span>
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{p.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.spec || '-'}</div>
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          <span style={{ fontWeight: 700, color: p.originCountry === '중국 수입' ? '#0284c7' : '#059669' }}>
+                            {p.originCountry || '중국 수입'}
+                          </span>
+                          <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', fontSize: '11px', fontWeight: 600 }}>
+                            {p.warehouses.length > 0 ? p.warehouses.join(', ') : (p.defaultWarehouse || 'A창고')}
+                          </span>
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          ₩{p.avgUnitCost.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', color: '#0369a1', fontWeight: 700 }}>
+                          ₩{p.dealerPrice.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>
+                          ₩{p.standardPrice.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: p.marginRate >= 20 ? '#059669' : '#d97706' }}>
+                          {p.marginRate.toFixed(1)}%
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800 }}>
+                          <span style={{ color: p.availableQty === 0 ? '#dc2626' : isLowStock ? '#d97706' : '#059669' }}>
+                            {p.availableQty.toLocaleString()} {p.unit || 'EA'}
+                          </span>
+                          {isLowStock && (
+                            <span style={{ marginLeft: '5px', color: '#dc2626', fontSize: '10px', fontWeight: 700 }}>
+                              [안전재고미달]
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>
+                          ₩{p.stockValue.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          {p.availableQty > 0 ? (
+                            <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, backgroundColor: agingBadge.bg, color: agingBadge.color }}>
+                              {p.maxAgingDays}일 · {agingBadge.label}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              backgroundColor: p.status === 'ACTIVE' ? '#dcfce7' : '#fee2e2',
+                              color: p.status === 'ACTIVE' ? '#166534' : '#991b1b',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px'
+                            }}
+                          >
+                            {p.status === 'ACTIVE' ? <CheckCircle2 size={11} /> : <Ban size={11} />}
+                            {p.status === 'ACTIVE' ? '판매중' : '단종'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              {filteredProducts.length > 0 && (
+                <tfoot>
+                  <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
+                    <td colSpan={6} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
+                      조회 합계 ({filteredProducts.length}종 품목)
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                      평균 ₩{Math.round(filteredProducts.reduce((s, p) => s + p.avgUnitCost, 0) / filteredProducts.length).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#0369a1' }}>
+                      평균 ₩{Math.round(filteredProducts.reduce((s, p) => s + p.dealerPrice, 0) / filteredProducts.length).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
+                      평균 ₩{Math.round(filteredProducts.reduce((s, p) => s + p.standardPrice, 0) / filteredProducts.length).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#059669' }}>
+                      {(filteredProducts.reduce((s, p) => s + p.marginRate, 0) / filteredProducts.length).toFixed(1)}%
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
+                      {filteredProducts.reduce((s, p) => s + p.availableQty, 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
+                      ₩{filteredProducts.reduce((s, p) => s + p.stockValue, 0).toLocaleString()}
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          )}
         </div>
       </div>
 
-      {/* 5. 상품 등록/수정 모달 */}
+      {/* 5. 제품·부품 등록/수정 모달 */}
       {isProductModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
-          <div style={{ backgroundColor: 'var(--bg-card)', width: '560px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', width: '640px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                {editingProduct ? `상품 마스터 수정 (${editingProduct.skuCode})` : '신규 유통 상품 상세 등록'}
+                {editingProduct ? `제품·부품 마스터 수정` : '신규 지게차·부품 마스터 등록'}
               </h3>
               <button type="button" onClick={() => setIsProductModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProductModal} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <form onSubmit={handleSaveProductModal} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '82vh', overflowY: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>품목코드 (자동 채번)</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>품목코드</label>
                   <input
                     type="text"
-                    readOnly
                     value={formSku}
-                    style={{ padding: '8px 10px', fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--primary)' }}
+                    onChange={e => setFormSku(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--primary)' }}
                   />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>품목 구분 *</label>
+                  <select
+                    value={formItemType}
+                    onChange={e => {
+                      const nextType = e.target.value as 'EQUIPMENT' | 'PART';
+                      setFormItemType(nextType);
+                      setFormUnit(nextType === 'EQUIPMENT' ? '대' : 'EA');
+                      setFormDefaultWarehouse(nextType === 'EQUIPMENT' ? 'A창고' : '부품창고');
+                    }}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  >
+                    <option value="EQUIPMENT">지게차 완제품</option>
+                    <option value="PART">부품 및 소모품</option>
+                  </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>카테고리 *</label>
@@ -884,26 +1519,64 @@ export const TradeProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>상품명 *</label>
-                <input
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={e => setFormName(e.target.value)}
-                  placeholder="예: 고소작업대 상부 안전 경광등(직류 24볼트)"
-                  style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>제조사 *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formManufacturer}
+                    onChange={e => setFormManufacturer(e.target.value)}
+                    placeholder="예: 헬리포크리프트, 두산밥캣"
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>모델명 *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formModelName}
+                    onChange={e => setFormModelName(e.target.value)}
+                    placeholder="예: CPD25-L1, EPL1531"
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>조달 구분</label>
+                  <select
+                    value={formOriginCountry}
+                    onChange={e => setFormOriginCountry(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  >
+                    <option value="중국 수입">중국 수입</option>
+                    <option value="국내 매입">국내 매입</option>
+                    <option value="해외 수입">기타 해외 수입</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>기본 창고</label>
+                  <select
+                    value={formDefaultWarehouse}
+                    onChange={e => setFormDefaultWarehouse(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  >
+                    {WAREHOUSES.map(w => (
+                      <option key={w} value={w}>{w}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>상세 규격 / 사양</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>제품명 *</label>
                   <input
                     type="text"
-                    value={formSpec}
-                    onChange={e => setFormSpec(e.target.value)}
-                    placeholder="예: 24V LED 회전형 / 자석 브라켓"
+                    required
+                    value={formName}
+                    onChange={e => setFormName(e.target.value)}
+                    placeholder="예: 리튬 전동지게차 2.5톤"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   />
                 </div>
@@ -921,31 +1594,53 @@ export const TradeProductsPage: React.FC = () => {
                 </div>
               </div>
 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>상세 규격 / 사양</label>
+                <input
+                  type="text"
+                  value={formSpec}
+                  onChange={e => setFormSpec(e.target.value)}
+                  placeholder="예: 정격하중 2500kg / 3단 마스트 4500mm / 리튬인산철 80V 205Ah"
+                  style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>기준 매입단가 (원) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>기준 매입원가 *</label>
                   <input
                     type="number"
                     required
                     min={1}
                     value={formStandardCost || ''}
                     onChange={e => setFormStandardCost(Number(e.target.value))}
-                    placeholder="기준 매입단가 입력"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>기준 판매단가 (원) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>대리점 공급단가</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={formDealerPrice || ''}
+                    onChange={e => setFormDealerPrice(Number(e.target.value))}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#0369a1', fontWeight: 700 }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>최종고객 판매단가 *</label>
                   <input
                     type="number"
                     required
                     min={1}
                     value={formStandardPrice || ''}
                     onChange={e => setFormStandardPrice(Number(e.target.value))}
-                    placeholder="기준 판매단가 입력"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
                   />
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: editingProduct ? '1fr 1fr 1fr' : '1fr 1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>안전재고 수량</label>
                   <input
@@ -956,19 +1651,15 @@ export const TradeProductsPage: React.FC = () => {
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   />
                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: editingProduct ? '1fr 1fr' : '1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>원가 산정 방식</label>
-                  <select
-                    value={formCogsMethod}
-                    onChange={e => setFormCogsMethod(e.target.value as any)}
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>무상보증 개월수</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={formWarrantyMonths}
+                    onChange={e => setFormWarrantyMonths(Number(e.target.value))}
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                  >
-                    <option value="FIFO">선입선출법</option>
-                    <option value="MOVING_AVG">이동평균법</option>
-                  </select>
+                  />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>거래 상태</label>
@@ -995,13 +1686,26 @@ export const TradeProductsPage: React.FC = () => {
                 )}
               </div>
 
+              {!editingProduct && formInitialStock > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>기초 입고 차대·로트번호</label>
+                  <input
+                    type="text"
+                    value={formInitialSerial}
+                    onChange={e => setFormInitialSerial(e.target.value)}
+                    placeholder="예: HL-CPD25-261001"
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+              )}
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>비고 / 관리 메모</label>
                 <input
                   type="text"
                   value={formMemo}
                   onChange={e => setFormMemo(e.target.value)}
-                  placeholder="호환 기종 및 보관 위치 등 메모 입력"
+                  placeholder="수입 제조사 및 호환 기종 메모 입력"
                   style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                 />
               </div>
@@ -1020,7 +1724,7 @@ export const TradeProductsPage: React.FC = () => {
                   className="btn-primary"
                   style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer' }}
                 >
-                  {editingProduct ? '수정 내용 저장' : '상품 등록 확정'}
+                  {editingProduct ? '수정 내용 저장' : '제품 등록 확정'}
                 </button>
               </div>
             </form>
@@ -1031,10 +1735,10 @@ export const TradeProductsPage: React.FC = () => {
       {/* 6. 재고 실사/수량 조정 모달 */}
       {adjustTarget && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
-          <div style={{ backgroundColor: 'var(--bg-card)', width: '440px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', width: '480px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                재고 수량 조정 ({adjustTarget.name})
+                창고·차대 재고 조정 · {adjustTarget.name}
               </h3>
               <button type="button" onClick={() => setAdjustTarget(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -1044,7 +1748,7 @@ export const TradeProductsPage: React.FC = () => {
             <form onSubmit={handleConfirmAdjust} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}>
                 <div>현재 가용 재고: <strong>{getProductStock(adjustTarget.id).availableQty.toLocaleString()} {adjustTarget.unit || 'EA'}</strong></div>
-                <div style={{ marginTop: '4px', color: 'var(--text-muted)' }}>SKU: {adjustTarget.skuCode} | 규격: {adjustTarget.spec || '-'}</div>
+                <div style={{ marginTop: '4px', color: 'var(--text-muted)' }}>품목코드: {adjustTarget.skuCode} | 규격: {adjustTarget.spec || '-'}</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1082,14 +1786,51 @@ export const TradeProductsPage: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    - 파손 / 실사 차감
+                    - 출고 / 실사 차감
                   </button>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>조정 수량 ({adjustTarget.unit || 'EA'}) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>보관 창고</label>
+                  <select
+                    value={adjustWarehouse}
+                    onChange={e => setAdjustWarehouse(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  >
+                    {WAREHOUSES.map(w => (
+                      <option key={w} value={w}>{w}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>입고 기준일</label>
+                  <input
+                    type="date"
+                    value={adjustInboundDate}
+                    onChange={e => setAdjustInboundDate(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+              </div>
+
+              {adjustType === 'ADD' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>차대번호 또는 로트번호</label>
+                  <input
+                    type="text"
+                    value={adjustSerialNumber}
+                    onChange={e => setAdjustSerialNumber(e.target.value)}
+                    placeholder="미입력 시 모델명 기준 자동 채번"
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>조정 수량 *</label>
                   <input
                     type="number"
                     required
@@ -1100,7 +1841,7 @@ export const TradeProductsPage: React.FC = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>단위 원가 (원)</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>단위 입고원가</label>
                   <input
                     type="number"
                     min={0}
@@ -1119,7 +1860,7 @@ export const TradeProductsPage: React.FC = () => {
                   required
                   value={adjustReason}
                   onChange={e => setAdjustReason(e.target.value)}
-                  placeholder="예: 정기 실사 수량 보정, 샘플 출고 등"
+                  placeholder="예: 정기 실사 수량 보정, 전시장 이동 등"
                   style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                 />
               </div>

@@ -9316,11 +9316,18 @@ export interface TradeProduct {
   skuCode: string;
   name: string;
   category: string;
+  itemType?: 'EQUIPMENT' | 'PART';
+  manufacturer?: string;
+  modelName?: string;
+  originCountry?: string;
+  defaultWarehouse?: string;
   spec?: string;
   unit?: string;
   standardCost?: number;
+  dealerPrice?: number;
   standardPrice: number;
   safetyStock?: number;
+  warrantyMonths?: number;
   status: 'ACTIVE' | 'DISCONTINUED';
   cogsMethod: 'FIFO' | 'MOVING_AVG';
   memo?: string;
@@ -9331,6 +9338,18 @@ export interface TradeProduct {
 export interface TradePurchase {
   id: string;
   vendorId: string;
+  purchaseType?: 'DOMESTIC' | 'IMPORT';
+  currency?: 'KRW' | 'CNY' | 'USD';
+  exchangeRate?: number;
+  foreignTotalAmount?: number;
+  customsDuty?: number;
+  customsClearanceFee?: number;
+  freightCost?: number;
+  otherIncidentalCost?: number;
+  totalIncidentalCost?: number;
+  landedTotalAmount?: number;
+  warehouseName?: string;
+  blNumber?: string;
   orderDate: string;
   expectedDate?: string;
   receivedDate?: string;
@@ -9350,6 +9369,11 @@ export interface TradePurchaseItem {
   orderQty: number;
   receivedQty: number;
   unitCost: number;
+  foreignUnitCost?: number;
+  incidentalCostPerUnit?: number;
+  landedUnitCost?: number;
+  warehouseName?: string;
+  serialNumbers?: string[];
   memo?: string;
 }
 
@@ -9357,6 +9381,18 @@ export interface TradeInventoryLot {
   id: string;
   purchaseId: string;
   productId: string;
+  serialNumber?: string;
+  warehouseName?: string;
+  inboundDate?: string;
+  foreignCurrency?: 'KRW' | 'CNY' | 'USD';
+  foreignUnitPrice?: number;
+  exchangeRate?: number;
+  incidentalCostPerUnit?: number;
+  lotStatus?: 'IN_STOCK' | 'SOLD' | 'RESERVED' | 'RETURNED';
+  soldOrderId?: string;
+  soldDate?: string;
+  soldCustomerName?: string;
+  warrantyEndDate?: string;
   initialQty: number;
   remainingQty: number;
   unitCost: number;
@@ -9366,6 +9402,7 @@ export interface TradeInventoryLot {
 export interface TradeSalesOrder {
   id: string;
   customerId: string;
+  customerTier?: 'DEALER' | 'END_USER';
   contractId?: string;
   contractNo?: string;
   siteId?: string;
@@ -9402,6 +9439,8 @@ export interface TradeSalesOrderLine {
   qty: number;
   unitPrice: number;
   unitCogs: number;
+  serialNumbers?: string[];
+  warehouseName?: string;
   memo?: string;
   createdAt: string;
 }

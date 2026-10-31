@@ -595,7 +595,7 @@ const App: React.FC = () => {
         if (!rememberId) setLoginId('');
         if (!rememberPw) setPassword('');
         
-        setActiveTab('dashboard'); // 로그인 성공시 대시보드로
+        setActiveTab('trade_products'); // 로그인 성공시 유통 제품·재고관리로
 
       } else if (res.requireDeviceVerification) {
         setPendingDeviceLogin({ id: loginId, pw: password });
@@ -628,7 +628,7 @@ const App: React.FC = () => {
           if (!rememberId) setLoginId('');
           if (!rememberPw) setPassword('');
           setPendingDeviceLogin(null);
-          setActiveTab('dashboard');
+          setActiveTab('trade_products');
         } else {
           setLoginErrorMsg(res.reason || '지문 인증 후 관리자 로그인에 실패했습니다.');
         }
@@ -652,7 +652,7 @@ const App: React.FC = () => {
           if (!rememberId) setLoginId('');
           if (!rememberPw) setPassword('');
           setPendingDeviceLogin(null);
-          setActiveTab('dashboard');
+          setActiveTab('trade_products');
         } else {
           setLoginErrorMsg(res.reason || '단말기 인가 후 로그인에 실패했습니다.');
         }
@@ -664,154 +664,110 @@ const App: React.FC = () => {
     }
   };
 
-  // 계층형 상위-하위 아코디언 메뉴 구조 정의 (유저 지정 규격)
-  const menuGroups: MenuGroup[] = React.useMemo(() => [
-    {
-      id: 'grp_distribution',
-      name: '영업-유통',
-      icon: <ShoppingBag size={18} />,
-      items: [
-        { id: 'trade_products', name: '상품 등록 및 관리', icon: <Package size={16} />, component: <TradeProductsPage /> },
-        { id: 'trade_purchases', name: '구매 및 입고', icon: <Layers size={16} />, component: <TradePurchasesPage /> },
-        { id: 'trade_contracts', name: '유통 수주', icon: <UserCheck size={16} />, component: <TradeContractsPage /> },
-        { id: 'trade_outbounds', name: '유통 출고 관리', icon: <Zap size={16} />, component: <TradeOutboundPage /> },
-        { id: 'courier_dispatch', name: '택배 배송 관리', icon: <Truck size={16} />, component: <CourierDispatchPage /> },
-        { id: 'trade_billing', name: '유통 청구 및 명세', icon: <CreditCard size={16} />, component: <TradeBillingPage /> },
-        { id: 'trade_returns', name: '환입 및 반품', icon: <ArrowLeftRight size={16} />, component: <TradeReturnsPage /> },
-        { id: 'trade_profitability', name: '수익성 관리', icon: <TrendingUp size={16} />, component: <TradeProfitabilityPage /> }
-      ]
-    },
-    {
-      id: 'grp_approval',
-      name: '결재 센터',
-      icon: <CheckCircle size={18} />,
-      items: [
-        { id: 'approvalInbox', name: '내 결재함', icon: <CheckCircle size={16} />, component: <ApprovalInbox /> },
-        { id: 'approvalRules', name: '결재선 규칙 설정', icon: <SettingsIcon size={16} />, component: <ApprovalRulesManage /> },
-      ]
-    },
-    {
-      id: 'grp_sales',
-      name: '영업관리',
-      icon: <Briefcase size={17} />,
-      items: [
-        { id: 'sales_journal', name: '영업일지', icon: <BookOpen size={16} />, component: <SalesJournalPage /> },
-        { id: 'customer', name: '고객 관리', icon: <Users size={16} />, component: <Customers /> },
-        { id: 'site_options', name: '현장별 옵션 관리', icon: <SlidersHorizontal size={16} />, component: <SiteOptionManage /> },
-        { id: 'contract', name: '계약 관리', icon: <UserCheck size={16} />, component: <Contracts /> },
-        { id: 'billing', name: '청구 수납 관리', icon: <CreditCard size={16} />, component: <Billings /> },
-        { id: 'receivable', name: '외상미수금 대장', icon: <CreditCard size={16} />, component: <Receivables /> },
-        { id: 'smart_dispatch4', name: '출고 요청', icon: <Zap size={16} />, component: <SmartDispatch4 /> },
-        { id: 'smart_return', name: '회수 요청', icon: <Zap size={16} />, component: <SmartReturn /> },
-        { id: 'smart_as_request', name: '현장 정비 요청', icon: <Wrench size={16} />, component: <SmartAsRequest /> },
-        { id: 'delinquency', name: '미수 채권 연체 관리', icon: <AlertTriangle size={16} />, component: <DelinquencyPage /> },
-        { id: 'official_mail', name: '공식 메일 발송', icon: <Mail size={16} />, component: <OfficialMailPage /> },
-        { id: 'public_construction_permits', name: '인허가 건축공정 조회', icon: <Building2 size={16} />, component: <PublicConstructionPermitsPage /> },
-      ]
-    },
-    {
-      id: 'grp_product_asset',
-      name: '자산/재고관리',
-      icon: <Box size={17} />,
-      items: [
-        { id: 'available_inventory', name: '가용재고조회', icon: <ClipboardList size={16} />, component: <AvailableInventoryPage /> },
-        { id: 'product', name: '제품 관리', icon: <Package size={16} />, component: <Products /> },
-        { id: 'asset', name: '자산 관리', icon: <Layers size={16} />, component: <Assets /> },
-        { id: 'acquisition_disposal', name: '자산 취득 매각', icon: <PlusCircle size={16} />, component: <AssetAcquisitionDisposal /> },
-        { id: 'rent_asset', name: '임차 장비 관리', icon: <ShoppingBag size={16} />, component: <RentAssets /> },
-      ]
-    },
-    {
-      id: 'grp_logistics',
-      name: '배차 운송관리',
-      icon: <Truck size={17} />,
-      items: [
-        { id: 'delivery', name: '배차 운송 관리', icon: <Truck size={16} />, component: <TruckDispatch /> },
-        { id: 'transport_master', name: '운송 거래처 관리', icon: <Settings size={16} />, component: <TransportMaster /> },
-      ]
-    },
-    {
-      id: 'grp_inout',
-      name: '입출고관리',
-      icon: <ArrowLeftRight size={17} />,
-      items: [
-        { id: 'daily_inout', name: '일일 입출고 조회', icon: <Calendar size={16} />, component: <DailyInOutStatus /> },
-        { id: 'asset_inout_history', name: '입고등록/입출고조회', icon: <Clock size={16} />, component: <AssetHistory /> },
-        { id: 'dispatch_assign', name: '장비 할당', icon: <Layers size={16} />, component: <AssetAssignment /> },
-        { id: 'outbound_inspections', name: '출고 검수 관리', icon: <CheckSquare size={16} />, component: <OutboundInspections /> },
-          { id: 'stocktaking', name: '재고 실사', icon: <ClipboardList size={16} />, component: <StocktakingPage /> },
-        { id: 'print_queue_monitor', name: '프린트 큐 모니터', icon: <Printer size={16} />, component: <PrintQueueManager /> },
-      ]
-    },
-    {
-      id: 'grp_maintenance',
-      name: '정비 소모품관리',
-      icon: <Wrench size={17} />,
-      items: [
-        { id: 'consumable_purchase', name: '소모품 구매', icon: <ShoppingBag size={16} />, component: <ConsumablePurchasesPage /> },
-        { id: 'consumable_inout', name: '소모품 입출고', icon: <PackagePlus size={16} />, component: <ConsumableInOutPage /> },
-        { id: 'consumable_stock', name: '소모품 재고', icon: <Boxes size={16} />, component: <ConsumableStockPage /> },
-        { id: 'field_as', name: '현장 정비 관리', icon: <Wrench size={16} />, component: <FieldAsManagement /> },
-        { id: 'as_route_tracking', name: '현장정비 동선 관리', icon: <Clock size={16} />, component: <AsRouteTrackingPage /> },
-        { id: 'repair', name: '주기장 정비 관리', icon: <Wrench size={16} />, component: <Repairs /> },
-        { id: 'inspection_checklist_manage', name: '정비 항목 관리', icon: <Shield size={16} />, component: <InspectionChecklistManage /> },
-      ]
-    },
-    {
-      id: 'grp_management',
-      name: '경영관리',
-      icon: <FolderKanban size={17} />,
-      items: [
-        { id: 'leave_application', name: '연차신청', icon: <Calendar size={16} />, component: <LeaveApplicationPage /> },
-        { id: 'ot_management', name: '연장근무 관리', icon: <Clock size={16} />, component: <OtManagementPage /> },
-        { id: 'vehicle_log', name: '차량 주유관리', icon: <Car size={16} />, component: <VehicleOperationLogPage /> },
-        { id: 'purchase_settlement', name: '월말 매입 정산', icon: <CreditCard size={16} />, component: <PurchaseSettlementPage /> },
-        { id: 'vendors', name: '매입처 관리', icon: <Building2 size={16} />, component: <Vendors /> },
-        { id: 'bank_matching', name: '은행 입출금 대장', icon: <TrendingUp size={16} />, component: <BankMatching /> },
-        { id: 'corporate_card', name: '법인카드 매입정산', icon: <CreditCard size={16} />, component: <CorporateCardPage /> },
-        { id: 'cash_flow', name: '자금 흐름 분석', icon: <TrendingUp size={16} />, component: <CashFlowPage /> },
-        { id: 'depreciation_execution', name: '감가상각 마감 실행', icon: <TrendingUp size={16} />, component: <DepreciationExecution /> },
-        { id: 'regular_reports', name: '정기보고서 생성', icon: <FileText size={16} />, component: <RegularReportsPage /> },
-        { id: 'kiyeun_contract_status', name: '계약현황(기연전용)', icon: <FileSpreadsheet size={16} />, component: <KiyeunContractStatusPage /> },
-      ]
-    },
-    {
-      id: 'grp_management_special',
-      name: '경영관리 - 특수',
-      icon: <ShieldAlert size={17} />,
-      items: [
-        { id: 'organization', name: '조직 인사 관리', icon: <Users size={16} />, component: <OrganizationSettings /> },
-        { id: 'permission', name: '사용자 및 권한', icon: <Shield size={16} />, component: <UsersPermissions /> },
-        { id: 'manual_dictionary', name: '전사 업무 매뉴얼 사전', icon: <BookOpen size={16} />, component: <ManualDictionaryPage /> },
-        { id: 'payroll', name: '급여 정산', icon: <CreditCard size={16} />, component: <PayrollPage /> },
-        { id: 'leave_management', name: '연차관리', icon: <UserCheck size={16} />, component: <LeaveManagementPage /> },
-        { id: 'privacy_audit', name: '개인정보 접속 감사', icon: <FileCheck size={16} />, component: <PrivacyAuditPage /> },
-      ]
-    },
-    {
-      id: 'grp_tools',
-      name: '도구 및 다운로드',
-      icon: <BookOpen size={17} />,
-      items: [
-        { id: 'operations_manual', name: '업무매뉴얼', icon: <BookOpen size={16} />, component: <OperationManualPage /> },
-        { id: 'error_report', name: '오류 신고', icon: <AlertTriangle size={16} />, component: <ErrorReportPage /> },
-      ]
-    },
-    {
-      id: 'grp_system_dev',
-      name: '시스템관리 - 개발자',
-      icon: <Terminal size={17} />,
-      items: [
-        { id: 'agentic_ai_lab', name: 'AI 샌드박스 랩', icon: <Bot size={16} />, component: <AgenticAiLabPage /> },
-        { id: 'agentic_dispatch_studio', name: '배차 관제 스튜디오', icon: <Truck size={16} />, component: <AgenticDispatchStudioPage /> },
-        { id: 'agentic_settlement_autopilot', name: '월말 대사 정산', icon: <TrendingUp size={16} />, component: <AgenticSettlementAutopilotPage /> },
-        { id: 'agentic_asset_lifecycle', name: '자산 라이프사이클 관제', icon: <Layers size={16} />, component: <AgenticAssetLifecyclePage /> },
-        { id: 'initial_db_upload', name: '초기DB 업로드', icon: <DatabaseIcon size={16} />, component: <InitialDbUploader /> },
-        { id: 'dev_uploader', name: 'DB 데이터 업로더', icon: <DatabaseIcon size={16} />, component: <DevDataUploader /> },
-        { id: 'tenant_management', name: '테넌트 관리', icon: <Building2 size={16} />, component: <TenantManagementPage /> },
-      ]
+  // 향후 확장 모듈(렌탈·회계·인사) 미리보기 토글 상태 (기본값 false: 유통영업 중심 슬림 구성)
+  const [showExtendedErpModules, setShowExtendedErpModules] = useState<boolean>(false);
+
+  // 계층형 상위-하위 아코디언 메뉴 구조 정의 (지게차·부품 유통영업 특화 구성 + 향후 확장 모듈)
+  const menuGroups: MenuGroup[] = React.useMemo(() => {
+    const coreFlGroups: MenuGroup[] = [
+      {
+        id: 'grp_fl_inventory',
+        name: '1. 제품 및 재고관리',
+        icon: <Package size={18} />,
+        items: [
+          { id: 'trade_products', name: '제품·차대번호·재고경과', icon: <Package size={16} />, component: <TradeProductsPage /> },
+          { id: 'stocktaking', name: '창고별 재고 실사', icon: <ClipboardList size={16} />, component: <StocktakingPage /> },
+        ]
+      },
+      {
+        id: 'grp_fl_trade',
+        name: '2. 매입·매출 관리',
+        icon: <ShoppingBag size={18} />,
+        items: [
+          { id: 'trade_purchases', name: '국내매입·해외수입 원가', icon: <Layers size={16} />, component: <TradePurchasesPage /> },
+          { id: 'trade_contracts', name: '거래처별 판매·매출이익', icon: <UserCheck size={16} />, component: <TradeContractsPage /> },
+          { id: 'trade_outbounds', name: '유통 출고 관리', icon: <Zap size={16} />, component: <TradeOutboundPage /> },
+          { id: 'courier_dispatch', name: '화물·택배 배송 관리', icon: <Truck size={16} />, component: <CourierDispatchPage /> },
+          { id: 'trade_billing', name: '매출내역 및 미수금 관리', icon: <CreditCard size={16} />, component: <TradeBillingPage /> },
+          { id: 'trade_returns', name: '환입 및 반품 관리', icon: <ArrowLeftRight size={16} />, component: <TradeReturnsPage /> },
+        ]
+      },
+      {
+        id: 'grp_fl_reports',
+        name: '3. 영업실적 및 보고서',
+        icon: <TrendingUp size={18} />,
+        items: [
+          { id: 'trade_profitability', name: '영업실적 및 매출총이익', icon: <TrendingUp size={16} />, component: <TradeProfitabilityPage /> },
+          { id: 'sales_journal', name: '영업일지 관리', icon: <BookOpen size={16} />, component: <SalesJournalPage /> },
+        ]
+      },
+      {
+        id: 'grp_fl_warranty',
+        name: '4. 거래처 · 보증이력(확장)',
+        icon: <Wrench size={17} />,
+        items: [
+          { id: 'customer', name: '대리점 및 고객사 관리', icon: <Users size={16} />, component: <Customers /> },
+          { id: 'vendors', name: '해외·국내 매입처 관리', icon: <Building2 size={16} />, component: <Vendors /> },
+          { id: 'field_as', name: '차대별 정비·보증이력', icon: <Wrench size={16} />, component: <FieldAsManagement /> },
+          { id: 'smart_as_request', name: '보증·정비 접수 등록', icon: <Shield size={16} />, component: <SmartAsRequest /> },
+        ]
+      },
+      {
+        id: 'grp_fl_system',
+        name: '5. 시스템 및 설정',
+        icon: <Settings size={17} />,
+        items: [
+          { id: 'permission', name: '사용자 및 권한', icon: <Shield size={16} />, component: <UsersPermissions /> },
+          { id: 'operations_manual', name: '업무매뉴얼', icon: <BookOpen size={16} />, component: <OperationManualPage /> },
+          { id: 'tenant_management', name: '테넌트 관리', icon: <Building2 size={16} />, component: <TenantManagementPage /> },
+        ]
+      }
+    ];
+
+    if (!showExtendedErpModules) {
+      return coreFlGroups;
     }
-  ], []);
+
+    const extendedGroups: MenuGroup[] = [
+      {
+        id: 'grp_ext_rental',
+        name: '확장모듈: 렌탈·배차관리',
+        icon: <Truck size={17} />,
+        items: [
+          { id: 'contract', name: '렌탈 계약 관리', icon: <UserCheck size={16} />, component: <Contracts /> },
+          { id: 'available_inventory', name: '렌탈 가용재고조회', icon: <ClipboardList size={16} />, component: <AvailableInventoryPage /> },
+          { id: 'asset', name: '렌탈 자산 관리', icon: <Layers size={16} />, component: <Assets /> },
+          { id: 'smart_dispatch4', name: '출고 요청', icon: <Zap size={16} />, component: <SmartDispatch4 /> },
+          { id: 'delivery', name: '배차 운송 관리', icon: <Truck size={16} />, component: <TruckDispatch /> },
+          { id: 'outbound_inspections', name: '출고 검수 관리', icon: <CheckSquare size={16} />, component: <OutboundInspections /> },
+        ]
+      },
+      {
+        id: 'grp_ext_accounting',
+        name: '확장모듈: 회계·자금관리',
+        icon: <FolderKanban size={17} />,
+        items: [
+          { id: 'bank_matching', name: '은행 입출금 대장', icon: <TrendingUp size={16} />, component: <BankMatching /> },
+          { id: 'corporate_card', name: '법인카드 매입정산', icon: <CreditCard size={16} />, component: <CorporateCardPage /> },
+          { id: 'cash_flow', name: '자금 흐름 분석', icon: <TrendingUp size={16} />, component: <CashFlowPage /> },
+          { id: 'depreciation_execution', name: '감가상각 마감 실행', icon: <TrendingUp size={16} />, component: <DepreciationExecution /> },
+        ]
+      },
+      {
+        id: 'grp_ext_hr',
+        name: '확장모듈: 인사·전자결재',
+        icon: <Users size={17} />,
+        items: [
+          { id: 'approvalInbox', name: '내 결재함', icon: <CheckCircle size={16} />, component: <ApprovalInbox /> },
+          { id: 'organization', name: '조직 인사 관리', icon: <Users size={16} />, component: <OrganizationSettings /> },
+          { id: 'payroll', name: '급여 정산', icon: <CreditCard size={16} />, component: <PayrollPage /> },
+          { id: 'leave_management', name: '연차관리', icon: <UserCheck size={16} />, component: <LeaveManagementPage /> },
+        ]
+      }
+    ];
+
+    return [...coreFlGroups, ...extendedGroups];
+  }, [showExtendedErpModules]);
 
   // 상위 그룹 아코디언 접힘/펼침 상태
 
@@ -988,6 +944,11 @@ const App: React.FC = () => {
   }, [sortedMenuGroups, hasPermission, menuPrefs]);
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    grp_fl_inventory: true,
+    grp_fl_trade: true,
+    grp_fl_reports: true,
+    grp_fl_warranty: true,
+    grp_fl_system: false,
     grp_sales: true,
     grp_product_asset: true,
     grp_logistics: true,
@@ -1059,7 +1020,7 @@ const App: React.FC = () => {
 
   // 탭 ID별 페이지 컴포넌트 탐색
   const getComponentByTabId = (tabId: string) => {
-    if (tabId === 'dashboard') return <Dashboard />;
+    if (tabId === 'dashboard') return <TradeProfitabilityPage />;
     if (tabId === 'manual_dictionary') return <ManualDictionaryPage />;
     if (tabId === 'consumable' || tabId === 'consumables') return <ConsumableStockPage />;
     if (tabId === 'leave_ot') return <LeaveOtPage />;
@@ -1075,7 +1036,7 @@ const App: React.FC = () => {
       const found = grp.items.find(item => item.id === tabId);
       if (found) return found.component;
     }
-    return <Dashboard />;
+    return <TradeProfitabilityPage />;
   };
 
   const domainMode = getDomainMode();
@@ -2488,8 +2449,31 @@ const App: React.FC = () => {
             );
           })}
 
-          {/* ⚙️ 사이드바 최하단: 메뉴 패널 개인화 설정 버튼 */}
-          <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid var(--border-color)' }}>
+          {/* ⚙️ 사이드바 최하단: 향후 업무확장 모듈 미리보기 & 메뉴 패널 설정 */}
+          <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => setShowExtendedErpModules(prev => !prev)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: showExtendedErpModules ? '1px solid #3B82F6' : '1px solid #BFDBFE',
+                backgroundColor: showExtendedErpModules ? '#EFF6FF' : '#F8FAFC',
+                color: '#1D4ED8',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+              title="향후 업무 확장 시 즉시 활성화 가능한 렌탈·회계·인사 메뉴 미리보기"
+            >
+              <span>{showExtendedErpModules ? '✓ 확장모듈 미리보기 끄기' : '+ 향후 업무확장 메뉴 보기'}</span>
+            </button>
             <button
               type="button"
               onClick={() => setShowSidebarCustomModal(true)}

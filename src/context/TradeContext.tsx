@@ -33,13 +33,41 @@ export interface TradeContextType {
   addProduct: (p: Omit<TradeProduct, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TradeProduct>;
   updateProduct: (id: string, updates: Partial<TradeProduct>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  adjustProductStock: (productId: string, adjustQty: number, unitCost: number, reason: string) => Promise<void>;
+  adjustProductStock: (
+    productId: string,
+    adjustQty: number,
+    unitCost: number,
+    reason: string,
+    extra?: { warehouseName?: string; serialNumber?: string; inboundDate?: string }
+  ) => Promise<void>;
 
   // Purchases (구매 및 입고) CRUD & Workflow
   createPurchase: (
     vendorId: string,
-    items: { productId: string; qty: number; unitCost: number; memo?: string }[],
+    items: {
+      productId: string;
+      qty: number;
+      unitCost: number;
+      foreignUnitCost?: number;
+      incidentalCostPerUnit?: number;
+      landedUnitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+      memo?: string;
+    }[],
     options?: {
+      purchaseType?: 'DOMESTIC' | 'IMPORT';
+      currency?: 'KRW' | 'CNY' | 'USD';
+      exchangeRate?: number;
+      foreignTotalAmount?: number;
+      customsDuty?: number;
+      customsClearanceFee?: number;
+      freightCost?: number;
+      otherIncidentalCost?: number;
+      totalIncidentalCost?: number;
+      landedTotalAmount?: number;
+      warehouseName?: string;
+      blNumber?: string;
       orderDate?: string;
       expectedDate?: string;
       status?: 'REQUESTED' | 'ORDERED';
@@ -50,12 +78,29 @@ export interface TradeContextType {
   updatePurchase: (
     purchaseId: string,
     updates: Partial<TradePurchase>,
-    updatedItems?: { id?: string; productId: string; orderQty: number; unitCost: number; memo?: string }[]
+    updatedItems?: {
+      id?: string;
+      productId: string;
+      orderQty: number;
+      unitCost: number;
+      foreignUnitCost?: number;
+      incidentalCostPerUnit?: number;
+      landedUnitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+      memo?: string;
+    }[]
   ) => Promise<void>;
   acceptPurchase: (purchaseId: string) => Promise<void>;
   confirmInbound: (
     purchaseId: string,
-    received: { productId: string; qty: number; unitCost?: number }[],
+    received: {
+      productId: string;
+      qty: number;
+      unitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+    }[],
     receivedDate?: string
   ) => Promise<void>;
   cancelPurchase: (purchaseId: string, reason?: string, itemId?: string) => Promise<void>;
@@ -64,8 +109,16 @@ export interface TradeContextType {
   // Sales Orders (유통 계약 관리) CRUD & Workflow
   createSalesOrder: (
     customerId: string,
-    items: { productId: string; qty: number; unitPrice: number; memo?: string }[],
+    items: {
+      productId: string;
+      qty: number;
+      unitPrice: number;
+      serialNumbers?: string[];
+      warehouseName?: string;
+      memo?: string;
+    }[],
     options?: {
+      customerTier?: 'DEALER' | 'END_USER';
       orderDate?: string;
       deliveryDate?: string;
       deliveryLocation?: string;
@@ -91,7 +144,15 @@ export interface TradeContextType {
   updateSalesOrder: (
     id: string,
     updates: Partial<TradeSalesOrder>,
-    updatedLines?: { id?: string; productId: string; qty: number; unitPrice: number; memo?: string }[]
+    updatedLines?: {
+      id?: string;
+      productId: string;
+      qty: number;
+      unitPrice: number;
+      serialNumbers?: string[];
+      warehouseName?: string;
+      memo?: string;
+    }[]
   ) => Promise<void>;
   acceptSalesOrder: (id: string) => Promise<void>;
   cancelSalesOrder: (id: string, reason?: string) => Promise<void>;
@@ -235,147 +296,1048 @@ export interface TradeContextType {
 const DEFAULT_PRODUCTS: TradeProduct[] = [
   {
     id: 'p1',
-    skuCode: 'SKU001',
-    name: '산업용 장갑',
-    category: '소모품',
-    spec: 'L사이즈 / NBR 코팅 (10켤레/타)',
-    unit: '켤레',
-    standardCost: 1000,
-    standardPrice: 1500,
-    safetyStock: 100,
+    skuCode: 'FL-EPL1531',
+    name: '전동 파레트트럭 1.5톤',
+    category: '전동지게차',
+    itemType: 'EQUIPMENT',
+    manufacturer: '이피이큅먼트',
+    modelName: 'EPL1531',
+    originCountry: '중국 수입',
+    defaultWarehouse: 'A창고',
+    spec: '정격하중 1500kg / 리튬배터리 24V 20Ah 내장형',
+    unit: '대',
+    standardCost: 1320000,
+    dealerPrice: 1650000,
+    standardPrice: 1850000,
+    safetyStock: 5,
+    warrantyMonths: 12,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '현장 기본 출고 작업용 장갑',
-    createdAt: '2026-09-01T09:00:00.000Z',
+    memo: '중국 항저우 공장 직수입 주력 소형 전동 파레트트럭',
+    createdAt: '2026-03-01T09:00:00.000Z',
     updatedAt: '2026-09-01T09:00:00.000Z'
   },
   {
     id: 'p2',
-    skuCode: 'SKU002',
-    name: '보안경',
-    category: '안전용품',
-    spec: '김서림 방지 폴리카보네이트 투명',
-    unit: 'EA',
-    standardCost: 3500,
-    standardPrice: 5000,
-    safetyStock: 50,
+    skuCode: 'FL-CPD25L1',
+    name: '리튬 전동지게차 2.5톤',
+    category: '전동지게차',
+    itemType: 'EQUIPMENT',
+    manufacturer: '헬리포크리프트',
+    modelName: 'CPD25-L1',
+    originCountry: '중국 수입',
+    defaultWarehouse: 'A창고',
+    spec: '정격하중 2500kg / 3단 마스트 4500mm / 리튬인산철 80V 205Ah',
+    unit: '대',
+    standardCost: 14800000,
+    dealerPrice: 18200000,
+    standardPrice: 20500000,
+    safetyStock: 3,
+    warrantyMonths: 24,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '고소작업대 탑승자 안전보호구',
-    createdAt: '2026-09-01T09:00:00.000Z',
+    memo: '중국 안후이 헬리 직수입 2.5톤 좌식 리튬 전동지게차',
+    createdAt: '2026-03-10T09:00:00.000Z',
     updatedAt: '2026-09-01T09:00:00.000Z'
   },
   {
     id: 'p3',
-    skuCode: 'SKU003',
-    name: '고소작업대 안전벨트 (하네스)',
-    category: '안전용품',
-    spec: '전신형 2샼클 충격흡수장비 포함 (KCs인증)',
-    unit: 'SET',
-    standardCost: 48000,
-    standardPrice: 68000,
-    safetyStock: 20,
+    skuCode: 'FL-CQD15R',
+    name: '입승식 리치트럭 1.5톤',
+    category: '리치트럭',
+    itemType: 'EQUIPMENT',
+    manufacturer: '항차그룹',
+    modelName: 'CQD15-XC4',
+    originCountry: '중국 수입',
+    defaultWarehouse: 'B창고',
+    spec: '정격하중 1500kg / 인상높이 6000mm / 사이드쉬프트 기본 장착',
+    unit: '대',
+    standardCost: 11900000,
+    dealerPrice: 14900000,
+    standardPrice: 16800000,
+    safetyStock: 2,
+    warrantyMonths: 18,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '산업안전보건기준 필수 착용 품목',
-    createdAt: '2026-09-05T09:00:00.000Z',
+    memo: '물류센터 하이랙 작업용 입승식 전동 리치트럭',
+    createdAt: '2026-04-05T09:00:00.000Z',
     updatedAt: '2026-09-05T09:00:00.000Z'
   },
   {
     id: 'p4',
-    skuCode: 'SKU004',
-    name: '24V 30A 스마트 배터리 충전기',
-    category: '전장부품',
-    spec: 'GENIE / SINOBOOM / DINGLI 호환 방수형',
-    unit: 'EA',
-    standardCost: 185000,
-    standardPrice: 260000,
-    safetyStock: 10,
+    skuCode: 'FL-FD30T',
+    name: '디젤 카운터밸런스 지게차 3.0톤',
+    category: '디젤지게차',
+    itemType: 'EQUIPMENT',
+    manufacturer: '두산밥캣',
+    modelName: 'FD30T-7',
+    originCountry: '국내 매입',
+    defaultWarehouse: 'A창고',
+    spec: '정격하중 3000kg / 스테이지5 친환경 디젤엔진 / 캐빈·히터 사양',
+    unit: '대',
+    standardCost: 22500000,
+    dealerPrice: 26500000,
+    standardPrice: 28900000,
+    safetyStock: 2,
+    warrantyMonths: 24,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '시저리프트 전 기종 호환 충전기',
-    createdAt: '2026-09-10T09:00:00.000Z',
+    memo: '국내 야외 자재야드 및 제조공장 납품용 3톤 디젤지게차',
+    createdAt: '2026-04-15T09:00:00.000Z',
     updatedAt: '2026-09-10T09:00:00.000Z'
   },
   {
     id: 'p5',
-    skuCode: 'SKU005',
-    name: '상부 조이스틱 컨트롤러 어셈블리',
-    category: '전장부품',
-    spec: 'GENIE GS-1930 / 2646 정품 호환 ECU 박스',
+    skuCode: 'PT-LFP80205',
+    name: '리튬인산철 배터리팩 80V 205Ah',
+    category: '배터리/충전기',
+    itemType: 'PART',
+    manufacturer: '시이티엘',
+    modelName: 'LFP-80V205',
+    originCountry: '중국 수입',
+    defaultWarehouse: '부품창고',
+    spec: '80V 205Ah BMS 일체형 모듈 / 급속충전 지원',
     unit: 'EA',
-    standardCost: 240000,
-    standardPrice: 350000,
+    standardCost: 3450000,
+    dealerPrice: 4200000,
+    standardPrice: 4800000,
     safetyStock: 5,
+    warrantyMonths: 36,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '상부 조종기 교체용',
-    createdAt: '2026-09-12T09:00:00.000Z',
+    memo: '2.5톤~3.0톤 전동지게차 교체 및 옵션 장착용 리튬배터리',
+    createdAt: '2026-05-01T09:00:00.000Z',
     updatedAt: '2026-09-12T09:00:00.000Z'
   },
   {
     id: 'p6',
-    skuCode: 'SKU006',
-    name: '비마킹 솔리드 백색 타이어',
-    category: '타이어/휠',
-    spec: '1930/2032 규격 휠 일체형 논마킹 타이어',
+    skuCode: 'PT-CURTIS1232',
+    name: '구동모터 AC 컨트롤러 어셈블리',
+    category: '전장부품',
+    itemType: 'PART',
+    manufacturer: '커티스',
+    modelName: 'AC-1232E',
+    originCountry: '중국 수입',
+    defaultWarehouse: '부품창고',
+    spec: '24V-80V 250A 전동지게차 구동 제어 컨트롤러',
     unit: 'EA',
-    standardCost: 72000,
-    standardPrice: 105000,
-    safetyStock: 16,
+    standardCost: 310000,
+    dealerPrice: 410000,
+    standardPrice: 480000,
+    safetyStock: 10,
+    warrantyMonths: 12,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '실내 클린룸 및 에폭시 바닥 전용',
-    createdAt: '2026-09-15T09:00:00.000Z',
+    memo: '이피이큅먼트 및 헬리 전동지게차 호환 메인 컨트롤러',
+    createdAt: '2026-05-10T09:00:00.000Z',
+    updatedAt: '2026-09-15T09:00:00.000Z'
+  },
+  {
+    id: 'p7',
+    skuCode: 'PT-FORK1200',
+    name: '단조 중량 덧발 포크 세트 1200mm',
+    category: '유압부품',
+    itemType: 'PART',
+    manufacturer: '카스케이드',
+    modelName: 'FK-25-1200',
+    originCountry: '국내 매입',
+    defaultWarehouse: '부품창고',
+    spec: '2.5톤~3톤 공용 고장력 단조 포크 1쌍',
+    unit: 'SET',
+    standardCost: 380000,
+    dealerPrice: 490000,
+    standardPrice: 560000,
+    safetyStock: 8,
+    warrantyMonths: 12,
+    status: 'ACTIVE',
+    cogsMethod: 'FIFO',
+    memo: '국내 포크 제조사 직매입 표준 포크 세트',
+    createdAt: '2026-06-01T09:00:00.000Z',
+    updatedAt: '2026-09-15T09:00:00.000Z'
+  },
+  {
+    id: 'p8',
+    skuCode: 'PT-SOLID70012',
+    name: '지게차 노마킹 솔리드 타이어 7.00-12',
+    category: '타이어/휠',
+    itemType: 'PART',
+    manufacturer: '넥센솔리드',
+    modelName: 'NM-700-12',
+    originCountry: '국내 매입',
+    defaultWarehouse: '부품창고',
+    spec: '2.5톤~3톤 전륜/후륜 겸용 백색 친환경 솔리드 타이어',
+    unit: 'EA',
+    standardCost: 145000,
+    dealerPrice: 195000,
+    standardPrice: 230000,
+    safetyStock: 16,
+    warrantyMonths: 6,
+    status: 'ACTIVE',
+    cogsMethod: 'FIFO',
+    memo: '식품·제약·반도체 물류창고 납품 지게차 장착용',
+    createdAt: '2026-06-15T09:00:00.000Z',
     updatedAt: '2026-09-15T09:00:00.000Z'
   }
 ];
 
-const DEFAULT_LOTS: TradeInventoryLot[] = [
-  { id: 'lot-init-1', purchaseId: 'PO-202609-001', productId: 'p1', initialQty: 1000, remainingQty: 1000, unitCost: 1000, createdAt: '2026-09-01T10:00:00.000Z' },
-  { id: 'lot-init-2', purchaseId: 'PO-202609-001', productId: 'p2', initialQty: 500, remainingQty: 500, unitCost: 3500, createdAt: '2026-09-01T10:00:00.000Z' },
-  { id: 'lot-init-3', purchaseId: 'PO-202609-002', productId: 'p3', initialQty: 100, remainingQty: 100, unitCost: 48000, createdAt: '2026-09-05T10:00:00.000Z' },
-  { id: 'lot-init-4', purchaseId: 'PO-202609-002', productId: 'p4', initialQty: 40, remainingQty: 40, unitCost: 185000, createdAt: '2026-09-10T10:00:00.000Z' },
-  { id: 'lot-init-5', purchaseId: 'PO-202609-003', productId: 'p5', initialQty: 25, remainingQty: 25, unitCost: 240000, createdAt: '2026-09-12T10:00:00.000Z' },
-  { id: 'lot-init-6', purchaseId: 'PO-202609-003', productId: 'p6', initialQty: 60, remainingQty: 60, unitCost: 72000, createdAt: '2026-09-15T10:00:00.000Z' }
-];
-
 const DEFAULT_PURCHASES: TradePurchase[] = [
   {
-    id: 'PO-202609-001',
+    id: 'PO-202604-001',
     vendorId: 'v-1',
-    orderDate: '2026-09-01',
-    expectedDate: '2026-09-03',
-    receivedDate: '2026-09-02',
+    purchaseType: 'IMPORT',
+    currency: 'CNY',
+    exchangeRate: 192.0,
+    foreignTotalAmount: 215000,
+    customsDuty: 2470000,
+    customsClearanceFee: 550000,
+    freightCost: 2000000,
+    otherIncidentalCost: 0,
+    totalIncidentalCost: 5020000,
+    landedTotalAmount: 46300000,
+    warehouseName: 'A창고',
+    blNumber: 'SNKO-SHA2604018',
+    orderDate: '2026-03-28',
+    expectedDate: '2026-04-08',
+    receivedDate: '2026-04-10',
     status: 'RECEIVED',
-    totalAmount: 2750000,
-    vatAmount: 275000,
-    requesterName: '구매자재팀',
-    memo: '하반기 현장 안전보호구 정기 발주 입고',
-    createdAt: '2026-09-01T09:30:00.000Z',
-    updatedAt: '2026-09-02T14:00:00.000Z'
+    totalAmount: 46300000,
+    vatAmount: 4630000,
+    requesterName: '해외수입팀',
+    memo: '중국 안후이 헬리 2.5톤 리튬 전동지게차 및 파레트트럭 1차 컨테이너 직수입 입고',
+    createdAt: '2026-03-28T09:30:00.000Z',
+    updatedAt: '2026-04-10T14:00:00.000Z'
   },
   {
-    id: 'PO-202610-002',
-    vendorId: 'v-2',
-    orderDate: '2026-10-05',
-    expectedDate: '2026-10-12',
-    receivedDate: '2026-10-10',
+    id: 'PO-202606-002',
+    vendorId: 'v-3',
+    purchaseType: 'IMPORT',
+    currency: 'USD',
+    exchangeRate: 1380.0,
+    foreignTotalAmount: 16000,
+    customsDuty: 1100000,
+    customsClearanceFee: 320000,
+    freightCost: 300000,
+    otherIncidentalCost: 0,
+    totalIncidentalCost: 1720000,
+    landedTotalAmount: 23800000,
+    warehouseName: 'B창고',
+    blNumber: 'KMTC-NGB2606112',
+    orderDate: '2026-06-10',
+    expectedDate: '2026-06-22',
+    receivedDate: '2026-06-25',
     status: 'RECEIVED',
-    totalAmount: 12200000,
-    vatAmount: 1220000,
-    requesterName: '유통영업팀',
-    memo: '전장부품 및 안전하네스 확충 발주',
-    createdAt: '2026-10-05T10:00:00.000Z',
-    updatedAt: '2026-10-10T15:30:00.000Z'
+    totalAmount: 23800000,
+    vatAmount: 2380000,
+    requesterName: '해외수입팀',
+    memo: '중국 닝보항 선적 입승식 리치트럭 1.5톤 2대 수입 통관 완료',
+    createdAt: '2026-06-10T10:00:00.000Z',
+    updatedAt: '2026-06-25T15:30:00.000Z'
+  },
+  {
+    id: 'PO-202608-003',
+    vendorId: 'v-2',
+    purchaseType: 'DOMESTIC',
+    currency: 'KRW',
+    exchangeRate: 1,
+    foreignTotalAmount: 45000000,
+    customsDuty: 0,
+    customsClearanceFee: 0,
+    freightCost: 0,
+    otherIncidentalCost: 0,
+    totalIncidentalCost: 0,
+    landedTotalAmount: 45000000,
+    warehouseName: 'A창고',
+    orderDate: '2026-08-05',
+    expectedDate: '2026-08-12',
+    receivedDate: '2026-08-14',
+    status: 'RECEIVED',
+    totalAmount: 45000000,
+    vatAmount: 4500000,
+    requesterName: '국내매입팀',
+    memo: '국내 두산밥캣 3.0톤 디젤지게차 2대 직매입 입고',
+    createdAt: '2026-08-05T11:00:00.000Z',
+    updatedAt: '2026-08-14T16:00:00.000Z'
+  },
+  {
+    id: 'PO-202609-004',
+    vendorId: 'v-1',
+    purchaseType: 'IMPORT',
+    currency: 'CNY',
+    exchangeRate: 195.0,
+    foreignTotalAmount: 215000,
+    customsDuty: 2450000,
+    customsClearanceFee: 480000,
+    freightCost: 1345000,
+    otherIncidentalCost: 0,
+    totalIncidentalCost: 4275000,
+    landedTotalAmount: 46200000,
+    warehouseName: 'A창고',
+    blNumber: 'SNKO-SHA2609088',
+    orderDate: '2026-09-10',
+    expectedDate: '2026-09-20',
+    receivedDate: '2026-09-20',
+    status: 'RECEIVED',
+    totalAmount: 46200000,
+    vatAmount: 4620000,
+    requesterName: '해외수입팀',
+    memo: '추계 성수기 대비 리튬 전동지게차 2.5톤 2대 및 리튬배터리팩·컨트롤러 수입 입고',
+    createdAt: '2026-09-10T09:00:00.000Z',
+    updatedAt: '2026-09-20T17:00:00.000Z'
+  },
+  {
+    id: 'PO-202610-005',
+    vendorId: 'v-2',
+    purchaseType: 'DOMESTIC',
+    currency: 'KRW',
+    exchangeRate: 1,
+    foreignTotalAmount: 13960000,
+    customsDuty: 0,
+    customsClearanceFee: 0,
+    freightCost: 0,
+    otherIncidentalCost: 0,
+    totalIncidentalCost: 0,
+    landedTotalAmount: 13960000,
+    warehouseName: '부품창고',
+    orderDate: '2026-10-12',
+    expectedDate: '2026-10-15',
+    receivedDate: '2026-10-15',
+    status: 'RECEIVED',
+    totalAmount: 13960000,
+    vatAmount: 1396000,
+    requesterName: '부품자재팀',
+    memo: '전동 파레트트럭 3대 및 단조 포크·솔리드 타이어 정기 보충 입고',
+    createdAt: '2026-10-12T10:00:00.000Z',
+    updatedAt: '2026-10-15T15:00:00.000Z'
   }
 ];
 
 const DEFAULT_PURCHASE_ITEMS: TradePurchaseItem[] = [
-  { id: 'PI-001', purchaseId: 'PO-202609-001', productId: 'p1', orderQty: 1000, receivedQty: 1000, unitCost: 1000, memo: '정상 입고' },
-  { id: 'PI-002', purchaseId: 'PO-202609-001', productId: 'p2', orderQty: 500, receivedQty: 500, unitCost: 3500, memo: '정상 입고' },
-  { id: 'PI-003', purchaseId: 'PO-202610-002', productId: 'p3', orderQty: 100, receivedQty: 100, unitCost: 48000, memo: 'KCs 인증서 동봉 확인' },
-  { id: 'PI-004', purchaseId: 'PO-202610-002', productId: 'p4', orderQty: 40, receivedQty: 40, unitCost: 185000, memo: '시리얼 검수 완료' }
+  {
+    id: 'PI-001',
+    purchaseId: 'PO-202604-001',
+    productId: 'p2',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 70000,
+    incidentalCostPerUnit: 1360000,
+    landedUnitCost: 14800000,
+    unitCost: 14800000,
+    warehouseName: 'A창고',
+    serialNumbers: ['HL-CPD25-260401', 'HL-CPD25-260402'],
+    memo: '중국 안후이 헬리 2.5톤 리튬 전동지게차 2대'
+  },
+  {
+    id: 'PI-002',
+    purchaseId: 'PO-202604-001',
+    productId: 'p1',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 6000,
+    incidentalCostPerUnit: 168000,
+    landedUnitCost: 1320000,
+    unitCost: 1320000,
+    warehouseName: 'A창고',
+    serialNumbers: ['EP-1531-260401', 'EP-1531-260402'],
+    memo: '이피이큅먼트 1.5톤 파레트트럭 2대'
+  },
+  {
+    id: 'PI-003',
+    purchaseId: 'PO-202604-001',
+    productId: 'p5',
+    orderQty: 4,
+    receivedQty: 4,
+    foreignUnitCost: 15750,
+    incidentalCostPerUnit: 426000,
+    landedUnitCost: 3450000,
+    unitCost: 3450000,
+    warehouseName: '부품창고',
+    memo: '리튬인산철 배터리팩 80V 205Ah 4세트'
+  },
+  {
+    id: 'PI-004',
+    purchaseId: 'PO-202606-002',
+    productId: 'p3',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 8000,
+    incidentalCostPerUnit: 860000,
+    landedUnitCost: 11900000,
+    unitCost: 11900000,
+    warehouseName: 'B창고',
+    serialNumbers: ['HC-CQD15-260601', 'HC-CQD15-260602'],
+    memo: '항차 입승식 리치트럭 1.5톤 2대'
+  },
+  {
+    id: 'PI-005',
+    purchaseId: 'PO-202608-003',
+    productId: 'p4',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 22500000,
+    incidentalCostPerUnit: 0,
+    landedUnitCost: 22500000,
+    unitCost: 22500000,
+    warehouseName: 'A창고',
+    serialNumbers: ['DS-FD30T-260801', 'DS-FD30T-260802'],
+    memo: '두산밥캣 3.0톤 디젤지게차 2대'
+  },
+  {
+    id: 'PI-006',
+    purchaseId: 'PO-202609-004',
+    productId: 'p2',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 70000,
+    incidentalCostPerUnit: 1150000,
+    landedUnitCost: 14800000,
+    unitCost: 14800000,
+    warehouseName: 'A창고',
+    serialNumbers: ['HL-CPD25-260901', 'HL-CPD25-260902'],
+    memo: '헬리 2.5톤 리튬 전동지게차 2대'
+  },
+  {
+    id: 'PI-007',
+    purchaseId: 'PO-202609-004',
+    productId: 'p6',
+    orderQty: 30,
+    receivedQty: 30,
+    foreignUnitCost: 1450,
+    incidentalCostPerUnit: 27250,
+    landedUnitCost: 310000,
+    unitCost: 310000,
+    warehouseName: '부품창고',
+    memo: '커티스 구동모터 컨트롤러 30개'
+  },
+  {
+    id: 'PI-008',
+    purchaseId: 'PO-202609-004',
+    productId: 'p5',
+    orderQty: 2,
+    receivedQty: 2,
+    foreignUnitCost: 15750,
+    incidentalCostPerUnit: 378750,
+    landedUnitCost: 3450000,
+    unitCost: 3450000,
+    warehouseName: '부품창고',
+    memo: '리튬인산철 배터리팩 2개'
+  },
+  {
+    id: 'PI-009',
+    purchaseId: 'PO-202610-005',
+    productId: 'p1',
+    orderQty: 3,
+    receivedQty: 3,
+    foreignUnitCost: 1320000,
+    incidentalCostPerUnit: 0,
+    landedUnitCost: 1320000,
+    unitCost: 1320000,
+    warehouseName: 'A창고',
+    serialNumbers: ['EP-1531-261001', 'EP-1531-261002', 'EP-1531-261003'],
+    memo: '이피이큅먼트 파레트트럭 3대'
+  },
+  {
+    id: 'PI-010',
+    purchaseId: 'PO-202610-005',
+    productId: 'p7',
+    orderQty: 15,
+    receivedQty: 15,
+    foreignUnitCost: 380000,
+    incidentalCostPerUnit: 0,
+    landedUnitCost: 380000,
+    unitCost: 380000,
+    warehouseName: '부품창고',
+    memo: '단조 중량 포크 세트 15조'
+  },
+  {
+    id: 'PI-011',
+    purchaseId: 'PO-202610-005',
+    productId: 'p8',
+    orderQty: 30,
+    receivedQty: 30,
+    foreignUnitCost: 145000,
+    incidentalCostPerUnit: 0,
+    landedUnitCost: 145000,
+    unitCost: 145000,
+    warehouseName: '부품창고',
+    memo: '노마킹 솔리드 타이어 30본'
+  }
+];
+
+const DEFAULT_LOTS: TradeInventoryLot[] = [
+  // 180일 이상 장기체화 재고 (2026-04-10 입고 -> 약 204일 경과)
+  {
+    id: 'LOT-SN-001',
+    purchaseId: 'PO-202604-001',
+    productId: 'p2',
+    serialNumber: 'HL-CPD25-260401',
+    warehouseName: 'A창고',
+    inboundDate: '2026-04-10',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 70000,
+    exchangeRate: 192.0,
+    incidentalCostPerUnit: 1360000,
+    lotStatus: 'SOLD',
+    soldOrderId: 'SO-202609-101',
+    soldDate: '2026-09-12',
+    soldCustomerName: '경기종합물류 대리점',
+    warrantyEndDate: '2028-09-11',
+    initialQty: 1,
+    remainingQty: 0,
+    unitCost: 14800000,
+    createdAt: '2026-04-10T10:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-002',
+    purchaseId: 'PO-202604-001',
+    productId: 'p2',
+    serialNumber: 'HL-CPD25-260402',
+    warehouseName: 'A창고',
+    inboundDate: '2026-04-10',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 70000,
+    exchangeRate: 192.0,
+    incidentalCostPerUnit: 1360000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 14800000,
+    createdAt: '2026-04-10T10:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-003',
+    purchaseId: 'PO-202604-001',
+    productId: 'p1',
+    serialNumber: 'EP-1531-260401',
+    warehouseName: 'A창고',
+    inboundDate: '2026-04-10',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 6000,
+    exchangeRate: 192.0,
+    incidentalCostPerUnit: 168000,
+    lotStatus: 'SOLD',
+    soldOrderId: 'SO-202609-101',
+    soldDate: '2026-09-12',
+    soldCustomerName: '경기종합물류 대리점',
+    warrantyEndDate: '2027-09-11',
+    initialQty: 1,
+    remainingQty: 0,
+    unitCost: 1320000,
+    createdAt: '2026-04-10T10:05:00.000Z'
+  },
+  {
+    id: 'LOT-SN-004',
+    purchaseId: 'PO-202604-001',
+    productId: 'p1',
+    serialNumber: 'EP-1531-260402',
+    warehouseName: 'B창고',
+    inboundDate: '2026-04-10',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 6000,
+    exchangeRate: 192.0,
+    incidentalCostPerUnit: 168000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 1320000,
+    createdAt: '2026-04-10T10:06:00.000Z'
+  },
+  // 90~180일 경과 재고 (2026-06-25 입고 -> 약 128일 경과)
+  {
+    id: 'LOT-SN-005',
+    purchaseId: 'PO-202606-002',
+    productId: 'p3',
+    serialNumber: 'HC-CQD15-260601',
+    warehouseName: 'B창고',
+    inboundDate: '2026-06-25',
+    foreignCurrency: 'USD',
+    foreignUnitPrice: 8000,
+    exchangeRate: 1380.0,
+    incidentalCostPerUnit: 860000,
+    lotStatus: 'SOLD',
+    soldOrderId: 'SO-202610-102',
+    soldDate: '2026-10-08',
+    soldCustomerName: '평택항만냉동창고',
+    warrantyEndDate: '2028-04-07',
+    initialQty: 1,
+    remainingQty: 0,
+    unitCost: 11900000,
+    createdAt: '2026-06-25T10:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-006',
+    purchaseId: 'PO-202606-002',
+    productId: 'p3',
+    serialNumber: 'HC-CQD15-260602',
+    warehouseName: 'B창고',
+    inboundDate: '2026-06-25',
+    foreignCurrency: 'USD',
+    foreignUnitPrice: 8000,
+    exchangeRate: 1380.0,
+    incidentalCostPerUnit: 860000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 11900000,
+    createdAt: '2026-06-25T10:05:00.000Z'
+  },
+  // 60~90일 경과 재고 (2026-08-14 입고 -> 약 78일 경과)
+  {
+    id: 'LOT-SN-007',
+    purchaseId: 'PO-202608-003',
+    productId: 'p4',
+    serialNumber: 'DS-FD30T-260801',
+    warehouseName: 'A창고',
+    inboundDate: '2026-08-14',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 22500000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'SOLD',
+    soldOrderId: 'SO-202610-103',
+    soldDate: '2026-10-18',
+    soldCustomerName: '한진철강산업',
+    warrantyEndDate: '2028-10-17',
+    initialQty: 1,
+    remainingQty: 0,
+    unitCost: 22500000,
+    createdAt: '2026-08-14T11:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-008',
+    purchaseId: 'PO-202608-003',
+    productId: 'p4',
+    serialNumber: 'DS-FD30T-260802',
+    warehouseName: 'A창고',
+    inboundDate: '2026-08-14',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 22500000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 22500000,
+    createdAt: '2026-08-14T11:05:00.000Z'
+  },
+  // 30~60일 경과 재고 (2026-09-20 입고 -> 약 41일 경과)
+  {
+    id: 'LOT-SN-009',
+    purchaseId: 'PO-202609-004',
+    productId: 'p2',
+    serialNumber: 'HL-CPD25-260901',
+    warehouseName: 'A창고',
+    inboundDate: '2026-09-20',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 70000,
+    exchangeRate: 195.0,
+    incidentalCostPerUnit: 1150000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 14800000,
+    createdAt: '2026-09-20T14:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-010',
+    purchaseId: 'PO-202609-004',
+    productId: 'p2',
+    serialNumber: 'HL-CPD25-260902',
+    warehouseName: 'A창고',
+    inboundDate: '2026-09-20',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 70000,
+    exchangeRate: 195.0,
+    incidentalCostPerUnit: 1150000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 14800000,
+    createdAt: '2026-09-20T14:05:00.000Z'
+  },
+  // 30일 이내 신규 재고 (2026-10-15 입고 -> 약 16일 경과)
+  {
+    id: 'LOT-SN-011',
+    purchaseId: 'PO-202610-005',
+    productId: 'p1',
+    serialNumber: 'EP-1531-261001',
+    warehouseName: 'A창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 1320000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 1320000,
+    createdAt: '2026-10-15T15:00:00.000Z'
+  },
+  {
+    id: 'LOT-SN-012',
+    purchaseId: 'PO-202610-005',
+    productId: 'p1',
+    serialNumber: 'EP-1531-261002',
+    warehouseName: 'A창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 1320000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 1320000,
+    createdAt: '2026-10-15T15:02:00.000Z'
+  },
+  {
+    id: 'LOT-SN-013',
+    purchaseId: 'PO-202610-005',
+    productId: 'p1',
+    serialNumber: 'EP-1531-261003',
+    warehouseName: 'B창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 1320000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 1,
+    remainingQty: 1,
+    unitCost: 1320000,
+    createdAt: '2026-10-15T15:04:00.000Z'
+  },
+  // 부품 재고 로트
+  {
+    id: 'LOT-PT-001',
+    purchaseId: 'PO-202604-001',
+    productId: 'p5',
+    serialNumber: 'BAT-LFP-2604-LOT',
+    warehouseName: '부품창고',
+    inboundDate: '2026-04-10',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 15750,
+    exchangeRate: 192.0,
+    incidentalCostPerUnit: 426000,
+    lotStatus: 'IN_STOCK',
+    initialQty: 6,
+    remainingQty: 5,
+    unitCost: 3450000,
+    createdAt: '2026-04-10T11:00:00.000Z'
+  },
+  {
+    id: 'LOT-PT-002',
+    purchaseId: 'PO-202609-004',
+    productId: 'p6',
+    serialNumber: 'CTRL-1232-2609-LOT',
+    warehouseName: '부품창고',
+    inboundDate: '2026-09-20',
+    foreignCurrency: 'CNY',
+    foreignUnitPrice: 1450,
+    exchangeRate: 195.0,
+    incidentalCostPerUnit: 27250,
+    lotStatus: 'IN_STOCK',
+    initialQty: 30,
+    remainingQty: 26,
+    unitCost: 310000,
+    createdAt: '2026-09-20T15:00:00.000Z'
+  },
+  {
+    id: 'LOT-PT-003',
+    purchaseId: 'PO-202610-005',
+    productId: 'p7',
+    serialNumber: 'FORK-1200-2610-LOT',
+    warehouseName: '부품창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 380000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 15,
+    remainingQty: 13,
+    unitCost: 380000,
+    createdAt: '2026-10-15T15:10:00.000Z'
+  },
+  {
+    id: 'LOT-PT-004',
+    purchaseId: 'PO-202610-005',
+    productId: 'p8',
+    serialNumber: 'TIRE-70012-2610-LOT',
+    warehouseName: '부품창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW',
+    foreignUnitPrice: 145000,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK',
+    initialQty: 30,
+    remainingQty: 22,
+    unitCost: 145000,
+    createdAt: '2026-10-15T15:15:00.000Z'
+  }
+];
+
+const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
+  {
+    id: 'SO-202609-101',
+    customerId: 'CUST-001',
+    customerTier: 'DEALER',
+    orderDate: '2026-09-12',
+    deliveryDate: '2026-09-14',
+    deliveryLocation: '경기도 평택시 포승읍 경기종합물류 지게차 전시장',
+    receiverName: '김대리점장',
+    receiverPhone: '010-4455-8899',
+    paymentTerms: '대리점 도매 공급가 적용 / 납품 후 30일 이내 현금 결제',
+    specialTerms: '1. 차대번호 HL-CPD25-260401, EP-1531-260401 출고\n2. 무상보증 12개월 적용',
+    salespersonName: '해외유통영업팀',
+    status: 'DELIVERED',
+    totalSalesAmount: 21490000,
+    totalCogsAmount: 17360000,
+    contractDocStatus: 'SENT',
+    memo: '경기남부 총판 대리점 9월 정기 출고 건',
+    createdAt: '2026-09-12T09:00:00.000Z',
+    updatedAt: '2026-09-14T16:00:00.000Z'
+  },
+  {
+    id: 'SO-202610-102',
+    customerId: 'CUST-002',
+    customerTier: 'END_USER',
+    orderDate: '2026-10-08',
+    deliveryDate: '2026-10-10',
+    deliveryLocation: '경기도 화성시 송산면 물류단지로 55',
+    receiverName: '박물류팀장',
+    receiverPhone: '010-8877-2233',
+    paymentTerms: '최종고객 납품 검수 후 세금계산서 발행 15일 이내 결제',
+    specialTerms: '1. 차대번호 HC-CQD15-260601 및 예비 리튬배터리·노마킹 타이어 일괄 납품',
+    salespersonName: '유통영업팀',
+    status: 'DELIVERED',
+    totalSalesAmount: 23440000,
+    totalCogsAmount: 16510000,
+    contractDocStatus: 'GENERATED',
+    memo: '화성 냉동창고 최종고객 직납 완료',
+    createdAt: '2026-10-08T10:00:00.000Z',
+    updatedAt: '2026-10-10T17:00:00.000Z'
+  },
+  {
+    id: 'SO-202610-103',
+    customerId: 'CUST-003',
+    customerTier: 'END_USER',
+    orderDate: '2026-10-18',
+    deliveryDate: '2026-10-20',
+    deliveryLocation: '충청남도 당진시 송악읍 부곡공단로 110',
+    receiverName: '최자재과장',
+    receiverPhone: '010-3322-9911',
+    paymentTerms: '납품 후 당월 말 세금계산서 마감, 익월 10일 현금 입금',
+    specialTerms: '1. 차대번호 DS-FD30T-260801 및 중량 단조포크 2세트 납품',
+    salespersonName: '유통영업팀',
+    status: 'SHIPPED',
+    totalSalesAmount: 30020000,
+    totalCogsAmount: 23260000,
+    contractDocStatus: 'GENERATED',
+    memo: '당진 철강공장 3톤 디젤지게차 및 중량포크 출고 (미수금 관리 대상)',
+    createdAt: '2026-10-18T11:00:00.000Z',
+    updatedAt: '2026-10-20T14:00:00.000Z'
+  }
+];
+
+const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
+  {
+    id: 'SOL-101-1',
+    orderId: 'SO-202609-101',
+    productId: 'p2',
+    qty: 1,
+    unitPrice: 18200000,
+    unitCogs: 14800000,
+    serialNumbers: ['HL-CPD25-260401'],
+    warehouseName: 'A창고',
+    memo: '대리점 공급단가 적용',
+    createdAt: '2026-09-12T09:00:00.000Z'
+  },
+  {
+    id: 'SOL-101-2',
+    orderId: 'SO-202609-101',
+    productId: 'p1',
+    qty: 1,
+    unitPrice: 1650000,
+    unitCogs: 1320000,
+    serialNumbers: ['EP-1531-260401'],
+    warehouseName: 'A창고',
+    memo: '대리점 공급단가 적용',
+    createdAt: '2026-09-12T09:00:00.000Z'
+  },
+  {
+    id: 'SOL-101-3',
+    orderId: 'SO-202609-101',
+    productId: 'p6',
+    qty: 4,
+    unitPrice: 410000,
+    unitCogs: 310000,
+    warehouseName: '부품창고',
+    memo: '대리점 A/S용 컨트롤러 4개',
+    createdAt: '2026-09-12T09:00:00.000Z'
+  },
+  {
+    id: 'SOL-102-1',
+    orderId: 'SO-202610-102',
+    productId: 'p3',
+    qty: 1,
+    unitPrice: 16800000,
+    unitCogs: 11900000,
+    serialNumbers: ['HC-CQD15-260601'],
+    warehouseName: 'B창고',
+    memo: '최종고객 표준단가 적용',
+    createdAt: '2026-10-08T10:00:00.000Z'
+  },
+  {
+    id: 'SOL-102-2',
+    orderId: 'SO-202610-102',
+    productId: 'p5',
+    qty: 1,
+    unitPrice: 4800000,
+    unitCogs: 3450000,
+    warehouseName: '부품창고',
+    memo: '예비 리튬인산철 배터리팩',
+    createdAt: '2026-10-08T10:00:00.000Z'
+  },
+  {
+    id: 'SOL-102-3',
+    orderId: 'SO-202610-102',
+    productId: 'p8',
+    qty: 8,
+    unitPrice: 230000,
+    unitCogs: 145000,
+    warehouseName: '부품창고',
+    memo: '노마킹 솔리드 타이어 8본',
+    createdAt: '2026-10-08T10:00:00.000Z'
+  },
+  {
+    id: 'SOL-103-1',
+    orderId: 'SO-202610-103',
+    productId: 'p4',
+    qty: 1,
+    unitPrice: 28900000,
+    unitCogs: 22500000,
+    serialNumbers: ['DS-FD30T-260801'],
+    warehouseName: 'A창고',
+    memo: '최종고객 3톤 디젤지게차',
+    createdAt: '2026-10-18T11:00:00.000Z'
+  },
+  {
+    id: 'SOL-103-2',
+    orderId: 'SO-202610-103',
+    productId: 'p7',
+    qty: 2,
+    unitPrice: 560000,
+    unitCogs: 380000,
+    warehouseName: '부품창고',
+    memo: '단조 중량 포크 세트 2조',
+    createdAt: '2026-10-18T11:00:00.000Z'
+  }
+];
+
+const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
+  {
+    id: 'TOUT-202609-101',
+    orderId: 'SO-202609-101',
+    status: 'DELIVERED',
+    deliveryType: 'DIRECT',
+    driverName: '정운송 기사',
+    driverContact: '010-9111-2222',
+    vehicleNo: '경기88바5544',
+    shippingCost: 250000,
+    paidBy: 'OURS',
+    destinationAddress: '경기도 평택시 포승읍 경기종합물류 지게차 전시장',
+    receiverName: '김대리점장',
+    receiverPhone: '010-4455-8899',
+    allocatedAt: '2026-09-12T10:00:00.000Z',
+    packedAt: '2026-09-13T11:00:00.000Z',
+    shippedAt: '2026-09-14T08:30:00.000Z',
+    deliveredAt: '2026-09-14T15:00:00.000Z',
+    closingMemo: '차대번호 HL-CPD25-260401, EP-1531-260401 및 컨트롤러 4개 대리점 인도 완료',
+    createdAt: '2026-09-12T09:30:00.000Z',
+    updatedAt: '2026-09-14T15:00:00.000Z'
+  },
+  {
+    id: 'TOUT-202610-102',
+    orderId: 'SO-202610-102',
+    status: 'DELIVERED',
+    deliveryType: 'DIRECT',
+    driverName: '박셀프로더 기사',
+    driverContact: '010-8222-3333',
+    vehicleNo: '경기92아7788',
+    shippingCost: 200000,
+    paidBy: 'CUSTOMER',
+    destinationAddress: '경기도 화성시 송산면 물류단지로 55',
+    receiverName: '박물류팀장',
+    receiverPhone: '010-8877-2233',
+    allocatedAt: '2026-10-08T11:00:00.000Z',
+    packedAt: '2026-10-09T14:00:00.000Z',
+    shippedAt: '2026-10-10T09:00:00.000Z',
+    deliveredAt: '2026-10-10T16:30:00.000Z',
+    closingMemo: '차대번호 HC-CQD15-260601 리치트럭 및 배터리·타이어 화성 물류창고 납품 완료',
+    createdAt: '2026-10-08T10:30:00.000Z',
+    updatedAt: '2026-10-10T16:30:00.000Z'
+  },
+  {
+    id: 'TOUT-202610-103',
+    orderId: 'SO-202610-103',
+    status: 'SHIPPED',
+    deliveryType: 'DIRECT',
+    driverName: '이대형트럭 기사',
+    driverContact: '010-7333-4444',
+    vehicleNo: '충남81사1199',
+    shippingCost: 300000,
+    paidBy: 'OURS',
+    destinationAddress: '충청남도 당진시 송악읍 부곡공단로 110',
+    receiverName: '최자재과장',
+    receiverPhone: '010-3322-9911',
+    allocatedAt: '2026-10-18T13:00:00.000Z',
+    packedAt: '2026-10-19T15:00:00.000Z',
+    shippedAt: '2026-10-20T08:00:00.000Z',
+    closingMemo: '차대번호 DS-FD30T-260801 3톤 디젤지게차 당진 철강공장 상차 출발',
+    createdAt: '2026-10-18T11:30:00.000Z',
+    updatedAt: '2026-10-20T08:00:00.000Z'
+  }
+];
+
+const DEFAULT_BILLINGS: TradeBilling[] = [
+  {
+    id: 'TBIL-202609-101',
+    orderId: 'SO-202609-101',
+    orderIds: ['SO-202609-101'],
+    customerId: 'CUST-001',
+    billingMonth: '2026-09',
+    billingDate: '2026-09-25',
+    supplyAmount: 21490000,
+    vatAmount: 2149000,
+    totalAmount: 23639000,
+    status: 'PAID',
+    recipientName: '김대리점장',
+    recipientEmail: 'dealer-gg@example.com',
+    sentAt: '2026-09-25T10:00:00.000Z',
+    paidAt: '2026-10-05T14:30:00.000Z',
+    memo: '9월분 대리점 출고 대금 전액 수납 완료',
+    createdAt: '2026-09-25T09:00:00.000Z',
+    updatedAt: '2026-10-05T14:30:00.000Z'
+  },
+  {
+    id: 'TBIL-202610-102',
+    orderId: 'SO-202610-102',
+    orderIds: ['SO-202610-102'],
+    customerId: 'CUST-002',
+    billingMonth: '2026-10',
+    billingDate: '2026-10-12',
+    supplyAmount: 23440000,
+    vatAmount: 2344000,
+    totalAmount: 25784000,
+    status: 'SENT',
+    recipientName: '박물류팀장',
+    recipientEmail: 'hwaseong-cold@example.com',
+    sentAt: '2026-10-12T11:00:00.000Z',
+    memo: '10월 말 결제 예정 미수 채권',
+    createdAt: '2026-10-12T10:00:00.000Z',
+    updatedAt: '2026-10-12T11:00:00.000Z'
+  }
 ];
 
 function loadFromStorage<T>(key: string, fallback: T, allowEmpty = false): T {
@@ -391,86 +1353,26 @@ function loadFromStorage<T>(key: string, fallback: T, allowEmpty = false): T {
   return fallback;
 }
 
-function purgeSku001TestTradeContractsOnce(): void {
-  const MIGRATION_KEY = 'ebro_purge_sku001_test_contracts_v1';
+function ensureFlTradeSeedMigratedOnce(): void {
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v2';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
-
     const rawProducts = localStorage.getItem('ebro_trade_products');
-    const savedProducts: TradeProduct[] = rawProducts ? JSON.parse(rawProducts) : DEFAULT_PRODUCTS;
-    const targetProductIds = new Set<string>(['p1']);
-    for (const p of savedProducts) {
-      if (p.id === 'p1' || p.skuCode === 'SKU001' || p.name === '산업용 장갑') {
-        targetProductIds.add(p.id);
-      }
+    const parsedProducts: TradeProduct[] = rawProducts ? JSON.parse(rawProducts) : [];
+    const hasLegacyGloves = parsedProducts.some(p => p.skuCode === 'SKU001' || p.name === '산업용 장갑');
+    if (!rawProducts || parsedProducts.length === 0 || hasLegacyGloves) {
+      localStorage.setItem('ebro_trade_products', JSON.stringify(DEFAULT_PRODUCTS));
+      localStorage.setItem('ebro_trade_purchases', JSON.stringify(DEFAULT_PURCHASES));
+      localStorage.setItem('ebro_trade_purchase_items', JSON.stringify(DEFAULT_PURCHASE_ITEMS));
+      localStorage.setItem('ebro_trade_inventory', JSON.stringify(DEFAULT_LOTS));
+      localStorage.setItem('ebro_trade_orders', JSON.stringify(DEFAULT_SALES_ORDERS));
+      localStorage.setItem('ebro_trade_lines', JSON.stringify(DEFAULT_SALES_ORDER_LINES));
+      localStorage.setItem('ebro_trade_outbounds', JSON.stringify(DEFAULT_OUTBOUNDS));
+      localStorage.setItem('ebro_trade_billings', JSON.stringify(DEFAULT_BILLINGS));
     }
-
-    const rawLines = localStorage.getItem('ebro_trade_lines');
-    const lines: TradeSalesOrderLine[] = rawLines ? JSON.parse(rawLines) : [];
-    const targetOrderIds = new Set<string>();
-    for (const l of lines) {
-      if (targetProductIds.has(l.productId)) {
-        targetOrderIds.add(l.orderId);
-      }
-    }
-
-    const rawOrders = localStorage.getItem('ebro_trade_orders');
-    const orders: TradeSalesOrder[] = rawOrders ? JSON.parse(rawOrders) : [];
-    const remainingLines = lines.filter(l => !targetProductIds.has(l.productId) && !targetOrderIds.has(l.orderId));
-    const remainingOrderIdsWithLines = new Set(remainingLines.map(l => l.orderId));
-    const removedOrders = orders.filter(o => targetOrderIds.has(o.id) || !remainingOrderIdsWithLines.has(o.id));
-    for (const ro of removedOrders) {
-      targetOrderIds.add(ro.id);
-    }
-    const remainingOrders = orders.filter(o => !targetOrderIds.has(o.id));
-
-    const rawOutbounds = localStorage.getItem('ebro_trade_outbounds');
-    const outboundsList: TradeOutbound[] = rawOutbounds ? JSON.parse(rawOutbounds) : [];
-    const remainingOutbounds = outboundsList.filter(ob => !targetOrderIds.has(ob.orderId));
-
-    const rawBillings = localStorage.getItem('ebro_trade_billings');
-    const billingsList: TradeBilling[] = rawBillings ? JSON.parse(rawBillings) : [];
-    const remainingBillings = billingsList.filter(
-      b =>
-        (!b.orderId || !targetOrderIds.has(b.orderId)) &&
-        (!b.orderIds || !b.orderIds.some(oid => targetOrderIds.has(oid)))
-    );
-
-    const rawReturns = localStorage.getItem('ebro_trade_returns');
-    const returnsList: TradeReturn[] = rawReturns ? JSON.parse(rawReturns) : [];
-    const remainingReturns = returnsList.filter(r => !r.orderId || !targetOrderIds.has(r.orderId));
-
-    const rawLots = localStorage.getItem('ebro_trade_inventory');
-    if (rawLots) {
-      const lotsList: TradeInventoryLot[] = JSON.parse(rawLots);
-      const cleanedLots = lotsList
-        .filter(l => {
-          if (!targetProductIds.has(l.productId)) return true;
-          // 테스트 수주/취소로 인해 생성된 임시 로트 제거
-          if (
-            l.id.startsWith('LOT-AUTO-') ||
-            l.id.startsWith('LOT-RESTORE-') ||
-            l.id.startsWith('LOT-RET-') ||
-            String(l.purchaseId || '').startsWith('SO_CANCEL_') ||
-            String(l.purchaseId || '').startsWith('CONTRACT_AUTO_') ||
-            String(l.purchaseId || '').startsWith('OUTBOUND_AUTO_')
-          ) {
-            return false;
-          }
-          return true;
-        })
-        .map(l => (l.id === 'lot-init-1' ? { ...l, remainingQty: l.initialQty } : l));
-      localStorage.setItem('ebro_trade_inventory', JSON.stringify(cleanedLots));
-    }
-
-    localStorage.setItem('ebro_trade_orders', JSON.stringify(remainingOrders));
-    localStorage.setItem('ebro_trade_lines', JSON.stringify(remainingLines));
-    localStorage.setItem('ebro_trade_outbounds', JSON.stringify(remainingOutbounds));
-    localStorage.setItem('ebro_trade_billings', JSON.stringify(remainingBillings));
-    localStorage.setItem('ebro_trade_returns', JSON.stringify(remainingReturns));
     localStorage.setItem(MIGRATION_KEY, 'done');
   } catch (e) {
-    console.warn('purgeSku001TestTradeContractsOnce failed:', e);
+    console.warn('ensureFlTradeSeedMigratedOnce failed:', e);
   }
 }
 
@@ -479,7 +1381,7 @@ const TradeContext = createContext<TradeContextType | undefined>(undefined);
 export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { customers, vendors, currentUser } = useApp();
 
-  purgeSku001TestTradeContractsOnce();
+  ensureFlTradeSeedMigratedOnce();
 
   const [products, setProducts] = useState<TradeProduct[]>(() =>
     loadFromStorage<TradeProduct[]>('ebro_trade_products', DEFAULT_PRODUCTS, true)
@@ -502,19 +1404,19 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const [salesOrders, setSalesOrders] = useState<TradeSalesOrder[]>(() =>
-    loadFromStorage<TradeSalesOrder[]>('ebro_trade_orders', [])
+    loadFromStorage<TradeSalesOrder[]>('ebro_trade_orders', DEFAULT_SALES_ORDERS)
   );
 
   const [salesOrderLines, setSalesOrderLines] = useState<TradeSalesOrderLine[]>(() =>
-    loadFromStorage<TradeSalesOrderLine[]>('ebro_trade_lines', [])
+    loadFromStorage<TradeSalesOrderLine[]>('ebro_trade_lines', DEFAULT_SALES_ORDER_LINES)
   );
 
   const [outbounds, setOutbounds] = useState<TradeOutbound[]>(() =>
-    loadFromStorage<TradeOutbound[]>('ebro_trade_outbounds', [])
+    loadFromStorage<TradeOutbound[]>('ebro_trade_outbounds', DEFAULT_OUTBOUNDS)
   );
 
   const [billings, setBillings] = useState<TradeBilling[]>(() =>
-    loadFromStorage<TradeBilling[]>('ebro_trade_billings', [])
+    loadFromStorage<TradeBilling[]>('ebro_trade_billings', DEFAULT_BILLINGS)
   );
 
   const [returns, setReturns] = useState<TradeReturn[]>(() =>
@@ -623,10 +1525,12 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!customerId) return '미지정 고객사';
       const found = getCustomerById(customerId);
       if (found) return found.name;
-      if (customerId === 'CUST-001') return customers[0]?.name || '현대건설(주)';
+      if (customerId === 'CUST-001') return '경기종합물류 대리점';
+      if (customerId === 'CUST-002') return '평택항만냉동창고';
+      if (customerId === 'CUST-003') return '한진철강산업';
       return customerId;
     },
-    [getCustomerById, customers]
+    [getCustomerById]
   );
 
   const getVendorById = useCallback(
@@ -645,11 +1549,12 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!vendorId) return '미지정 매입처';
       const found = getVendorById(vendorId);
       if (found) return found.name;
-      if (vendorId === 'VD-001' || vendorId === 'v-1') return vendors[0]?.name || '(주)대한산업안전';
-      if (vendorId === 'v-2') return vendors[1]?.name || '진성부품상사';
+      if (vendorId === 'VD-001' || vendorId === 'v-1') return '안후이 헬리·이피이큅먼트 중국수출공사';
+      if (vendorId === 'v-2') return '두산밥캣·카스케이드 국내총판';
+      if (vendorId === 'v-3') return '닝보 항차포크리프트 글로벌';
       return vendorId;
     },
-    [getVendorById, vendors]
+    [getVendorById]
   );
 
   const getProductStock = useCallback(
@@ -722,15 +1627,26 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await db.awaitPendingWrites();
   };
 
-  const adjustProductStock = async (productId: string, adjustQty: number, unitCost: number, reason: string) => {
+  const adjustProductStock = async (
+    productId: string,
+    adjustQty: number,
+    unitCost: number,
+    reason: string,
+    extra?: { warehouseName?: string; serialNumber?: string; inboundDate?: string }
+  ) => {
     if (adjustQty === 0) throw new Error('조정 수량은 0이 아니어야 합니다.');
     const now = new Date().toISOString();
+    const prod = products.find(p => p.id === productId);
 
     if (adjustQty > 0) {
       const newLot: TradeInventoryLot = {
         id: `LOT-ADJ-${uuidv4()}`,
         purchaseId: 'STOCK_ADJUST',
         productId,
+        serialNumber: extra?.serialNumber || (prod?.itemType === 'EQUIPMENT' ? `${prod.modelName || 'FL'}-${Date.now().toString().slice(-6)}` : `LOT-${Date.now().toString().slice(-5)}`),
+        warehouseName: extra?.warehouseName || prod?.defaultWarehouse || 'A창고',
+        inboundDate: extra?.inboundDate || now.split('T')[0],
+        lotStatus: 'IN_STOCK',
         initialQty: adjustQty,
         remainingQty: adjustQty,
         unitCost: Math.max(0, unitCost),
@@ -751,7 +1667,12 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (lot.productId === productId && lot.remainingQty > 0 && toDeduct > 0) {
             const d = Math.min(lot.remainingQty, toDeduct);
             toDeduct -= d;
-            return { ...lot, remainingQty: lot.remainingQty - d };
+            const nextRem = lot.remainingQty - d;
+            return {
+              ...lot,
+              remainingQty: nextRem,
+              lotStatus: nextRem === 0 ? 'SOLD' : lot.lotStatus
+            };
           }
           return lot;
         })
@@ -761,7 +1682,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const adj: TradeInventoryAdjustment = {
       id: `ADJ-${uuidv4()}`,
       productId,
-      warehouseId: 'WH-MAIN',
+      warehouseId: extra?.warehouseName || prod?.defaultWarehouse || 'A창고',
       adjustQty,
       reason: reason || '수동 재고 실사 조정',
       createdAt: now
@@ -775,8 +1696,30 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ==========================================
   const createPurchase = async (
     vendorId: string,
-    items: { productId: string; qty: number; unitCost: number; memo?: string }[],
+    items: {
+      productId: string;
+      qty: number;
+      unitCost: number;
+      foreignUnitCost?: number;
+      incidentalCostPerUnit?: number;
+      landedUnitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+      memo?: string;
+    }[],
     options?: {
+      purchaseType?: 'DOMESTIC' | 'IMPORT';
+      currency?: 'KRW' | 'CNY' | 'USD';
+      exchangeRate?: number;
+      foreignTotalAmount?: number;
+      customsDuty?: number;
+      customsClearanceFee?: number;
+      freightCost?: number;
+      otherIncidentalCost?: number;
+      totalIncidentalCost?: number;
+      landedTotalAmount?: number;
+      warehouseName?: string;
+      blNumber?: string;
       orderDate?: string;
       expectedDate?: string;
       status?: 'REQUESTED' | 'ORDERED';
@@ -784,7 +1727,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       memo?: string;
     }
   ): Promise<TradePurchase> => {
-    if (!vendorId) throw new Error('매입처(공급사)를 선택해 주세요.');
+    if (!vendorId) throw new Error('매입처를 선택해 주세요.');
     if (!items || items.length === 0) throw new Error('발주 품목을 최소 1개 이상 입력해 주세요.');
     for (const item of items) {
       if (!item.productId) throw new Error('발주 상품을 선택해 주세요.');
@@ -795,12 +1738,26 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const now = new Date().toISOString();
     const today = now.split('T')[0];
     const pId = `PO-${today.slice(0, 7).replace('-', '')}-${uuidv4().slice(0, 4)}`;
-    const totalAmount = items.reduce((sum, item) => sum + item.qty * item.unitCost, 0);
+    const totalAmount =
+      options?.landedTotalAmount ??
+      items.reduce((sum, item) => sum + item.qty * (item.landedUnitCost ?? item.unitCost), 0);
     const vatAmount = Math.round(totalAmount * 0.1);
 
     const newPurchase: TradePurchase = {
       id: pId,
       vendorId,
+      purchaseType: options?.purchaseType || 'DOMESTIC',
+      currency: options?.currency || 'KRW',
+      exchangeRate: options?.exchangeRate || 1,
+      foreignTotalAmount: options?.foreignTotalAmount,
+      customsDuty: options?.customsDuty || 0,
+      customsClearanceFee: options?.customsClearanceFee || 0,
+      freightCost: options?.freightCost || 0,
+      otherIncidentalCost: options?.otherIncidentalCost || 0,
+      totalIncidentalCost: options?.totalIncidentalCost || 0,
+      landedTotalAmount: totalAmount,
+      warehouseName: options?.warehouseName || 'A창고',
+      blNumber: options?.blNumber || '',
       orderDate: options?.orderDate || today,
       expectedDate: options?.expectedDate || today,
       status: options?.status || 'ORDERED',
@@ -818,7 +1775,12 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       productId: i.productId,
       orderQty: i.qty,
       receivedQty: 0,
-      unitCost: i.unitCost,
+      unitCost: i.landedUnitCost ?? i.unitCost,
+      foreignUnitCost: i.foreignUnitCost,
+      incidentalCostPerUnit: i.incidentalCostPerUnit,
+      landedUnitCost: i.landedUnitCost ?? i.unitCost,
+      warehouseName: i.warehouseName || options?.warehouseName || 'A창고',
+      serialNumbers: i.serialNumbers,
       memo: i.memo || ''
     }));
 
@@ -831,17 +1793,30 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updatePurchase = async (
     purchaseId: string,
     updates: Partial<TradePurchase>,
-    updatedItems?: { id?: string; productId: string; orderQty: number; unitCost: number; memo?: string }[]
+    updatedItems?: {
+      id?: string;
+      productId: string;
+      orderQty: number;
+      unitCost: number;
+      foreignUnitCost?: number;
+      incidentalCostPerUnit?: number;
+      landedUnitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+      memo?: string;
+    }[]
   ) => {
     const purchase = purchases.find(p => p.id === purchaseId);
     if (!purchase) throw new Error('발주 내역을 찾을 수 없습니다.');
 
     const now = new Date().toISOString();
-    let nextTotalAmount = updates.totalAmount ?? purchase.totalAmount;
+    let nextTotalAmount = updates.landedTotalAmount ?? updates.totalAmount ?? purchase.totalAmount;
     let nextVatAmount = updates.vatAmount ?? purchase.vatAmount;
 
     if (updatedItems && updatedItems.length > 0) {
-      nextTotalAmount = updatedItems.reduce((sum, i) => sum + i.orderQty * i.unitCost, 0);
+      nextTotalAmount =
+        updates.landedTotalAmount ??
+        updatedItems.reduce((sum, i) => sum + i.orderQty * (i.landedUnitCost ?? i.unitCost), 0);
       nextVatAmount = Math.round(nextTotalAmount * 0.1);
 
       const existingForPurchase = purchaseItems.filter(pi => pi.purchaseId === purchaseId);
@@ -853,7 +1828,12 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           productId: ui.productId,
           orderQty: ui.orderQty,
           receivedQty: matched?.receivedQty || 0,
-          unitCost: ui.unitCost,
+          unitCost: ui.landedUnitCost ?? ui.unitCost,
+          foreignUnitCost: ui.foreignUnitCost ?? matched?.foreignUnitCost,
+          incidentalCostPerUnit: ui.incidentalCostPerUnit ?? matched?.incidentalCostPerUnit,
+          landedUnitCost: ui.landedUnitCost ?? ui.unitCost,
+          warehouseName: ui.warehouseName ?? matched?.warehouseName ?? purchase.warehouseName ?? 'A창고',
+          serialNumbers: ui.serialNumbers ?? matched?.serialNumbers,
           memo: ui.memo ?? matched?.memo ?? ''
         };
       });
@@ -864,7 +1844,14 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setPurchases(prev =>
       prev.map(p =>
         p.id === purchaseId
-          ? { ...p, ...updates, totalAmount: nextTotalAmount, vatAmount: nextVatAmount, updatedAt: now }
+          ? {
+              ...p,
+              ...updates,
+              landedTotalAmount: nextTotalAmount,
+              totalAmount: nextTotalAmount,
+              vatAmount: nextVatAmount,
+              updatedAt: now
+            }
           : p
       )
     );
@@ -881,7 +1868,13 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const confirmInbound = async (
     purchaseId: string,
-    received: { productId: string; qty: number; unitCost?: number }[],
+    received: {
+      productId: string;
+      qty: number;
+      unitCost?: number;
+      warehouseName?: string;
+      serialNumbers?: string[];
+    }[],
     receivedDate?: string
   ) => {
     const purchase = purchases.find(p => p.id === purchaseId);
@@ -904,19 +1897,68 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (pi.purchaseId === purchaseId) {
         const rec = received.find(r => r.productId === pi.productId);
         const addQty = rec ? Math.max(0, rec.qty) : 0;
-        const finalCost = rec?.unitCost !== undefined ? rec.unitCost : pi.unitCost;
+        const finalCost = rec?.unitCost !== undefined ? rec.unitCost : (pi.landedUnitCost ?? pi.unitCost);
+        const prod = products.find(p => p.id === pi.productId);
+        const whName = rec?.warehouseName || pi.warehouseName || purchase.warehouseName || prod?.defaultWarehouse || 'A창고';
+        const serialList =
+          rec?.serialNumbers && rec.serialNumbers.length > 0
+            ? rec.serialNumbers
+            : pi.serialNumbers && pi.serialNumbers.length > 0
+            ? pi.serialNumbers
+            : [];
+
         if (addQty > 0) {
-          newLots.push({
-            id: `LOT-${uuidv4()}`,
-            purchaseId,
-            productId: pi.productId,
-            initialQty: addQty,
-            remainingQty: addQty,
-            unitCost: finalCost,
-            createdAt: now
-          });
+          if (prod?.itemType === 'EQUIPMENT' || serialList.length > 0) {
+            for (let idx = 0; idx < addQty; idx++) {
+              const sn =
+                serialList[idx] ||
+                `${prod?.modelName || prod?.skuCode || 'FL'}-${inDate.replace(/-/g, '').slice(2)}${String(idx + 1).padStart(2, '0')}`;
+              newLots.push({
+                id: `LOT-SN-${uuidv4()}`,
+                purchaseId,
+                productId: pi.productId,
+                serialNumber: sn,
+                warehouseName: whName,
+                inboundDate: inDate,
+                foreignCurrency: purchase.currency || 'KRW',
+                foreignUnitPrice: pi.foreignUnitCost ?? finalCost,
+                exchangeRate: purchase.exchangeRate || 1,
+                incidentalCostPerUnit: pi.incidentalCostPerUnit || 0,
+                lotStatus: 'IN_STOCK',
+                initialQty: 1,
+                remainingQty: 1,
+                unitCost: finalCost,
+                createdAt: now
+              });
+            }
+          } else {
+            newLots.push({
+              id: `LOT-PT-${uuidv4()}`,
+              purchaseId,
+              productId: pi.productId,
+              serialNumber: `${prod?.skuCode || 'PART'}-${inDate.replace(/-/g, '').slice(2)}-LOT`,
+              warehouseName: whName,
+              inboundDate: inDate,
+              foreignCurrency: purchase.currency || 'KRW',
+              foreignUnitPrice: pi.foreignUnitCost ?? finalCost,
+              exchangeRate: purchase.exchangeRate || 1,
+              incidentalCostPerUnit: pi.incidentalCostPerUnit || 0,
+              lotStatus: 'IN_STOCK',
+              initialQty: addQty,
+              remainingQty: addQty,
+              unitCost: finalCost,
+              createdAt: now
+            });
+          }
         }
-        return { ...pi, receivedQty: pi.receivedQty + addQty, unitCost: finalCost };
+        return {
+          ...pi,
+          receivedQty: pi.receivedQty + addQty,
+          unitCost: finalCost,
+          landedUnitCost: finalCost,
+          warehouseName: whName,
+          serialNumbers: serialList.length > 0 ? serialList : pi.serialNumbers
+        };
       }
       return pi;
     });
@@ -1106,8 +2148,16 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ==========================================
   const createSalesOrder = async (
     customerId: string,
-    items: { productId: string; qty: number; unitPrice: number; memo?: string }[],
+    items: {
+      productId: string;
+      qty: number;
+      unitPrice: number;
+      serialNumbers?: string[];
+      warehouseName?: string;
+      memo?: string;
+    }[],
     options?: {
+      customerTier?: 'DEALER' | 'END_USER';
       orderDate?: string;
       deliveryDate?: string;
       deliveryLocation?: string;
@@ -1152,6 +2202,9 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             id: `LOT-AUTO-${uuidv4()}`,
             purchaseId: options?.contractId ? `CONTRACT_AUTO_${options.contractId}` : `OUTBOUND_AUTO_${today.replace(/-/g, '')}`,
             productId: i.productId,
+            warehouseName: i.warehouseName || prod.defaultWarehouse || 'A창고',
+            inboundDate: today,
+            lotStatus: 'IN_STOCK',
             initialQty: shortfall,
             remainingQty: shortfall,
             unitCost: prod.standardCost ?? Math.round((i.unitPrice || prod.standardPrice || 0) * 0.7),
@@ -1159,7 +2212,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           });
         } else {
           throw new Error(
-            `[${prod.name}] 가용 재고(${availableQty}개)가 부족하여 ${i.qty}개를 수주할 수 없습니다. (재고 보존 법칙 위배)`
+            `[${prod.name}] 가용 재고(${availableQty}개)가 부족하여 ${i.qty}개를 수주할 수 없습니다.`
           );
         }
       }
@@ -1169,6 +2222,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let totalSalesAmount = 0;
     let totalCogsAmount = 0;
     const newLines: TradeSalesOrderLine[] = [];
+    const custName = getCustomerName(customerId);
+    const saleDate = options?.orderDate || today;
 
     const updatedLots = [...inventoryLots, ...autoReplenishedLots]
       .map(l => ({ ...l }))
@@ -1180,13 +2235,54 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       let remainingToFulfill = i.qty;
       let lineCogsTotal = 0;
+      const usedSerials: string[] = [];
+      let resolvedWh = i.warehouseName;
+      const prod = products.find(p => p.id === i.productId);
+      const warrantyMonths = prod?.warrantyMonths || 12;
+      const warrantyEnd = new Date(new Date(saleDate).getTime() + warrantyMonths * 30 * 86400000)
+        .toISOString()
+        .split('T')[0];
 
+      // 1) If specific serialNumbers were requested, deduct those first
+      if (i.serialNumbers && i.serialNumbers.length > 0) {
+        for (const reqSn of i.serialNumbers) {
+          const targetLot = updatedLots.find(
+            l => l.productId === i.productId && l.serialNumber === reqSn && l.remainingQty > 0
+          );
+          if (targetLot && remainingToFulfill > 0) {
+            const deduct = Math.min(targetLot.remainingQty, remainingToFulfill);
+            targetLot.remainingQty -= deduct;
+            remainingToFulfill -= deduct;
+            lineCogsTotal += deduct * targetLot.unitCost;
+            if (targetLot.serialNumber) usedSerials.push(targetLot.serialNumber);
+            if (!resolvedWh && targetLot.warehouseName) resolvedWh = targetLot.warehouseName;
+            if (targetLot.remainingQty === 0) {
+              targetLot.lotStatus = 'SOLD';
+              targetLot.soldOrderId = oId;
+              targetLot.soldDate = saleDate;
+              targetLot.soldCustomerName = custName;
+              targetLot.warrantyEndDate = warrantyEnd;
+            }
+          }
+        }
+      }
+
+      // 2) Deduct any remaining quantity via FIFO
       for (const lot of updatedLots) {
         if (lot.productId === i.productId && lot.remainingQty > 0 && remainingToFulfill > 0) {
           const deduct = Math.min(lot.remainingQty, remainingToFulfill);
           lot.remainingQty -= deduct;
           remainingToFulfill -= deduct;
           lineCogsTotal += deduct * lot.unitCost;
+          if (lot.serialNumber && prod?.itemType === 'EQUIPMENT') usedSerials.push(lot.serialNumber);
+          if (!resolvedWh && lot.warehouseName) resolvedWh = lot.warehouseName;
+          if (lot.remainingQty === 0) {
+            lot.lotStatus = 'SOLD';
+            lot.soldOrderId = oId;
+            lot.soldDate = saleDate;
+            lot.soldCustomerName = custName;
+            lot.warrantyEndDate = warrantyEnd;
+          }
         }
       }
 
@@ -1200,6 +2296,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         qty: i.qty,
         unitPrice: i.unitPrice,
         unitCogs,
+        serialNumbers: usedSerials.length > 0 ? usedSerials : i.serialNumbers,
+        warehouseName: resolvedWh || prod?.defaultWarehouse || 'A창고',
         memo: i.memo || '',
         createdAt: now
       };
@@ -1219,6 +2317,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newOrder: TradeSalesOrder = {
       id: oId,
       customerId,
+      customerTier: options?.customerTier || 'END_USER',
       contractId: options?.contractId,
       contractNo: options?.contractNo,
       siteId: options?.siteId,
@@ -1242,16 +2341,10 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       receiverPhone: options?.receiverPhone || cust?.repContact || '010-0000-0000',
       paymentTerms:
         options?.paymentTerms ||
-        (options?.contractId
-          ? options?.billingMode === 'STANDALONE'
-            ? '유통 별도 청구 (납품 및 검수 완료 후 세금계산서 발행)'
-            : `렌탈 계약(${options.contractNo || options.contractId}) ${options.targetBillingYm || today.slice(0, 7)}월 정기 청구 합산`
-          : '납품 및 검수 완료 후 세금계산서 발행, 30일 이내 현금 결제'),
+        '납품 및 검수 완료 후 세금계산서 발행, 30일 이내 현금 결제',
       specialTerms:
         options?.specialTerms ||
-        (options?.contractId
-          ? `1. 연동 렌탈계약: ${options.contractNo || options.contractId}${options.siteName ? ` (${options.siteName})` : ''}\n2. 출고방식: ${defaultDeliveryLabel}`
-          : '1. 운송비 매도인 부담\n2. 물품 검수 기한 3영업일'),
+        '1. 운송비 매도인 부담\n2. 물품 검수 기한 3영업일',
       salespersonName: options?.salespersonName || currentUser?.name || '유통영업팀',
       memo: options?.memo || ''
     };
@@ -1270,13 +2363,13 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         linkedRentalDeliveryId: options?.linkedRentalDeliveryId,
         status: autoAllocate ? 'ALLOCATED' : 'REQUESTED',
         allocatedAt: autoAllocate ? now : undefined,
-        deliveryType: options?.deliveryMethod || 'COURIER',
+        deliveryType: options?.deliveryMethod || 'DIRECT',
         destinationAddress: newOrder.deliveryLocation,
         receiverName: newOrder.receiverName,
         receiverPhone: newOrder.receiverPhone,
         closingMemo: isBundleWithRental
-          ? `[렌탈 장비 동봉 출고] 계약: ${options?.contractNo || options?.contractId || '-'}${options?.linkedRentalDeliveryId ? ` / 배차: ${options.linkedRentalDeliveryId}` : ''}`
-          : (options?.contractNo ? `[렌탈계약 연동: ${options.contractNo}] (${defaultDeliveryLabel})` : undefined),
+          ? `[렌탈 장비 동봉 출고] 계약: ${options?.contractNo || options?.contractId || '-'}`
+          : undefined,
         createdAt: now,
         updatedAt: now
       },
@@ -1290,7 +2383,15 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateSalesOrder = async (
     id: string,
     updates: Partial<TradeSalesOrder>,
-    updatedLines?: { id?: string; productId: string; qty: number; unitPrice: number; memo?: string }[]
+    updatedLines?: {
+      id?: string;
+      productId: string;
+      qty: number;
+      unitPrice: number;
+      serialNumbers?: string[];
+      warehouseName?: string;
+      memo?: string;
+    }[]
   ) => {
     const now = new Date().toISOString();
     let computedSalesAmount: number | undefined = updates.totalSalesAmount;
@@ -1310,6 +2411,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             qty: ul.qty,
             unitPrice: ul.unitPrice,
             unitCogs,
+            serialNumbers: ul.serialNumbers ?? matched?.serialNumbers,
+            warehouseName: ul.warehouseName ?? matched?.warehouseName ?? prod?.defaultWarehouse ?? 'A창고',
             memo: ul.memo ?? matched?.memo ?? '',
             createdAt: matched?.createdAt || now
           };

@@ -28,6 +28,7 @@ export const TradeBillingPage: React.FC = () => {
   const showSuccessToast = (msg: string) => console.info(msg);
 
   // Filter states (청구월, 시작일, 종료일, 고객사, 품명, 상태, 검색어)
+  const [viewMode, setViewMode] = useState<'ORDER_LEDGER' | 'CUSTOMER_AR'>('ORDER_LEDGER');
   const [billingMonthFilter, setBillingMonthFilter] = useState<string>('ALL');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -161,9 +162,60 @@ export const TradeBillingPage: React.FC = () => {
       issuedCount: issuedRows.length,
       issuedAmount,
       paidCount: paidRows.length,
-      paidAmount
+      paidAmount,
+      totalReceivableAmount: unissuedAmount + issuedAmount
     };
   }, [filteredRows]);
+
+  // 거래처별 매출 및 미수금 잔액 집계
+  const customerReceivableRows = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        customerId: string;
+        customerName: string;
+        tierLabel: string;
+        orderCount: number;
+        supplyTotal: number;
+        vatTotal: number;
+        totalAmount: number;
+        paidAmount: number;
+        receivableAmount: number;
+        unpaidOrderCount: number;
+      }
+    >();
+
+    filteredRows.forEach(r => {
+      const cid = r.order.customerId;
+      const cname = getCustomerName(cid);
+      const isDealer = r.order.customerTier === 'DEALER' || cid.startsWith('DEALER-') || cname.includes('대리점');
+      const cur = map.get(cid) || {
+        customerId: cid,
+        customerName: cname,
+        tierLabel: isDealer ? '대리점' : '최종고객',
+        orderCount: 0,
+        supplyTotal: 0,
+        vatTotal: 0,
+        totalAmount: 0,
+        paidAmount: 0,
+        receivableAmount: 0,
+        unpaidOrderCount: 0
+      };
+      cur.orderCount += 1;
+      cur.supplyTotal += r.supplyAmount;
+      cur.vatTotal += r.vatAmount;
+      cur.totalAmount += r.totalAmount;
+      if (r.billingState === 'PAID') {
+        cur.paidAmount += r.totalAmount;
+      } else {
+        cur.receivableAmount += r.totalAmount;
+        cur.unpaidOrderCount += 1;
+      }
+      map.set(cid, cur);
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.receivableAmount - a.receivableAmount);
+  }, [filteredRows, getCustomerName]);
 
   // Open Statement & Email Modal for a specific order
   const openStatementModal = (order: TradeSalesOrder, existingBilling: TradeBilling | null) => {
@@ -447,11 +499,30 @@ export const TradeBillingPage: React.FC = () => {
         <div>
           <h2 data-mid="trade_billing-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <FileText size={18} color="var(--primary)" />
-            유통 청구 및 명세
+            거래처별 매출내역 및 미수금 관리
           </h2>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
+            대리점 및 최종고객 매출 명세서 발행, 수금 완료 확정 및 거래처별 미수금 잔액 현황 관리
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="segmented-tab-group">
+            <button
+              type="button"
+              onClick={() => setViewMode('ORDER_LEDGER')}
+              className={`segmented-tab-item ${viewMode === 'ORDER_LEDGER' ? 'active' : ''}`}
+            >
+              건별 매출내역 · 미수금
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('CUSTOMER_AR')}
+              className={`segmented-tab-item ${viewMode === 'CUSTOMER_AR' ? 'active' : ''}`}
+            >
+              거래처별 매출 및 미수금 집계
+            </button>
+          </div>
           {filteredRows.length > 0 && (
             <button
               onClick={() => {
@@ -505,27 +576,27 @@ export const TradeBillingPage: React.FC = () => {
       {/* KPI Strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))', gap: '10px' }}>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>청구 대상 총액 (부가세 포함)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출액 (부가세 포함)</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
             {summary.totalTargetAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.totalCount}건)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>명세서 미발행</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>
-            {summary.unissuedAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.unissuedCount}건)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>명세서 발행 / 이메일 발송</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#2563eb', marginTop: '2px' }}>
-            {summary.issuedAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.issuedCount}건)</span>
           </div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>수금완료 확정액</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
             {summary.paidAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.paidCount}건)</span>
+          </div>
+        </div>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>거래처 미수금 총잔액</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: '#dc2626', marginTop: '2px' }}>
+            {summary.totalReceivableAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.unissuedCount + summary.issuedCount}건)</span>
+          </div>
+        </div>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>명세서 발행 / 미발행 내역</div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#2563eb', marginTop: '4px', whiteSpace: 'nowrap' }}>
+            발행 ₩{summary.issuedAmount.toLocaleString()} · 미발행 <span style={{ color: '#d97706' }}>₩{summary.unissuedAmount.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -655,6 +726,68 @@ export const TradeBillingPage: React.FC = () => {
 
       {/* Main Grid Table */}
       <div style={{ flex: 1, overflow: 'auto', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        {viewMode === 'CUSTOMER_AR' ? (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>상세조회</th>
+                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>거래처 구분</th>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 매출건수</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 공급가액</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 매출합계 (부가세 포함)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수금완료 확정액</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재 미수금 잔액</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수금률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customerReceivableRows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    집계된 거래처 매출 및 미수금 내역이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                customerReceivableRows.map(c => {
+                  const collectRate = c.totalAmount > 0 ? Math.round((c.paidAmount / c.totalAmount) * 1000) / 10 : 0;
+                  return (
+                    <tr key={c.customerId} style={{ borderBottom: '1px solid var(--border-color)', height: '42px' }}>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomerFilter(c.customerId);
+                            setViewMode('ORDER_LEDGER');
+                          }}
+                          style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--primary)', cursor: 'pointer' }}
+                        >
+                          건별내역 ➔
+                        </button>
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: c.tierLabel === '대리점' ? '#ede9fe' : '#e0f2fe', color: c.tierLabel === '대리점' ? '#6d28d9' : '#0369a1' }}>
+                          {c.tierLabel}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>{c.customerName}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>{c.orderCount}건 (미수 {c.unpaidOrderCount}건)</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>₩{c.supplyTotal.toLocaleString()}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>₩{c.totalAmount.toLocaleString()}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>₩{c.paidAmount.toLocaleString()}</td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: c.receivableAmount > 0 ? '#dc2626' : 'var(--text-muted)' }}>
+                        ₩{c.receivableAmount.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: collectRate >= 100 ? '#16a34a' : '#2563eb' }}>
+                        {collectRate}%
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        ) : (
         <table data-mid="trade_billing-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -942,6 +1075,7 @@ export const TradeBillingPage: React.FC = () => {
             )}
           </tbody>
         </table>
+        )}
       </div>
 
       {/* Bottom Reconciliation Bar (Gutenberg Z-Pattern Step 4) */}
