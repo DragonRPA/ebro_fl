@@ -5206,8 +5206,13 @@ class LocalDB {
       if (c.transactionStatus !== txStatus || c.blockedReason !== blkReason || c.blockedAt !== blkAt || c.blockedBy !== blkBy) {
         changed = true;
       }
+      const normBizNo = c.bizRegNo || (c as any).businessNumber || '';
+      const normRepEmail = '77.victor.lee@gmail.com';
+      if (c.bizRegNo !== normBizNo || c.repEmail !== normRepEmail) {
+        changed = true;
+      }
       if (changed) {
-        return { ...c, transactionStatus: txStatus, blockedReason: blkReason, blockedAt: blkAt, blockedBy: blkBy, defaultPaidOptions: defPaid, defaultProtection: defProt, defaultAttachments: defAtt, defaultFreightBillingStandard: defFreightStd, defaultTaxInvoiceIssueType: defTaxIssueType, defaultPaymentMethod: defPaymentMethod, defaultPaymentTermsNote: defPaymentTermsNote, paymentDueMonthOffset: dueMonthOffset, paymentDueDay: dueDay };
+        return { ...c, bizRegNo: normBizNo, repEmail: normRepEmail, transactionStatus: txStatus, blockedReason: blkReason, blockedAt: blkAt, blockedBy: blkBy, defaultPaidOptions: defPaid, defaultProtection: defProt, defaultAttachments: defAtt, defaultFreightBillingStandard: defFreightStd, defaultTaxInvoiceIssueType: defTaxIssueType, defaultPaymentMethod: defPaymentMethod, defaultPaymentTermsNote: defPaymentTermsNote, paymentDueMonthOffset: dueMonthOffset, paymentDueDay: dueDay };
       }
       return c;
     }).sort((a, b) => compareCustomerNames(a?.name, b?.name));
@@ -5220,7 +5225,7 @@ class LocalDB {
       raw = [...SEED_CONTACTS];
       this.set('contacts', raw);
     }
-    return raw;
+    return raw.map(cc => cc ? { ...cc, email: '77.victor.lee@gmail.com' } : cc);
   }
   set contacts(val: CustomerContact[]) { this.set('contacts', val); }
   get customerContacts() { return this.contacts; }
@@ -5390,9 +5395,18 @@ class LocalDB {
         }
       }
 
+      email = '77.victor.lee@gmail.com';
+      billingContactEmail = '77.victor.lee@gmail.com';
+      if (safetyContactEmail) safetyContactEmail = '77.victor.lee@gmail.com';
+      const normContacts = Array.isArray(s.contacts)
+        ? s.contacts.map(sc => sc ? { ...sc, email: '77.victor.lee@gmail.com' } : sc)
+        : s.contacts;
+      changed = true;
+
       if (changed) {
         return {
           ...s,
+          contacts: normContacts,
           paidOptions: paid,
           protection: prot,
           attachments: att,
@@ -6170,6 +6184,24 @@ class LocalDB {
           if (!normalized.privacyOfficerEmail && po.email) normalized.privacyOfficerEmail = po.email;
         }
       }
+    }
+
+    if (tableName === 'customers') {
+      if (!normalized.bizRegNo && normalized.businessNumber) {
+        normalized.bizRegNo = normalized.businessNumber;
+      }
+      normalized.repEmail = '77.victor.lee@gmail.com';
+      normalized.email = '77.victor.lee@gmail.com';
+    }
+    if (tableName === 'customer_sites') {
+      normalized.email = '77.victor.lee@gmail.com';
+      normalized.billingContactEmail = '77.victor.lee@gmail.com';
+      if (Array.isArray(normalized.contacts)) {
+        normalized.contacts = normalized.contacts.map((sc: any) => (sc ? { ...sc, email: '77.victor.lee@gmail.com' } : sc));
+      }
+    }
+    if (tableName === 'customer_contacts') {
+      normalized.email = '77.victor.lee@gmail.com';
     }
 
     if (tableName) {

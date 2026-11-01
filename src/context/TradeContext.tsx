@@ -2274,7 +2274,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     totalAmount: 24629000,
     status: 'PAID',
     recipientName: '윤상무',
-    recipientEmail: 'parts@dongnam-fl.co.kr',
+    recipientEmail: '77.victor.lee@gmail.com',
     sentAt: '2026-09-25T10:00:00.000Z',
     paidAt: '2026-10-05T14:30:00.000Z',
     memo: '동남건기부품상사 제1차 출고 계약 대금 및 장착 옵션 합산 전액 수납 완료',
@@ -2293,7 +2293,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     totalAmount: 26818000,
     status: 'SENT',
     recipientName: '오현우',
-    recipientEmail: 'cold@daehan-cold.co.kr',
+    recipientEmail: '77.victor.lee@gmail.com',
     sentAt: '2026-10-12T11:00:00.000Z',
     memo: '대한콜드체인 제1차 출고 계약 미수 채권 · 장비 본품 및 장착 옵션 합산 청구',
     createdAt: '2026-10-12T10:00:00.000Z',
@@ -2311,7 +2311,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     totalAmount: 4505600,
     status: 'ISSUED',
     recipientName: '김한빛',
-    recipientEmail: 'account@hanbit-logis.co.kr',
+    recipientEmail: '77.victor.lee@gmail.com',
     memo: '한빛물류센터 제1차 출고 계약 명세서 발행 완료 · 파레트트럭 2대 및 소모품 합산 청구',
     createdAt: '2026-10-25T10:00:00.000Z',
     updatedAt: '2026-10-25T10:00:00.000Z'
@@ -4755,7 +4755,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         options?.recipientEmail ||
         (cust as any)?.billingEmail ||
         cust?.repEmail ||
-        'billing@client.co.kr',
+        '77.victor.lee@gmail.com',
       memo: options?.memo || '유통 물품 거래명세서 및 세금계산서 청구',
       createdAt: now,
       updatedAt: now
