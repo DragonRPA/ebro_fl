@@ -72,10 +72,10 @@ export const TradeBillingPage: React.FC = () => {
       .map(order => {
         const matchedOutbound = outbounds.find(ob => ob.orderId === order.id && ob.status !== 'CANCELLED');
         const lines = salesOrderLines.filter(l => l.orderId === order.id);
-        // Find billing linked to this orderId or customerId
-        const linkedBilling =
-          billings.find(b => b.orderId === order.id || (b.orderIds && b.orderIds.includes(order.id))) ||
-          billings.find(b => b.customerId === order.customerId && b.status !== 'CANCELLED');
+        // Find billing linked to this orderId
+        const linkedBilling = billings.find(
+          b => b.status !== 'CANCELLED' && (b.orderId === order.id || (b.orderIds && b.orderIds.includes(order.id)))
+        );
 
         const supplyAmount = linkedBilling?.supplyAmount ?? order.totalSalesAmount;
         const vatAmount = linkedBilling?.vatAmount ?? Math.round(supplyAmount * 0.1);

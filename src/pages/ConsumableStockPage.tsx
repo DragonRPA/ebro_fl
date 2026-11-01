@@ -1428,7 +1428,7 @@ export const ConsumableStockPage: React.FC = () => {
                                     min={0}
                                     value={item.actualQty}
                                     onChange={e => {
-                                      const val = parseInt(e.target.value) || 0;
+                                      const val = Math.max(0, parseInt(e.target.value) || 0);
                                       handleAuditItemQtyChange(item.id, val, item.diffReason, item.note);
                                     }}
                                     style={{

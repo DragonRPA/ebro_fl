@@ -1158,7 +1158,7 @@ export const RentAssets: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [modelQuery, setModelQuery] = useState('');
   const [renterQuery, setRenterQuery] = useState('');
-  const [startDateQuery, setStartDateQuery] = useState(getCurrentMonthStartDate);
+  const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [feeQuery, setFeeQuery] = useState('ALL');
   const [returnQuery, setReturnQuery] = useState('ALL');
@@ -4362,7 +4362,7 @@ export const RentAssets: React.FC = () => {
                         <tbody>
                           {targetRows.map((r, idx) => {
                             const matched = rentedAssets.find(a => a.assetNo === r.assetNo);
-                            const recItem = reconcileResults.find(res => res.id === r.id);
+                            const recItem = reconcileResults.find(res => (res as any).id === r.id || res.statementRow?.id === r.id);
                             return (
                               <tr key={r.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: idx % 2 === 1 ? 'var(--bg-app)' : 'transparent' }}>
                                 <td style={{ padding: '6px 10px', fontWeight: '700', whiteSpace: 'nowrap' }}>{r.assetNo}</td>

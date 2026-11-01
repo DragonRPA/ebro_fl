@@ -335,8 +335,9 @@ export const ExchangeRateInquiryPage: React.FC = () => {
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>외화 단가</label>
             <input
               type="number"
+              min={0}
               value={simForeignUnitPrice}
-              onChange={e => setSimForeignUnitPrice(Number(e.target.value) || 0)}
+              onChange={e => setSimForeignUnitPrice(Math.max(0, Number(e.target.value) || 0))}
               style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12.5px' }}
             />
           </div>
@@ -356,9 +357,10 @@ export const ExchangeRateInquiryPage: React.FC = () => {
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>관세율 · 퍼센트</label>
             <input
               type="number"
+              min={0}
               step="0.5"
               value={simDutyPercent}
-              onChange={e => setSimDutyPercent(Number(e.target.value) || 0)}
+              onChange={e => setSimDutyPercent(Math.max(0, Number(e.target.value) || 0))}
               style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12.5px' }}
             />
           </div>
@@ -367,9 +369,10 @@ export const ExchangeRateInquiryPage: React.FC = () => {
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>통관·운송 부대비용 · 원화</label>
             <input
               type="number"
+              min={0}
               step="50000"
               value={simFreightKrw}
-              onChange={e => setSimFreightKrw(Number(e.target.value) || 0)}
+              onChange={e => setSimFreightKrw(Math.max(0, Number(e.target.value) || 0))}
               style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12.5px' }}
             />
           </div>

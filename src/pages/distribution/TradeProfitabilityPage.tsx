@@ -141,7 +141,7 @@ export const TradeProfitabilityPage: React.FC = () => {
       }
 
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+        const q = searchQuery.trim().toLowerCase();
         const match =
           order.id.toLowerCase().includes(q) ||
           customerName.toLowerCase().includes(q) ||
@@ -314,8 +314,8 @@ export const TradeProfitabilityPage: React.FC = () => {
     }>();
 
     filteredOrderRows.forEach(row => {
-      const cid = row.order.customerId;
-      const isDealer = row.order.customerTier === 'DEALER' || cid.startsWith('DEALER-') || row.customerName.includes('대리점');
+      const cid = row.order.customerId || 'UNKNOWN';
+      const isDealer = row.order.customerTier === 'DEALER' || cid.startsWith('DEALER-') || row.customerName.includes('대리점') || row.customerName.includes('부품상사');
       const linkedBill = billings.find(b => b.orderId === row.order.id && b.status !== 'CANCELLED');
       const isPaid = linkedBill?.status === 'PAID';
       const orderVatIncluded = Math.round(row.netSales * 1.1);

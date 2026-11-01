@@ -189,16 +189,17 @@ export const Products: React.FC = () => {
         canonicalKeyToProdId.get(cKey);
 
       if (!targetProdId) continue;
+      if (a.status === 'RENTED_RETURNED') continue;
       const st = map.get(targetProdId);
       if (!st) continue;
 
       st.total++;
       if (a.ownerType === 'OWNED' || !a.ownerType) st.owned++;
       if (a.ownerType === 'RENTED') st.leased++;
-      if (a.status === 'AVAILABLE' && !a.actualRentReturnDate) st.available++;
-      if (a.status === 'RENTED' || (!a.actualRentReturnDate && a.currentCustomerId)) st.rented++;
-      if (a.status === 'ASSIGNED' || a.status === 'OUTBOUND_INSPECTION' || a.status === 'AWAITING_TRANSPORT') st.assigned++;
       if (a.status === 'REPAIRING') st.repairing++;
+      else if (a.status === 'ASSIGNED' || a.status === 'OUTBOUND_INSPECTION' || a.status === 'AWAITING_TRANSPORT') st.assigned++;
+      else if (a.status === 'RENTED' || (!a.actualRentReturnDate && a.currentCustomerId)) st.rented++;
+      else st.available++;
     }
 
     return map;
@@ -283,7 +284,7 @@ export const Products: React.FC = () => {
   }, [products]);
 
   const uniquePowerSources = useMemo(() => {
-    return Array.from(new Set(products.map(p => p.powerSource).filter(Boolean))) as string[];
+    return Array.from(new Set(products.map(p => (p as any).powerType || p.powerSource).filter(Boolean))) as string[];
   }, [products]);
 
   // KPI 통계 (단일 패스 집계)
@@ -320,8 +321,9 @@ export const Products: React.FC = () => {
       if (assetFilter === 'WITH_ASSETS' && totalAssets === 0) return false;
       if (assetFilter === 'NO_ASSETS' && totalAssets > 0) return false;
 
+      const pPower = (p as any).powerType || p.powerSource || '';
       if (manufacturerFilter !== 'ALL' && p.manufacturer !== manufacturerFilter) return false;
-      if (powerSourceFilter !== 'ALL' && p.powerSource !== powerSourceFilter) return false;
+      if (powerSourceFilter !== 'ALL' && pPower !== powerSourceFilter) return false;
       if (activeStatusFilter === 'ACTIVE' && p.isActive === false) return false;
       if (activeStatusFilter !== 'ALL' && activeStatusFilter !== 'ACTIVE' && p.isActive !== false) return false;
 
@@ -331,7 +333,7 @@ export const Products: React.FC = () => {
         matcher.test(p.shortName) ||
         matcher.test(p.manufacturer) ||
         matcher.test(p.spec) ||
-        matcher.test(p.powerSource)
+        matcher.test(pPower)
       );
     });
   }, [products, assetStatsMap, assetFilter, searchTerm, manufacturerFilter, powerSourceFilter, activeStatusFilter]);
@@ -346,7 +348,7 @@ export const Products: React.FC = () => {
         case 'feet': return Number(p.feet) || 0;
         case 'assetCount': return assetStatsMap.get(p.id)?.total || 0;
         case 'manufacturer': return p.manufacturer || '';
-        case 'powerSource': return p.powerSource || '';
+        case 'powerSource': return (p as any).powerType || p.powerSource || '';
         case 'workingHeight': return p.workingHeight || '';
         case 'platformHeight': return p.platformHeight || '';
         case 'machineWeight': return p.weight || '';

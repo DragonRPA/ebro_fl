@@ -453,7 +453,7 @@ export const BankMatching: React.FC = () => {
     });
 
     return { bankMap, totalBalance };
-  }, [bankTransactions]);
+  }, [bankTransactions, initBalanceByBankNameMap]);
 
   // 단일 패스 입금/출금 통계 집계
   const {
@@ -1778,7 +1778,7 @@ export const BankMatching: React.FC = () => {
 
             {canSave && (
               <button data-hs-trigger="Register"
-                onClick={() => setIsRuleModalOpen(false)}
+                onClick={() => setIsRuleModalOpen(true)}
                 className="btn btn-primary"
                 style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
               >

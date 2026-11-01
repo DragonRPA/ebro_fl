@@ -128,9 +128,11 @@ export const DelinquencyPage: React.FC = () => {
 
       const todayStr = new Date().toISOString().split('T')[0];
       targetUnpaidBillings.forEach(b => {
+        const supplyAmt = b.totalAmount || 0;
+        const grandTotal = supplyAmt + Math.round(supplyAmt * 0.1);
         db.updateRow<Billing>('billings', b.id, {
           status: 'PAID',
-          paidAmount: b.totalAmount,
+          paidAmount: grandTotal,
           updatedAt: new Date().toISOString()
         });
       });
@@ -358,7 +360,9 @@ export const DelinquencyPage: React.FC = () => {
     // 미수금이 남아있는 청구서 추출
     billings.forEach(b => {
       if (b.status === 'REJECTED' || b.status === 'PAID') return;
-      const unpaid = (b.totalAmount || 0) - (b.paidAmount || 0);
+      const supplyAmt = b.totalAmount || 0;
+      const grandTotal = supplyAmt + Math.round(supplyAmt * 0.1);
+      const unpaid = grandTotal - (b.paidAmount || 0);
       if (unpaid <= 0) return;
 
       const custId = b.customerId;
@@ -1298,7 +1302,7 @@ export const DelinquencyPage: React.FC = () => {
                   <SortableTh label="연체 총액" sortKey="totalOverdueAmount" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'right', whiteSpace: 'nowrap' }} align="right" />
                   <SortableTh label="약정 납기일" sortKey="oldestOverdueDueDate" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
                   <SortableTh label="경과일" sortKey="overdueDays" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
-                  <SortableTh label="약속위반" sortKey="brokenPromiseCount" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
+                  <SortableTh label="약속위반" sortKey="brokenPromisesCount" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
                   <SortableTh label="담당 영업" sortKey="responsibleEmployeeName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
                   <SortableTh label="지시/통제" sortKey="directiveNeglectedDays" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />
                   <SortableTh label="차단" sortKey="transactionStatus" currentSort={sortConfig} onSort={requestSort} style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} align="center" />

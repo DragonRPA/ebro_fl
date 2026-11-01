@@ -777,7 +777,7 @@ export const Billings: React.FC = () => {
   //  청구 및 수납 종합 집계 메모이제이션 (검색/데이터 변경 시에만 재계산)
   const billingKpiSummary = useMemo(() => {
     const totalSupply = filteredBillings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-    const totalVat = Math.round(totalSupply * 0.1);
+    const totalVat = filteredBillings.reduce((sum, b) => sum + Math.round((b.totalAmount || 0) * 0.1), 0);
     const totalGrand = totalSupply + totalVat;
     const totalPaid = filteredBillings.reduce((sum, b) => {
       const g = (b.totalAmount || 0) + Math.round((b.totalAmount || 0) * 0.1);
@@ -4138,7 +4138,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
           let sumPaid = 0;
           let sumUnpaid = 0;
           filteredBillings.forEach(b => {
-            const grand = b.totalAmount || 0;
+            const supply = b.totalAmount || 0;
+            const grand = supply + Math.round(supply * 0.1);
             const isP = b.status === 'PAID';
             const pAmt = isP ? grand : (b.paidAmount || 0);
             const uAmt = isP ? 0 : Math.max(0, grand - pAmt);

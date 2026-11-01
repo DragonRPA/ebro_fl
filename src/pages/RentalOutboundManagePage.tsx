@@ -157,10 +157,29 @@ const INITIAL_RENTAL_OUTBOUNDS: RentalOutboundRecord[] = [
 
 export const RentalOutboundManagePage: React.FC = () => {
   const { assets, contracts } = useApp();
-  const [outbounds, setOutbounds] = useState<RentalOutboundRecord[]>(INITIAL_RENTAL_OUTBOUNDS);
+  const [outbounds, setOutbounds] = useState<RentalOutboundRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ebro_fl_rental_outbounds_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_RENTAL_OUTBOUNDS;
+  });
   const [selectedId, setSelectedId] = useState<string>('ROUT-202611-004');
   const [statusFilter, setStatusFilter] = useState<'ALL' | '출고대기·검수중' | '출고완료·대여중'>('ALL');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('ebro_fl_rental_outbounds_v1', JSON.stringify(outbounds));
+    } catch {}
+  }, [outbounds]);
+
+  const updateOutbounds = (updater: (prev: RentalOutboundRecord[]) => RentalOutboundRecord[]) => {
+    setOutbounds(prev => updater(prev));
+  };
 
   // 신규 렌탈 출고 등록 모달/폼 상태
   const [showNewForm, setShowNewForm] = useState<boolean>(false);
@@ -180,7 +199,8 @@ export const RentalOutboundManagePage: React.FC = () => {
 
   const availableAssets = useMemo(() => {
     const raw = assets && assets.length > 0 ? assets : SEED_FL_RENTAL_ASSETS;
-    return raw;
+    const avail = raw.filter((a: any) => !a.status || a.status === 'AVAILABLE' || a.status === 'ASSIGNED');
+    return avail.length > 0 ? avail : raw;
   }, [assets]);
 
   const filteredOutbounds = useMemo(() => {
@@ -198,7 +218,7 @@ export const RentalOutboundManagePage: React.FC = () => {
 
   const toggleDeliveredDoc = (docName: string) => {
     if (!selectedRecord) return;
-    setOutbounds(prev => prev.map(o => {
+    updateOutbounds(prev => prev.map(o => {
       if (o.id !== selectedRecord.id) return o;
       const exists = o.deliveredDocs.includes(docName);
       const nextDocs = exists
@@ -210,13 +230,13 @@ export const RentalOutboundManagePage: React.FC = () => {
 
   const updateSelectedField = (field: keyof RentalOutboundRecord, value: any) => {
     if (!selectedRecord) return;
-    setOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? { ...o, [field]: value } : o));
+    updateOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? { ...o, [field]: value } : o));
   };
 
   const handleSendDeliveryDocs = () => {
     if (!selectedRecord) return;
     const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    setOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? {
+    updateOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? {
       ...o,
       deliveredDocs: [...REQUIRED_RENTAL_DELIVERY_DOCS],
       docSentAt: nowStr
@@ -226,10 +246,14 @@ export const RentalOutboundManagePage: React.FC = () => {
 
   const handleApproveRentalOutbound = () => {
     if (!selectedRecord) return;
+    if (selectedRecord.deliveredDocs.length < REQUIRED_RENTAL_DELIVERY_DOCS.length) {
+      showToast(`법정 필수 납품문서 5종 중 ${REQUIRED_RENTAL_DELIVERY_DOCS.length - selectedRecord.deliveredDocs.length}종이 누락되었습니다. [납품문서 패키지 이메일 전달] 또는 전체 문서 체크 후 승인하세요.`);
+      return;
+    }
     const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    setOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? {
+    updateOutbounds(prev => prev.map(o => o.id === selectedRecord.id ? {
       ...o,
-      deliveredDocs: o.deliveredDocs.length > 0 ? o.deliveredDocs : [...REQUIRED_RENTAL_DELIVERY_DOCS],
+      deliveredDocs: [...REQUIRED_RENTAL_DELIVERY_DOCS],
       docSentAt: o.docSentAt === '발송 대기' ? nowStr : o.docSentAt,
       status: '출고완료·대여중'
     } : o));
@@ -241,7 +265,7 @@ export const RentalOutboundManagePage: React.FC = () => {
     const ast: any = availableAssets.find((a: any) => a.id === newAssetId) || SEED_FL_RENTAL_ASSETS[1];
     const cust = SEED_FL_CUSTOMERS.find(c => c.id === ctr.customerId) || SEED_FL_CUSTOMERS[0];
     const site = SEED_FL_SITES.find(s => s.id === ctr.siteId) || SEED_FL_SITES[0];
-    const newId = `ROUT-202611-00${outbounds.length + 1}`;
+    const newId = `ROUT-202611-${String(outbounds.length + 1).padStart(3, '0')}`;
     const newRow: RentalOutboundRecord = {
       id: newId,
       outboundNo: newId,
@@ -266,11 +290,11 @@ export const RentalOutboundManagePage: React.FC = () => {
       vehicleNo: newVehicleNo,
       driverName: newDriverName,
       driverPhone: newDriverPhone,
-      freightCost: newFreightCost,
+      freightCost: Math.max(0, Number(newFreightCost) || 0),
       freightPaidBy: newFreightPaidBy,
       status: '출고대기·검수중'
     };
-    setOutbounds(prev => [newRow, ...prev]);
+    updateOutbounds(prev => [newRow, ...prev]);
     setSelectedId(newId);
     setShowNewForm(false);
     showToast(`신규 렌탈 출고 건 [${newId}]이 등록되었습니다.`);
@@ -352,7 +376,7 @@ export const RentalOutboundManagePage: React.FC = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700 }}>운송비용 · 원</label>
-              <input type="number" value={newFreightCost} onChange={e => setNewFreightCost(Number(e.target.value) || 0)} style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }} />
+              <input type="number" min={0} value={newFreightCost} onChange={e => setNewFreightCost(Math.max(0, Number(e.target.value) || 0))} style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }} />
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button type="button" onClick={handleCreateOutbound} className="btn btn-primary" style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 700 }}>등록 저장</button>
@@ -544,10 +568,10 @@ export const RentalOutboundManagePage: React.FC = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>기사명 · 연락처</label>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>기사명 · 연락처 ({selectedRecord.driverPhone})</label>
                   <input
                     type="text"
-                    value={`${selectedRecord.driverName} (${selectedRecord.driverPhone})`}
+                    value={selectedRecord.driverName}
                     onChange={e => updateSelectedField('driverName', e.target.value)}
                     style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}
                   />
@@ -565,8 +589,9 @@ export const RentalOutboundManagePage: React.FC = () => {
                   <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>배송 운송비용 · 원</label>
                   <input
                     type="number"
+                    min={0}
                     value={selectedRecord.freightCost}
-                    onChange={e => updateSelectedField('freightCost', Number(e.target.value) || 0)}
+                    onChange={e => updateSelectedField('freightCost', Math.max(0, Number(e.target.value) || 0))}
                     style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}
                   />
                 </div>

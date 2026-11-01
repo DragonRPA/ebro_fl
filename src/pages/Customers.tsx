@@ -750,9 +750,9 @@ export const Customers: React.FC = () => {
       const matchesStatus = 
         statusFilter === 'ALL' ? true :
         statusFilter === 'ACTIVE' ? (!isCustomerRestricted(c.transactionStatus) && !c.isClosed) :
-        statusFilter === 'RESTRICT_NEW' ? (c.transactionStatus === 'RESTRICT_NEW') :
-        statusFilter === 'BLOCKED_ALL' ? isCustomerTotalBlocked(c.transactionStatus) :
-        statusFilter === 'BLOCKED' ? isCustomerRestricted(c.transactionStatus) :
+        statusFilter === 'RESTRICT_NEW' ? (c.transactionStatus === 'RESTRICT_NEW' && !c.isClosed) :
+        statusFilter === 'BLOCKED_ALL' ? (isCustomerTotalBlocked(c.transactionStatus) && !c.isClosed) :
+        statusFilter === 'BLOCKED' ? (isCustomerRestricted(c.transactionStatus) && !c.isClosed) :
         (c.isClosed === true);
 
       const matchesIncomplete = !showOnlyIncomplete || isMissingBizCert(c);

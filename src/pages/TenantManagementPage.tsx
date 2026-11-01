@@ -98,8 +98,8 @@ export const TenantManagementPage: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Tenant>>({
     tenantCode: '',
     subdomain: '',
-    solutionType: 'AWP',
-    targetRepo: 'DragonRPA/ebro_awp',
+    solutionType: 'FL',
+    targetRepo: 'DragonRPA/ebro_fl',
     displayName: '',
     corporateName: '',
     tradeName: '',
@@ -110,7 +110,7 @@ export const TenantManagementPage: React.FC = () => {
     businessAddress: '',
     headOfficeAddress: '',
     businessCategory: '사업지원및임대서비스업',
-    businessItem: '고소작업대임대',
+    businessItem: '지게차임대및유통',
     tel: '',
     fax: '',
     salesPhone: '',
@@ -390,8 +390,8 @@ export const TenantManagementPage: React.FC = () => {
       setFormData({
         tenantCode: '',
         subdomain: '',
-        solutionType: 'AWP',
-        targetRepo: 'DragonRPA/ebro_awp',
+        solutionType: 'FL',
+        targetRepo: 'DragonRPA/ebro_fl',
         displayName: '',
         corporateName: '',
         tradeName: '',
@@ -402,7 +402,7 @@ export const TenantManagementPage: React.FC = () => {
         businessAddress: '',
         headOfficeAddress: '',
         businessCategory: '사업지원및임대서비스업',
-        businessItem: '고소작업대임대',
+        businessItem: '지게차임대및유통',
         tel: '',
         fax: '',
         salesPhone: '',
@@ -555,12 +555,12 @@ export const TenantManagementPage: React.FC = () => {
       businessAddress: result.address || '',
       headOfficeAddress: result.headOfficeAddress || result.address || '',
       businessCategory: result.bizType || '사업지원및임대서비스업',
-      businessItem: result.bizItem || '고소작업대임대',
+      businessItem: result.bizItem || '지게차임대및유통',
       taxEmail: result.taxEmail || '',
       tel: result.repContact || '',
       taxOffice: result.taxOffice || '',
-      solutionType: 'AWP',
-      targetRepo: 'DragonRPA/ebro_awp'
+      solutionType: 'FL',
+      targetRepo: 'DragonRPA/ebro_fl'
     }));
     setIsOnboardingModalOpen(false);
   };

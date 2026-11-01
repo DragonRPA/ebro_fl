@@ -89,12 +89,12 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         if (searchTerm.trim()) {
           const q = searchTerm.toLowerCase();
           return (
-            opt.name.toLowerCase().includes(q) ||
-            opt.optionCode.toLowerCase().includes(q) ||
-            opt.subVariant.toLowerCase().includes(q) ||
-            opt.specDetail.toLowerCase().includes(q) ||
-            opt.applicableTonnage.toLowerCase().includes(q) ||
-            opt.optionGroupLabel.toLowerCase().includes(q)
+            (opt.name || '').toLowerCase().includes(q) ||
+            (opt.optionCode || '').toLowerCase().includes(q) ||
+            (opt.subVariant || '').toLowerCase().includes(q) ||
+            (opt.specDetail || '').toLowerCase().includes(q) ||
+            (opt.applicableTonnage || '').toLowerCase().includes(q) ||
+            (opt.optionGroupLabel || '').toLowerCase().includes(q)
           );
         }
         return true;
@@ -115,7 +115,11 @@ export const ForkliftOptionMasterPage: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingOption(null);
-    const nextSeq = optionMasters.length + 1;
+    const maxSeq = optionMasters.reduce((max, o) => {
+      const m = (o.optionCode || '').match(/(\d+)$/);
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, optionMasters.length);
+    const nextSeq = maxSeq + 1;
     setFormCode(`OPT-FL-${String(nextSeq).padStart(3, '0')}`);
     setFormGroup(selectedGroup === 'ALL' ? 'BACKREST' : selectedGroup);
     setFormDomainType('PAID');

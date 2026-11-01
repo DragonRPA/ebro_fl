@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FileCheck, Send, Download, Search, CheckCircle2, Clock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { SEED_FL_CUSTOMERS, SEED_FL_CONTRACTS } from '../data/flUnifiedSeedData';
@@ -226,13 +226,32 @@ const INITIAL_TAX_INVOICES: TaxInvoiceRecord[] = [
 
 export const TaxInvoiceManagePage: React.FC = () => {
   const { customers } = useApp();
-  const [records, setRecords] = useState<TaxInvoiceRecord[]>(INITIAL_TAX_INVOICES);
+  const [records, setRecords] = useState<TaxInvoiceRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ebro_fl_tax_invoices_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_TAX_INVOICES;
+  });
   const [billingYmFilter, setBillingYmFilter] = useState<string>('2026-10');
   const [contractTypeFilter, setContractTypeFilter] = useState<'ALL' | 'TRADE' | 'RENTAL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'NTS_SENT' | 'ISSUED_READY' | 'PENDING_ISSUE'>('ALL');
   const [customerFilter, setCustomerFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ebro_fl_tax_invoices_v1', JSON.stringify(records));
+    } catch {}
+  }, [records]);
+
+  const updateRecords = (updater: (prev: TaxInvoiceRecord[]) => TaxInvoiceRecord[]) => {
+    setRecords(prev => updater(prev));
+  };
 
   const customerList = useMemo(() => {
     return customers && customers.length > 0 ? customers : SEED_FL_CUSTOMERS;
@@ -266,7 +285,7 @@ export const TaxInvoiceManagePage: React.FC = () => {
   const summary = useMemo(() => {
     const totalSupply = filteredRecords.reduce((acc, r) => acc + r.supplyAmount, 0);
     const totalVat = filteredRecords.reduce((acc, r) => acc + r.vatAmount, 0);
-    const grandTotal = filteredRecords.reduce((acc, r) => acc + r.totalAmount, 0);
+    const grandTotal = totalSupply + totalVat;
     const sentTotal = filteredRecords.filter(r => r.ntsStatus === 'NTS_SENT').reduce((acc, r) => acc + r.totalAmount, 0);
     const pendingTotal = filteredRecords.filter(r => r.ntsStatus !== 'NTS_SENT').reduce((acc, r) => acc + r.totalAmount, 0);
     const diff = grandTotal - (sentTotal + pendingTotal);
@@ -275,10 +294,10 @@ export const TaxInvoiceManagePage: React.FC = () => {
 
   const handleIssueSingle = (id: string) => {
     const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    setRecords(prev => prev.map(r => {
+    updateRecords(prev => prev.map(r => {
       if (r.id !== id) return r;
       const randTail = String(Math.floor(10000000 + Math.random() * 89999999));
-      const cleanBiz = r.bizRegNo.replace(/-/g, '').slice(0, 8);
+      const cleanBiz = (r.bizRegNo || '').replace(/[^0-9]/g, '').padEnd(10, '0').slice(0, 8);
       return {
         ...r,
         ntsStatus: 'NTS_SENT',
@@ -297,10 +316,10 @@ export const TaxInvoiceManagePage: React.FC = () => {
     }
     const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const targetIds = new Set(targets.map(t => t.id));
-    setRecords(prev => prev.map(r => {
+    updateRecords(prev => prev.map(r => {
       if (!targetIds.has(r.id)) return r;
       const randTail = String(Math.floor(10000000 + Math.random() * 89999999));
-      const cleanBiz = r.bizRegNo.replace(/-/g, '').slice(0, 8);
+      const cleanBiz = (r.bizRegNo || '').replace(/[^0-9]/g, '').padEnd(10, '0').slice(0, 8);
       return {
         ...r,
         ntsStatus: 'NTS_SENT',

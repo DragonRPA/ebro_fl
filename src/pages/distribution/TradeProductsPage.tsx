@@ -607,14 +607,15 @@ export const TradeProductsPage: React.FC = () => {
       if (stockFilter === 'NORMAL' && p.availableQty < p.safetyStock) return false;
 
       if (matcher) {
+        const testFn = (val?: string) => typeof matcher === 'function' ? matcher(val || '') : (matcher as any).test(val || '');
         const hit =
-          matcher(p.name) ||
-          matcher(p.skuCode) ||
-          matcher(p.manufacturer || '') ||
-          matcher(p.modelName || '') ||
-          matcher(p.category || '') ||
-          matcher(p.spec || '') ||
-          matcher(p.memo || '');
+          testFn(p.name) ||
+          testFn(p.skuCode) ||
+          testFn(p.manufacturer) ||
+          testFn(p.modelName) ||
+          testFn(p.category) ||
+          testFn(p.spec) ||
+          testFn(p.memo);
         if (!hit) return false;
       }
       return true;
@@ -684,14 +685,15 @@ export const TradeProductsPage: React.FC = () => {
       if (agingBucketFilter !== 'ALL' && row.agingInfo.bucket !== agingBucketFilter) return false;
 
       if (matcher) {
+        const testFn = (val?: string) => typeof matcher === 'function' ? matcher(val || '') : (matcher as any).test(val || '');
         const hit =
-          matcher(row.serialNumber) ||
-          matcher(row.productName) ||
-          matcher(row.manufacturer) ||
-          matcher(row.modelName) ||
-          matcher(row.warehouseName) ||
-          matcher(row.vendorName) ||
-          matcher(row.soldCustomerName);
+          testFn(row.serialNumber) ||
+          testFn(row.productName) ||
+          testFn(row.manufacturer) ||
+          testFn(row.modelName) ||
+          testFn(row.warehouseName) ||
+          testFn(row.vendorName) ||
+          testFn(row.soldCustomerName);
         if (!hit) return false;
       }
       return true;
@@ -733,7 +735,7 @@ export const TradeProductsPage: React.FC = () => {
         .filter(r => r.itemType === 'EQUIPMENT')
         .reduce((s, r) => s + r.lot.remainingQty, 0);
       const partQty = whLots
-        .filter(r => r.itemType === 'PART')
+        .filter(r => r.itemType === 'PART' || r.itemType === 'CONSUMABLE')
         .reduce((s, r) => s + r.lot.remainingQty, 0);
       const totalValue = whLots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0);
       const over90Count = whLots.filter(r => r.agingDays > 90).length;
@@ -792,7 +794,7 @@ export const TradeProductsPage: React.FC = () => {
         순번: idx + 1,
         상태: r.isSold ? '출고완료' : '현재고보유',
         차대및로트번호: r.serialNumber,
-        구분: r.itemType === 'EQUIPMENT' ? '지게차' : '부품',
+        구분: r.itemType === 'EQUIPMENT' ? '지게차' : r.itemType === 'CONSUMABLE' ? '소모품' : '부품',
         제조사: r.manufacturer,
         모델명: r.modelName,
         품명: r.productName,
@@ -1498,8 +1500,8 @@ export const TradeProductsPage: React.FC = () => {
                         {r.serialNumber}
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: r.itemType === 'EQUIPMENT' ? '#eff6ff' : '#f3e8ff', color: r.itemType === 'EQUIPMENT' ? '#1d4ed8' : '#7e22ce' }}>
-                          {r.itemType === 'EQUIPMENT' ? '지게차' : '부품'}
+                        <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: r.itemType === 'EQUIPMENT' ? '#eff6ff' : r.itemType === 'CONSUMABLE' ? '#ccfbf1' : '#f3e8ff', color: r.itemType === 'EQUIPMENT' ? '#1d4ed8' : r.itemType === 'CONSUMABLE' ? '#0f766e' : '#7e22ce' }}>
+                          {r.itemType === 'EQUIPMENT' ? '지게차' : r.itemType === 'CONSUMABLE' ? '소모품' : '부품'}
                         </span>
                       </td>
                       <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
@@ -1931,7 +1933,7 @@ export const TradeProductsPage: React.FC = () => {
                   <select
                     value={formItemType}
                     onChange={e => {
-                      const nextType = e.target.value as 'EQUIPMENT' | 'PART';
+                      const nextType = e.target.value as 'EQUIPMENT' | 'PART' | 'CONSUMABLE';
                       setFormItemType(nextType);
                       setFormUnit(nextType === 'EQUIPMENT' ? '대' : 'EA');
                       setFormDefaultWarehouse(nextType === 'EQUIPMENT' ? 'A창고' : '부품창고');
@@ -1939,7 +1941,8 @@ export const TradeProductsPage: React.FC = () => {
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   >
                     <option value="EQUIPMENT">지게차 완제품</option>
-                    <option value="PART">부품 및 소모품</option>
+                    <option value="PART">부품</option>
+                    <option value="CONSUMABLE">소모품</option>
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

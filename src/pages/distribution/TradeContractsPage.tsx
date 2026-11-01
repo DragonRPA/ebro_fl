@@ -144,7 +144,7 @@ export const TradeContractsPage: React.FC = () => {
       filteredQuickCustomerOptions.some(c => c.id === selectedCustomerId)
         ? selectedCustomerId
         : filteredQuickCustomerOptions[0]?.id || selectedCustomerId || customerOptions[0]?.id || 'DEALER-001';
-    const isDealer = customerId.startsWith('DEALER-') || getCustomerName(customerId).includes('대리점');
+    const isDealer = customerId.startsWith('DEALER-') || getCustomerName(customerId).includes('대리점') || getCustomerName(customerId).includes('부품상사');
     const tier: 'DEALER' | 'END_USER' = isDealer ? 'DEALER' : 'END_USER';
     const unitPrice = getRecommendedUnitPrice(product.id, tier);
 
@@ -179,7 +179,7 @@ export const TradeContractsPage: React.FC = () => {
       return;
     }
     const firstCust = customerOptions[0];
-    const isDealer = firstCust?.id.startsWith('DEALER-') || firstCust?.name.includes('대리점');
+    const isDealer = firstCust?.id.startsWith('DEALER-') || firstCust?.name.includes('대리점') || firstCust?.name.includes('부품상사');
     const tier: 'DEALER' | 'END_USER' = isDealer ? 'DEALER' : 'END_USER';
 
     setEditingOrder(null);
@@ -255,7 +255,7 @@ export const TradeContractsPage: React.FC = () => {
     setFormCustomerId(custId);
     const cust = customerOptions.find(c => c.id === custId);
     const nextTier: 'DEALER' | 'END_USER' =
-      custId.startsWith('DEALER-') || (cust?.name || '').includes('대리점') ? 'DEALER' : 'END_USER';
+      custId.startsWith('DEALER-') || (cust?.name || '').includes('대리점') || (cust?.name || '').includes('부품상사') ? 'DEALER' : 'END_USER';
     setFormCustomerTier(nextTier);
     if (!editingOrder) {
       setFormLines(prev =>
@@ -697,7 +697,7 @@ export const TradeContractsPage: React.FC = () => {
             type="number"
             min={1}
             value={orderQty}
-            onChange={e => setOrderQty(Math.max(1, Number(e.target.value)))}
+            onChange={e => setOrderQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
             style={{ width: '60px', padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
           />
 
@@ -913,7 +913,7 @@ export const TradeContractsPage: React.FC = () => {
             <tbody>
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={11} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={12} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     조회된 거래처 판매 및 매출이익 데이터가 없습니다.
  </td>
                 </tr>

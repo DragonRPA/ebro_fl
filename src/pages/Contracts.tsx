@@ -833,7 +833,7 @@ export const Contracts: React.FC = () => {
       if (quickChipFilter === 'COMPLETED') {
         if (c.status !== 'COMPLETED') return false;
       } else if (quickChipFilter === 'ACTIVE') {
-        if (!(c.status === 'ACTIVE' || c.status === 'EXTENDED')) return false;
+        if (!(c.status === 'ACTIVE' || c.status === 'EXTENDED' || c.status === 'SHORTENED')) return false;
       } else if (quickChipFilter === 'PENDING_DELIVERY') {
         const isMySalesContract = !currentUser || currentUser.role === 'ADMIN' || !hasCurrentUserSalesContracts || c.salespersonId === currentUser.id;
         const m = getContractOutboundMilestones(c);
@@ -846,7 +846,7 @@ export const Contracts: React.FC = () => {
         if (c.status === 'COMPLETED' || !cas.some(ca => ca.monthlyRentalFee === 0)) return false;
       } else if (statusFilter !== 'ALL') {
         const matchesStatus = statusFilter === 'ACTIVE'
-          ? (c.status === 'ACTIVE' || c.status === 'EXTENDED')
+          ? (c.status === 'ACTIVE' || c.status === 'EXTENDED' || c.status === 'SHORTENED')
           : c.status === statusFilter;
         if (!matchesStatus) return false;
       }
@@ -2707,8 +2707,8 @@ export const Contracts: React.FC = () => {
     for (const c of contracts) {
       const isSale = c.contractType === 'SALE';
       const isTrade = c.contractType === 'TRADE';
-      const isActive = c.status === 'ACTIVE' || c.status === 'EXTENDED';
-      const isD3 = getDDayText(c.endDate).isWarning;
+      const isActive = c.status === 'ACTIVE' || c.status === 'EXTENDED' || c.status === 'SHORTENED';
+      const isD3 = c.status !== 'COMPLETED' && getDDayText(c.endDate).isWarning;
       const cas = contractAssetsByContractMap.get(c.id) || [];
       let hasZero = false;
       let contractRentSum = 0;
@@ -2719,7 +2719,7 @@ export const Contracts: React.FC = () => {
 
       if (isActive) allActiveCount++;
       if (isD3) allD3Count++;
-      if (hasZero && !isTrade) allZeroFeeCount++;
+      if (hasZero && !isTrade && c.status !== 'COMPLETED') allZeroFeeCount++;
       if (c.status === 'COMPLETED') allCompletedCount++;
 
       if (isSale) {
@@ -2731,7 +2731,7 @@ export const Contracts: React.FC = () => {
         rentalCount++;
         if (isActive) activeCount++;
         if (isD3) d3Count++;
-        if (hasZero) zeroFeeCount++;
+        if (hasZero && c.status !== 'COMPLETED') zeroFeeCount++;
         if (c.status === 'SUCCEEDED') succeededCount++;
         if (c.status === 'COMPLETED') completedCount++;
         totalRentSum += contractRentSum;

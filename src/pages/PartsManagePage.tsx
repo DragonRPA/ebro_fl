@@ -109,14 +109,67 @@ export const INITIAL_ASSET_PART_USAGE_HISTORY: AssetPartUsageHistoryRecord[] = [
   }
 ];
 
+export function loadPartsInventory(): PartInventoryItem[] {
+  try {
+    const saved = localStorage.getItem('ebro_fl_parts_inv_v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return INITIAL_PARTS_INVENTORY;
+}
+
+export function savePartsInventory(items: PartInventoryItem[]): void {
+  try {
+    localStorage.setItem('ebro_fl_parts_inv_v1', JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent('ebro:parts_updated'));
+  } catch {}
+}
+
+export function loadPartUsageHistory(): AssetPartUsageHistoryRecord[] {
+  try {
+    const saved = localStorage.getItem('ebro_fl_parts_usage_v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return INITIAL_ASSET_PART_USAGE_HISTORY;
+}
+
+export function savePartUsageHistory(records: AssetPartUsageHistoryRecord[]): void {
+  try {
+    localStorage.setItem('ebro_fl_parts_usage_v1', JSON.stringify(records));
+    window.dispatchEvent(new CustomEvent('ebro:parts_updated'));
+  } catch {}
+}
+
 export const PartsManagePage: React.FC = () => {
   const { setActiveTab } = useApp();
   const [subTab, setSubTab] = useState<'INVENTORY' | 'ASSET_HISTORY' | 'CATALOG'>('INVENTORY');
-  const [parts, setParts] = useState<PartInventoryItem[]>(INITIAL_PARTS_INVENTORY);
-  const [usageHistory] = useState<AssetPartUsageHistoryRecord[]>(INITIAL_ASSET_PART_USAGE_HISTORY);
+  const [parts, setParts] = useState<PartInventoryItem[]>(loadPartsInventory);
+  const [usageHistory, setUsageHistory] = useState<AssetPartUsageHistoryRecord[]>(loadPartUsageHistory);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [assetFilter, setAssetFilter] = useState<string>('ALL');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      if (!localStorage.getItem('ebro_fl_parts_inv_v1')) {
+        localStorage.setItem('ebro_fl_parts_inv_v1', JSON.stringify(parts));
+      }
+      if (!localStorage.getItem('ebro_fl_parts_usage_v1')) {
+        localStorage.setItem('ebro_fl_parts_usage_v1', JSON.stringify(usageHistory));
+      }
+    } catch {}
+    const sync = () => {
+      setParts(loadPartsInventory());
+      setUsageHistory(loadPartUsageHistory());
+    };
+    window.addEventListener('ebro:parts_updated', sync);
+    return () => window.removeEventListener('ebro:parts_updated', sync);
+  }, []);
 
   // 입고 등록 인라인 폼 상태
   const [showInboundForm, setShowInboundForm] = useState<boolean>(false);
@@ -167,19 +220,24 @@ export const PartsManagePage: React.FC = () => {
   }, [parts, usageHistory]);
 
   const handleInboundSubmit = () => {
-    setParts(prev => prev.map(p => {
-      if (p.id !== targetPartId) return p;
-      const addSale = inboundPurpose === 'SALE' ? inboundQty : 0;
-      const addRepair = inboundPurpose === 'REPAIR' ? inboundQty : 0;
-      return {
-        ...p,
-        saleStockQty: p.saleStockQty + addSale,
-        repairStockQty: p.repairStockQty + addRepair,
-        totalQty: p.totalQty + addSale + addRepair
-      };
-    }));
+    const safeQty = Math.max(1, Math.floor(Number(inboundQty) || 1));
+    setParts(prev => {
+      const next = prev.map(p => {
+        if (p.id !== targetPartId) return p;
+        const addSale = inboundPurpose === 'SALE' ? safeQty : 0;
+        const addRepair = inboundPurpose === 'REPAIR' ? safeQty : 0;
+        return {
+          ...p,
+          saleStockQty: p.saleStockQty + addSale,
+          repairStockQty: p.repairStockQty + addRepair,
+          totalQty: p.totalQty + addSale + addRepair
+        };
+      });
+      savePartsInventory(next);
+      return next;
+    });
     setShowInboundForm(false);
-    showToast(`부품 입고 등록 완료 · ${inboundPurpose === 'REPAIR' ? '렌탈자산 정비용' : '유통 판매용'} 재고 ${inboundQty}개가 반영되었습니다.`);
+    showToast(`부품 입고 등록 완료 · ${inboundPurpose === 'REPAIR' ? '렌탈자산 정비용' : '유통 판매용'} 재고 ${safeQty}개가 반영되었습니다.`);
   };
 
   return (

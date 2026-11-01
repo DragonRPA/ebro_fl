@@ -169,7 +169,16 @@ const INITIAL_RENTAL_INBOUNDS: RentalInboundRecord[] = [
 
 export const RentalInboundManagePage: React.FC = () => {
   const { setActiveTab } = useApp();
-  const [inbounds, setInbounds] = useState<RentalInboundRecord[]>(INITIAL_RENTAL_INBOUNDS);
+  const [inbounds, setInbounds] = useState<RentalInboundRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ebro_fl_rental_inbounds_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_RENTAL_INBOUNDS;
+  });
   const [selectedId, setSelectedId] = useState<string>('RIN-202610-001');
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
   const [newContractId, setNewContractId] = useState<string>('CTR-R2607-001');
@@ -177,6 +186,16 @@ export const RentalInboundManagePage: React.FC = () => {
   const [newYardName, setNewYardName] = useState<string>('평택 본사 주기장');
   const [newFreightCost, setNewFreightCost] = useState<number>(200000);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('ebro_fl_rental_inbounds_v1', JSON.stringify(inbounds));
+    } catch {}
+  }, [inbounds]);
+
+  const updateInbounds = (updater: (prev: RentalInboundRecord[]) => RentalInboundRecord[]) => {
+    setInbounds(prev => updater(prev));
+  };
 
   const selectedRecord = useMemo(() => {
     return inbounds.find(r => r.id === selectedId) || inbounds[0];
@@ -189,7 +208,11 @@ export const RentalInboundManagePage: React.FC = () => {
 
   const toggleSymptom = (symptom: ForkliftDefectSymptomMaster) => {
     if (!selectedRecord) return;
-    setInbounds(prev => prev.map(row => {
+    if (selectedRecord.claimStatus === '고객청구생성완료') {
+      showToast('이미 고객 수리비 청구 생성이 완료된 반납입고 건은 불량증상을 변경할 수 없습니다.');
+      return;
+    }
+    updateInbounds(prev => prev.map(row => {
       if (row.id !== selectedRecord.id) return row;
       const exists = row.selectedSymptomIds.includes(symptom.id);
       const nextIds = exists
@@ -211,16 +234,25 @@ export const RentalInboundManagePage: React.FC = () => {
 
   const handleGenerateCustomerClaim = () => {
     if (!selectedRecord) return;
+    if (selectedRecord.claimStatus === '고객청구생성완료') {
+      showToast('이미 고객 수리비 청구 생성이 완료된 건입니다.');
+      return;
+    }
+    const hasSymptoms = selectedRecord.selectedSymptomIds.length > 0;
     if (selectedRecord.claimAmount <= 0) {
-      showToast('선택된 유상 불량증상이 없습니다. 불량없음 정상입고로 확정합니다.');
-      setInbounds(prev => prev.map(r => r.id === selectedRecord.id ? {
+      const nextStatus = hasSymptoms ? '수리중' : '임대가능';
+      showToast(hasSymptoms
+        ? '당사부담 경정비 항목이 선택되어 수리중 상태로 입고 확정되었습니다.'
+        : '선택된 유상 불량증상이 없습니다. 불량없음 정상입고로 확정합니다.');
+      updateInbounds(prev => prev.map(r => r.id === selectedRecord.id ? {
         ...r,
+        claimAmount: 0,
         claimStatus: '불량없음·정상입고',
-        nextAssetStatus: '임대가능'
+        nextAssetStatus: nextStatus
       } : r));
       return;
     }
-    setInbounds(prev => prev.map(r => r.id === selectedRecord.id ? {
+    updateInbounds(prev => prev.map(r => r.id === selectedRecord.id ? {
       ...r,
       claimStatus: '고객청구생성완료',
       nextAssetStatus: '수리중'
@@ -233,7 +265,7 @@ export const RentalInboundManagePage: React.FC = () => {
     const ast = SEED_FL_RENTAL_ASSETS.find(a => a.id === newAssetId) || SEED_FL_RENTAL_ASSETS[0];
     const cust = SEED_FL_CUSTOMERS.find(c => c.id === ctr.customerId) || SEED_FL_CUSTOMERS[0];
     const site = SEED_FL_SITES.find(s => s.id === ctr.siteId) || SEED_FL_SITES[0];
-    const newId = `RIN-202611-00${inbounds.length + 1}`;
+    const newId = `RIN-202611-${String(inbounds.length + 1).padStart(3, '0')}`;
     const newRow: RentalInboundRecord = {
       id: newId,
       inboundNo: newId,
@@ -248,14 +280,14 @@ export const RentalInboundManagePage: React.FC = () => {
       assetNo: ast.assetNo,
       modelName: ast.modelName,
       yardName: newYardName,
-      returnFreightCost: newFreightCost,
+      returnFreightCost: Math.max(0, Number(newFreightCost) || 0),
       selectedSymptomIds: [],
       inspectorNote: '반납 입고 검수 진행 중',
       claimAmount: 0,
       claimStatus: '불량없음·정상입고',
       nextAssetStatus: '임대가능'
     };
-    setInbounds(prev => [newRow, ...prev]);
+    updateInbounds(prev => [newRow, ...prev]);
     setSelectedId(newId);
     setShowNewModal(false);
     showToast(`반납입고 건 [${newId}]이 등록되었습니다. 우측에서 불량증상 판정을 진행하세요.`);
@@ -331,7 +363,7 @@ export const RentalInboundManagePage: React.FC = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700 }}>회수 운송비 · 원</label>
-              <input type="number" value={newFreightCost} onChange={e => setNewFreightCost(Number(e.target.value) || 0)} style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }} />
+              <input type="number" min={0} value={newFreightCost} onChange={e => setNewFreightCost(Math.max(0, Number(e.target.value) || 0))} style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }} />
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button type="button" onClick={handleRegisterNewInbound} className="btn btn-primary" style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 700 }}>반납입고 저장</button>
@@ -499,7 +531,7 @@ export const RentalInboundManagePage: React.FC = () => {
                 <input
                   type="text"
                   value={selectedRecord.inspectorNote}
-                  onChange={e => setInbounds(prev => prev.map(r => r.id === selectedRecord.id ? { ...r, inspectorNote: e.target.value } : r))}
+                  onChange={e => updateInbounds(prev => prev.map(r => r.id === selectedRecord.id ? { ...r, inspectorNote: e.target.value } : r))}
                   style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}
                 />
               </div>
@@ -507,8 +539,10 @@ export const RentalInboundManagePage: React.FC = () => {
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: '#dc2626' }}>사용자 확정 청구금액 · 원</label>
                 <input
                   type="number"
+                  min={0}
+                  disabled={selectedRecord.claimStatus === '고객청구생성완료'}
                   value={selectedRecord.claimAmount}
-                  onChange={e => setInbounds(prev => prev.map(r => r.id === selectedRecord.id ? { ...r, claimAmount: Number(e.target.value) || 0 } : r))}
+                  onChange={e => updateInbounds(prev => prev.map(r => r.id === selectedRecord.id ? { ...r, claimAmount: Math.max(0, Number(e.target.value) || 0) } : r))}
                   style={{ padding: '7px 10px', borderRadius: '6px', border: '1.5px solid #dc2626', fontSize: '13px', fontWeight: 800, color: '#dc2626' }}
                 />
               </div>

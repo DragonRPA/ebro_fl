@@ -707,7 +707,7 @@ export const Vendors: React.FC = () => {
         '누적거래액': (v.totalPurchaseAmount || 0).toLocaleString() + '원',
         '최근거래일': v.lastTradeDate || '-',
         '사용여부': v.isActive ? '사용중' : '미사용',
-        '등록일': v.createdAt.slice(0, 10)
+        '등록일': (v.createdAt || '').slice(0, 10) || '-'
       };
     });
 
@@ -1512,8 +1512,9 @@ export const Vendors: React.FC = () => {
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>매입 누적거래액 (원)</label>
                   <input
                     type="number"
+                    min={0}
                     value={editingVendor.totalPurchaseAmount ?? 0}
-                    onChange={e => setEditingVendor({ ...editingVendor, totalPurchaseAmount: Number(e.target.value) || 0 })}
+                    onChange={e => setEditingVendor({ ...editingVendor, totalPurchaseAmount: Math.max(0, Number(e.target.value) || 0) })}
                     placeholder="0"
                     style={{ width: '100%', padding: '8px' }}
                   />

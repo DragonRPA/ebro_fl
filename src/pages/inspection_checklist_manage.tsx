@@ -290,11 +290,11 @@ export const InspectionChecklistManage: React.FC = () => {
       if (!searchTerm.trim()) return true;
       const term = searchTerm.toLowerCase();
       return (
-        item.name.toLowerCase().includes(term) ||
-        item.category.toLowerCase().includes(term) ||
-        item.code.toLowerCase().includes(term) ||
-        (item.description && item.description.toLowerCase().includes(term)) ||
-        (item.actionGuide && item.actionGuide.toLowerCase().includes(term))
+        String(item.name || '').toLowerCase().includes(term) ||
+        String(item.category || '').toLowerCase().includes(term) ||
+        String(item.code || '').toLowerCase().includes(term) ||
+        (item.description && String(item.description).toLowerCase().includes(term)) ||
+        (item.actionGuide && String(item.actionGuide).toLowerCase().includes(term))
       );
     });
   }, [inspectionChecklistItems, selectedCategory, searchTerm, filterDefectSymptomOnly]);
@@ -460,12 +460,12 @@ export const InspectionChecklistManage: React.FC = () => {
         r.repairType === 'EXTERNAL' ||
         r.resolutionType === 'EXTERNAL_OUTSOURCE';
       if (isExternal) {
-        repairExternalCost = r.totalCost || 0;
+        repairExternalCost = Math.max(0, (r.totalCost || 0) - repairPartCost);
       }
 
       const repairTotalCost = repairPartCost + repairExternalCost || (r.totalCost || 0);
       const billable = r.billableType === 'BILLABLE' ? (r.billableAmount || 0) : 0;
-      const compCost = Math.max(0, repairTotalCost - billable);
+      const compCost = repairTotalCost - billable;
 
       const existing = itemAggMap.get(code) || {
         itemCode: code,

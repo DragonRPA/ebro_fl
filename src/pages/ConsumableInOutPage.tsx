@@ -570,7 +570,7 @@ export const ConsumableInOutPage: React.FC = () => {
                           key={p.id}
                           onClick={() => {
                             setSelectedReqId(p.id);
-                            setInboundQty(p.requestedQty);
+                            setInboundQty(Math.max(1, (p.requestedQty || 0) - ((p as any).receivedQty || 0)));
                           }}
                           style={{
                             cursor: 'pointer',

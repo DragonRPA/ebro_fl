@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Repairs } from './Repairs';
 import { SEED_FL_RENTAL_ASSETS } from '../data/flUnifiedSeedData';
 import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
-import { INITIAL_ASSET_PART_USAGE_HISTORY } from './PartsManagePage';
+import { loadPartsInventory, savePartsInventory, loadPartUsageHistory, savePartUsageHistory } from './PartsManagePage';
 
 export const RentalMaintenanceManagePage: React.FC = () => {
   const { setActiveTab } = useApp();
@@ -18,24 +18,50 @@ export const RentalMaintenanceManagePage: React.FC = () => {
   const handleSavePartLinkedRepair = () => {
     const ast = SEED_FL_RENTAL_ASSETS.find(a => a.id === selectedAssetId) || SEED_FL_RENTAL_ASSETS[0];
     const part = COMPATIBLE_PARTS_CATALOG.find(p => p.sku === selectedPartSku) || COMPATIBLE_PARTS_CATALOG[0];
-    INITIAL_ASSET_PART_USAGE_HISTORY.unshift({
-      id: `PUH-202611-${Math.floor(100 + Math.random() * 899)}`,
+    const currentParts = loadPartsInventory();
+    const invItem = currentParts.find(p => p.skuCode === part.sku);
+    const reqQty = Math.max(1, Math.floor(Number(usedQty) || 1));
+
+    if (invItem && reqQty > invItem.repairStockQty) {
+      setToastMsg(`렌탈 정비용 가용 부품재고(${invItem.repairStockQty}개)가 부족하여 차감이 차단되었습니다. (유통 판매용 재고 ${invItem.saleStockQty}개는 침범 불가)`);
+      setTimeout(() => setToastMsg(null), 3500);
+      return;
+    }
+
+    if (invItem) {
+      const nextParts = currentParts.map(p => {
+        if (p.skuCode !== part.sku) return p;
+        const nextRepairQty = Math.max(0, p.repairStockQty - reqQty);
+        return {
+          ...p,
+          repairStockQty: nextRepairQty,
+          totalQty: p.saleStockQty + nextRepairQty
+        };
+      });
+      savePartsInventory(nextParts);
+    }
+
+    const currentHistory = loadPartUsageHistory();
+    const newRecord = {
+      id: `PUH-202611-${String(currentHistory.length + 1).padStart(3, '0')}`,
       usedDate: new Date().toISOString().split('T')[0],
-      repairTicketNo: `REP-202611-${Math.floor(100 + Math.random() * 899)}`,
+      repairTicketNo: `REP-202611-${String(currentHistory.length + 1).padStart(3, '0')}`,
       assetId: ast.id,
       assetNo: ast.assetNo,
       modelName: ast.modelName,
       partId: part.id,
       skuCode: part.sku,
       partName: part.partName,
-      usedQty,
+      usedQty: reqQty,
       unitCost: part.dealerPriceKrw || part.retailPriceKrw,
-      totalPartCost: (part.dealerPriceKrw || part.retailPriceKrw) * usedQty,
+      totalPartCost: (part.dealerPriceKrw || part.retailPriceKrw) * reqQty,
       mechanicName: '김정비',
       repairSummary
-    });
+    };
+    savePartUsageHistory([newRecord, ...currentHistory]);
+
     setShowQuickPartLinkForm(false);
-    setToastMsg(`자산 [${ast.assetNo}] 정비이력 등록 완료 · 부품관리-렌탈 재고 차감(${part.partName} ${usedQty}개) 및 자산 부품사용이력 기록이 연동되었습니다.`);
+    setToastMsg(`자산 [${ast.assetNo}] 정비이력 등록 완료 · 부품관리-렌탈 재고 차감(${part.partName} ${reqQty}개) 및 자산 부품사용이력 기록이 연동되었습니다.`);
     setTimeout(() => setToastMsg(null), 3500);
   };
 

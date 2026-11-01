@@ -135,11 +135,30 @@ const INITIAL_PATROL_SCHEDULES: PatrolScheduleRecord[] = [
 ];
 
 export const PatrolMaintenancePage: React.FC = () => {
-  const [schedules, setSchedules] = useState<PatrolScheduleRecord[]>(INITIAL_PATROL_SCHEDULES);
+  const [schedules, setSchedules] = useState<PatrolScheduleRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ebro_fl_patrol_schedules_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_PATROL_SCHEDULES;
+  });
   const [selectedId, setSelectedId] = useState<string>('PTL-202611-003');
   const [statusFilter, setStatusFilter] = useState<'ALL' | '방문예정' | '점검진행중' | '처리완료'>('ALL');
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('ebro_fl_patrol_schedules_v1', JSON.stringify(schedules));
+    } catch {}
+  }, [schedules]);
+
+  const updateSchedules = (updater: (prev: PatrolScheduleRecord[]) => PatrolScheduleRecord[]) => {
+    setSchedules(prev => updater(prev));
+  };
 
   // 신규 순회정비 일정 등록 상태
   const [newDate, setNewDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -163,7 +182,7 @@ export const PatrolMaintenancePage: React.FC = () => {
 
   const toggleCheckItem = (item: string) => {
     if (!selectedRecord) return;
-    setSchedules(prev => prev.map(s => {
+    updateSchedules(prev => prev.map(s => {
       if (s.id !== selectedRecord.id) return s;
       const exists = s.checkedItems.includes(item);
       const next = exists ? s.checkedItems.filter(i => i !== item) : [...s.checkedItems, item];
@@ -173,13 +192,13 @@ export const PatrolMaintenancePage: React.FC = () => {
 
   const updateSelectedField = (field: keyof PatrolScheduleRecord, val: any) => {
     if (!selectedRecord) return;
-    setSchedules(prev => prev.map(s => s.id === selectedRecord.id ? { ...s, [field]: val } : s));
+    updateSchedules(prev => prev.map(s => s.id === selectedRecord.id ? { ...s, [field]: val } : s));
   };
 
   const handleCompletePatrol = () => {
     if (!selectedRecord) return;
     const today = new Date().toISOString().split('T')[0];
-    setSchedules(prev => prev.map(s => s.id === selectedRecord.id ? {
+    updateSchedules(prev => prev.map(s => s.id === selectedRecord.id ? {
       ...s,
       checkedItems: s.checkedItems.length > 0 ? s.checkedItems : [...PATROL_CHECK_ITEMS],
       completedDate: today,
@@ -192,7 +211,7 @@ export const PatrolMaintenancePage: React.FC = () => {
     const site = SEED_FL_SITES.find(s => s.id === newSiteId) || SEED_FL_SITES[0];
     const cust = SEED_FL_CUSTOMERS.find(c => c.id === site.customerId) || SEED_FL_CUSTOMERS[0];
     const ast = SEED_FL_RENTAL_ASSETS.find(a => a.id === newAssetId) || SEED_FL_RENTAL_ASSETS[0];
-    const newId = `PTL-202611-00${schedules.length + 1}`;
+    const newId = `PTL-202611-${String(schedules.length + 1).padStart(3, '0')}`;
     const newRec: PatrolScheduleRecord = {
       id: newId,
       patrolNo: newId,
@@ -216,7 +235,7 @@ export const PatrolMaintenancePage: React.FC = () => {
       customerConfirmName: site.contactName,
       status: '방문예정'
     };
-    setSchedules(prev => [newRec, ...prev]);
+    updateSchedules(prev => [newRec, ...prev]);
     setSelectedId(newId);
     setShowAddForm(false);
     showToast(`신규 순회정비 일정 [${newId}]이 등록되었습니다.`);
@@ -416,16 +435,17 @@ export const PatrolMaintenancePage: React.FC = () => {
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>가동 아워미터 · 시간</label>
                 <input
                   type="number"
+                  min={0}
                   value={selectedRecord.hourMeterReading}
-                  onChange={e => updateSelectedField('hourMeterReading', Number(e.target.value) || 0)}
+                  onChange={e => updateSelectedField('hourMeterReading', Math.max(0, Number(e.target.value) || 0))}
                   style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700 }}
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>담당 정비사 · 정비차량</label>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>담당 정비사 · 정비차량 ({selectedRecord.vehicleNo})</label>
                 <input
                   type="text"
-                  value={`${selectedRecord.mechanicName} · ${selectedRecord.vehicleNo}`}
+                  value={selectedRecord.mechanicName}
                   onChange={e => updateSelectedField('mechanicName', e.target.value)}
                   style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}
                 />
