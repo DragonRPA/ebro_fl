@@ -17,6 +17,9 @@ export const SYSTEM_MENU_CONFIG: MenuGroupConfig[] = [
     name: '영업-유통',
     items: [
       { id: 'trade_products', name: '상품 등록 및 관리' },
+      { id: 'trade_option_masters', name: '지게차 옵션·부착물 단가관리' },
+      { id: 'trade_parts_catalog', name: '호환부품 카탈로그·주문서' },
+      { id: 'fl_doc_archive', name: '제조사 제원·매뉴얼 아카이브' },
       { id: 'trade_purchases', name: '구매 및 입고' },
       { id: 'trade_contracts', name: '유통 수주' },
       { id: 'trade_outbounds', name: '유통 출고 관리' },

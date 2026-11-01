@@ -4,16 +4,19 @@ import {
   TradeProduct, TradePurchase, TradePurchaseItem, TradeInventoryLot,
   TradeSalesOrder, TradeSalesOrderLine, TradeOutbound, TradeBilling,
   TradeReturn, TradeInventoryAdjustment,
+  ForkliftOptionMaster, AppliedForkliftOption,
   db, supabase, Customer, Vendor
 } from '../services/db';
 import { emailService, SentEmail } from '../services/email';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
+import { DEFAULT_FORKLIFT_OPTION_MASTERS } from '../data/forkliftOptionMastersData';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
 export interface TradeContextType {
   products: TradeProduct[];
+  optionMasters: ForkliftOptionMaster[];
   purchases: TradePurchase[];
   purchaseItems: TradePurchaseItem[];
   inventoryLots: TradeInventoryLot[];
@@ -23,6 +26,12 @@ export interface TradeContextType {
   outbounds: TradeOutbound[];
   billings: TradeBilling[];
   returns: TradeReturn[];
+
+  // Option Masters CRUD (지게차 옵션·부착물 단가 마스터)
+  addOptionMaster: (opt: Omit<ForkliftOptionMaster, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ForkliftOptionMaster>;
+  updateOptionMaster: (id: string, updates: Partial<ForkliftOptionMaster>) => Promise<void>;
+  deleteOptionMaster: (id: string) => Promise<void>;
+  applyOptionsToOutbound: (outboundId: string, appliedOptions: AppliedForkliftOption[]) => Promise<void>;
 
   // Helpers (SSOT Normalization)
   getCustomerName: (customerId?: string) => string;
@@ -141,6 +150,7 @@ export interface TradeContextType {
       linkedBillingId?: string;
       deliveryMethod?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';
       linkedRentalDeliveryId?: string;
+      appliedOptions?: AppliedForkliftOption[];
     }
   ) => Promise<TradeSalesOrder>;
   updateSalesOrder: (
@@ -187,6 +197,7 @@ export interface TradeContextType {
       receiverPhone?: string;
       deliveryType?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';
       closingMemo?: string;
+      appliedOptions?: AppliedForkliftOption[];
     }
   ) => Promise<TradeOutbound>;
   allocateOutbound: (outboundId: string) => Promise<void>;
@@ -1496,6 +1507,246 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
   }))
 ];
 
+const SEED_OPTIONS_SO101: AppliedForkliftOption[] = [
+  {
+    optionId: 'FL-OPT-003',
+    optionCode: 'OPT-SS-25C2',
+    optionGroup: 'SIDESHIFT',
+    optionGroupLabel: '사이드시프트·부착물',
+    domainTypeLabel: '부착물',
+    name: '2.5톤급 일체형 유압 사이드시프트',
+    subVariant: 'Class II · 좌우 각 100mm 이송',
+    specDetail: 'ISO 2328 Class II 캐리지 장착 / 3스풀 컨트롤 밸브 및 유압호스 릴 세트 포함',
+    qty: 1,
+    costPrice: 450000,
+    unitPrice: 620000,
+    supplyAmount: 620000,
+    isFreeApplied: false,
+    note: '대리점 공급가 적용'
+  },
+  {
+    optionId: 'FL-OPT-014',
+    optionCode: 'OPT-FE-1800',
+    optionGroup: 'FORK_EXTENSION',
+    optionGroupLabel: '덧발·길이별',
+    domainTypeLabel: '부착물',
+    name: '고강도 밀폐형 덧발 1,800mm 세트',
+    subVariant: '길이 1,800mm · 표준 파레트 연장형',
+    specDetail: 'SS400 / SM490 고장력 절곡 보강판 6T · 2.5톤~3.0톤 1,070~1,200mm 기본 포크 장착용 1쌍',
+    qty: 1,
+    costPrice: 210000,
+    unitPrice: 280000,
+    supplyAmount: 280000,
+    isFreeApplied: false,
+    note: '대리점 공급가 적용'
+  },
+  {
+    optionId: 'FL-OPT-020',
+    optionCode: 'OPT-PRT-STD',
+    optionGroup: 'PROTECTION',
+    optionGroupLabel: '무상옵션·장비보호',
+    domainTypeLabel: '무상옵션',
+    name: '출고 표준 장비보호 시공',
+    subVariant: '마스트 방청 코팅 + 시트·발판 보호래핑',
+    specDetail: '출고 전 마스트 체인·실린더 로드 방청윤활 도포, 운전석 시트·조종레버·발판 오염방지 보호랩 시공',
+    qty: 2,
+    costPrice: 35000,
+    unitPrice: 0,
+    supplyAmount: 0,
+    isFreeApplied: true,
+    note: '무상 기본 시공'
+  }
+];
+
+const SEED_OPTIONS_SO102: AppliedForkliftOption[] = [
+  {
+    optionId: 'FL-OPT-009',
+    optionCode: 'OPT-CAB-SOFT',
+    optionGroup: 'CABIN_DOOR',
+    optionGroupLabel: '캐빈·문열림구조별',
+    domainTypeLabel: '유상옵션',
+    name: '투명 우레탄 방풍 소프트 캐빈',
+    subVariant: '문열림: 양측면 이중 지퍼 롤업 개폐형',
+    specDetail: '고투명 내한성 PVC 우레탄 시트 + 마그네틱·벨크로 밀착 프레임 · 동절기/우천 방풍용',
+    qty: 1,
+    costPrice: 220000,
+    unitPrice: 480000,
+    supplyAmount: 480000,
+    isFreeApplied: false,
+    note: '냉동창고 방풍용 장착'
+  },
+  {
+    optionId: 'FL-OPT-016',
+    optionCode: 'OPT-RS-4CH',
+    optionGroup: 'REAR_SENSOR',
+    optionGroupLabel: '후방감지센서·카메라',
+    domainTypeLabel: '현장요구사양',
+    name: '초음파 4채널 후방감지센서 + 거리표시 음성경보기',
+    subVariant: '4채널 초음파 센서 + LED 거리 모니터',
+    specDetail: '카운터웨이트 매립형 방수 초음파 센서 4구 + 운전석 디지털 거리표시창 + 한국어 음성 경고 알림',
+    qty: 1,
+    costPrice: 95000,
+    unitPrice: 240000,
+    supplyAmount: 240000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-019',
+    optionCode: 'OPT-BL-BLUE',
+    optionGroup: 'BEACON_LIGHT',
+    optionGroupLabel: '경광등·안전조명',
+    domainTypeLabel: '현장요구사양',
+    name: '전후방 청색·적색 안전 스팟라이트 + 측면 레드존 라인빔',
+    subVariant: '블루스팟 2구 + 좌우 레드 라인빔 2구 세트',
+    specDetail: '바닥면 전후 5m 진행방향 청색 스팟 빔 투사 + 좌우 2m 접근금지 적색 라인 레이저 조명 일체',
+    qty: 1,
+    costPrice: 85000,
+    unitPrice: 220000,
+    supplyAmount: 220000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-020',
+    optionCode: 'OPT-PRT-STD',
+    optionGroup: 'PROTECTION',
+    optionGroupLabel: '무상옵션·장비보호',
+    domainTypeLabel: '무상옵션',
+    name: '출고 표준 장비보호 시공',
+    subVariant: '마스트 방청 코팅 + 시트·발판 보호래핑',
+    specDetail: '출고 전 마스트 체인·실린더 로드 방청윤활 도포, 운전석 시트·조종레버·발판 오염방지 보호랩 시공',
+    qty: 1,
+    costPrice: 35000,
+    unitPrice: 0,
+    supplyAmount: 0,
+    isFreeApplied: true,
+    note: '무상 기본 시공'
+  }
+];
+
+const SEED_OPTIONS_SO103: AppliedForkliftOption[] = [
+  {
+    optionId: 'FL-OPT-001',
+    optionCode: 'OPT-BR-1220',
+    optionGroup: 'BACKREST',
+    optionGroupLabel: '백레스트 변경',
+    domainTypeLabel: '유상옵션',
+    name: '고하중 높이연장 백레스트 변경',
+    subVariant: '높이 1,220mm 연장형',
+    specDetail: '표준 960mm 탈거 후 1,220mm 고강도 평철 격자형 백레스트 교체 장착 · 2단 적재 화물 후방 낙하 방지',
+    qty: 1,
+    costPrice: 180000,
+    unitPrice: 350000,
+    supplyAmount: 350000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-004',
+    optionCode: 'OPT-SS-30C3',
+    optionGroup: 'SIDESHIFT',
+    optionGroupLabel: '사이드시프트·부착물',
+    domainTypeLabel: '부착물',
+    name: '3.0톤급 중량 유압 사이드시프트',
+    subVariant: 'Class III · 좌우 각 100mm 이송',
+    specDetail: 'ISO 2328 Class III 고강도 캐리지 장착 / 복동 실린더 및 고압 유압배관 일체 시공',
+    qty: 1,
+    costPrice: 540000,
+    unitPrice: 920000,
+    supplyAmount: 920000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-006',
+    optionCode: 'OPT-CAB-SWING',
+    optionGroup: 'CABIN_DOOR',
+    optionGroupLabel: '캐빈·문열림구조별',
+    domainTypeLabel: '유상옵션',
+    name: '강화유리 스틸 캐빈 · 양문 여닫이형',
+    subVariant: '문열림: 좌우 180도 스윙 여닫이 도어 + 가스쇼바 고정',
+    specDetail: '전후면 와이퍼·워셔액, 전면 열선 안전강화유리, 좌우 여닫이 도어 잠금장치, LED 실내등 및 히터 기본 내장',
+    qty: 1,
+    costPrice: 1450000,
+    unitPrice: 2350000,
+    supplyAmount: 2350000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-010',
+    optionCode: 'OPT-AC-ROOF',
+    optionGroup: 'AIRCON',
+    optionGroupLabel: '에어컨·공조설치',
+    domainTypeLabel: '유상옵션',
+    name: '루프형 전동 일체형 에어컨 설치',
+    subVariant: '천장 루프탑 슬림 일체형 · 냉방전용',
+    specDetail: 'DC 인버터 트윈 로터리 컴프레서 내장 루프탑 에어컨 · 냉방능력 2,600W · 전동/디젤 공용 장착',
+    qty: 1,
+    costPrice: 1150000,
+    unitPrice: 1850000,
+    supplyAmount: 1850000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-015',
+    optionCode: 'OPT-FE-2100',
+    optionGroup: 'FORK_EXTENSION',
+    optionGroupLabel: '덧발·길이별',
+    domainTypeLabel: '부착물',
+    name: '고강도 밀폐형 덧발 2,100mm 세트',
+    subVariant: '길이 2,100mm · 광폭 화물용',
+    specDetail: '하부 전체 밀폐 박스용접 구조 8T 보강 · 장척 목재·석고보드·대형 설비 상하차용 1쌍',
+    qty: 1,
+    costPrice: 260000,
+    unitPrice: 420000,
+    supplyAmount: 420000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-017',
+    optionCode: 'OPT-RS-CAM2',
+    optionGroup: 'REAR_SENSOR',
+    optionGroupLabel: '후방감지센서·카메라',
+    domainTypeLabel: '현장요구사양',
+    name: '전후방 2채널 HD 카메라 + 7인치 모니터 + 보행자 인식 알람',
+    subVariant: '2채널 방수 카메라 + 7인치 분할 모니터 + AI 인체감지',
+    specDetail: '마스트 전방 포크팁 카메라 + 후방 광각 야간투시 카메라 + AI 작업자 접근 시 95dB 사이렌 및 적색 점멸',
+    qty: 1,
+    costPrice: 280000,
+    unitPrice: 550000,
+    supplyAmount: 550000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-018',
+    optionCode: 'OPT-BL-LED',
+    optionGroup: 'BEACON_LIGHT',
+    optionGroupLabel: '경광등·안전조명',
+    domainTypeLabel: '현장요구사양',
+    name: '고휘도 회전형 LED 경광등 + 후진 음성안내기',
+    subVariant: '황색 회전 LED 경광등 + 후진 멜로디/음성경보',
+    specDetail: '헤드가드 상부 방수 브래킷 장착 DC 12V~80V 프리볼트 LED 경광등 + 후진 시 한국어 안전음성 송출',
+    qty: 1,
+    costPrice: 45000,
+    unitPrice: 130000,
+    supplyAmount: 130000,
+    isFreeApplied: false
+  },
+  {
+    optionId: 'FL-OPT-020',
+    optionCode: 'OPT-PRT-STD',
+    optionGroup: 'PROTECTION',
+    optionGroupLabel: '무상옵션·장비보호',
+    domainTypeLabel: '무상옵션',
+    name: '출고 표준 장비보호 시공',
+    subVariant: '마스트 방청 코팅 + 시트·발판 보호래핑',
+    specDetail: '출고 전 마스트 체인·실린더 로드 방청윤활 도포, 운전석 시트·조종레버·발판 오염방지 보호랩 시공',
+    qty: 1,
+    costPrice: 35000,
+    unitPrice: 0,
+    supplyAmount: 0,
+    isFreeApplied: true,
+    note: '무상 기본 시공'
+  }
+];
+
 const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   {
     id: 'SO-202609-101',
@@ -1507,13 +1758,16 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     receiverName: '김대리점장',
     receiverPhone: '010-4455-8899',
     paymentTerms: '대리점 도매 공급가 적용 / 납품 후 30일 이내 현금 결제',
-    specialTerms: '1. 차대번호 HL-CPD25-260401, EP-1531-260401 출고\n2. 무상보증 12개월 적용',
+    specialTerms: '1. 차대번호 HL-CPD25-260401, EP-1531-260401 출고\n2. 사이드시프트·덧발 1,800mm·무상 장비보호 옵션 시공 포함\n3. 무상보증 12개월 적용',
     salespersonName: '해외유통영업팀',
     status: 'DELIVERED',
-    totalSalesAmount: 21490000,
-    totalCogsAmount: 17360000,
+    totalSalesAmount: 22390000,
+    totalCogsAmount: 18090000,
+    appliedOptions: SEED_OPTIONS_SO101,
+    optionSupplyAmount: 900000,
+    optionCostAmount: 730000,
     contractDocStatus: 'SENT',
-    memo: '경기남부 총판 대리점 9월 정기 출고 건',
+    memo: '경기남부 총판 대리점 9월 정기 출고 건 · 사이드시프트 및 덧발 1,800mm 옵션 청구 포함',
     createdAt: '2026-09-12T09:00:00.000Z',
     updatedAt: '2026-09-14T16:00:00.000Z'
   },
@@ -1527,13 +1781,16 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     receiverName: '박물류팀장',
     receiverPhone: '010-8877-2233',
     paymentTerms: '최종고객 납품 검수 후 세금계산서 발행 15일 이내 결제',
-    specialTerms: '1. 차대번호 HC-CQD15-260601 및 예비 리튬배터리·노마킹 타이어 일괄 납품',
+    specialTerms: '1. 차대번호 HC-CQD15-260601 및 예비 리튬배터리·노마킹 타이어 일괄 납품\n2. 소프트 캐빈·후방감지센서·블루스팟 안전조명 옵션 장착 청구 포함',
     salespersonName: '유통영업팀',
     status: 'DELIVERED',
-    totalSalesAmount: 23440000,
-    totalCogsAmount: 16510000,
+    totalSalesAmount: 24380000,
+    totalCogsAmount: 16945000,
+    appliedOptions: SEED_OPTIONS_SO102,
+    optionSupplyAmount: 940000,
+    optionCostAmount: 435000,
     contractDocStatus: 'GENERATED',
-    memo: '화성 냉동창고 최종고객 직납 완료',
+    memo: '화성 냉동창고 최종고객 직납 완료 · 소프트 캐빈 및 후방감지센서 옵션 합산 청구',
     createdAt: '2026-10-08T10:00:00.000Z',
     updatedAt: '2026-10-10T17:00:00.000Z'
   },
@@ -1547,13 +1804,16 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     receiverName: '최자재과장',
     receiverPhone: '010-3322-9911',
     paymentTerms: '납품 후 당월 말 세금계산서 마감, 익월 10일 현금 입금',
-    specialTerms: '1. 차대번호 DS-FD30T-260801 및 중량 단조포크 2세트 납품',
+    specialTerms: '1. 차대번호 DS-FD30T-260801 및 중량 단조포크 2세트 납품\n2. 높이연장 백레스트·3톤 사이드시프트·양문 여닫이 스틸캐빈·루프 에어컨·덧발 2,100mm·2채널 카메라·경광등 풀옵션 장착 청구 반영',
     salespersonName: '유통영업팀',
     status: 'SHIPPED',
-    totalSalesAmount: 30020000,
-    totalCogsAmount: 23260000,
+    totalSalesAmount: 36590000,
+    totalCogsAmount: 27200000,
+    appliedOptions: SEED_OPTIONS_SO103,
+    optionSupplyAmount: 6570000,
+    optionCostAmount: 3940000,
     contractDocStatus: 'GENERATED',
-    memo: '당진 철강공장 3톤 디젤지게차 및 중량포크 출고 (미수금 관리 대상)',
+    memo: '당진 철강공장 3톤 디젤지게차 풀옵션 장착 출고 · 미수금 관리 대상',
     createdAt: '2026-10-18T11:00:00.000Z',
     updatedAt: '2026-10-20T14:00:00.000Z'
   }
@@ -1668,11 +1928,13 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     destinationAddress: '경기도 평택시 포승읍 경기종합물류 지게차 전시장',
     receiverName: '김대리점장',
     receiverPhone: '010-4455-8899',
+    appliedOptions: SEED_OPTIONS_SO101,
+    optionBillingAmount: 900000,
     allocatedAt: '2026-09-12T10:00:00.000Z',
     packedAt: '2026-09-13T11:00:00.000Z',
     shippedAt: '2026-09-14T08:30:00.000Z',
     deliveredAt: '2026-09-14T15:00:00.000Z',
-    closingMemo: '차대번호 HL-CPD25-260401, EP-1531-260401 및 컨트롤러 4개 대리점 인도 완료',
+    closingMemo: '차대번호 HL-CPD25-260401, EP-1531-260401 출고 · 사이드시프트 및 덧발 1,800mm 장착·무상 장비보호 시공 완료',
     createdAt: '2026-09-12T09:30:00.000Z',
     updatedAt: '2026-09-14T15:00:00.000Z'
   },
@@ -1689,11 +1951,13 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     destinationAddress: '경기도 화성시 송산면 물류단지로 55',
     receiverName: '박물류팀장',
     receiverPhone: '010-8877-2233',
+    appliedOptions: SEED_OPTIONS_SO102,
+    optionBillingAmount: 940000,
     allocatedAt: '2026-10-08T11:00:00.000Z',
     packedAt: '2026-10-09T14:00:00.000Z',
     shippedAt: '2026-10-10T09:00:00.000Z',
     deliveredAt: '2026-10-10T16:30:00.000Z',
-    closingMemo: '차대번호 HC-CQD15-260601 리치트럭 및 배터리·타이어 화성 물류창고 납품 완료',
+    closingMemo: '차대번호 HC-CQD15-260601 리치트럭 · 소프트 캐빈(지퍼 개폐형), 후방감지센서, 블루스팟 장착 납품 완료',
     createdAt: '2026-10-08T10:30:00.000Z',
     updatedAt: '2026-10-10T16:30:00.000Z'
   },
@@ -1710,10 +1974,12 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     destinationAddress: '충청남도 당진시 송악읍 부곡공단로 110',
     receiverName: '최자재과장',
     receiverPhone: '010-3322-9911',
+    appliedOptions: SEED_OPTIONS_SO103,
+    optionBillingAmount: 6570000,
     allocatedAt: '2026-10-18T13:00:00.000Z',
     packedAt: '2026-10-19T15:00:00.000Z',
     shippedAt: '2026-10-20T08:00:00.000Z',
-    closingMemo: '차대번호 DS-FD30T-260801 3톤 디젤지게차 당진 철강공장 상차 출발',
+    closingMemo: '차대번호 DS-FD30T-260801 3톤 디젤지게차 · 연장 백레스트, 3톤 사이드시프트, 양문 여닫이 캐빈, 루프 에어컨, 덧발 2,100mm, 2채널 카메라, 경광등 장착 출고',
     createdAt: '2026-10-18T11:30:00.000Z',
     updatedAt: '2026-10-20T08:00:00.000Z'
   }
@@ -1727,15 +1993,15 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     customerId: 'CUST-001',
     billingMonth: '2026-09',
     billingDate: '2026-09-25',
-    supplyAmount: 21490000,
-    vatAmount: 2149000,
-    totalAmount: 23639000,
+    supplyAmount: 22390000,
+    vatAmount: 2239000,
+    totalAmount: 24629000,
     status: 'PAID',
     recipientName: '김대리점장',
     recipientEmail: 'dealer-gg@example.com',
     sentAt: '2026-09-25T10:00:00.000Z',
     paidAt: '2026-10-05T14:30:00.000Z',
-    memo: '9월분 대리점 출고 대금 전액 수납 완료',
+    memo: '9월분 대리점 출고 대금 및 장착 옵션(사이드시프트·덧발 1,800mm) 합산 전액 수납 완료',
     createdAt: '2026-09-25T09:00:00.000Z',
     updatedAt: '2026-10-05T14:30:00.000Z'
   },
@@ -1746,14 +2012,14 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     customerId: 'CUST-002',
     billingMonth: '2026-10',
     billingDate: '2026-10-12',
-    supplyAmount: 23440000,
-    vatAmount: 2344000,
-    totalAmount: 25784000,
+    supplyAmount: 24380000,
+    vatAmount: 2438000,
+    totalAmount: 26818000,
     status: 'SENT',
     recipientName: '박물류팀장',
     recipientEmail: 'hwaseong-cold@example.com',
     sentAt: '2026-10-12T11:00:00.000Z',
-    memo: '10월 말 결제 예정 미수 채권',
+    memo: '10월 말 결제 예정 미수 채권 · 장비 본품 및 장착 옵션(소프트 캐빈·후방센서·블루스팟) 합산 청구',
     createdAt: '2026-10-12T10:00:00.000Z',
     updatedAt: '2026-10-12T11:00:00.000Z'
   }
@@ -1821,9 +2087,10 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v4';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v5';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
+    localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));
     const rawProducts = localStorage.getItem('ebro_trade_products');
     const parsedProducts: TradeProduct[] = rawProducts ? JSON.parse(rawProducts) : [];
     const hasLegacyGloves = parsedProducts.some(p => p.skuCode === 'SKU001' || p.name === '산업용 장갑');
@@ -1851,6 +2118,66 @@ function ensureFlTradeSeedMigratedOnce(): void {
       if (missingLots.length > 0) {
         localStorage.setItem('ebro_trade_inventory', JSON.stringify([...parsedLots, ...missingLots]));
       }
+
+      // 기본 샘플 수주·출고·청구에 지게차 옵션 장착 내역 동기화
+      const rawOrders = localStorage.getItem('ebro_trade_orders');
+      if (rawOrders) {
+        const parsedOrders: TradeSalesOrder[] = JSON.parse(rawOrders);
+        const mergedOrders = parsedOrders.map(so => {
+          const defSo = DEFAULT_SALES_ORDERS.find(d => d.id === so.id);
+          if (defSo && (!so.appliedOptions || so.appliedOptions.length === 0)) {
+            return {
+              ...so,
+              appliedOptions: defSo.appliedOptions,
+              optionSupplyAmount: defSo.optionSupplyAmount,
+              optionCostAmount: defSo.optionCostAmount,
+              totalSalesAmount: defSo.totalSalesAmount,
+              totalCogsAmount: defSo.totalCogsAmount,
+              specialTerms: defSo.specialTerms,
+              memo: defSo.memo
+            };
+          }
+          return so;
+        });
+        localStorage.setItem('ebro_trade_orders', JSON.stringify(mergedOrders));
+      }
+
+      const rawOutbounds = localStorage.getItem('ebro_trade_outbounds');
+      if (rawOutbounds) {
+        const parsedOutbounds: TradeOutbound[] = JSON.parse(rawOutbounds);
+        const mergedOutbounds = parsedOutbounds.map(ob => {
+          const defOb = DEFAULT_OUTBOUNDS.find(d => d.id === ob.id);
+          if (defOb && (!ob.appliedOptions || ob.appliedOptions.length === 0)) {
+            return {
+              ...ob,
+              appliedOptions: defOb.appliedOptions,
+              optionBillingAmount: defOb.optionBillingAmount,
+              closingMemo: defOb.closingMemo
+            };
+          }
+          return ob;
+        });
+        localStorage.setItem('ebro_trade_outbounds', JSON.stringify(mergedOutbounds));
+      }
+
+      const rawBillings = localStorage.getItem('ebro_trade_billings');
+      if (rawBillings) {
+        const parsedBillings: TradeBilling[] = JSON.parse(rawBillings);
+        const mergedBillings = parsedBillings.map(tb => {
+          const defTb = DEFAULT_BILLINGS.find(d => d.id === tb.id);
+          if (defTb) {
+            return {
+              ...tb,
+              supplyAmount: defTb.supplyAmount,
+              vatAmount: defTb.vatAmount,
+              totalAmount: defTb.totalAmount,
+              memo: defTb.memo
+            };
+          }
+          return tb;
+        });
+        localStorage.setItem('ebro_trade_billings', JSON.stringify(mergedBillings));
+      }
     }
     localStorage.setItem(MIGRATION_KEY, 'done');
   } catch (e) {
@@ -1867,6 +2194,10 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [products, setProducts] = useState<TradeProduct[]>(() =>
     loadFromStorage<TradeProduct[]>('ebro_trade_products', DEFAULT_PRODUCTS, true).map(enrichTradeProductWithArchive)
+  );
+
+  const [optionMasters, setOptionMasters] = useState<ForkliftOptionMaster[]>(() =>
+    loadFromStorage<ForkliftOptionMaster[]>('ebro_fl_option_masters', DEFAULT_FORKLIFT_OPTION_MASTERS)
   );
 
   const [purchases, setPurchases] = useState<TradePurchase[]>(() =>
@@ -1909,6 +2240,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     try {
       localStorage.setItem('ebro_trade_products', JSON.stringify(products));
+      localStorage.setItem('ebro_fl_option_masters', JSON.stringify(optionMasters));
       localStorage.setItem('ebro_trade_purchases', JSON.stringify(purchases));
       localStorage.setItem('ebro_trade_purchase_items', JSON.stringify(purchaseItems));
       localStorage.setItem('ebro_trade_inventory', JSON.stringify(inventoryLots));
@@ -1921,6 +2253,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {}
   }, [
     products,
+    optionMasters,
     purchases,
     purchaseItems,
     inventoryLots,
@@ -2660,6 +2993,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       linkedBillingId?: string;
       deliveryMethod?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';
       linkedRentalDeliveryId?: string;
+      appliedOptions?: AppliedForkliftOption[];
     }
   ): Promise<TradeSalesOrder> => {
     if (!customerId || customerId.trim() === '') throw new Error('고객사 정보가 누락되었습니다.');
@@ -2788,14 +3122,18 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setInventoryLots(updatedLots);
 
+    const appliedOpts = options?.appliedOptions || [];
+    const optionSupplyAmount = appliedOpts.reduce(
+      (sum, opt) => sum + (opt.isFreeApplied ? 0 : opt.supplyAmount),
+      0
+    );
+    const optionCostAmount = appliedOpts.reduce(
+      (sum, opt) => sum + opt.qty * opt.costPrice,
+      0
+    );
+
     const cust = getCustomerById(customerId);
     const resolvedStatus = options?.status || (options?.contractId ? 'CONFIRMED' : 'PENDING');
-    const defaultDeliveryLabel =
-      options?.deliveryMethod === 'BUNDLE_WITH_RENTAL'
-        ? '출고 장비 동봉'
-        : options?.deliveryMethod === 'DIRECT'
-        ? '화물 직배'
-        : '택배 발송';
     const newOrder: TradeSalesOrder = {
       id: oId,
       customerId,
@@ -2812,8 +3150,11 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       linkedRentalDeliveryId: options?.linkedRentalDeliveryId,
       orderDate: options?.orderDate || today,
       status: resolvedStatus,
-      totalSalesAmount,
-      totalCogsAmount,
+      totalSalesAmount: totalSalesAmount + optionSupplyAmount,
+      totalCogsAmount: totalCogsAmount + optionCostAmount,
+      appliedOptions: appliedOpts.length > 0 ? appliedOpts : undefined,
+      optionSupplyAmount,
+      optionCostAmount,
       createdAt: now,
       updatedAt: now,
       contractDocStatus: 'DRAFT',
@@ -2849,6 +3190,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         destinationAddress: newOrder.deliveryLocation,
         receiverName: newOrder.receiverName,
         receiverPhone: newOrder.receiverPhone,
+        appliedOptions: appliedOpts.length > 0 ? appliedOpts : undefined,
+        optionBillingAmount: optionSupplyAmount,
         closingMemo: isBundleWithRental
           ? `[렌탈 장비 동봉 출고] 계약: ${options?.contractNo || options?.contractId || '-'}`
           : undefined,
@@ -2876,6 +3219,9 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }[]
   ) => {
     const now = new Date().toISOString();
+    const targetOrder = salesOrders.find(o => o.id === id);
+    const currentOptSupply = updates.optionSupplyAmount ?? targetOrder?.optionSupplyAmount ?? 0;
+    const currentOptCost = updates.optionCostAmount ?? targetOrder?.optionCostAmount ?? 0;
     let computedSalesAmount: number | undefined = updates.totalSalesAmount;
     let computedCogsAmount: number | undefined = updates.totalCogsAmount;
 
@@ -2900,8 +3246,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           };
         });
 
-        computedSalesAmount = nextLines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
-        computedCogsAmount = nextLines.reduce((s, l) => s + l.qty * l.unitCogs, 0);
+        computedSalesAmount = nextLines.reduce((s, l) => s + l.qty * l.unitPrice, 0) + currentOptSupply;
+        computedCogsAmount = nextLines.reduce((s, l) => s + l.qty * l.unitCogs, 0) + currentOptCost;
 
         return [...prev.filter(l => l.orderId !== id), ...nextLines];
       });
@@ -3125,6 +3471,158 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ==========================================
   // 4. Outbounds & Courier Dispatch (출고 및 배송)
   // ==========================================
+  const addOptionMaster = async (
+    opt: Omit<ForkliftOptionMaster, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<ForkliftOptionMaster> => {
+    const now = new Date().toISOString();
+    const newOpt: ForkliftOptionMaster = {
+      ...opt,
+      id: `FL-OPT-${uuidv4().slice(0, 5)}`,
+      optionCode: opt.optionCode?.trim() || `OPT-${uuidv4().slice(0, 5)}`,
+      createdAt: now,
+      updatedAt: now
+    };
+    setOptionMasters(prev => [...prev, newOpt].sort((a, b) => a.sortOrder - b.sortOrder));
+    try {
+      if (supabase) {
+        await supabase.from('forklift_option_masters').upsert({
+          ...newOpt,
+          tenant_id: 'fl-demo'
+        });
+      }
+    } catch (e) {
+      console.warn('Supabase forklift_option_masters upsert error:', e);
+    }
+    await db.awaitPendingWrites();
+    return newOpt;
+  };
+
+  const updateOptionMaster = async (id: string, updates: Partial<ForkliftOptionMaster>) => {
+    const now = new Date().toISOString();
+    setOptionMasters(prev =>
+      prev.map(o => (o.id === id ? { ...o, ...updates, updatedAt: now } : o))
+    );
+    try {
+      if (supabase) {
+        await supabase
+          .from('forklift_option_masters')
+          .update({ ...updates, updatedAt: now })
+          .eq('id', id);
+      }
+    } catch (e) {
+      console.warn('Supabase forklift_option_masters update error:', e);
+    }
+    await db.awaitPendingWrites();
+  };
+
+  const deleteOptionMaster = async (id: string) => {
+    setOptionMasters(prev => prev.filter(o => o.id !== id));
+    try {
+      if (supabase) {
+        await supabase.from('forklift_option_masters').delete().eq('id', id);
+      }
+    } catch (e) {
+      console.warn('Supabase forklift_option_masters delete error:', e);
+    }
+    await db.awaitPendingWrites();
+  };
+
+  const applyOptionsToOutbound = async (
+    outboundId: string,
+    appliedOptions: AppliedForkliftOption[]
+  ) => {
+    const ob = outbounds.find(o => o.id === outboundId);
+    if (!ob) throw new Error('대상 출고 내역을 찾을 수 없습니다.');
+
+    const now = new Date().toISOString();
+    const normalizedOptions = appliedOptions.map(opt => {
+      const supplyAmount = opt.isFreeApplied ? 0 : Math.max(0, Math.round(opt.qty * opt.unitPrice));
+      return {
+        ...opt,
+        supplyAmount
+      };
+    });
+    const optionSupplyAmount = normalizedOptions.reduce(
+      (sum, opt) => sum + (opt.isFreeApplied ? 0 : opt.supplyAmount),
+      0
+    );
+    const optionCostAmount = normalizedOptions.reduce(
+      (sum, opt) => sum + Math.max(0, Math.round(opt.qty * opt.costPrice)),
+      0
+    );
+
+    const baseLines = salesOrderLines.filter(l => l.orderId === ob.orderId);
+    const baseSalesTotal = baseLines.reduce((sum, l) => sum + l.qty * l.unitPrice, 0);
+    const baseCogsTotal = baseLines.reduce((sum, l) => sum + l.qty * l.unitCogs, 0);
+
+    const nextTotalSalesAmount = baseSalesTotal + optionSupplyAmount;
+    const nextTotalCogsAmount = baseCogsTotal + optionCostAmount;
+
+    setOutbounds(prev =>
+      prev.map(o =>
+        o.id === outboundId || o.orderId === ob.orderId
+          ? {
+              ...o,
+              appliedOptions: normalizedOptions,
+              optionBillingAmount: optionSupplyAmount,
+              updatedAt: now
+            }
+          : o
+      )
+    );
+
+    setSalesOrders(prev =>
+      prev.map(so =>
+        so.id === ob.orderId
+          ? {
+              ...so,
+              appliedOptions: normalizedOptions,
+              optionSupplyAmount,
+              optionCostAmount,
+              totalSalesAmount: nextTotalSalesAmount,
+              totalCogsAmount: nextTotalCogsAmount,
+              updatedAt: now
+            }
+          : so
+      )
+    );
+
+    setBillings(prev =>
+      prev.map(tb => {
+        if (tb.status === 'CANCELLED') return tb;
+        const linkedToOrder =
+          tb.orderId === ob.orderId ||
+          (Array.isArray(tb.orderIds) && tb.orderIds.includes(ob.orderId));
+        if (!linkedToOrder) return tb;
+
+        const targetIds =
+          Array.isArray(tb.orderIds) && tb.orderIds.length > 0
+            ? tb.orderIds
+            : tb.orderId
+            ? [tb.orderId]
+            : [];
+
+        const recomputedSupply = targetIds.reduce((sum, oid) => {
+          if (oid === ob.orderId) return sum + nextTotalSalesAmount;
+          const foundOrder = salesOrders.find(so => so.id === oid);
+          return sum + (foundOrder?.totalSalesAmount || 0);
+        }, 0);
+        const recomputedVat = Math.round(recomputedSupply * 0.1);
+        const recomputedTotal = recomputedSupply + recomputedVat;
+
+        return {
+          ...tb,
+          supplyAmount: recomputedSupply,
+          vatAmount: recomputedVat,
+          totalAmount: recomputedTotal,
+          updatedAt: now
+        };
+      })
+    );
+
+    await db.awaitPendingWrites();
+  };
+
   const createOutboundManual = async (
     orderId: string,
     extra?: {
@@ -3133,12 +3631,23 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       receiverPhone?: string;
       deliveryType?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';
       closingMemo?: string;
+      appliedOptions?: AppliedForkliftOption[];
     }
   ): Promise<TradeOutbound> => {
     const order = salesOrders.find(o => o.id === orderId);
     if (!order) throw new Error('대상 수주 건을 찾을 수 없습니다.');
     const cust = getCustomerById(order.customerId);
     const now = new Date().toISOString();
+    const initialOptions = extra?.appliedOptions ?? order.appliedOptions ?? [];
+    const optionSupplyAmount = initialOptions.reduce(
+      (sum, opt) => sum + (opt.isFreeApplied ? 0 : opt.supplyAmount),
+      0
+    );
+    const optionCostAmount = initialOptions.reduce(
+      (sum, opt) => sum + Math.max(0, Math.round(opt.qty * opt.costPrice)),
+      0
+    );
+
     const newOb: TradeOutbound = {
       id: `TOUT-${uuidv4()}`,
       orderId,
@@ -3147,11 +3656,38 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       destinationAddress: extra?.destinationAddress || order.deliveryLocation || cust?.address || '',
       receiverName: extra?.receiverName || order.receiverName || cust?.representative || '',
       receiverPhone: extra?.receiverPhone || order.receiverPhone || cust?.repContact || '',
+      appliedOptions: initialOptions.length > 0 ? initialOptions : undefined,
+      optionBillingAmount: optionSupplyAmount,
       closingMemo: extra?.closingMemo || '',
       createdAt: now,
       updatedAt: now
     };
     setOutbounds(prev => [newOb, ...prev]);
+
+    if (extra?.appliedOptions) {
+      const baseLines = salesOrderLines.filter(l => l.orderId === orderId);
+      const baseSalesTotal = baseLines.reduce((sum, l) => sum + l.qty * l.unitPrice, 0);
+      const baseCogsTotal = baseLines.reduce((sum, l) => sum + l.qty * l.unitCogs, 0);
+      const nextTotalSalesAmount = baseSalesTotal + optionSupplyAmount;
+      const nextTotalCogsAmount = baseCogsTotal + optionCostAmount;
+
+      setSalesOrders(prev =>
+        prev.map(so =>
+          so.id === orderId
+            ? {
+                ...so,
+                appliedOptions: initialOptions,
+                optionSupplyAmount,
+                optionCostAmount,
+                totalSalesAmount: nextTotalSalesAmount,
+                totalCogsAmount: nextTotalCogsAmount,
+                updatedAt: now
+              }
+            : so
+        )
+      );
+    }
+
     await db.awaitPendingWrites();
     return newOb;
   };
@@ -4009,6 +4545,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <TradeContext.Provider
       value={{
         products,
+        optionMasters,
         purchases,
         purchaseItems,
         inventoryLots,
@@ -4018,6 +4555,10 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         outbounds,
         billings,
         returns,
+        addOptionMaster,
+        updateOptionMaster,
+        deleteOptionMaster,
+        applyOptionsToOutbound,
         getCustomerName,
         getCustomerById,
         getVendorName,

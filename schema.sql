@@ -514,6 +514,9 @@ CREATE TABLE IF NOT EXISTS trade_sales_orders (
     status                    TEXT CHECK (status IN ('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'RETURNED', 'CANCELLED')) NOT NULL DEFAULT 'CONFIRMED',
     "totalSalesAmount"        DOUBLE PRECISION NOT NULL DEFAULT 0,
     "totalCogsAmount"         DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
+    "optionSupplyAmount"      DOUBLE PRECISION DEFAULT 0,
+    "optionCostAmount"        DOUBLE PRECISION DEFAULT 0,
     "contractDocStatus"       TEXT DEFAULT 'DRAFT',
     "contractSentAt"          TEXT,
     "contractSentTo"          TEXT,
@@ -563,6 +566,8 @@ CREATE TABLE IF NOT EXISTS trade_outbounds (
     "receiverPhone"           TEXT,
     "proofUrl"                TEXT,
     "proofType"               TEXT CHECK ("proofType" IN ('SIGNATURE', 'PHOTO')),
+    "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
+    "optionBillingAmount"     DOUBLE PRECISION DEFAULT 0,
     "allocatedAt"             TEXT,
     "packedAt"                TEXT,
     "shippedAt"               TEXT,
@@ -570,6 +575,32 @@ CREATE TABLE IF NOT EXISTS trade_outbounds (
     "closingMemo"             TEXT,
     "createdAt"               TEXT NOT NULL,
     "updatedAt"               TEXT NOT NULL,
+    "tenant_id"               TEXT NOT NULL DEFAULT 'fl-demo'
+);
+
+-- 3-8-2. 지게차 옵션·부착물·장비보호 단가 마스터 (forklift_option_masters)
+CREATE TABLE IF NOT EXISTS forklift_option_masters (
+    id                        TEXT PRIMARY KEY,
+    "optionCode"              TEXT NOT NULL,
+    "optionGroup"             TEXT NOT NULL,
+    "optionGroupLabel"        TEXT NOT NULL,
+    "domainType"              TEXT CHECK ("domainType" IN ('PAID', 'PROTECTION', 'ATTACHMENT', 'SPEC')) NOT NULL DEFAULT 'PAID',
+    "domainTypeLabel"         TEXT NOT NULL DEFAULT '유상옵션',
+    name                      TEXT NOT NULL,
+    "subVariant"              TEXT,
+    "specDetail"              TEXT,
+    "applicableTonnage"       TEXT,
+    unit                      TEXT DEFAULT '식',
+    "costPrice"               DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "dealerPrice"             DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "unitPrice"               DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "isFreeDefault"           BOOLEAN NOT NULL DEFAULT FALSE,
+    "installLeadHours"        DOUBLE PRECISION DEFAULT 0,
+    "isActive"                BOOLEAN NOT NULL DEFAULT TRUE,
+    "sortOrder"               INTEGER NOT NULL DEFAULT 1,
+    memo                      TEXT,
+    "createdAt"               TEXT NOT NULL,
+    "updatedAt"               TEXT,
     "tenant_id"               TEXT NOT NULL DEFAULT 'fl-demo'
 );
 
@@ -1551,6 +1582,96 @@ CREATE TABLE IF NOT EXISTS error_reports (
     "createdAt"           TEXT,
     "updatedAt"           TEXT,
     "tenant_id"           TEXT DEFAULT 'fl-demo'
+);
+
+-- ==============================================================================
+-- 🚜 지게차 옵션·부착물 단가 마스터 및 유통 출고 옵션 청구 확장 스키마
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS forklift_option_masters (
+    id                    TEXT PRIMARY KEY,
+    code                  TEXT NOT NULL UNIQUE,
+    "optionGroup"         TEXT NOT NULL,
+    "optionGroupLabel"    TEXT NOT NULL,
+    "domainType"          TEXT NOT NULL,
+    name                  TEXT NOT NULL,
+    spec                  TEXT NOT NULL,
+    "subType"             TEXT,
+    "applicableModels"    JSONB DEFAULT '[]'::jsonb,
+    "applicableCapacity"  TEXT,
+    "unitPrice"           DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "dealerPrice"         DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "costPrice"           DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "installLeadHours"    DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "isFreeDefault"       BOOLEAN NOT NULL DEFAULT FALSE,
+    "isActive"            BOOLEAN NOT NULL DEFAULT TRUE,
+    description           TEXT,
+    "updatedAt"           TEXT,
+    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS trade_sales_orders (
+    id                    TEXT PRIMARY KEY,
+    "orderNo"             TEXT NOT NULL,
+    "orderDate"           TEXT NOT NULL,
+    "customerId"          TEXT NOT NULL,
+    "customerName"        TEXT NOT NULL,
+    "customerBizNo"       TEXT,
+    "customerType"        TEXT,
+    "salesRepName"        TEXT,
+    "itemType"            TEXT,
+    "manufacturer"        TEXT,
+    "modelName"           TEXT,
+    "serialNumber"        TEXT,
+    "partId"              TEXT,
+    "partNumber"          TEXT,
+    quantity              INTEGER DEFAULT 1,
+    "unitSalesPrice"      DOUBLE PRECISION DEFAULT 0,
+    "totalSalesAmount"    DOUBLE PRECISION DEFAULT 0,
+    "unitCogs"            DOUBLE PRECISION DEFAULT 0,
+    "totalCogsAmount"     DOUBLE PRECISION DEFAULT 0,
+    "appliedOptions"      JSONB DEFAULT '[]'::jsonb,
+    "optionSupplyAmount"  DOUBLE PRECISION DEFAULT 0,
+    "optionCostAmount"    DOUBLE PRECISION DEFAULT 0,
+    "deliveryDate"        TEXT,
+    "deliveryLocation"    TEXT,
+    "warehouseName"       TEXT,
+    status                TEXT DEFAULT 'CONFIRMED',
+    memo                  TEXT,
+    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS trade_outbounds (
+    id                    TEXT PRIMARY KEY,
+    "outboundNo"          TEXT NOT NULL,
+    "salesOrderId"        TEXT,
+    "orderNo"             TEXT,
+    "requestDate"         TEXT,
+    "scheduledDate"       TEXT,
+    "completedDate"       TEXT,
+    "customerId"          TEXT,
+    "customerName"        TEXT,
+    "destinationAddress"  TEXT,
+    "receiverName"        TEXT,
+    "receiverPhone"       TEXT,
+    "itemType"            TEXT,
+    "manufacturer"        TEXT,
+    "modelName"           TEXT,
+    "serialNumber"        TEXT,
+    "partNumber"          TEXT,
+    quantity              INTEGER DEFAULT 1,
+    "warehouseName"       TEXT,
+    "appliedOptions"      JSONB DEFAULT '[]'::jsonb,
+    "optionBillingAmount" DOUBLE PRECISION DEFAULT 0,
+    "transportType"       TEXT,
+    "driverName"          TEXT,
+    "driverPhone"         TEXT,
+    "vehicleNo"           TEXT,
+    "freightCost"         DOUBLE PRECISION DEFAULT 0,
+    "freightPaidBy"       TEXT,
+    "inspectorName"       TEXT,
+    "inspectionNote"      TEXT,
+    status                TEXT DEFAULT 'REQUESTED',
+    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
 );
 
 -- ==============================================================================

@@ -1015,7 +1015,12 @@ export const TradeContractsPage: React.FC = () => {
                       </td>
 
                       <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        {getOrderItemsSummary(o.id)}
+                        <div>{getOrderItemsSummary(o.id)}</div>
+                        {(o.appliedOptions || []).length > 0 && (
+                          <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700, marginTop: '2px' }}>
+                            + 장착옵션 {(o.appliedOptions || []).length}종 ({(o.appliedOptions || []).slice(0, 2).map(op => op.name).join(', ')}{(o.appliedOptions || []).length > 2 ? ` 외 ${(o.appliedOptions || []).length - 2}종` : ''})
+                          </div>
+                        )}
                       </td>
 
                       <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -1023,11 +1028,17 @@ export const TradeContractsPage: React.FC = () => {
                       </td>
 
                       <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                        ₩{o.totalCogsAmount.toLocaleString()}
+                        <div>₩{o.totalCogsAmount.toLocaleString()}</div>
+                        {(o.optionCostAmount || 0) > 0 && (
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>옵션원가 ₩{(o.optionCostAmount || 0).toLocaleString()} 포함</div>
+                        )}
                       </td>
 
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
-                        ₩{o.totalSalesAmount.toLocaleString()}
+                        <div>₩{o.totalSalesAmount.toLocaleString()}</div>
+                        {(o.optionSupplyAmount || 0) > 0 && (
+                          <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700 }}>옵션청구 +₩{(o.optionSupplyAmount || 0).toLocaleString()} 포함</div>
+                        )}
                       </td>
 
                       <td style={{ padding: '8px 12px', textAlign: 'right' }}>

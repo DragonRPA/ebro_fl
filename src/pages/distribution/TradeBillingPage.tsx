@@ -80,6 +80,11 @@ export const TradeBillingPage: React.FC = () => {
         const supplyAmount = linkedBilling?.supplyAmount ?? order.totalSalesAmount;
         const vatAmount = linkedBilling?.vatAmount ?? Math.round(supplyAmount * 0.1);
         const totalAmount = linkedBilling?.totalAmount ?? (supplyAmount + vatAmount);
+        const appliedOptions = matchedOutbound?.appliedOptions || order.appliedOptions || [];
+        const optionSupplyAmount =
+          typeof order.optionSupplyAmount === 'number'
+            ? order.optionSupplyAmount
+            : appliedOptions.reduce((s, o) => s + (o.isFreeApplied ? 0 : o.supplyAmount), 0);
 
         const billingState: 'UNISSUED' | 'ISSUED' | 'SENT' | 'PAID' | 'CANCELLED' = linkedBilling
           ? (linkedBilling.status as any)
@@ -89,6 +94,8 @@ export const TradeBillingPage: React.FC = () => {
           order,
           matchedOutbound,
           lines,
+          appliedOptions,
+          optionSupplyAmount,
           billing: linkedBilling || null,
           billingState,
           supplyAmount,
@@ -368,12 +375,14 @@ export const TradeBillingPage: React.FC = () => {
     const custName = getCustomerName(statementModalOrder.customerId);
     const cust = getCustomerById(statementModalOrder.customerId);
     const lines = salesOrderLines.filter(l => l.orderId === statementModalOrder.id);
+    const matchedOutbound = outbounds.find(ob => ob.orderId === statementModalOrder.id && ob.status !== 'CANCELLED');
+    const appliedOpts = matchedOutbound?.appliedOptions || statementModalOrder.appliedOptions || [];
     const supply = activeBilling?.supplyAmount ?? statementModalOrder.totalSalesAmount;
     const vat = activeBilling?.vatAmount ?? Math.round(supply * 0.1);
     const total = activeBilling?.totalAmount ?? (supply + vat);
     const stmtNo = activeBilling?.id || `STMT-${statementModalOrder.id}`;
 
-    const rowsHtml = lines.map((l, idx) => {
+    const prodRowsHtml = lines.map((l, idx) => {
       const prod = products.find(p => p.id === l.productId);
       const lineSupply = l.qty * l.unitPrice;
       const lineVat = Math.round(lineSupply * 0.1);
@@ -382,7 +391,7 @@ export const TradeBillingPage: React.FC = () => {
           <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${idx + 1}</td>
           <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${prod?.skuCode || '-'}</td>
           <td style="padding:8px; border:1px solid #cbd5e1;">${prod?.name || '유통상품'}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${prod?.spec || prod?.unit || 'EA'}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${prod?.spec || prod?.unit || '식'}</td>
           <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${l.qty.toLocaleString()}</td>
           <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${l.unitPrice.toLocaleString()}</td>
           <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineSupply.toLocaleString()}</td>
@@ -390,6 +399,25 @@ export const TradeBillingPage: React.FC = () => {
         </tr>
       `;
     }).join('');
+
+    const optRowsHtml = appliedOpts.map((opt, idx) => {
+      const lineSupply = opt.isFreeApplied ? 0 : opt.supplyAmount;
+      const lineVat = Math.round(lineSupply * 0.1);
+      return `
+        <tr style="background:#faf5ff;">
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${lines.length + idx + 1}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${opt.optionCode}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1;">[장착옵션·${opt.optionGroupLabel}] ${opt.name}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${opt.subVariant}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${opt.qty.toLocaleString()}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${opt.isFreeApplied ? '무상시공' : opt.unitPrice.toLocaleString()}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineSupply.toLocaleString()}</td>
+          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineVat.toLocaleString()}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const rowsHtml = prodRowsHtml + optRowsHtml;
 
     const printWin = window.open('', '_blank', 'width=900,height=950');
     if (printWin) {
@@ -811,15 +839,15 @@ export const TradeBillingPage: React.FC = () => {
               </tr>
             ) : (
               filteredRows.map(row => {
-                const { order, matchedOutbound, lines, billing, billingState, supplyAmount, vatAmount, totalAmount } = row;
+                const { order, matchedOutbound, lines, appliedOptions, optionSupplyAmount, billing, billingState, supplyAmount, vatAmount, totalAmount } = row;
                 const custName = getCustomerName(order.customerId);
                 const isDelivered = order.status === 'DELIVERED' || matchedOutbound?.status === 'DELIVERED';
                 const hasProof = Boolean(matchedOutbound?.proofUrl);
 
                 const firstProd = lines.length > 0 ? products.find(p => p.id === lines[0].productId) : null;
                 const itemsText = lines.length === 0 ? '품목 없음' : lines.length === 1
-                  ? `[${firstProd?.skuCode || 'SKU'}] ${firstProd?.name || '상품'} ${lines[0].qty}${firstProd?.unit || '개'}`
-                  : `[${firstProd?.skuCode || 'SKU'}] ${firstProd?.name || '상품'} 외 ${lines.length - 1}종`;
+                  ? `[${firstProd?.skuCode || '품목'}] ${firstProd?.name || '상품'} ${lines[0].qty}${firstProd?.unit || '개'}`
+                  : `[${firstProd?.skuCode || '품목'}] ${firstProd?.name || '상품'} 외 ${lines.length - 1}종`;
 
                 return (
                   <tr key={order.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -987,7 +1015,12 @@ export const TradeBillingPage: React.FC = () => {
 
                     {/* Line Items Summary */}
                     <td style={{ padding: '10px 12px', fontSize: '12.5px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                      <div>{itemsText}</div>
+                      <div style={{ fontWeight: 600 }}>{itemsText}</div>
+                      {appliedOptions.length > 0 && (
+                        <div style={{ fontSize: '11px', color: '#6d28d9', fontWeight: 700, marginTop: '2px' }}>
+                          + 출고장착옵션 {appliedOptions.length}종 ({appliedOptions.slice(0, 2).map(o => o.name).join(', ')}{appliedOptions.length > 2 ? ` 외 ${appliedOptions.length - 2}종` : ''}) · +₩{optionSupplyAmount.toLocaleString()}
+                        </div>
+                      )}
                       {billing?.memo && (
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{billing.memo}</div>
                       )}
@@ -1046,6 +1079,11 @@ export const TradeBillingPage: React.FC = () => {
                     {/* Supply & VAT */}
                     <td style={{ padding: '10px 12px', fontSize: '12.5px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>공급가: {supplyAmount.toLocaleString()}원</div>
+                      {optionSupplyAmount > 0 && (
+                        <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700 }}>
+                          옵션청구 포함: +₩{optionSupplyAmount.toLocaleString()}
+                        </div>
+                      )}
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>부가세: {vatAmount.toLocaleString()}원</div>
                     </td>
 
@@ -1203,7 +1241,7 @@ export const TradeBillingPage: React.FC = () => {
                         return (
                           <tr key={l.id}>
                             <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace' }}>{prod?.skuCode || '-'}</td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 600 }}>{prod?.name || '상품'} <span style={{ color: '#64748b', fontSize: '11px' }}>({prod?.spec || prod?.unit || 'EA'})</span></td>
+                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 600 }}>{prod?.name || '상품'} <span style={{ color: '#64748b', fontSize: '11px' }}>({prod?.spec || prod?.unit || '식'})</span></td>
                             <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{l.qty.toLocaleString()}</td>
                             <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{l.unitPrice.toLocaleString()}</td>
                             <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700 }}>{lineSupply.toLocaleString()}</td>
@@ -1211,6 +1249,24 @@ export const TradeBillingPage: React.FC = () => {
                           </tr>
                         );
                       })}
+                    {(outbounds.find(ob => ob.orderId === statementModalOrder.id && ob.status !== 'CANCELLED')?.appliedOptions || statementModalOrder.appliedOptions || []).map(opt => {
+                      const optSupply = opt.isFreeApplied ? 0 : opt.supplyAmount;
+                      const optVat = Math.round(optSupply * 0.1);
+                      return (
+                        <tr key={opt.optionId} style={{ backgroundColor: '#faf5ff' }}>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace', color: '#6d28d9', fontWeight: 700 }}>{opt.optionCode}</td>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#6d28d9' }}>
+                            [장착옵션·{opt.optionGroupLabel}] {opt.name} <span style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}>({opt.subVariant})</span>
+                          </td>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{opt.qty.toLocaleString()}</td>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', color: opt.isFreeApplied ? '#047857' : '#0f172a' }}>
+                            {opt.isFreeApplied ? '무상시공' : opt.unitPrice.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 800, color: '#6d28d9' }}>{optSupply.toLocaleString()}</td>
+                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{optVat.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
 

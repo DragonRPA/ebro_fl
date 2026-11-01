@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import {
   Printer, Eye, FileText, CheckCircle, Package, X,
-  Download, Search, RefreshCw, Plus, Edit2, Ban, Trash2, Check, LayoutGrid, List
+  Download, Search, RefreshCw, Plus, Edit2, Ban, Trash2, Check, LayoutGrid, List, SlidersHorizontal
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
-import { db, TradeOutbound } from '../../services/db';
+import { db, TradeOutbound, AppliedForkliftOption, ForkliftOptionGroupType, ForkliftOptionMaster } from '../../services/db';
+import { FORKLIFT_OPTION_GROUPS } from '../../data/forkliftOptionMastersData';
 import { generateReceiptHtml } from '../../utils/receiptGenerator';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
@@ -17,6 +18,7 @@ export const TradeOutboundPage: React.FC = () => {
     salesOrders,
     salesOrderLines,
     products,
+    optionMasters,
     getCustomerName,
     getCustomerById,
     getProductStock,
@@ -26,7 +28,8 @@ export const TradeOutboundPage: React.FC = () => {
     packOutbound,
     updateOutbound,
     cancelOutbound,
-    deleteOutbound
+    deleteOutbound,
+    applyOptionsToOutbound
   } = useTrade();
 
   // Toast state
@@ -70,21 +73,91 @@ export const TradeOutboundPage: React.FC = () => {
   const [formReceiverName, setFormReceiverName] = useState<string>('');
   const [formReceiverPhone, setFormReceiverPhone] = useState<string>('');
   const [formClosingMemo, setFormClosingMemo] = useState<string>('');
+  const [formAppliedOptions, setFormAppliedOptions] = useState<AppliedForkliftOption[]>([]);
+  const [formOptionCategoryFilter, setFormOptionCategoryFilter] = useState<'ALL' | ForkliftOptionGroupType>('ALL');
+
+  // 전용 옵션 장착 및 청구 반영 모달 상태
+  const [optionModalOutbound, setOptionModalOutbound] = useState<TradeOutbound | null>(null);
+  const [modalAppliedOptions, setModalAppliedOptions] = useState<AppliedForkliftOption[]>([]);
+  const [modalOptionGroupFilter, setModalOptionGroupFilter] = useState<'ALL' | ForkliftOptionGroupType>('ALL');
+  const [modalOptionSearch, setModalOptionSearch] = useState('');
+
+  const buildAppliedOptionFromMaster = (opt: ForkliftOptionMaster, useDealerPrice = false): AppliedForkliftOption => {
+    const unitPrice = opt.isFreeDefault ? 0 : (useDealerPrice ? opt.dealerPrice : opt.unitPrice);
+    return {
+      optionId: opt.id,
+      optionCode: opt.optionCode,
+      optionGroup: opt.optionGroup,
+      optionGroupLabel: opt.optionGroupLabel,
+      domainTypeLabel: opt.domainTypeLabel,
+      name: opt.name,
+      subVariant: opt.subVariant,
+      specDetail: opt.specDetail,
+      qty: 1,
+      costPrice: opt.costPrice,
+      unitPrice,
+      supplyAmount: unitPrice,
+      isFreeApplied: opt.isFreeDefault,
+      note: opt.subVariant
+    };
+  };
+
+  const openOptionModal = (ob: TradeOutbound) => {
+    const order = salesOrders.find(so => so.id === ob.orderId);
+    const existingOpts = ob.appliedOptions || order?.appliedOptions || [];
+    setOptionModalOutbound(ob);
+    setModalAppliedOptions(existingOpts.map(item => ({ ...item })));
+    setModalOptionGroupFilter('ALL');
+    setModalOptionSearch('');
+  };
+
+  const handleSaveOptionModal = async () => {
+    if (!optionModalOutbound) return;
+    try {
+      const normalized = modalAppliedOptions.map(opt => {
+        const qty = Math.max(1, Number(opt.qty) || 1);
+        const unitPrice = opt.isFreeApplied ? 0 : Math.max(0, Number(opt.unitPrice) || 0);
+        return {
+          ...opt,
+          qty,
+          unitPrice,
+          supplyAmount: qty * unitPrice
+        };
+      });
+      await applyOptionsToOutbound(optionModalOutbound.id, normalized);
+      const totalOptionAmt = normalized.reduce((s, o) => s + (o.isFreeApplied ? 0 : o.supplyAmount), 0);
+      showToast(
+        `출고 [${optionModalOutbound.id}] 옵션 ${normalized.length}종 장착 및 청구추가액 ₩${totalOptionAmt.toLocaleString()}원이 수주·명세서에 자동 반영되었습니다.`
+      );
+      setOptionModalOutbound(null);
+    } catch (err: any) {
+      showErrorModal(err.message || '옵션 장착 및 청구 반영 실패');
+    }
+  };
 
   const getDeliveryForOutbound = (ob: TradeOutbound) => {
     const order = salesOrders.find(so => so.id === ob.orderId);
     const lines = salesOrderLines.filter(l => l.orderId === ob.orderId);
     const cust = getCustomerById(order?.customerId);
     const custName = getCustomerName(order?.customerId);
+    const appliedOpts = ob.appliedOptions || order?.appliedOptions || [];
 
-    const cargos = lines.map(l => {
+    const baseCargos = lines.map(l => {
       const prod = products.find(p => p.id === l.productId);
       return {
-        modelName: `[${prod?.skuCode || 'SKU'}] ${prod?.name || '유통상품'}`,
+        modelName: `[${prod?.skuCode || '품목'}] ${prod?.name || '유통상품'}`,
         count: l.qty,
         note: `${l.unitPrice?.toLocaleString()}원 (정상 납품)`
       };
     });
+
+    const optionCargos = appliedOpts.map(opt => ({
+      modelName: `[장착옵션·${opt.optionGroupLabel}] ${opt.name} (${opt.subVariant})`,
+      count: opt.qty,
+      note: opt.isFreeApplied ? '무상기본시공 (₩0)' : `옵션청구 ₩${opt.supplyAmount.toLocaleString()}원`
+    }));
+
+    const cargos = [...baseCargos, ...optionCargos];
 
     const dlv = db.deliveries?.find(d => d.id === ob.id);
     return (
@@ -210,6 +283,7 @@ export const TradeOutboundPage: React.FC = () => {
     const activeProducts = (products || []).filter(p => p.status !== 'DISCONTINUED');
     const firstContract = (contracts || []).find(c => c.status === 'ACTIVE') || (contracts || [])[0];
     const defaultCustId = firstContract?.customerId || customerOptions[0]?.id || '';
+    const freeDefaultMaster = optionMasters.find(m => m.isFreeDefault && m.isActive);
 
     setEditingOutbound(null);
     setFormCreateMode('AUTO_ORDER');
@@ -219,6 +293,8 @@ export const TradeOutboundPage: React.FC = () => {
         ? [{ productId: activeProducts[0].id, quantity: 1, unitPrice: activeProducts[0].standardPrice || 0 }]
         : []
     );
+    setFormAppliedOptions(freeDefaultMaster ? [buildAppliedOptionFromMaster(freeDefaultMaster)] : []);
+    setFormOptionCategoryFilter('ALL');
     setFormDeliveryType('COURIER');
     setFormClosingMemo('');
     applyCustomerAndContractInfo(defaultCustId, firstContract?.id || '');
@@ -235,12 +311,25 @@ export const TradeOutboundPage: React.FC = () => {
     setFormReceiverName(ob.receiverName || order?.receiverName || cust?.representative || '');
     setFormReceiverPhone(ob.receiverPhone || order?.receiverPhone || cust?.repContact || '');
     setFormClosingMemo(ob.closingMemo || '');
+    setFormAppliedOptions((ob.appliedOptions || order?.appliedOptions || []).map(opt => ({ ...opt })));
+    setFormOptionCategoryFilter('ALL');
     setIsOutboundModalOpen(true);
   };
 
   const handleSaveOutboundModal = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const normalizedOptions = formAppliedOptions.map(opt => {
+        const qty = Math.max(1, Number(opt.qty) || 1);
+        const unitPrice = opt.isFreeApplied ? 0 : Math.max(0, Number(opt.unitPrice) || 0);
+        return {
+          ...opt,
+          qty,
+          unitPrice,
+          supplyAmount: qty * unitPrice
+        };
+      });
+
       if (editingOutbound) {
         await updateOutbound(editingOutbound.id, {
           deliveryType: formDeliveryType,
@@ -249,7 +338,8 @@ export const TradeOutboundPage: React.FC = () => {
           receiverPhone: formReceiverPhone,
           closingMemo: formClosingMemo
         });
-        showToast(`출고요청 [${editingOutbound.id}] 배송지 및 수령인 정보가 수정되었습니다.`);
+        await applyOptionsToOutbound(editingOutbound.id, normalizedOptions);
+        showToast(`출고요청 [${editingOutbound.id}] 배송지 및 장착 옵션 청구 정보가 수정되었습니다.`);
       } else if (formCreateMode === 'AUTO_ORDER' || !formOrderId) {
         if (!formCustomerId) {
           showErrorModal('고객사를 선택해 주세요.');
@@ -278,16 +368,18 @@ export const TradeOutboundPage: React.FC = () => {
           siteId: linkedSite?.id,
           siteName: linkedSite?.name,
           salespersonName: currentUser?.name || '유통영업팀',
-          memo: formClosingMemo
+          memo: formClosingMemo,
+          appliedOptions: normalizedOptions
         });
-        showToast(`수주 [${createdOrder.id}] 자동 생성 및 출고 지시가 등록되었습니다.`);
+        showToast(`수주 [${createdOrder.id}] 자동 생성 및 옵션 포함 출고 지시가 등록되었습니다.`);
       } else {
         const created = await createOutboundManual(formOrderId, {
           deliveryType: formDeliveryType,
           destinationAddress: formDestinationAddress,
           receiverName: formReceiverName,
           receiverPhone: formReceiverPhone,
-          closingMemo: formClosingMemo
+          closingMemo: formClosingMemo,
+          appliedOptions: normalizedOptions
         });
         showToast(`신규 출고요청 [${created.id}] 건이 등록되었습니다.`);
       }
@@ -314,6 +406,13 @@ export const TradeOutboundPage: React.FC = () => {
             ? `${firstProd?.name || '상품'} (${lines[0].qty}개)`
             : `${firstProd?.name || '상품'} 외 ${lines.length - 1}종 (총 ${totalQty}개)`;
         const reqDate = (o.createdAt || '').split('T')[0] || order?.orderDate || '';
+        const appliedOpts = o.appliedOptions || order?.appliedOptions || [];
+        const optionBillingAmount =
+          typeof o.optionBillingAmount === 'number'
+            ? o.optionBillingAmount
+            : appliedOpts.reduce((s, opt) => s + (opt.isFreeApplied ? 0 : opt.supplyAmount), 0);
+        const baseOrderSupply = lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+        const totalBillingSupply = order?.totalSalesAmount || (baseOrderSupply + optionBillingAmount);
 
         return {
           o,
@@ -323,6 +422,10 @@ export const TradeOutboundPage: React.FC = () => {
           custName,
           itemSummary,
           reqDate,
+          appliedOpts,
+          optionBillingAmount,
+          baseOrderSupply,
+          totalBillingSupply,
           destination: o.destinationAddress || order?.deliveryLocation || cust?.address || '-',
           receiver: o.receiverName || order?.receiverName || cust?.representative || '-',
           receiverPhone: o.receiverPhone || order?.receiverPhone || cust?.repContact || '-'
@@ -342,11 +445,13 @@ export const TradeOutboundPage: React.FC = () => {
       if (productFilter !== 'ALL' && !row.lines.some(l => l.productId === productFilter)) return false;
 
       if (matcher) {
+        const optText = row.appliedOpts.map(op => `${op.name} ${op.subVariant}`).join(' ');
         const hit =
           matcher(row.o.id) ||
           matcher(row.o.orderId) ||
           matcher(row.custName) ||
           matcher(row.itemSummary) ||
+          matcher(optText) ||
           matcher(row.destination) ||
           matcher(row.receiver) ||
           matcher(row.o.trackingNumber || '') ||
@@ -363,7 +468,9 @@ export const TradeOutboundPage: React.FC = () => {
     const requested = enrichedOutbounds.filter(r => r.o.status === 'REQUESTED').length;
     const allocated = enrichedOutbounds.filter(r => r.o.status === 'ALLOCATED' || r.o.status === 'PACKED').length;
     const completed = enrichedOutbounds.filter(r => r.o.status === 'SHIPPED' || r.o.status === 'DELIVERED').length;
-    return { total, requested, allocated, completed };
+    const optionInstalledCount = enrichedOutbounds.filter(r => r.appliedOpts.length > 0).length;
+    const optionBillingTotal = enrichedOutbounds.reduce((s, r) => s + r.optionBillingAmount, 0);
+    return { total, requested, allocated, completed, optionInstalledCount, optionBillingTotal };
   }, [enrichedOutbounds]);
 
   // Excel Export
@@ -376,6 +483,9 @@ export const TradeOutboundPage: React.FC = () => {
       고객사명: r.custName,
       출고품목: r.itemSummary,
       총수량: r.totalQty,
+      장착옵션내역: r.appliedOpts.length > 0 ? r.appliedOpts.map(op => `${op.name}[${op.subVariant}]`).join(', ') : '없음',
+      옵션청구추가액: r.optionBillingAmount,
+      합산청구공급가: r.totalBillingSupply,
       배송방식: r.o.deliveryType === 'DIRECT' ? '화물직배' : '택배배송',
       수령인: r.receiver,
       연락처: r.receiverPhone,
@@ -527,7 +637,7 @@ export const TradeOutboundPage: React.FC = () => {
       </div>
 
       {/* 2. KPI 요약 카드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(165px, 1fr))', gap: '12px', flexShrink: 0 }}>
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>전체 출고 요청</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{kpi.total}건</div>
@@ -543,6 +653,12 @@ export const TradeOutboundPage: React.FC = () => {
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>배송중 / 납품 완료</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#059669', whiteSpace: 'nowrap' }}>{kpi.completed}건</div>
+        </div>
+        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid rgba(124, 58, 237, 0.35)' }}>
+          <div style={{ fontSize: '11px', color: '#6d28d9', fontWeight: 700, whiteSpace: 'nowrap' }}>출고 옵션 장착 · 청구추가 합계</div>
+          <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: '#6d28d9', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+            +₩{kpi.optionBillingTotal.toLocaleString()} <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)' }}>({kpi.optionInstalledCount}건 장착)</span>
+          </div>
         </div>
       </div>
 
@@ -691,13 +807,15 @@ export const TradeOutboundPage: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '310px' }}>출고 할당 / 납품증 관리</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '370px' }}>출고 할당 / 옵션장착 / 납품증</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고번호</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>주문번호</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>요청일자</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>고객사명</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 품목 명세</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 수량</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#6d28d9' }}>장착 옵션 명세</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#6d28d9' }}>옵션 청구추가액 / 합산청구액</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>수령인 / 연락처</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>배송지 주소</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>출고 상태</th>
@@ -706,16 +824,39 @@ export const TradeOutboundPage: React.FC = () => {
               <tbody>
                 {displayedOutbounds.length === 0 ? (
                   <tr>
-                    <td colSpan={10} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={12} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       해당 조건의 출고 요청 데이터가 없습니다.
                     </td>
                   </tr>
                 ) : (
-                  displayedOutbounds.map(({ o, custName, itemSummary, totalQty, reqDate, destination, receiver, receiverPhone }) => (
-                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)', height: '42px' }}>
+                  displayedOutbounds.map(({ o, custName, itemSummary, totalQty, reqDate, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver, receiverPhone }) => (
+                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)', height: '44px' }}>
                       {/* 1열 액션 */}
                       <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {o.status !== 'CANCELLED' && (
+                            <button
+                              type="button"
+                              onClick={() => openOptionModal(o)}
+                              style={{
+                                padding: '4px 8px',
+                                backgroundColor: appliedOpts.length > 0 ? 'rgba(124, 58, 237, 0.14)' : 'var(--bg-app)',
+                                color: '#6d28d9',
+                                border: '1px solid rgba(124, 58, 237, 0.4)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}
+                              title="백레스트, 사이드시프트, 캐빈, 에어컨, 덧발, 센서, 경광등, 장비보호 옵션 추가 및 청구 합산"
+                            >
+                              <SlidersHorizontal size={11} /> 옵션장착·청구({appliedOpts.length})
+                            </button>
+                          )}
+
                           {(o.status === 'REQUESTED' || o.status === 'CANCELLED') && (
                             <button
                               type="button"
@@ -804,6 +945,40 @@ export const TradeOutboundPage: React.FC = () => {
                       <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>{custName}</td>
                       <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{itemSummary}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>{totalQty.toLocaleString()}개</td>
+                      <td style={{ padding: '6px 12px' }}>
+                        {appliedOpts.length === 0 ? (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>미장착</span>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'nowrap' }}>
+                            {appliedOpts.slice(0, 2).map(opt => (
+                              <span
+                                key={opt.optionId}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontSize: '10.5px',
+                                  fontWeight: 700,
+                                  backgroundColor: opt.isFreeApplied ? 'rgba(5, 150, 105, 0.12)' : 'rgba(124, 58, 237, 0.12)',
+                                  color: opt.isFreeApplied ? '#047857' : '#6d28d9'
+                                }}
+                              >
+                                {opt.name}
+                              </span>
+                            ))}
+                            {appliedOpts.length > 2 && (
+                              <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#6d28d9' }}>외 {appliedOpts.length - 2}종</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '6px 12px', textAlign: 'right', fontFamily: 'monospace' }}>
+                        <div style={{ fontWeight: 800, color: optionBillingAmount > 0 ? '#6d28d9' : 'var(--text-muted)', fontSize: '12px' }}>
+                          {optionBillingAmount > 0 ? `+₩${optionBillingAmount.toLocaleString()}` : '₩0'}
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                          합산청구 ₩{totalBillingSupply.toLocaleString()}
+                        </div>
+                      </td>
                       <td style={{ padding: '8px 12px', color: 'var(--text-main)' }}>
                         {receiver} <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({receiverPhone})</span>
                       </td>
@@ -863,6 +1038,12 @@ export const TradeOutboundPage: React.FC = () => {
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
                       총 {displayedOutbounds.reduce((s, r) => s + r.totalQty, 0).toLocaleString()}개
                     </td>
+                    <td style={{ padding: '10px 12px', color: '#6d28d9' }}>
+                      옵션 장착 {displayedOutbounds.filter(r => r.appliedOpts.length > 0).length}건
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#6d28d9', fontFamily: 'monospace' }}>
+                      옵션청구 +₩{displayedOutbounds.reduce((s, r) => s + r.optionBillingAmount, 0).toLocaleString()} / 합산 ₩{displayedOutbounds.reduce((s, r) => s + r.totalBillingSupply, 0).toLocaleString()}
+                    </td>
                     <td colSpan={3} />
                   </tr>
                 </tfoot>
@@ -872,13 +1053,13 @@ export const TradeOutboundPage: React.FC = () => {
         </div>
       ) : (
         /* 카드 뷰 */
-        <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: '14px', alignContent: 'start' }}>
+        <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '14px', alignContent: 'start' }}>
           {displayedOutbounds.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', padding: '48px', textAlign: 'center', color: 'var(--text-muted)', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               해당 조건의 출고 데이터가 없습니다.
             </div>
           ) : (
-            displayedOutbounds.map(({ o, custName, itemSummary, totalQty, destination, receiver }) => (
+            displayedOutbounds.map(({ o, custName, itemSummary, totalQty, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver }) => (
               <div
                 key={o.id}
                 style={{
@@ -935,12 +1116,28 @@ export const TradeOutboundPage: React.FC = () => {
                   <div style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, marginBottom: '6px' }}>
                     품목: {itemSummary} (총 {totalQty}개)
                   </div>
+                  <div style={{ padding: '7px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: 700, color: '#6d28d9', marginBottom: '3px' }}>
+                      <span>장착 옵션 ({appliedOpts.length}종)</span>
+                      <span style={{ fontFamily: 'monospace' }}>+₩{optionBillingAmount.toLocaleString()} (합산 ₩{totalBillingSupply.toLocaleString()})</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      {appliedOpts.length > 0 ? appliedOpts.map(op => `${op.name}[${op.subVariant}]`).join(', ') : '장착된 옵션 없음'}
+                    </div>
+                  </div>
                   <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                     수령인: {receiver} | 배송지: {destination}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '6px', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                  <button
+                    type="button"
+                    onClick={() => openOptionModal(o)}
+                    style={{ padding: '7px 10px', backgroundColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9', border: '1px solid rgba(124, 58, 237, 0.35)', borderRadius: '4px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    옵션·청구추가
+                  </button>
                   {o.status === 'REQUESTED' ? (
                     <button
                       type="button"
@@ -1226,6 +1423,162 @@ export const TradeOutboundPage: React.FC = () => {
                 </div>
               )}
 
+              {/* 지게차 출고 장착 옵션 선택 및 청구 추가 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(124, 58, 237, 0.35)', backgroundColor: 'rgba(124, 58, 237, 0.04)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 800, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <SlidersHorizontal size={14} /> 출고 장착 옵션 선택 · 청구 자동 합산
+                  </label>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#6d28d9', fontFamily: 'monospace' }}>
+                    옵션 청구추가액: +₩{formAppliedOptions.reduce((s, o) => s + (o.isFreeApplied ? 0 : o.qty * o.unitPrice), 0).toLocaleString()}원
+                  </span>
+                </div>
+
+                {/* 분류 탭 */}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setFormOptionCategoryFilter('ALL')}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: formOptionCategoryFilter === 'ALL' ? 700 : 500,
+                      border: formOptionCategoryFilter === 'ALL' ? '1px solid #6d28d9' : '1px solid var(--border-color)',
+                      backgroundColor: formOptionCategoryFilter === 'ALL' ? '#6d28d9' : 'var(--bg-card)',
+                      color: formOptionCategoryFilter === 'ALL' ? '#fff' : 'var(--text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    전체
+                  </button>
+                  {FORKLIFT_OPTION_GROUPS.map(g => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setFormOptionCategoryFilter(g.id)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: formOptionCategoryFilter === g.id ? 700 : 500,
+                        border: formOptionCategoryFilter === g.id ? '1px solid #6d28d9' : '1px solid var(--border-color)',
+                        backgroundColor: formOptionCategoryFilter === g.id ? '#6d28d9' : 'var(--bg-card)',
+                        color: formOptionCategoryFilter === g.id ? '#fff' : 'var(--text-secondary)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 옵션 마스터 원클릭 버튼 */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '115px', overflowY: 'auto', padding: '6px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                  {optionMasters
+                    .filter(m => m.isActive && (formOptionCategoryFilter === 'ALL' || m.optionGroup === formOptionCategoryFilter))
+                    .map(opt => {
+                      const exists = formAppliedOptions.some(a => a.optionId === opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setFormAppliedOptions(prev => {
+                              if (prev.some(a => a.optionId === opt.id)) {
+                                return prev.filter(a => a.optionId !== opt.id);
+                              }
+                              return [...prev, buildAppliedOptionFromMaster(opt)];
+                            });
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '5px',
+                            fontSize: '11px',
+                            fontWeight: exists ? 700 : 500,
+                            border: exists ? '1px solid #6d28d9' : '1px solid var(--border-color)',
+                            backgroundColor: exists ? 'rgba(124, 58, 237, 0.14)' : 'var(--bg-app)',
+                            color: exists ? '#6d28d9' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <span>{exists ? '✓' : '+'} {opt.name} [{opt.subVariant}]</span>
+                          <span style={{ fontSize: '10px', color: opt.isFreeDefault ? '#047857' : 'var(--text-muted)', fontFamily: 'monospace' }}>
+                            {opt.isFreeDefault ? '무상기본' : `+₩${opt.unitPrice.toLocaleString()}`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+
+                {formAppliedOptions.length > 0 && (
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', backgroundColor: 'var(--bg-card)' }}>
+                    <table style={{ width: '100%', fontSize: '11.5px', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '5px 8px', textAlign: 'left' }}>장착 옵션명 / 세부규격</th>
+                          <th style={{ padding: '5px 6px', textAlign: 'center', width: '65px' }}>수량</th>
+                          <th style={{ padding: '5px 8px', textAlign: 'right', width: '105px' }}>청구단가</th>
+                          <th style={{ padding: '5px 8px', textAlign: 'right', width: '95px' }}>청구공급가</th>
+                          <th style={{ padding: '5px 6px', textAlign: 'center', width: '40px' }}>제외</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formAppliedOptions.map((ao, idx) => (
+                          <tr key={ao.optionId} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '5px 8px' }}>
+                              <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{ao.name}</div>
+                              <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>{ao.optionGroupLabel} · {ao.subVariant}</div>
+                            </td>
+                            <td style={{ padding: '5px 6px', textAlign: 'center' }}>
+                              <input
+                                type="number"
+                                min={1}
+                                value={ao.qty}
+                                onChange={e => {
+                                  const nextQty = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                  setFormAppliedOptions(prev => prev.map((r, i) => i === idx ? { ...r, qty: nextQty, supplyAmount: r.isFreeApplied ? 0 : nextQty * r.unitPrice } : r));
+                                }}
+                                style={{ width: '48px', padding: '2px 4px', textAlign: 'center', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                              />
+                            </td>
+                            <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                              <input
+                                type="number"
+                                min={0}
+                                step={10000}
+                                disabled={ao.isFreeApplied}
+                                value={ao.isFreeApplied ? 0 : ao.unitPrice}
+                                onChange={e => {
+                                  const nextPrice = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                  setFormAppliedOptions(prev => prev.map((r, i) => i === idx ? { ...r, unitPrice: nextPrice, supplyAmount: r.qty * nextPrice } : r));
+                                }}
+                                style={{ width: '88px', padding: '2px 5px', textAlign: 'right', borderRadius: '4px', border: '1px solid var(--border-color)', fontFamily: 'monospace' }}
+                              />
+                            </td>
+                            <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 700, color: ao.isFreeApplied ? '#047857' : '#6d28d9', fontFamily: 'monospace' }}>
+                              {ao.isFreeApplied ? '무상 (₩0)' : `+₩${(ao.qty * ao.unitPrice).toLocaleString()}`}
+                            </td>
+                            <td style={{ padding: '5px 6px', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => setFormAppliedOptions(prev => prev.filter((_, i) => i !== idx))}
+                                style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>희망 운송 방식</label>
                 <select
@@ -1305,6 +1658,355 @@ export const TradeOutboundPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 6. 전용 출고 지게차 옵션 장착 및 청구 반영 모달 */}
+      {optionModalOutbound && (() => {
+        const targetOrder = salesOrders.find(so => so.id === optionModalOutbound.orderId);
+        const targetLines = salesOrderLines.filter(l => l.orderId === optionModalOutbound.orderId);
+        const baseItemsSupply = targetLines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+        const modalOptionSupply = modalAppliedOptions.reduce((s, o) => s + (o.isFreeApplied ? 0 : (Number(o.qty) || 1) * (Number(o.unitPrice) || 0)), 0);
+        const modalOptionCost = modalAppliedOptions.reduce((s, o) => s + (Number(o.qty) || 1) * (Number(o.costPrice) || 0), 0);
+        const combinedSupply = baseItemsSupply + modalOptionSupply;
+        const combinedVat = Math.round(combinedSupply * 0.1);
+        const combinedTotal = combinedSupply + combinedVat;
+
+        const filteredMasters = optionMasters.filter(m => {
+          if (!m.isActive) return false;
+          if (modalOptionGroupFilter !== 'ALL' && m.optionGroup !== modalOptionGroupFilter) return false;
+          if (modalOptionSearch.trim()) {
+            const q = modalOptionSearch.trim().toLowerCase();
+            return (
+              m.name.toLowerCase().includes(q) ||
+              m.subVariant.toLowerCase().includes(q) ||
+              m.optionGroupLabel.toLowerCase().includes(q) ||
+              m.optionCode.toLowerCase().includes(q)
+            );
+          }
+          return true;
+        });
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1300, padding: '16px' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', width: '980px', maxWidth: '96vw', maxHeight: '92vh', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)' }}>
+              {/* 헤더 */}
+              <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <SlidersHorizontal size={18} color="#6d28d9" />
+                    <span>출고 지게차 옵션 장착 및 청구액 합산 [{optionModalOutbound.id}]</span>
+                  </h3>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                    주문번호: {optionModalOutbound.orderId} · 거래처: {getCustomerName(targetOrder?.customerId)} · 선택된 옵션은 수주 금액 및 매출 명세서 청구액에 자동 추가됩니다.
+                  </div>
+                </div>
+                <button type="button" onClick={() => setOptionModalOutbound(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* 본문 */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* 옵션 분류 필터 바 + 단가 일괄 전환 버튼 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setModalOptionGroupFilter('ALL')}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '5px',
+                        fontSize: '11.5px',
+                        fontWeight: modalOptionGroupFilter === 'ALL' ? 800 : 600,
+                        border: modalOptionGroupFilter === 'ALL' ? '1px solid #6d28d9' : '1px solid var(--border-color)',
+                        backgroundColor: modalOptionGroupFilter === 'ALL' ? '#6d28d9' : 'var(--bg-app)',
+                        color: modalOptionGroupFilter === 'ALL' ? '#fff' : 'var(--text-secondary)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      전체 옵션 ({optionMasters.filter(m => m.isActive).length})
+                    </button>
+                    {FORKLIFT_OPTION_GROUPS.map(grp => (
+                      <button
+                        key={grp.id}
+                        type="button"
+                        onClick={() => setModalOptionGroupFilter(grp.id)}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '5px',
+                          fontSize: '11.5px',
+                          fontWeight: modalOptionGroupFilter === grp.id ? 800 : 600,
+                          border: modalOptionGroupFilter === grp.id ? '1px solid #6d28d9' : '1px solid var(--border-color)',
+                          backgroundColor: modalOptionGroupFilter === grp.id ? '#6d28d9' : 'var(--bg-app)',
+                          color: modalOptionGroupFilter === grp.id ? '#fff' : 'var(--text-secondary)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {grp.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input
+                      type="text"
+                      value={modalOptionSearch}
+                      onChange={e => setModalOptionSearch(e.target.value)}
+                      placeholder="백레스트, 캐빈, 덧발, 에어컨 검색"
+                      style={{ padding: '6px 10px', fontSize: '12px', width: '190px', borderRadius: '5px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalAppliedOptions(prev =>
+                          prev.map(ao => {
+                            const master = optionMasters.find(m => m.id === ao.optionId);
+                            if (!master || ao.isFreeApplied) return ao;
+                            return { ...ao, unitPrice: master.dealerPrice, supplyAmount: ao.qty * master.dealerPrice };
+                          })
+                        );
+                      }}
+                      style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '5px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#1d4ed8', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      대리점 공급단가 일괄적용
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalAppliedOptions(prev =>
+                          prev.map(ao => {
+                            const master = optionMasters.find(m => m.id === ao.optionId);
+                            if (!master || ao.isFreeApplied) return ao;
+                            return { ...ao, unitPrice: master.unitPrice, supplyAmount: ao.qty * master.unitPrice };
+                          })
+                        );
+                      }}
+                      style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '5px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#059669', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      표준 청구단가 일괄적용
+                    </button>
+                  </div>
+                </div>
+
+                {/* 옵션 마스터 선택 그리드 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(285px, 1fr))', gap: '8px', maxHeight: '235px', overflowY: 'auto', padding: '10px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                  {filteredMasters.map(opt => {
+                    const isSelected = modalAppliedOptions.some(a => a.optionId === opt.id);
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => {
+                          setModalAppliedOptions(prev => {
+                            if (prev.some(a => a.optionId === opt.id)) {
+                              return prev.filter(a => a.optionId !== opt.id);
+                            }
+                            return [...prev, buildAppliedOptionFromMaster(opt)];
+                          });
+                        }}
+                        style={{
+                          padding: '9px 11px',
+                          borderRadius: '6px',
+                          border: isSelected ? '2px solid #6d28d9' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-card)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '4px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                            {opt.optionGroupLabel} · {opt.domainTypeLabel}
+                          </span>
+                          <span style={{ fontSize: '11.5px', fontWeight: 800, color: opt.isFreeDefault ? '#047857' : '#6d28d9', fontFamily: 'monospace' }}>
+                            {opt.isFreeDefault ? '무상기본 (₩0)' : `+₩${opt.unitPrice.toLocaleString()}`}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                          {isSelected ? '✓ ' : '+ '}{opt.name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
+                          세부규격: {opt.subVariant}
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>원가 ₩{opt.costPrice.toLocaleString()} / 대리점 ₩{opt.dealerPrice.toLocaleString()}</span>
+                          <span>장착 {opt.installLeadHours}시간</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 선택된 장착 옵션 및 청구 단가 조정 테이블 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    선택된 출고 장착 옵션 및 청구 반영 명세 ({modalAppliedOptions.length}건)
+                  </div>
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '8px 10px', textAlign: 'left' }}>옵션분류</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left' }}>장착 옵션명 / 세부규격(문열림·길이)</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', width: '75px' }}>수량</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', width: '90px' }}>유/무상 구분</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '130px' }}>청구단가 (원)</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '125px' }}>옵션 청구공급가</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left' }}>장착·시공 메모</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', width: '55px' }}>삭제</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {modalAppliedOptions.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} style={{ padding: '26px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                              상단 옵션 카드를 클릭하여 출고 지게차에 장착할 옵션(백레스트, 사이드시프트, 캐빈, 에어컨, 덧발, 센서, 경광등, 무상옵션)을 추가하세요.
+                            </td>
+                          </tr>
+                        ) : (
+                          modalAppliedOptions.map((ao, idx) => {
+                            const master = optionMasters.find(m => m.id === ao.optionId);
+                            const rowSupply = ao.isFreeApplied ? 0 : (Number(ao.qty) || 1) * (Number(ao.unitPrice) || 0);
+                            return (
+                              <tr key={ao.optionId} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                <td style={{ padding: '7px 10px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                  {ao.optionGroupLabel}
+                                </td>
+                                <td style={{ padding: '7px 10px' }}>
+                                  <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{ao.name}</div>
+                                  <div style={{ fontSize: '11px', color: 'var(--primary)' }}>{ao.subVariant}</div>
+                                </td>
+                                <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={ao.qty}
+                                    onChange={e => {
+                                      const nextQty = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                      setModalAppliedOptions(prev =>
+                                        prev.map((r, i) => (i === idx ? { ...r, qty: nextQty, supplyAmount: r.isFreeApplied ? 0 : nextQty * r.unitPrice } : r))
+                                      );
+                                    }}
+                                    style={{ width: '56px', padding: '4px 6px', textAlign: 'center', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                  />
+                                </td>
+                                <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setModalAppliedOptions(prev =>
+                                        prev.map((r, i) => {
+                                          if (i !== idx) return r;
+                                          const nextFree = !r.isFreeApplied;
+                                          const restoredPrice = nextFree ? 0 : (r.unitPrice > 0 ? r.unitPrice : (master?.unitPrice || 150000));
+                                          return {
+                                            ...r,
+                                            isFreeApplied: nextFree,
+                                            unitPrice: restoredPrice,
+                                            supplyAmount: nextFree ? 0 : r.qty * restoredPrice
+                                          };
+                                        })
+                                      );
+                                    }}
+                                    style={{
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      fontWeight: 700,
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      backgroundColor: ao.isFreeApplied ? 'rgba(5, 150, 105, 0.14)' : 'rgba(37, 99, 235, 0.12)',
+                                      color: ao.isFreeApplied ? '#047857' : '#1d4ed8'
+                                    }}
+                                  >
+                                    {ao.isFreeApplied ? '무상적용' : '유상청구'}
+                                  </button>
+                                </td>
+                                <td style={{ padding: '7px 10px', textAlign: 'right' }}>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    step={10000}
+                                    disabled={ao.isFreeApplied}
+                                    value={ao.isFreeApplied ? 0 : ao.unitPrice}
+                                    onChange={e => {
+                                      const nextPrice = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                      setModalAppliedOptions(prev =>
+                                        prev.map((r, i) => (i === idx ? { ...r, unitPrice: nextPrice, supplyAmount: r.qty * nextPrice } : r))
+                                      );
+                                    }}
+                                    style={{ width: '108px', padding: '4px 6px', textAlign: 'right', borderRadius: '4px', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontWeight: 700 }}
+                                  />
+                                </td>
+                                <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: ao.isFreeApplied ? '#047857' : '#6d28d9', fontFamily: 'monospace' }}>
+                                  {ao.isFreeApplied ? '₩0 (무상)' : `+₩${rowSupply.toLocaleString()}`}
+                                </td>
+                                <td style={{ padding: '7px 10px' }}>
+                                  <input
+                                    type="text"
+                                    value={ao.note || ''}
+                                    onChange={e => {
+                                      const val = e.target.value;
+                                      setModalAppliedOptions(prev => prev.map((r, i) => (i === idx ? { ...r, note: val } : r)));
+                                    }}
+                                    placeholder="장착 위치·세부 사양 메모"
+                                    style={{ width: '100%', padding: '4px 8px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                  />
+                                </td>
+                                <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setModalAppliedOptions(prev => prev.filter((_, i) => i !== idx))}
+                                    style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}
+                                  >
+                                    ✕
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* 하단 대차대조 합산 요약 및 최종 확정 버튼 (Gutenberg Z-Pattern Terminal Action) */}
+              <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '12.5px', fontWeight: 700, flexWrap: 'wrap' }}>
+                  <span>장비·품목 공급가액: <strong style={{ fontFamily: 'monospace' }}>₩{baseItemsSupply.toLocaleString()}</strong></span>
+                  <span>+</span>
+                  <span style={{ color: '#6d28d9' }}>옵션 유상청구 합계: <strong style={{ fontFamily: 'monospace' }}>+₩{modalOptionSupply.toLocaleString()}</strong> (원가 ₩{modalOptionCost.toLocaleString()})</span>
+                  <span>=</span>
+                  <span style={{ color: 'var(--primary)', fontSize: '13.5px' }}>
+                    변경 후 총 청구 공급가액: <strong style={{ fontFamily: 'monospace' }}>₩{combinedSupply.toLocaleString()}</strong> (부가세 포함 ₩{combinedTotal.toLocaleString()})
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setOptionModalOutbound(null)}
+                    className="btn-secondary"
+                    style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveOptionModal}
+                    className="btn-primary"
+                    style={{ padding: '8px 18px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', cursor: 'pointer', backgroundColor: '#6d28d9', border: 'none', color: '#fff' }}
+                  >
+                    옵션 장착 확정 및 청구액 즉시 반영
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Preview Modal */}
       {previewHtml && (

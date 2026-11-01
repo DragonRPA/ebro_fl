@@ -11,6 +11,9 @@ export type PermissionRuleMap = Record<string, MenuPermissionRule>;
 // 1. 공통 기본 권한 (모든 직원 공통: 대시보드, 본인 연차신청, 차량운행일지, 가용재고조회)
 const BASE_COMMON_PERMISSIONS: PermissionRuleMap = {
   dashboard: { canView: true, canSave: false },
+  trade_option_masters: { canView: true, canSave: true },
+  trade_parts_catalog: { canView: true, canSave: true },
+  fl_doc_archive: { canView: true, canSave: true },
   available_inventory: { canView: true, canSave: false },
   leave_application: { canView: true, canSave: true }, // 모든 직원 공통 연차신청
   leave_ot: { canView: true, canSave: true },          // 레거시 호환

@@ -8252,6 +8252,57 @@ export interface TradeInventoryLot {
   createdAt: string;
 }
 
+export type ForkliftOptionGroupType =
+  | 'BACKREST'        // 백레스트 변경
+  | 'SIDESHIFT'       // 사이드시프트·부착물
+  | 'CABIN_DOOR'      // 캐빈·문열림구조별
+  | 'AIRCON'          // 에어컨·공조설치
+  | 'FORK_EXTENSION'  // 덧발·길이별
+  | 'REAR_SENSOR'     // 후방감지센서·카메라
+  | 'BEACON_LIGHT'    // 경광등·안전조명
+  | 'PROTECTION';     // 무상옵션·장비보호
+
+export interface ForkliftOptionMaster {
+  id: string;
+  optionCode: string;
+  optionGroup: ForkliftOptionGroupType;
+  optionGroupLabel: string;
+  domainType: 'PAID' | 'PROTECTION' | 'ATTACHMENT' | 'SPEC';
+  domainTypeLabel: '유상옵션' | '무상옵션' | '부착물' | '현장요구사양';
+  name: string;
+  subVariant: string;
+  specDetail: string;
+  applicableTonnage: string;
+  unit: string;
+  costPrice: number;
+  dealerPrice: number;
+  unitPrice: number;
+  isFreeDefault: boolean;
+  installLeadHours: number;
+  isActive: boolean;
+  sortOrder: number;
+  memo?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AppliedForkliftOption {
+  optionId: string;
+  optionCode: string;
+  optionGroup: ForkliftOptionGroupType;
+  optionGroupLabel: string;
+  domainTypeLabel: '유상옵션' | '무상옵션' | '부착물' | '현장요구사양';
+  name: string;
+  subVariant: string;
+  specDetail: string;
+  qty: number;
+  costPrice: number;
+  unitPrice: number;
+  supplyAmount: number;
+  isFreeApplied: boolean;
+  note?: string;
+}
+
 export interface TradeSalesOrder {
   id: string;
   customerId: string;
@@ -8270,6 +8321,9 @@ export interface TradeSalesOrder {
   status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'RETURNED' | 'CANCELLED';
   totalSalesAmount: number;
   totalCogsAmount: number;
+  appliedOptions?: AppliedForkliftOption[];
+  optionSupplyAmount?: number;
+  optionCostAmount?: number;
   createdAt: string;
   updatedAt: string;
   contractDocStatus?: 'DRAFT' | 'GENERATED' | 'SENT';
@@ -8317,6 +8371,8 @@ export interface TradeOutbound {
   receiverPhone?: string;
   proofUrl?: string;
   proofType?: 'SIGNATURE' | 'PHOTO';
+  appliedOptions?: AppliedForkliftOption[];
+  optionBillingAmount?: number;
   allocatedAt?: string;
   packedAt?: string;
   shippedAt?: string;
