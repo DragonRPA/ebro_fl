@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { UserMenuPreferences, MenuItemPreference, MENU_COLOR_PRESETS, MenuColorPreset } from '../types/menuCustomization';
 
-const STORAGE_KEY_PREFIX = 'erp_menu_preferences_';
+const STORAGE_KEY_PREFIX = 'erp_fl_menu_preferences_v2_';
 
 export function useMenuPreferences(userId?: string) {
   const storageKey = useMemo(() => {

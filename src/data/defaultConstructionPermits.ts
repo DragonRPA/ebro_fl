@@ -54,7 +54,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 441,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m', '굴절렌탈 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤', '중량 디젤지게차 5.0톤'],
     estimatedAwpUnits: 25,
     leadStatus: 'UNTOUCHED'
   },
@@ -107,7 +107,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 576,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 8m', '시저리프트 10m', '수직밀림식 6m'],
+    recommendedEquipment: ['전동지게차 2.0톤', '리튬전동지게차 2.5톤', '수직밀림식 6m'],
     estimatedAwpUnits: 40,
     leadStatus: 'CONTACTED'
   },
@@ -158,7 +158,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 324,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절렌탈 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '중량 디젤지게차 5.0톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'REGISTERED'
   },
@@ -209,7 +209,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 273,
     awpRecommendationScore: 'MID',
     awpGoldenTime: false,
-    recommendedEquipment: ['소형 시저리프트 6m', '시저리프트 8m'],
+    recommendedEquipment: ['리치전동지게차 1.8톤', '전동지게차 2.0톤'],
     estimatedAwpUnits: 4,
     leadStatus: 'UNTOUCHED'
   },
@@ -260,7 +260,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 518,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 12m', '시저리프트 14m', '굴절렌탈 18m'],
+    recommendedEquipment: ['디젤지게차 3.0톤', '디젤지게차 3.5톤', '굴절렌탈 18m'],
     estimatedAwpUnits: 30,
     leadStatus: 'CONTACTED'
   },
@@ -311,7 +311,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 394,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m (넌마킹)', '시저리프트 12m', '수직밀림식 8m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤 (넌마킹)', '디젤지게차 3.0톤', '수직밀림식 8m'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -362,7 +362,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 411,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 12m', '시저리프트 14m', '직붐렌탈 22m'],
+    recommendedEquipment: ['디젤지게차 3.0톤', '디젤지게차 3.5톤', '직붐렌탈 22m'],
     estimatedAwpUnits: 32,
     leadStatus: 'CONTACTED'
   },
@@ -413,7 +413,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 452,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 14m', '엔진굴절 16m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.5톤', '엔진굴절 16m'],
     estimatedAwpUnits: 28,
     leadStatus: 'UNTOUCHED'
   },
@@ -464,7 +464,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 324,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '수직형 8m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '수직형 8m'],
     estimatedAwpUnits: 18,
     leadStatus: 'REGISTERED'
   },
@@ -515,7 +515,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 518,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 8m', '시저리프트 10m', '시저리프트 12m'],
+    recommendedEquipment: ['전동지게차 2.0톤', '리튬전동지게차 2.5톤', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 25,
     leadStatus: 'CONTACTED'
   },
@@ -569,7 +569,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 649,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m (넌마킹)', '시저리프트 12m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤 (넌마킹)', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -620,7 +620,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 567,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['소형 시저리프트 8m', '시저리프트 10m'],
+    recommendedEquipment: ['소형 전동지게차 2.0톤', '리튬전동지게차 2.5톤'],
     estimatedAwpUnits: 16,
     leadStatus: 'CONTACTED'
   },
@@ -671,7 +671,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 668,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절식 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '굴절식 15m'],
     estimatedAwpUnits: 35,
     leadStatus: 'UNTOUCHED'
   },
@@ -722,7 +722,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 618,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 8m', '시저리프트 10m'],
+    recommendedEquipment: ['전동지게차 2.0톤', '리튬전동지게차 2.5톤'],
     estimatedAwpUnits: 14,
     leadStatus: 'UNTOUCHED'
   },
@@ -775,7 +775,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 421,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m (넌마킹)', '시저리프트 12m', '굴절렌탈 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤 (넌마킹)', '디젤지게차 3.0톤', '중량 디젤지게차 5.0톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -826,7 +826,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 466,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절렌탈 16m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '굴절렌탈 16m'],
     estimatedAwpUnits: 25,
     leadStatus: 'CONTACTED'
   },
@@ -877,7 +877,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 406,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['직붐렌탈 20m', '굴절렌탈 18m', '시저리프트 12m'],
+    recommendedEquipment: ['직붐렌탈 20m', '굴절렌탈 18m', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'REGISTERED'
   },
@@ -930,7 +930,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 456,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 28,
     leadStatus: 'UNTOUCHED'
   },
@@ -981,7 +981,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 548,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 12m', '시저리프트 14m', '굴절렌탈 18m'],
+    recommendedEquipment: ['디젤지게차 3.0톤', '디젤지게차 3.5톤', '굴절렌탈 18m'],
     estimatedAwpUnits: 30,
     leadStatus: 'CONTACTED'
   },
@@ -1034,7 +1034,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 442,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절렌탈 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '중량 디젤지게차 5.0톤'],
     estimatedAwpUnits: 24,
     leadStatus: 'UNTOUCHED'
   },
@@ -1085,7 +1085,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 588,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m (넌마킹)', '시저리프트 12m', '굴절식 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤 (넌마킹)', '디젤지게차 3.0톤', '굴절식 15m'],
     estimatedAwpUnits: 38,
     leadStatus: 'REGISTERED'
   },
@@ -1138,7 +1138,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 447,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '직붐렌탈 22m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '직붐렌탈 22m'],
     estimatedAwpUnits: 16,
     leadStatus: 'UNTOUCHED'
   },
@@ -1189,7 +1189,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 425,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 12m', '굴절식 18m', '직붐 26m'],
+    recommendedEquipment: ['디젤지게차 3.0톤', '굴절식 18m', '직붐 26m'],
     estimatedAwpUnits: 18,
     leadStatus: 'CONTACTED'
   },
@@ -1242,7 +1242,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 528,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 35,
     leadStatus: 'UNTOUCHED'
   },
@@ -1293,7 +1293,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 440,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절렌탈 16m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '굴절렌탈 16m'],
     estimatedAwpUnits: 20,
     leadStatus: 'CONTACTED'
   },
@@ -1344,7 +1344,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 441,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '굴절렌탈 15m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '중량 디젤지게차 5.0톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -1397,7 +1397,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 452,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['직붐렌탈 22m', '굴절렌탈 18m', '시저리프트 12m'],
+    recommendedEquipment: ['직붐렌탈 22m', '굴절렌탈 18m', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 25,
     leadStatus: 'CONTACTED'
   },
@@ -1448,7 +1448,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 503,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 12m', '시저리프트 14m', '직붐 20m'],
+    recommendedEquipment: ['디젤지게차 3.0톤', '디젤지게차 3.5톤', '직붐 20m'],
     estimatedAwpUnits: 30,
     leadStatus: 'UNTOUCHED'
   },
@@ -1499,7 +1499,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 371,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'UNTOUCHED'
   },
@@ -1550,7 +1550,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 503,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 8m', '시저리프트 10m', '시저리프트 12m'],
+    recommendedEquipment: ['전동지게차 2.0톤', '리튬전동지게차 2.5톤', '디젤지게차 3.0톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'CONTACTED'
   },
@@ -1601,7 +1601,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 25,
     leadStatus: 'UNTOUCHED'
   },
@@ -1652,7 +1652,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -1703,7 +1703,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 30,
     leadStatus: 'UNTOUCHED'
   },
@@ -1754,7 +1754,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 28,
     leadStatus: 'UNTOUCHED'
   },
@@ -1805,7 +1805,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 18,
     leadStatus: 'UNTOUCHED'
   },
@@ -1856,7 +1856,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'UNTOUCHED'
   },
@@ -1907,7 +1907,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 35,
     leadStatus: 'UNTOUCHED'
   },
@@ -1958,7 +1958,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 30,
     leadStatus: 'UNTOUCHED'
   },
@@ -2009,7 +2009,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 24,
     leadStatus: 'UNTOUCHED'
   },
@@ -2060,7 +2060,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 16,
     leadStatus: 'UNTOUCHED'
   },
@@ -2111,7 +2111,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 32,
     leadStatus: 'UNTOUCHED'
   },
@@ -2162,7 +2162,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -2213,7 +2213,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 18,
     leadStatus: 'UNTOUCHED'
   },
@@ -2264,7 +2264,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -2315,7 +2315,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 14,
     leadStatus: 'UNTOUCHED'
   },
@@ -2366,7 +2366,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 30,
     leadStatus: 'UNTOUCHED'
   },
@@ -2417,7 +2417,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 25,
     leadStatus: 'UNTOUCHED'
   },
@@ -2468,7 +2468,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 18,
     leadStatus: 'UNTOUCHED'
   },
@@ -2519,7 +2519,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -2570,7 +2570,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'UNTOUCHED'
   },
@@ -2621,7 +2621,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -2672,7 +2672,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 14,
     leadStatus: 'UNTOUCHED'
   },
@@ -2723,7 +2723,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 24,
     leadStatus: 'UNTOUCHED'
   },
@@ -2774,7 +2774,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -2825,7 +2825,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 26,
     leadStatus: 'UNTOUCHED'
   },
@@ -2876,7 +2876,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 24,
     leadStatus: 'UNTOUCHED'
   },
@@ -2927,7 +2927,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 18,
     leadStatus: 'UNTOUCHED'
   },
@@ -2978,7 +2978,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 28,
     leadStatus: 'UNTOUCHED'
   },
@@ -3029,7 +3029,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -3080,7 +3080,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 16,
     leadStatus: 'UNTOUCHED'
   },
@@ -3131,7 +3131,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 20,
     leadStatus: 'UNTOUCHED'
   },
@@ -3182,7 +3182,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 24,
     leadStatus: 'UNTOUCHED'
   },
@@ -3233,7 +3233,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 26,
     leadStatus: 'UNTOUCHED'
   },
@@ -3284,7 +3284,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 22,
     leadStatus: 'UNTOUCHED'
   },
@@ -3335,7 +3335,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: false,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 14,
     leadStatus: 'UNTOUCHED'
   },
@@ -3386,7 +3386,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     totalDays: 486,
     awpRecommendationScore: 'HIGH',
     awpGoldenTime: true,
-    recommendedEquipment: ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m'],
+    recommendedEquipment: ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤'],
     estimatedAwpUnits: 15,
     leadStatus: 'UNTOUCHED'
   },
@@ -3448,9 +3448,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: false,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 18,
     leadStatus: "UNTOUCHED"
@@ -3514,9 +3514,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
-      "시저리프트 12m",
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
       "수직밀림 6m"
     ],
     estimatedAwpUnits: 35,
@@ -3579,10 +3579,10 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 22,
     leadStatus: "UNTOUCHED"
@@ -3643,8 +3643,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
       "수직밀림 6m"
     ],
     estimatedAwpUnits: 30,
@@ -3706,9 +3706,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: false,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 16,
     leadStatus: "UNTOUCHED"
@@ -3771,9 +3771,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 28,
     leadStatus: "UNTOUCHED"
@@ -3836,9 +3836,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
-      "시저리프트 12m",
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
       "수직밀림 6m"
     ],
     estimatedAwpUnits: 32,
@@ -3902,9 +3902,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 36,
     leadStatus: "UNTOUCHED"
@@ -3968,9 +3968,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
       "전동직신렌탈 16m"
     ],
     estimatedAwpUnits: 45,
@@ -4033,9 +4033,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 15,
     leadStatus: "UNTOUCHED"
@@ -4096,9 +4096,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 12,
     leadStatus: "UNTOUCHED"
@@ -4160,9 +4160,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: false,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 18,
     leadStatus: "UNTOUCHED"
@@ -4227,9 +4227,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
       "전동직신 16m"
     ],
     estimatedAwpUnits: 50,
@@ -4292,9 +4292,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 20,
     leadStatus: "UNTOUCHED"
@@ -4356,9 +4356,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 30,
     leadStatus: "UNTOUCHED"
@@ -4419,9 +4419,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 24,
     leadStatus: "UNTOUCHED"
@@ -4483,9 +4483,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 30,
     leadStatus: "UNTOUCHED"
@@ -4548,9 +4548,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
       "전동직신 16m"
     ],
     estimatedAwpUnits: 38,
@@ -4613,8 +4613,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: false,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 14,
     leadStatus: "UNTOUCHED"
@@ -4675,9 +4675,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 20,
     leadStatus: "UNTOUCHED"
@@ -4740,9 +4740,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
       "전동직신 16m",
       "엔진직신 22m"
     ],
@@ -4806,9 +4806,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 25,
     leadStatus: "UNTOUCHED"
@@ -4869,9 +4869,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 30,
     leadStatus: "UNTOUCHED"
@@ -4931,8 +4931,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 16,
     leadStatus: "UNTOUCHED"
@@ -4994,9 +4994,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤",
       "전동직신 16m"
     ],
     estimatedAwpUnits: 28,
@@ -5058,9 +5058,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 22,
     leadStatus: "UNTOUCHED"
@@ -5123,9 +5123,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤"
     ],
     estimatedAwpUnits: 30,
     leadStatus: "UNTOUCHED"
@@ -5186,8 +5186,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 16,
     leadStatus: "UNTOUCHED"
@@ -5247,8 +5247,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 14,
     leadStatus: "UNTOUCHED"
@@ -5309,9 +5309,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 8m",
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "전동지게차 2.0톤",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 25,
     leadStatus: "UNTOUCHED"
@@ -5371,8 +5371,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 18,
     leadStatus: "UNTOUCHED"
@@ -5434,9 +5434,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 22,
     leadStatus: "UNTOUCHED"
@@ -5496,8 +5496,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 15,
     leadStatus: "UNTOUCHED"
@@ -5557,9 +5557,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 20,
     leadStatus: "UNTOUCHED"
@@ -5622,9 +5622,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "굴절렌탈 15m",
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "중량 디젤지게차 5.0톤",
       "엔진직신 22m"
     ],
     estimatedAwpUnits: 40,
@@ -5685,8 +5685,8 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤"
     ],
     estimatedAwpUnits: 12,
     leadStatus: "UNTOUCHED"
@@ -5747,9 +5747,9 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     awpRecommendationScore: "HIGH",
     awpGoldenTime: true,
     recommendedEquipment: [
-      "시저리프트 10m",
-      "시저리프트 12m",
-      "시저리프트 14m"
+      "리튬전동지게차 2.5톤",
+      "디젤지게차 3.0톤",
+      "디젤지게차 3.5톤"
     ],
     estimatedAwpUnits: 28,
     leadStatus: "UNTOUCHED"

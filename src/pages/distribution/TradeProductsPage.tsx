@@ -86,8 +86,8 @@ export const TradeProductsPage: React.FC = () => {
   const [cost, setCost] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
 
-  // Filter states (유형자산 분류, 용도 구분, 제조사, 카테고리, 창고, 품명/코드, 재고상태, 거래상태)
-  const [itemTypeFilter, setItemTypeFilter] = useState<'ALL' | 'EQUIPMENT' | 'PART' | 'CONSUMABLE'>('ALL');
+  // Filter states (유형자산 분류: 완제품 지게차 기본, 용도 구분, 제조사, 카테고리, 창고, 품명/코드, 재고상태, 거래상태)
+  const [itemTypeFilter, setItemTypeFilter] = useState<'ALL' | 'EQUIPMENT' | 'PART' | 'CONSUMABLE'>('EQUIPMENT');
   const [usagePurposeFilter, setUsagePurposeFilter] = useState<'ALL' | 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE'>('ALL');
   const [manufacturerFilter, setManufacturerFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');

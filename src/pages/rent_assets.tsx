@@ -875,7 +875,7 @@ export const RentAssets: React.FC = () => {
     const newAsset: Partial<Asset> = {
       id: `asset-rent-${Date.now()}`,
       assetNo: newAssetNo,
-      modelName: stmt.modelName || '임차고소작업대',
+      modelName: stmt.modelName || '임차지게차',
       serialNo: stmt.serialNo || '',
       ownerType: 'RENTED',
       antiEntrapmentOwnership: 'VENDOR',
@@ -3232,7 +3232,7 @@ export const RentAssets: React.FC = () => {
                 <textarea
                   value={subleaseMemo}
                   onChange={e => setSubleaseMemo(e.target.value)}
-                  placeholder="예: 2022년식 이상 요구, 협착방지봉 부착 상태로 상차 요망..."
+                  placeholder="예: 2022년식 이상 요구, 안전옵션부착물 부착 상태로 상차 요망..."
                   style={{
                     height: '65px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', boxSizing: 'border-box'
@@ -4073,15 +4073,15 @@ export const RentAssets: React.FC = () => {
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* 협착방지봉 소유권 주의 배너 */}
+              {/* 안전옵션부착물 소유권 주의 배너 */}
               {returnTargetAsset?.antiEntrapmentOwnership === 'VENDOR' && (
                 <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.3)', color: '#dc2626', fontSize: '11.5px', lineHeight: '1.4' }}>
-                   <strong>[임차처 소유 협착방지봉 확인]</strong> 해당 장비는 <strong>임차거래처 소유 협착방지봉</strong>이 장착되어 있습니다. 절대로 탈거하지 말고 <strong>장착된 상태 그대로 원형 반납</strong>하십시오. (임의 탈거 시 비용 피청구 발생)
+                   <strong>[임차처 소유 안전옵션부착물 확인]</strong> 해당 장비는 <strong>임차거래처 소유 안전옵션부착물</strong>이 장착되어 있습니다. 절대로 탈거하지 말고 <strong>장착된 상태 그대로 원형 반납</strong>하십시오. (임의 탈거 시 비용 피청구 발생)
  </div>
               )}
               {returnTargetAsset?.antiEntrapmentOwnership === 'OURS' && (
                 <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(37, 99, 235, 0.1)', border: '1px solid rgba(37, 99, 235, 0.3)', color: '#2563eb', fontSize: '11.5px', lineHeight: '1.4' }}>
-                   <strong>[당사 소유 협착방지봉 탈거 확인]</strong> 반납 전 당사 소유 협착방지봉을 <strong>반드시 탈거하여 당사 부품실로 회수</strong>하였는지 확인하십시오.
+                   <strong>[당사 소유 안전옵션부착물 탈거 확인]</strong> 반납 전 당사 소유 안전옵션부착물을 <strong>반드시 탈거하여 당사 부품실로 회수</strong>하였는지 확인하십시오.
  </div>
               )}
 
@@ -4835,7 +4835,7 @@ export const RentAssets: React.FC = () => {
                 </div>
               </div>
 
-              {/* 협착방지봉 옵션 소유권 및 입고/반납 지침 */}
+              {/* 안전옵션부착물 옵션 소유권 및 입고/반납 지침 */}
               <div style={{
                 padding: '10px 12px',
                 backgroundColor: a.antiEntrapmentOwnership === 'VENDOR' ? 'rgba(220, 38, 38, 0.08)' : a.antiEntrapmentOwnership === 'OURS' ? 'rgba(37, 99, 235, 0.08)' : 'var(--bg-app)',
@@ -4844,7 +4844,7 @@ export const RentAssets: React.FC = () => {
               }}>
                 <div style={{ fontWeight: 600, color: a.antiEntrapmentOwnership === 'VENDOR' ? 'var(--danger)' : a.antiEntrapmentOwnership === 'OURS' ? 'var(--primary)' : 'var(--text-main)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ShieldAlert size={14} />
-                  협착방지봉 소유권: {a.antiEntrapmentOwnership === 'VENDOR' ? '임차처 소유' : a.antiEntrapmentOwnership === 'OURS' ? '당사 소유' : '미장착'}
+                  안전옵션부착물 소유권: {a.antiEntrapmentOwnership === 'VENDOR' ? '임차처 소유' : a.antiEntrapmentOwnership === 'OURS' ? '당사 소유' : '미장착'}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-main)', lineHeight: '1.4' }}>
                   {a.antiEntrapmentOwnership === 'VENDOR' && (
@@ -4854,11 +4854,11 @@ export const RentAssets: React.FC = () => {
                   )}
                   {a.antiEntrapmentOwnership === 'OURS' && (
                     <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                       당사 소유 부품입니다. 임차처 최종 반납 시 장착된 협착방지봉을 반드시 탈거하여 당사 부품실로 회수하십시오.
+                       당사 소유 부품입니다. 임차처 최종 반납 시 장착된 안전옵션부착물을 반드시 탈거하여 당사 부품실로 회수하십시오.
  </span>
                   )}
                   {(!a.antiEntrapmentOwnership || a.antiEntrapmentOwnership === 'NONE') && (
-                    <span style={{ color: 'var(--text-muted)' }}>협착방지봉 옵션이 장착되어 있지 않은 자산입니다.</span>
+                    <span style={{ color: 'var(--text-muted)' }}>안전옵션부착물 옵션이 장착되어 있지 않은 자산입니다.</span>
                   )}
                 </div>
               </div>

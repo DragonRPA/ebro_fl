@@ -1876,15 +1876,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      // 2) allowedPages가 지정되어 있는 경우, 허용 목록에 없는 메뉴는 원천 차단 (대시보드 및 신규 영업일지/가용재고조회/현장정비동선관리 기본 개방 제외, 숨김은 hiddenPages에서 제어)
+      const flStandardMenus = new Set([
+        'dashboard', 'sales_performance', 'trade_profitability', 'customer', 'trade_contracts',
+        'contract', 'exchange_rate', 'fl_doc_archive', 'public_construction_permits',
+        'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
+        'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',
+        'trade_purchases', 'trade_outbounds', 'rental_inbound', 'rental_outbound',
+        'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
+        'repairs', 'repair', 'patrol_maintenance', 'permission', 'operations_manual'
+      ]);
+
+      // 2) allowedPages가 지정되어 있는 경우, 허용 목록에 없는 메뉴는 원천 차단
       if (
         normAllowedPages.length > 0 &&
-        normMenuId !== 'dashboard' &&
+        !flStandardMenus.has(normMenuId) &&
+        !flStandardMenus.has(menuId) &&
         normMenuId !== 'sales_journal' &&
         normMenuId !== 'available_inventory' &&
         normMenuId !== 'as_route_tracking' &&
         normMenuId !== 'trade_parts_catalog' &&
-        normMenuId !== 'fl_doc_archive' &&
         !(normMenuId === 'kiyeun_contract_status' && (currentTenant.id === 'tenant-giyeonlift' || (currentTenant.tenantCode || '').toUpperCase().includes('GIYEON') || (currentTenant.tenantCode || '').toUpperCase().includes('GIYUEN'))) &&
         !normAllowedPages.includes(normMenuId)
       ) {
@@ -1900,47 +1910,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
 
-    // 3. 사용자 정의 권한 명칭 상속 판정 (역할 기반 자동 상속 최우선 - 매트릭스 설정과 100% 일치)
-    if (currentUser.customRoleId) {
-      const userRolePerms = rolePermissions.filter(p => p.roleId === currentUser.customRoleId);
-      if (userRolePerms.length > 0) {
-        const rolePerm = userRolePerms.find(p => normalizeMenuId(p.menuId) === normMenuId);
-        if (rolePerm) {
-          return action === 'view' ? Boolean(rolePerm.canView) : Boolean(rolePerm.canSave);
-        }
-        if (
-          normMenuId === 'sales_journal' ||
-          normMenuId === 'available_inventory' ||
-          normMenuId === 'as_route_tracking' ||
-          normMenuId === 'kiyeun_contract_status' ||
-          normMenuId.startsWith('trade_') ||
-          normMenuId === 'courier_dispatch'
-        ) {
-          const dept = currentUser.departmentId || currentUser.department;
-          const fallbackRule = getRoleTemplatePermission(currentUser.role, dept, normMenuId, action);
-          if (fallbackRule !== undefined) return fallbackRule;
-        }
-        return false;
-      }
-    }
-
     // 4. 사용자별 명시적 오버라이드(개인 예외 권한) 우선 판정
     const perm = permissions.find(p => 
       (p.userId === currentUser.id || (p as any).user_id === currentUser.id) && 
-      normalizeMenuId(p.menuId) === normMenuId
+      (normalizeMenuId(p.menuId) === normMenuId || p.menuId === menuId)
     );
     if (perm) {
       return action === 'view' ? Boolean(perm.canView) : Boolean(perm.canSave);
     }
 
-    // 5. 직무 템플릿 기반 자동 상속 판정
+    // 5. eBro FL 7대 표준 메뉴그룹(24개 하위메뉴) 기본 권한 허용
+    const flDefaultOpenMenus = new Set([
+      'sales_performance', 'trade_profitability', 'customer', 'trade_contracts',
+      'contract', 'exchange_rate', 'fl_doc_archive', 'public_construction_permits',
+      'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
+      'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',
+      'trade_purchases', 'trade_outbounds', 'rental_inbound', 'rental_outbound',
+      'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
+      'repairs', 'repair', 'patrol_maintenance', 'operations_manual'
+    ]);
+    if (flDefaultOpenMenus.has(normMenuId) || flDefaultOpenMenus.has(menuId)) {
+      return true;
+    }
+
+    // 6. 직무 템플릿 기반 자동 상속 판정
     const dept = currentUser.departmentId || currentUser.department;
     const templateRule = getRoleTemplatePermission(currentUser.role, dept, normMenuId, action);
     if (templateRule !== undefined) {
       return templateRule;
     }
 
-    // 6. 엄격한 거부 우선: 정의되지 않은 메뉴는 전면 차단
+    // 7. 엄격한 거부 우선: 정의되지 않은 메뉴는 전면 차단
     return false;
   };
 

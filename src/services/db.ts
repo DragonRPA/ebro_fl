@@ -3883,7 +3883,104 @@ const SEED_OVERTIME_RECORDS: OvertimeRecord[] = [
 // [v1.68.15] 체크리스트 항목은 앱 UI(체크리스트 관리 메뉴)에서만 등록/관리한다.
 // 코드 레벨 자동 시드 주입 시 Supabase DB 삭제 후에도 재부활하는 문제가 있어 빈 배열로 변경.
 // 실제 운영 데이터는 Supabase에 저장되며, 신규 설치 시에는 체크리스트 관리 메뉴에서 직접 등록한다.
-const SEED_INSPECTION_CHECKLIST_ITEMS: InspectionChecklistItem[] = [];
+const SEED_INSPECTION_CHECKLIST_ITEMS: InspectionChecklistItem[] = [
+  {
+    id: 'CHK-FL-001',
+    category: '포크·어태치먼트',
+    code: 'DEF-FORK-01',
+    name: '포크 암 휨 변형 및 팁 균열 파손',
+    score: 25,
+    description: '과적 또는 편하중 작업으로 인한 포크 수평 편차 초과 및 균열',
+    isDefectSymptom: true,
+    standardManHours: 2.0,
+    actionGuide: '포크 1조 탈거 후 신품 단조포크 교체 및 마스트 캐리지 정렬 점검',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-002',
+    category: '마스트·유압계통',
+    code: 'DEF-MAST-01',
+    name: '마스트 리프트·틸트 실린더 오일 누유',
+    score: 20,
+    description: '실린더 로드 찍힘 또는 더스트씰·패킹 파손으로 인한 작동유 누유',
+    isDefectSymptom: true,
+    standardManHours: 2.5,
+    actionGuide: '유압실린더 오버홀 씰키트 교환 및 ISO VG 46 작동유 보충',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-003',
+    category: '마스트·유압계통',
+    code: 'DEF-MAST-02',
+    name: '사이드시프트 유압호스 절단 및 피팅 파손',
+    score: 15,
+    description: '팔레트 간섭으로 인한 사이드시프트 고압호스 손상',
+    isDefectSymptom: true,
+    standardManHours: 1.5,
+    actionGuide: '고압 유압호스 신품 교체 및 에어 빼기·작동 압력 점검',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-004',
+    category: '캐빈·외관차체',
+    code: 'DEF-CAB-01',
+    name: '전방 캐빈 안전강화유리 파손 및 프레임 변형',
+    score: 20,
+    description: '적재물 낙하 또는 충돌로 인한 캐빈 전면 강화유리 파손',
+    isDefectSymptom: true,
+    standardManHours: 2.0,
+    actionGuide: '전면 접합강화유리 및 웨더스트립 실링 교체',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-005',
+    category: '타이어·주행부',
+    code: 'DEF-TIRE-01',
+    name: '전륜 솔리드타이어 코드절상 및 편마모 파손',
+    score: 20,
+    description: '철편 밟음 또는 급회전으로 인한 타이어 청킹·트레드 박리',
+    isDefectSymptom: true,
+    standardManHours: 2.0,
+    actionGuide: '유압 타이어 프레스 탈부착 후 신품 솔리드타이어 장착',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-006',
+    category: '전장·안전장치',
+    code: 'DEF-ELEC-01',
+    name: '후방감지센서·블루스팟 안전등 충돌 파손',
+    score: 10,
+    description: '후진 시 적재랙 충돌로 인한 후방 카메라·센서·경광등 파손',
+    isDefectSymptom: true,
+    standardManHours: 1.0,
+    actionGuide: '후방감지센서 모듈 및 LED 블루스팟 램프 신품 교체',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-007',
+    category: '배터리·충전기',
+    code: 'DEF-BAT-01',
+    name: '충전 플러그 하우징 파손 및 케이블 피복 손상',
+    score: 15,
+    description: '충전 커넥터 미분리 출발 또는 강제 탈거로 인한 단자 파손',
+    isDefectSymptom: true,
+    standardManHours: 1.0,
+    actionGuide: 'REMA/앤더슨 대전류 충전 커넥터 및 단자 압착 교체',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  },
+  {
+    id: 'CHK-FL-008',
+    category: '제동·조향장치',
+    code: 'DEF-BRK-01',
+    name: '주차·주행 브레이크 라이닝 마모 및 제동력 저하',
+    score: 15,
+    description: '브레이크 드럼 라이닝 마모 한계 도달 또는 마스터실린더 압력 저하',
+    isDefectSymptom: true,
+    standardManHours: 2.5,
+    actionGuide: '브레이크 슈 라이닝 세트 교체 및 간극 조정',
+    createdAt: '2026-01-10T09:00:00.000Z'
+  }
+];
 
 export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
   {
@@ -5340,7 +5437,12 @@ class LocalDB {
   set assets(val: Asset[]) { this.set('assets', val); }
 
   get inspectionChecklistItems() {
-    return this.get<InspectionChecklistItem>('inspectionChecklistItems', SEED_INSPECTION_CHECKLIST_ITEMS);
+    const list = this.get<InspectionChecklistItem>('inspectionChecklistItems', SEED_INSPECTION_CHECKLIST_ITEMS);
+    if (!list || list.length === 0) {
+      this.set('inspectionChecklistItems', SEED_INSPECTION_CHECKLIST_ITEMS);
+      return SEED_INSPECTION_CHECKLIST_ITEMS;
+    }
+    return list;
   }
   set inspectionChecklistItems(val: InspectionChecklistItem[]) { this.set('inspectionChecklistItems', val); }
 

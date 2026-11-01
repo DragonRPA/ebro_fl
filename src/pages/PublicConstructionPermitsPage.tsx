@@ -412,7 +412,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
     }
   };
 
-  // 고소작업대 추천도 렌더러
+  // 지게차 추천도 렌더러
   const renderAwpScoreBadge = (score: ConstructionPermitItem['awpRecommendationScore'], units: number) => {
     if (score === 'HIGH') {
       return (
@@ -533,7 +533,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
       추정공정률_퍼센트: item.progressRate,
       공정단계: item.progressStage,
       골든타임여부: item.awpGoldenTime ? 'Y' : 'N',
-      고소작업대추천도: item.awpRecommendationScore,
+      지게차추천도: item.awpRecommendationScore,
       추천소요대수: item.estimatedAwpUnits,
       추천장비군: item.recommendedEquipment.join(', '),
       시공사명: item.builderName,
@@ -630,16 +630,16 @@ export const PublicConstructionPermitsPage: React.FC = () => {
 
         let awpScore: ConstructionPermitItem['awpRecommendationScore'] = 'MID';
         let estUnits = 4;
-        let recEquip = ['시저리프트 10m', '시저리프트 8m'];
+        let recEquip = ['리튬전동지게차 2.5톤', '전동지게차 2.0톤'];
 
         if (totArea >= 10000 || mainUse.includes('창고') || mainUse.includes('공장') || mainUse.includes('지식산업')) {
           awpScore = 'HIGH';
           estUnits = Math.min(50, Math.max(12, Math.floor(totArea / 1500)));
-          recEquip = ['시저리프트 10m', '시저리프트 12m', '시저리프트 14m', '굴절렌탈 15m'];
+          recEquip = ['리튬전동지게차 2.5톤', '디젤지게차 3.0톤', '디젤지게차 3.5톤', '중량 디젤지게차 5.0톤'];
         } else if (totArea < 2000) {
           awpScore = 'LOW';
           estUnits = 2;
-          recEquip = ['소형 시저리프트 6m', '시저리프트 8m'];
+          recEquip = ['리치전동지게차 1.8톤', '전동지게차 2.0톤'];
         }
 
         return {
@@ -969,7 +969,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           </select>
         </div>
 
-        {/* 고소작업대 골든타임 전용 스위치 토글 */}
+        {/* 지게차 골든타임 전용 스위치 토글 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>영업 타겟팅</label>
           <button
@@ -1379,7 +1379,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                   </div>
 
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
-                    고소작업대 투입 시 필수 요구 안전장치:
+                    지게차 투입 시 필수 요구 안전장치:
  </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
                     {selectedItem.csiSafety.requiredSafetyOptions.map((opt, idx) => (
@@ -1405,7 +1405,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 3. 고소작업대 투입 골든타임 진단 카드 */}
+                {/* 3. 지게차 투입 골든타임 진단 카드 */}
                 <div style={{
                   padding: '12px 14px', borderRadius: '8px',
                   backgroundColor: 'var(--bg-card)',
@@ -1419,7 +1419,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       display: 'flex', alignItems: 'center', gap: '5px'
                     }}>
                       <HardHat size={14} color={selectedItem.awpGoldenTime ? 'var(--success, #22c55e)' : 'var(--text-muted)'} />
-                      고소작업대 투입 적기 진단
+                      지게차 투입 적기 진단
  </span>
                     <span style={{
                       fontSize: '11px', fontWeight: 600,
@@ -1588,7 +1588,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                   </div>
 
                   <div style={{ marginBottom: '8px' }}>
-                    <div style={{ color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 500 }}>추천 고소작업대 기종:</div>
+                    <div style={{ color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 500 }}>추천 지게차 기종:</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {selectedItem.recommendedEquipment.map((eq, idx) => (
                         <span key={idx} style={{
@@ -1767,7 +1767,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
               }}>
                 <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <HardHat size={16} />
-                  2. 추천 장비군 및 고소작업대 소요 대수 산정 수학식
+                  2. 추천 장비군 및 지게차 소요 대수 산정 수학식
  </div>
                 <div style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   건물의 연면적, 지상 층수, 주용도(물류창고/공장/지식산업센터 등) 제원을 매핑하여 최적 규격과 대수를 자동 계산합니다:
@@ -1776,7 +1776,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', margin: '8px 0', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-main)' }}>
                   • <b>대형 산업시설 (연면적 ≥ 10,000㎡ 또는 물류센터/공장/지식산업센터)</b><br />
                   &nbsp;&nbsp;- 규모 분류: <b>대형 (연면적 3,000평 이상)</b><br />
-                  &nbsp;&nbsp;- 적용 장비군: 대형 시저리프트, 굴절렌탈 15m<br />
+                  &nbsp;&nbsp;- 적용 장비군: 대형 시저리프트, 중량 디젤지게차 5.0톤<br />
                   • <b>중형 일반건축물 (연면적 2,000㎡ ~ 10,000㎡)</b><br />
                   &nbsp;&nbsp;- 규모 분류: <b>중형 (연면적 600평 ~ 3,000평)</b><br />
                   &nbsp;&nbsp;- 적용 장비군: 표준 시저리프트<br />
