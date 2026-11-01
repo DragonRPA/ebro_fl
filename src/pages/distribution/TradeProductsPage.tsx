@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import {
   Package, Plus, Download, Search, RefreshCw, Edit2, Trash2,
-  SlidersHorizontal, CheckCircle2, Ban, X, Layers, Clock, Building2, ShieldCheck
+  SlidersHorizontal, CheckCircle2, Ban, X, Layers, Clock, Building2, ShieldCheck,
+  FileText, ExternalLink, BookOpen
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
 import { TradeProduct, TradeInventoryLot } from '../../services/db';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
+import { FL_TECHNICAL_ARCHIVE, FlModelTechnicalSpec } from '../../data/flTechnicalArchive';
 
 const CATEGORIES = ['전동지게차', '리치트럭', '디젤지게차', '배터리/충전기', '전장부품', '유압부품', '타이어/휠', '소모품', '기타'];
 const WAREHOUSES = ['A창고', 'B창고', '부품창고'];
@@ -100,15 +102,43 @@ export const TradeProductsPage: React.FC = () => {
   // Product Create/Edit Modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<TradeProduct | null>(null);
+  const [specDetailProduct, setSpecDetailProduct] = useState<TradeProduct | null>(null);
   const [formSku, setFormSku] = useState('');
   const [formItemType, setFormItemType] = useState<'EQUIPMENT' | 'PART'>('EQUIPMENT');
   const [formManufacturer, setFormManufacturer] = useState('');
   const [formModelName, setFormModelName] = useState('');
+  const [formSeriesName, setFormSeriesName] = useState('');
   const [formOriginCountry, setFormOriginCountry] = useState('중국 수입');
   const [formDefaultWarehouse, setFormDefaultWarehouse] = useState('A창고');
   const [formName, setFormName] = useState('');
   const [formCategory, setFormCategory] = useState('전동지게차');
   const [formSpec, setFormSpec] = useState('');
+  const [formEquipmentClass, setFormEquipmentClass] = useState('전동 좌승식 카운터밸런스');
+  const [formPowerType, setFormPowerType] = useState('리튬인산철 전동');
+  const [formRatedCapacityKg, setFormRatedCapacityKg] = useState<number>(2500);
+  const [formLoadCenterMm, setFormLoadCenterMm] = useState<number>(500);
+  const [formStandardLiftHeightMm, setFormStandardLiftHeightMm] = useState<number>(3000);
+  const [formMaxOptionLiftHeightMm, setFormMaxOptionLiftHeightMm] = useState<number>(4700);
+  const [formFreeLiftHeightMm, setFormFreeLiftHeightMm] = useState<number>(1480);
+  const [formForkDimensionsMm, setFormForkDimensionsMm] = useState('40 × 122 × 1,070');
+  const [formOverallLengthMm, setFormOverallLengthMm] = useState<number>(2485);
+  const [formOverallWidthMm, setFormOverallWidthMm] = useState<number>(1180);
+  const [formOverheadGuardHeightMm, setFormOverheadGuardHeightMm] = useState<number>(2140);
+  const [formTurningRadiusMm, setFormTurningRadiusMm] = useState<number>(2120);
+  const [formAisleWidth1000x1200Mm, setFormAisleWidth1000x1200Mm] = useState<number>(3845);
+  const [formTravelSpeedKmh, setFormTravelSpeedKmh] = useState('18.0 / 19.0');
+  const [formLiftingSpeedMms, setFormLiftingSpeedMms] = useState('460 / 540');
+  const [formGradeabilityPercent, setFormGradeabilityPercent] = useState<number>(20);
+  const [formServiceWeightKg, setFormServiceWeightKg] = useState<number>(3980);
+  const [formPowerSpecDetail, setFormPowerSpecDetail] = useState('');
+  const [formMotorOrEngineDetail, setFormMotorOrEngineDetail] = useState('');
+  const [formChargerOrFuelDetail, setFormChargerOrFuelDetail] = useState('');
+  const [formTireSpecFrontRear, setFormTireSpecFrontRear] = useState('');
+  const [formBrakeType, setFormBrakeType] = useState('');
+  const [formWaterproofRating, setFormWaterproofRating] = useState('');
+  const [formWarrantyTerms, setFormWarrantyTerms] = useState('');
+  const [formSpecSheetUrl, setFormSpecSheetUrl] = useState('');
+  const [formManualUrl, setFormManualUrl] = useState('');
   const [formUnit, setFormUnit] = useState('대');
   const [formStandardCost, setFormStandardCost] = useState<number>(0);
   const [formDealerPrice, setFormDealerPrice] = useState<number>(0);
@@ -120,6 +150,49 @@ export const TradeProductsPage: React.FC = () => {
   const [formInitialStock, setFormInitialStock] = useState<number>(0);
   const [formInitialSerial, setFormInitialSerial] = useState<string>('');
   const [formMemo, setFormMemo] = useState('');
+
+  // 공식 아카이브 모델 선택 시 VDI 2198 전 항목 자동 세팅
+  const applyArchivePreset = (archiveId: string) => {
+    const spec = FL_TECHNICAL_ARCHIVE.find(s => s.id === archiveId);
+    if (!spec) return;
+    const specDoc = spec.documents.find(d => d.docCategory === 'SPEC_SHEET') || spec.documents[0];
+    const manualDoc = spec.documents.find(d => d.docCategory === 'OPERATOR_MANUAL') || spec.documents[1];
+    setFormItemType('EQUIPMENT');
+    setFormManufacturer(spec.manufacturerName);
+    setFormModelName(spec.modelName);
+    setFormSeriesName(spec.seriesName);
+    setFormOriginCountry(spec.originCountry);
+    setFormName(`${spec.manufacturerName} ${spec.seriesName}`);
+    setFormCategory(spec.powerType.includes('디젤') ? '디젤지게차' : spec.equipmentClass.includes('리치') ? '리치트럭' : '전동지게차');
+    setFormSpec(`정격하중 ${spec.ratedCapacityKg}kg / 표준인상고 ${spec.standardLiftHeightMm}mm / ${spec.powerSpecDetail}`);
+    setFormEquipmentClass(spec.equipmentClass);
+    setFormPowerType(spec.powerType);
+    setFormRatedCapacityKg(spec.ratedCapacityKg);
+    setFormLoadCenterMm(spec.loadCenterMm);
+    setFormStandardLiftHeightMm(spec.standardLiftHeightMm);
+    setFormMaxOptionLiftHeightMm(spec.maxOptionLiftHeightMm);
+    setFormFreeLiftHeightMm(spec.freeLiftHeightMm);
+    setFormForkDimensionsMm(spec.forkDimensionsMm);
+    setFormOverallLengthMm(spec.overallLengthMm);
+    setFormOverallWidthMm(spec.overallWidthMm);
+    setFormOverheadGuardHeightMm(spec.overheadGuardHeightMm);
+    setFormTurningRadiusMm(spec.turningRadiusMm);
+    setFormAisleWidth1000x1200Mm(spec.aisleWidth1000x1200Mm);
+    setFormTravelSpeedKmh(spec.travelSpeedKmh);
+    setFormLiftingSpeedMms(spec.liftingSpeedMms);
+    setFormGradeabilityPercent(spec.gradeabilityPercent);
+    setFormServiceWeightKg(spec.serviceWeightKg);
+    setFormPowerSpecDetail(spec.powerSpecDetail);
+    setFormMotorOrEngineDetail(spec.motorOrEngineDetail);
+    setFormChargerOrFuelDetail(spec.chargerOrFuelDetail);
+    setFormTireSpecFrontRear(spec.tireSpecFrontRear);
+    setFormBrakeType(spec.brakeType);
+    setFormWaterproofRating(spec.waterproofRating);
+    setFormWarrantyTerms(spec.warrantyTerms);
+    setFormSpecSheetUrl(specDoc?.r2Url || '');
+    setFormManualUrl(manualDoc?.r2Url || '');
+    showToast(`[${spec.manufacturerName} ${spec.modelName}] 공식 VDI 2198 제원이 자동 적용되었습니다.`);
+  };
 
   // Stock Adjustment Modal state
   const [adjustTarget, setAdjustTarget] = useState<TradeProduct | null>(null);
@@ -181,13 +254,40 @@ export const TradeProductsPage: React.FC = () => {
     setEditingProduct(null);
     setFormSku(nextAutoSku);
     setFormItemType('EQUIPMENT');
-    setFormManufacturer('이피이큅먼트');
+    setFormManufacturer('안후이 헬리');
     setFormModelName('');
+    setFormSeriesName('');
     setFormOriginCountry('중국 수입');
     setFormDefaultWarehouse('A창고');
     setFormName('');
     setFormCategory('전동지게차');
     setFormSpec('');
+    setFormEquipmentClass('전동 좌승식 카운터밸런스');
+    setFormPowerType('리튬인산철 전동');
+    setFormRatedCapacityKg(2500);
+    setFormLoadCenterMm(500);
+    setFormStandardLiftHeightMm(3000);
+    setFormMaxOptionLiftHeightMm(4700);
+    setFormFreeLiftHeightMm(1480);
+    setFormForkDimensionsMm('40 × 122 × 1,070');
+    setFormOverallLengthMm(2485);
+    setFormOverallWidthMm(1180);
+    setFormOverheadGuardHeightMm(2140);
+    setFormTurningRadiusMm(2120);
+    setFormAisleWidth1000x1200Mm(3845);
+    setFormTravelSpeedKmh('18.0 / 19.0');
+    setFormLiftingSpeedMms('460 / 540');
+    setFormGradeabilityPercent(20);
+    setFormServiceWeightKg(3980);
+    setFormPowerSpecDetail('');
+    setFormMotorOrEngineDetail('');
+    setFormChargerOrFuelDetail('');
+    setFormTireSpecFrontRear('');
+    setFormBrakeType('');
+    setFormWaterproofRating('');
+    setFormWarrantyTerms('');
+    setFormSpecSheetUrl('');
+    setFormManualUrl('');
     setFormUnit('대');
     setFormStandardCost(0);
     setFormDealerPrice(0);
@@ -208,11 +308,38 @@ export const TradeProductsPage: React.FC = () => {
     setFormItemType(p.itemType || (p.unit === '대' ? 'EQUIPMENT' : 'PART'));
     setFormManufacturer(p.manufacturer || '');
     setFormModelName(p.modelName || '');
+    setFormSeriesName(p.seriesName || '');
     setFormOriginCountry(p.originCountry || '중국 수입');
     setFormDefaultWarehouse(p.defaultWarehouse || 'A창고');
     setFormName(p.name);
     setFormCategory(p.category || '전동지게차');
     setFormSpec(p.spec || '');
+    setFormEquipmentClass(p.equipmentClass || '전동 좌승식 카운터밸런스');
+    setFormPowerType(p.powerType || '리튬인산철 전동');
+    setFormRatedCapacityKg(p.ratedCapacityKg ?? 2500);
+    setFormLoadCenterMm(p.loadCenterMm ?? 500);
+    setFormStandardLiftHeightMm(p.standardLiftHeightMm ?? 3000);
+    setFormMaxOptionLiftHeightMm(p.maxOptionLiftHeightMm ?? 4700);
+    setFormFreeLiftHeightMm(p.freeLiftHeightMm ?? 1480);
+    setFormForkDimensionsMm(p.forkDimensionsMm || '40 × 122 × 1,070');
+    setFormOverallLengthMm(p.overallLengthMm ?? 2485);
+    setFormOverallWidthMm(p.overallWidthMm ?? 1180);
+    setFormOverheadGuardHeightMm(p.overheadGuardHeightMm ?? 2140);
+    setFormTurningRadiusMm(p.turningRadiusMm ?? 2120);
+    setFormAisleWidth1000x1200Mm(p.aisleWidth1000x1200Mm ?? 3845);
+    setFormTravelSpeedKmh(p.travelSpeedKmh || '18.0 / 19.0');
+    setFormLiftingSpeedMms(p.liftingSpeedMms || '460 / 540');
+    setFormGradeabilityPercent(p.gradeabilityPercent ?? 20);
+    setFormServiceWeightKg(p.serviceWeightKg ?? 3980);
+    setFormPowerSpecDetail(p.powerSpecDetail || '');
+    setFormMotorOrEngineDetail(p.motorOrEngineDetail || '');
+    setFormChargerOrFuelDetail(p.chargerOrFuelDetail || '');
+    setFormTireSpecFrontRear(p.tireSpecFrontRear || '');
+    setFormBrakeType(p.brakeType || '');
+    setFormWaterproofRating(p.waterproofRating || '');
+    setFormWarrantyTerms(p.warrantyTerms || '');
+    setFormSpecSheetUrl(p.specSheetUrl || '');
+    setFormManualUrl(p.manualUrl || '');
     setFormUnit(p.unit || '대');
     setFormStandardCost(p.standardCost ?? 0);
     setFormDealerPrice(p.dealerPrice ?? Math.round(((p.standardCost ?? 0) + p.standardPrice) / 2));
@@ -243,16 +370,47 @@ export const TradeProductsPage: React.FC = () => {
     }
 
     try {
-      const payload = {
+      const payload: Omit<TradeProduct, 'id' | 'createdAt' | 'updatedAt'> = {
         skuCode: formSku.trim() || nextAutoSku,
         itemType: formItemType,
         manufacturer: formManufacturer.trim() || '기타제조사',
         modelName: formModelName.trim() || formSku.trim(),
+        seriesName: formItemType === 'EQUIPMENT' ? formSeriesName.trim() : undefined,
         originCountry: formOriginCountry,
         defaultWarehouse: formDefaultWarehouse,
         name: formName.trim(),
         category: formCategory,
-        spec: formSpec.trim() || '-',
+        spec:
+          formSpec.trim() ||
+          (formItemType === 'EQUIPMENT'
+            ? `정격하중 ${formRatedCapacityKg}kg / 표준인상고 ${formStandardLiftHeightMm}mm / ${formPowerSpecDetail || formPowerType}`
+            : '-'),
+        equipmentClass: formItemType === 'EQUIPMENT' ? formEquipmentClass : undefined,
+        powerType: formItemType === 'EQUIPMENT' ? formPowerType : undefined,
+        ratedCapacityKg: formItemType === 'EQUIPMENT' ? formRatedCapacityKg : undefined,
+        loadCenterMm: formItemType === 'EQUIPMENT' ? formLoadCenterMm : undefined,
+        standardLiftHeightMm: formItemType === 'EQUIPMENT' ? formStandardLiftHeightMm : undefined,
+        maxOptionLiftHeightMm: formItemType === 'EQUIPMENT' ? formMaxOptionLiftHeightMm : undefined,
+        freeLiftHeightMm: formItemType === 'EQUIPMENT' ? formFreeLiftHeightMm : undefined,
+        forkDimensionsMm: formItemType === 'EQUIPMENT' ? formForkDimensionsMm : undefined,
+        overallLengthMm: formItemType === 'EQUIPMENT' ? formOverallLengthMm : undefined,
+        overallWidthMm: formItemType === 'EQUIPMENT' ? formOverallWidthMm : undefined,
+        overheadGuardHeightMm: formItemType === 'EQUIPMENT' ? formOverheadGuardHeightMm : undefined,
+        turningRadiusMm: formItemType === 'EQUIPMENT' ? formTurningRadiusMm : undefined,
+        aisleWidth1000x1200Mm: formItemType === 'EQUIPMENT' ? formAisleWidth1000x1200Mm : undefined,
+        travelSpeedKmh: formItemType === 'EQUIPMENT' ? formTravelSpeedKmh : undefined,
+        liftingSpeedMms: formItemType === 'EQUIPMENT' ? formLiftingSpeedMms : undefined,
+        gradeabilityPercent: formItemType === 'EQUIPMENT' ? formGradeabilityPercent : undefined,
+        serviceWeightKg: formItemType === 'EQUIPMENT' ? formServiceWeightKg : undefined,
+        powerSpecDetail: formItemType === 'EQUIPMENT' ? formPowerSpecDetail : undefined,
+        motorOrEngineDetail: formItemType === 'EQUIPMENT' ? formMotorOrEngineDetail : undefined,
+        chargerOrFuelDetail: formItemType === 'EQUIPMENT' ? formChargerOrFuelDetail : undefined,
+        tireSpecFrontRear: formItemType === 'EQUIPMENT' ? formTireSpecFrontRear : undefined,
+        brakeType: formItemType === 'EQUIPMENT' ? formBrakeType : undefined,
+        waterproofRating: formItemType === 'EQUIPMENT' ? formWaterproofRating : undefined,
+        warrantyTerms: formItemType === 'EQUIPMENT' ? formWarrantyTerms : undefined,
+        specSheetUrl: formItemType === 'EQUIPMENT' ? formSpecSheetUrl : undefined,
+        manualUrl: formItemType === 'EQUIPMENT' ? formManualUrl : undefined,
         unit: formUnit,
         standardCost: formStandardCost,
         dealerPrice: formDealerPrice > 0 ? formDealerPrice : formStandardPrice,
@@ -266,7 +424,7 @@ export const TradeProductsPage: React.FC = () => {
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, payload);
-        showToast(`[${formName.trim()}] 제품 마스터 정보가 수정되었습니다.`);
+        showToast(`[${formName.trim()}] 제품 마스터 및 VDI 2198 지게차 제원이 수정되었습니다.`);
       } else {
         const created = await addProduct(payload);
         if (formInitialStock > 0) {
@@ -603,11 +761,35 @@ export const TradeProductsPage: React.FC = () => {
       품목구분: p.resolvedItemType === 'EQUIPMENT' ? '지게차 완제품' : '부품/소모품',
       제조사: p.manufacturer || '-',
       모델명: p.modelName || '-',
+      시리즈명: p.seriesName || '-',
+      차종구분: p.equipmentClass || '-',
+      동력방식: p.powerType || '-',
       제품명: p.name,
       카테고리: p.category,
       원산지: p.originCountry || '-',
       기본창고: p.defaultWarehouse || 'A창고',
-      규격: p.spec || '-',
+      정격하중_kg: p.ratedCapacityKg ?? '-',
+      하중중심_mm: p.loadCenterMm ?? '-',
+      표준인상고_mm: p.standardLiftHeightMm ?? '-',
+      최대인상고_mm: p.maxOptionLiftHeightMm ?? '-',
+      자유인상고_mm: p.freeLiftHeightMm ?? '-',
+      포크규격_mm: p.forkDimensionsMm || '-',
+      전장_mm: p.overallLengthMm ?? '-',
+      전폭_mm: p.overallWidthMm ?? '-',
+      헤드가드고_mm: p.overheadGuardHeightMm ?? '-',
+      최소회전반경_mm: p.turningRadiusMm ?? '-',
+      직각적재통로폭_mm: p.aisleWidth1000x1200Mm ?? '-',
+      주행속도_kmh: p.travelSpeedKmh || '-',
+      인양속도_mms: p.liftingSpeedMms || '-',
+      등판능력_퍼센트: p.gradeabilityPercent ?? '-',
+      장비자중_kg: p.serviceWeightKg ?? '-',
+      배터리및엔진사양: p.powerSpecDetail || '-',
+      모터및출력사양: p.motorOrEngineDetail || '-',
+      충전기및연료사양: p.chargerOrFuelDetail || '-',
+      타이어규격: p.tireSpecFrontRear || '-',
+      제동방식: p.brakeType || '-',
+      방수방진등급: p.waterproofRating || '-',
+      보증조건: p.warrantyTerms || '-',
       단위: p.unit || 'EA',
       평균매입원가: p.avgUnitCost,
       대리점공급단가: p.dealerPrice,
@@ -619,7 +801,7 @@ export const TradeProductsPage: React.FC = () => {
       최대보유경과일수: `${p.maxAgingDays}일`,
       상태: p.status === 'ACTIVE' ? '판매중' : '단종'
     }));
-    exportToExcel(rows, `지게차_부품_재고현황_${todayStr}`, '제품및재고현황');
+    exportToExcel(rows, `지게차_부품_VDI2198제원_재고현황_${todayStr}`, '제품및재고현황');
     showToast('제품 및 재고현황 엑셀 파일이 다운로드되었습니다.');
   };
 
@@ -1306,11 +1488,15 @@ export const TradeProductsPage: React.FC = () => {
             >
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '200px' }}>관리 / 조치</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '240px' }}>관리 / 제원·조치</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>품목코드</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분 / 동력</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제조사 / 모델명</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제품명 및 규격</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제품명 / 차종분류</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>정격하중 · 하중중심</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>표준 · 최대 인상고</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>포크규격 · 회전반경 · 자중</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>동력·배터리 사양 및 공식문서</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>조달구분 / 창고</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>평균 매입원가</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>대리점 공급가</th>
@@ -1325,7 +1511,7 @@ export const TradeProductsPage: React.FC = () => {
               <tbody>
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={14} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={18} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조건에 해당하는 제품 및 부품 데이터가 없습니다.
                     </td>
                   </tr>
@@ -1333,10 +1519,21 @@ export const TradeProductsPage: React.FC = () => {
                   filteredProducts.map(p => {
                     const isLowStock = p.availableQty < p.safetyStock;
                     const agingBadge = getAgingBucket(p.maxAgingDays);
+                    const isEquip = p.resolvedItemType === 'EQUIPMENT';
                     return (
-                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', height: '42px' }}>
+                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', height: '44px' }}>
                         <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {isEquip && (
+                              <button
+                                type="button"
+                                onClick={() => setSpecDetailProduct(p)}
+                                style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', border: '1px solid #6366f1', backgroundColor: '#eef2ff', color: '#4338ca', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                title="공식 VDI 2198 기술제원 및 매뉴얼 조회"
+                              >
+                                <BookOpen size={11} /> 제원·문서
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => openEditModal(p)}
@@ -1373,16 +1570,98 @@ export const TradeProductsPage: React.FC = () => {
                           {p.skuCode}
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                          <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: p.resolvedItemType === 'EQUIPMENT' ? '#dbeafe' : '#f3e8ff', color: p.resolvedItemType === 'EQUIPMENT' ? '#1d4ed8' : '#7e22ce' }}>
-                            {p.resolvedItemType === 'EQUIPMENT' ? '지게차' : '부품'}
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: isEquip ? '#dbeafe' : '#f3e8ff', color: isEquip ? '#1d4ed8' : '#7e22ce' }}>
+                              {isEquip ? '지게차' : '부품'}
+                            </span>
+                            {isEquip && p.powerType && (
+                              <span style={{ fontSize: '10px', fontWeight: 700, color: p.powerType.includes('리튬') ? '#059669' : p.powerType.includes('디젤') ? '#b45309' : '#2563eb' }}>
+                                {p.powerType}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
-                          {p.manufacturer || '-'} · <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{p.modelName || '-'}</span>
+                          <div>{p.manufacturer || '-'} · <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{p.modelName || '-'}</span></div>
+                          {p.seriesName && <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>{p.seriesName}</div>}
                         </td>
                         <td style={{ padding: '8px 12px' }}>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{p.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.spec || '-'}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.equipmentClass || p.category || '-'}</div>
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          {isEquip && p.ratedCapacityKg ? (
+                            <div>
+                              <div style={{ fontWeight: 800, color: '#1d4ed8', fontFamily: 'monospace' }}>
+                                {p.ratedCapacityKg.toLocaleString()} kg
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                중심 {p.loadCenterMm || 500} mm
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>부품 공통</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          {isEquip && p.standardLiftHeightMm ? (
+                            <div>
+                              <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                                표준 {p.standardLiftHeightMm.toLocaleString()} mm
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#0369a1', fontWeight: 600 }}>
+                                최대 {(p.maxOptionLiftHeightMm || p.standardLiftHeightMm).toLocaleString()} mm
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>-</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          {isEquip && (p.forkDimensionsMm || p.turningRadiusMm || p.serviceWeightKg) ? (
+                            <div>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                                포크 {p.forkDimensionsMm || '-'} mm
+                              </div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                회전반경 {p.turningRadiusMm ? `${p.turningRadiusMm.toLocaleString()}mm` : '-'} · 자중 {p.serviceWeightKg ? `${p.serviceWeightKg.toLocaleString()}kg` : '-'}
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.spec || '-'}</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-main)' }}>
+                            {p.powerSpecDetail || p.spec || '-'}
+                          </div>
+                          {isEquip && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                {p.motorOrEngineDetail ? p.motorOrEngineDetail.slice(0, 34) : `보증 ${p.warrantyMonths || 12}개월`}
+                              </span>
+                              {p.specSheetUrl && (
+                                <a
+                                  href={p.specSheetUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{ fontSize: '10px', fontWeight: 700, color: '#2563eb', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                >
+                                  <FileText size={10} /> 스펙시트
+                                </a>
+                              )}
+                              {p.manualUrl && (
+                                <a
+                                  href={p.manualUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{ fontSize: '10px', fontWeight: 700, color: '#059669', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                >
+                                  <ExternalLink size={10} /> 매뉴얼
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                           <span style={{ fontWeight: 700, color: p.originCountry === '중국 수입' ? '#0284c7' : '#059669' }}>
@@ -1452,7 +1731,7 @@ export const TradeProductsPage: React.FC = () => {
               {filteredProducts.length > 0 && (
                 <tfoot>
                   <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-                    <td colSpan={6} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
+                    <td colSpan={10} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
                       조회 합계 ({filteredProducts.length}종 품목)
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
@@ -1482,21 +1761,45 @@ export const TradeProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. 제품·부품 등록/수정 모달 */}
+      {/* 5. 제품·부품 등록/수정 모달 (공식 VDI 2198 지게차 제원 통합) */}
       {isProductModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
-          <div style={{ backgroundColor: 'var(--bg-card)', width: '640px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', width: '880px', maxWidth: '96vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                {editingProduct ? `제품·부품 마스터 수정` : '신규 지게차·부품 마스터 등록'}
+                {editingProduct ? `제품·부품 마스터 및 VDI 2198 제원 수정` : '신규 지게차·부품 마스터 및 VDI 2198 제원 등록'}
               </h3>
               <button type="button" onClick={() => setIsProductModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProductModal} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '82vh', overflowY: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <form onSubmit={handleSaveProductModal} style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '84vh', overflowY: 'auto' }}>
+              {/* 공식 아카이브 제원 1클릭 자동불러오기 바 */}
+              {formItemType === 'EQUIPMENT' && (
+                <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BookOpen size={15} />
+                    <span>공식 아카이브 제원 자동불러오기</span>
+                  </div>
+                  <select
+                    defaultValue=""
+                    onChange={e => {
+                      if (e.target.value) applyArchivePreset(e.target.value);
+                    }}
+                    style={{ flex: 1, minWidth: '280px', padding: '7px 10px', fontSize: '12px', fontWeight: 700, borderRadius: '6px', border: '1px solid #93c5fd', backgroundColor: '#fff', color: '#1e3a8a' }}
+                  >
+                    <option value="">글로벌 8대 제조사 공식 지게차 모델 선택 시 VDI 2198 제원·문서 자동 세팅...</option>
+                    {FL_TECHNICAL_ARCHIVE.map(spec => (
+                      <option key={spec.id} value={spec.id}>
+                        [{spec.manufacturerName}] {spec.modelName} — {spec.seriesName} · 정격 {spec.ratedCapacityKg}kg / {spec.powerType}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>품목코드</label>
                   <input
@@ -1534,6 +1837,18 @@ export const TradeProductsPage: React.FC = () => {
                     ))}
                   </select>
                 </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>수량 단위</label>
+                  <select
+                    value={formUnit}
+                    onChange={e => setFormUnit(e.target.value)}
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  >
+                    {UNITS.map(u => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
@@ -1544,7 +1859,7 @@ export const TradeProductsPage: React.FC = () => {
                     required
                     value={formManufacturer}
                     onChange={e => setFormManufacturer(e.target.value)}
-                    placeholder="예: 헬리포크리프트, 두산밥캣"
+                    placeholder="예: 안후이 헬리, 두산밥캣"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   />
                 </div>
@@ -1555,7 +1870,7 @@ export const TradeProductsPage: React.FC = () => {
                     required
                     value={formModelName}
                     onChange={e => setFormModelName(e.target.value)}
-                    placeholder="예: CPD25-L1, EPL1531"
+                    placeholder="예: CPD25-GB2Li, D30S-7"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   />
                 </div>
@@ -1568,6 +1883,7 @@ export const TradeProductsPage: React.FC = () => {
                   >
                     <option value="중국 수입">중국 수입</option>
                     <option value="국내 매입">국내 매입</option>
+                    <option value="일본 수입">일본 수입</option>
                     <option value="해외 수입">기타 해외 수입</option>
                   </select>
                 </div>
@@ -1585,7 +1901,7 @@ export const TradeProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>제품명 *</label>
                   <input
@@ -1598,29 +1914,252 @@ export const TradeProductsPage: React.FC = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>수량 단위</label>
-                  <select
-                    value={formUnit}
-                    onChange={e => setFormUnit(e.target.value)}
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>시리즈명</label>
+                  <input
+                    type="text"
+                    value={formSeriesName}
+                    onChange={e => setFormSeriesName(e.target.value)}
+                    placeholder="예: G2 시리즈 리튬전동 2.5톤"
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                  >
-                    {UNITS.map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>요약 규격 설명</label>
+                  <input
+                    type="text"
+                    value={formSpec}
+                    onChange={e => setFormSpec(e.target.value)}
+                    placeholder="예: 정격하중 2500kg / 3단 마스트 4700mm / 리튬인산철 80V 271Ah"
+                    style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>상세 규격 / 사양</label>
-                <input
-                  type="text"
-                  value={formSpec}
-                  onChange={e => setFormSpec(e.target.value)}
-                  placeholder="예: 정격하중 2500kg / 3단 마스트 4500mm / 리튬인산철 80V 205Ah"
-                  style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
-              </div>
+              {/* 지게차 완제품일 때 VDI 2198 / ISO 5053 표준 제원 섹션 노출 */}
+              {formItemType === 'EQUIPMENT' && (
+                <div style={{ padding: '14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                    공식 VDI 2198 지게차 표준 기술제원
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.8fr 0.8fr 0.8fr', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>차종 구분</label>
+                      <select
+                        value={formEquipmentClass}
+                        onChange={e => setFormEquipmentClass(e.target.value)}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      >
+                        <option value="전동 좌승식 카운터밸런스">전동 좌승식 카운터밸런스</option>
+                        <option value="디젤 카운터밸런스">디젤 카운터밸런스</option>
+                        <option value="전동 입승식 리치트럭">전동 입승식 리치트럭</option>
+                        <option value="전동 파레트트럭">전동 파레트트럭</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>동력 방식</label>
+                      <select
+                        value={formPowerType}
+                        onChange={e => setFormPowerType(e.target.value)}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      >
+                        <option value="리튬인산철 전동">리튬인산철 전동</option>
+                        <option value="납산배터리 전동">납산배터리 전동</option>
+                        <option value="디젤 내연기관">디젤 내연기관</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>정격하중 · kg</label>
+                      <input
+                        type="number"
+                        value={formRatedCapacityKg || ''}
+                        onChange={e => setFormRatedCapacityKg(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', fontWeight: 700 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>하중중심 · mm</label>
+                      <input
+                        type="number"
+                        value={formLoadCenterMm || ''}
+                        onChange={e => setFormLoadCenterMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>장비자중 · kg</label>
+                      <input
+                        type="number"
+                        value={formServiceWeightKg || ''}
+                        onChange={e => setFormServiceWeightKg(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>표준인상고 · mm</label>
+                      <input
+                        type="number"
+                        value={formStandardLiftHeightMm || ''}
+                        onChange={e => setFormStandardLiftHeightMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>최대인상고 · mm</label>
+                      <input
+                        type="number"
+                        value={formMaxOptionLiftHeightMm || ''}
+                        onChange={e => setFormMaxOptionLiftHeightMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>자유인상고 · mm</label>
+                      <input
+                        type="number"
+                        value={formFreeLiftHeightMm || ''}
+                        onChange={e => setFormFreeLiftHeightMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>포크 규격 · mm</label>
+                      <input
+                        type="text"
+                        value={formForkDimensionsMm}
+                        onChange={e => setFormForkDimensionsMm(e.target.value)}
+                        placeholder="40 × 122 × 1,070"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>최소회전반경 · mm</label>
+                      <input
+                        type="number"
+                        value={formTurningRadiusMm || ''}
+                        onChange={e => setFormTurningRadiusMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>차체 전장 · mm</label>
+                      <input
+                        type="number"
+                        value={formOverallLengthMm || ''}
+                        onChange={e => setFormOverallLengthMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>차체 전폭 · mm</label>
+                      <input
+                        type="number"
+                        value={formOverallWidthMm || ''}
+                        onChange={e => setFormOverallWidthMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>헤드가드고 · mm</label>
+                      <input
+                        type="number"
+                        value={formOverheadGuardHeightMm || ''}
+                        onChange={e => setFormOverheadGuardHeightMm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>직각통로폭 · mm</label>
+                      <input
+                        type="number"
+                        value={formAisleWidth1000x1200Mm || ''}
+                        onChange={e => setFormAisleWidth1000x1200Mm(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>주행속도 · km/h</label>
+                      <input
+                        type="text"
+                        value={formTravelSpeedKmh}
+                        onChange={e => setFormTravelSpeedKmh(e.target.value)}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>등판능력 · 퍼센트</label>
+                      <input
+                        type="number"
+                        value={formGradeabilityPercent || ''}
+                        onChange={e => setFormGradeabilityPercent(Number(e.target.value))}
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>배터리 / 엔진 핵심 사양</label>
+                      <input
+                        type="text"
+                        value={formPowerSpecDetail}
+                        onChange={e => setFormPowerSpecDetail(e.target.value)}
+                        placeholder="예: 80V / 271Ah 리튬인산철 배터리팩 기본"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>구동·유압모터 / 엔진 출력 사양</label>
+                      <input
+                        type="text"
+                        value={formMotorOrEngineDetail}
+                        onChange={e => setFormMotorOrEngineDetail(e.target.value)}
+                        placeholder="예: 주행 AC 16.6kW + 유압 인양 AC 24.0kW"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>타이어 규격</label>
+                      <input
+                        type="text"
+                        value={formTireSpecFrontRear}
+                        onChange={e => setFormTireSpecFrontRear(e.target.value)}
+                        placeholder="전륜 7.00-12 / 후륜 6.00-9"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>제동 방식</label>
+                      <input
+                        type="text"
+                        value={formBrakeType}
+                        onChange={e => setFormBrakeType(e.target.value)}
+                        placeholder="습식 디스크 브레이크 + 회생제동"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>제조사 공식 보증 조건</label>
+                      <input
+                        type="text"
+                        value={formWarrantyTerms}
+                        onChange={e => setFormWarrantyTerms(e.target.value)}
+                        placeholder="리튬배터리 5년 / 차체·구동계 2년"
+                        style={{ padding: '7px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1748,6 +2287,160 @@ export const TradeProductsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 5-B. 공식 VDI 2198 기술제원 및 매뉴얼 상세 모달 */}
+      {specDetailProduct && (() => {
+        const matchedArchive = FL_TECHNICAL_ARCHIVE.find(
+          s =>
+            s.modelName === specDetailProduct.modelName ||
+            s.linkedSkuCode === specDetailProduct.skuCode ||
+            (specDetailProduct.modelName === 'CPD25-L1' && s.modelName === 'CPD25-GB2Li') ||
+            (specDetailProduct.modelName === 'FD30T-7' && s.modelName === 'D30S-7') ||
+            (specDetailProduct.modelName === 'EPL1531' && s.modelName === 'EPL205Z')
+        );
+        return (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1250 }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', width: '860px', maxWidth: '96vw', maxHeight: '88vh', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 25px 35px -5px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)' }}>
+                    {specDetailProduct.manufacturer} · {specDetailProduct.modelName} · 품목코드 {specDetailProduct.skuCode}
+                  </div>
+                  <h3 style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    {specDetailProduct.name} — 공식 VDI 2198 기술제원 및 매뉴얼
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = specDetailProduct;
+                      setSpecDetailProduct(null);
+                      openEditModal(target);
+                    }}
+                    style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Edit2 size={12} /> 제원 수정
+                  </button>
+                  <button type="button" onClick={() => setSpecDetailProduct(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* 1. 핵심 6대 제원 배지 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                  {[
+                    { label: '정격하중', value: specDetailProduct.ratedCapacityKg ? `${specDetailProduct.ratedCapacityKg.toLocaleString()} kg` : '-' },
+                    { label: '하중중심', value: specDetailProduct.loadCenterMm ? `${specDetailProduct.loadCenterMm} mm` : '-' },
+                    { label: '표준인상고', value: specDetailProduct.standardLiftHeightMm ? `${specDetailProduct.standardLiftHeightMm.toLocaleString()} mm` : '-' },
+                    { label: '최대인상고', value: specDetailProduct.maxOptionLiftHeightMm ? `${specDetailProduct.maxOptionLiftHeightMm.toLocaleString()} mm` : '-' },
+                    { label: '최소회전반경', value: specDetailProduct.turningRadiusMm ? `${specDetailProduct.turningRadiusMm.toLocaleString()} mm` : '-' },
+                    { label: '장비자중', value: specDetailProduct.serviceWeightKg ? `${specDetailProduct.serviceWeightKg.toLocaleString()} kg` : '-' }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{ padding: '10px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>{item.label}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--primary)', marginTop: '3px', fontFamily: 'monospace' }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 2. VDI 2198 상세 스펙 테이블 */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-secondary)', fontWeight: 800, fontSize: '12px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)' }}>
+                    국제 산업차량 표준 VDI 2198 / ISO 5053 상세 제원표
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <tbody>
+                      {[
+                        ['차종 분류', specDetailProduct.equipmentClass || '-', '동력 방식', specDetailProduct.powerType || '-'],
+                        ['포크 규격 · 두께×폭×길이', `${specDetailProduct.forkDimensionsMm || '-'} mm`, '자유인상고', specDetailProduct.freeLiftHeightMm ? `${specDetailProduct.freeLiftHeightMm.toLocaleString()} mm` : '-'],
+                        ['차체 전장 · 포크제외', specDetailProduct.overallLengthMm ? `${specDetailProduct.overallLengthMm.toLocaleString()} mm` : '-', '차체 전폭', specDetailProduct.overallWidthMm ? `${specDetailProduct.overallWidthMm.toLocaleString()} mm` : '-'],
+                        ['헤드가드 높이', specDetailProduct.overheadGuardHeightMm ? `${specDetailProduct.overheadGuardHeightMm.toLocaleString()} mm` : '-', '직각 적재 통로폭', specDetailProduct.aisleWidth1000x1200Mm ? `${specDetailProduct.aisleWidth1000x1200Mm.toLocaleString()} mm` : '-'],
+                        ['주행속도 · 부하/무부하', `${specDetailProduct.travelSpeedKmh || '-'} km/h`, '인양속도 · 부하/무부하', `${specDetailProduct.liftingSpeedMms || '-'} mm/s`],
+                        ['최대 등판능력', specDetailProduct.gradeabilityPercent ? `${specDetailProduct.gradeabilityPercent} %` : '-', '타이어 규격 · 전륜/후륜', specDetailProduct.tireSpecFrontRear || '-'],
+                        ['배터리 / 엔진 사양', specDetailProduct.powerSpecDetail || '-', '구동·유압모터 / 출력', specDetailProduct.motorOrEngineDetail || '-'],
+                        ['충전기 / 연료계통', specDetailProduct.chargerOrFuelDetail || '-', '제동 시스템', specDetailProduct.brakeType || '-'],
+                        ['방수·방진 등급', specDetailProduct.waterproofRating || '-', '공식 보증 조건', specDetailProduct.warrantyTerms || `${specDetailProduct.warrantyMonths || 12}개월`]
+                      ].map((row, rIdx) => (
+                        <tr key={rIdx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ width: '18%', padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{row[0]}</th>
+                          <td style={{ width: '32%', padding: '8px 12px', color: 'var(--text-main)', fontWeight: 600 }}>{row[1]}</td>
+                          <th style={{ width: '18%', padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>{row[2]}</th>
+                          <td style={{ width: '32%', padding: '8px 12px', color: 'var(--text-main)', fontWeight: 600 }}>{row[3]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 3. 공식 아카이브 연동 문서 및 점검기준 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                      공식 기술문서 및 매뉴얼 원문
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {matchedArchive ? (
+                        matchedArchive.documents.map(doc => (
+                          <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                            <div>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>{doc.title}</div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>문서번호 {doc.docNo} · {doc.pageCount}쪽 · {doc.fileSizeLabel}</div>
+                            </div>
+                            <a
+                              href={doc.r2Url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ padding: '4px 10px', borderRadius: '4px', backgroundColor: '#eff6ff', color: '#1d4ed8', fontSize: '11px', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <ExternalLink size={11} /> 열람
+                            </a>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {specDetailProduct.specSheetUrl && (
+                            <a href={specDetailProduct.specSheetUrl} target="_blank" rel="noreferrer" style={{ marginRight: '12px', color: '#2563eb', fontWeight: 700 }}>
+                              공식 스펙시트 열람
+                            </a>
+                          )}
+                          {specDetailProduct.manualUrl && (
+                            <a href={specDetailProduct.manualUrl} target="_blank" rel="noreferrer" style={{ color: '#059669', fontWeight: 700 }}>
+                              운전·정비 매뉴얼 열람
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                      출고 전 필수 점검 및 정기 예방정비 기준
+                    </div>
+                    {matchedArchive ? (
+                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {matchedArchive.dailyChecklist.map((chk, idx) => (
+                          <li key={idx}>{chk}</li>
+                        ))}
+                        {matchedArchive.periodicMaintenance.map((pm, idx) => (
+                          <li key={`pm-${idx}`} style={{ color: '#0369a1', fontWeight: 600 }}>{pm}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        출고 전 마스트 작동유, 제동장치, 배터리 절연 및 타이어 마모 상태를 점검합니다.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 6. 재고 실사/수량 조정 모달 */}
       {adjustTarget && (

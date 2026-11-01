@@ -4,7 +4,6 @@ import { useApp } from '../context/AppContext';
 import { Plus, Download, Search, RefreshCw, FileText, X, Folder, Trash2, ExternalLink, Upload, CheckCircle2, AlertCircle, Eye, Edit2, Save, Package, Layers } from 'lucide-react';
 import { exportToExcel } from '../services/excel';
 import { db, Product } from '../services/db';
-import { LIFT_RETRACTED_IMG, LIFT_EXTENDED_IMG } from '../services/specImages';
 import { SortableTh } from '../components/SortableTh';
 import { useSortableData } from '../hooks/useSortableData';
 import { decryptSecret } from '../utils/cryptoVault';
@@ -385,14 +384,14 @@ export const Products: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!selectedProduct || !editForm || !editForm.modelName) return;
 
-    const feetValue = Number(editForm.feet);
+    const feetValue = Number(editForm.feet || 25);
     if (isNaN(feetValue) || feetValue <= 0) {
-      showToast('피트 규격은 0보다 큰 숫자로 입력해야 합니다.', 'error');
+      showToast('톤급 규격은 0보다 큰 숫자로 입력해야 합니다.', 'error');
       return;
     }
 
     try {
-      const updated = { ...selectedProduct, ...editForm } as Product;
+      const updated = { ...selectedProduct, ...editForm, feet: feetValue } as Product;
       await saveProduct(updated);
       setSelectedProduct(updated);
       setIsEditing(false);
@@ -407,13 +406,12 @@ export const Products: React.FC = () => {
     setEditForm({
       modelName: '',
       shortName: '',
-      feet: 19,
+      feet: 25,
       spec: '',
-      manufacturer: 'Skyjack',
+      manufacturer: '안후이 헬리',
       isActive: true,
-      powerSource: '배터리',
+      powerSource: '리튬인산철 전동',
       asContact: '031-334-5296',
-      maxWindSpeed: '12.5 m/s 이내',
       safetyCertUrl: '',
       specSheetUrl: '',
       emergencyGuideUrl: ''
@@ -427,18 +425,18 @@ export const Products: React.FC = () => {
       showToast('모델명을 입력해주세요.', 'error');
       return;
     }
-    const feetValue = Number(editForm.feet);
+    const feetValue = Number(editForm.feet || 25);
     if (isNaN(feetValue) || feetValue <= 0) {
-      showToast('피트 규격은 0보다 큰 숫자로 입력해야 합니다.', 'error');
+      showToast('톤급 규격은 0보다 큰 숫자로 입력해야 합니다.', 'error');
       return;
     }
 
     try {
-      await saveProduct(editForm as Omit<Product, 'id' | 'createdAt'>);
+      await saveProduct({ ...editForm, feet: feetValue } as Omit<Product, 'id' | 'createdAt'>);
       setShowAddModal(false);
       setEditForm({});
       await refreshAllData();
-      showToast(`신규 모델 [${editForm.modelName}]이 등록되었습니다.`);
+      showToast(`신규 지게차 모델 [${editForm.modelName}]이 등록되었습니다.`);
     } catch (err: any) {
       showToast(`등록 실패: ${err?.message || err}`, 'error');
     }
@@ -536,20 +534,18 @@ export const Products: React.FC = () => {
       return {
         '번호': idx + 1,
         '모델명': p.modelName,
-        '피트': p.feet ? `${p.feet} ft` : '-',
-        '동력': p.powerSource || '-',
-        '작업높이': p.workingHeight || '-',
-        '발판높이': p.platformHeight || '-',
-        '장비중량': p.weight || '-',
-        '적재중량': p.capacityPreExt || '-',
-        '장비크기': p.machineDimensions || '-',
-        '플랫폼크기': p.platformDimensions || '-',
-        '등판능력': p.gradeability || '-',
-        '주행속도': p.speed || '-',
-        '안전인증일': p.safetyCertDate || '-',
-        '최대풍속': p.maxWindSpeed || '-',
-        'A/S접수': p.asContact || '031-334-5296',
         '제조사': p.manufacturer || '-',
+        '동력방식': p.powerType || p.powerSource || '-',
+        '정격하중': p.ratedCapacityKg ? `${p.ratedCapacityKg} kg` : (p.capacityPreExt || '-'),
+        '표준인상고': p.standardLiftHeightMm ? `${p.standardLiftHeightMm} mm` : (p.platformHeight || '-'),
+        '최대인상고': p.maxOptionLiftHeightMm ? `${p.maxOptionLiftHeightMm} mm` : (p.workingHeight || '-'),
+        '포크규격': p.forkDimensionsMm || p.platformDimensions || '-',
+        '차체치수': p.machineDimensions || '-',
+        '장비자중': p.serviceWeightKg ? `${p.serviceWeightKg} kg` : (p.weight || '-'),
+        '등판능력': p.gradeability || '-',
+        '주행속도': p.travelSpeedKmh ? `${p.travelSpeedKmh} km/h` : (p.speed || '-'),
+        '안전인증일': p.safetyCertDate || '-',
+        'A/S접수': p.asContact || '031-334-5296',
         '사용여부': p.isActive !== false ? '사용' : '미사용',
         '총보유대수': stats.total,
         '당사자산대수': stats.owned,
@@ -561,8 +557,8 @@ export const Products: React.FC = () => {
       };
     });
 
-    exportToExcel(excelData, `제품모델목록_${new Date().toISOString().split('T')[0]}`, '제품목록');
-    showToast(`제품 모델 목록 (${filtered.length}건) 엑셀이 다운로드되었습니다.`);
+    exportToExcel(excelData, `지게차모델목록_${new Date().toISOString().split('T')[0]}`, '제품목록');
+    showToast(`지게차 모델 목록 (${filtered.length}건) 엑셀이 다운로드되었습니다.`);
   };
 
   const ef = (field: keyof Product) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -802,16 +798,16 @@ export const Products: React.FC = () => {
                 <th style={{ padding: '7px 8px', width: '50px', textAlign: 'center', whiteSpace: 'nowrap' }}>상세</th>
                 <SortableTh sortKey="modelName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>모델명</SortableTh>
                 <SortableTh sortKey="shortName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>축약명</SortableTh>
-                <SortableTh sortKey="feet" currentSort={sortConfig} onSort={requestSort} align="center" style={{ padding: '7px 8px' }}>피트</SortableTh>
-                <SortableTh sortKey="assetCount" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>실물자산 (당사/임차)</SortableTh>
+                <SortableTh sortKey="feet" currentSort={sortConfig} onSort={requestSort} align="center" style={{ padding: '7px 8px' }}>톤급코드</SortableTh>
+                <SortableTh sortKey="assetCount" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>실물자산 · 당사/임차</SortableTh>
                 <th style={{ padding: '7px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>R2 문서함</th>
                 <SortableTh sortKey="manufacturer" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>제조사</SortableTh>
-                <SortableTh sortKey="powerSource" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>동력</SortableTh>
-                <SortableTh sortKey="workingHeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>작업높이</SortableTh>
-                <SortableTh sortKey="platformHeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>발판높이</SortableTh>
-                <SortableTh sortKey="machineWeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>장비중량</SortableTh>
-                <SortableTh sortKey="loadingCapacity" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>적재중량</SortableTh>
-                <SortableTh sortKey="machineDimensions" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>장비크기</SortableTh>
+                <SortableTh sortKey="powerSource" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>동력방식</SortableTh>
+                <SortableTh sortKey="workingHeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>최대인상고</SortableTh>
+                <SortableTh sortKey="platformHeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>표준인상고</SortableTh>
+                <SortableTh sortKey="machineWeight" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>장비자중</SortableTh>
+                <SortableTh sortKey="loadingCapacity" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>정격하중</SortableTh>
+                <SortableTh sortKey="machineDimensions" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>차체치수</SortableTh>
                 <SortableTh sortKey="travelSpeed" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>주행속도</SortableTh>
                 <SortableTh sortKey="safetyCertDate" currentSort={sortConfig} onSort={requestSort} style={{ padding: '7px 8px' }}>안전인증일</SortableTh>
                 <SortableTh sortKey="isActive" currentSort={sortConfig} onSort={requestSort} align="center" style={{ padding: '7px 8px' }}>상태</SortableTh>
@@ -870,9 +866,9 @@ export const Products: React.FC = () => {
                         {p.shortName || <span style={{ opacity: 0.35 }}>—</span>}
                       </td>
 
-                      {/* 피트 */}
+                      {/* 톤급코드 */}
                       <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <strong>{p.feet}</strong> ft
+                        <strong>{(Number(p.feet || 25) / 10).toFixed(1)}</strong> 톤급
                       </td>
 
                       {/* 실물자산 보유 현황 */}
@@ -915,26 +911,26 @@ export const Products: React.FC = () => {
                       {/* 제조사 */}
                       <td style={{ padding: '6px 8px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{p.manufacturer || '-'}</td>
 
-                      {/* 동력 */}
-                      <td style={{ padding: '6px 8px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{p.powerSource || '-'}</td>
+                      {/* 동력방식 */}
+                      <td style={{ padding: '6px 8px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{p.powerType || p.powerSource || '-'}</td>
 
-                      {/* 작업높이 */}
-                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.workingHeight || '-'}</td>
+                      {/* 최대인상고 */}
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.maxOptionLiftHeightMm ? `${p.maxOptionLiftHeightMm} mm` : (p.workingHeight || '-')}</td>
 
-                      {/* 발판높이 */}
-                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.platformHeight || '-'}</td>
+                      {/* 표준인상고 */}
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.standardLiftHeightMm ? `${p.standardLiftHeightMm} mm` : (p.platformHeight || '-')}</td>
 
-                      {/* 장비중량 */}
-                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.weight || '-'}</td>
+                      {/* 장비자중 */}
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.serviceWeightKg ? `${p.serviceWeightKg} kg` : (p.weight || '-')}</td>
 
-                      {/* 적재중량 */}
-                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.capacityPreExt || '-'}</td>
+                      {/* 정격하중 */}
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap', fontWeight: 700 }}>{p.ratedCapacityKg ? `${p.ratedCapacityKg} kg` : (p.capacityPreExt || '-')}</td>
 
-                      {/* 장비크기 */}
+                      {/* 차체치수 */}
                       <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.machineDimensions || '-'}</td>
 
                       {/* 주행속도 */}
-                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.speed || '-'}</td>
+                      <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{p.travelSpeedKmh ? `${p.travelSpeedKmh} km/h` : (p.speed || '-')}</td>
 
                       {/* 안전인증일 */}
                       <td style={{ padding: '6px 8px', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>{getSafetyCertDate(p) || '-'}</td>
@@ -1154,7 +1150,7 @@ export const Products: React.FC = () => {
               <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    3. 상세 물리 제원 규격
+                    3. VDI 2198 지게차 상세 물리 제원 규격
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {!isEditing && (
@@ -1164,7 +1160,7 @@ export const Products: React.FC = () => {
                         onClick={() => setShowSpecPreviewModal(true)}
                         style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
-                        <FileText size={12} /> 제원표 그래픽
+                        <FileText size={12} /> 제원표 보기
                       </button>
                     )}
                     {canSave && !isEditing && (
@@ -1202,8 +1198,8 @@ export const Products: React.FC = () => {
                 {isEditing ? (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <div><label style={labelStyle}>모델명 *</label><input style={inputStyle} value={editForm.modelName || ''} onChange={ef('modelName')} /></div>
-                    <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: 1930, GS1930" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
-                    <div><label style={labelStyle}>피트 규격 *</label><input type="number" style={inputStyle} value={editForm.feet ?? ''} onChange={ef('feet')} /></div>
+                    <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: CPD25, D30S" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
+                    <div><label style={labelStyle}>톤급 코드 *</label><input type="number" style={inputStyle} value={editForm.feet ?? ''} onChange={ef('feet')} /></div>
                     <div><label style={labelStyle}>제조사</label><input style={inputStyle} value={editForm.manufacturer || ''} onChange={ef('manufacturer')} /></div>
                     <div><label style={labelStyle}>동력 방식</label><input style={inputStyle} value={editForm.powerSource || ''} onChange={ef('powerSource')} /></div>
                     <div>
@@ -1217,21 +1213,18 @@ export const Products: React.FC = () => {
                         <option value="false">미사용</option>
                       </select>
                     </div>
-                    <div><label style={labelStyle}>작업 높이</label><input style={inputStyle} value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
-                    <div><label style={labelStyle}>발판 높이</label><input style={inputStyle} value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
-                    <div><label style={labelStyle}>장비 중량</label><input style={inputStyle} value={editForm.weight || ''} onChange={ef('weight')} /></div>
-                    <div><label style={labelStyle}>적재 중량 (확장 전)</label><input style={inputStyle} value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
-                    <div><label style={labelStyle}>확장 후 본체 하중</label><input style={inputStyle} value={editForm.capacityPostExtMain || ''} onChange={ef('capacityPostExtMain')} /></div>
-                    <div><label style={labelStyle}>확장 후 확장부 하중</label><input style={inputStyle} value={editForm.capacityPostExtDeck || ''} onChange={ef('capacityPostExtDeck')} /></div>
-                    <div><label style={labelStyle}>장비 크기</label><input style={inputStyle} value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
-                    <div><label style={labelStyle}>플랫폼 크기</label><input style={inputStyle} value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
+                    <div><label style={labelStyle}>최대 인상고</label><input style={inputStyle} value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
+                    <div><label style={labelStyle}>표준 인상고</label><input style={inputStyle} value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
+                    <div><label style={labelStyle}>장비 자중</label><input style={inputStyle} value={editForm.weight || ''} onChange={ef('weight')} /></div>
+                    <div><label style={labelStyle}>정격 하중</label><input style={inputStyle} value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
+                    <div><label style={labelStyle}>차체 치수</label><input style={inputStyle} value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
+                    <div><label style={labelStyle}>포크 규격</label><input style={inputStyle} value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
                     <div><label style={labelStyle}>주행 속도</label><input style={inputStyle} value={editForm.speed || ''} onChange={ef('speed')} /></div>
                     <div><label style={labelStyle}>등판 능력</label><input style={inputStyle} value={editForm.gradeability || ''} onChange={ef('gradeability')} /></div>
-                    <div><label style={labelStyle}>최대 풍속</label><input style={inputStyle} value={editForm.maxWindSpeed || ''} onChange={ef('maxWindSpeed')} /></div>
                     <div><label style={labelStyle}>안전인증일</label><input type="date" style={inputStyle} value={editForm.safetyCertDate || ''} onChange={ef('safetyCertDate')} /></div>
                     <div><label style={labelStyle}>A/S 접수처</label><input style={inputStyle} value={editForm.asContact || ''} onChange={ef('asContact')} /></div>
                     <div style={{ gridColumn: 'span 2' }}>
-                      <label style={labelStyle}>기타 제원 메모</label>
+                      <label style={labelStyle}>배터리·엔진 및 상세 제원 메모</label>
                       <textarea style={{ ...inputStyle, minHeight: '44px' }} value={editForm.spec || ''} onChange={ef('spec')} />
                     </div>
                   </div>
@@ -1239,25 +1232,22 @@ export const Products: React.FC = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11.5px' }}>
                     <div><span style={{ color: 'var(--text-secondary)' }}>모델명:</span> <strong>{selectedProduct.modelName}</strong></div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>축약 모델명:</span> {selectedProduct.shortName || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>피트 규격:</span> <strong>{selectedProduct.feet} ft</strong></div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>톤급 규격:</span> <strong>{(Number(selectedProduct.feet || 25) / 10).toFixed(1)} 톤급</strong></div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>제조사:</span> {selectedProduct.manufacturer || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>동력 방식:</span> {selectedProduct.powerSource || '-'}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>동력 방식:</span> {selectedProduct.powerType || selectedProduct.powerSource || '-'}</div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>사용 상태:</span> {selectedProduct.isActive !== false ? '사용' : '미사용'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>작업 높이:</span> {selectedProduct.workingHeight || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>발판 높이:</span> {selectedProduct.platformHeight || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>장비 중량:</span> {selectedProduct.weight || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>적재 중량 (확장 전):</span> {selectedProduct.capacityPreExt || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>확장 후 본체 하중:</span> {selectedProduct.capacityPostExtMain || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>확장 후 확장부 하중:</span> {selectedProduct.capacityPostExtDeck || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>장비 크기:</span> {selectedProduct.machineDimensions || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>플랫폼 크기:</span> {selectedProduct.platformDimensions || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>주행 속도:</span> {selectedProduct.speed || '-'}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>최대 인상고:</span> {selectedProduct.maxOptionLiftHeightMm ? `${selectedProduct.maxOptionLiftHeightMm} mm` : (selectedProduct.workingHeight || '-')}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>표준 인상고:</span> {selectedProduct.standardLiftHeightMm ? `${selectedProduct.standardLiftHeightMm} mm` : (selectedProduct.platformHeight || '-')}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>장비 자중:</span> {selectedProduct.serviceWeightKg ? `${selectedProduct.serviceWeightKg} kg` : (selectedProduct.weight || '-')}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>정격 하중:</span> {selectedProduct.ratedCapacityKg ? `${selectedProduct.ratedCapacityKg} kg` : (selectedProduct.capacityPreExt || '-')}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>차체 치수:</span> {selectedProduct.machineDimensions || '-'}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>포크 규격:</span> {selectedProduct.forkDimensionsMm || selectedProduct.platformDimensions || '-'}</div>
+                    <div><span style={{ color: 'var(--text-secondary)' }}>주행 속도:</span> {selectedProduct.travelSpeedKmh ? `${selectedProduct.travelSpeedKmh} km/h` : (selectedProduct.speed || '-')}</div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>등판 능력:</span> {selectedProduct.gradeability || '-'}</div>
-                    <div><span style={{ color: 'var(--text-secondary)' }}>최대 풍속:</span> {selectedProduct.maxWindSpeed || '-'}</div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>안전인증일:</span> <strong style={{ color: 'var(--primary)' }}>{getSafetyCertDate(selectedProduct) || '-'}</strong></div>
                     <div><span style={{ color: 'var(--text-secondary)' }}>A/S 접수처:</span> <strong>{selectedProduct.asContact || '031-334-5296'}</strong></div>
                     <div style={{ gridColumn: 'span 2' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>기타 제원 메모:</span> {selectedProduct.spec || '-'}
+                      <span style={{ color: 'var(--text-secondary)' }}>배터리·엔진 및 상세 제원:</span> {selectedProduct.powerSpecDetail || selectedProduct.spec || '-'}
                     </div>
                   </div>
                 )}
@@ -1289,16 +1279,16 @@ export const Products: React.FC = () => {
         }}>
           <form onSubmit={handleSaveAddModal} className="card" style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'var(--bg-card)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>신규 제품 모델 등록</h3>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>신규 지게차 모델 등록</h3>
               <button type="button" onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
-              <div><label style={labelStyle}>모델명 *</label><input style={inputStyle} placeholder="예: SJ3219" value={editForm.modelName || ''} onChange={ef('modelName')} required /></div>
-              <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: 1930, GS1930" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
-              <div><label style={labelStyle}>피트 규격 *</label><input type="number" style={inputStyle} placeholder="예: 19" value={editForm.feet ?? ''} onChange={ef('feet')} required /></div>
-              <div><label style={labelStyle}>제조사</label><input style={inputStyle} placeholder="예: Skyjack" value={editForm.manufacturer || ''} onChange={ef('manufacturer')} /></div>
-              <div><label style={labelStyle}>동력 방식</label><input style={inputStyle} placeholder="예: 배터리" value={editForm.powerSource || ''} onChange={ef('powerSource')} /></div>
+              <div><label style={labelStyle}>모델명 *</label><input style={inputStyle} placeholder="예: CPD25-GB2Li" value={editForm.modelName || ''} onChange={ef('modelName')} required /></div>
+              <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: CPD25" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
+              <div><label style={labelStyle}>톤급 코드 *</label><input type="number" style={inputStyle} placeholder="예: 25" value={editForm.feet ?? ''} onChange={ef('feet')} required /></div>
+              <div><label style={labelStyle}>제조사</label><input style={inputStyle} placeholder="예: 안후이 헬리" value={editForm.manufacturer || ''} onChange={ef('manufacturer')} /></div>
+              <div><label style={labelStyle}>동력 방식</label><input style={inputStyle} placeholder="예: 리튬인산철 전동" value={editForm.powerSource || ''} onChange={ef('powerSource')} /></div>
               <div>
                 <label style={labelStyle}>사용 상태</label>
                 <select
@@ -1310,21 +1300,18 @@ export const Products: React.FC = () => {
                   <option value="false">미사용</option>
                 </select>
               </div>
-              <div><label style={labelStyle}>작업 높이</label><input style={inputStyle} placeholder="예: 7.79 M" value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
-              <div><label style={labelStyle}>발판 높이</label><input style={inputStyle} placeholder="예: 5.79 M" value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
-              <div><label style={labelStyle}>장비 중량</label><input style={inputStyle} placeholder="예: 1,312 kg" value={editForm.weight || ''} onChange={ef('weight')} /></div>
-              <div><label style={labelStyle}>적재 중량 (확장 전)</label><input style={inputStyle} placeholder="예: 227 kg" value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
-              <div><label style={labelStyle}>확장 후 본체 하중</label><input style={inputStyle} placeholder="예: 159 kg" value={editForm.capacityPostExtMain || ''} onChange={ef('capacityPostExtMain')} /></div>
-              <div><label style={labelStyle}>확장 후 확장부 하중</label><input style={inputStyle} placeholder="예: 113 kg" value={editForm.capacityPostExtDeck || ''} onChange={ef('capacityPostExtDeck')} /></div>
-              <div><label style={labelStyle}>장비 크기</label><input style={inputStyle} placeholder="예: 1.78 x 0.81 x 2.11 M" value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
-              <div><label style={labelStyle}>플랫폼 크기</label><input style={inputStyle} placeholder="예: 1.63 x 0.66 M" value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
-              <div><label style={labelStyle}>주행 속도</label><input style={inputStyle} placeholder="예: 3.2 km/h" value={editForm.speed || ''} onChange={ef('speed')} /></div>
-              <div><label style={labelStyle}>등판 능력</label><input style={inputStyle} placeholder="예: 25%" value={editForm.gradeability || ''} onChange={ef('gradeability')} /></div>
-              <div><label style={labelStyle}>최대 풍속</label><input style={inputStyle} placeholder="예: 12.5 m/s 이내" value={editForm.maxWindSpeed || ''} onChange={ef('maxWindSpeed')} /></div>
+              <div><label style={labelStyle}>최대 인상고</label><input style={inputStyle} placeholder="예: 4.70 M" value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
+              <div><label style={labelStyle}>표준 인상고</label><input style={inputStyle} placeholder="예: 3.00 M" value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
+              <div><label style={labelStyle}>장비 자중</label><input style={inputStyle} placeholder="예: 3,980 kg" value={editForm.weight || ''} onChange={ef('weight')} /></div>
+              <div><label style={labelStyle}>정격 하중</label><input style={inputStyle} placeholder="예: 2,500 kg" value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
+              <div><label style={labelStyle}>차체 치수</label><input style={inputStyle} placeholder="예: 2.49 x 1.18 x 2.14 M" value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
+              <div><label style={labelStyle}>포크 규격</label><input style={inputStyle} placeholder="예: 40 × 122 × 1,070 mm" value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
+              <div><label style={labelStyle}>주행 속도</label><input style={inputStyle} placeholder="예: 18.0 km/h" value={editForm.speed || ''} onChange={ef('speed')} /></div>
+              <div><label style={labelStyle}>등판 능력</label><input style={inputStyle} placeholder="예: 20%" value={editForm.gradeability || ''} onChange={ef('gradeability')} /></div>
               <div><label style={labelStyle}>안전인증일</label><input type="date" style={inputStyle} value={editForm.safetyCertDate || ''} onChange={ef('safetyCertDate')} /></div>
               <div><label style={labelStyle}>A/S 접수처</label><input style={inputStyle} value={editForm.asContact || '031-334-5296'} onChange={ef('asContact')} /></div>
               <div style={{ gridColumn: 'span 2' }}>
-                <label style={labelStyle}>기타 제원 메모</label>
+                <label style={labelStyle}>배터리·엔진 및 상세 제원 메모</label>
                 <textarea style={{ ...inputStyle, minHeight: '44px' }} placeholder="특이사항 및 제원" value={editForm.spec || ''} onChange={ef('spec')} />
               </div>
             </div>
@@ -1337,7 +1324,7 @@ export const Products: React.FC = () => {
         </div>
       )}
 
-      {/* ⑧ 제원표 그래픽 미리보기 모달 */}
+      {/* ⑧ VDI 2198 지게차 제원표 미리보기 모달 */}
       {showSpecPreviewModal && selectedProduct && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1350,7 +1337,7 @@ export const Products: React.FC = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-                [{selectedProduct.modelName}] 제원표 그래픽 규격
+                [{selectedProduct.modelName}] 지게차 VDI 2198 표준 제원표
               </h3>
               <button
                 type="button"
@@ -1361,64 +1348,24 @@ export const Products: React.FC = () => {
               </button>
             </div>
 
-            {/* 작업대 확장 전/후 적재중량 그래픽 헤더 */}
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '4px' }}>
-                작업대 확장 전 / 후 적재중량
-              </div>
-
-              {/* 하중 분배 다이어그램 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', backgroundColor: 'var(--bg-app)', padding: '14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                {/* 확장 전 */}
-                <div style={{ textAlign: 'center', borderRight: '1px dashed var(--border-color)', paddingRight: '10px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-main)', marginBottom: '2px' }}>
-                    {selectedProduct.capacityPreExt || '227 kg'}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70px', margin: '4px 0' }}>
-                    <img
-                      src={LIFT_RETRACTED_IMG}
-                      alt="확장 전 형상"
-                      style={{ maxHeight: '66px', maxWidth: '100%', objectFit: 'contain' }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-secondary)', padding: '3px', borderRadius: '3px' }}>
-                    작업대 확장 전 (작업자 2인)
-                  </div>
-                </div>
-
-                {/* 확장 후 */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '2px' }}>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-main)' }}>
-                        {selectedProduct.capacityPostExtMain || '159 kg'}
-                      </div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 'bold' }}>본체</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-main)' }}>
-                        {selectedProduct.capacityPostExtDeck || '113 kg'}
-                      </div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 'bold' }}>확장부</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70px', margin: '4px 0' }}>
-                    <img
-                      src={LIFT_EXTENDED_IMG}
-                      alt="확장 후 형상"
-                      style={{ maxHeight: '66px', maxWidth: '100%', objectFit: 'contain' }}
-                    />
-                  </div>
-                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-secondary)', padding: '3px', borderRadius: '3px' }}>
-                    작업대 확장 후 (각 1인)
-                  </div>
+            {/* 지게차 정격하중 및 인상고 요약 배너 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>정격하중 · 하중중심</div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--primary)', marginTop: '4px' }}>
+                  {selectedProduct.ratedCapacityKg ? `${selectedProduct.ratedCapacityKg} kg` : (selectedProduct.capacityPreExt || '-')} / {selectedProduct.loadCenterMm || 500} mm
                 </div>
               </div>
-
-              {/* 최대풍속 배너 */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                <div style={{ backgroundColor: 'var(--danger)', color: '#ffffff', fontWeight: 'bold', padding: '4px 12px', borderRadius: '4px', fontSize: '12px' }}>
-                  최대풍속: {selectedProduct.maxWindSpeed || '12.5 m/s 이내'}
+              <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>표준 · 최대 인상고</div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+                  {selectedProduct.standardLiftHeightMm ? `${selectedProduct.standardLiftHeightMm} mm` : (selectedProduct.platformHeight || '-')} / {selectedProduct.maxOptionLiftHeightMm ? `${selectedProduct.maxOptionLiftHeightMm} mm` : (selectedProduct.workingHeight || '-')}
+                </div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>장비 자중 · 회전반경</div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+                  {selectedProduct.serviceWeightKg ? `${selectedProduct.serviceWeightKg} kg` : (selectedProduct.weight || '-')} / {selectedProduct.turningRadiusMm ? `${selectedProduct.turningRadiusMm} mm` : '-'}
                 </div>
               </div>
             </div>
@@ -1427,34 +1374,40 @@ export const Products: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--border-color)', fontSize: '11.5px', textAlign: 'center' }}>
               <tbody>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', width: '22%', padding: '5px' }}>장 비 명</td>
-                  <td style={{ width: '28%', padding: '5px', fontWeight: 'bold' }}>{selectedProduct.modelName}</td>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', width: '22%', padding: '5px' }}>동 력</td>
-                  <td style={{ width: '28%', padding: '5px' }}>{selectedProduct.powerSource || '배터리'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', width: '22%', padding: '6px' }}>모 델 명</td>
+                  <td style={{ width: '28%', padding: '6px', fontWeight: 'bold' }}>{selectedProduct.modelName}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', width: '22%', padding: '6px' }}>동력 방식</td>
+                  <td style={{ width: '28%', padding: '6px' }}>{selectedProduct.powerType || selectedProduct.powerSource || '-'}</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>작업 높이</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.workingHeight || '-'}</td>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>발판 높이</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.platformHeight || '-'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>최대 인상고</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.maxOptionLiftHeightMm ? `${selectedProduct.maxOptionLiftHeightMm} mm` : (selectedProduct.workingHeight || '-')}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>표준 인상고</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.standardLiftHeightMm ? `${selectedProduct.standardLiftHeightMm} mm` : (selectedProduct.platformHeight || '-')}</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>장비 중량</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.weight || '-'}</td>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>적재 중량</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.capacityPreExt || '-'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>장비 자중</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.serviceWeightKg ? `${selectedProduct.serviceWeightKg} kg` : (selectedProduct.weight || '-')}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>정격 하중</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.ratedCapacityKg ? `${selectedProduct.ratedCapacityKg} kg` : (selectedProduct.capacityPreExt || '-')}</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>장비 크기</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.machineDimensions || '-'}</td>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>주행 속도</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.speed || '-'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>차체 치수</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.machineDimensions || '-'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>포크 규격</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.forkDimensionsMm || selectedProduct.platformDimensions || '-'}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>주행 속도</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.travelSpeedKmh ? `${selectedProduct.travelSpeedKmh} km/h` : (selectedProduct.speed || '-')}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>등판 능력</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.gradeability || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>안전인증일</td>
-                  <td style={{ padding: '5px', fontWeight: 'bold', color: 'var(--primary)' }}>{getSafetyCertDate(selectedProduct) || '-'}</td>
-                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '5px' }}>A/S 접수처</td>
-                  <td style={{ padding: '5px' }}>{selectedProduct.asContact || '031-334-5296'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>안전인증일</td>
+                  <td style={{ padding: '6px', fontWeight: 'bold', color: 'var(--primary)' }}>{getSafetyCertDate(selectedProduct) || '-'}</td>
+                  <td style={{ backgroundColor: 'var(--bg-app)', fontWeight: 'bold', padding: '6px' }}>A/S 접수처</td>
+                  <td style={{ padding: '6px' }}>{selectedProduct.asContact || '031-334-5296'}</td>
                 </tr>
               </tbody>
             </table>

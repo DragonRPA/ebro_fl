@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
+import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { 
   encryptEntityPrivacyFields, 
   decryptEntityPrivacyFields,
@@ -1381,34 +1382,61 @@ export interface CustomerSite {
 export interface Product {
   id: string;
   modelName: string;
-  shortName?: string;            // 실무 축약 모델명 (예: '1930', 'GS1930', 'GS-1930')
-  feet: number;
+  shortName?: string;            // 실무 축약 모델명 (예: 'CPD25', '8FB25')
+  seriesName?: string;           // 시리즈명 (예: 'G2 시리즈 리튬전동 2.5톤')
+  feet?: number;                 // 하위 호환용 톤수·피트 수치
   spec: string;
   manufacturer: string;
-  isActive?: boolean; // 사용/미사용 (단종/매각 등)
-  
-  // 🌟 [신규 확장] 장비 제원표 상세 규격 (1대1 매핑)
-  powerSource?: string;          // 동력 (예: '배터리', '디젤', '전동')
-  workingHeight?: string;        // 작업 높이 (예: '6.57 M')
-  platformHeight?: string;       // 발판 높이 (예: '4.57 M')
-  weight?: string;               // 장비 중량 (예: '1,148 Kg')
-  machineDimensions?: string;    // 장비 크기 전장x전폭x전고 (예: '1.80 x 0.81 x 1.92 M')
-  platformDimensions?: string;   // 플랫폼 크기 길이x폭 (예: '1.55 x 0.66 M')
-  gradeability?: string;         // 등판 능력 (예: '25 %')
-  speed?: string;                // 주행 속도 (예: '3.4 Km/h')
-  asContact?: string;            // A/S 접수처 (예: '031-334-5296')
+  originCountry?: string;        // 조달 국가/구분 ('중국 수입', '국내 매입', '해외 수입')
+  isActive?: boolean;            // 사용/미사용 (단종/매각 등)
 
-  // 🌟 [신규 확장] 작업대 확장 전/후 적재중량 및 안전 기준
-  capacityPreExt?: string;       // 확장 전 적재중량 (예: '272 kg' - 작업자 2인)
-  capacityPostExtMain?: string;  // 확장 후 본체 적재중량 (예: '159 kg' - 작업자 1인)
-  capacityPostExtDeck?: string;  // 확장 후 확장부 적재중량 (예: '113 kg' - 작업자 1인)
-  maxWindSpeed?: string;         // 최대 허용 풍속 (예: '12.5 m/s 이내')
+  // 🌟 [지게차 VDI 2198 / ISO 5053 국제표준 제원 규격]
+  equipmentClass?: string;       // 차종 구분
+  powerSource?: string;          // 동력 방식
+  powerType?: string;            // 동력 방식 표준
+  ratedCapacityKg?: number;      // 정격 적재하중 · kg
+  loadCenterMm?: number;         // 하중중심거리 · mm
+  standardLiftHeightMm?: number; // 표준 인상높이 · mm
+  maxOptionLiftHeightMm?: number;// 최대 옵션 인상높이 · mm
+  freeLiftHeightMm?: number;     // 자유 인상높이 · mm
+  forkDimensionsMm?: string;     // 포크 규격 두께×폭×길이 · mm
+  overallLengthMm?: number;      // 전장 포크제외 · mm
+  overallWidthMm?: number;       // 전폭 · mm
+  overheadGuardHeightMm?: number;// 헤드가드 높이 · mm
+  turningRadiusMm?: number;      // 최소 회전반경 · mm
+  aisleWidth1000x1200Mm?: number;// 직각 적재 통로폭 · mm
+  travelSpeedKmh?: string;       // 주행속도 적재/공차 · km/h
+  liftingSpeedMms?: string;      // 인상속도 적재/공차 · mm/s
+  gradeabilityPercent?: number;  // 최대 등판능력 · %
+  serviceWeightKg?: number;      // 장비 자중 · kg
+  powerSpecDetail?: string;      // 배터리 전압·용량 / 엔진 형식·배기량
+  motorOrEngineDetail?: string;  // 구동·유압 모터 / 정격 출력·토크
+  chargerOrFuelDetail?: string;  // 충전기 사양 / 연료탱크·변속기
+  tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
+  brakeType?: string;            // 제동 방식
+  waterproofRating?: string;     // 방수·운용 등급
+  warrantyMonths?: number;       // 보증 개월수
+  warrantyTerms?: string;        // 보증 상세 조건
 
-  // 기존 안전/문서 URL
-  maxHeightCapacity?: string;    // 작업최대높이/적재용량
-  safetyCertDate?: string;       // 안전인증년월일 (예: '2009-09-14', '2024-03-01')
+  // 표기 및 하위 호환 필드
+  workingHeight?: string;        // 최대 인상높이 표기
+  platformHeight?: string;       // 표준 인상높이 표기
+  weight?: string;               // 장비 자중 표기 (예: '3,980 kg')
+  machineDimensions?: string;    // 차체 치수 전장×전폭×헤드가드고
+  platformDimensions?: string;   // 포크 규격 표기
+  gradeability?: string;         // 등판능력 표기
+  speed?: string;                // 주행속도 표기
+  asContact?: string;            // A/S 접수처
+  capacityPreExt?: string;       // 정격하중 표기
+  capacityPostExtMain?: string;
+  capacityPostExtDeck?: string;
+  maxWindSpeed?: string;
+  maxHeightCapacity?: string;
+  safetyCertDate?: string;
   safetyCertUrl?: string;
   specSheetUrl?: string;
+  brochureUrl?: string;
+  operatorManualUrl?: string;
   emergencyGuideUrl?: string;
   createdAt: string;
   updatedAt?: string;
@@ -3183,1174 +3211,64 @@ export interface VehicleFuelLog {
 // 초기 로컬 스토리지 데이터 생성
 
 const generateMockProducts = (): Product[] => {
-  return [
-    {
-        "id": "prod-001",
-        "modelName": "JCPT0607DCS",
-        "feet": 20,
-        "spec": "배터리, 5.6 M, 적재 240 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "5.6 M",
-        "platformHeight": "3.6 M",
-        "weight": "880 Kg",
-        "capacityPreExt": "240 kg",
-        "machineDimensions": "1.44x 0.76 x 1.90 M",
-        "platformDimensions": "1.29x 0.70 M",
-        "gradeability": "° 15 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "140 kg",
-        "capacityPostExtDeck": "100 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-002",
-        "modelName": "JCPT0807AC",
-        "feet": 20,
-        "spec": "배터리, 7.8 M, 적재 230 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "7.8 M",
-        "platformHeight": "6 M",
-        "weight": "1,630 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.86 x 0.76 x 2.02 M",
-        "platformDimensions": "1.67 x 0.74 M",
-        "gradeability": "25 %",
-        "speed": "4.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "117 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-003",
-        "modelName": "JCPT1008AC",
-        "feet": 32,
-        "spec": "배터리, 10 M, 적재 230 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,230 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "2.48 x 0.83 x 2.36 M",
-        "platformDimensions": "2.27 x 0.81 M",
-        "gradeability": "% 25 %",
-        "speed": "5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "117 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-004",
-        "modelName": "JCPT1012AC",
-        "feet": 32,
-        "spec": "배터리, 10.0 M, 적재 450 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "10.0 M",
-        "platformHeight": "8.0 M",
-        "weight": "2,710 Kg",
-        "capacityPreExt": "450 kg",
-        "machineDimensions": "2.48 x 1.15 x 2.36 M",
-        "platformDimensions": "1.15 x 2.27 M",
-        "gradeability": "% 25 %",
-        "speed": "5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "337 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-005",
-        "modelName": "S1008AC+",
-        "feet": 32,
-        "spec": "배터리, 10 M, 적재 272 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,230 Kg",
-        "capacityPreExt": "272 kg",
-        "machineDimensions": "2.48 x 0.83 x 2.36 M",
-        "platformDimensions": "2.27 x 0.81 M",
-        "gradeability": "% 25 %",
-        "speed": "6 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "159 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-006",
-        "modelName": "S1012AC+",
-        "feet": 32,
-        "spec": "배터리, 10 M, 적재 450 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,750 Kg",
-        "capacityPreExt": "450 kg",
-        "machineDimensions": "2.48 x 1.15 x 2.36 M",
-        "platformDimensions": "2.27 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "337 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-007",
-        "modelName": "JCPT1212AC",
-        "feet": 39,
-        "spec": "배터리, 12.0 M, 적재 320 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "12.0 M",
-        "platformHeight": "10.0 M",
-        "weight": "3,060 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.48 x 1.15 x 2.49 M",
-        "platformDimensions": "2.27 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "207 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-008",
-        "modelName": "S1212AC+",
-        "feet": 39,
-        "spec": "배터리, 12 M, 적재 408 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "12 M",
-        "platformHeight": "10 M",
-        "weight": "3,060 Kg",
-        "capacityPreExt": "408 kg",
-        "machineDimensions": "2.48 x 1.15 x 2.49 M",
-        "platformDimensions": "2.27 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "295 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-009",
-        "modelName": "JCPT1412AC",
-        "feet": 45,
-        "spec": "배터리, 13.8 M, 적재 320 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "13.8 M",
-        "platformHeight": "11.8 M",
-        "weight": "2,990 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.84 x 1.19 x 2.62 M",
-        "platformDimensions": "2.48 x 2.62 M",
-        "gradeability": "% 25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "207 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-010",
-        "modelName": "S1412AC+",
-        "feet": 45,
-        "spec": "배터리, 13.8 M, 적재 408 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "13.8 M",
-        "platformHeight": "11.8 M",
-        "weight": "3,250 Kg",
-        "capacityPreExt": "408 kg",
-        "machineDimensions": "M",
-        "platformDimensions": "2.27 x 1.12 M",
-        "gradeability": "25 %",
-        "speed": "6.0 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "295 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-011",
-        "modelName": "JCPT1614ACZ",
-        "feet": 53,
-        "spec": "배터리, 15.7 M, 적재 350 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "15.7 M",
-        "platformHeight": "13.7 M",
-        "weight": "3,470 Kg",
-        "capacityPreExt": "350 kg",
-        "machineDimensions": "2.84 x 1.39 x 2.62 M",
-        "platformDimensions": "2.64 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "237 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "16.0 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-012",
-        "modelName": "S1612AC+",
-        "feet": 53,
-        "spec": "배터리, 15.7 M, 적재 363 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "15.7 M",
-        "platformHeight": "13.7 M",
-        "weight": "3,520 Kg",
-        "capacityPreExt": "363 kg",
-        "machineDimensions": "2.84 x 1.25 x 2.62 M",
-        "platformDimensions": "2.64 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "6 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "227 kg",
-        "capacityPostExtDeck": "136 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-013",
-        "modelName": "S1614AC+",
-        "feet": 53,
-        "spec": "배터리, 15.7 M, 적재 363 kg",
-        "manufacturer": "DINGLI",
-        "powerSource": "배터리",
-        "workingHeight": "15.7 M",
-        "platformHeight": "13.7 M",
-        "weight": "3,500 Kg",
-        "capacityPreExt": "363 kg",
-        "machineDimensions": "2.84 x 1.39 x 2.62 M",
-        "platformDimensions": "2.64 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "5.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "250 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-014",
-        "modelName": "GS-1330M",
-        "feet": 13,
-        "spec": "배터리, 5.7 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "5.7 M",
-        "platformHeight": "3.9 M",
-        "weight": "902 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "1.41 x 0.78 x 1.83 M",
-        "platformDimensions": "1.26 x 0.67 M",
-        "gradeability": "25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "136 kg",
-        "capacityPostExtDeck": "91 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-015",
-        "modelName": "GS-1432",
-        "feet": 14,
-        "spec": "배터리, 6.3 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "6.3 M",
-        "platformHeight": "4.3 M",
-        "weight": "900 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "1.40 x 0.81 x 1.88 M",
-        "platformDimensions": "1.40 x 0.78 M",
-        "gradeability": "25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "114 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-016",
-        "modelName": "GS-1930",
-        "feet": 19,
-        "spec": "배터리, 7.8 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "7.8 M",
-        "platformHeight": "5.8 M",
-        "weight": "1226 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "1.83 x 0.77 x 2.16 M",
-        "platformDimensions": "1.64 x 0.76 M",
-        "gradeability": "25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "114 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-017",
-        "modelName": "GS-1930 E",
-        "feet": 19,
-        "spec": "배터리, 7.8 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "7.8 M",
-        "platformHeight": "5.8 M",
-        "weight": "1,498 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "1.83 x 0.76 x 2.10 M",
-        "platformDimensions": "1.63 x 0.76 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "114 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-018",
-        "modelName": "GS-2632",
-        "feet": 26,
-        "spec": "배터리, 9.9 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "9.9 M",
-        "platformHeight": "7.9 M",
-        "weight": "2,003 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "2.44 x 0.81 x 2.26 M",
-        "platformDimensions": "2.26 x 0.84 M",
-        "gradeability": "25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "114 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-019",
-        "modelName": "GS-2632 E",
-        "feet": 26,
-        "spec": "배터리, 10 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,145 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "2.44 x 0.82 x 2.31 M",
-        "platformDimensions": "2.26 x 0.84 M",
-        "gradeability": "% 25 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "114 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-020",
-        "modelName": "GS-2646",
-        "feet": 26,
-        "spec": "배터리, 9.92 M, 적재 454 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "9.92 M",
-        "platformHeight": "7.92 M",
-        "weight": "1,956 Kg",
-        "capacityPreExt": "454 kg",
-        "machineDimensions": "2.44 x 1.18 x 2.31 M",
-        "platformDimensions": "2.26 x 1.18 M",
-        "gradeability": "25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "341 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-021",
-        "modelName": "GS-2646 E",
-        "feet": 26,
-        "spec": "배터리, 10 M, 적재 454 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "1,997 Kg",
-        "capacityPreExt": "454 kg",
-        "machineDimensions": "2.44 x 1.17 x 2.26 M",
-        "platformDimensions": "2.26 x 1.15 M",
-        "gradeability": "% 25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "341 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-022",
-        "modelName": "GS-3246",
-        "feet": 32,
-        "spec": "배터리, 11.8 M, 적재 205 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "11.8 M",
-        "platformHeight": "9.8 M",
-        "weight": "2367 Kg",
-        "capacityPreExt": "205 kg",
-        "machineDimensions": "2.44 x 1.18 x 2.44 M",
-        "platformDimensions": "2.26 x 1.18 M",
-        "gradeability": "25 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "113 kg",
-        "capacityPostExtDeck": "",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-023",
-        "modelName": "GS-3246 E",
-        "feet": 32,
-        "spec": "배터리, 11.7 M, 적재 318 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "11.7 M",
-        "platformHeight": "9.7 M",
-        "weight": "2,374 Kg",
-        "capacityPreExt": "318 kg",
-        "machineDimensions": "2.44 x 1.17 x 2.39 M",
-        "platformDimensions": "2.26 x 1.16 M",
-        "gradeability": "% 25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "205 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-024",
-        "modelName": "GS-4046",
-        "feet": 40,
-        "spec": "배터리, 13.7 M, 적재 350 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "13.7 M",
-        "platformHeight": "11.9 M",
-        "weight": "3,184 Kg",
-        "capacityPreExt": "350 kg",
-        "machineDimensions": "2.48 x 1.17 x 2.57 M",
-        "platformDimensions": "2.26 x 1.16 M",
-        "gradeability": "25 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "237 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-025",
-        "modelName": "GS-4047",
-        "feet": 40,
-        "spec": "배터리, 13.7 M, 적재 350 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "13.7 M",
-        "platformHeight": "11.7 M",
-        "weight": "3,260 Kg",
-        "capacityPreExt": "350 kg",
-        "machineDimensions": "2.48 x 1.19 x 2.54 M",
-        "platformDimensions": "2.26 x 1.16 M",
-        "gradeability": "% 25 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "237 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-026",
-        "modelName": "GS-4069DC",
-        "feet": 40,
-        "spec": "배터리, 14.3 M, 적재 363 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "14.3 M",
-        "platformHeight": "12.3 M",
-        "weight": "4,933 Kg",
-        "capacityPreExt": "363 kg",
-        "machineDimensions": "3.12 x 1.6 x 2.74 M",
-        "platformDimensions": "2.79 x 1.6 M",
-        "gradeability": "19 ° %",
-        "speed": "7.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "250 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-027",
-        "modelName": "Z-45/25J",
-        "feet": 45,
-        "spec": "배터리, 15.9 M, 적재 227 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "15.9 M",
-        "platformHeight": "13.9 M",
-        "weight": "7,400 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "6.83 x 1.79 x 2.0 M",
-        "platformDimensions": "1.83 x 0.76 M",
-        "gradeability": "30 %",
-        "speed": "4.8 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "227 kg",
-        "capacityPostExtDeck": "-",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-028",
-        "modelName": "GS-4655",
-        "feet": 46,
-        "spec": "배터리, 15.95 M, 적재 349 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "배터리",
-        "workingHeight": "15.95 M",
-        "platformHeight": "13.95 M",
-        "weight": "3,701 Kg",
-        "capacityPreExt": "349 kg",
-        "machineDimensions": "3.11 x 1.41 x 2.77 M",
-        "platformDimensions": "2.84 x 1.35 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "213 kg",
-        "capacityPostExtDeck": "136 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-029",
-        "modelName": "GS-5390RT",
-        "feet": 53,
-        "spec": "디젤, 18 M, 적재 680 kg",
-        "manufacturer": "GENIE",
-        "powerSource": "디젤",
-        "workingHeight": "18 M",
-        "platformHeight": "16.15 M",
-        "weight": "7,537 Kg",
-        "capacityPreExt": "680 kg",
-        "machineDimensions": "4.88 x 2.29 x 3.15 M",
-        "platformDimensions": "3.98 x 1.83 M",
-        "gradeability": "12 %",
-        "speed": "8 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "460 kg",
-        "capacityPostExtDeck": "110 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-030",
-        "modelName": "STAR-6",
-        "feet": 15,
-        "spec": "배터리, 5.8 M, 적재 230 kg",
-        "manufacturer": "HAULOTTE",
-        "powerSource": "배터리",
-        "workingHeight": "5.8 M",
-        "platformHeight": "3.8 M",
-        "weight": "880 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.4 x 0.79 x 1.75 M",
-        "platformDimensions": "1.38 x 0.77 M",
-        "gradeability": "% 25 %",
-        "speed": "4.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "110 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-031",
-        "modelName": "OPTIMUM 8",
-        "feet": 20,
-        "spec": "배터리, 7.77 M, 적재 230 kg",
-        "manufacturer": "HAULOTTE",
-        "powerSource": "배터리",
-        "workingHeight": "7.77 M",
-        "platformHeight": "5.77 M",
-        "weight": "1,590 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.9 x 0.79 x 1.88 M",
-        "platformDimensions": "2.59 x 0.74 M",
-        "gradeability": "25 %",
-        "speed": "4.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "120 kg",
-        "capacityPostExtDeck": "110 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-032",
-        "modelName": "1230ES",
-        "feet": 12,
-        "spec": "배터리, 5.7 M, 적재 230 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "5.7 M",
-        "platformHeight": "3.7 M",
-        "weight": "790 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.37 x 0.76 x 1.65 M",
-        "platformDimensions": "1.25 x 0.68 M",
-        "gradeability": "25 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "230 kg",
-        "capacityPostExtDeck": "-",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-033",
-        "modelName": "ES1330L",
-        "feet": 13,
-        "spec": "배터리, 5.8 M, 적재 227 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "5.8 M",
-        "platformHeight": "3.8 M",
-        "weight": "900 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "1.8 x 0.6 x 1.4 M",
-        "platformDimensions": "1.3 x 0.6 M",
-        "gradeability": "° 25 %",
-        "speed": "3.8 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "112 kg",
-        "capacityPostExtDeck": "115 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-034",
-        "modelName": "1532R",
-        "feet": 15,
-        "spec": "배터리, 6.6 M, 적재 270 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "6.6 M",
-        "platformHeight": "4.6 M",
-        "weight": "1,079 Kg",
-        "capacityPreExt": "270 kg",
-        "machineDimensions": "1.74 x 0.81 x 1.90 M",
-        "platformDimensions": "1.74x 0.81 M",
-        "gradeability": "° 14 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "150 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-035",
-        "modelName": "R1532i",
-        "feet": 15,
-        "spec": "배터리, 6.6 M, 적재 275 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "6.6 M",
-        "platformHeight": "4.6 M",
-        "weight": "1,085 Kg",
-        "capacityPreExt": "275 kg",
-        "machineDimensions": "1.74 x 0.81 x 1.90 M",
-        "platformDimensions": "1.74x 0.81 M",
-        "gradeability": "° 14 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "155 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-036",
-        "modelName": "1930ES",
-        "feet": 19,
-        "spec": "배터리, 7.7 M, 적재 230 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "7.7 M",
-        "platformHeight": "5.7 M",
-        "weight": "1,230 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.87 x 0.76 x 1.99 M",
-        "platformDimensions": "1.87x 0.76 M",
-        "gradeability": "° 14 %",
-        "speed": "4.8 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "117 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-037",
-        "modelName": "ES2646",
-        "feet": 26,
-        "spec": "배터리, 9.92 M, 적재 545 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "9.92 M",
-        "platformHeight": "7.92 M",
-        "weight": "2,401 Kg",
-        "capacityPreExt": "545 kg",
-        "machineDimensions": "2.28 x 1.17 x 2.4 M",
-        "platformDimensions": "1.1 x 2.1 M",
-        "gradeability": "% 30 %",
-        "speed": "3.2 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "425 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-038",
-        "modelName": "4069LE",
-        "feet": 40,
-        "spec": "배터리, 14 M, 적재 360 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "14 M",
-        "platformHeight": "12 M",
-        "weight": "4,790 Kg",
-        "capacityPreExt": "360 kg",
-        "machineDimensions": "3.15 x 1.75 x 2.84 M",
-        "platformDimensions": "2.92x 1.65 M",
-        "gradeability": "° 19 %",
-        "speed": "4.8 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "247 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-039",
-        "modelName": "JLG-E600JP",
-        "feet": 60,
-        "spec": "배터리, 20.1 M, 적재 227 kg",
-        "manufacturer": "JLG",
-        "powerSource": "배터리",
-        "workingHeight": "20.1 M",
-        "platformHeight": "18.3 M",
-        "weight": "7,663 Kg",
-        "capacityPreExt": "227 kg",
-        "machineDimensions": "10.16 x 2.41 x 2.54 M",
-        "platformDimensions": "1.83 x 0.76 M",
-        "gradeability": "30 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "227 kg",
-        "capacityPostExtDeck": "-",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-040",
-        "modelName": "S0808E",
-        "feet": 26,
-        "spec": "배터리, 10 M, 적재 230 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,200 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "2.45 x 0.83 x 2.32 M",
-        "platformDimensions": "2.26 x 0.81 M",
-        "gradeability": "% 25 %",
-        "speed": "변동 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "113 kg",
-        "capacityPostExtDeck": "117 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-041",
-        "modelName": "S0812E",
-        "feet": 26,
-        "spec": "배터리, 10 M, 적재 450 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "10 M",
-        "platformHeight": "8 M",
-        "weight": "2,300 Kg",
-        "capacityPreExt": "450 kg",
-        "machineDimensions": "2.49 x 1.18 x 2.36 M",
-        "platformDimensions": "2.26 x 1.12 M",
-        "gradeability": "% 25 %",
-        "speed": "3 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "340 kg",
-        "capacityPostExtDeck": "110 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-042",
-        "modelName": "S1012E",
-        "feet": 32,
-        "spec": "배터리, 12.0 M, 적재 320 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "12.0 M",
-        "platformHeight": "10.0 M",
-        "weight": "2,600 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "x 1.18 x 2.49 M",
-        "platformDimensions": "1.18 x 2.26 M",
-        "gradeability": "% 25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "200 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-043",
-        "modelName": "S1212E",
-        "feet": 39,
-        "spec": "배터리, 14.0 M, 적재 320 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "14.0 M",
-        "platformHeight": "12.0 M",
-        "weight": "3,000 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.49 x 1.18 x 2.63 M",
-        "platformDimensions": "1.18 x 2.26 M",
-        "gradeability": "25 %",
-        "speed": "3.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "200 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-044",
-        "modelName": "S1413E",
-        "feet": 45,
-        "spec": "배터리, 15.8 M, 적재 320 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "15.8 M",
-        "platformHeight": "13.8 M",
-        "weight": "3,500 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.8 x 1.3 x 2.74 M",
-        "platformDimensions": "2.64 x 1.12 M",
-        "gradeability": "25 %",
-        "speed": "4.5 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "200 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-045",
-        "modelName": "SR1623E",
-        "feet": 53,
-        "spec": "배터리, 17.9 M, 적재 680 kg",
-        "manufacturer": "LGMG",
-        "powerSource": "배터리",
-        "workingHeight": "17.9 M",
-        "platformHeight": "15.9 M",
-        "weight": "8,200 Kg",
-        "capacityPreExt": "680 kg",
-        "machineDimensions": "4.9 x 2.3 x 3.23 M",
-        "platformDimensions": "3.98 x 1.83 M",
-        "gradeability": "% 40 %",
-        "speed": "변동 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "450 kg",
-        "capacityPostExtDeck": "230 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-046",
-        "modelName": "MS10.4",
-        "feet": 34,
-        "spec": "AC 110~220V, 11.9 M, 적재 159 kg",
-        "manufacturer": "MANLIFT",
-        "powerSource": "AC 110~220V",
-        "workingHeight": "11.9 M",
-        "platformHeight": "10.06 M",
-        "weight": "389 Kg",
-        "capacityPreExt": "159 kg",
-        "machineDimensions": "1.46 x 0.74 x 1.97 M",
-        "platformDimensions": "0.68 x 0.66 M",
-        "gradeability": "-",
-        "speed": "-",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "159 kg",
-        "capacityPostExtDeck": "-",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-047",
-        "modelName": "MS11.8",
-        "feet": 38,
-        "spec": "AC 110~220V, 13.8 M, 적재 136 kg",
-        "manufacturer": "MANLIFT",
-        "powerSource": "AC 110~220V",
-        "workingHeight": "13.8 M",
-        "platformHeight": "11.8 M",
-        "weight": "458 Kg",
-        "capacityPreExt": "136 kg",
-        "machineDimensions": "1.53 x 0.74 x 1.97 M",
-        "platformDimensions": "0.68 x 0.66 M",
-        "gradeability": "-",
-        "speed": "-",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "136 kg",
-        "capacityPostExtDeck": "-",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-048",
-        "modelName": "GTJZ0608ME",
-        "feet": 20,
-        "spec": "배터리, 7.8 M, 적재 230 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "7.8 M",
-        "platformHeight": "5.8 M",
-        "weight": "1,575 Kg",
-        "capacityPreExt": "230 kg",
-        "machineDimensions": "1.80 x 0.81 x 2.04 M",
-        "platformDimensions": "1.64 x 0.76 M",
-        "gradeability": "25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "110 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-049",
-        "modelName": "GTJZ1012E",
-        "feet": 32,
-        "spec": "배터리, 12 M, 적재 320 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "12 M",
-        "platformHeight": "10 M",
-        "weight": "2,815 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.45 x 1.17 x 2.48 M",
-        "platformDimensions": "2.30 x 1.15 M",
-        "gradeability": "25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "200 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-050",
-        "modelName": "GTJZ0808E",
-        "feet": 26,
-        "spec": "배터리, 10.1 M, 적재 250 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "10.1 M",
-        "platformHeight": "8.1 M",
-        "weight": "2,265 Kg",
-        "capacityPreExt": "250 kg",
-        "machineDimensions": "2.46 x 0.83 x 2.36 M",
-        "platformDimensions": "2.30x 0.80 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "137 kg",
-        "capacityPostExtDeck": "113 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-051",
-        "modelName": "GTJZ0812E",
-        "feet": 26,
-        "spec": "배터리, 10.1 M, 적재 450 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "10.1 M",
-        "platformHeight": "8.1 M",
-        "weight": "2,715 Kg",
-        "capacityPreExt": "450 kg",
-        "machineDimensions": "2.45 x 1.17 x 2.36 M",
-        "platformDimensions": "2.30x 1.15 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "330 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-052",
-        "modelName": "GTJZ1212E",
-        "feet": 39,
-        "spec": "배터리, 13.9 M, 적재 320 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "13.9 M",
-        "platformHeight": "11.9 M",
-        "weight": "3,210 Kg",
-        "capacityPreExt": "320 kg",
-        "machineDimensions": "2.45 x 1.17 x 2.60 M",
-        "platformDimensions": "2.30 x 1.15 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "200 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    },
-    {
-        "id": "prod-053",
-        "modelName": "1414E Plus",
-        "feet": 45,
-        "spec": "배터리, 15.8 M, 적재 350 kg",
-        "manufacturer": "Sinoboom",
-        "powerSource": "배터리",
-        "workingHeight": "15.8 M",
-        "platformHeight": "13.8 M",
-        "weight": "3,660 Kg",
-        "capacityPreExt": "350 kg",
-        "machineDimensions": "2.78 x 1.41 x 2.6 M",
-        "platformDimensions": "2.64 x 1.3 M",
-        "gradeability": "% 25 %",
-        "speed": "4 Km/h",
-        "asContact": "031-334-5296",
-        "capacityPostExtMain": "230 kg",
-        "capacityPostExtDeck": "120 kg",
-        "maxWindSpeed": "12.5 m/s 이내",
-        "isActive": true,
-        "createdAt": "2026-08-27T00:00:00.000Z"
-    }
-];
+  return FL_TECHNICAL_ARCHIVE.map((item, idx) => {
+    const primarySpecDoc = item.documents.find(d => d.docCategory === 'SPEC_SHEET' || d.docCategory === 'BROCHURE') || item.documents[0];
+    const primaryManualDoc = item.documents.find(d => d.docCategory === 'OPERATOR_MANUAL' || d.docCategory === 'SAFETY_CERT') || item.documents[1] || primarySpecDoc;
+    const dimensionsStr = `${item.overallLengthMm.toLocaleString()} × ${item.overallWidthMm.toLocaleString()} × ${item.overheadGuardHeightMm.toLocaleString()} mm`;
+    const specSummary = `정격하중 ${item.ratedCapacityKg.toLocaleString()}kg (하중중심 ${item.loadCenterMm}mm) / 표준인상고 ${item.standardLiftHeightMm.toLocaleString()}mm (최대 ${item.maxOptionLiftHeightMm.toLocaleString()}mm) / ${item.powerSpecDetail}`;
+    return {
+      id: `prod-${String(idx + 1).padStart(3, '0')}`,
+      modelName: item.modelName,
+      shortName: item.modelName.split('-')[0] || item.modelName,
+      seriesName: item.seriesName,
+      feet: Math.round((item.ratedCapacityKg / 1000) * 10) / 10,
+      spec: specSummary,
+      manufacturer: item.manufacturerName,
+      originCountry: item.originCountry,
+      equipmentClass: item.equipmentClass,
+      powerSource: item.powerType,
+      ratedCapacityKg: item.ratedCapacityKg,
+      loadCenterMm: item.loadCenterMm,
+      standardLiftHeightMm: item.standardLiftHeightMm,
+      maxOptionLiftHeightMm: item.maxOptionLiftHeightMm,
+      freeLiftHeightMm: item.freeLiftHeightMm,
+      forkDimensionsMm: item.forkDimensionsMm,
+      overallLengthMm: item.overallLengthMm,
+      overallWidthMm: item.overallWidthMm,
+      overheadGuardHeightMm: item.overheadGuardHeightMm,
+      turningRadiusMm: item.turningRadiusMm,
+      aisleWidth1000x1200Mm: item.aisleWidth1000x1200Mm,
+      travelSpeedKmh: `${item.travelSpeedKmh} km/h`,
+      liftingSpeedMms: `${item.liftingSpeedMms} mm/s`,
+      gradeabilityPercent: item.gradeabilityPercent,
+      serviceWeightKg: item.serviceWeightKg,
+      powerSpecDetail: item.powerSpecDetail,
+      motorOrEngineDetail: item.motorOrEngineDetail,
+      chargerOrFuelDetail: item.chargerOrFuelDetail,
+      tireSpecFrontRear: item.tireSpecFrontRear,
+      brakeType: item.brakeType,
+      waterproofRating: item.waterproofRating,
+      warrantyMonths: 24,
+      warrantyTerms: item.warrantyTerms,
+      workingHeight: `${item.maxOptionLiftHeightMm.toLocaleString()} mm`,
+      platformHeight: `${item.standardLiftHeightMm.toLocaleString()} mm`,
+      weight: `${item.serviceWeightKg.toLocaleString()} kg`,
+      capacityPreExt: `${item.ratedCapacityKg.toLocaleString()} kg`,
+      machineDimensions: dimensionsStr,
+      platformDimensions: `${item.forkDimensionsMm} mm`,
+      gradeability: `${item.gradeabilityPercent} %`,
+      speed: `${item.travelSpeedKmh} km/h`,
+      asContact: '1588-0000',
+      safetyCertDate: primarySpecDoc?.issuedDate || '2026-03-01',
+      specSheetUrl: primarySpecDoc?.r2Url,
+      brochureUrl: primarySpecDoc?.r2Url,
+      operatorManualUrl: primaryManualDoc?.r2Url,
+      safetyCertUrl: primaryManualDoc?.r2Url,
+      isActive: true,
+      createdAt: '2026-03-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z'
+    };
+  });
 };
 
 const generateMockCustomers = () => {
@@ -4361,41 +3279,39 @@ const generateMockCustomers = () => {
     const custId = `cust-${i}`;
     customers.push({
       id: custId,
-      name: `(주)대현테크 ${i}호점`,
+      name: `(주)대한물류테크 ${i}호점`,
       bizRegNo: `123-45-00${i.toString().padStart(3, '0')}`,
       isClosed: false,
-      address: `서울시 강남구 테헤란로 ${i}번길`,
+      address: `경기도 화성시 동탄산단로 ${i}번길`,
       representative: `대표자${i}`,
       repContact: `010-1234-${i.toString().padStart(4, '0')}`,
       repEmail: `ceo${i}@example.com`,
-      bizType: '건설 및 임대업',
-      bizItem: '고소작업대 외',
+      bizType: '도소매 및 물류장비',
+      bizItem: '지게차 및 물류부품',
       transactionStatus: 'ALLOWED',
       createdAt: new Date().toISOString()
     });
-    
-    const contactCount = Math.floor(Math.random() * 3) + 1; // 1~3명
-    for(let j=1; j<=contactCount; j++) {
+    const contactCount = Math.floor(Math.random() * 2) + 1;
+    for (let j = 1; j <= contactCount; j++) {
       contacts.push({
         id: `contact-${i}-${j}`,
         customerId: custId,
         name: `김담당${i}-${j}`,
-        position: '대리',
+        position: '과장',
         contact: `010-9999-${i}${j}`,
         email: `contact${i}_${j}@example.com`,
         isActive: true,
         createdAt: new Date().toISOString()
       });
     }
-
-    const siteCount = Math.floor(Math.random() * 2) + 2; // 2~3개
-    for(let j=1; j<=siteCount; j++) {
+    const siteCount = Math.floor(Math.random() * 2) + 1;
+    for (let j = 1; j <= siteCount; j++) {
       sites.push({
         id: `site-${i}-${j}`,
         customerId: custId,
-        name: `강남 래미안 공사현장 ${i}-${j}구역`,
-        address: `경기도 분당구 판교로 ${i}-${j}`,
-        contactName: `이소장${i}-${j}`,
+        name: `동탄 물류센터 ${i}-${j}동`,
+        address: `경기도 평택시 포승공단로 ${i}-${j}`,
+        contactName: `이센터장${i}-${j}`,
         contact: `010-8888-${i}${j}`,
         email: `site${i}_${j}@example.com`,
         isActive: true,
@@ -4408,45 +3324,20 @@ const generateMockCustomers = () => {
 
 const generateMockAssets = (products: Product[]): Asset[] => {
   const assets: Asset[] = [];
-  for(let i=1; i<=100; i++) {
-    const prod = products[i % products.length];
+  for (let i = 1; i <= 30; i++) {
+    const prod = products[(i - 1) % products.length];
     assets.push({
       id: `asset-${i}`,
       modelName: prod.modelName,
-      assetNo: `EQ-${i.toString().padStart(4, '0')}`,
+      assetNo: `FL-${i.toString().padStart(4, '0')}`,
       ownerType: 'OWNED',
       status: 'AVAILABLE',
-      acquisitionDate: '2023-01-01',
-      acquisitionPrice: 15000000,
+      acquisitionDate: '2026-01-15',
+      acquisitionPrice: 18500000,
       depreciationMonths: 60,
       residualValueRate: 10,
       accumDepreciation: 0,
-      bookValue: 15000000,
-      cumRentalFee: 0,
-      cumRepairCost: 0,
-      maintenanceScore: 0, // 기본 이상무 (0점)
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-  }
-  
-  // 20개 강제 장비 생성 (출고 테스트용: GS3246, 1012E 등)
-  const extraModels = ['GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246', 'GS3246',
-                       '1012E', '1012E', '1012E', '1012E', '1012E', '1012E', '1012E', '1012E', '1012E', '1012E'];
-  for(let i=0; i<extraModels.length; i++) {
-    const assetId = 101 + i;
-    assets.push({
-      id: `asset-${assetId}`,
-      modelName: extraModels[i],
-      assetNo: `EQ-${assetId.toString().padStart(4, '0')}`,
-      ownerType: 'OWNED',
-      status: 'AVAILABLE',
-      acquisitionDate: '2023-01-01',
-      acquisitionPrice: 15000000,
-      depreciationMonths: 60,
-      residualValueRate: 10,
-      accumDepreciation: 0,
-      bookValue: 15000000,
+      bookValue: 18500000,
       cumRentalFee: 0,
       cumRepairCost: 0,
       maintenanceScore: 0,
@@ -4454,72 +3345,6 @@ const generateMockAssets = (products: Product[]): Asset[] => {
       updatedAt: new Date().toISOString()
     });
   }
-
-  // 임차 자산 테스트용 모의 데이터 3건 주입
-  assets.push({
-    id: 'asset-rent-1',
-    modelName: 'GS3246',
-    assetNo: 'RENT-0001',
-    ownerType: 'RENTED',
-    antiEntrapmentOwnership: 'VENDOR', // 임차처 소유 (탈거 금지)
-    status: 'RENTED',
-    renter: 'AJ네트웍스',
-    rentStart: '2026-05-01',
-    rentEnd: '2026-07-10',
-    monthlyRentFee: 350000,
-    dailyRentFee: 15000,
-    currentCustomerId: 'cust-1',
-    currentSiteId: 'site-1-1',
-    contractStart: '2026-05-05',
-    contractEnd: '2026-07-20',
-    monthlyRentalFee: 500000,
-    dailyRentalFee: 20000,
-    cumRentalFee: 1000000,
-    cumRepairCost: 0,
-    maintenanceScore: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
-
-  assets.push({
-    id: 'asset-rent-2',
-    modelName: '1012E',
-    assetNo: 'RENT-0002',
-    ownerType: 'RENTED',
-    antiEntrapmentOwnership: 'OURS', // 당사 소유 (회수 대상)
-    status: 'RENTED_RETURNED',
-    renter: '한국종합렌탈',
-    rentStart: '2026-06-01',
-    rentEnd: '2026-07-12',
-    actualRentReturnDate: '2026-07-18',
-    monthlyRentFee: 400000,
-    dailyRentFee: 18000,
-    cumRentalFee: 0,
-    cumRepairCost: 0,
-    maintenanceScore: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
-
-  assets.push({
-    id: 'asset-rent-3',
-    modelName: 'GS3246',
-    assetNo: 'RENT-0003',
-    ownerType: 'RENTED',
-    antiEntrapmentOwnership: 'VENDOR', // 임차처 소유 (탈거 금지)
-    status: 'AVAILABLE',
-    renter: 'AJ네트웍스',
-    rentStart: '2026-06-10',
-    rentEnd: '2026-08-30',
-    monthlyRentFee: 300000,
-    dailyRentFee: 12000,
-    cumRentalFee: 0,
-    cumRepairCost: 0,
-    maintenanceScore: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
-
   return assets;
 };
 
@@ -9319,6 +8144,7 @@ export interface TradeProduct {
   itemType?: 'EQUIPMENT' | 'PART';
   manufacturer?: string;
   modelName?: string;
+  seriesName?: string;
   originCountry?: string;
   defaultWarehouse?: string;
   spec?: string;
@@ -9328,8 +8154,35 @@ export interface TradeProduct {
   standardPrice: number;
   safetyStock?: number;
   warrantyMonths?: number;
+  warrantyTerms?: string;
   status: 'ACTIVE' | 'DISCONTINUED';
   cogsMethod: 'FIFO' | 'MOVING_AVG';
+  // 지게차 VDI 2198 / ISO 5053 국제표준 공식 스펙 필드
+  equipmentClass?: string;       // 차종구분
+  powerType?: string;            // 동력방식
+  ratedCapacityKg?: number;      // 정격하중 · kg
+  loadCenterMm?: number;         // 하중중심거리 · mm
+  standardLiftHeightMm?: number; // 표준 인상높이 · mm
+  maxOptionLiftHeightMm?: number;// 최대 옵션 인상높이 · mm
+  freeLiftHeightMm?: number;     // 자유 인상높이 · mm
+  forkDimensionsMm?: string;     // 포크 규격 두께×폭×길이 · mm
+  overallLengthMm?: number;      // 전장 포크제외 · mm
+  overallWidthMm?: number;       // 전폭 · mm
+  overheadGuardHeightMm?: number;// 헤드가드 높이 · mm
+  turningRadiusMm?: number;      // 최소 회전반경 · mm
+  aisleWidth1000x1200Mm?: number;// 직각 적재 통로폭 · mm
+  travelSpeedKmh?: string;       // 주행속도 적재/공차 · km/h
+  liftingSpeedMms?: string;      // 인상속도 적재/공차 · mm/s
+  gradeabilityPercent?: number;  // 최대 등판능력 · %
+  serviceWeightKg?: number;      // 장비 자중 · kg
+  powerSpecDetail?: string;      // 배터리 전압·용량 / 엔진 형식·배기량
+  motorOrEngineDetail?: string;  // 구동·유압 모터 / 정격 출력·토크
+  chargerOrFuelDetail?: string;  // 충전기 사양 / 연료탱크·변속기
+  tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
+  brakeType?: string;            // 제동방식
+  waterproofRating?: string;     // 방수·운용등급
+  specSheetUrl?: string;         // 공식 제원표·카탈로그 PDF URL
+  manualUrl?: string;            // 운전·정비 매뉴얼 PDF URL
   memo?: string;
   createdAt: string;
   updatedAt: string;
