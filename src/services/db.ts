@@ -5435,17 +5435,61 @@ class LocalDB {
   get customerSites() { return this.sites; }
   set customerSites(val: CustomerSite[]) { this.sites = val; }
 
-  get products() { return this.get<Product>('products', SEED_PRODUCTS); }
+  get products() {
+    const raw = this.get<Product>('products', SEED_PRODUCTS);
+    return raw.map(p => {
+      if (!p) return p;
+      const seedMatch = SEED_PRODUCTS.find(
+        sp => sp.id === p.id || (sp.modelName && p.modelName && sp.modelName.toUpperCase() === p.modelName.toUpperCase())
+      ) || SEED_PRODUCTS[0];
+      return {
+        ...(seedMatch || {}),
+        ...p,
+        ratedCapacityKg: Number(p.ratedCapacityKg ?? seedMatch?.ratedCapacityKg ?? 2500),
+        loadCenterMm: Number(p.loadCenterMm ?? seedMatch?.loadCenterMm ?? 500),
+        maxLiftHeightMm: Number(p.maxLiftHeightMm ?? (p as any).standardLiftHeightMm ?? seedMatch?.maxLiftHeightMm ?? 3000),
+        freeLiftMm: Number(p.freeLiftMm ?? (p as any).freeLiftHeightMm ?? seedMatch?.freeLiftMm ?? 150),
+        overallLengthToForkFaceMm: Number(p.overallLengthToForkFaceMm ?? (p as any).overallLengthMm ?? seedMatch?.overallLengthToForkFaceMm ?? 2500),
+        overallWidthMm: Number(p.overallWidthMm ?? seedMatch?.overallWidthMm ?? 1150),
+        mastLoweredHeightMm: Number(p.mastLoweredHeightMm ?? (p as any).overheadGuardHeightMm ?? seedMatch?.mastLoweredHeightMm ?? 2140),
+        mastExtendedHeightMm: Number(p.mastExtendedHeightMm ?? (p as any).maxOptionLiftHeightMm ?? seedMatch?.mastExtendedHeightMm ?? 4250),
+        overheadGuardHeightMm: Number(p.overheadGuardHeightMm ?? seedMatch?.overheadGuardHeightMm ?? 2140),
+        turningRadiusMm: Number(p.turningRadiusMm ?? seedMatch?.turningRadiusMm ?? 2120),
+        minRightAngleStackingAisleMm: Number(p.minRightAngleStackingAisleMm ?? (p as any).aisleWidth1000x1200Mm ?? seedMatch?.minRightAngleStackingAisleMm ?? 3845),
+        serviceWeightKg: Number(p.serviceWeightKg ?? seedMatch?.serviceWeightKg ?? 3980),
+        baseListPriceKrw: Number(p.baseListPriceKrw ?? seedMatch?.baseListPriceKrw ?? 24500000),
+        standardMonthlyRentalKrw: Number(p.standardMonthlyRentalKrw ?? seedMatch?.standardMonthlyRentalKrw ?? 750000),
+        standardDailyRentalKrw: Number(p.standardDailyRentalKrw ?? seedMatch?.standardDailyRentalKrw ?? 75000),
+        equipmentClass: p.equipmentClass || seedMatch?.equipmentClass || 'COUNTERBALANCE',
+        powerType: p.powerType || seedMatch?.powerType || 'ELECTRIC_LITHIUM',
+        forkDimensionsMm: p.forkDimensionsMm || seedMatch?.forkDimensionsMm || '40 x 122 x 1070'
+      };
+    });
+  }
   set products(val: Product[]) { this.set('products', val); }
 
   get assets() {
     const raw = this.get<Asset>('assets', SEED_ASSETS);
     return raw.map(a => {
       if (!a) return a;
-      if (!a.yard || String(a.yard).trim() === '') {
-        return { ...a, yard: '용인' };
-      }
-      return a;
+      const aAny = a as any;
+      return {
+        ...a,
+        assetNo: a.assetNo || aAny.assetNumber || a.id,
+        serialNo: a.serialNo || aAny.serialNumber || '',
+        manufactureYear: String(a.manufactureYear || aAny.manufacturingYear || '2026'),
+        ownerType: a.ownerType || (aAny.ownership === 'SUBLEASED' ? 'RENTED' : 'OWNED'),
+        acquisitionPrice: Number(a.acquisitionPrice || aAny.purchasePrice || 20500000),
+        acquisitionDate: a.acquisitionDate || '2026-05-10',
+        monthlyRentalFee: Number(aAny.monthlyRentalFee || 750000),
+        dailyRentalFee: Number(aAny.dailyRentalFee || 45000),
+        monthlyRentFee: Number(a.monthlyRentFee || 0),
+        dailyRentFee: Number(a.dailyRentFee || 0),
+        cumRentalFee: Number(a.cumRentalFee || 0),
+        cumRepairCost: Number(a.cumRepairCost || aAny.cumulativeRepairCost || 0),
+        DefectScore: Number(a.DefectScore ?? aAny.repairScore ?? aAny.maintenanceScore ?? 0),
+        yard: (!a.yard || String(a.yard).trim() === '') ? '용인' : a.yard
+      };
     });
   }
   set assets(val: Asset[]) { this.set('assets', val); }
@@ -5486,10 +5530,38 @@ class LocalDB {
   set standardOptions(val: StandardOption[]) { this.set('standardOptions', val); }
 
 
-  get consumables() { return this.get<Consumable>('consumables', SEED_CONSUMABLES); }
+  get consumables() {
+    const raw = this.get<Consumable>('consumables', SEED_CONSUMABLES);
+    return raw.map(c => {
+      if (!c) return c;
+      const cAny = c as any;
+      return {
+        ...c,
+        name: c.name || c.modelName || '소모품',
+        modelName: c.modelName || c.name || '소모품',
+        unitPrice: Number(c.unitPrice || 0),
+        stockQty: Number(c.stockQty ?? cAny.currentStock ?? 0),
+        repairingQty: Number(c.repairingQty || 0)
+      };
+    });
+  }
   set consumables(val: Consumable[]) { this.set('consumables', val); }
 
-  get consumableLots() { return this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]); }
+  get consumableLots() {
+    const raw = this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]);
+    return raw.map(l => {
+      if (!l) return l;
+      const lAny = l as any;
+      return {
+        ...l,
+        lotNo: l.lotNo || `LOT-${l.id}`,
+        inboundDate: l.inboundDate || lAny.receivedDate || '2026-09-10',
+        unitPrice: Number(l.unitPrice || lAny.unitCost || 0),
+        initialQty: Number(l.initialQty || 0),
+        remainingQty: Number(l.remainingQty ?? l.initialQty ?? 0)
+      };
+    });
+  }
   set consumableLots(val: ConsumableLot[]) { this.set('consumableLots', val); }
 
   get consumableLogs() { return this.get<ConsumableLog>('consumableLogs', SEED_CONSUMABLE_LOGS); }
@@ -5516,15 +5588,28 @@ class LocalDB {
       if (!c) return c;
       const dueMonthOffset = c.paymentDueMonthOffset !== undefined && c.paymentDueMonthOffset !== null ? c.paymentDueMonthOffset : 1;
       const dueDay = c.paymentDueDay || 25;
-      if (c.paymentDueMonthOffset !== dueMonthOffset || c.paymentDueDay !== dueDay) {
-        return { ...c, paymentDueMonthOffset: dueMonthOffset, paymentDueDay: dueDay };
-      }
-      return c;
+      return {
+        ...c,
+        contractNo: c.contractNo || c.id,
+        totalAmount: Number(c.totalAmount || 0),
+        paymentDueMonthOffset: dueMonthOffset,
+        paymentDueDay: dueDay
+      };
     });
   }
   set contracts(val: Contract[]) { this.set('contracts', val); }
 
-  get contractAssets() { return this.get<ContractAsset>('contractAssets', SEED_CONTRACT_ASSETS); }
+  get contractAssets() {
+    const raw = this.get<ContractAsset>('contractAssets', SEED_CONTRACT_ASSETS);
+    return raw.map(ca => {
+      if (!ca) return ca;
+      return {
+        ...ca,
+        monthlyRentalFee: Number(ca.monthlyRentalFee || 0),
+        dailyRentalFee: Number(ca.dailyRentalFee || 0)
+      };
+    });
+  }
   set contractAssets(val: ContractAsset[]) { this.set('contractAssets', val); }
 
   get contractHistory() { return this.get<ContractHistory>('contractHistory', SEED_CONTRACT_HISTORY); }
@@ -5571,16 +5656,49 @@ class LocalDB {
   get subleaseNegotiations() { return this.get<SubleaseNegotiation>('subleaseNegotiations', []); }
   set subleaseNegotiations(val: SubleaseNegotiation[]) { this.set('subleaseNegotiations', val); }
 
-  get billings() { return this.get<Billing>('billings', SEED_BILLINGS); }
+  get billings() {
+    const raw = this.get<Billing>('billings', SEED_BILLINGS);
+    return raw.map(b => b ? {
+      ...b,
+      billingYm: b.billingYm || '2026-10',
+      totalAmount: Number(b.totalAmount || 0),
+      supplyAmount: Number((b as any).supplyAmount || Math.round(Number(b.totalAmount || 0) / 1.1)),
+      vatAmount: Number((b as any).vatAmount || (Number(b.totalAmount || 0) - Math.round(Number(b.totalAmount || 0) / 1.1))),
+      paidAmount: Number(b.paidAmount || 0)
+    } : b);
+  }
   set billings(val: Billing[]) { this.set('billings', val); }
 
-  get billingDetails() { return this.get<BillingDetail>('billingDetails', SEED_BILLING_DETAILS); }
+  get billingDetails() {
+    const raw = this.get<BillingDetail>('billingDetails', SEED_BILLING_DETAILS);
+    return raw.map(bd => bd ? {
+      ...bd,
+      amount: Number(bd.amount || 0),
+      supplyAmount: Number((bd as any).supplyAmount || bd.amount || 0),
+      vatAmount: Number((bd as any).vatAmount || 0)
+    } : bd);
+  }
   set billingDetails(val: BillingDetail[]) { this.set('billingDetails', val); }
 
-  get receivables() { return this.get<Receivable>('receivables', []); }
+  get receivables() {
+    const raw = this.get<Receivable>('receivables', []);
+    return raw.map(r => r ? {
+      ...r,
+      supplyAmount: Number(r.supplyAmount || 0),
+      vatAmount: Number(r.vatAmount || 0),
+      totalAmount: Number(r.totalAmount || 0),
+      paidAmount: Number(r.paidAmount || 0)
+    } : r);
+  }
   set receivables(val: Receivable[]) { this.set('receivables', val); }
 
-  get payments() { return this.get<Payment>('payments', SEED_PAYMENTS); }
+  get payments() {
+    const raw = this.get<Payment>('payments', SEED_PAYMENTS);
+    return raw.map(p => p ? {
+      ...p,
+      amount: Number(p.amount || 0)
+    } : p);
+  }
   set payments(val: Payment[]) { this.set('payments', val); }
 
   get paymentDepositLinks() { return this.get<PaymentDepositLink>('paymentDepositLinks', []); }
@@ -5600,23 +5718,53 @@ class LocalDB {
 
   get repairs() {
     const list = this.get<Repair>('repairs', SEED_REPAIRS);
-    //  현장 도로명 주소 보강 (원격 DB 미반영 환경에서도 무누락 상속)
     return list.map(r => {
-      if (r.siteAddress && r.siteAddress.trim()) return r;
-      let addr = '';
-      if (r.locationDetail && /(?:시|군|구)\s+[가-힣0-9]+(?:로|길|읍|면|동)/.test(r.locationDetail)) {
-        addr = r.locationDetail.trim();
-      } else if (r.memo && r.memo.includes('[현장도로명:')) {
-        const match = r.memo.match(/\[현장도로명:\s*([^\]]+)\]/);
-        if (match) addr = match[1].trim();
+      if (!r) return r;
+      const rAny = r as any;
+      let addr = r.siteAddress || '';
+      if (!addr.trim()) {
+        if (r.locationDetail && /(?:시|군|구)\s+[가-힣0-9]+(?:로|길|읍|면|동)/.test(r.locationDetail)) {
+          addr = r.locationDetail.trim();
+        } else if (r.memo && r.memo.includes('[현장도로명:')) {
+          const match = r.memo.match(/\[현장도로명:\s*([^\]]+)\]/);
+          if (match) addr = match[1].trim();
+        }
       }
-      if (addr) return { ...r, siteAddress: addr };
-      return r;
+      return {
+        ...r,
+        ticketNo: r.ticketNo || `AS-${(r.requestDate || '2026-10-28').replace(/-/g, '').slice(2)}-01`,
+        assetNo: r.assetNo || 'FL-R35-012',
+        modelName: r.modelName || 'FD35-XC',
+        customerId: r.customerId || 'CUST-FL-002',
+        customerName: r.customerName || '태양중공업 주식회사',
+        siteId: r.siteId || 'SITE-FL-003',
+        siteName: r.siteName || '창원 성산 제1중기공장',
+        siteAddress: addr || '경상남도 창원시 성산구 공단로 215',
+        issueDescription: r.issueDescription || rAny.symptom || r.details || '정기 점검 및 유압계통 정비',
+        details: r.details || rAny.symptom || r.issueDescription || '정기 점검 및 유압계통 정비',
+        actionTaken: r.actionTaken || rAny.repairDetails || '점검 및 부품 교체 완료',
+        totalCost: Number(r.totalCost || rAny.cost || 0),
+        costTotal: Number(r.costTotal || rAny.cost || r.totalCost || 0),
+        billableAmount: Number(r.billableAmount || 0)
+      };
     });
   }
   set repairs(val: Repair[]) { this.set('repairs', val); }
 
-  get vendors() { return this.get<Vendor>('vendors', SEED_VENDORS); }
+  get vendors() {
+    const raw = this.get<Vendor>('vendors', SEED_VENDORS);
+    return raw.map(v => {
+      if (!v) return v;
+      const vAny = v as any;
+      const vType = v.type || vAny.category || 'PURCHASE';
+      return {
+        ...v,
+        type: vType,
+        types: Array.isArray(v.types) && v.types.length > 0 ? v.types : [vType],
+        bizRegNo: v.bizRegNo || vAny.businessNumber || ''
+      };
+    });
+  }
   set vendors(val: Vendor[]) { this.set('vendors', val); }
 
   get repairConsumables() { return this.get<RepairConsumable>('repairConsumables', SEED_REPAIR_CONSUMABLES); }

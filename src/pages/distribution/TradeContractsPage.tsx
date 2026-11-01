@@ -685,8 +685,8 @@ export const TradeContractsPage: React.FC = () => {
                 const st = getProductStock(p.id);
                 return (
                   <option key={p.id} value={p.id}>
-                    {p.name} (재고: {st.availableQty}{p.unit || '대'} / 대리점 ₩{(p.dealerPrice || p.standardPrice).toLocaleString()} · 고객 ₩{p.standardPrice.toLocaleString()})
- </option>
+                    {p.name} (재고: {st.availableQty}{p.unit || '대'} / 대리점 ₩{Number(p.dealerPrice || p.standardPrice || 0).toLocaleString()} · 고객 ₩{Number(p.standardPrice || 0).toLocaleString()})
+                  </option>
                 );
               })
             )}
@@ -1049,14 +1049,14 @@ export const TradeContractsPage: React.FC = () => {
                       </td>
 
                       <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                        <div>₩{o.totalCogsAmount.toLocaleString()}</div>
+                        <div>₩{Number(o.totalCogsAmount || 0).toLocaleString()}</div>
                         {(o.optionCostAmount || 0) > 0 && (
                           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>옵션원가 ₩{(o.optionCostAmount || 0).toLocaleString()} 포함</div>
                         )}
                       </td>
 
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
-                        <div>₩{o.totalSalesAmount.toLocaleString()}</div>
+                        <div>₩{Number(o.totalSalesAmount || 0).toLocaleString()}</div>
                         {(o.optionSupplyAmount || 0) > 0 && (
                           <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700 }}>옵션청구 +₩{(o.optionSupplyAmount || 0).toLocaleString()} 포함</div>
                         )}
@@ -1178,7 +1178,7 @@ export const TradeContractsPage: React.FC = () => {
           {salesOrders.map(o => (
             <div key={o.id}>
               <div>주문번호: {o.id.substring(0, 8)}</div>
-              <div>총액: {o.totalSalesAmount.toLocaleString()}원</div>
+              <div>총액: {Number(o.totalSalesAmount || 0).toLocaleString()}원</div>
               <div>상태: {o.status}</div>
             </div>
           ))}

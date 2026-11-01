@@ -19025,7 +19025,12 @@
       "email": "import@heli-korea.co.kr",
       "category": "PURCHASE",
       "memo": "전동 및 디젤 지게차 직수입 제조사",
-      "createdAt": "2026-01-10T09:00:00Z"
+      "createdAt": "2026-01-10T09:00:00Z",
+      "type": "PURCHASE",
+      "types": [
+        "PURCHASE"
+      ],
+      "bizRegNo": "108-86-91001"
     },
     {
       "id": "VEND-FL-002",
@@ -19036,7 +19041,12 @@
       "email": "import@hangcha-korea.co.kr",
       "category": "PURCHASE",
       "memo": "고전압 리튬 지게차 제조사",
-      "createdAt": "2026-01-10T09:00:00Z"
+      "createdAt": "2026-01-10T09:00:00Z",
+      "type": "PURCHASE",
+      "types": [
+        "PURCHASE"
+      ],
+      "bizRegNo": "108-86-91002"
     },
     {
       "id": "VEND-FL-003",
@@ -19047,7 +19057,12 @@
       "email": "parts@ep-korea.co.kr",
       "category": "PARTS",
       "memo": "물류장비 및 호환부품 공급사",
-      "createdAt": "2026-01-10T09:00:00Z"
+      "createdAt": "2026-01-10T09:00:00Z",
+      "type": "PARTS",
+      "types": [
+        "PARTS"
+      ],
+      "bizRegNo": "108-86-91003"
     },
     {
       "id": "VEND-FL-004",
@@ -19058,7 +19073,12 @@
       "email": "tire@nexen-solid.co.kr",
       "category": "CONSUMABLE",
       "memo": "지게차 통타이어 및 정비용 소모품 공급사",
-      "createdAt": "2026-01-10T09:00:00Z"
+      "createdAt": "2026-01-10T09:00:00Z",
+      "type": "CONSUMABLE",
+      "types": [
+        "CONSUMABLE"
+      ],
+      "bizRegNo": "605-81-44210"
     }
   ],
   "consumables": [
@@ -19835,7 +19855,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-05-10T09:00:00Z",
-      "updatedAt": "2026-07-01T09:00:00Z"
+      "updatedAt": "2026-07-01T09:00:00Z",
+      "assetNo": "FL-R25-001",
+      "serialNo": "HL25GB-260101",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 20500000,
+      "cumRepairCost": 120000,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-002",
@@ -19862,7 +19890,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-05-10T09:00:00Z",
-      "updatedAt": "2026-07-01T09:00:00Z"
+      "updatedAt": "2026-07-01T09:00:00Z",
+      "assetNo": "FL-R25-002",
+      "serialNo": "HL25GB-260102",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 20500000,
+      "cumRepairCost": 85000,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-003",
@@ -19889,7 +19925,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-05-15T09:00:00Z",
-      "updatedAt": "2026-08-01T09:00:00Z"
+      "updatedAt": "2026-08-01T09:00:00Z",
+      "assetNo": "FL-R18-003",
+      "serialNo": "EP18CQD-260201",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 17500000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-004",
@@ -19916,7 +19960,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-05-20T09:00:00Z",
-      "updatedAt": "2026-07-15T09:00:00Z"
+      "updatedAt": "2026-07-15T09:00:00Z",
+      "assetNo": "FL-R35-004",
+      "serialNo": "HL35FD-260301",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 21500000,
+      "cumRepairCost": 240000,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-005",
@@ -19943,7 +19995,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-01T09:00:00Z",
-      "updatedAt": "2026-09-01T09:00:00Z"
+      "updatedAt": "2026-09-01T09:00:00Z",
+      "assetNo": "FL-R30-005",
+      "serialNo": "HC30XH-260305",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 25500000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-006",
@@ -19966,7 +20026,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-10T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R25-006",
+      "serialNo": "HL25GB-260106",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 20500000,
+      "cumRepairCost": 60000,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-007",
@@ -19989,7 +20057,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-12T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R25-007",
+      "serialNo": "EP25EFL-260401",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 17800000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-008",
@@ -20012,7 +20088,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-15T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R30-008",
+      "serialNo": "HC30XC-260402",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 22200000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-009",
@@ -20035,7 +20119,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-18T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R18-009",
+      "serialNo": "EP18CQD-260209",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 17500000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-010",
@@ -20058,7 +20150,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-20T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R35-010",
+      "serialNo": "HL35FD-260310",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 21500000,
+      "cumRepairCost": 110000,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-011",
@@ -20081,7 +20181,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-06-25T09:00:00Z",
-      "updatedAt": "2026-10-15T09:00:00Z"
+      "updatedAt": "2026-10-15T09:00:00Z",
+      "assetNo": "FL-R20-011",
+      "serialNo": "BYD20-260501",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 21800000,
+      "cumRepairCost": 0,
+      "DefectScore": 0
     },
     {
       "id": "AST-FL-012",
@@ -20104,7 +20212,15 @@
       "inventoryAssetClass": "ASSET",
       "usagePurpose": "RENTAL_ONLY",
       "createdAt": "2026-05-12T09:00:00Z",
-      "updatedAt": "2026-10-28T09:00:00Z"
+      "updatedAt": "2026-10-28T09:00:00Z",
+      "assetNo": "FL-R25-012",
+      "serialNo": "HL25GB-260112",
+      "manufactureYear": "2026",
+      "ownerType": "OWNED",
+      "acquisitionDate": "2026-05-10",
+      "acquisitionPrice": 20500000,
+      "cumRepairCost": 350000,
+      "DefectScore": 4
     }
   ],
   "contracts": [
@@ -20434,7 +20550,20 @@
       "cost": 180000,
       "mechanicName": "박정비",
       "createdAt": "2026-10-28T09:00:00Z",
-      "updatedAt": "2026-10-28T11:00:00Z"
+      "updatedAt": "2026-10-28T11:00:00Z",
+      "ticketNo": "AS-261028-01",
+      "assetNo": "FL-R35-012",
+      "modelName": "FD35-XC",
+      "customerId": "CUST-FL-002",
+      "customerName": "태양중공업 주식회사",
+      "siteId": "SITE-FL-003",
+      "siteName": "창원 성산 제1중기공장",
+      "siteAddress": "경상남도 창원시 성산구 공단로 215",
+      "issueDescription": "마스트 틸트 실린더 미세 유압유 누유 점검 및 패킹 교체",
+      "details": "마스트 틸트 실린더 미세 유압유 누유 점검 및 패킹 교체",
+      "actionTaken": "틸트 실린더 씰 키트 교체 및 유압작동유 보충",
+      "totalCost": 180000,
+      "costTotal": 180000
     }
   ],
   "repair_consumables": [],

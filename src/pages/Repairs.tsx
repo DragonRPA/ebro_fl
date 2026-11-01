@@ -272,7 +272,7 @@ export const Repairs: React.FC = () => {
       const pA = getPriority(a);
       const pB = getPriority(b);
       if (pA !== pB) return pA - pB;
-      return a.assetNo.localeCompare(b.assetNo, 'ko');
+      return String(a.assetNo || (a as any).assetNumber || a.id || '').localeCompare(String(b.assetNo || (b as any).assetNumber || b.id || ''), 'ko');
     });
   }, [assets, repairsByAssetIdMap, yardQueueFilter, yardSearchTerm]);
 

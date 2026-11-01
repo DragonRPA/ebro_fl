@@ -850,7 +850,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
   }),
   ...SEED_FL_CONSUMABLES.map((csm) => ({
     id: csm.id,
-    skuCode: csm.id,
+    skuCode: csm.skuCode || csm.id,
     name: csm.name,
     category: csm.category || '지게차 소모품',
     itemType: 'CONSUMABLE' as const,
@@ -859,19 +859,19 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     saleStockQty: csm.saleStockQty,
     repairStockQty: csm.repairStockQty,
     manufacturer: '공식인증 소모품',
-    modelName: csm.applicableModels,
+    modelName: csm.modelName || csm.applicableModels || csm.name,
     originCountry: '국내 매입',
     defaultWarehouse: '소모품창고',
-    spec: `${csm.modelSpec} | 호환: ${csm.applicableModels}`,
+    spec: csm.spec || `${csm.modelSpec || ''} | 호환: ${csm.applicableModels || '전 차종'}`,
     unit: csm.unit,
-    standardCost: csm.unitPrice,
-    dealerPrice: Math.round(csm.salePrice * 0.9),
-    standardPrice: csm.salePrice,
-    safetyStock: csm.minStockThreshold,
+    standardCost: Number(csm.unitPrice || 0),
+    dealerPrice: Number(csm.dealerPrice || Math.round((csm.standardPrice || csm.salePrice || csm.unitPrice || 0) * 0.9)),
+    standardPrice: Number(csm.standardPrice || csm.salePrice || csm.unitPrice || 0),
+    safetyStock: Number(csm.safetyStock || csm.minStock || csm.minStockThreshold || 10),
     warrantyMonths: 3,
     status: 'ACTIVE' as const,
     cogsMethod: 'FIFO' as const,
-    memo: csm.memo,
+    memo: csm.note || csm.memo || '',
     createdAt: '2026-07-10T09:00:00.000Z',
     updatedAt: '2026-10-25T09:00:00.000Z'
   }))
@@ -2359,6 +2359,10 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
   return {
     ...(defaultMatch || {}),
     ...product,
+    standardCost: Number(product.standardCost || defaultMatch?.standardCost || 0),
+    dealerPrice: Number(product.dealerPrice || defaultMatch?.dealerPrice || product.standardPrice || defaultMatch?.standardPrice || 0),
+    standardPrice: Number(product.standardPrice || defaultMatch?.standardPrice || product.dealerPrice || defaultMatch?.dealerPrice || 0),
+    safetyStock: Number(product.safetyStock || defaultMatch?.safetyStock || 1),
     itemType: resolvedItemType,
     inventoryAssetClass: resolvedAssetClass,
     usagePurpose: resolvedUsagePurpose,
@@ -2395,7 +2399,7 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v7_virtual5';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v8_clean';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));
