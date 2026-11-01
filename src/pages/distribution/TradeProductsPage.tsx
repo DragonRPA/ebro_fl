@@ -49,7 +49,7 @@ export function getAgingBucket(days: number): {
 }
 
 export const TradeProductsPage: React.FC = () => {
-  const { showErrorModal, setActiveTab: setGlobalActiveTab } = useApp();
+  const { assets, showErrorModal, setActiveTab: setGlobalActiveTab } = useApp();
   const {
     products,
     inventoryLots,
@@ -62,7 +62,7 @@ export const TradeProductsPage: React.FC = () => {
     adjustProductStock
   } = useTrade();
 
-  // 메인 탭: MASTER (제품·부품 마스터) | SERIAL_AGING (차대번호별 입출고 및 재고 경과일수) | WAREHOUSE_PARTS (창고별·부품 재고현황)
+  // 메인 탭: MASTER (제품·부품·소모품 마스터) | SERIAL_AGING (차대번호별 입출고 및 재고 경과일수) | WAREHOUSE_PARTS (창고별·부품 재고현황)
   const [activeViewTab, setActiveViewTab] = useState<'MASTER' | 'SERIAL_AGING' | 'WAREHOUSE_PARTS'>('MASTER');
 
   // Toast state
@@ -86,8 +86,9 @@ export const TradeProductsPage: React.FC = () => {
   const [cost, setCost] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
 
-  // Filter states (품목구분, 제조사, 카테고리, 창고, 품명/코드, 재고상태, 거래상태)
-  const [itemTypeFilter, setItemTypeFilter] = useState<'ALL' | 'EQUIPMENT' | 'PART'>('ALL');
+  // Filter states (유형자산 분류, 용도 구분, 제조사, 카테고리, 창고, 품명/코드, 재고상태, 거래상태)
+  const [itemTypeFilter, setItemTypeFilter] = useState<'ALL' | 'EQUIPMENT' | 'PART' | 'CONSUMABLE'>('ALL');
+  const [usagePurposeFilter, setUsagePurposeFilter] = useState<'ALL' | 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE'>('ALL');
   const [manufacturerFilter, setManufacturerFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState('ALL');
@@ -104,7 +105,7 @@ export const TradeProductsPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<TradeProduct | null>(null);
   const [specDetailProduct, setSpecDetailProduct] = useState<TradeProduct | null>(null);
   const [formSku, setFormSku] = useState('');
-  const [formItemType, setFormItemType] = useState<'EQUIPMENT' | 'PART'>('EQUIPMENT');
+  const [formItemType, setFormItemType] = useState<'EQUIPMENT' | 'PART' | 'CONSUMABLE'>('EQUIPMENT');
   const [formManufacturer, setFormManufacturer] = useState('');
   const [formModelName, setFormModelName] = useState('');
   const [formSeriesName, setFormSeriesName] = useState('');
@@ -524,9 +525,47 @@ export const TradeProductsPage: React.FC = () => {
         new Set(activeLots.map(l => l.warehouseName || p.defaultWarehouse || 'A창고'))
       );
 
+      const resolvedItemType: 'EQUIPMENT' | 'PART' | 'CONSUMABLE' =
+        p.itemType ||
+        (p.inventoryAssetClass === 'CONSUMABLE' || p.category === '소모품'
+          ? 'CONSUMABLE'
+          : p.unit === '대'
+          ? 'EQUIPMENT'
+          : 'PART');
+      const resolvedAssetClass: 'PRODUCT' | 'PART' | 'CONSUMABLE' =
+        (p.inventoryAssetClass === 'PRODUCT' || p.inventoryAssetClass === 'PART' || p.inventoryAssetClass === 'CONSUMABLE')
+          ? p.inventoryAssetClass
+          : resolvedItemType === 'EQUIPMENT'
+          ? 'PRODUCT'
+          : resolvedItemType === 'CONSUMABLE'
+          ? 'CONSUMABLE'
+          : 'PART';
+      const resolvedUsagePurpose: 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE' =
+        (p.usagePurpose === 'TRADE_SALE' || p.usagePurpose === 'RENTAL_REPAIR' || p.usagePurpose === 'DUAL_USE')
+          ? p.usagePurpose
+          : resolvedItemType === 'EQUIPMENT'
+          ? 'TRADE_SALE'
+          : 'DUAL_USE';
+      const saleStockQty =
+        p.saleStockQty ??
+        (resolvedItemType === 'EQUIPMENT'
+          ? st.availableQty
+          : resolvedUsagePurpose === 'RENTAL_REPAIR'
+          ? 0
+          : Math.ceil(st.availableQty * 0.7));
+      const repairStockQty =
+        p.repairStockQty ??
+        (resolvedItemType === 'EQUIPMENT' || resolvedUsagePurpose === 'TRADE_SALE'
+          ? 0
+          : Math.max(0, st.availableQty - saleStockQty));
+
       return {
         ...p,
-        resolvedItemType: p.itemType || (p.unit === '대' ? 'EQUIPMENT' : 'PART'),
+        resolvedItemType,
+        resolvedAssetClass,
+        resolvedUsagePurpose,
+        saleStockQty,
+        repairStockQty,
         availableQty: st.availableQty,
         avgUnitCost: costVal,
         stockValue: st.stockValue,
@@ -547,6 +586,11 @@ export const TradeProductsPage: React.FC = () => {
     const matcher = searchTerm.trim() ? createHangulMatcher(searchTerm.trim()) : null;
     return enrichedProducts.filter(p => {
       if (itemTypeFilter !== 'ALL' && p.resolvedItemType !== itemTypeFilter) return false;
+      if (usagePurposeFilter !== 'ALL') {
+        if (usagePurposeFilter === 'TRADE_SALE' && p.resolvedUsagePurpose !== 'TRADE_SALE' && p.resolvedUsagePurpose !== 'DUAL_USE') return false;
+        if (usagePurposeFilter === 'RENTAL_REPAIR' && p.resolvedUsagePurpose !== 'RENTAL_REPAIR' && p.resolvedUsagePurpose !== 'DUAL_USE') return false;
+        if (usagePurposeFilter === 'DUAL_USE' && p.resolvedUsagePurpose !== 'DUAL_USE') return false;
+      }
       if (manufacturerFilter !== 'ALL' && p.manufacturer !== manufacturerFilter) return false;
       if (categoryFilter !== 'ALL' && p.category !== categoryFilter) return false;
       if (
@@ -578,6 +622,7 @@ export const TradeProductsPage: React.FC = () => {
   }, [
     enrichedProducts,
     itemTypeFilter,
+    usagePurposeFilter,
     manufacturerFilter,
     categoryFilter,
     warehouseFilter,
@@ -703,25 +748,41 @@ export const TradeProductsPage: React.FC = () => {
     });
   }, [enrichedLots]);
 
-  // KPI Summary
+  // KPI Summary (회사의 유형자산·재고 4대 구성: 자산·렌탈용 / 제품·완제품판매용 / 부품·판매및정비용 / 소모품·판매및정비용)
   const kpi = useMemo(() => {
+    const rentalAssetCount = (assets || []).length;
+    const rentalActiveCount = (assets || []).filter(a => a.status === 'RENTED').length;
     const equipProducts = enrichedProducts.filter(p => p.resolvedItemType === 'EQUIPMENT');
     const partProducts = enrichedProducts.filter(p => p.resolvedItemType === 'PART');
+    const consumableProducts = enrichedProducts.filter(p => p.resolvedItemType === 'CONSUMABLE');
     const equipStockUnits = equipProducts.reduce((s, p) => s + p.availableQty, 0);
     const partStockQty = partProducts.reduce((s, p) => s + p.availableQty, 0);
+    const partSaleQty = partProducts.reduce((s, p) => s + p.saleStockQty, 0);
+    const partRepairQty = partProducts.reduce((s, p) => s + p.repairStockQty, 0);
+    const consumableStockQty = consumableProducts.reduce((s, p) => s + p.availableQty, 0);
+    const consumableSaleQty = consumableProducts.reduce((s, p) => s + p.saleStockQty, 0);
+    const consumableRepairQty = consumableProducts.reduce((s, p) => s + p.repairStockQty, 0);
     const lowStockCount = enrichedProducts.filter(p => p.status === 'ACTIVE' && p.availableQty < p.safetyStock).length;
     const totalStockValue = enrichedProducts.reduce((s, p) => s + p.stockValue, 0);
     const longAgingCount = agingSummary.counts.DAYS_91_180 + agingSummary.counts.OVER_180;
     return {
+      rentalAssetCount,
+      rentalActiveCount,
       equipCount: equipProducts.length,
       partCount: partProducts.length,
+      consumableCount: consumableProducts.length,
       equipStockUnits,
       partStockQty,
+      partSaleQty,
+      partRepairQty,
+      consumableStockQty,
+      consumableSaleQty,
+      consumableRepairQty,
       lowStockCount,
       totalStockValue,
       longAgingCount
     };
-  }, [enrichedProducts, agingSummary]);
+  }, [assets, enrichedProducts, agingSummary]);
 
   // Excel Export (현재 활성 탭 기준 맞춤형 다운로드)
   const handleExportExcel = () => {
@@ -807,6 +868,7 @@ export const TradeProductsPage: React.FC = () => {
 
   const resetFilters = () => {
     setItemTypeFilter('ALL');
+    setUsagePurposeFilter('ALL');
     setManufacturerFilter('ALL');
     setCategoryFilter('ALL');
     setWarehouseFilter('ALL');
@@ -1152,37 +1214,61 @@ export const TradeProductsPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
-          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>등록 모델 및 부품 수</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-              지게차 {kpi.equipCount}종 / 부품 {kpi.partCount}종
- </div>
-          </div>
-          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>현재 가용 재고 수량</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-              지게차 {kpi.equipStockUnits}대 / 부품 {kpi.partStockQty.toLocaleString()}개
- </div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(210px, 1fr))', gap: '12px', flexShrink: 0 }}>
           <div
             className="card"
-            onClick={() => {
-              setActiveViewTab('SERIAL_AGING');
-              setLotStatusFilter('IN_STOCK');
-              setAgingBucketFilter('OVER_180');
-            }}
+            onClick={() => setGlobalActiveTab && setGlobalActiveTab('available_inventory')}
             style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+            title="클릭하여 렌탈용 유형자산 현황 조회"
           >
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>90일 이상 장기보유 재고 (클릭 시 조회)</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: kpi.longAgingCount > 0 ? '#dc2626' : '#059669', whiteSpace: 'nowrap' }}>
-              {kpi.longAgingCount}건 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>(180일 이상 {agingSummary.counts.OVER_180}건)</span>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>1. 자산 · 렌탈용 유형자산</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              총 {kpi.rentalAssetCount}대 <span style={{ fontSize: '12px', color: 'var(--primary)' }}>(대여중 {kpi.rentalActiveCount}대 / 대기 {Math.max(0, kpi.rentalAssetCount - kpi.rentalActiveCount)}대)</span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+              용도: 고객 현장 임대 전용 자산
             </div>
           </div>
-          <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 재고자산 금액 (수입 부대비용 반영 도착원가)</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-              ₩{kpi.totalStockValue.toLocaleString()}
+
+          <div
+            className="card"
+            onClick={() => { setItemTypeFilter(itemTypeFilter === 'EQUIPMENT' ? 'ALL' : 'EQUIPMENT'); setUsagePurposeFilter('ALL'); }}
+            style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: itemTypeFilter === 'EQUIPMENT' ? '2px solid var(--primary)' : '1px solid var(--border-color)', cursor: 'pointer' }}
+          >
+            <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: 700, whiteSpace: 'nowrap' }}>2. 제품 · 완제품 지게차 (판매용)</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+              {kpi.equipCount}개 모델 · 현재고 {kpi.equipStockUnits}대
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+              용도: 유통 판매 전용 완제품
+            </div>
+          </div>
+
+          <div
+            className="card"
+            onClick={() => { setItemTypeFilter(itemTypeFilter === 'PART' ? 'ALL' : 'PART'); }}
+            style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: itemTypeFilter === 'PART' ? '2px solid #7e22ce' : '1px solid var(--border-color)', cursor: 'pointer' }}
+          >
+            <div style={{ fontSize: '11px', color: '#7e22ce', fontWeight: 700, whiteSpace: 'nowrap' }}>3. 부품 · 유통 판매용 및 렌탈자산 정비용</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              {kpi.partCount}종 · 총 {kpi.partStockQty.toLocaleString()}개
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+              유통 판매용 {kpi.partSaleQty.toLocaleString()}개 / 렌탈자산 정비용 {kpi.partRepairQty.toLocaleString()}개
+            </div>
+          </div>
+
+          <div
+            className="card"
+            onClick={() => { setItemTypeFilter(itemTypeFilter === 'CONSUMABLE' ? 'ALL' : 'CONSUMABLE'); }}
+            style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: itemTypeFilter === 'CONSUMABLE' ? '2px solid #0f766e' : '1px solid var(--border-color)', cursor: 'pointer' }}
+          >
+            <div style={{ fontSize: '11px', color: '#0f766e', fontWeight: 700, whiteSpace: 'nowrap' }}>4. 소모품 · 유통 판매용 및 렌탈자산 정비용</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: '#0f766e', whiteSpace: 'nowrap' }}>
+              {kpi.consumableCount}종 · 총 {kpi.consumableStockQty.toLocaleString()}개
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+              유통 판매용 {kpi.consumableSaleQty.toLocaleString()}개 / 렌탈자산 정비용 {kpi.consumableRepairQty.toLocaleString()}개
             </div>
           </div>
         </div>
@@ -1203,15 +1289,30 @@ export const TradeProductsPage: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>품목 구분</label>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>유형자산·재고 분류</label>
           <select
             value={itemTypeFilter}
             onChange={e => setItemTypeFilter(e.target.value as any)}
             style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
           >
-            <option value="ALL">전체 구분</option>
-            <option value="EQUIPMENT">지게차 완제품</option>
-            <option value="PART">부품 및 소모품</option>
+            <option value="ALL">전체 분류 (제품·부품·소모품)</option>
+            <option value="EQUIPMENT">제품 · 지게차 완제품 (판매용)</option>
+            <option value="PART">부품 (유통 판매용 / 렌탈자산 정비용)</option>
+            <option value="CONSUMABLE">소모품 (유통 판매용 / 렌탈자산 정비용)</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>보유 용도 구분</label>
+          <select
+            value={usagePurposeFilter}
+            onChange={e => setUsagePurposeFilter(e.target.value as any)}
+            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+          >
+            <option value="ALL">전체 용도</option>
+            <option value="TRADE_SALE">유통 판매용 포함</option>
+            <option value="RENTAL_REPAIR">렌탈자산 정비용 포함</option>
+            <option value="DUAL_USE">유통 판매 · 렌탈자산 정비 겸용</option>
           </select>
         </div>
 
@@ -1568,8 +1669,20 @@ export const TradeProductsPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: isEquip ? '#dbeafe' : '#f3e8ff', color: isEquip ? '#1d4ed8' : '#7e22ce' }}>
-                              {isEquip ? '지게차' : '부품'}
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: isEquip ? '#dbeafe' : p.resolvedItemType === 'CONSUMABLE' ? '#ccfbf1' : '#f3e8ff',
+                                color: isEquip ? '#1d4ed8' : p.resolvedItemType === 'CONSUMABLE' ? '#0f766e' : '#7e22ce'
+                              }}
+                            >
+                              {isEquip ? '제품 · 완제품' : p.resolvedItemType === 'CONSUMABLE' ? '소모품' : '부품'}
+                            </span>
+                            <span style={{ fontSize: '10px', fontWeight: 700, color: p.resolvedUsagePurpose === 'TRADE_SALE' ? '#0284c7' : p.resolvedUsagePurpose === 'RENTAL_REPAIR' ? '#b45309' : '#059669' }}>
+                              {p.resolvedUsagePurpose === 'TRADE_SALE' ? '판매전용' : p.resolvedUsagePurpose === 'RENTAL_REPAIR' ? '렌탈정비용' : '유통판매·렌탈정비'}
                             </span>
                             {isEquip && p.powerType && (
                               <span style={{ fontSize: '10px', fontWeight: 700, color: p.powerType.includes('리튬') ? '#059669' : p.powerType.includes('디젤') ? '#b45309' : '#2563eb' }}>
@@ -1681,13 +1794,20 @@ export const TradeProductsPage: React.FC = () => {
                           {p.marginRate.toFixed(1)}%
  </td>
                         <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800 }}>
-                          <span style={{ color: p.availableQty === 0 ? '#dc2626' : isLowStock ? '#d97706' : '#059669' }}>
-                            {p.availableQty.toLocaleString()} {p.unit || 'EA'}
-                          </span>
-                          {isLowStock && (
-                            <span style={{ marginLeft: '5px', color: '#dc2626', fontSize: '10px', fontWeight: 700 }}>
-                              [안전재고미달]
- </span>
+                          <div>
+                            <span style={{ color: p.availableQty === 0 ? '#dc2626' : isLowStock ? '#d97706' : '#059669' }}>
+                              {p.availableQty.toLocaleString()} {p.unit || 'EA'}
+                            </span>
+                            {isLowStock && (
+                              <span style={{ marginLeft: '5px', color: '#dc2626', fontSize: '10px', fontWeight: 700 }}>
+                                [안전재고미달]
+                              </span>
+                            )}
+                          </div>
+                          {!isEquip && (
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '2px' }}>
+                              판매용 {p.saleStockQty} / 정비용 {p.repairStockQty}
+                            </div>
                           )}
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>

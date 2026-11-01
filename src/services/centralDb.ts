@@ -39,10 +39,12 @@ export async function fetchCentralTenants(): Promise<Tenant[]> {
       return [];
     }
 
-    return (data || []).map(row => {
+    return (data || [])
+      .filter(row => row && row.id !== 'tenant-giyeonlift' && row.id !== 'tenant-ebro-awp' && row.tenantCode !== 'GIYEONLIFT' && row.tenantCode !== 'EBRO_AWP')
+      .map(row => {
       const decrypted = decryptEntityPrivacyFields('tenants', row);
       const defaultSpecialFeatures = ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound'];
-      const rawSpecialFeatures = decrypted.specialFeatures || decrypted.features?.specialFeatures || (row.id === 'tenant-giyeonlift' ? defaultSpecialFeatures : undefined);
+      const rawSpecialFeatures = decrypted.specialFeatures || decrypted.features?.specialFeatures || defaultSpecialFeatures;
       const explicitContractTrade = (decrypted as any).allowContractTradeOutbound ?? decrypted.features?.allowContractTradeOutbound;
       const resolvedAllowContractTradeOutbound = typeof explicitContractTrade === 'boolean' ? explicitContractTrade : true;
       let specialFeatures = Array.isArray(rawSpecialFeatures)
@@ -50,14 +52,6 @@ export async function fetchCentralTenants(): Promise<Tenant[]> {
             ? [...rawSpecialFeatures, 'btn:contracts:trade_outbound']
             : [...rawSpecialFeatures])
         : rawSpecialFeatures;
-      if (row.id === 'tenant-giyeonlift' && Array.isArray(specialFeatures)) {
-        if (!specialFeatures.includes('tab:truck_dispatch:audit_settle')) {
-          specialFeatures.push('tab:truck_dispatch:audit_settle');
-        }
-        if (!specialFeatures.includes('btn:truck_dispatch:bulk_approve')) {
-          specialFeatures.push('btn:truck_dispatch:bulk_approve');
-        }
-      }
       const po = decrypted.privacyOfficer || decrypted.features?.privacyOfficer;
       const rawAllowedPages = Array.isArray((decrypted as any).allowedPages)
         ? [...(decrypted as any).allowedPages]
@@ -68,9 +62,10 @@ export async function fetchCentralTenants(): Promise<Tenant[]> {
       if (Array.isArray(rawAllowedPages) && rawAllowedPages.length > 0 && !rawAllowedPages.includes('as_route_tracking')) {
         rawAllowedPages.push('as_route_tracking');
       }
-      if (row.id === 'tenant-giyeonlift' || row.id === 'tenant-ebro-awp' || row.id === 'tenant-ebro-fl') {
-        const exposedTradeMenus = ['trade_products', 'trade_purchases'];
-        const hiddenTradeMenus = [
+      if (row.id === 'tenant-ebro-fl') {
+        const exposedTradeMenus = [
+          'trade_products',
+          'trade_purchases',
           'trade_contracts',
           'trade_outbounds',
           'courier_dispatch',
@@ -82,25 +77,11 @@ export async function fetchCentralTenants(): Promise<Tenant[]> {
           exposedTradeMenus.forEach(tm => {
             if (!rawAllowedPages.includes(tm)) rawAllowedPages.push(tm);
           });
-          if (row.id === 'tenant-giyeonlift' && !(rawHiddenPages && rawHiddenPages.includes('kiyeun_contract_status'))) {
-            if (!rawAllowedPages.includes('kiyeun_contract_status')) {
-              rawAllowedPages.push('kiyeun_contract_status');
-            }
-          }
-          for (let i = rawAllowedPages.length - 1; i >= 0; i--) {
-            if (hiddenTradeMenus.includes(rawAllowedPages[i])) {
-              rawAllowedPages.splice(i, 1);
-            }
-          }
         }
         if (Array.isArray(rawHiddenPages)) {
           rawHiddenPages = rawHiddenPages.filter(hm => !exposedTradeMenus.includes(hm));
-          hiddenTradeMenus.forEach(hm => {
-            if (!rawHiddenPages!.includes(hm)) rawHiddenPages!.push(hm);
-          });
         }
       } else {
-        // 기연리프트 외 타 테넌트: 테넌트관리 노출관리에서 명시적으로 허용하지 않은 경우 기본 숨김
         const explicitlyAllowed = Array.isArray(rawAllowedPages) && rawAllowedPages.includes('kiyeun_contract_status');
         if (!explicitlyAllowed) {
           if (!Array.isArray(rawHiddenPages)) rawHiddenPages = [];

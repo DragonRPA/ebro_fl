@@ -1,9 +1,9 @@
 // src/components/DemoModeBanner.tsx
-// ebro_awp 시연 데모 모드 상단 고정 배너 및 기연리프트 DB 복제 / 데이터 초기화 컴포넌트
+// ebro_fl 시연 데모 모드 상단 고정 배너 및 데이터 초기화 컴포넌트
 
 import React, { useState } from 'react';
-import { isDemoMode, exitDemoMode, resetDemoDataToGolden, cloneKiyeunProdToDemoDb } from '../services/demoMode';
-import { RotateCcw, LogOut, Database, Loader2 } from 'lucide-react';
+import { isDemoMode, exitDemoMode, resetDemoDataToGolden } from '../services/demoMode';
+import { RotateCcw, LogOut, Loader2 } from 'lucide-react';
 
 export const DemoModeBanner: React.FC = () => {
   const [isBusy, setIsBusy] = useState(false);
@@ -11,56 +11,24 @@ export const DemoModeBanner: React.FC = () => {
 
   if (!isDemoMode()) return null;
 
-  const handleCloneKiyeunDb = async () => {
-    if (
-      !window.confirm(
-        '기연리프트 실운영 DB의 최신 데이터를 현재 시연 데이터베이스로 전체 복제하시겠습니까?\n\n' +
-          '• 기연리프트 실운영 DB에는 아무런 영향을 주지 않습니다 (읽기 전용 조회).\n' +
-          '• 현재 시연 DB의 기존 테스트 데이터는 모두 삭제되고 기연리프트 최신 데이터로 덮어쓰기됩니다.'
-      )
-    ) {
-      return;
-    }
-
-    setIsBusy(true);
-    setStatusMessage('기연리프트 DB 복제 준비 중...');
-
-    const res = await cloneKiyeunProdToDemoDb((msg) => {
-      setStatusMessage(msg);
-    });
-
-    if (res.success) {
-      setStatusMessage(
-        `기연리프트 DB 복제 완료! (${res.tableCount || 0}개 테이블, ${(res.totalRows || 0).toLocaleString()}건) 화면을 새로고침합니다...`
-      );
-      setTimeout(() => {
-        window.location.reload();
-      }, 900);
-    } else {
-      alert(`기연리프트 DB 복제 실패: ${res.error}`);
-      setIsBusy(false);
-      setStatusMessage(null);
-    }
-  };
-
   const handleReset = async () => {
     if (
       !window.confirm(
-        '시연용 가상 데이터를 최초 골든 상태로 전체 초기화하시겠습니까?\n(등록/수정된 모든 테스트 데이터가 초기화됩니다)'
+        '시연용 가상 데이터를 초기 상태로 전체 초기화하시겠습니까?\n(등록 및 수정된 모든 테스트 데이터가 초기화됩니다)'
       )
     ) {
       return;
     }
 
     setIsBusy(true);
-    setStatusMessage('데이터 초기화 준비 중...');
+    setStatusMessage('데이터 초기화 준비 중');
 
     const res = await resetDemoDataToGolden((msg) => {
       setStatusMessage(msg);
     });
 
     if (res.success) {
-      setStatusMessage('초기화 완료! 화면을 새로고침합니다...');
+      setStatusMessage('초기화 완료. 화면을 새로고침합니다');
       setTimeout(() => {
         window.location.reload();
       }, 900);
@@ -104,11 +72,11 @@ export const DemoModeBanner: React.FC = () => {
           }}
         >
           시연
- </span>
-        <span style={{ color: '#93c5fd', fontWeight: 800 }}>ebro_awp 시연 모드</span>
+        </span>
+        <span style={{ color: '#93c5fd', fontWeight: 800 }}>지게차 시연 모드</span>
         <span style={{ color: '#cbd5e1', fontSize: '11.5px', fontWeight: 500 }}>
-          | 가상 시연 데이터베이스 연결됨
- </span>
+          | 가상 고객 5개사 데이터베이스 연결됨
+        </span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
@@ -134,33 +102,6 @@ export const DemoModeBanner: React.FC = () => {
 
         <button
           type="button"
-          onClick={handleCloneKiyeunDb}
-          disabled={isBusy}
-          style={{
-            backgroundColor: '#2563eb',
-            color: '#ffffff',
-            border: '1.5px solid #60a5fa',
-            borderRadius: '6px',
-            padding: '5px 12px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: isBusy ? 'not-allowed' : 'pointer',
-            opacity: isBusy ? 0.6 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)'
-          }}
-          title="기연리프트 실운영 DB의 최신 데이터를 시연 DB로 즉시 1:1 복제합니다"
-        >
-          <Database size={13} />
-          기연리프트 DB 복제
- </button>
-
-        <button
-          type="button"
           onClick={handleReset}
           disabled={isBusy}
           style={{
@@ -180,11 +121,11 @@ export const DemoModeBanner: React.FC = () => {
             flexShrink: 0,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)'
           }}
-          title="모든 데모 데이터를 초기 골든 상태로 재설정합니다"
+          title="모든 데모 데이터를 초기 상태로 재설정합니다"
         >
           <RotateCcw size={13} />
           데이터 초기화
- </button>
+        </button>
 
         <button
           type="button"
@@ -211,7 +152,7 @@ export const DemoModeBanner: React.FC = () => {
         >
           <LogOut size={13} />
           실운영 전환
- </button>
+        </button>
       </div>
     </div>
   );

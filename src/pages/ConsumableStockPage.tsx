@@ -240,13 +240,19 @@ export const ConsumableStockPage: React.FC = () => {
     return map;
   }, [mechanics]);
 
-  // 재고 통계 요약
+  // 재고 통계 요약 (유통 판매용 재고 / 렌탈자산 정비용 재고 구분 집계)
   const stockSummary = useMemo(() => {
     let hqTotalQty = 0;
+    let hqSaleQty = 0;
+    let hqRepairQty = 0;
     let hqTotalValue = 0;
     for (const c of consumables) {
       const qty = c.stockQty || 0;
+      const saleQ = c.saleStockQty ?? (c.usagePurpose === 'RENTAL_REPAIR' ? 0 : Math.floor(qty * 0.6));
+      const repQ = c.repairStockQty ?? Math.max(0, qty - saleQ);
       hqTotalQty += qty;
+      hqSaleQty += saleQ;
+      hqRepairQty += repQ;
       hqTotalValue += qty * (c.unitPrice || 0);
     }
 
@@ -262,6 +268,8 @@ export const ConsumableStockPage: React.FC = () => {
     return {
       hqTotalKinds: consumables.length,
       hqTotalQty,
+      hqSaleQty,
+      hqRepairQty,
       hqTotalValue,
       vehicleTotalQty,
       vehicleTotalValue,
@@ -645,11 +653,14 @@ export const ConsumableStockPage: React.FC = () => {
 
       {/* ─── [Z-패턴 1단계: 헤더 & 탭 네비게이션] ─── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <Boxes size={18} color="var(--primary)" />
           <h2 data-mid="consumable_stock-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
             소모품 재고 관리
- </h2>
+          </h2>
+          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 800, backgroundColor: 'rgba(15, 118, 110, 0.14)', color: '#0f766e', border: '1px solid rgba(15, 118, 110, 0.35)', whiteSpace: 'nowrap' }}>
+            유형자산 구성 4: 소모품 · 유통 판매용 및 렌탈자산 정비용 통합 관리
+          </span>
         </div>
 
         {/* 탭 버튼군 (무수식어 건조 표준) */}
@@ -711,27 +722,33 @@ export const ConsumableStockPage: React.FC = () => {
       {activeTab === 'STOCK' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* 상단 통계 카드 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>총 관리 품목 수</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>총 관리 소모품 수</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)' }}>
                 {stockSummary.hqTotalKinds}종
- </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 보유 수량</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
-                {stockSummary.hqTotalQty.toLocaleString()}개
- </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 재고 평가액</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--text-primary)' }}>
-                ₩{stockSummary.hqTotalValue.toLocaleString()}
               </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>전사 총 재고 (주기장+차량)</div>
+              <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: 700 }}>유통 판매용 소모품 재고</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#0284c7' }}>
+                {stockSummary.hqSaleQty.toLocaleString()}개
+              </div>
+            </div>
+            <div className="card" style={{ margin: 0, padding: '16px' }}>
+              <div style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>렌탈자산 정비용 소모품 재고</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#b45309' }}>
+                {stockSummary.hqRepairQty.toLocaleString()}개
+              </div>
+            </div>
+            <div className="card" style={{ margin: 0, padding: '16px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 총보유 수량</div>
+              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
+                {stockSummary.hqTotalQty.toLocaleString()}개
+              </div>
+            </div>
+            <div className="card" style={{ margin: 0, padding: '16px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>전사 총 재고 평가액</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#7c3aed' }}>
                 ₩{stockSummary.grandTotalValue.toLocaleString()}
               </div>
@@ -779,12 +796,15 @@ export const ConsumableStockPage: React.FC = () => {
                 <thead>
                   <tr>
                     <th>순번</th>
-                    <SortableTh label="품목명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <SortableTh label="주기장 재고" sortKey="stockQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
+                    <SortableTh label="소모품명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <th style={{ textAlign: 'center' }}>유형자산 분류 · 용도 구분</th>
+                    <th style={{ textAlign: 'center', color: '#0284c7' }}>유통 판매용 재고</th>
+                    <th style={{ textAlign: 'center', color: '#b45309' }}>렌탈자산 정비용 재고</th>
+                    <SortableTh label="주기장 총재고" sortKey="stockQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="차량 재고" sortKey="totalVehicleQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="전사 총수량" sortKey="grandQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="단위" sortKey="unit" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <SortableTh label="단가" sortKey="unitPrice" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="매입단가 / 판매단가" sortKey="unitPrice" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <SortableTh label="주기장 평가액" sortKey="hqValue" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <SortableTh label="공급처" sortKey="supplier" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <th style={{ textAlign: 'center' }}>관리</th>
@@ -797,9 +817,9 @@ export const ConsumableStockPage: React.FC = () => {
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={10} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
+                          <td colSpan={13} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                             등록된 소모품 품목이 없습니다.
- </td>
+                          </td>
                         </tr>
                       );
                     }
@@ -808,18 +828,40 @@ export const ConsumableStockPage: React.FC = () => {
                       const totalVehicleQty = c.totalVehicleQty;
                       const grandQty = c.grandQty;
                       const hqValue = c.hqValue;
+                      const saleStock = c.saleStockQty ?? (c.usagePurpose === 'RENTAL_REPAIR' ? 0 : Math.floor((c.stockQty || 0) * 0.6));
+                      const repairStock = c.repairStockQty ?? Math.max(0, (c.stockQty || 0) - saleStock);
+                      const usageLabel =
+                        c.usagePurpose === 'RENTAL_REPAIR'
+                          ? '렌탈자산 정비전용'
+                          : c.usagePurpose === 'TRADE_SALE'
+                          ? '유통 판매전용'
+                          : '유통 판매 · 렌탈자산 정비 겸용';
 
                       return (
                         <tr key={c.id}>
                           <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{idx + 1}</td>
                           <td><strong style={{ color: 'var(--primary)' }}>{c.modelName}</strong></td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: c.usagePurpose === 'RENTAL_REPAIR' ? '#fef3c7' : '#ccfbf1', color: c.usagePurpose === 'RENTAL_REPAIR' ? '#b45309' : '#0f766e' }}>
+                              소모품 · {usageLabel}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#0284c7' }}>
+                            {saleStock}
+                          </td>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#b45309' }}>
+                            {repairStock}
+                          </td>
                           <td style={{ textAlign: 'center', fontWeight: 700, color: c.stockQty > 0 ? '#059669' : '#dc2626' }}>
                             {c.stockQty}
                           </td>
                           <td style={{ textAlign: 'center', fontWeight: 600 }}>{totalVehicleQty}</td>
                           <td style={{ textAlign: 'center', fontWeight: 800, color: 'var(--primary)' }}>{grandQty}</td>
                           <td style={{ fontSize: '12px' }}>{c.unit || '개'}</td>
-                          <td style={{ fontSize: '12px' }}>{(c.unitPrice || 0).toLocaleString()}원</td>
+                          <td style={{ fontSize: '12px' }}>
+                            {(c.unitPrice || 0).toLocaleString()}원
+                            {c.saleUnitPrice ? <span style={{ color: '#0284c7', marginLeft: '6px', fontWeight: 700 }}>/ 판매 {c.saleUnitPrice.toLocaleString()}원</span> : null}
+                          </td>
                           <td style={{ fontWeight: 600 }}>{hqValue.toLocaleString()}원</td>
                           <td style={{ fontSize: '12px' }}>{c.supplier || '-'}</td>
                           <td style={{ textAlign: 'center' }}>

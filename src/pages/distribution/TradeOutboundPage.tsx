@@ -6,6 +6,7 @@ import {
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
 import { db, TradeOutbound, AppliedForkliftOption, ForkliftOptionGroupType, ForkliftOptionMaster } from '../../services/db';
+import { SEED_FL_CUSTOMERS } from '../../data/flUnifiedSeedData';
 import { FORKLIFT_OPTION_GROUPS } from '../../data/forkliftOptionMastersData';
 import { generateReceiptHtml } from '../../utils/receiptGenerator';
 import { exportToExcel } from '../../services/excel';
@@ -41,7 +42,7 @@ export const TradeOutboundPage: React.FC = () => {
 
   const customerOptions = useMemo(() => {
     if (customers && customers.length > 0) return customers;
-    return [{ id: 'CUST-001', name: '현대건설(주)' }];
+    return SEED_FL_CUSTOMERS;
   }, [customers]);
 
   // View mode ('GRID' | 'CARD')
@@ -553,7 +554,7 @@ export const TradeOutboundPage: React.FC = () => {
           flexShrink: 0
         }}
       >
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <h2
             data-mid="trade_outbounds-header"
             style={{
@@ -568,8 +569,22 @@ export const TradeOutboundPage: React.FC = () => {
             }}
           >
             <Package size={20} color="var(--primary)" />
-            <span>출고 요청 및 재고 할당</span>
+            <span>유통 출고 관리 · 재고 할당</span>
           </h2>
+          <span
+            style={{
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(2, 132, 199, 0.14)',
+              color: '#0284c7',
+              border: '1px solid rgba(2, 132, 199, 0.35)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            유통 계약 원칙: 각 출고횟수가 1개의 계약 (1출고 = 1계약)
+          </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -806,7 +821,7 @@ export const TradeOutboundPage: React.FC = () => {
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '370px' }}>출고 할당 / 옵션장착 / 납품증</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고번호</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>주문번호</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>유통계약번호 · 출고회차</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>요청일자</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>고객사명</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 품목 명세</th>
@@ -826,7 +841,7 @@ export const TradeOutboundPage: React.FC = () => {
  </td>
                   </tr>
                 ) : (
-                  displayedOutbounds.map(({ o, custName, itemSummary, totalQty, reqDate, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver, receiverPhone }) => (
+                  displayedOutbounds.map(({ o, order, custName, itemSummary, totalQty, reqDate, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver, receiverPhone }) => (
                     <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)', height: '44px' }}>
                       {/* 1열 액션 */}
                       <td style={{ padding: '6px 10px', textAlign: 'center' }}>
@@ -937,7 +952,17 @@ export const TradeOutboundPage: React.FC = () => {
                       </td>
 
                       <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>{o.id}</td>
-                      <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--primary)', fontFamily: 'monospace' }}>{o.orderId}</td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace' }}>
+                            {o.contractNo || order?.contractNo || o.orderId}
+                          </span>
+                          <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 800, backgroundColor: 'rgba(2, 132, 199, 0.14)', color: '#0284c7', border: '1px solid rgba(2, 132, 199, 0.35)' }}>
+                            제{o.outboundSeq || order?.outboundSeq || 1}차 출고 (1출고=1계약)
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>수주: {o.orderId}</div>
+                      </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>{reqDate}</td>
                       <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>{custName}</td>
                       <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{itemSummary}</td>

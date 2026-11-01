@@ -11,6 +11,7 @@ import { emailService, SentEmail } from '../services/email';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
 import { DEFAULT_FORKLIFT_OPTION_MASTERS } from '../data/forkliftOptionMastersData';
+import { SEED_FL_CONSUMABLES } from '../data/flUnifiedSeedData';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
@@ -713,6 +714,10 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     name: '리튬인산철 배터리팩 80V 205Ah',
     category: '배터리/충전기',
     itemType: 'PART',
+    inventoryAssetClass: 'PART',
+    usagePurpose: 'DUAL_USE',
+    saleStockQty: 3,
+    repairStockQty: 2,
     manufacturer: '시이티엘',
     modelName: 'LFP-80V205',
     originCountry: '중국 수입',
@@ -726,7 +731,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     warrantyMonths: 36,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '2.5톤~3.0톤 전동지게차 교체 및 옵션 장착용 리튬배터리',
+    memo: '2.5톤~3.0톤 전동지게차 유통 판매용 및 렌탈자산 정비용 리튬배터리',
     createdAt: '2026-05-01T09:00:00.000Z',
     updatedAt: '2026-09-12T09:00:00.000Z'
   },
@@ -736,6 +741,10 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     name: '구동모터 AC 컨트롤러 어셈블리',
     category: '전장부품',
     itemType: 'PART',
+    inventoryAssetClass: 'PART',
+    usagePurpose: 'DUAL_USE',
+    saleStockQty: 18,
+    repairStockQty: 8,
     manufacturer: '커티스',
     modelName: 'AC-1232E',
     originCountry: '중국 수입',
@@ -749,7 +758,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     warrantyMonths: 12,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '이피이큅먼트 및 헬리 전동지게차 호환 메인 컨트롤러',
+    memo: '유통 판매용 및 렌탈자산 정비용 호환 메인 컨트롤러',
     createdAt: '2026-05-10T09:00:00.000Z',
     updatedAt: '2026-09-15T09:00:00.000Z'
   },
@@ -759,6 +768,10 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     name: '단조 중량 덧발 포크 세트 1200mm',
     category: '유압부품',
     itemType: 'PART',
+    inventoryAssetClass: 'PART',
+    usagePurpose: 'DUAL_USE',
+    saleStockQty: 9,
+    repairStockQty: 4,
     manufacturer: '카스케이드',
     modelName: 'FK-25-1200',
     originCountry: '국내 매입',
@@ -772,7 +785,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     warrantyMonths: 12,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '국내 포크 제조사 직매입 표준 포크 세트',
+    memo: '유통 판매용 및 렌탈자산 정비용 표준 포크 세트',
     createdAt: '2026-06-01T09:00:00.000Z',
     updatedAt: '2026-09-15T09:00:00.000Z'
   },
@@ -782,6 +795,10 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     name: '지게차 노마킹 솔리드 타이어 7.00-12',
     category: '타이어/휠',
     itemType: 'PART',
+    inventoryAssetClass: 'PART',
+    usagePurpose: 'DUAL_USE',
+    saleStockQty: 14,
+    repairStockQty: 8,
     manufacturer: '넥센솔리드',
     modelName: 'NM-700-12',
     originCountry: '국내 매입',
@@ -795,31 +812,67 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     warrantyMonths: 6,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '식품·제약·반도체 물류창고 납품 지게차 장착용',
+    memo: '유통 판매용 및 렌탈자산 정비용 백색 솔리드 타이어',
     createdAt: '2026-06-15T09:00:00.000Z',
     updatedAt: '2026-09-15T09:00:00.000Z'
   },
-  ...COMPATIBLE_PARTS_CATALOG.map(cp => ({
-    id: `prod-${cp.id}`,
-    skuCode: cp.sku,
-    name: cp.partName,
-    category: cp.category,
-    itemType: 'PART' as const,
-    manufacturer: cp.manufacturer,
-    modelName: cp.compatibleModels.join(', '),
-    originCountry: (cp.originCountry === '중국 직수입' ? '중국 수입' : '국내 매입') as '중국 수입' | '국내 매입',
-    defaultWarehouse: '부품창고',
-    spec: `${cp.specSummary} | 순정호환: ${cp.oemCrossRefCodes.slice(0, 2).join(', ')}`,
-    unit: cp.unitName,
-    standardCost: cp.landedCostKrw,
-    dealerPrice: cp.dealerPriceKrw,
-    standardPrice: cp.retailPriceKrw,
-    safetyStock: cp.moq * 2,
-    warrantyMonths: 6,
+  ...COMPATIBLE_PARTS_CATALOG.map((cp, idx) => {
+    const saleQty = Math.max(1, Math.round(cp.stockQty * 0.65));
+    const repairQty = Math.max(0, cp.stockQty - saleQty);
+    const usagePurpose = idx % 5 === 0 ? ('RENTAL_REPAIR' as const) : idx % 4 === 0 ? ('TRADE_SALE' as const) : ('DUAL_USE' as const);
+    return {
+      id: `prod-${cp.id}`,
+      skuCode: cp.sku,
+      name: cp.partName,
+      category: cp.category,
+      itemType: 'PART' as const,
+      inventoryAssetClass: 'PART' as const,
+      usagePurpose,
+      saleStockQty: usagePurpose === 'RENTAL_REPAIR' ? 0 : saleQty,
+      repairStockQty: usagePurpose === 'TRADE_SALE' ? 0 : repairQty,
+      manufacturer: cp.manufacturer,
+      modelName: cp.compatibleModels.join(', '),
+      originCountry: (cp.originCountry === '중국 직수입' ? '중국 수입' : '국내 매입') as '중국 수입' | '국내 매입',
+      defaultWarehouse: '부품창고',
+      spec: `${cp.specSummary} | 순정호환: ${cp.oemCrossRefCodes.slice(0, 2).join(', ')}`,
+      unit: cp.unitName,
+      standardCost: cp.landedCostKrw,
+      dealerPrice: cp.dealerPriceKrw,
+      standardPrice: cp.retailPriceKrw,
+      safetyStock: cp.moq * 2,
+      warrantyMonths: 6,
+      status: 'ACTIVE' as const,
+      cogsMethod: 'FIFO' as const,
+      memo: `${cp.tonnageRange} · ${cp.technicalNote}`,
+      createdAt: '2026-07-01T09:00:00.000Z',
+      updatedAt: '2026-10-25T09:00:00.000Z'
+    };
+  }),
+  ...SEED_FL_CONSUMABLES.map((csm) => ({
+    id: csm.id,
+    skuCode: csm.id,
+    name: csm.name,
+    category: csm.category || '지게차 소모품',
+    itemType: 'CONSUMABLE' as const,
+    inventoryAssetClass: 'CONSUMABLE' as const,
+    usagePurpose: csm.usagePurpose,
+    saleStockQty: csm.saleStockQty,
+    repairStockQty: csm.repairStockQty,
+    manufacturer: '공식인증 소모품',
+    modelName: csm.applicableModels,
+    originCountry: '국내 매입',
+    defaultWarehouse: '소모품창고',
+    spec: `${csm.modelSpec} | 호환: ${csm.applicableModels}`,
+    unit: csm.unit,
+    standardCost: csm.unitPrice,
+    dealerPrice: Math.round(csm.salePrice * 0.9),
+    standardPrice: csm.salePrice,
+    safetyStock: csm.minStockThreshold,
+    warrantyMonths: 3,
     status: 'ACTIVE' as const,
     cogsMethod: 'FIFO' as const,
-    memo: `${cp.tonnageRange} · ${cp.technicalNote}`,
-    createdAt: '2026-07-01T09:00:00.000Z',
+    memo: csm.memo,
+    createdAt: '2026-07-10T09:00:00.000Z',
     updatedAt: '2026-10-25T09:00:00.000Z'
   }))
 ];
@@ -827,7 +880,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
 const DEFAULT_PURCHASES: TradePurchase[] = [
   {
     id: 'PO-202604-001',
-    vendorId: 'v-1',
+    vendorId: 'VND-FL-001',
     purchaseType: 'IMPORT',
     currency: 'CNY',
     exchangeRate: 192.0,
@@ -853,7 +906,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
   },
   {
     id: 'PO-202606-002',
-    vendorId: 'v-3',
+    vendorId: 'VND-FL-003',
     purchaseType: 'IMPORT',
     currency: 'USD',
     exchangeRate: 1380.0,
@@ -879,7 +932,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
   },
   {
     id: 'PO-202608-003',
-    vendorId: 'v-2',
+    vendorId: 'VND-FL-002',
     purchaseType: 'DOMESTIC',
     currency: 'KRW',
     exchangeRate: 1,
@@ -904,7 +957,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
   },
   {
     id: 'PO-202609-004',
-    vendorId: 'v-1',
+    vendorId: 'VND-FL-001',
     purchaseType: 'IMPORT',
     currency: 'CNY',
     exchangeRate: 195.0,
@@ -930,7 +983,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
   },
   {
     id: 'PO-202610-005',
-    vendorId: 'v-2',
+    vendorId: 'VND-FL-004',
     purchaseType: 'DOMESTIC',
     currency: 'KRW',
     exchangeRate: 1,
@@ -949,7 +1002,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
     totalAmount: 13960000,
     vatAmount: 1396000,
     requesterName: '부품자재팀',
-    memo: '전동 파레트트럭 3대 및 단조 포크·솔리드 타이어 정기 보충 입고',
+    memo: '전동 파레트트럭 3대 및 단조 포크·솔리드 타이어·소모품 정기 보충 입고',
     createdAt: '2026-10-12T10:00:00.000Z',
     updatedAt: '2026-10-15T15:00:00.000Z'
   }
@@ -1123,7 +1176,7 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     lotStatus: 'SOLD',
     soldOrderId: 'SO-202609-101',
     soldDate: '2026-09-12',
-    soldCustomerName: '경기종합물류 대리점',
+    soldCustomerName: '동남건기부품상사',
     warrantyEndDate: '2028-09-11',
     initialQty: 1,
     remainingQty: 0,
@@ -1161,7 +1214,7 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     lotStatus: 'SOLD',
     soldOrderId: 'SO-202609-101',
     soldDate: '2026-09-12',
-    soldCustomerName: '경기종합물류 대리점',
+    soldCustomerName: '동남건기부품상사',
     warrantyEndDate: '2027-09-11',
     initialQty: 1,
     remainingQty: 0,
@@ -1200,7 +1253,7 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     lotStatus: 'SOLD',
     soldOrderId: 'SO-202610-102',
     soldDate: '2026-10-08',
-    soldCustomerName: '평택항만냉동창고',
+    soldCustomerName: '대한콜드체인 주식회사',
     warrantyEndDate: '2028-04-07',
     initialQty: 1,
     remainingQty: 0,
@@ -1239,7 +1292,7 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     lotStatus: 'SOLD',
     soldOrderId: 'SO-202610-103',
     soldDate: '2026-10-18',
-    soldCustomerName: '한진철강산업',
+    soldCustomerName: '태양중공업 주식회사',
     warrantyEndDate: '2028-10-17',
     initialQty: 1,
     remainingQty: 0,
@@ -1504,6 +1557,23 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     remainingQty: cp.stockQty,
     unitCost: cp.landedCostKrw,
     createdAt: '2026-09-25T10:00:00.000Z'
+  })),
+  ...SEED_FL_CONSUMABLES.map((csm, idx) => ({
+    id: `LOT-CSM-00${idx + 1}`,
+    purchaseId: 'PO-202610-005',
+    productId: csm.id,
+    serialNumber: `LOT-${csm.id}-2610`,
+    warehouseName: '소모품창고',
+    inboundDate: '2026-10-15',
+    foreignCurrency: 'KRW' as const,
+    foreignUnitPrice: csm.unitPrice,
+    exchangeRate: 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK' as const,
+    initialQty: csm.currentStock,
+    remainingQty: csm.currentStock,
+    unitCost: csm.unitPrice,
+    createdAt: '2026-10-15T15:30:00.000Z'
   }))
 ];
 
@@ -1750,16 +1820,24 @@ const SEED_OPTIONS_SO103: AppliedForkliftOption[] = [
 const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   {
     id: 'SO-202609-101',
-    customerId: 'CUST-001',
+    customerId: 'CUST-FL-005',
     customerTier: 'DEALER',
+    contractId: 'CTR-T2609-101',
+    contractNo: 'CTR-T2609-101',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    outboundId: 'TOUT-202609-101',
+    siteId: 'SITE-FL-008',
+    siteName: '동남건기 김해 골든루트 부품전시장',
     orderDate: '2026-09-12',
     deliveryDate: '2026-09-14',
-    deliveryLocation: '경기도 평택시 포승읍 경기종합물류 지게차 전시장',
-    receiverName: '김대리점장',
-    receiverPhone: '010-4455-8899',
+    deliveryLocation: '경상남도 김해시 주촌면 골든루트로 66 동남건기 지게차 전시장',
+    receiverName: '윤상무',
+    receiverPhone: '010-6210-5505',
     paymentTerms: '대리점 도매 공급가 적용 / 납품 후 30일 이내 현금 결제',
-    specialTerms: '1. 차대번호 HL-CPD25-260401, EP-1531-260401 출고\n2. 사이드시프트·덧발 1,800mm·무상 장비보호 옵션 시공 포함\n3. 무상보증 12개월 적용',
-    salespersonName: '해외유통영업팀',
+    specialTerms: '1. 제조번호 HL-CPD25-260401, EP-1531-260401 출고\n2. 사이드시프트·덧발 1,800mm·무상 장비보호 옵션 시공 포함\n3. 무상보증 12개월 적용',
+    salespersonName: '박준혁',
     status: 'DELIVERED',
     totalSalesAmount: 22390000,
     totalCogsAmount: 18090000,
@@ -1767,22 +1845,30 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     optionSupplyAmount: 900000,
     optionCostAmount: 730000,
     contractDocStatus: 'SENT',
-    memo: '경기남부 총판 대리점 9월 정기 출고 건 · 사이드시프트 및 덧발 1,800mm 옵션 청구 포함',
+    memo: '유통 계약 제1차 출고 건 · 동남건기부품상사 완제품 2대 및 부품 4개 출고',
     createdAt: '2026-09-12T09:00:00.000Z',
     updatedAt: '2026-09-14T16:00:00.000Z'
   },
   {
     id: 'SO-202610-102',
-    customerId: 'CUST-002',
+    customerId: 'CUST-FL-004',
     customerTier: 'END_USER',
+    contractId: 'CTR-T2610-102',
+    contractNo: 'CTR-T2610-102',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    outboundId: 'TOUT-202610-102',
+    siteId: 'SITE-FL-007',
+    siteName: '대한콜드체인 용인 기흥 허브창고',
     orderDate: '2026-10-08',
     deliveryDate: '2026-10-10',
-    deliveryLocation: '경기도 화성시 송산면 물류단지로 55',
-    receiverName: '박물류팀장',
-    receiverPhone: '010-8877-2233',
-    paymentTerms: '최종고객 납품 검수 후 세금계산서 발행 15일 이내 결제',
-    specialTerms: '1. 차대번호 HC-CQD15-260601 및 예비 리튬배터리·노마킹 타이어 일괄 납품\n2. 소프트 캐빈·후방감지센서·블루스팟 안전조명 옵션 장착 청구 포함',
-    salespersonName: '유통영업팀',
+    deliveryLocation: '경기도 용인시 기흥구 공세로 150 대한콜드체인 허브창고',
+    receiverName: '오현우',
+    receiverPhone: '010-5210-4404',
+    paymentTerms: '최종고객 납품 검수 후 계산서 발행 15일 이내 결제',
+    specialTerms: '1. 제조번호 HC-CQD15-260601 및 예비 리튬배터리·노마킹 타이어 일괄 납품\n2. 소프트 캐빈·후방감지센서·블루스팟 안전조명 옵션 장착 청구 포함',
+    salespersonName: '김민수',
     status: 'DELIVERED',
     totalSalesAmount: 24380000,
     totalCogsAmount: 16945000,
@@ -1790,22 +1876,30 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     optionSupplyAmount: 940000,
     optionCostAmount: 435000,
     contractDocStatus: 'GENERATED',
-    memo: '화성 냉동창고 최종고객 직납 완료 · 소프트 캐빈 및 후방감지센서 옵션 합산 청구',
+    memo: '유통 계약 제1차 출고 건 · 대한콜드체인 리치트럭 완제품 1대 및 부품 9개 직납 완료',
     createdAt: '2026-10-08T10:00:00.000Z',
     updatedAt: '2026-10-10T17:00:00.000Z'
   },
   {
     id: 'SO-202610-103',
-    customerId: 'CUST-003',
+    customerId: 'CUST-FL-002',
     customerTier: 'END_USER',
+    contractId: 'CTR-T2610-103',
+    contractNo: 'CTR-T2610-103',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    outboundId: 'TOUT-202610-103',
+    siteId: 'SITE-FL-003',
+    siteName: '태양중공업 당진 제1철강야드',
     orderDate: '2026-10-18',
     deliveryDate: '2026-10-20',
-    deliveryLocation: '충청남도 당진시 송악읍 부곡공단로 110',
-    receiverName: '최자재과장',
-    receiverPhone: '010-3322-9911',
-    paymentTerms: '납품 후 당월 말 세금계산서 마감, 익월 10일 현금 입금',
-    specialTerms: '1. 차대번호 DS-FD30T-260801 및 중량 단조포크 2세트 납품\n2. 높이연장 백레스트·3톤 사이드시프트·양문 여닫이 스틸캐빈·루프 에어컨·덧발 2,100mm·2채널 카메라·경광등 풀옵션 장착 청구 반영',
-    salespersonName: '유통영업팀',
+    deliveryLocation: '충청남도 당진시 송악읍 부곡공단로 110 태양중공업 제1철강야드',
+    receiverName: '박태양',
+    receiverPhone: '010-3210-2202',
+    paymentTerms: '납품 후 당월 말 계산서 마감, 익월 10일 현금 입금',
+    specialTerms: '1. 제조번호 DS-FD30T-260801 및 중량 단조포크 2세트 납품\n2. 높이연장 백레스트·3톤 사이드시프트·양문 여닫이 스틸캐빈·루프 에어컨·덧발 2,100mm·2채널 카메라·경광등 풀옵션 장착 청구 반영',
+    salespersonName: '박준혁',
     status: 'SHIPPED',
     totalSalesAmount: 36590000,
     totalCogsAmount: 27200000,
@@ -1813,9 +1907,65 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     optionSupplyAmount: 6570000,
     optionCostAmount: 3940000,
     contractDocStatus: 'GENERATED',
-    memo: '당진 철강공장 3톤 디젤지게차 풀옵션 장착 출고 · 미수금 관리 대상',
+    memo: '유통 계약 제1차 출고 건 · 태양중공업 3톤 디젤지게차 완제품 및 단조포크 부품 출고',
     createdAt: '2026-10-18T11:00:00.000Z',
     updatedAt: '2026-10-20T14:00:00.000Z'
+  },
+  {
+    id: 'SO-202610-104',
+    customerId: 'CUST-FL-001',
+    customerTier: 'END_USER',
+    contractId: 'CTR-T2610-104',
+    contractNo: 'CTR-T2610-104',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    outboundId: 'TOUT-202610-104',
+    siteId: 'SITE-FL-001',
+    siteName: '한빛 평택 포승 제1물류센터',
+    orderDate: '2026-10-22',
+    deliveryDate: '2026-10-24',
+    deliveryLocation: '경기도 평택시 포승읍 평택항만길 124 한빛 제1물류센터',
+    receiverName: '김한빛',
+    receiverPhone: '010-2210-1101',
+    paymentTerms: '납품 검수 후 당월 말 계산서 마감, 익월 25일 현금 결제',
+    specialTerms: '1. 전동 파레트트럭 1.5톤 완제품 2대 납품\n2. 유압작동유 VG46 4통 및 체인 전용 윤활 그리스 1박스 소모품 동시 출고',
+    salespersonName: '김민수',
+    status: 'DELIVERED',
+    totalSalesAmount: 4096000,
+    totalCogsAmount: 2912000,
+    contractDocStatus: 'SENT',
+    memo: '유통 계약 제1차 출고 건 · 한빛물류센터 파레트트럭 완제품 2대 및 소모품 출고',
+    createdAt: '2026-10-22T09:30:00.000Z',
+    updatedAt: '2026-10-24T15:00:00.000Z'
+  },
+  {
+    id: 'SO-202610-105',
+    customerId: 'CUST-FL-003',
+    customerTier: 'END_USER',
+    contractId: 'CTR-T2610-105',
+    contractNo: 'CTR-T2610-105',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    outboundId: 'TOUT-202610-105',
+    siteId: 'SITE-FL-005',
+    siteName: '서해글로벌 화성 우정 조립1공장',
+    orderDate: '2026-10-26',
+    deliveryDate: '2026-10-28',
+    deliveryLocation: '경기도 화성시 우정읍 기아자동차로 310 서해글로벌 조립1공장',
+    receiverName: '정서해',
+    receiverPhone: '010-4210-3303',
+    paymentTerms: '납품 검수 후 당월 말 계산서 마감, 익월 25일 현금 결제',
+    specialTerms: '1. 리튬인산철 배터리팩 80V 205Ah 1식 및 구동모터 컨트롤러 2개 납품\n2. 배터리 증류수 20L 5통 소모품 일괄 출고',
+    salespersonName: '김민수',
+    status: 'CONFIRMED',
+    totalSalesAmount: 5835000,
+    totalCogsAmount: 4110000,
+    contractDocStatus: 'GENERATED',
+    memo: '유통 계약 제1차 출고 건 · 서해글로벌모터스 부품 및 소모품 납품 계약',
+    createdAt: '2026-10-26T10:00:00.000Z',
+    updatedAt: '2026-10-27T11:00:00.000Z'
   }
 ];
 
@@ -1829,7 +1979,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitCogs: 14800000,
     serialNumbers: ['HL-CPD25-260401'],
     warehouseName: 'A창고',
-    memo: '대리점 공급단가 적용',
+    memo: '완제품 판매용 · 대리점 공급단가 적용',
     createdAt: '2026-09-12T09:00:00.000Z'
   },
   {
@@ -1841,7 +1991,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitCogs: 1320000,
     serialNumbers: ['EP-1531-260401'],
     warehouseName: 'A창고',
-    memo: '대리점 공급단가 적용',
+    memo: '완제품 판매용 · 대리점 공급단가 적용',
     createdAt: '2026-09-12T09:00:00.000Z'
   },
   {
@@ -1852,7 +2002,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitPrice: 410000,
     unitCogs: 310000,
     warehouseName: '부품창고',
-    memo: '대리점 A/S용 컨트롤러 4개',
+    memo: '부품 유통 판매용 · 컨트롤러 4개',
     createdAt: '2026-09-12T09:00:00.000Z'
   },
   {
@@ -1864,7 +2014,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitCogs: 11900000,
     serialNumbers: ['HC-CQD15-260601'],
     warehouseName: 'B창고',
-    memo: '최종고객 표준단가 적용',
+    memo: '완제품 판매용 · 최종고객 표준단가 적용',
     createdAt: '2026-10-08T10:00:00.000Z'
   },
   {
@@ -1875,7 +2025,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitPrice: 4800000,
     unitCogs: 3450000,
     warehouseName: '부품창고',
-    memo: '예비 리튬인산철 배터리팩',
+    memo: '부품 유통 판매용 · 예비 리튬인산철 배터리팩',
     createdAt: '2026-10-08T10:00:00.000Z'
   },
   {
@@ -1886,7 +2036,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitPrice: 230000,
     unitCogs: 145000,
     warehouseName: '부품창고',
-    memo: '노마킹 솔리드 타이어 8본',
+    memo: '부품 유통 판매용 · 노마킹 솔리드 타이어 8본',
     createdAt: '2026-10-08T10:00:00.000Z'
   },
   {
@@ -1898,7 +2048,7 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitCogs: 22500000,
     serialNumbers: ['DS-FD30T-260801'],
     warehouseName: 'A창고',
-    memo: '최종고객 3톤 디젤지게차',
+    memo: '완제품 판매용 · 최종고객 3톤 디젤지게차',
     createdAt: '2026-10-18T11:00:00.000Z'
   },
   {
@@ -1909,8 +2059,75 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
     unitPrice: 560000,
     unitCogs: 380000,
     warehouseName: '부품창고',
-    memo: '단조 중량 포크 세트 2조',
+    memo: '부품 유통 판매용 · 단조 중량 포크 세트 2조',
     createdAt: '2026-10-18T11:00:00.000Z'
+  },
+  {
+    id: 'SOL-104-1',
+    orderId: 'SO-202610-104',
+    productId: 'p1',
+    qty: 2,
+    unitPrice: 1850000,
+    unitCogs: 1320000,
+    serialNumbers: ['EP-1531-261001', 'EP-1531-261002'],
+    warehouseName: 'A창고',
+    memo: '완제품 판매용 · 전동 파레트트럭 1.5톤 2대',
+    createdAt: '2026-10-22T09:30:00.000Z'
+  },
+  {
+    id: 'SOL-104-2',
+    orderId: 'SO-202610-104',
+    productId: 'CSM-FL-001',
+    qty: 4,
+    unitPrice: 68000,
+    unitCogs: 48000,
+    warehouseName: '소모품창고',
+    memo: '소모품 유통 판매용 · 유압작동유 VG46 4통',
+    createdAt: '2026-10-22T09:30:00.000Z'
+  },
+  {
+    id: 'SOL-104-3',
+    orderId: 'SO-202610-104',
+    productId: 'CSM-FL-002',
+    qty: 1,
+    unitPrice: 124000,
+    unitCogs: 80000,
+    warehouseName: '소모품창고',
+    memo: '소모품 유통 판매용 · 마스트 체인 전용 윤활 그리스 1박스',
+    createdAt: '2026-10-22T09:30:00.000Z'
+  },
+  {
+    id: 'SOL-105-1',
+    orderId: 'SO-202610-105',
+    productId: 'p5',
+    qty: 1,
+    unitPrice: 4800000,
+    unitCogs: 3450000,
+    warehouseName: '부품창고',
+    memo: '부품 유통 판매용 · 리튬인산철 배터리팩 80V 205Ah 1식',
+    createdAt: '2026-10-26T10:00:00.000Z'
+  },
+  {
+    id: 'SOL-105-2',
+    orderId: 'SO-202610-105',
+    productId: 'p6',
+    qty: 2,
+    unitPrice: 480000,
+    unitCogs: 310000,
+    warehouseName: '부품창고',
+    memo: '부품 유통 판매용 · 구동모터 컨트롤러 2개',
+    createdAt: '2026-10-26T10:00:00.000Z'
+  },
+  {
+    id: 'SOL-105-3',
+    orderId: 'SO-202610-105',
+    productId: 'CSM-FL-003',
+    qty: 5,
+    unitPrice: 15000,
+    unitCogs: 8000,
+    warehouseName: '소모품창고',
+    memo: '소모품 유통 판매용 · 전동지게차 배터리 증류수 20L 5통',
+    createdAt: '2026-10-26T10:00:00.000Z'
   }
 ];
 
@@ -1918,6 +2135,11 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
   {
     id: 'TOUT-202609-101',
     orderId: 'SO-202609-101',
+    contractId: 'CTR-T2609-101',
+    contractNo: 'CTR-T2609-101',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
     status: 'DELIVERED',
     deliveryType: 'DIRECT',
     driverName: '정운송 기사',
@@ -1925,22 +2147,27 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     vehicleNo: '경기88바5544',
     shippingCost: 250000,
     paidBy: 'OURS',
-    destinationAddress: '경기도 평택시 포승읍 경기종합물류 지게차 전시장',
-    receiverName: '김대리점장',
-    receiverPhone: '010-4455-8899',
+    destinationAddress: '경상남도 김해시 주촌면 골든루트로 66 동남건기 지게차 전시장',
+    receiverName: '윤상무',
+    receiverPhone: '010-6210-5505',
     appliedOptions: SEED_OPTIONS_SO101,
     optionBillingAmount: 900000,
     allocatedAt: '2026-09-12T10:00:00.000Z',
     packedAt: '2026-09-13T11:00:00.000Z',
     shippedAt: '2026-09-14T08:30:00.000Z',
     deliveredAt: '2026-09-14T15:00:00.000Z',
-    closingMemo: '차대번호 HL-CPD25-260401, EP-1531-260401 출고 · 사이드시프트 및 덧발 1,800mm 장착·무상 장비보호 시공 완료',
+    closingMemo: '유통 계약 제1차 출고 · 제조번호 HL-CPD25-260401, EP-1531-260401 출고 · 사이드시프트 및 덧발 1,800mm 장착 완료',
     createdAt: '2026-09-12T09:30:00.000Z',
     updatedAt: '2026-09-14T15:00:00.000Z'
   },
   {
     id: 'TOUT-202610-102',
     orderId: 'SO-202610-102',
+    contractId: 'CTR-T2610-102',
+    contractNo: 'CTR-T2610-102',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
     status: 'DELIVERED',
     deliveryType: 'DIRECT',
     driverName: '박셀프로더 기사',
@@ -1948,22 +2175,27 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     vehicleNo: '경기92아7788',
     shippingCost: 200000,
     paidBy: 'CUSTOMER',
-    destinationAddress: '경기도 화성시 송산면 물류단지로 55',
-    receiverName: '박물류팀장',
-    receiverPhone: '010-8877-2233',
+    destinationAddress: '경기도 용인시 기흥구 공세로 150 대한콜드체인 허브창고',
+    receiverName: '오현우',
+    receiverPhone: '010-5210-4404',
     appliedOptions: SEED_OPTIONS_SO102,
     optionBillingAmount: 940000,
     allocatedAt: '2026-10-08T11:00:00.000Z',
     packedAt: '2026-10-09T14:00:00.000Z',
     shippedAt: '2026-10-10T09:00:00.000Z',
     deliveredAt: '2026-10-10T16:30:00.000Z',
-    closingMemo: '차대번호 HC-CQD15-260601 리치트럭 · 소프트 캐빈(지퍼 개폐형), 후방감지센서, 블루스팟 장착 납품 완료',
+    closingMemo: '유통 계약 제1차 출고 · 제조번호 HC-CQD15-260601 리치트럭 · 소프트 캐빈, 후방감지센서, 블루스팟 장착 납품 완료',
     createdAt: '2026-10-08T10:30:00.000Z',
     updatedAt: '2026-10-10T16:30:00.000Z'
   },
   {
     id: 'TOUT-202610-103',
     orderId: 'SO-202610-103',
+    contractId: 'CTR-T2610-103',
+    contractNo: 'CTR-T2610-103',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
     status: 'SHIPPED',
     deliveryType: 'DIRECT',
     driverName: '이대형트럭 기사',
@@ -1971,17 +2203,61 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
     vehicleNo: '충남81사1199',
     shippingCost: 300000,
     paidBy: 'OURS',
-    destinationAddress: '충청남도 당진시 송악읍 부곡공단로 110',
-    receiverName: '최자재과장',
-    receiverPhone: '010-3322-9911',
+    destinationAddress: '충청남도 당진시 송악읍 부곡공단로 110 태양중공업 제1철강야드',
+    receiverName: '박태양',
+    receiverPhone: '010-3210-2202',
     appliedOptions: SEED_OPTIONS_SO103,
     optionBillingAmount: 6570000,
     allocatedAt: '2026-10-18T13:00:00.000Z',
     packedAt: '2026-10-19T15:00:00.000Z',
     shippedAt: '2026-10-20T08:00:00.000Z',
-    closingMemo: '차대번호 DS-FD30T-260801 3톤 디젤지게차 · 연장 백레스트, 3톤 사이드시프트, 양문 여닫이 캐빈, 루프 에어컨, 덧발 2,100mm, 2채널 카메라, 경광등 장착 출고',
+    closingMemo: '유통 계약 제1차 출고 · 제조번호 DS-FD30T-260801 3톤 디젤지게차 · 연장 백레스트, 3톤 사이드시프트, 양문 여닫이 캐빈, 루프 에어컨 장착 출고',
     createdAt: '2026-10-18T11:30:00.000Z',
     updatedAt: '2026-10-20T08:00:00.000Z'
+  },
+  {
+    id: 'TOUT-202610-104',
+    orderId: 'SO-202610-104',
+    contractId: 'CTR-T2610-104',
+    contractNo: 'CTR-T2610-104',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    status: 'DELIVERED',
+    deliveryType: 'DIRECT',
+    driverName: '김화물 기사',
+    driverContact: '010-6444-5555',
+    vehicleNo: '경기85자3321',
+    shippingCost: 150000,
+    paidBy: 'OURS',
+    destinationAddress: '경기도 평택시 포승읍 평택항만길 124 한빛 제1물류센터',
+    receiverName: '김한빛',
+    receiverPhone: '010-2210-1101',
+    allocatedAt: '2026-10-22T11:00:00.000Z',
+    packedAt: '2026-10-23T14:00:00.000Z',
+    shippedAt: '2026-10-24T09:00:00.000Z',
+    deliveredAt: '2026-10-24T15:00:00.000Z',
+    closingMemo: '유통 계약 제1차 출고 · 파레트트럭 완제품 2대 및 유압작동유·체인그리스 소모품 납품 완료',
+    createdAt: '2026-10-22T10:00:00.000Z',
+    updatedAt: '2026-10-24T15:00:00.000Z'
+  },
+  {
+    id: 'TOUT-202610-105',
+    orderId: 'SO-202610-105',
+    contractId: 'CTR-T2610-105',
+    contractNo: 'CTR-T2610-105',
+    contractType: 'TRADE',
+    contractUnitRule: 'PER_OUTBOUND',
+    outboundSeq: 1,
+    status: 'ALLOCATED',
+    deliveryType: 'COURIER',
+    destinationAddress: '경기도 화성시 우정읍 기아자동차로 310 서해글로벌 조립1공장',
+    receiverName: '정서해',
+    receiverPhone: '010-4210-3303',
+    allocatedAt: '2026-10-26T14:00:00.000Z',
+    closingMemo: '유통 계약 제1차 출고 대기 · 리튬배터리팩, 컨트롤러 부품 및 배터리 증류수 소모품 출고 할당 완료',
+    createdAt: '2026-10-26T10:30:00.000Z',
+    updatedAt: '2026-10-26T14:00:00.000Z'
   }
 ];
 
@@ -1990,18 +2266,18 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     id: 'TBIL-202609-101',
     orderId: 'SO-202609-101',
     orderIds: ['SO-202609-101'],
-    customerId: 'CUST-001',
+    customerId: 'CUST-FL-005',
     billingMonth: '2026-09',
     billingDate: '2026-09-25',
     supplyAmount: 22390000,
     vatAmount: 2239000,
     totalAmount: 24629000,
     status: 'PAID',
-    recipientName: '김대리점장',
-    recipientEmail: 'dealer-gg@example.com',
+    recipientName: '윤상무',
+    recipientEmail: 'parts@dongnam-fl.co.kr',
     sentAt: '2026-09-25T10:00:00.000Z',
     paidAt: '2026-10-05T14:30:00.000Z',
-    memo: '9월분 대리점 출고 대금 및 장착 옵션 합산 전액 수납 완료',
+    memo: '동남건기부품상사 제1차 출고 계약 대금 및 장착 옵션 합산 전액 수납 완료',
     createdAt: '2026-09-25T09:00:00.000Z',
     updatedAt: '2026-10-05T14:30:00.000Z'
   },
@@ -2009,19 +2285,36 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     id: 'TBIL-202610-102',
     orderId: 'SO-202610-102',
     orderIds: ['SO-202610-102'],
-    customerId: 'CUST-002',
+    customerId: 'CUST-FL-004',
     billingMonth: '2026-10',
     billingDate: '2026-10-12',
     supplyAmount: 24380000,
     vatAmount: 2438000,
     totalAmount: 26818000,
     status: 'SENT',
-    recipientName: '박물류팀장',
-    recipientEmail: 'hwaseong-cold@example.com',
+    recipientName: '오현우',
+    recipientEmail: 'cold@daehan-cold.co.kr',
     sentAt: '2026-10-12T11:00:00.000Z',
-    memo: '10월 말 결제 예정 미수 채권 · 장비 본품 및 장착 옵션(소프트 캐빈·후방센서·블루스팟) 합산 청구',
+    memo: '대한콜드체인 제1차 출고 계약 미수 채권 · 장비 본품 및 장착 옵션 합산 청구',
     createdAt: '2026-10-12T10:00:00.000Z',
     updatedAt: '2026-10-12T11:00:00.000Z'
+  },
+  {
+    id: 'TBIL-202610-104',
+    orderId: 'SO-202610-104',
+    orderIds: ['SO-202610-104'],
+    customerId: 'CUST-FL-001',
+    billingMonth: '2026-10',
+    billingDate: '2026-10-25',
+    supplyAmount: 4096000,
+    vatAmount: 409600,
+    totalAmount: 4505600,
+    status: 'ISSUED',
+    recipientName: '김한빛',
+    recipientEmail: 'account@hanbit-logis.co.kr',
+    memo: '한빛물류센터 제1차 출고 계약 명세서 발행 완료 · 파레트트럭 2대 및 소모품 합산 청구',
+    createdAt: '2026-10-25T10:00:00.000Z',
+    updatedAt: '2026-10-25T10:00:00.000Z'
   }
 ];
 
@@ -2053,9 +2346,24 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
   const specDoc = archiveMatch?.documents.find(d => d.docCategory === 'SPEC_SHEET') || archiveMatch?.documents[0];
   const manualDoc = archiveMatch?.documents.find(d => d.docCategory === 'OPERATOR_MANUAL') || archiveMatch?.documents[1];
 
+  const resolvedItemType = product.itemType ?? defaultMatch?.itemType ?? 'EQUIPMENT';
+  const resolvedAssetClass =
+    product.inventoryAssetClass ??
+    defaultMatch?.inventoryAssetClass ??
+    (resolvedItemType === 'EQUIPMENT' ? 'PRODUCT' : resolvedItemType === 'CONSUMABLE' ? 'CONSUMABLE' : 'PART');
+  const resolvedUsagePurpose =
+    product.usagePurpose ??
+    defaultMatch?.usagePurpose ??
+    (resolvedAssetClass === 'PRODUCT' ? 'TRADE_SALE' : 'DUAL_USE');
+
   return {
     ...(defaultMatch || {}),
     ...product,
+    itemType: resolvedItemType,
+    inventoryAssetClass: resolvedAssetClass,
+    usagePurpose: resolvedUsagePurpose,
+    saleStockQty: product.saleStockQty ?? defaultMatch?.saleStockQty,
+    repairStockQty: product.repairStockQty ?? defaultMatch?.repairStockQty,
     seriesName: product.seriesName ?? defaultMatch?.seriesName ?? archiveMatch?.seriesName,
     equipmentClass: product.equipmentClass ?? defaultMatch?.equipmentClass ?? archiveMatch?.equipmentClass,
     powerType: product.powerType ?? defaultMatch?.powerType ?? archiveMatch?.powerType,
@@ -2087,98 +2395,18 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v5';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v7_virtual5';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));
-    const rawProducts = localStorage.getItem('ebro_trade_products');
-    const parsedProducts: TradeProduct[] = rawProducts ? JSON.parse(rawProducts) : [];
-    const hasLegacyGloves = parsedProducts.some(p => p.skuCode === 'SKU001' || p.name === '산업용 장갑');
-    if (!rawProducts || parsedProducts.length === 0 || hasLegacyGloves) {
-      localStorage.setItem('ebro_trade_products', JSON.stringify(DEFAULT_PRODUCTS));
-      localStorage.setItem('ebro_trade_purchases', JSON.stringify(DEFAULT_PURCHASES));
-      localStorage.setItem('ebro_trade_purchase_items', JSON.stringify(DEFAULT_PURCHASE_ITEMS));
-      localStorage.setItem('ebro_trade_inventory', JSON.stringify(DEFAULT_LOTS));
-      localStorage.setItem('ebro_trade_orders', JSON.stringify(DEFAULT_SALES_ORDERS));
-      localStorage.setItem('ebro_trade_lines', JSON.stringify(DEFAULT_SALES_ORDER_LINES));
-      localStorage.setItem('ebro_trade_outbounds', JSON.stringify(DEFAULT_OUTBOUNDS));
-      localStorage.setItem('ebro_trade_billings', JSON.stringify(DEFAULT_BILLINGS));
-    } else {
-      // 기존 제품에 공식 VDI 2198 지게차 제원 병합 및 누락된 글로벌 제조사 주력 모델 추가
-      const enrichedExisting = parsedProducts.map(enrichTradeProductWithArchive);
-      const existingIds = new Set(enrichedExisting.map(p => p.id));
-      const existingSkus = new Set(enrichedExisting.map(p => p.skuCode));
-      const missingDefaults = DEFAULT_PRODUCTS.filter(dp => !existingIds.has(dp.id) && !existingSkus.has(dp.skuCode));
-      localStorage.setItem('ebro_trade_products', JSON.stringify([...enrichedExisting, ...missingDefaults]));
-
-      const rawLots = localStorage.getItem('ebro_trade_inventory');
-      const parsedLots: TradeInventoryLot[] = rawLots ? JSON.parse(rawLots) : [];
-      const existingLotIds = new Set(parsedLots.map(l => l.id));
-      const missingLots = DEFAULT_LOTS.filter(dl => !existingLotIds.has(dl.id));
-      if (missingLots.length > 0) {
-        localStorage.setItem('ebro_trade_inventory', JSON.stringify([...parsedLots, ...missingLots]));
-      }
-
-      // 기본 샘플 수주·출고·청구에 지게차 옵션 장착 내역 동기화
-      const rawOrders = localStorage.getItem('ebro_trade_orders');
-      if (rawOrders) {
-        const parsedOrders: TradeSalesOrder[] = JSON.parse(rawOrders);
-        const mergedOrders = parsedOrders.map(so => {
-          const defSo = DEFAULT_SALES_ORDERS.find(d => d.id === so.id);
-          if (defSo && (!so.appliedOptions || so.appliedOptions.length === 0)) {
-            return {
-              ...so,
-              appliedOptions: defSo.appliedOptions,
-              optionSupplyAmount: defSo.optionSupplyAmount,
-              optionCostAmount: defSo.optionCostAmount,
-              totalSalesAmount: defSo.totalSalesAmount,
-              totalCogsAmount: defSo.totalCogsAmount,
-              specialTerms: defSo.specialTerms,
-              memo: defSo.memo
-            };
-          }
-          return so;
-        });
-        localStorage.setItem('ebro_trade_orders', JSON.stringify(mergedOrders));
-      }
-
-      const rawOutbounds = localStorage.getItem('ebro_trade_outbounds');
-      if (rawOutbounds) {
-        const parsedOutbounds: TradeOutbound[] = JSON.parse(rawOutbounds);
-        const mergedOutbounds = parsedOutbounds.map(ob => {
-          const defOb = DEFAULT_OUTBOUNDS.find(d => d.id === ob.id);
-          if (defOb && (!ob.appliedOptions || ob.appliedOptions.length === 0)) {
-            return {
-              ...ob,
-              appliedOptions: defOb.appliedOptions,
-              optionBillingAmount: defOb.optionBillingAmount,
-              closingMemo: defOb.closingMemo
-            };
-          }
-          return ob;
-        });
-        localStorage.setItem('ebro_trade_outbounds', JSON.stringify(mergedOutbounds));
-      }
-
-      const rawBillings = localStorage.getItem('ebro_trade_billings');
-      if (rawBillings) {
-        const parsedBillings: TradeBilling[] = JSON.parse(rawBillings);
-        const mergedBillings = parsedBillings.map(tb => {
-          const defTb = DEFAULT_BILLINGS.find(d => d.id === tb.id);
-          if (defTb) {
-            return {
-              ...tb,
-              supplyAmount: defTb.supplyAmount,
-              vatAmount: defTb.vatAmount,
-              totalAmount: defTb.totalAmount,
-              memo: defTb.memo
-            };
-          }
-          return tb;
-        });
-        localStorage.setItem('ebro_trade_billings', JSON.stringify(mergedBillings));
-      }
-    }
+    localStorage.setItem('ebro_trade_products', JSON.stringify(DEFAULT_PRODUCTS));
+    localStorage.setItem('ebro_trade_purchases', JSON.stringify(DEFAULT_PURCHASES));
+    localStorage.setItem('ebro_trade_purchase_items', JSON.stringify(DEFAULT_PURCHASE_ITEMS));
+    localStorage.setItem('ebro_trade_inventory', JSON.stringify(DEFAULT_LOTS));
+    localStorage.setItem('ebro_trade_orders', JSON.stringify(DEFAULT_SALES_ORDERS));
+    localStorage.setItem('ebro_trade_lines', JSON.stringify(DEFAULT_SALES_ORDER_LINES));
+    localStorage.setItem('ebro_trade_outbounds', JSON.stringify(DEFAULT_OUTBOUNDS));
+    localStorage.setItem('ebro_trade_billings', JSON.stringify(DEFAULT_BILLINGS));
     localStorage.setItem(MIGRATION_KEY, 'done');
   } catch (e) {
     console.warn('ensureFlTradeSeedMigratedOnce failed:', e);
@@ -2340,9 +2568,11 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!customerId) return '미지정 고객사';
       const found = getCustomerById(customerId);
       if (found) return found.name;
-      if (customerId === 'CUST-001') return '경기종합물류 대리점';
-      if (customerId === 'CUST-002') return '평택항만냉동창고';
-      if (customerId === 'CUST-003') return '한진철강산업';
+      if (customerId === 'CUST-FL-001') return '한빛물류센터 주식회사';
+      if (customerId === 'CUST-FL-002' || customerId === 'CUST-003') return '태양중공업 주식회사';
+      if (customerId === 'CUST-FL-003') return '주식회사 서해글로벌모터스';
+      if (customerId === 'CUST-FL-004' || customerId === 'CUST-002') return '대한콜드체인 주식회사';
+      if (customerId === 'CUST-FL-005' || customerId === 'CUST-001') return '동남건기부품상사';
       return customerId;
     },
     [getCustomerById]
@@ -3134,12 +3364,23 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const cust = getCustomerById(customerId);
     const resolvedStatus = options?.status || (options?.contractId ? 'CONFIRMED' : 'PENDING');
+    const outbId = `TOUT-${uuidv4()}`;
+    const customerOutboundSeq =
+      salesOrders.filter(o => o.customerId === customerId && o.status !== 'CANCELLED').length + 1;
+    const generatedTradeContractId =
+      options?.contractId || `CTR-T${today.slice(2, 7).replace('-', '')}-${uuidv4().slice(0, 3)}`;
+    const generatedTradeContractNo = options?.contractNo || generatedTradeContractId;
+
     const newOrder: TradeSalesOrder = {
       id: oId,
       customerId,
       customerTier: options?.customerTier || 'END_USER',
-      contractId: options?.contractId,
-      contractNo: options?.contractNo,
+      contractId: generatedTradeContractId,
+      contractNo: generatedTradeContractNo,
+      contractType: 'TRADE',
+      contractUnitRule: 'PER_OUTBOUND',
+      outboundSeq: customerOutboundSeq,
+      outboundId: outbId,
       siteId: options?.siteId,
       siteName: options?.siteName,
       billingMode: options?.billingMode,
@@ -3164,25 +3405,28 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       receiverPhone: options?.receiverPhone || cust?.repContact || '010-0000-0000',
       paymentTerms:
         options?.paymentTerms ||
-        '납품 및 검수 완료 후 세금계산서 발행, 30일 이내 현금 결제',
+        '납품 및 검수 완료 후 계산서 발행, 30일 이내 현금 결제',
       specialTerms:
         options?.specialTerms ||
         '1. 운송비 매도인 부담\n2. 물품 검수 기한 3영업일',
       salespersonName: options?.salespersonName || currentUser?.name || '유통영업팀',
-      memo: options?.memo || ''
+      memo: options?.memo || `유통 계약 · 제${customerOutboundSeq}차 출고 건별 계약`
     };
 
     setSalesOrders(prev => [newOrder, ...prev]);
     setSalesOrderLines(prev => [...newLines, ...prev]);
 
-    const outbId = `TOUT-${uuidv4()}`;
     const isBundleWithRental = options?.deliveryMethod === 'BUNDLE_WITH_RENTAL';
     const autoAllocate = isBundleWithRental || Boolean(options?.contractId) || resolvedStatus === 'CONFIRMED';
     setOutbounds(prev => [
       {
         id: outbId,
         orderId: oId,
-        contractId: options?.contractId,
+        contractId: generatedTradeContractId,
+        contractNo: generatedTradeContractNo,
+        contractType: 'TRADE',
+        contractUnitRule: 'PER_OUTBOUND',
+        outboundSeq: customerOutboundSeq,
         linkedRentalDeliveryId: options?.linkedRentalDeliveryId,
         status: autoAllocate ? 'ALLOCATED' : 'REQUESTED',
         allocatedAt: autoAllocate ? now : undefined,
@@ -3193,13 +3437,53 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         appliedOptions: appliedOpts.length > 0 ? appliedOpts : undefined,
         optionBillingAmount: optionSupplyAmount,
         closingMemo: isBundleWithRental
-          ? `[렌탈 장비 동봉 출고] 계약: ${options?.contractNo || options?.contractId || '-'}`
-          : undefined,
+          ? `렌탈 장비 동봉 출고 · 계약: ${generatedTradeContractNo}`
+          : `유통 계약 제${customerOutboundSeq}차 출고 건`,
         createdAt: now,
         updatedAt: now
       },
       ...prev
     ]);
+
+    try {
+      const itemSummary = newLines
+        .map(l => {
+          const p = products.find(pr => pr.id === l.productId);
+          return `${p?.name || l.productId} ${l.qty}${p?.unit || 'EA'}`;
+        })
+        .join(', ');
+      const existingContract = (db.contracts || []).find(c => c.id === generatedTradeContractId);
+      if (!existingContract) {
+        const tradeContractRecord: any = {
+          id: generatedTradeContractId,
+          customerId,
+          siteId: options?.siteId || undefined,
+          siteName: options?.siteName || newOrder.deliveryLocation,
+          contractType: 'TRADE',
+          contractUnitRule: 'PER_OUTBOUND',
+          outboundId: outbId,
+          outboundSeq: customerOutboundSeq,
+          tradeOrderId: oId,
+          tradeItemSummary: itemSummary,
+          startDate: newOrder.orderDate,
+          endDate: newOrder.deliveryDate || newOrder.orderDate,
+          type: 'DAILY',
+          billingCycleDay: cust?.defaultInvoiceCloseDay || 25,
+          statementCloseDay: cust?.defaultStatementCloseDay || 25,
+          taxInvoiceCloseDay: cust?.defaultInvoiceCloseDay || 30,
+          taxInvoiceIssueType: cust?.defaultTaxInvoiceIssueType || 'FORWARD',
+          paymentMethod: cust?.defaultPaymentMethod || 'CASH',
+          paymentDueMonthOffset: cust?.paymentDueMonthOffset ?? 1,
+          paymentDueDay: cust?.paymentDueDay || 25,
+          totalAmount: newOrder.totalSalesAmount,
+          status: 'ACTIVE',
+          salespersonName: newOrder.salespersonName,
+          specialTerms: `유통 계약 · 제${customerOutboundSeq}차 출고 1건 = 1계약 · ${itemSummary}`,
+          createdAt: now.split('T')[0]
+        };
+        db.contracts = [tradeContractRecord, ...(db.contracts || [])];
+      }
+    } catch (e) {}
 
     await db.awaitPendingWrites();
     return newOrder;
@@ -3449,7 +3733,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         finalBody,
         attachments,
         destinationCc,
-        '(주)기연리프트 / e-Bro ERP'
+        '이브로 지게차모빌리티 주식회사'
       );
     }
 
@@ -3648,9 +3932,22 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       0
     );
 
+    const nextObId = `TOUT-${uuidv4()}`;
+    const customerOutboundSeq =
+      outbounds.filter(ob => {
+        const linkedSo = salesOrders.find(so => so.id === ob.orderId);
+        return linkedSo?.customerId === order.customerId && ob.status !== 'CANCELLED';
+      }).length + 1;
+    const outboundContractId = `CTR-T${now.slice(2, 7).replace('-', '')}-${uuidv4().slice(0, 3)}`;
+
     const newOb: TradeOutbound = {
-      id: `TOUT-${uuidv4()}`,
+      id: nextObId,
       orderId,
+      contractId: outboundContractId,
+      contractNo: outboundContractId,
+      contractType: 'TRADE',
+      contractUnitRule: 'PER_OUTBOUND',
+      outboundSeq: customerOutboundSeq,
       status: 'REQUESTED',
       deliveryType: extra?.deliveryType || 'COURIER',
       destinationAddress: extra?.destinationAddress || order.deliveryLocation || cust?.address || '',
@@ -3658,11 +3955,49 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       receiverPhone: extra?.receiverPhone || order.receiverPhone || cust?.repContact || '',
       appliedOptions: initialOptions.length > 0 ? initialOptions : undefined,
       optionBillingAmount: optionSupplyAmount,
-      closingMemo: extra?.closingMemo || '',
+      closingMemo: extra?.closingMemo || `유통 계약 · 제${customerOutboundSeq}차 출고 건`,
       createdAt: now,
       updatedAt: now
     };
     setOutbounds(prev => [newOb, ...prev]);
+
+    try {
+      const baseLines = salesOrderLines.filter(l => l.orderId === orderId);
+      const itemSummary = baseLines
+        .map(l => {
+          const p = products.find(pr => pr.id === l.productId);
+          return `${p?.name || l.productId} ${l.qty}${p?.unit || 'EA'}`;
+        })
+        .join(', ');
+      const tradeContractRecord: any = {
+        id: outboundContractId,
+        customerId: order.customerId,
+        siteId: order.siteId || undefined,
+        siteName: order.siteName || newOb.destinationAddress,
+        contractType: 'TRADE',
+        contractUnitRule: 'PER_OUTBOUND',
+        outboundId: nextObId,
+        outboundSeq: customerOutboundSeq,
+        tradeOrderId: orderId,
+        tradeItemSummary: itemSummary,
+        startDate: now.split('T')[0],
+        endDate: now.split('T')[0],
+        type: 'DAILY',
+        billingCycleDay: cust?.defaultInvoiceCloseDay || 25,
+        statementCloseDay: cust?.defaultStatementCloseDay || 25,
+        taxInvoiceCloseDay: cust?.defaultInvoiceCloseDay || 30,
+        taxInvoiceIssueType: cust?.defaultTaxInvoiceIssueType || 'FORWARD',
+        paymentMethod: cust?.defaultPaymentMethod || 'CASH',
+        paymentDueMonthOffset: cust?.paymentDueMonthOffset ?? 1,
+        paymentDueDay: cust?.paymentDueDay || 25,
+        totalAmount: order.totalSalesAmount,
+        status: 'ACTIVE',
+        salespersonName: order.salespersonName || '유통영업팀',
+        specialTerms: `유통 계약 · 제${customerOutboundSeq}차 출고 1건 = 1계약 · ${itemSummary}`,
+        createdAt: now.split('T')[0]
+      };
+      db.contracts = [tradeContractRecord, ...(db.contracts || [])];
+    } catch (e) {}
 
     if (extra?.appliedOptions) {
       const baseLines = salesOrderLines.filter(l => l.orderId === orderId);
@@ -4490,7 +4825,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         finalBody,
         [],
         destinationCc,
-        '(주)기연리프트 / e-Bro ERP'
+        '이브로 지게차모빌리티 주식회사'
       );
     }
 

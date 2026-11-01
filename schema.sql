@@ -8,25 +8,13 @@
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
--- 기존 불필요 테이블(AWP 전용 / IT 전용) 및 재편 대상 테이블 정리 (FK 역순 CASCADE)
+-- 불필요한 레거시 뷰 및 테이블 정리
 -- ------------------------------------------------------------------------------
 DROP VIEW IF EXISTS v_awp_shared_memories_compat CASCADE;
-DROP TABLE IF EXISTS site_masters CASCADE;
-DROP TABLE IF EXISTS contract_history CASCADE;
-DROP TABLE IF EXISTS external_leases CASCADE;
-DROP TABLE IF EXISTS outbound_inspections CASCADE;
-DROP TABLE IF EXISTS contract_assets CASCADE;
-DROP TABLE IF EXISTS contracts CASCADE;
-DROP TABLE IF EXISTS standard_options CASCADE;
-DROP TABLE IF EXISTS depreciation_logs CASCADE;
 DROP TABLE IF EXISTS call_pipeline_logs CASCADE;
 DROP TABLE IF EXISTS call_uploads CASCADE;
-DROP TABLE IF EXISTS draft_dispatch_orders CASCADE;
 DROP TABLE IF EXISTS walkie_channels CASCADE;
-DROP TABLE IF EXISTS print_queue CASCADE;
-DROP TABLE IF EXISTS print_stations CASCADE;
 DROP TABLE IF EXISTS apk_releases CASCADE;
-DROP TABLE IF EXISTS developer_authorized_devices CASCADE;
 
 -- ==============================================================================
 -- 🏢 [도메인 0] 멀티테넌트 및 전사 기본 설정 (Tenants & Core Workplace)
@@ -1692,6 +1680,138 @@ CREATE TABLE IF NOT EXISTS trade_outbounds (
     "inspectionNote"      TEXT,
     status                TEXT DEFAULT 'REQUESTED',
     "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS contracts (
+    id                        TEXT PRIMARY KEY,
+    "contractNo"              TEXT,
+    "contractType"            TEXT DEFAULT 'RENTAL',
+    "contractUnitRule"        TEXT DEFAULT 'PER_CUSTOMER_SITE',
+    "outboundId"              TEXT,
+    "outboundSeq"             INTEGER,
+    "tradeOrderId"            TEXT,
+    "tradeItemSummary"        TEXT,
+    "customerId"              TEXT,
+    "contactId"               TEXT,
+    "siteId"                  TEXT,
+    "siteName"                TEXT,
+    "salespersonId"           TEXT,
+    "startDate"               TEXT,
+    "endDate"                 TEXT,
+    "billingDay"              INTEGER DEFAULT 30,
+    "statementClosingDay"     INTEGER DEFAULT 25,
+    "paymentDueDay"           INTEGER DEFAULT 15,
+    "paymentDueMonthOffset"   INTEGER DEFAULT 1,
+    "lateInterestRate"        DOUBLE PRECISION DEFAULT 0,
+    status                    TEXT DEFAULT 'ACTIVE',
+    "totalAmount"             DOUBLE PRECISION DEFAULT 0,
+    "approvalStatus"          TEXT,
+    "packageSentAt"           TEXT,
+    "lastBilledYm"            TEXT,
+    "lastBillingDate"         TEXT,
+    "lastBilledPeriodStart"   TEXT,
+    "lastBilledPeriodEnd"     TEXT,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS contract_assets (
+    id                        TEXT PRIMARY KEY,
+    "contractId"              TEXT,
+    "assetId"                 TEXT,
+    "expectedModel"           TEXT,
+    "monthlyRentalFee"        DOUBLE PRECISION DEFAULT 0,
+    "dailyRentalFee"          DOUBLE PRECISION DEFAULT 0,
+    "salePrice"               DOUBLE PRECISION DEFAULT 0,
+    "startDate"               TEXT,
+    "endDate"                 TEXT,
+    "firstStartDate"          TEXT,
+    "actualReturnDate"        TEXT,
+    status                    TEXT DEFAULT 'RENTED',
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS contract_history (
+    id                        TEXT PRIMARY KEY,
+    "contractId"              TEXT,
+    "changeType"              TEXT,
+    "changeDate"              TEXT,
+    description               TEXT,
+    "createdAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS site_masters (
+    id                        TEXT PRIMARY KEY,
+    name                      TEXT,
+    "paidOptions"             JSONB DEFAULT '[]'::jsonb,
+    protection                JSONB DEFAULT '[]'::jsonb,
+    "checkedSpecs"            JSONB DEFAULT '[]'::jsonb,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS external_leases (
+    id                        TEXT PRIMARY KEY,
+    "vendorId"                TEXT,
+    "assetId"                 TEXT,
+    "contractId"              TEXT,
+    "modelName"               TEXT,
+    "monthlyRentFee"          DOUBLE PRECISION DEFAULT 0,
+    "dailyRentFee"            DOUBLE PRECISION DEFAULT 0,
+    "startDate"               TEXT,
+    "endDate"                 TEXT,
+    status                    TEXT DEFAULT 'ACTIVE',
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS outbound_inspections (
+    id                        TEXT PRIMARY KEY,
+    "contractId"              TEXT,
+    "contractAssetId"         TEXT,
+    "assetId"                 TEXT,
+    status                    TEXT DEFAULT 'PENDING',
+    "inspectorName"           TEXT,
+    "inspectedAt"             TEXT,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS standard_options (
+    id                        TEXT PRIMARY KEY,
+    category                  TEXT,
+    name                      TEXT,
+    "defaultPrice"            DOUBLE PRECISION DEFAULT 0,
+    "isActive"                BOOLEAN DEFAULT TRUE,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS print_stations (
+    id                        TEXT PRIMARY KEY,
+    name                      TEXT,
+    status                    TEXT DEFAULT 'ONLINE',
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS print_queue (
+    id                        TEXT PRIMARY KEY,
+    "stationId"               TEXT,
+    status                    TEXT DEFAULT 'PENDING',
+    payload                   JSONB DEFAULT '{}'::jsonb,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
 );
 
 -- ==============================================================================

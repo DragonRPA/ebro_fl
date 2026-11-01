@@ -6,6 +6,7 @@ import {
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
 import { TradeSalesOrder } from '../../services/db';
+import { SEED_FL_CUSTOMERS } from '../../data/flUnifiedSeedData';
 import { TradeContractBundleModal } from '../../components/TradeContractBundleModal';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
@@ -45,34 +46,21 @@ export const TradeContractsPage: React.FC = () => {
   };
 
   const customerOptions = useMemo(() => {
-    const flCustomers = [
-      { id: 'DEALER-001', name: '경기지게차판매 대리점', address: '경기도 화성시 팔탄면 서해로 1024', representative: '박진우', repContact: '031-352-8811', tier: 'DEALER' as const },
-      { id: 'DEALER-002', name: '영남기계상사 대리점', address: '경상남도 김해시 골든루트로 188', representative: '최동훈', repContact: '055-338-4490', tier: 'DEALER' as const },
-      { id: 'CUST-001', name: '평택항만물류 주식회사', address: '경기도 평택시 포승읍 평택항만길 85', representative: '윤영준', repContact: '031-681-1114', tier: 'END_USER' as const },
-      { id: 'CUST-002', name: '대한식품냉동 물류센터', address: '충청북도 음성군 대소면 대풍산단로 44', representative: '오세철', repContact: '043-877-5114', tier: 'END_USER' as const }
-    ];
-    if (customers && customers.length > 0) {
-      const merged = [...flCustomers];
-      customers.forEach(c => {
-        if (!merged.some(m => m.id === c.id)) {
-          merged.push({
-            id: c.id,
-            name: c.name,
-            address: c.address || '',
-            representative: c.representative || '',
-            repContact: c.repContact || '',
-            tier: c.name.includes('대리점') ? 'DEALER' : 'END_USER'
-          });
-        }
-      });
-      return merged;
-    }
-    return flCustomers;
+    const sourceCustomers = customers && customers.length > 0 ? customers : SEED_FL_CUSTOMERS;
+    return sourceCustomers.map(c => ({
+      id: c.id,
+      name: c.name,
+      address: c.address || '',
+      representative: c.representative || '',
+      repContact: c.repContact || '',
+      businessNumber: c.businessNumber || '',
+      tier: (c.name.includes('부품상사') || c.name.includes('대리점')) ? ('DEALER' as const) : ('END_USER' as const)
+    }));
   }, [customers]);
 
   // Quick Order Bar state
   const [quickCustomerSearch, setQuickCustomerSearch] = useState<string>('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(customerOptions[0]?.id || 'DEALER-001');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(customerOptions[0]?.id || 'CUST-FL-001');
   const [selectedProductId, setSelectedProductId] = useState<string>(products[0]?.id || 'p1');
   const [orderQty, setOrderQty] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -604,7 +592,7 @@ export const TradeContractsPage: React.FC = () => {
           flexShrink: 0
         }}
       >
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <h2
             data-mid="trade_contracts-header"
             style={{
@@ -619,8 +607,22 @@ export const TradeContractsPage: React.FC = () => {
             }}
           >
             <FileSpreadsheet size={20} color="var(--primary)" />
-            <span>거래처별 판매 · 매출이익 관리</span>
+            <span>유통 계약 및 거래처별 판매 · 매출이익 관리</span>
           </h2>
+          <span
+            style={{
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              backgroundColor: 'rgba(2, 132, 199, 0.14)',
+              color: '#0284c7',
+              border: '1px solid rgba(2, 132, 199, 0.35)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            계약구분: 유통 계약 · 각 출고횟수가 1개의 계약 (1출고 = 1계약)
+          </span>
         </div>
 
         {/* 신규 수주 파이프라인 + 상세 모달 + 엑셀 다운로드 */}
@@ -895,10 +897,11 @@ export const TradeContractsPage: React.FC = () => {
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '250px' }}>계약서 / 업무 처리</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>주문번호 / 일자</th>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>계약번호 / 주문번호</th>
+                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약구분 · 출고회차</th>
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>거래처구분</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>제품 명세</th>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 품목 명세 (제품·부품·소모품)</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 차대번호</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매입원가</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매금액</th>
@@ -988,8 +991,29 @@ export const TradeContractsPage: React.FC = () => {
                       </td>
 
                       <td style={{ padding: '8px 12px' }}>
-                        <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>{o.id}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.orderDate}</div>
+                        <div style={{ fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace' }}>{o.contractNo || o.id}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{o.id} · {o.orderDate}</div>
+                      </td>
+
+                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              backgroundColor: 'rgba(2, 132, 199, 0.14)',
+                              color: '#0284c7',
+                              border: '1px solid rgba(2, 132, 199, 0.35)'
+                            }}
+                          >
+                            유통계약 · 제{o.outboundSeq || 1}차 출고
+                          </span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                            {o.outboundId || '1출고=1계약'}
+                          </span>
+                        </div>
                       </td>
 
                       <td style={{ padding: '8px 10px', textAlign: 'center' }}>
@@ -1130,8 +1154,8 @@ export const TradeContractsPage: React.FC = () => {
             {filteredOrders.length > 0 && (
               <tfoot>
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-                  <td colSpan={6} style={{ padding: '10px 12px', color: 'var(--text-main)' }}>
-                    조회 합계 ({filteredOrders.length}건)
+                  <td colSpan={7} style={{ padding: '10px 12px', color: 'var(--text-main)' }}>
+                    조회 합계 ({filteredOrders.length}건 · 1출고 = 1유통계약)
  </td>
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
                     ₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + o.totalCogsAmount, 0).toLocaleString()}

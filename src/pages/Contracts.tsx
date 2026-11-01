@@ -85,7 +85,7 @@ export const Contracts: React.FC = () => {
 
   // --- 계약 조회 필터 상태 ---
   const [searchTerm, setSearchTerm] = useState('');
-  const [contractTypeFilter, setContractTypeFilter] = useState<'ALL' | 'RENTAL' | 'SALE'>('RENTAL');
+  const [contractTypeFilter, setContractTypeFilter] = useState<'ALL' | 'RENTAL' | 'TRADE' | 'SALE'>('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [customerInputText, setCustomerInputText] = useState('');
@@ -656,6 +656,16 @@ export const Contracts: React.FC = () => {
 
   //  테이블 및 피드용 4대 마일스톤 배지 렌더러 (건조하고 직관적인 전문 표준 준수)
   const renderMilestoneBadges = (c: Contract, onOpenPackageModal?: (contractId: string) => void) => {
+    if (c.contractType === 'TRADE') {
+      return (
+        <div data-hs-observe="contracts" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <span className="badge badge-info" style={{ fontSize: '11px', padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            유통출고 완료 · 제{c.outboundSeq || 1}차 출고
+          </span>
+        </div>
+      );
+    }
+
     const m = getContractOutboundMilestones(c);
 
     if (m.isDelivered) {
@@ -2676,9 +2686,10 @@ export const Contracts: React.FC = () => {
     setBasket([]);
   };
 
-  // 계약 KPI 통계 및 상태 칩 건수 (렌탈 계약과 매각 계약 정밀 분리 - 단일 패스 O(N))
+  // 계약 KPI 통계 및 상태 칩 건수 (렌탈 계약·유통 계약·매각 계약 정밀 분리 - 단일 패스 O(N))
   const contractKpiStats = useMemo(() => {
     let rentalCount = 0;
+    let tradeCount = 0;
     let saleCount = 0;
     let activeCount = 0;
     let d3Count = 0;
@@ -2686,6 +2697,7 @@ export const Contracts: React.FC = () => {
     let succeededCount = 0;
     let completedCount = 0;
     let totalRentSum = 0;
+    let totalTradeSum = 0;
 
     let allActiveCount = 0;
     let allD3Count = 0;
@@ -2694,6 +2706,7 @@ export const Contracts: React.FC = () => {
 
     for (const c of contracts) {
       const isSale = c.contractType === 'SALE';
+      const isTrade = c.contractType === 'TRADE';
       const isActive = c.status === 'ACTIVE' || c.status === 'EXTENDED';
       const isD3 = getDDayText(c.endDate).isWarning;
       const cas = contractAssetsByContractMap.get(c.id) || [];
@@ -2706,11 +2719,14 @@ export const Contracts: React.FC = () => {
 
       if (isActive) allActiveCount++;
       if (isD3) allD3Count++;
-      if (hasZero) allZeroFeeCount++;
+      if (hasZero && !isTrade) allZeroFeeCount++;
       if (c.status === 'COMPLETED') allCompletedCount++;
 
       if (isSale) {
         saleCount++;
+      } else if (isTrade) {
+        tradeCount++;
+        totalTradeSum += (c.totalAmount || 0);
       } else {
         rentalCount++;
         if (isActive) activeCount++;
@@ -2725,6 +2741,7 @@ export const Contracts: React.FC = () => {
     return {
       totalCount: contracts.length,
       rentalCount,
+      tradeCount,
       saleCount,
       activeCount,
       d3Count,
@@ -2732,6 +2749,7 @@ export const Contracts: React.FC = () => {
       succeededCount,
       completedCount,
       totalRentSum,
+      totalTradeSum,
       totalAssetsCount: contractAssets.length,
       allActiveCount,
       allD3Count,
@@ -2862,8 +2880,25 @@ export const Contracts: React.FC = () => {
           {/* 필터 패널 */}
           <div className="card" data-mid="contract-filter-panel" style={{ padding: '12px 14px', margin: 0, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
             
-            {/* 0행: 계약 유형 분계선 탭 (렌탈 계약 vs 매각 계약) */}
+            {/* 0행: 계약 종류 구분자 탭 (전체 / 렌탈 계약·현장별 계약 / 유통 계약·출고 건별 계약 / 매각 계약) */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setContractTypeFilter('ALL')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: contractTypeFilter === 'ALL' ? 700 : 500,
+                  border: contractTypeFilter === 'ALL' ? '1px solid var(--border-focus, #3b82f6)' : '1px solid var(--border-color)',
+                  backgroundColor: contractTypeFilter === 'ALL' ? 'var(--bg-card)' : 'var(--bg-app)',
+                  color: contractTypeFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                전체 계약 ({contractKpiStats.totalCount}건)
+              </button>
               <button
                 type="button"
                 onClick={() => setContractTypeFilter('RENTAL')}
@@ -2882,19 +2917,19 @@ export const Contracts: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}
               >
-                렌탈 계약 ({contractKpiStats.rentalCount}건)
- </button>
+                렌탈 계약 · 고객 현장별 계약 ({contractKpiStats.rentalCount}건)
+              </button>
               <button
                 type="button"
-                onClick={() => setContractTypeFilter('SALE')}
+                onClick={() => setContractTypeFilter('TRADE')}
                 style={{
                   padding: '6px 14px',
                   borderRadius: '6px',
                   fontSize: '12px',
-                  fontWeight: contractTypeFilter === 'SALE' ? 700 : 500,
-                  border: contractTypeFilter === 'SALE' ? '1px solid #475569' : '1px solid var(--border-color)',
-                  backgroundColor: contractTypeFilter === 'SALE' ? '#475569' : 'var(--bg-app)',
-                  color: contractTypeFilter === 'SALE' ? '#fff' : 'var(--text-secondary)',
+                  fontWeight: contractTypeFilter === 'TRADE' ? 700 : 500,
+                  border: contractTypeFilter === 'TRADE' ? '1px solid #0284c7' : '1px solid var(--border-color)',
+                  backgroundColor: contractTypeFilter === 'TRADE' ? '#0284c7' : 'var(--bg-app)',
+                  color: contractTypeFilter === 'TRADE' ? '#fff' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -2902,25 +2937,30 @@ export const Contracts: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}
               >
-                매각 계약 ({contractKpiStats.saleCount}건)
- </button>
-              <button
-                type="button"
-                onClick={() => setContractTypeFilter('ALL')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: contractTypeFilter === 'ALL' ? 700 : 500,
-                  border: contractTypeFilter === 'ALL' ? '1px solid var(--border-focus, #3b82f6)' : '1px solid var(--border-color)',
-                  backgroundColor: contractTypeFilter === 'ALL' ? 'var(--bg-card)' : 'var(--bg-app)',
-                  color: contractTypeFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                전체 ({contractKpiStats.totalCount}건)
- </button>
+                유통 계약 · 출고 건별 계약 ({contractKpiStats.tradeCount}건)
+              </button>
+              {contractKpiStats.saleCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setContractTypeFilter('SALE')}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: contractTypeFilter === 'SALE' ? 700 : 500,
+                    border: contractTypeFilter === 'SALE' ? '1px solid #475569' : '1px solid var(--border-color)',
+                    backgroundColor: contractTypeFilter === 'SALE' ? '#475569' : 'var(--bg-app)',
+                    color: contractTypeFilter === 'SALE' ? '#fff' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  매각 계약 ({contractKpiStats.saleCount}건)
+                </button>
+              )}
             </div>
 
             {/* 1행: 검색어 & 표준 횡배치 버튼군 (조회 -> 엑셀 다운로드) */}
@@ -3284,10 +3324,20 @@ export const Contracts: React.FC = () => {
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <strong style={{ color: 'var(--primary)' }}>{c.contractNo}</strong>
+                              {(c.contractType || 'RENTAL') === 'RENTAL' && (
+                                <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.14)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.35)', flexShrink: 0 }}>
+                                  렌탈·현장별
+                                </span>
+                              )}
+                              {c.contractType === 'TRADE' && (
+                                <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(2, 132, 199, 0.16)', color: '#38bdf8', border: '1px solid rgba(2, 132, 199, 0.4)', flexShrink: 0 }}>
+                                  유통·제{c.outboundSeq || 1}차출고
+                                </span>
+                              )}
                               {c.contractType === 'SALE' && (
                                 <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--primary)', color: '#fff', flexShrink: 0 }}>
                                   매각
- </span>
+                                </span>
                               )}
                             </div>
                           </td>
@@ -3306,7 +3356,7 @@ export const Contracts: React.FC = () => {
                               )}
                             </div>
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{getSiteName(c.siteId)}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{c.siteName || getSiteName(c.siteId)}</td>
                           {showOutboundProgressCol && (
                             <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                               {renderMilestoneBadges(c, (cid) => {
@@ -3316,17 +3366,30 @@ export const Contracts: React.FC = () => {
                             </td>
                           )}
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <div 
-                              style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}
-                              onClick={(e) => { e.stopPropagation(); setShowAssetsDetailModalContractId(c.id); }}
-                              title="클릭하여 체결자산 상세 보기"
-                            >
-                              <strong style={{ color: 'var(--text-primary)' }}>{modelSummaryText || '미지정'}</strong>
-                              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px' }}>(총 {cas.length}대)</span>
-                            </div>
+                            {c.contractType === 'TRADE' ? (
+                              <div
+                                style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(2, 132, 199, 0.35)', backgroundColor: 'rgba(2, 132, 199, 0.08)' }}
+                              >
+                                <strong style={{ color: 'var(--text-primary)' }}>{c.tradeItemSummary || '유통 출고 품목'}</strong>
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '6px' }}>1출고=1계약</span>
+                              </div>
+                            ) : (
+                              <div 
+                                style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}
+                                onClick={(e) => { e.stopPropagation(); setShowAssetsDetailModalContractId(c.id); }}
+                                title="클릭하여 체결자산 상세 보기"
+                              >
+                                <strong style={{ color: 'var(--text-primary)' }}>{modelSummaryText || '미지정'}</strong>
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px' }}>(총 {cas.length}대)</span>
+                              </div>
+                            )}
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            {c.contractType === 'SALE' ? (
+                            {c.contractType === 'TRADE' ? (
+                              <span style={{ color: '#38bdf8', fontWeight: 700 }}>
+                                출고공급가 ₩{(c.totalAmount || 0).toLocaleString()}원
+                              </span>
+                            ) : c.contractType === 'SALE' ? (
                               <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
                                 매각가 ₩{cas.reduce((s, ca) => s + (ca.salePrice || 0), 0).toLocaleString()}원
  </span>

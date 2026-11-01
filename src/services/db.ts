@@ -3,6 +3,34 @@ import { createClient } from '@supabase/supabase-js';
 import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
+import {
+  InventoryAssetClass,
+  InventoryUsagePurpose,
+  ContractCategoryType,
+  INVENTORY_ASSET_CLASS_META,
+  INVENTORY_USAGE_PURPOSE_META,
+  CONTRACT_CATEGORY_META,
+  SEED_FL_CUSTOMERS,
+  SEED_FL_SITES,
+  SEED_FL_CONTACTS,
+  SEED_FL_VENDORS,
+  SEED_FL_RENTAL_ASSETS,
+  SEED_FL_CONSUMABLES,
+  SEED_FL_CONSUMABLE_LOTS,
+  SEED_FL_CONTRACTS,
+  SEED_FL_CONTRACT_ASSETS,
+  SEED_FL_REPAIRS
+} from '../data/flUnifiedSeedData';
+export {
+  INVENTORY_ASSET_CLASS_META,
+  INVENTORY_USAGE_PURPOSE_META,
+  CONTRACT_CATEGORY_META
+};
+export type {
+  InventoryAssetClass,
+  InventoryUsagePurpose,
+  ContractCategoryType
+};
 import { 
   encryptEntityPrivacyFields, 
   decryptEntityPrivacyFields,
@@ -30,19 +58,8 @@ export const CENTRAL_TABLE_NAMES = new Set([
   'apk_releases'
 ]);
 
-//  eBro_FL(지게차 유통 전용 ERP)에서 제거된 레거시 렌탈/AWP 전용 테이블 (원격 DB 호출 원천 차단 및 로컬 인메모리만 허용)
-export const LOCAL_ONLY_REMOVED_TABLES = new Set([
-  'contracts',
-  'contract_assets',
-  'contract_history',
-  'outbound_inspections',
-  'depreciation_logs',
-  'external_leases',
-  'site_masters',
-  'standard_options',
-  'print_stations',
-  'print_queue'
-]);
+//  로컬 전용 격리 테이블 목록 (렌탈·유통 통합 운용으로 전 테이블 원격 DB 연동 활성화)
+export const LOCAL_ONLY_REMOVED_TABLES = new Set<string>([]);
 
 // 법인 표기어 및 공백 제거 정규화 파서
 export function normalizeCustomerName(name: string): string {
@@ -1278,6 +1295,9 @@ export interface Customer {
   blockedBy?: string; // 거래 차단 처분자
   defaultBillingDay?: number; // 계산서 기본 마감일 (예: 30일/월말, 0: 미지정)
   defaultStatementClosingDay?: number; // 명세서 기본 마감일 (예: 25일)
+  defaultInvoiceCloseDay?: number; // 계산서 마감일 하위호환
+  defaultStatementCloseDay?: number; // 명세서 마감일 하위호환
+  businessNumber?: string; // 사업자번호 하위호환
   defaultFreightBillingStandard?: '3/5' | '2/4'; // 운송료 청구기준 기본값 ('3/5' | '2/4')
   defaultTaxInvoiceIssueType?: TaxInvoiceIssueType; // 계산서 발행 조건 기본값 ('FORWARD': 정발행 | 'REVERSE': 역발행)
   defaultPaymentMethod?: PaymentMethodType; // 약정 결제조건 기본값 ('CASH': 현금 기본 | 'BILL': 어음 | 'BOND': 채권)
@@ -1502,6 +1522,8 @@ export interface Asset {
   id: string;
   modelName: string;
   assetNo: string; // 관리번호
+  inventoryAssetClass?: InventoryAssetClass; // 유형자산·재고 4대 분류 ('ASSET': 렌탈용 자산)
+  usagePurpose?: InventoryUsagePurpose;      // 운용 용도 ('RENTAL_ONLY': 렌탈 전용)
   vendorId?: string; // 임차처/매입처 외래키
   vendorAssetNo?: string; // 타사(임차처) 원래 관리번호
   serialNo?: string; // 제조번호
@@ -1509,7 +1531,7 @@ export interface Asset {
   manufactureYear?: string; // 제조년도 (예: 2023)
   ownerType: 'OWNED' | 'RENTED'; // 당사자산 / 임차자산
   assetNature?: 'PHYSICAL' | 'VIRTUAL'; // 자산 구분 ('PHYSICAL': 실물, 'VIRTUAL': 가상)
-  yard?: string; // 주기장 (예: '용인')
+  yard?: string; // 주기장 (예: '평택')
   antiEntrapmentOwnership?: AntiEntrapmentOwnership; // 협착방지봉 소유권 ('VENDOR': 임차처 소유, 'OURS': 당사 소유, 'NONE': 미장착)
   status: 'AVAILABLE' | 'ASSIGNED' | 'OUTBOUND_INSPECTION' | 'AWAITING_TRANSPORT' | 'RENTED' | 'REPAIRING' | 'RENTED_RETURNED' | 'SOLD' | 'LOST' | 'DISPOSED';
   
@@ -1648,13 +1670,28 @@ export function calculateAssetDepreciation(asset: Asset, asOfDate: Date = new Da
 
 export interface Consumable {
   id: string;
+  skuCode?: string;
+  name?: string;
   modelName: string;
   stockQty: number; // 주기장 총 재고 (Lot들의 현재 잔여 수량 합계)
+  saleStockQty?: number; // 유통 판매용 재고 수량
+  repairStockQty?: number; // 렌탈자산 정비용 재고 수량
+  inventoryAssetClass?: InventoryAssetClass; // 'CONSUMABLE' | 'PART'
+  usagePurpose?: InventoryUsagePurpose; // 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE'
   unit: string; // '개' | '박스' 등
   unitPrice: number; // 최근 매입 단가 (참고용)
+  saleUnitPrice?: number; // 유통 판매 단가
+  salePrice?: number; // 유통 판매 단가 호환
   supplier: string; // 최근 매입처
+  vendorId?: string;
+  spec?: string;
+  modelSpec?: string;
+  applicableModels?: string;
+  minStockQty?: number;
+  minStockThreshold?: number;
   category?: string;
   note?: string;
+  memo?: string;
   repairingQty?: number;
   createdAt: string;
   updatedAt: string;
@@ -1806,7 +1843,7 @@ export interface ContractAsset {
   updatedAt?: string;
 }
 
-export type ContractType = 'RENTAL' | 'SALE';
+export type ContractType = 'RENTAL' | 'TRADE' | 'SALE';
 
 /** 자산 매각 계약 전용 실무 5대 조건 인터페이스 */
 export interface SaleContractTerms {
@@ -1822,7 +1859,7 @@ export interface SaleContractTerms {
   deliveryDate?: string; // 장비 인도 예정일(일자)
   deliveryLocationType?: 'YARD' | 'BUYER_SITE'; // 당사 주기장 상차도 | 매수처 도착도
   deliverySiteAddress?: string; // 도착도 시 상세 주소
-  freightBearer?: 'BUYER' | 'SELLER'; // 운송비 부담 주체: 매수자 부담(기본) | 당사(기연) 부담
+  freightBearer?: 'BUYER' | 'SELLER'; // 운송비 부담 주체: 매수자 부담(기본) | 당사 부담
 
   useStandardAsIsClause?: boolean; // 현상태 인수 및 하자담보책임 면책 특약 동의 여부
   specialNotes?: string; // 추가 특약 사항 전문
@@ -1831,12 +1868,23 @@ export interface SaleContractTerms {
 export interface Contract {
   id: string;
   contractNo: string;
-  contractType?: ContractType; //  신규 추가: 'RENTAL' (기본값) | 'SALE' (자산 매각 계약)
+  contractType?: ContractType; // 계약 종류 구분자: 'RENTAL' (렌탈 계약: 고객 현장별 계약) | 'TRADE' (유통 계약: 출고 1건 = 1계약) | 'SALE' (자산 매각 계약)
+  contractUnitRule?: 'PER_CUSTOMER_SITE' | 'PER_OUTBOUND'; // 계약 단위 기준 ('PER_CUSTOMER_SITE': 고객 현장별 1계약 | 'PER_OUTBOUND': 출고 1회 = 1계약)
+  outboundId?: string; // 유통 계약 연동 출고 ID (1출고 = 1계약)
+  outboundSeq?: number; // 해당 고객에 대한 유통 출고 회차 (예: 1차 출고 계약, 2차 출고 계약)
+  tradeOrderId?: string; // 연동 유통 수주 ID
+  tradeItemsSummary?: string; // 유통 계약 출고 품목 요약 (제품·부품·소모품)
+  tradeItemSummary?: string; // 유통 계약 출고 품목 요약 호환
+  tradeInventoryClasses?: InventoryAssetClass[]; // 출고된 유형자산·재고 분류 목록
+  tradeSupplyAmount?: number; // 유통 계약 공급가액
+  tradeTotalAmount?: number; // 유통 계약 합계금액 (부가세 포함)
+  totalAmount?: number; // 계약 금액 호환
   saleTerms?: SaleContractTerms; //  자산 매각 계약 전용 상세 조건
   customerId: string;
   customerName?: string;
   contactId?: string;
   siteId?: string;
+  siteName?: string;
   startDate: string;
   endDate: string;
   billingDay: number; // 계산서 마감일 (예: 25 → 매월 25일 발행, 청구기간: 전월26~당월25)
@@ -3461,18 +3509,15 @@ const generateMockContracts = (customers: Customer[], contacts: CustomerContact[
 };
 
 const mockDataProducts = generateMockProducts();
-const mockDataCust = generateMockCustomers();
-const mockDataAssets = generateMockAssets(mockDataProducts);
-const mockDataCont = generateMockContracts(mockDataCust.customers, mockDataCust.contacts, mockDataCust.sites, mockDataAssets);
 export const SEED_TENANTS: Tenant[] = [
   {
     id: 'tenant-ebro-fl',
     tenantCode: 'EBRO_FL',
     solutionType: 'FL',
     systemName: 'e-Bro FL ERP',
-    displayName: 'eBroFL 렌탈',
+    displayName: 'eBroFL 렌탈·유통',
     corporateName: '주식회사 이브로지게차렌탈',
-    tradeName: 'eBroFL 렌탈',
+    tradeName: 'eBroFL 렌탈·유통',
     businessNumber: '108-86-99999',
     corporateRegistrationNumber: '110111-7777777',
     representativeName: '이정용',
@@ -3586,336 +3631,6 @@ export const SEED_TENANTS: Tenant[] = [
     allowCustomBillingStatement: true,
     allowContractTradeOutbound: true,
     specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound']
-  },
-  {
-    id: 'tenant-giyeonlift',
-    tenantCode: 'GIYEONLIFT',
-    solutionType: 'AWP',
-    systemName: 'eBro System',
-    displayName: '기연리프트',
-    corporateName: '주식회사 기연리프트',
-    tradeName: '(주)기연리프트',
-    businessNumber: '138-81-83251',
-    corporateRegistrationNumber: '134111-0236287',
-    representativeName: '이수용',
-    openingDate: '2013-04-03',
-    businessAddress: '경기도 용인시 처인구 모현읍 갈담로112번길 21-3',
-    headOfficeAddress: '경기도 용인시 처인구 모현읍 갈담로112번길 21-3',
-    businessCategory: '사업지원및임대서비스업',
-    businessItem: '고소장비임대업',
-    businessTypes: [
-      { bizType: '사업지원및임대서비스업', bizItem: '고소장비임대업' },
-      { bizType: '도매및소매업', bizItem: '건설기계·부품및수리업' },
-      { bizType: '도매및소매업', bizItem: '컴퓨터및주변장치도매업' },
-      { bizType: '제조업', bizItem: '건설기계장비 및 고소장비 수리,유지관리업' },
-    ],
-    isUnitTaxation: false,
-    taxEmail: 'giyeonlift@naver.com',
-    taxOffice: '용인세무서장',
-    certificateIssueDate: '2025-11-26',
-    tel: '031-334-5295',
-    fax: '031-335-5297',
-    salesPhone: '031-334-5296 / 010-9402-5296',
-    email: 'giyeonlift@naver.com',
-    websiteUrl: '',
-    
-    //  법정 개인정보 보호책임자
-    privacyOfficer: {
-      name: '이수용',
-      position: '대표이사 / 관리부 총괄',
-      department: '(주)기연리프트 경영진',
-      phone: '031-334-5295',
-      email: 'giyeonlift@naver.com (사내 관리부)',
-      updatedAt: '2026-01-01T00:00:00.000Z'
-    },
-    privacyOfficerName: '이수용',
-    privacyOfficerPosition: '대표이사 / 관리부 총괄',
-    privacyOfficerDepartment: '(주)기연리프트 경영진',
-    privacyOfficerPhone: '031-334-5295',
-    privacyOfficerEmail: 'giyeonlift@naver.com (사내 관리부)',
-    
-    //  본사 및 사업장 목록 (다수 사업장 체계)
-    workplaces: [
-      {
-        id: 'wp-01',
-        workplaceCode: 'HQ',
-        name: '용인 본사 (본점)',
-        isHeadquarter: true,
-        businessNumber: '138-81-83251',
-        subBizNumber: '0000',
-        address: '경기도 용인시 처인구 모현읍 갈담로112번길 21-3',
-        addressDetail: '',
-        tel: '031-334-5295',
-        fax: '031-335-5297',
-        managerName: '이수용',
-        managerPhone: '031-334-5295',
-        managerEmail: 'giyeonlift@naver.com',
-        memo: '법인 본점 및 주사업장',
-        createdAt: '2013-04-03T00:00:00.000Z',
-      }
-    ],
-
-    //  장비 주기장 목록 (다수 주기장 체계)
-    yards: [
-      {
-        id: 'yard-01',
-        yardCode: 'YARD-YONGIN',
-        name: '당사 보관소',
-        isDefault: true,
-        address: '경기도 용인시 처인구 모현읍 갈담로112번길 21-3',
-        addressDetail: '당사 보관소',
-        operatingCapacity: 250,
-        managerName: '김원진 부장',
-        managerPhone: '010-2018-1223',
-        tel: '031-334-5295',
-        operatingHours: '08:30 ~ 17:30',
-        memo: '본사 주력 출고/입고/정비 복합 주기장',
-        createdAt: '2013-04-03T00:00:00.000Z',
-      }
-    ],
-
-    mainYardAddress: '경기도 용인시 처인구 모현읍 갈담로112번길 21-3',
-    bankAccounts: [
-      {
-        bankName: '신한은행',
-        accountNumber: '140-010-007060',
-        accountHolder: '주식회사 기연리프트',
-        isDefault: true,
-      },
-      {
-        bankName: '기업은행',
-        accountNumber: '144-082875-01-017',
-        accountHolder: '(주)기연리프트',
-        isDefault: false,
-      },
-    ],
-    logoUrl: '/images/ci/giyeonlift_ci.png',
-    ciUrl: '/images/ci/giyeonlift_ci.png',
-    subdomain: 'giyeonlift',
-    solutionType: 'AWP',
-    targetRepo: 'DragonRPA/ebro_awp',
-    features: {
-      telegramBot: true,
-      callRecordingStt: true,
-      kakaoContract: true,
-      autoTaxInvoice: true,
-      voiceAssistance: true,
-      agentAiEnabled: false,
-      officialMailConfig: {
-        googleEmail: 'giyeonlift7@naver.com',
-        gmailAppPassword: 'WEFWT3MYX5CQ',
-        smtpProvider: 'NAVER',
-        smtpHost: 'smtp.naver.com',
-        smtpPort: 465,
-        isDevMode: false,
-        contractFolder: '렌탈계약서_증빙',
-        consumableFolder: '소모품납품증빙',
-        deliveryFolder: '출고의뢰_증빙',
-        maintenanceFolder: '정비보고서_증빙',
-        updatedAt: '2026-01-01T00:00:00.000Z'
-      }
-    },
-    subscription: {
-      plan: 'ENTERPRISE',
-      status: 'ACTIVE',
-      startDate: '2024-01-01',
-      endDate: '2027-12-31',
-      gracePeriodDays: 14,
-      billingCycle: 'YEARLY',
-      monthlyFee: 1500000,
-      autoRenew: true,
-      maxAssets: 0,
-      maxUsers: 0,
-      licenseKey: 'EBR-GIYEONLIFT-20271231-X9K2',
-      memo: '전사 무제한 엔터프라이즈 라이선스 (본점 및 전 지점 통합)',
-    },
-    stampImageUrl: OFFICIAL_STAMP_BASE64,
-    status: 'ACTIVE',
-    isDefault: true,
-    createdAt: '2013-04-03T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-    allowCustomBillingStatement: true,
-    allowContractTradeOutbound: true,
-    specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound'], //  특수 거래명세서 기능 활성화
-    excelMappingRules: {
-      contractAssetsStartRow: 44,
-      contractModelCol: 1,
-      contractQtyCol: 3,
-      contractSnCol: 4,
-      contractFeeCol: 5,
-      contractAmountCol: 7,
-      contractPrintAreaBase: "A26:K",
-      contractPrintAreaStartRow: 26,
-      statementAssetsStartRow: 21,
-      statementModelCol: 1,
-      statementSnCol: 2,
-      statementPeriodCol: 3,
-      statementQtyCol: 4,
-      statementPriceCol: 5,
-      statementAmountCol: 8,
-      statementPrintAreaBase: "A1:J",
-      statementPrintAreaStartRow: 1
-    }
-  },
-  {
-    id: 'tenant-ebro-awp',
-    tenantCode: 'EBRO_AWP',
-    solutionType: 'AWP',
-    systemName: 'eBro System',
-    displayName: 'eBroAWP 렌탈',
-    corporateName: '주식회사 이브로에이더블유피렌탈',
-    tradeName: 'eBroAWP 렌탈',
-    businessNumber: '107-86-99999',
-    corporateRegistrationNumber: '110111-9999999',
-    representativeName: '이정용',
-    openingDate: '2026-01-01',
-    businessAddress: '경기도 화성시 남양읍 시청로 160번길 20',
-    headOfficeAddress: '경기도 화성시 남양읍 시청로 160번길 20',
-    businessCategory: '사업지원 및 임대서비스업',
-    businessItem: '고소작업대임대·건설기계임대',
-    businessTypes: [
-      { bizType: '사업지원 및 임대서비스업', bizItem: '고소작업대임대' },
-      { bizType: '도매 및 소매업', bizItem: '건설기계·부품 및 수리업' }
-    ],
-    isUnitTaxation: false,
-    taxEmail: 'demo@ebro.run',
-    taxOffice: '화성세무서장',
-    certificateIssueDate: '2026-01-01',
-    tel: '031-355-8899',
-    fax: '031-355-8898',
-    salesPhone: '010-3344-5566',
-    email: 'demo@ebro.run',
-    websiteUrl: 'https://awp-demo.ebro.run',
-    subdomain: 'awp-demo',
-    targetRepo: 'DragonRPA/ebro_awp',
-    privacyOfficer: {
-      name: '이정용',
-      position: '대표이사 / 개인정보보호책임자',
-      department: '경영지원본부',
-      phone: '031-355-8899',
-      email: 'demo@ebro.run',
-      updatedAt: '2026-01-01T00:00:00.000Z'
-    },
-    privacyOfficerName: '이정용',
-    privacyOfficerPosition: '대표이사 / 개인정보보호책임자',
-    privacyOfficerDepartment: '경영지원본부',
-    privacyOfficerPhone: '031-355-8899',
-    privacyOfficerEmail: 'demo@ebro.run',
-    workplaces: [
-      {
-        id: 'wp-demo-01',
-        workplaceCode: 'HQ-DEMO',
-        name: '화성 본점 (데모)',
-        isHeadquarter: true,
-        businessNumber: '107-86-99999',
-        subBizNumber: '0000',
-        address: '경기도 화성시 남양읍 시청로 160번길 20',
-        addressDetail: '본관 3층',
-        tel: '031-355-8899',
-        fax: '031-355-8898',
-        managerName: '이정용',
-        managerPhone: '010-3344-5566',
-        managerEmail: 'demo@ebro.run',
-        memo: 'eBroAWP 렌탈 본사 및 관제센터',
-        createdAt: '2026-01-01T00:00:00.000Z'
-      }
-    ],
-    yards: [
-      {
-        id: 'yard-demo-01',
-        yardCode: 'YARD-DEMO-01',
-        name: 'eBroAWP 화성 메인 주기장',
-        isDefault: true,
-        address: '경기도 화성시 남양읍 시청로 160번길 20',
-        addressDetail: '야드 A구역',
-        operatingCapacity: 150,
-        managerName: '데모운영팀',
-        managerPhone: '031-355-8899',
-        tel: '031-355-8899',
-        operatingHours: '08:00 ~ 18:00',
-        memo: '고소작업대 시저/엔진/직진붐 데모 장비 주기장',
-        createdAt: '2026-01-01T00:00:00.000Z'
-      }
-    ],
-    mainYardAddress: '경기도 화성시 남양읍 시청로 160번길 20',
-    bankAccounts: [
-      {
-        bankName: '우리은행',
-        accountNumber: '1002-123-999999',
-        accountHolder: '주식회사 이브로에이더블유피렌탈',
-        isDefault: true
-      },
-      {
-        bankName: '신한은행',
-        accountNumber: '110-345-999999',
-        accountHolder: '주식회사 이브로에이더블유피렌탈',
-        isDefault: false
-      }
-    ],
-    logoUrl: '/favicon.svg',
-    ciUrl: '/favicon.svg',
-    features: {
-      telegramBot: true,
-      callRecordingStt: true,
-      kakaoContract: true,
-      autoTaxInvoice: true,
-      voiceAssistance: true,
-      agentAiEnabled: true,
-      officialMailConfig: {
-        googleEmail: 'giyeonlift7@naver.com',
-        gmailAppPassword: 'WEFWT3MYX5CQ',
-        smtpProvider: 'NAVER',
-        smtpHost: 'smtp.naver.com',
-        smtpPort: 465,
-        isDevMode: false,
-        contractFolder: '렌탈계약서_증빙',
-        consumableFolder: '소모품납품증빙',
-        deliveryFolder: '출고의뢰_증빙',
-        maintenanceFolder: '정비보고서_증빙',
-        updatedAt: '2026-01-01T00:00:00.000Z'
-      }
-    },
-    subscription: {
-      plan: 'ENTERPRISE',
-      status: 'ACTIVE',
-      startDate: '2026-01-01',
-      endDate: '2029-12-31',
-      gracePeriodDays: 30,
-      billingCycle: 'YEARLY',
-      monthlyFee: 0,
-      autoRenew: true,
-      maxAssets: 0,
-      maxUsers: 0,
-      licenseKey: 'EBR-DEMO-AWP-20291231-LIVE',
-      memo: '공식 AWP 데모 시연 및 테스트 전용 테넌트'
-    },
-    stampImageUrl: OFFICIAL_STAMP_BASE64,
-    status: 'ACTIVE',
-    isDefault: false,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-    allowCustomBillingStatement: true,
-    allowContractTradeOutbound: true,
-    specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound'],
-    excelMappingRules: {
-      contractAssetsStartRow: 44,
-      contractModelCol: 1,
-      contractQtyCol: 3,
-      contractSnCol: 4,
-      contractFeeCol: 5,
-      contractAmountCol: 7,
-      contractPrintAreaBase: 'A26:K',
-      contractPrintAreaStartRow: 26,
-      statementAssetsStartRow: 21,
-      statementModelCol: 1,
-      statementSnCol: 2,
-      statementPeriodCol: 3,
-      statementQtyCol: 4,
-      statementPriceCol: 5,
-      statementAmountCol: 8,
-      statementPrintAreaBase: 'A1:J',
-      statementPrintAreaStartRow: 1
-    }
   }
 ];
 
@@ -4059,15 +3774,15 @@ export const SEED_ROLE_PERMISSIONS: RolePermission[] = Object.entries(SEED_ROLE_
   }))
 );
 const SEED_PRODUCTS: Product[] = mockDataProducts;
-const SEED_CUSTOMERS: Customer[] = mockDataCust.customers;
-const SEED_CONTACTS: CustomerContact[] = mockDataCust.contacts;
-const SEED_SITES: CustomerSite[] = mockDataCust.sites;
-const SEED_ASSETS: Asset[] = mockDataAssets;
-export const SEED_CONSUMABLES: Consumable[] = [];
+const SEED_CUSTOMERS: Customer[] = SEED_FL_CUSTOMERS as any[];
+const SEED_CONTACTS: CustomerContact[] = SEED_FL_CONTACTS as any[];
+const SEED_SITES: CustomerSite[] = SEED_FL_SITES as any[];
+const SEED_ASSETS: Asset[] = SEED_FL_RENTAL_ASSETS as any[];
+export const SEED_CONSUMABLES: Consumable[] = SEED_FL_CONSUMABLES as any[];
 const SEED_CONSUMABLE_LOGS: ConsumableLog[] = [];
 const SEED_CONSUMABLE_PURCHASES: ConsumablePurchaseRequest[] = [];
-const SEED_CONTRACTS: Contract[] = mockDataCont.contracts;
-const SEED_CONTRACT_ASSETS: ContractAsset[] = mockDataCont.contractAssets;
+const SEED_CONTRACTS: Contract[] = SEED_FL_CONTRACTS as any[];
+const SEED_CONTRACT_ASSETS: ContractAsset[] = SEED_FL_CONTRACT_ASSETS as any[];
 const SEED_DELIVERIES: Delivery[] = [];
 const SEED_TRANSPORT_COMPANIES: TransportCompany[] = [
   { id: 'TC-001', name: '대한물류', businessNo: '123-45-67890', contact: '1588-0001', memo: '주요 파트너', createdAt: new Date().toISOString() },
@@ -4075,44 +3790,14 @@ const SEED_TRANSPORT_COMPANIES: TransportCompany[] = [
 ];
 const SEED_TRANSPORT_DRIVERS: TransportDriver[] = [
   { id: 'TD-001', companyId: 'TC-001', driverName: '홍길동', driverContact: '010-1111-1111', vehicleNo: '서울82가 1111', vehicleType: '5톤 셀프로더', createdAt: new Date().toISOString() },
-  { id: 'TD-002', companyId: 'TC-002', driverName: '홍길동', driverContact: '010-2222-2222', vehicleNo: '경기99바 2222', vehicleType: '1톤 화물차', createdAt: new Date().toISOString() },
+  { id: 'TD-002', companyId: 'TC-002', driverName: '홍길동', driverContact: '010-1111-2222', vehicleNo: '경기99바 2222', vehicleType: '1톤 화물차', createdAt: new Date().toISOString() },
   { id: 'TD-003', companyId: 'TC-001', driverName: '김기사', driverContact: '010-3333-3333', vehicleNo: '서울82가 3333', vehicleType: '2.5톤', createdAt: new Date().toISOString() }
 ];
 const SEED_BILLINGS: Billing[] = [];
 const SEED_BILLING_DETAILS: BillingDetail[] = [];
 const SEED_PAYMENTS: Payment[] = [];
-const SEED_VENDORS: Vendor[] = [
-  { id: 'V-001', name: '가나외주정비', type: 'REPAIR', bizRegNo: '111-22-33333', contactName: '김정비', contact: '010-9999-9999', memo: '경기 서부권 외주수리공장', createdAt: new Date().toISOString() },
-  { id: 'V-002', name: '나라정비센터', type: 'REPAIR', bizRegNo: '222-33-44444', contactName: '이수리', contact: '010-8888-8888', memo: '호남권 외주수리공장', createdAt: new Date().toISOString() }
-];
-const SEED_REPAIRS: Repair[] = [
-  {
-    id: 'REP-001',
-    assetId: 'asset-own-1',
-    repairType: 'EXTERNAL',
-    vendorId: 'V-001',
-    requestDate: '2026-07-15',
-    status: 'IN_PROGRESS',
-    details: '리프트 유압 호스 누유로 외주 입고',
-    totalCost: 250000,
-    billableToCustomer: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'REP-002',
-    assetId: 'asset-own-2',
-    repairType: 'EXTERNAL',
-    vendorId: 'V-002',
-    requestDate: '2026-07-18',
-    status: 'PENDING',
-    details: '메인보드 통신 에러 외주 의뢰',
-    totalCost: 450000,
-    billableToCustomer: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
+const SEED_VENDORS: Vendor[] = SEED_FL_VENDORS as any[];
+const SEED_REPAIRS: Repair[] = SEED_FL_REPAIRS as any[];
 const SEED_REPAIR_CONSUMABLES: RepairConsumable[] = [];
 const SEED_CONTRACT_HISTORY: ContractHistory[] = [];
 const SEED_TODOS: Todo[] = [];
@@ -4121,28 +3806,7 @@ const SEED_BANK_TRANSACTIONS: BankTransaction[] = [];
 
 const SEED_BANK_MATCHING_RULES: BankMatchingRule[] = [];
 
-const SEED_OFFICIAL_MAIL_CONFIG: OfficialMailConfig[] = [
-  {
-    id: 'cfg-tenant-giyeonlift',
-    tenantId: 'tenant-giyeonlift',
-    googleEmail: 'giyeonlift7@naver.com',
-    googlePassword: '',
-    gmailAppPassword: 'WEFWT3MYX5CQ',
-    smtpProvider: 'NAVER',
-    smtpHost: 'smtp.naver.com',
-    smtpPort: 465,
-    contractFolder: '렌탈계약서_증빙',
-    consumableFolder: '소모품납품증빙',
-    deliveryFolder: '출고의뢰_증빙',
-    maintenanceFolder: '정비보고서_증빙',
-    isDevMode: false,
-    currentInsuranceStartDate: '2026-03-05',
-    currentInsuranceEndDate: '2027-03-05',
-    nextInsuranceStartDate: '2027-03-05',
-    nextInsuranceEndDate: '2028-03-05',
-    updatedAt: '2026-01-01T00:00:00.000Z'
-  }
-];
+const SEED_OFFICIAL_MAIL_CONFIG: OfficialMailConfig[] = [];
 
 const SEED_CASH_FLOW_SNAPSHOTS: CashFlowSnapshot[] = [
   {
@@ -4734,41 +4398,41 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     id: 'DEV-PC-PRIMARY-01',
     deviceId: 'DEV-PC-PRIMARY-01',
     developerId: 'sys-admin',
-    developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (대표 개발자 공인 워크스테이션)',
+    developerName: '대표 개발자',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: 'D4-AB-61-46-47-82',
     hardwareFingerprint: 'HW-47A4-E661-24C32G',
     platform: 'Win32/x86_64',
     status: 'ACTIVE',
     isPrimary: true,
     emergencyBreakGlassUsed: false,
-    note: '기본 공인 개발자 메인 PC (사전 인가)',
+    note: '기본 공인 개발자 메인 PC',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
-    tenant_id: 'tenant-giyeonlift'
+    tenant_id: 'tenant-ebro-fl'
   },
   {
     id: 'DEV-PC-PRIMARY-01-ALT',
     deviceId: 'DEV-PC-PRIMARY-01-ALT',
     developerId: 'sys-admin',
-    developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (대표 개발자 공인 워크스테이션 고해상도)',
+    developerName: '대표 개발자',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: 'D4-AB-61-46-47-82',
     hardwareFingerprint: 'HW-6A2F-F12E-24C32G',
     platform: 'Win32/x86_64',
     status: 'ACTIVE',
     isPrimary: true,
     emergencyBreakGlassUsed: false,
-    note: '기본 공인 개발자 메인 PC (사전 인가)',
+    note: '기본 공인 개발자 메인 PC',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
-    tenant_id: 'tenant-giyeonlift'
+    tenant_id: 'tenant-ebro-fl'
   },
   {
     id: 'DEV-PC-PRIMARY-02',
     deviceId: 'DEV-PC-PRIMARY-02',
     developerId: 'sys-admin',
-    developerName: '대표 개발자 (시스템 총괄)',
+    developerName: '대표 개발자',
     machineName: 'D-RPA_PRESIDENT',
     macAddress: 'D4-AB-61-46-47-81',
     hardwareFingerprint: 'HW-D4AB-6146-4781-MASTER',
@@ -4776,16 +4440,16 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     status: 'ACTIVE',
     isPrimary: false,
     emergencyBreakGlassUsed: false,
-    note: '보조 개발 PC (사전 인가)',
+    note: '보조 개발 PC',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
-    tenant_id: 'tenant-giyeonlift'
+    tenant_id: 'tenant-ebro-fl'
   },
   {
     id: 'DEV-PC-PRIMARY-03',
     deviceId: 'DEV-PC-PRIMARY-03',
     developerId: 'sys-admin',
-    developerName: '대표 개발자 (시스템 총괄)',
+    developerName: '대표 개발자',
     machineName: 'D-RPA_PRESIDENT',
     macAddress: '18-3D-2D-58-F1-8C',
     hardwareFingerprint: 'HW-5AA3-E370-24C',
@@ -4793,16 +4457,17 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     status: 'ACTIVE',
     isPrimary: false,
     emergencyBreakGlassUsed: false,
-    note: '공인 개발 단말기 등록 (이더넷)',
+    note: '공인 개발 단말기 등록',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
-    tenant_id: 'tenant-giyeonlift'
+    tenant_id: 'tenant-ebro-fl'
   }
 ];
 
 export const ALL_DB_KEYS = [
-  'tenants', 'users', 'departments', 'permissions', 'customers', 'contacts', 'sites', 
+  'tenants', 'users', 'departments', 'permissions', 'customers', 'contacts', 'sites', 'siteMasters',
   'products', 'assets', 'consumables', 'consumableLots', 'consumableLogs', 'consumablePurchases',
+  'contracts', 'contractAssets', 'contractHistory', 'outboundInspections', 'standardOptions',
   'deliveries', 
   'transportCompanies', 'transportDrivers', 'vendors',
   'billings', 'billingDetails', 'payments', 'paymentDepositLinks', 'repairs', 'repairConsumables', 'todos', 
@@ -4961,6 +4626,22 @@ class LocalDB {
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
     try {
+      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261101_virtual5_clean';
+      if (localStorage.getItem(STORAGE_VERSION_KEY) !== '1') {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('erp_') || k.startsWith('ebro_fl_trade_'))) {
+            keysToRemove.push(k);
+          }
+        }
+        for (const k of keysToRemove) {
+          localStorage.removeItem(k);
+        }
+        localStorage.setItem('erp_current_tenant_id', 'tenant-ebro-fl');
+        localStorage.setItem(STORAGE_VERSION_KEY, '1');
+      }
+
       const bloatedKeys = [
         'erp_privacyAccessLogs', 
         'erp_privacy_access_logs', 
@@ -5114,23 +4795,13 @@ class LocalDB {
     let list = this.get<Tenant>('tenants', SEED_TENANTS);
     let modified = false;
 
-    //  [가짜 시드 테넌트 자동 소탕] 과거 데모용 mock 테넌트(tenant-2 ~ tenant-5, HANSOL, SAMWOO, TECHONE, ACE_GROUP) 제거
-    const MOCK_CODES = new Set(['HANSOL', 'SAMWOO', 'TECHONE', 'ACE_GROUP']);
-    const MOCK_IDS = new Set(['tenant-2', 'tenant-3', 'tenant-4', 'tenant-5']);
+    const MOCK_CODES = new Set(['HANSOL', 'SAMWOO', 'TECHONE', 'ACE_GROUP', 'GIYEONLIFT', 'GIYEUN', 'EBRO_AWP']);
+    const MOCK_IDS = new Set(['tenant-1', 'tenant-2', 'tenant-3', 'tenant-4', 'tenant-5', 'tenant-giyeonlift', 'tenant-ebro-awp']);
     const filtered = list.filter(t => !MOCK_CODES.has(t.tenantCode) && !MOCK_IDS.has(t.id));
     if (filtered.length !== list.length) {
       list = filtered;
       modified = true;
     }
-
-    // tenant-1 레거시 ID가 있으면 tenant-giyeonlift로 정규화
-    list = list.map(t => {
-      if (t.id === 'tenant-1') {
-        modified = true;
-        return { ...t, id: 'tenant-giyeonlift', isDefault: true };
-      }
-      return t;
-    });
 
     if (list.length === 0) {
       list = [...SEED_TENANTS];
@@ -5344,7 +5015,11 @@ class LocalDB {
   }
 
   get customers() { 
-    const raw = this.get<Customer>('customers', SEED_CUSTOMERS);
+    let raw = this.get<Customer>('customers', SEED_CUSTOMERS);
+    if (raw.some(c => c && (String(c.id || '').startsWith('CUST-000') || String(c.id || '').startsWith('cust-')))) {
+      raw = [...SEED_CUSTOMERS];
+      this.set('customers', raw);
+    }
     return raw.map(c => {
       if (!c) return c;
       let changed = false;
@@ -5442,7 +5117,14 @@ class LocalDB {
   }
   set customers(val: Customer[]) { this.set('customers', val); }
 
-  get contacts() { return this.get<CustomerContact>('contacts', SEED_CONTACTS); }
+  get contacts() {
+    let raw = this.get<CustomerContact>('contacts', SEED_CONTACTS);
+    if (raw.some(c => c && (String(c.id || '').startsWith('CONT-000') || String(c.customerId || '').startsWith('CUST-000') || String(c.customerId || '').startsWith('cust-')))) {
+      raw = [...SEED_CONTACTS];
+      this.set('contacts', raw);
+    }
+    return raw;
+  }
   set contacts(val: CustomerContact[]) { this.set('contacts', val); }
   get customerContacts() { return this.contacts; }
   set customerContacts(val: CustomerContact[]) { this.contacts = val; }
@@ -5477,7 +5159,11 @@ class LocalDB {
   set siteMasters(val: SiteMaster[]) { this.set('siteMasters', val); }
 
   get sites() {
-    const raw = this.get<CustomerSite>('sites', SEED_SITES);
+    let raw = this.get<CustomerSite>('sites', SEED_SITES);
+    if (raw.some(s => s && (String(s.id || '').startsWith('SITE-000') || String(s.id || '').startsWith('site-') || String(s.customerId || '').startsWith('CUST-000') || String(s.customerId || '').startsWith('cust-')))) {
+      raw = [...SEED_SITES];
+      this.set('sites', raw);
+    }
     const replaceLegacyCommas = (val?: string) => {
       if (!val || typeof val !== 'string') return val;
       return val
@@ -5687,7 +5373,7 @@ class LocalDB {
   get consumables() { return this.get<Consumable>('consumables', SEED_CONSUMABLES); }
   set consumables(val: Consumable[]) { this.set('consumables', val); }
 
-  get consumableLots() { return this.get<ConsumableLot>('consumableLots', []); }
+  get consumableLots() { return this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]); }
   set consumableLots(val: ConsumableLot[]) { this.set('consumableLots', val); }
 
   get consumableLogs() { return this.get<ConsumableLog>('consumableLogs', SEED_CONSUMABLE_LOGS); }
@@ -8177,7 +7863,13 @@ export interface TradeProduct {
   skuCode: string;
   name: string;
   category: string;
-  itemType?: 'EQUIPMENT' | 'PART';
+  itemType?: 'EQUIPMENT' | 'PART' | 'CONSUMABLE';
+  // 회사의 유형자산·재고 4대 분류 체계 구분자
+  // PRODUCT: 완제품 판매용, PART: 부품(유통 판매용 / 렌탈자산 정비용), CONSUMABLE: 소모품(유통 판매용 / 렌탈자산 정비용)
+  inventoryAssetClass?: InventoryAssetClass;
+  usagePurpose?: InventoryUsagePurpose;
+  saleStockQty?: number;     // 유통 판매용 가용재고
+  repairStockQty?: number;   // 렌탈자산 정비용 가용재고
   manufacturer?: string;
   modelName?: string;
   seriesName?: string;
@@ -8345,6 +8037,11 @@ export interface TradeSalesOrder {
   customerTier?: 'DEALER' | 'END_USER';
   contractId?: string;
   contractNo?: string;
+  // 계약 종류 구분자: 유통 계약은 각 출고횟수가 1개의 계약 (1출고 = 1계약)
+  contractType?: 'TRADE';
+  contractUnitRule?: 'PER_OUTBOUND';
+  outboundSeq?: number;
+  outboundId?: string;
   siteId?: string;
   siteName?: string;
   billingMode?: 'RENTAL_MERGED' | 'STANDALONE';
@@ -8392,6 +8089,11 @@ export interface TradeOutbound {
   id: string;
   orderId: string;
   contractId?: string;
+  contractNo?: string;
+  // 유통 계약은 각 출고횟수가 1개의 계약임
+  contractType?: 'TRADE';
+  contractUnitRule?: 'PER_OUTBOUND';
+  outboundSeq?: number;
   linkedRentalDeliveryId?: string;
   status: 'REQUESTED' | 'ALLOCATED' | 'PACKED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   deliveryType?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';

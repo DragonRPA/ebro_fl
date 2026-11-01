@@ -55,6 +55,7 @@ export const AvailableInventoryPage: React.FC = () => {
   const {
     products,
     assets,
+    consumables,
     contracts,
     contractAssets,
     deliveries,
@@ -62,7 +63,8 @@ export const AvailableInventoryPage: React.FC = () => {
     customers,
     sites,
     refreshAllData,
-    hasPermission
+    hasPermission,
+    setActiveTab
   } = useApp();
 
   const canView = hasPermission('available_inventory', 'view') || hasPermission('asset', 'view') || hasPermission('product', 'view');
@@ -738,10 +740,25 @@ export const AvailableInventoryPage: React.FC = () => {
       
       {/* ① 상단 타이틀 & 파이프라인 액션 바 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
-            가용재고조회
- </h2>
+            가용재고조회 · 렌탈용 자산
+          </h2>
+          <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 800, backgroundColor: 'rgba(59, 130, 246, 0.14)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.35)', whiteSpace: 'nowrap' }}>
+            유형자산 구성 1: 자산 (렌탈용 지게차 · 총 {(assets || []).length}대)
+          </span>
+          <span
+            onClick={() => setActiveTab && setActiveTab('trade_products')}
+            style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            구성 2·3: 제품(완제품 판매용) · 부품(판매/정비용) 이동
+          </span>
+          <span
+            onClick={() => setActiveTab && setActiveTab('consumable_stock')}
+            style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'var(--bg-card)', color: '#0f766e', border: '1px solid var(--border-color)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            구성 4: 소모품(판매/정비용 · {(consumables || []).length}종) 이동
+          </span>
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
             조회 모델 <strong style={{ color: 'var(--primary)' }}>{filteredRows.length}종</strong>
           </span>
