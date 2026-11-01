@@ -140,7 +140,7 @@ export const BENCHMARK_PARTS_COMPANIES: BenchmarkPartsCompany[] = [
     htmlCssDomArchitecture: {
       listContainerDom: 'div.part-search-wrap > table.part-grid > tbody > tr[data-oem-pn]',
       itemCardDom: 'td.col-pn + td.col-cross-pn + td.col-name + td.col-model + td.col-price + td.col-cart',
-      detailSpecDom: 'dl.spec-dl > dt(OEM 품번 / 대체 호환품번 / 치수 규격) + dd',
+      detailSpecDom: 'dl.spec-dl > dt + dd',
       cssLayoutCharacteristics: '고밀도 품번 대조 테이블 구조 및 OEM 품번 하이라이트 배지 스타일',
       crawledSampleHtmlSnippet: `<tr class="part-row">
   <td class="col-pn">A213508</td>
@@ -167,10 +167,10 @@ export const BENCHMARK_PARTS_COMPANIES: BenchmarkPartsCompany[] = [
     specialization: '전 세계 최대 산업차량·지게차 호환부품 B2B 공급망 및 통합 발주 포털',
     targetBrands: ['안후이 헬리', '비와이디', '항차그룹', '이피이큅먼트', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
     htmlCssDomArchitecture: {
-      listContainerDom: 'section.my-parts-finder(Make > Model > Assembly) + div.order-sheet-grid',
+      listContainerDom: 'section.my-parts-finder · Make > Model > Assembly + div.order-sheet-grid',
       itemCardDom: 'div.part-dossier > svg.tech-drawing + table.dim-spec + input.qty-stepper',
       detailSpecDom: '측면 기술 도면 내 치수 기호 및 하단 실측값 테이블 1:1 매칭',
-      cssLayoutCharacteristics: '좌상단 기종 선택기 ➔ 중앙 규격 도면 그리드 ➔ 우하단 일괄 발주 바의 전형적인 Z-패턴 B2B 워크벤치',
+      cssLayoutCharacteristics: '좌상단 기종 선택기 중앙 규격 도면 그리드 우하단 일괄 발주 바의 전형적인 Z-패턴 B2B 대장',
       crawledSampleHtmlSnippet: `<div class="tvh-part-card">
   <div class="fitment-bar">적합기종: HELI CPD25 / HANGCHA XC25 / HYUNDAI 25B-9U</div>
   <div class="spec-params">내경: 40mm | 외경: 115.8mm | 폭: 32mm</div>
@@ -223,7 +223,7 @@ export const CATALOG_TO_ORDER_STRATEGY: CatalogToOrderStrategyPhase[] = [
     coreObjective: '품번을 몰라도 지게차 모델명 또는 계통 분류만으로 1초 내 정확한 호환부품을 특정하는 단일 진실의 원천 체계 구축',
     keyExecutionItems: [
       '자사 표준 호환품번, 제조사 순정품번, 국내 유통 통용규격을 1:N 교차 매핑',
-      '당사 아카이브 8대 주력 지게차(헬리 CPD25, 비와이디 ECB30C, 항차 XC25, 이피 EPL205Z, 두산 D30S-7, 현대 25B-9U, 클라크 GTS25, 도요타 8FB25)와 부품 간 다대다 적합성 연결',
+      '당사 아카이브 8대 주력 지게차 · 헬리 CPD25, 비와이디 ECB30C, 항차 XC25, 이피 EPL205Z, 두산 D30S-7, 현대 25B-9U, 클라크 GTS25, 도요타 8FB25와 부품 간 다대다 적합성 연결',
       '7대 핵심 계통(타이어·휠, 포크·덧발, 마스트·체인, 전장·컨트롤러, 배터리·커넥터, 유압·제동, 필터·안전용품) 단일 표준 분류 적용'
     ],
     expectedBusinessImpact: '부품 문의 시 전화 응대 및 품번 대조 시간 80% 단축, 기종별 패키지 추가 판매 유도'
@@ -259,7 +259,7 @@ export const CATALOG_TO_ORDER_STRATEGY: CatalogToOrderStrategyPhase[] = [
       '우하단 대차대조 합계 바에서 [공급가액 + 부가세 = 총 주문액] 실시간 검증 후 [유통 수주·출고 즉시 확정] 연동',
       '대리점 팩스·이메일 배포용 [A4 호환부품 카탈로그 겸 주문서 인쇄] 및 수식 내장 [엑셀 카탈로그 주문서 다운로드] 제공'
     ],
-    expectedBusinessImpact: '카탈로그 확인 ➔ 별도 주문서 작성 ➔ ERP 재입력의 3중 수작업을 단일 원클릭 흐름으로 단축'
+    expectedBusinessImpact: '카탈로그 확인 별도 주문서 작성 ERP 재입력의 3중 수작업을 단일 흐름으로 단축'
   }
 ];
 
@@ -279,7 +279,7 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
       { label: '타이어 규격', value: '7.00-12 (솔리드 통타이어)' },
       { label: '적용 림 규격', value: '5.00S × 12 인치' },
       { label: '외경 × 단면폭', value: '665 mm × 172 mm' },
-      { label: '최대 허용하중', value: '2,920 kg (시속 25km 기준)' }
+      { label: '최대 허용하중', value: '2,920 kg · 시속 25km 기준' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'CPD25-XEY2-SI', 'GTS25'],
     compatibleBrands: ['안후이 헬리', '항차그룹', '클라크'],
@@ -408,11 +408,11 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     manufacturer: '캐스케이드·한지 단조 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '두께 40mm × 폭 122mm × 길이 1,070mm / 캐리지 걸이폭 407mm (2A 규격)',
+    specSummary: '두께 40mm × 폭 122mm × 길이 1,070mm / 캐리지 걸이폭 407mm · 2A 규격',
     detailedSpecs: [
       { label: '단면 두께 × 폭', value: '40 mm × 122 mm' },
       { label: '블레이드 길이', value: '1,070 mm' },
-      { label: '마운팅 클래스', value: 'ISO 2328 Class II Type A (걸이 간격 407 mm)' },
+      { label: '마운팅 클래스', value: 'ISO 2328 Class II Type A · 걸이 간격 407 mm' },
       { label: '소재 및 안전율', value: '35CrMo 합금 단조강 · 안전율 3:1 열처리 검증' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'CPD25-XEY2-SI', '25B-9U', 'GTS25', '8FB25'],
@@ -441,12 +441,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     manufacturer: '캐스케이드·한지 단조 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '두께 45mm × 폭 125mm × 길이 1,200mm / 캐리지 걸이폭 508mm (3A 규격)',
+    specSummary: '두께 45mm × 폭 125mm × 길이 1,200mm / 캐리지 걸이폭 508mm · 3A 규격',
     detailedSpecs: [
       { label: '단면 두께 × 폭', value: '45 mm × 125 mm' },
       { label: '블레이드 길이', value: '1,200 mm' },
-      { label: '마운팅 클래스', value: 'ISO 2328 Class III Type A (걸이 간격 508 mm)' },
-      { label: '정격 허용하중', value: '3,500 kg (하중중심 500 mm 기준)' }
+      { label: '마운팅 클래스', value: 'ISO 2328 Class III Type A · 걸이 간격 508 mm' },
+      { label: '정격 허용하중', value: '3,500 kg · 하중중심 500 mm 기준' }
     ],
     compatibleModels: ['ECB30C', 'D30S-7'],
     compatibleBrands: ['비와이디', '두산밥캣'],
@@ -476,10 +476,10 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     partGrade: '신품 호환',
     specSummary: '전장 1,800mm × 내측폭 135mm × 내측높이 52mm / 하부 8T 보강 / 잠금핀 일체형',
     detailedSpecs: [
-      { label: '덧발 총길이', value: '1,800 mm (기존 1,070~1,200mm 포크 삽입용)' },
-      { label: '내측 삽입 규격', value: '내폭 135 mm × 내고 52 mm (122~125mm 포크 공용)' },
+      { label: '덧발 총길이', value: '1,800 mm · 기존 1,070~1,200mm 포크 삽입용' },
+      { label: '내측 삽입 규격', value: '내폭 135 mm × 내고 52 mm · 122~125mm 포크 공용' },
       { label: '강판 두께', value: '상판 6T + 하부 보강판 8T 구조용 고장력강 SM490A' },
-      { label: '이탈 방지 장치', value: '후방 원터치 안전 고정핀 및 분실방지 체인 부착' }
+      { label: '이탈 방지 장치', value: '후방 안전 고정핀 및 분실방지 체인 부착' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
     compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
@@ -507,10 +507,10 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     manufacturer: '캐스케이드·한지 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '프레임폭 980mm × 좌우 시프트 200mm(±100mm) / 복동 실린더·슬라이드 패드 일체형',
+    specSummary: '프레임폭 980mm × 좌우 시프트 200mm · ±100mm / 복동 실린더·슬라이드 패드 일체형',
     detailedSpecs: [
-      { label: '프레임 전폭', value: '980 mm (ISO Class II 캐리지 장착)' },
-      { label: '좌우 이동 거리', value: '총 200 mm (좌 100 mm / 우 100 mm)' },
+      { label: '프레임 전폭', value: '980 mm · ISO Class II 캐리지 장착' },
+      { label: '좌우 이동 거리', value: '총 200 mm · 좌 100 mm / 우 100 mm' },
       { label: '적용 유압 압력', value: '정격 160 bar / 최대 200 bar' },
       { label: '포함 구성품', value: '어셈블리 본체 + 복동 유압실린더 + 황동 윤활 슬라이드 패드' }
     ],
@@ -603,17 +603,17 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-11',
     sku: 'FL-CHAIN-LH1223',
     oemCrossRefCodes: ['ISO4347-LH1223', 'DH-LH1223-215L', 'TY-13501-23320-71'],
-    partName: '마스트 리프트 판형 체인 LH1223 (피치 19.05mm, 3M 마스트 1대분)',
+    partName: '마스트 리프트 판형 체인 LH1223 · 피치 19.05mm, 3M 마스트 1대분',
     category: '마스트·롤러·체인',
     manufacturer: '동화·항주체인 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '규격 LH1223 (BL623) / 피치 19.05mm / 배열 2×3 / 인장강도 98.1kN',
+    specSummary: '규격 LH1223 · BL623 / 피치 19.05mm / 배열 2×3 / 인장강도 98.1kN',
     detailedSpecs: [
-      { label: '체인 규격 코드', value: 'LH1223 (ANSI BL623 호환)' },
+      { label: '체인 규격 코드', value: 'LH1223 · ANSI BL623 호환' },
       { label: '피치 × 플레이트 배열', value: '19.05 mm (3/4 인치) × 2×3 열' },
       { label: '핀 직경 × 플레이트 두께', value: '7.94 mm × 3.25 mm' },
-      { label: '최소 인장강도', value: '98.1 kN (3,000mm 표준 마스트 좌우 2줄 1세트)' }
+      { label: '최소 인장강도', value: '98.1 kN · 3,000mm 표준 마스트 좌우 2줄 1세트' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'CPD25-XEY2-SI', '25B-9U', 'GTS25', '8FB25'],
     compatibleBrands: ['안후이 헬리', '항차그룹', '현대사이트솔루션', '클라크', '도요타'],
@@ -636,14 +636,14 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-12',
     sku: 'FL-CHAIN-LH1623',
     oemCrossRefCodes: ['ISO4347-LH1623', 'DS-CH1623-3M', 'BYD-LH1623-SET'],
-    partName: '3.0톤 고하중 리프트 판형 체인 LH1623 (피치 25.4mm, 3M 1대분)',
+    partName: '3.0톤 고하중 리프트 판형 체인 LH1623 · 피치 25.4mm, 3M 1대분',
     category: '마스트·롤러·체인',
     manufacturer: '동화·항주체인 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '규격 LH1623 (BL823) / 피치 25.40mm / 배열 2×3 / 인장강도 151.0kN',
+    specSummary: '규격 LH1623 · BL823 / 피치 25.40mm / 배열 2×3 / 인장강도 151.0kN',
     detailedSpecs: [
-      { label: '체인 규격 코드', value: 'LH1623 (ANSI BL823 호환)' },
+      { label: '체인 규격 코드', value: 'LH1623 · ANSI BL823 호환' },
       { label: '피치 × 플레이트 배열', value: '25.40 mm (1 인치) × 2×3 열' },
       { label: '핀 직경 × 플레이트 두께', value: '9.53 mm × 4.00 mm' },
       { label: '최소 인장강도', value: '151.0 kN (고하중 쇼트피닝 피로강화 처리)' }
@@ -671,17 +671,17 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-13',
     sku: 'FL-CTRL-CURTIS-80V',
     oemCrossRefCodes: ['CURTIS-1238E-6521', 'HL-G2-CTRL80V', 'HC-XC-1238E'],
-    partName: '커티스 호환 AC 주행·인양 컨트롤러 1238E-6521 (80V 550A)',
+    partName: '커티스 호환 AC 주행·인양 컨트롤러 1238E-6521 · 80V 550A',
     category: '전장·컨트롤러·센서',
     manufacturer: '커티스 OEM·호환',
     originCountry: '중국 직수입',
     partGrade: '순정 OEM',
     specSummary: '정격 80V / 전류 550A / CANopen 프로토콜 / IP65 방수 알루미늄 방열판',
     detailedSpecs: [
-      { label: '정격 전압 범주', value: '80V DC (작동 범위 52V ~ 96V)' },
-      { label: '2분 정격 전류', value: '550 A RMS (연속 275 A)' },
-      { label: '통신 인터페이스', value: 'CANopen (리튬배터리 BMS 및 계기판 직결)' },
-      { label: '방수·방진 등급', value: 'IP65 완전 밀폐형 (외부 크기 212×280×96mm)' }
+      { label: '정격 전압 범주', value: '80V DC · 작동 범위 52V ~ 96V' },
+      { label: '2분 정격 전류', value: '550 A RMS · 연속 275 A' },
+      { label: '통신 인터페이스', value: 'CANopen · 리튬배터리 BMS 및 계기판 직결' },
+      { label: '방수·방진 등급', value: 'IP65 완전 밀폐형 · 외부 크기 212×280×96mm' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI'],
     compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹'],
@@ -704,7 +704,7 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-14',
     sku: 'FL-CTRL-CURTIS-24V',
     oemCrossRefCodes: ['CURTIS-1212C-2501', 'EP-1113-510002-00', 'HL-CBD20-1212P'],
-    partName: '전동 파레트트럭 영구자석 구동 컨트롤러 1212C-2501 (24V 90A)',
+    partName: '전동 파레트트럭 영구자석 구동 컨트롤러 1212C-2501 · 24V 90A',
     category: '전장·컨트롤러·센서',
     manufacturer: '커티스 OEM·호환',
     originCountry: '중국 직수입',
@@ -744,10 +744,10 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     partGrade: '신품 호환',
     specSummary: '연속전류 400A / 코일 48V·80V 겸용 / 은합금 더블 브레이크 주접점',
     detailedSpecs: [
-      { label: '열전류 용량', value: '연속 400A (단시간 최대 1,500A 개폐)' },
+      { label: '열전류 용량', value: '연속 400A · 단시간 최대 1,500A 개폐' },
       { label: '코일 작동전압', value: '48V DC 및 80V DC 선택 출고' },
       { label: '접점 재질', value: 'AgCdO 은-산화카드뮴 내아크 합금 팁' },
-      { label: '단자 볼트 규격', value: 'M10 황동 스터드 단자 (높이 138mm)' }
+      { label: '단자 볼트 규격', value: 'M10 황동 스터드 단자 · 높이 138mm' }
     ],
     compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', '25B-9U', '8FB25'],
     compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '현대사이트솔루션', '도요타'],
@@ -777,9 +777,9 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     partGrade: '신품 호환',
     specSummary: '정격 24V 90A / IC 레귤레이터 내장 / V벨트 싱글 풀리 외경 76mm',
     detailedSpecs: [
-      { label: '출력 전압 × 전류', value: '24V DC × 90A (12V 사양 별도 선택 가능)' },
-      { label: '풀리 규격', value: '외경 76 mm × V벨트 1열 (폭 13 mm)' },
-      { label: '마운팅 브래킷', value: '상·하 힌지 간격 80 mm (볼트홀 M10)' },
+      { label: '출력 전압 × 전류', value: '24V DC × 90A · 12V 사양 별도 선택 가능' },
+      { label: '풀리 규격', value: '외경 76 mm × V벨트 1열 · 폭 13 mm' },
+      { label: '마운팅 브래킷', value: '상·하 힌지 간격 80 mm · 볼트홀 M10' },
       { label: '레귤레이터', value: '내장형 과충전 방지 IC 전압조정기 탑재' }
     ],
     compatibleModels: ['D30S-7', 'GTS25'],
@@ -812,7 +812,7 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     partGrade: '신품 호환',
     specSummary: '정격 320A~350A / 내전압 150V DC / 70mm² 은도금 동단자 + 탈착 손잡이 포함',
     detailedSpecs: [
-      { label: '정격 전류 × 전압', value: '연속 320A (최대 350A) × DC 150V' },
+      { label: '정격 전류 × 전압', value: '연속 320A · 최대 350A × DC 150V' },
       { label: '적용 케이블 굵기', value: '50 mm² ~ 70 mm² (순동 은도금 압착 단자 4개 포함)' },
       { label: '하우징 재질', value: 'UL94 V-0 난연 폴리카보네이트 내산성 소재' },
       { label: '부속 구성', value: '암·수 플러그 하우징 1쌍 + 보조 파일럿 핀 + 안전 탈착 핸들' }
@@ -843,11 +843,11 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     manufacturer: '이피·CATL 셀 모듈',
     originCountry: '중국 직수입',
     partGrade: '순정 OEM',
-    specSummary: '정격 25.6V 160Ah (4.09kWh) / 스마트 BMS 내장 / 플러그인 케이스 일체형',
+    specSummary: '정격 25.6V 160Ah · 4.09kWh / 스마트 BMS 내장 / 플러그인 케이스 일체형',
     detailedSpecs: [
-      { label: '공칭 전압 × 용량', value: '25.6V × 160Ah (총 에너지 4.09 kWh)' },
+      { label: '공칭 전압 × 용량', value: '25.6V × 160Ah · 총 에너지 4.09 kWh' },
       { label: '배터리 셀 구성', value: 'CATL A급 리튬인산철 각형 셀 8S1P' },
-      { label: '케이스 외형 치수', value: '380 mm × 195 mm × 520 mm (중량 38 kg)' },
+      { label: '케이스 외형 치수', value: '380 mm × 195 mm × 520 mm · 중량 38 kg' },
       { label: '충전 및 수명', value: '24V 60A 충전 시 2.5시간 완충 · 4,000회 충방전 보증' }
     ],
     compatibleModels: ['EPL205Z'],
@@ -871,17 +871,17 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-19',
     sku: 'FL-BAT-TRAC-48V725',
     oemCrossRefCodes: ['VCE660-48V', 'HD-25B9U-BAT48', 'FORKL-9047', 'TY-8FB25-48V565'],
-    partName: '48V 725Ah 전동지게차 산업용 트랙션 배터리 어셈블리 (A급 리빌트)',
+    partName: '48V 725Ah 전동지게차 산업용 트랙션 배터리 어셈블리 · A급 리빌트',
     category: '배터리·충전·커넥터',
     manufacturer: '아트라스·세방 리빌트 호환',
     originCountry: '국내 매입',
     partGrade: 'A급 재생 호환',
-    specSummary: '48V (2V×24셀) 725Ah / 원터치 자동보수액 캡 장착 / 방전테스트 성적서 첨부',
+    specSummary: '48V · 2V×24셀 725Ah / 자동보수액 캡 장착 / 방전테스트 성적서 첨부',
     detailedSpecs: [
       { label: '정격 전압 × 용량', value: '48V (24셀 직렬) × 725Ah (5시간율 기준)' },
-      { label: '철제 함체 치수', value: '1,028 mm × 695 mm × 627 mm (현대 25B-9U / 도요타 8FB25 규격)' },
+      { label: '철제 함체 치수', value: '1,028 mm × 695 mm × 627 mm · 현대 25B-9U / 도요타 8FB25 규격' },
       { label: '셀 컨디션', value: '극판 황산염 제거 복원 및 불량 셀 신품 교체 완료 (용량 효율 88% 이상)' },
-      { label: '포함 부속품', value: '24셀 원터치 자동증류수 보충 플로트 캡 + 320A 전원 플러그' }
+      { label: '포함 부속품', value: '24셀 자동증류수 보충 플로트 캡 + 320A 전원 플러그' }
     ],
     compatibleModels: ['25B-9U', '8FB25'],
     compatibleBrands: ['현대사이트솔루션', '도요타'],
@@ -897,7 +897,7 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     warehouseLocation: '평택 1창고 F-08',
     deliveryPolicy: '폐배터리 대품 회수 조건 화물 발송',
     diagramType: 'LFP_BATTERY_PACK',
-    referenceSource: '포크엘 실거래 매물(현대 25B-9U용 VCE660 2,000,000원) 벤치마킹 반영',
+    referenceSource: '포크엘 실거래 매물 · 현대 25B-9U용 VCE660 2,000,000원 벤치마킹 반영',
     technicalNote: '신품 납산배터리 대비 50% 이상 비용 절감되며 1년 무상 셀 보증 제공'
   },
 
@@ -1040,15 +1040,15 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     id: 'cp-24',
     sku: 'FL-SAFE-SEAT-OPS',
     oemCrossRefCodes: ['GRAMMER-MSG20-OPS', 'HL-SEAT-OPS01', 'TY-53710-23320-71'],
-    partName: '전차종 호환 풀서스펜션 방수 시트 (OPS 착석센서 + 되감기 안전벨트)',
+    partName: '전차종 호환 서스펜션 방수 시트 · OPS 착석센서 + 되감기 안전벨트',
     category: '필터·시트·안전용품',
     manufacturer: '그래머 스타일 호환',
     originCountry: '중국 직수입',
     partGrade: '신품 호환',
-    specSummary: '가변 슬라이드 레일(230~330mm) / 체중조절 서스펜션 / OPS 착석감지 스위치 내장',
+    specSummary: '가변 슬라이드 레일 · 230~330mm / 체중조절 서스펜션 / OPS 착석감지 스위치 내장',
     detailedSpecs: [
       { label: '하부 장착 레일 폭', value: '좌우 230 mm ~ 330 mm 멀티 슬롯 가변 브래킷 (전 브랜드 무가공 장착)' },
-      { label: '서스펜션 스트로크', value: '상하 60 mm 충격 흡수 + 운전자 체중 조절 다이얼 (50 ~ 130 kg)' },
+      { label: '서스펜션 스트로크', value: '상하 60 mm 충격 흡수 + 운전자 체중 조절 다이얼 · 50 ~ 130 kg' },
       { label: '안전 인터록 센서', value: 'OPS 운전자 착석 감지 마이크로 스위치(2핀 커넥터) 기본 내장' },
       { label: '벨트 및 외피', value: '비상 잠금식 자동 되감기 2점식 안전벨트 + 고내구성 방수 PVC 레자' }
     ],

@@ -218,7 +218,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
     setUsedConsumables(prev => prev.filter(item => item.consumableId !== cId));
   };
 
-  // ✅ 최종 정비 완료 승인 (AVAILABLE 복원)
+  //  최종 정비 완료 승인 (AVAILABLE 복원)
   const handleComplete = async () => {
     if (!repairDetails.trim()) {
       showErrorModal('정비 상세 조치 내용을 입력해 주십시오.');
@@ -267,7 +267,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
     }
   };
 
-  // ⏸️ 소모품 수급 대기 보류
+  //  소모품 수급 대기 보류
   const handleHold = async () => {
     if (!holdReason.trim()) {
       showErrorModal('보류 사유를 입력해 주십시오.');
@@ -331,7 +331,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
               </div>
               <div className="text-[11px] text-slate-400">
                 {asset.ownerType === 'RENTED' ? '타사임차' : '자사보유'} · 주기장 정비입력
-              </div>
+ </div>
             </div>
           </div>
           <button
@@ -344,7 +344,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
 
         {/* 본문 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 text-xs">
-          {/* 🚨 1. 입고 결함 리포트 카드 */}
+          {/*  1. 입고 결함 리포트 카드 */}
           {inboundDefects.length > 0 ? (
             <div className="p-3.5 rounded-2xl bg-red-950/30 border border-red-500/40 flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                   {inboundDefects.length}건 (+{pendingRepair?.degradationScore || 0}점)
-                </span>
+ </span>
               </div>
 
               {/* 결함 항목 배지들 */}
@@ -377,7 +377,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className="text-[10px] text-slate-400 shrink-0 flex items-center gap-1">
                     <ImageIcon className="w-3 h-3 text-red-400" /> 입고증빙 ({inboundPhotos.length}장):
-                  </span>
+ </span>
                   {inboundPhotos.map((photo, pIdx) => (
                     <img
                       key={pIdx}
@@ -398,20 +398,20 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                   className="flex-1 py-1.5 px-2 rounded-xl bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 font-bold flex items-center justify-center gap-1 active:scale-95 transition-all text-[11px]"
                 >
                   <Check className="w-3.5 h-3.5" /> 조치내용 자동입력
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleAutoAddRecommended}
                   className="flex-1 py-1.5 px-2 rounded-xl bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30 font-bold flex items-center justify-center gap-1 active:scale-95 transition-all text-[11px]"
                 >
                   <Package className="w-3.5 h-3.5" /> 추천부품 일괄담기
-                </button>
+ </button>
               </div>
             </div>
           ) : (
             <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/60 text-slate-400">
               입고 시 명시된 결함이 없는 일반 주기장 정비 점검 대상입니다.
-            </div>
+ </div>
           )}
 
           {/* 2. 정비 항목 마스터 연동 (정비항목관리 DB) */}
@@ -441,19 +441,19 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                       }`}
                     >
                       <span>+</span> [{item.category}] {item.name} ({item.standardManHours || 0.5}M/H)
-                    </button>
+ </button>
                   );
                 })}
               </div>
             ) : (
               <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
                 등록된 정비 항목 마스터가 없습니다. (정비 항목 관리 메뉴 연동)
-              </div>
+ </div>
             )}
 
             {selectedInspectionItemActionGuide && (
               <div className="p-2 rounded-lg bg-blue-950/40 border border-blue-800/60 text-blue-300 text-[11px]">
-                📘 <strong>표준조치:</strong> {selectedInspectionItemActionGuide}
+                 <strong>표준조치:</strong> {selectedInspectionItemActionGuide}
               </div>
             )}
           </div>
@@ -464,7 +464,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
               <span className="font-bold text-slate-200 text-xs">정비 소요시간 *</span>
               <span className="text-xs font-mono font-bold text-blue-400">
                 {(durationMinutes / 60).toFixed(1)} M/H ({durationMinutes}분)
-              </span>
+ </span>
             </div>
             <div className="flex flex-wrap gap-1.5 items-center">
               {[15, 30, 45, 60, 90, 120].map(mins => (
@@ -479,7 +479,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                   }`}
                 >
                   {mins}분
-                </button>
+ </button>
               ))}
               <div className="flex items-center gap-1 ml-auto">
                 <input
@@ -513,15 +513,15 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
               <span className="font-bold text-slate-200 flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-blue-400" />
                 주기장 재고 소모품 투입
-              </span>
+ </span>
               {showUnitPrice ? (
                 <span className="text-[11px] font-bold text-blue-400 font-mono">
                   소모품 합계: {totalConsumablesCost.toLocaleString()}원
-                </span>
+ </span>
               ) : (
                 <span className="text-[11px] font-bold text-blue-400 font-mono">
                   투입 품목: {usedConsumables.length}종
-                </span>
+ </span>
               )}
             </div>
 
@@ -554,7 +554,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 className="py-2 px-3 rounded-xl bg-blue-600 text-white font-bold text-[11px] shrink-0 active:scale-95 transition-all"
               >
                 투입
-              </button>
+ </button>
             </div>
 
             {/* 투입된 목록 */}
@@ -567,7 +567,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                     <div key={uc.consumableId} className="flex items-center justify-between text-[11px] py-1 px-2 rounded-lg bg-slate-900 border border-slate-800">
                       <span className="font-medium text-white truncate mr-2">
                         {item?.modelName || uc.consumableId} ({uc.quantity}{item?.unit || '개'})
-                      </span>
+ </span>
                       <div className="flex items-center gap-2 shrink-0">
                         {showUnitPrice && (
                           <span className="font-mono text-slate-300">{subtotal.toLocaleString()}원</span>
@@ -617,7 +617,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 }`}
               >
                 무상 (회사부담)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setBillableType('BILLABLE')}
@@ -628,7 +628,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 }`}
               >
                 유상 (고객청구)
-              </button>
+ </button>
             </div>
             {billableType === 'BILLABLE' && (
               <input
@@ -648,12 +648,12 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
               <span className="font-bold text-amber-300 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
                 부품 수급 대기 보류 사유
-              </span>
+ </span>
               <input
                 type="text"
                 value={holdReason}
                 onChange={e => setHoldReason(e.target.value)}
-                placeholder="보류 사유 (예: 19FT 상승실린더 씰킷 발주 대기)"
+                placeholder="보류 사유"
                 className="rounded-xl bg-slate-950 border border-amber-500/40 p-2 text-white text-xs"
               />
               <button
@@ -662,7 +662,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
                 disabled={isSubmitting}
                 className="w-full py-2 rounded-xl bg-amber-600 text-white font-bold text-xs active:scale-95 transition-all"
               >
-                {isSubmitting ? '처리 중...' : '보류 저장 (정비중 REPAIRING 유지)'}
+                {isSubmitting ? '처리 중...' : '보류 저장'}
               </button>
             </div>
           )}
@@ -690,7 +690,7 @@ export const MobileYardRepairModal: React.FC<MobileYardRepairModalProps> = ({
             className="flex-1 py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 active:scale-98 transition-all"
           >
             <CheckCircle className="w-4 h-4 stroke-[3]" />
-            <span>{isSubmitting ? '처리 중...' : '정비 완료 (임대가능 AVAILABLE 전환)'}</span>
+            <span>{isSubmitting ? '처리 중...' : '정비 완료'}</span>
           </button>
         </div>
       </div>

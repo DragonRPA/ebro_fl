@@ -119,7 +119,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
             <Edit3 size={18} color="var(--primary)" />
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--primary)' }}>
               특수 거래명세서 품목 편집 ({targetBilling.billingYm} - {targetCustomer?.name || '고객사'})
-            </h3>
+ </h3>
           </div>
           <button
             type="button"
@@ -133,8 +133,8 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
               color: 'var(--text-muted)'
             }}
           >
-            ✕
-          </button>
+            
+ </button>
         </div>
 
         {/* 안내 배너 */}
@@ -148,8 +148,8 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
             color: '#5b21b6'
           }}
         >
-          💡 실제 계약 회계 원장 DB(Billing & BillingDetail)는 원본 그대로 보존되며, 거래명세서 출력 및 이메일 발송 시 교부될 품목명과 금액만 임의 수정됩니다.
-        </div>
+           실제 계약 회계 원장 DB는 원본 그대로 보존되며, 거래명세서 출력 및 이메일 발송 시 교부될 품목명과 금액만 임의 수정됩니다.
+ </div>
 
         {/* 기준 정보 카드 */}
         <div
@@ -176,7 +176,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
             <span style={{ color: 'var(--text-muted)', display: 'block' }}>회계 원장 정상 총액</span>
             <strong style={{ color: 'var(--primary)' }}>
               ₩{originalGrand.toLocaleString()} (공급가 ₩{originalSupply.toLocaleString()})
-            </strong>
+ </strong>
           </div>
           <div>
             <span style={{ color: 'var(--text-muted)', display: 'block' }}>현재 상태</span>
@@ -191,7 +191,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '12px', fontWeight: 800, color: '#6d28d9' }}>
             거래명세서 변환 사유 및 차이 내역 (필수) *
-          </label>
+ </label>
           <input
             type="text"
             value={reasonInput}
@@ -212,7 +212,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '12.5px', fontWeight: 700 }}>
             명세서 품목 목록 ({itemsDraft.length}건)
-          </span>
+ </span>
           <button
             type="button"
             className="btn-primary"
@@ -225,7 +225,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
             }}
           >
             <Plus size={11} /> 행 추가
-          </button>
+ </button>
         </div>
 
         {/* 품목 테이블 */}
@@ -412,8 +412,8 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
                         onClick={() => handleRemoveItem(idx)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}
                       >
-                        ✕
-                      </button>
+                        
+ </button>
                     </td>
                   </tr>
                 );
@@ -436,7 +436,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px' }}>
             <span>원장: ₩{originalGrand.toLocaleString()}</span>
-            <span>➔</span>
+            <span></span>
             <span style={{ fontWeight: 800, color: 'var(--primary)' }}>명세서: ₩{draftGrand.toLocaleString()}</span>
             <span
               style={{
@@ -450,8 +450,8 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
               }}
             >
               {diffGrand === 0
-                ? '⚖️ 총액 일치 (저장 승인 가능)'
-                : `🚫 저장 불가: 총액 불일치 (차액: ₩${diffGrand.toLocaleString()})`}
+                ? '총액 일치 (저장 승인 가능)'
+                : ` 저장 불가: 총액 불일치 (차액: ₩${diffGrand.toLocaleString()})`}
             </span>
           </div>
 
@@ -465,7 +465,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
                 style={{ fontSize: '12px', padding: '6px 12px' }}
               >
                 정상 복원
-              </button>
+ </button>
             )}
             <button
               type="button"
@@ -475,7 +475,7 @@ export const CustomStatementEditModal: React.FC<CustomStatementEditModalProps> =
               style={{ fontSize: '12px', padding: '6px 12px' }}
             >
               닫기
-            </button>
+ </button>
             <button
               data-hs-trigger="Save"
               type="button"

@@ -251,11 +251,11 @@ export const TradeBillingPage: React.FC = () => {
     setFormRecipientName(defaultRecName);
     setFormRecipientEmail(defaultRecEmail);
     setFormCcEmail(existingBilling?.ccEmail || '');
-    setFormMemo(existingBilling?.memo || `수주번호 ${order.id} (${itemTitle}) 거래명세서 청구`);
-    setFormSubject(`[거래명세서] (주)기연리프트 ${defaultMonth}월 유통 납품 대금 청구 (${custName} 귀중)`);
+    setFormMemo(existingBilling?.memo || `수주번호 ${order.id} · ${itemTitle} 거래명세서 청구`);
+    setFormSubject(`[거래명세서] (주)기연리프트 ${defaultMonth}월 유통 납품 대금 청구 · ${custName} 귀중`);
     setFormBody(
       `안녕하십니까, ${custName} ${defaultRecName}님.\n(주)기연리프트 유통사업부입니다.\n\n` +
-      `귀사와 체결한 유통 수주건(${order.id} / ${itemTitle})에 대한 ${defaultMonth}월 거래명세서를 발송드립니다.\n\n` +
+      `귀사와 체결한 유통 수주건 [${order.id} / ${itemTitle}]에 대한 ${defaultMonth}월 거래명세서를 발송드립니다.\n\n` +
       `■ 청구 요약\n` +
       `- 수주번호: ${order.id}\n` +
       `- 품목명세: ${itemTitle}\n` +
@@ -284,7 +284,7 @@ export const TradeBillingPage: React.FC = () => {
           ccEmail: formCcEmail.trim(),
           memo: formMemo.trim()
         });
-        if (showSuccessToast) showSuccessToast(`거래명세서(${activeBilling.id}) 정보가 수정되었습니다.`);
+        if (showSuccessToast) showSuccessToast(`거래명세서 [${activeBilling.id}] 정보가 수정되었습니다.`);
       } else {
         const created = await issueBilling(statementModalOrder.customerId, formMonth, {
           orderId: statementModalOrder.id,
@@ -298,7 +298,7 @@ export const TradeBillingPage: React.FC = () => {
           memo: formMemo.trim()
         });
         setActiveBilling(created);
-        if (showSuccessToast) showSuccessToast(`거래명세서(${created.id})가 발행되었습니다.`);
+        if (showSuccessToast) showSuccessToast(`거래명세서 [${created.id}]가 발행되었습니다.`);
       }
     } catch (err: any) {
       if (showErrorModal) showErrorModal(err.message);
@@ -358,7 +358,7 @@ export const TradeBillingPage: React.FC = () => {
       setActiveBilling(null);
       if (showSuccessToast) {
         showSuccessToast(
-          `거래명세서(${targetBilling.id}) 발행 및 이메일 발송(${isTestMode ? '테스트 안전 격리: emptyhead01@naver.com' : formRecipientEmail})이 완료되었습니다.`
+          `거래명세서 [${targetBilling.id}] 발행 및 이메일 발송이 완료되었습니다.`
         );
       }
     } catch (err: any) {
@@ -528,10 +528,7 @@ export const TradeBillingPage: React.FC = () => {
           <h2 data-mid="trade_billing-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <FileText size={18} color="var(--primary)" />
             거래처별 매출내역 및 미수금 관리
-          </h2>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
-            대리점 및 최종고객 매출 명세서 발행, 수금 완료 확정 및 거래처별 미수금 잔액 현황 관리
-          </div>
+ </h2>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -542,14 +539,14 @@ export const TradeBillingPage: React.FC = () => {
               className={`segmented-tab-item ${viewMode === 'ORDER_LEDGER' ? 'active' : ''}`}
             >
               건별 매출내역 · 미수금
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setViewMode('CUSTOMER_AR')}
               className={`segmented-tab-item ${viewMode === 'CUSTOMER_AR' ? 'active' : ''}`}
             >
               거래처별 매출 및 미수금 집계
-            </button>
+ </button>
           </div>
           {filteredRows.length > 0 && (
             <button
@@ -575,7 +572,7 @@ export const TradeBillingPage: React.FC = () => {
             >
               <PlusCircle size={14} />
               거래명세서 작성/발송
-            </button>
+ </button>
           )}
           <button
             onClick={handleExcelDownload}
@@ -597,14 +594,14 @@ export const TradeBillingPage: React.FC = () => {
           >
             <Download size={14} color="#16a34a" />
             엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
       {/* KPI Strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))', gap: '10px' }}>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출액 (부가세 포함)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출액</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
             {summary.totalTargetAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.totalCount}건)</span>
           </div>
@@ -749,7 +746,7 @@ export const TradeBillingPage: React.FC = () => {
         >
           <RotateCcw size={13} />
           초기화
-        </button>
+ </button>
       </div>
 
       {/* Main Grid Table */}
@@ -763,7 +760,7 @@ export const TradeBillingPage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 매출건수</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 공급가액</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 매출합계 (부가세 포함)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>총 매출합계</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수금완료 확정액</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재 미수금 잔액</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수금률</th>
@@ -774,7 +771,7 @@ export const TradeBillingPage: React.FC = () => {
                 <tr>
                   <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     집계된 거래처 매출 및 미수금 내역이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 customerReceivableRows.map(c => {
@@ -790,8 +787,8 @@ export const TradeBillingPage: React.FC = () => {
                           }}
                           style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--primary)', cursor: 'pointer' }}
                         >
-                          건별내역 ➔
-                        </button>
+                          건별내역
+ </button>
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: c.tierLabel === '대리점' ? '#ede9fe' : '#e0f2fe', color: c.tierLabel === '대리점' ? '#6d28d9' : '#0369a1' }}>
@@ -808,7 +805,7 @@ export const TradeBillingPage: React.FC = () => {
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: collectRate >= 100 ? '#16a34a' : '#2563eb' }}>
                         {collectRate}%
-                      </td>
+ </td>
                     </tr>
                   );
                 })
@@ -835,7 +832,7 @@ export const TradeBillingPage: React.FC = () => {
               <tr>
                 <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13.5px' }}>
                   조회 조건에 해당하는 유통 청구/명세 내역이 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               filteredRows.map(row => {
@@ -877,12 +874,12 @@ export const TradeBillingPage: React.FC = () => {
                             <>
                               <FileText size={12} />
                               명세서 발행/이메일
-                            </>
+ </>
                           ) : (
                             <>
                               <Mail size={12} />
                               명세서 확인/발송
-                            </>
+ </>
                           )}
                         </button>
 
@@ -912,7 +909,7 @@ export const TradeBillingPage: React.FC = () => {
                             >
                               <CreditCard size={12} />
                               수금완료
-                            </button>
+ </button>
 
                             <button
                               onClick={() => {
@@ -938,7 +935,7 @@ export const TradeBillingPage: React.FC = () => {
                             >
                               <Ban size={12} />
                               취소
-                            </button>
+ </button>
                           </>
                         )}
 
@@ -967,7 +964,7 @@ export const TradeBillingPage: React.FC = () => {
                           >
                             <Trash2 size={12} />
                             삭제
-                          </button>
+ </button>
                         )}
                       </div>
                     </td>
@@ -1043,7 +1040,7 @@ export const TradeBillingPage: React.FC = () => {
                           }}>
                             <CheckCircle size={11} />
                             서명 확인됨
-                          </span>
+ </span>
                           <button
                             data-uia="btn-view-billing-proof"
                             data-mid="btn-view-billing-proof"
@@ -1067,10 +1064,10 @@ export const TradeBillingPage: React.FC = () => {
                           >
                             <FileText size={11} />
                             납품증
-                          </button>
+ </button>
                         </div>
                       ) : isDelivered ? (
-                        <span style={{ fontSize: '12px', color: '#0284c7', fontWeight: 600 }}>납품 완료 (수취확인)</span>
+                        <span style={{ fontSize: '12px', color: '#0284c7', fontWeight: 600 }}>납품 완료</span>
                       ) : (
                         <span style={{ fontSize: '12px', color: '#94a3b8' }}>배송/납품 전</span>
                       )}
@@ -1090,14 +1087,14 @@ export const TradeBillingPage: React.FC = () => {
                     {/* Total Amount */}
                     <td style={{ padding: '10px 12px', fontSize: '13.5px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                       {totalAmount.toLocaleString()}원
-                    </td>
+ </td>
 
                     {/* Recipient & Email Status */}
                     <td style={{ padding: '10px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}>
                       {billing?.recipientEmail ? (
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
-                            {billing.recipientName || '담당자'} ({billing.recipientEmail})
+                            {billing.recipientName || '담당자'} · {billing.recipientEmail}
                           </div>
                           <div style={{ fontSize: '11px', color: billing.sentAt ? '#16a34a' : 'var(--text-muted)' }}>
                             {billing.sentAt ? `발송완료: ${billing.sentAt.replace('T', ' ').substring(0, 16)}` : '이메일 미발송'}
@@ -1163,22 +1160,22 @@ export const TradeBillingPage: React.FC = () => {
             <div style={{ padding: '14px 20px', backgroundColor: '#1e293b', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FileText size={18} />
-                유통 거래명세서 작성 · 발행 및 이메일 발송 ({statementModalOrder.id})
+                유통 거래명세서 작성 · 발행 및 이메일 발송 · {statementModalOrder.id}
               </h3>
               <button onClick={() => setStatementModalOrder(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}>
                 <X size={18} />
               </button>
             </div>
 
-            {/* Modal Body: Left (Formal Statement Preview) + Right (Billing & Email Form) */}
+            {/* Modal Body */}
             <div style={{ flex: 1, overflow: 'auto', padding: '18px', display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '18px', backgroundColor: 'var(--bg-app)' }}>
-              {/* Left Column: Formal Transaction Statement Document */}
+              {/* Left Column */}
               <div style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '20px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '10px' }}>
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '3px', color: '#0f172a' }}>거 래 명 세 서</div>
                     <div style={{ fontSize: '11.5px', color: '#475569', marginTop: '2px' }}>
-                      명세서번호: <strong>{activeBilling?.id || `신규발행예정 (${statementModalOrder.id})`}</strong>
+                      명세서번호: <strong>{activeBilling?.id || `신규발행예정 · ${statementModalOrder.id}`}</strong>
                     </div>
                   </div>
                   <button
@@ -1200,7 +1197,7 @@ export const TradeBillingPage: React.FC = () => {
                   >
                     <Printer size={13} />
                     거래명세서 인쇄
-                  </button>
+ </button>
                 </div>
 
                 {/* Supplier & Buyer Info */}
@@ -1256,7 +1253,7 @@ export const TradeBillingPage: React.FC = () => {
                         <tr key={opt.optionId} style={{ backgroundColor: '#faf5ff' }}>
                           <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace', color: '#6d28d9', fontWeight: 700 }}>{opt.optionCode}</td>
                           <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#6d28d9' }}>
-                            [장착옵션·{opt.optionGroupLabel}] {opt.name} <span style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}>({opt.subVariant})</span>
+                            [장착옵션·{opt.optionGroupLabel}] {opt.name} <span style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}>· {opt.subVariant}</span>
                           </td>
                           <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{opt.qty.toLocaleString()}</td>
                           <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', color: opt.isFreeApplied ? '#047857' : '#0f172a' }}>
@@ -1300,7 +1297,7 @@ export const TradeBillingPage: React.FC = () => {
               <div style={{ backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12.5px' }}>
                 <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
                   명세서 발행 조건 및 이메일 수신자 설정
-                </div>
+ </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1407,7 +1404,7 @@ export const TradeBillingPage: React.FC = () => {
                     checked={isTestMode}
                     onChange={e => setIsTestMode(e.target.checked)}
                   />
-                  <span>테스트 안전 격리 발송 모드 (ON 시 emptyhead01@naver.com 으로 안전 라우팅)</span>
+                  <span>테스트 안전 격리 발송 모드</span>
                 </label>
               </div>
             </div>
@@ -1415,7 +1412,7 @@ export const TradeBillingPage: React.FC = () => {
             {/* Modal Footer */}
             <div style={{ padding: '12px 20px', backgroundColor: 'var(--bg-card)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                {activeBilling ? `현재 상태: ${activeBilling.status} (명세서번호: ${activeBilling.id})` : '아직 명세서가 발행되지 않은 수주건입니다.'}
+                {activeBilling ? `현재 상태: ${activeBilling.status} · 명세서번호: ${activeBilling.id}` : '아직 명세서가 발행되지 않은 수주건입니다.'}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
@@ -1423,7 +1420,7 @@ export const TradeBillingPage: React.FC = () => {
                   style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
                 >
                   닫기
-                </button>
+ </button>
                 <button
                   onClick={handleIssueStatementOnly}
                   disabled={isSubmitting}

@@ -301,7 +301,7 @@ export async function processSingleLicense(
           details: isNtsClosed 
             ? `기존 고객사 보완 (국세청 폐업 확인: 폐업일 ${ntsData?.closedDate || '미상'} - 출고제한 적용)` 
             : nameChanged
-              ? `기존 고객사 매칭 완료 (상호 정규화: ${matchedCust.name} ➔ ${updatedCust.name}, 업태/종목 등록증 기준 갱신)`
+              ? `기존 고객사 매칭 완료 (상호 정규화: ${matchedCust.name} ${updatedCust.name}, 업태/종목 등록증 기준 갱신)`
               : `기존 고객사 매칭 완료 (${matchedCust.name}) - 등록증 기준 정보 갱신`,
           elapsedMs: Date.now() - t0
         };
@@ -416,7 +416,7 @@ export async function processSingleLicense(
           details: isNtsClosed
             ? `기존 매입처 보완 (국세청 폐업 확인: 폐업일 ${ntsData?.closedDate || '미상'} - 비활성화)`
             : vendorNameChanged
-              ? `기존 매입처 매칭 완료 (상호 정규화: ${matchedVendor.name} ➔ ${updatedVendor.name}, 업태/종목 등록증 기준 갱신)`
+              ? `기존 매입처 매칭 완료 (상호 정규화: ${matchedVendor.name} ${updatedVendor.name}, 업태/종목 등록증 기준 갱신)`
               : `기존 매입처 매칭 완료 (${matchedVendor.name}) - 등록증 기준 정보 갱신`,
           elapsedMs: Date.now() - t0
         };

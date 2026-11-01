@@ -28,7 +28,7 @@ import {
 } from '../utils/siteMatcher';
 import { splitMasterAwareOptions } from '../types/siteOption';
 
-// 🕒 KST(한국 표준시) 기준 입력일시/수정일시 포맷 헬퍼 (YYYY-MM-DD HH:mm)
+//  KST(한국 표준시) 기준 입력일시/수정일시 포맷 헬퍼 (YYYY-MM-DD HH:mm)
 const formatDateTimeKst = (raw?: string | null): string => {
   if (!raw) return '-';
   const str = String(raw).trim();
@@ -49,7 +49,7 @@ const formatDateTimeKst = (raw?: string | null): string => {
   return `${get('year')}-${get('month')}-${get('day')} ${hh}:${get('minute')}`;
 };
 
-// ⚡ 좌측 고객 목록 개별 아이템 메모이제이션 (선택 고객 변경 시 타 고객 불필요 재렌더링 방지)
+//  좌측 고객 목록 개별 아이템 메모이제이션 (선택 고객 변경 시 타 고객 불필요 재렌더링 방지)
 interface CustomerListItemProps {
   cust: Customer;
   isSelected: boolean;
@@ -103,7 +103,7 @@ const CustomerListItem = React.memo<CustomerListItemProps>(({
             <>
               <span style={{ fontSize: '9.5px', color: 'var(--danger)', backgroundColor: 'rgba(239,68,68,0.08)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, whiteSpace: 'nowrap' }}>
                 등록증 미첨부
-              </span>
+ </span>
               {canSave && (
                 <button
                   data-hs-trigger="Register"
@@ -129,14 +129,14 @@ const CustomerListItem = React.memo<CustomerListItemProps>(({
                   }}
                 >
                   <FileText size={10} /> 등록증 첨부
-                </button>
+ </button>
               )}
             </>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
               <span style={{ fontSize: '9.5px', color: 'var(--success)', backgroundColor: 'rgba(5,150,105,0.08)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                 <Check size={10} /> 등록증 첨부
-              </span>
+ </span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -160,7 +160,7 @@ const CustomerListItem = React.memo<CustomerListItemProps>(({
                 }}
               >
                 <FileText size={9} /> 보기
-              </button>
+ </button>
             </div>
           )}
           {isCustomerClosedBlocked(cust) ? (
@@ -172,8 +172,8 @@ const CustomerListItem = React.memo<CustomerListItemProps>(({
           ) : null}
           {noticeCount > 0 && (
             <span style={{ fontSize: '9.5px', color: '#7e22ce', backgroundColor: '#f3e8ff', padding: '1px 4px', borderRadius: '3px', fontWeight: 800 }}>
-              📜 내용증명 {noticeCount}건
-            </span>
+               내용증명 {noticeCount}건
+ </span>
           )}
         </div>
       </div>
@@ -200,7 +200,7 @@ const CustomerListItem = React.memo<CustomerListItemProps>(({
             }}
           >
             수정
-          </button>
+ </button>
         )}
       </div>
     </div>
@@ -311,13 +311,13 @@ export const Customers: React.FC = () => {
   const [showCustSpecs, setShowCustSpecs] = useState(false);
   const [isSubmittingCust, setIsSubmittingCust] = useState(false);
 
-  // 📄 사업자등록증 AI 모달 상태
+  //  사업자등록증 AI 모달 상태
   const [showBizLicenseModal, setShowBizLicenseModal] = useState(false);
   const [targetBizLicenseCustId, setTargetBizLicenseCustId] = useState<string | undefined>(undefined);
   const [showBatchLicenseModal, setShowBatchLicenseModal] = useState(false);
   const [showNtsAuditModal, setShowNtsAuditModal] = useState(false);
 
-  // 📄 사업자등록증 사본 열람 모달 상태 및 핸들러
+  //  사업자등록증 사본 열람 모달 상태 및 핸들러
   const [viewingBizCertCust, setViewingBizCertCust] = useState<Customer | null>(null);
   const [bizCertEditName, setBizCertEditName] = useState<string>('');
   const [isSavingBizCertName, setIsSavingBizCertName] = useState<boolean>(false);
@@ -383,13 +383,13 @@ export const Customers: React.FC = () => {
       } catch {
         // ignore pull error and fall through to modal
       }
-      showErrorModal(`[${cust.name}] 고객사에 등록된 사업자등록증 파일(이미지/PDF)이 없습니다. '사업자등록증 보완' 버튼을 통해 등록해 주십시오.`);
+      showErrorModal(`[${cust.name}] 고객사에 등록된 사업자등록증 파일이 없습니다. '사업자등록증 보완' 버튼을 통해 등록해 주십시오.`);
       return;
     }
     openBizCertViewer(cust);
   };
 
-  // 📇 명함/이메일 AI 모달 상태
+  //  명함/이메일 AI 모달 상태
   const [showContactCardModal, setShowContactCardModal] = useState(false);
   const [targetContactCardCustId, setTargetContactCardCustId] = useState<string | undefined>(undefined);
 
@@ -500,12 +500,12 @@ export const Customers: React.FC = () => {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Partial<CustomerBankAccount> | null>(null);
 
-  // 🏷️ 전사 표준 옵션 마스터 모달 상태
+  //  전사 표준 옵션 마스터 모달 상태
   const [showOptionMasterModal, setShowOptionMasterModal] = useState(false);
   const [editingOption, setEditingOption] = useState<Partial<StandardOption> | null>(null);
   const [optionCategoryFilter, setOptionCategoryFilter] = useState<'ALL' | 'PAID' | 'PROTECTION' | 'ATTACHMENT' | 'SPEC'>('ALL');
 
-  // 🛡️ 고객사 기본 옵션 관리 모달 상태
+  //  고객사 기본 옵션 관리 모달 상태
   const [showCustOptionModal, setShowCustOptionModal] = useState(false);
   const [custOptionForm, setCustOptionForm] = useState<{
     defaultPaidOptions: string;
@@ -514,7 +514,7 @@ export const Customers: React.FC = () => {
     specialNotes: string;
   }>({ defaultPaidOptions: '', defaultProtection: '', defaultAttachments: '', specialNotes: '' });
 
-  // 🏗️ 현장 전용 옵션 관리 모달 상태
+  //  현장 전용 옵션 관리 모달 상태
   const [showSiteOptionModal, setShowSiteOptionModal] = useState(false);
   const [editingSiteOption, setEditingSiteOption] = useState<CustomerSite | null>(null);
   const [siteOptionForm, setSiteOptionForm] = useState<{
@@ -524,7 +524,7 @@ export const Customers: React.FC = () => {
     checkedSpecs?: Record<string, boolean>;
   }>({ paidOptions: '', protection: '', attachments: '', checkedSpecs: {} });
 
-  // 🔍 현장별 옵션관리 기등록 현장 참조 검색 및 옵션 복사 상태
+  //  현장별 옵션관리 기등록 현장 참조 검색 및 옵션 복사 상태
   const [siteOptionRefSearch, setSiteOptionRefSearch] = useState('');
   const [selectedRefSiteId, setSelectedRefSiteId] = useState('');
 
@@ -564,21 +564,21 @@ export const Customers: React.FC = () => {
     return customers.find(c => c.id === selectedCustomerId) || null;
   }, [customers, selectedCustomerId]);
 
-  // 🏢 고객사 ID ➔ 고객사 매핑 맵
+  //  고객사 ID  고객사 매핑 맵
   const customerMap = useMemo(() => {
     const map = new Map<string, Customer>();
     (customers || []).forEach(c => map.set(c.id, c));
     return map;
   }, [customers]);
 
-  // 🗺️ 현장 마스터 ID ➔ 현장 마스터 매핑 맵
+  //  현장 마스터 ID  현장 마스터 매핑 맵
   const siteMasterMap = useMemo(() => {
     const map = new Map<string, SiteMaster>();
     (siteMasters || []).forEach(sm => map.set(sm.id, sm));
     return map;
   }, [siteMasters]);
 
-  // 🏗️ 고객사별 현장 개수 매핑 맵 (O(1) 검색)
+  //  고객사별 현장 개수 매핑 맵 (O(1) 검색)
   const customerSiteCountMap = useMemo(() => {
     const map = new Map<string, number>();
     (sites || []).forEach(s => {
@@ -589,7 +589,7 @@ export const Customers: React.FC = () => {
     return map;
   }, [sites]);
 
-  // 👤 고객사별 담당자 개수 매핑 맵 (O(1) 검색)
+  //  고객사별 담당자 개수 매핑 맵 (O(1) 검색)
   const customerContactCountMap = useMemo(() => {
     const map = new Map<string, number>();
     (contacts || []).forEach(c => {
@@ -600,7 +600,7 @@ export const Customers: React.FC = () => {
     return map;
   }, [contacts]);
 
-  // 📜 고객사별 내용증명 개수 매핑 맵 (O(1) 검색)
+  //  고객사별 내용증명 개수 매핑 맵 (O(1) 검색)
   const customerLegalNoticeCountMap = useMemo(() => {
     const map = new Map<string, number>();
     (legalNoticeLogs || []).forEach(l => {
@@ -611,7 +611,7 @@ export const Customers: React.FC = () => {
     return map;
   }, [legalNoticeLogs]);
 
-  // 📋 현장별 활성 계약 및 투입 장비 개수 매핑 맵 (O(1) 검색)
+  //  현장별 활성 계약 및 투입 장비 개수 매핑 맵 (O(1) 검색)
   const siteContractAssetStatsMap = useMemo(() => {
     const contractAssetCountMap = new Map<string, number>();
     (contractAssets || []).forEach(ca => {
@@ -632,7 +632,7 @@ export const Customers: React.FC = () => {
     return statsMap;
   }, [contracts, contractAssets]);
 
-  // 🎯 현장별 옵션관리 등록 옵션 그룹 목록 (검색 필터 및 옵션 보유 그룹 상위 정렬)
+  //  현장별 옵션관리 등록 옵션 그룹 목록 (검색 필터 및 옵션 보유 그룹 상위 정렬)
   const optionReferenceSites = useMemo(() => {
     const matcher = createHangulMatcher(siteOptionRefSearch);
     return (siteMasters || []).filter(s => {
@@ -722,7 +722,7 @@ export const Customers: React.FC = () => {
   const { items: sortedCustomerContacts, requestSort: requestSortContacts, sortConfig: sortConfigContacts } = useSortableData(customerContacts);
   const { items: sortedCustomerSites, requestSort: requestSortSites, sortConfig: sortConfigSites } = useSortableData(customerSites);
 
-  // 📄 사업자등록증 원본 파일 누락 여부 판정 (실제 파일 첨부/등록 여부)
+  //  사업자등록증 원본 파일 누락 여부 판정 (실제 파일 첨부/등록 여부)
   const isMissingBizCert = (c: Customer) => {
     return !c.businessCertFileUrl || c.businessCertFileUrl.trim() === '';
   };
@@ -1314,12 +1314,12 @@ export const Customers: React.FC = () => {
     }
   };
 
-  // 👥 현장 등록/수정 및 다중 담당자(동시 2인 이상) 핸들러
+  //  현장 등록/수정 및 다중 담당자(동시 2인 이상) 핸들러
   const handleOpenAddSite = () => {
     if (!selectedCustomerId) return;
     const parentCust = customers.find(c => c.id === selectedCustomerId);
     
-    // 👥 3대 담당자 기본 슬롯 (장비담당자 / 마감담당자 / 안전담당자)
+    //  3대 담당자 기본 슬롯 (장비담당자 / 마감담당자 / 안전담당자)
     const initialContacts: SiteContactPerson[] = [
       {
         id: 'SC-EQ-' + Date.now(),
@@ -1582,7 +1582,7 @@ export const Customers: React.FC = () => {
     }
 
     try {
-      // 👥 3대 담당자 (장비 / 마감 / 안전) 정규화 및 플랫 필드 동기화
+      //  3대 담당자 (장비 / 마감 / 안전) 정규화 및 플랫 필드 동기화
       const rawContacts = editingSite.contacts || [];
       // 입력된 데이터가 있거나 활성화된 항목 필터
       const validContacts = rawContacts.filter(c => 
@@ -1694,7 +1694,7 @@ export const Customers: React.FC = () => {
     }
   };
 
-  // 🏷️ 옵션 정규화 유틸리티 함수 (배열/객체/비문자열 런타임 크래시 원천 방어)
+  //  옵션 정규화 유틸리티 함수 (배열/객체/비문자열 런타임 크래시 원천 방어)
   const normalizeOptionString = (val: any): string => {
     if (!val) return '';
     if (Array.isArray(val)) return val.flat().map((s: any) => String(s).trim()).filter(Boolean).join(', ');
@@ -1702,7 +1702,7 @@ export const Customers: React.FC = () => {
     return String(val).trim();
   };
 
-  // 🏷️ 옵션 유틸리티 함수 (옵션마스터 쉼표 포함 품목명 보존 및 비마스터/시드 항목 차단)
+  //  옵션 유틸리티 함수 (옵션마스터 쉼표 포함 품목명 보존 및 비마스터/시드 항목 차단)
   const splitOptions = (str?: any): string[] => {
     return splitMasterAwareOptions(str, standardOptions, { onlyMasterOptions: true, stripPrice: true });
   };
@@ -1717,7 +1717,7 @@ export const Customers: React.FC = () => {
     return arr.join(', ');
   };
 
-  // 🛡️ 고객사 기본 옵션 모달 핸들러
+  //  고객사 기본 옵션 모달 핸들러
   const handleOpenCustOptionModal = (cust: Customer) => {
     setCustOptionForm({
       defaultPaidOptions: normalizeOptionString(cust.defaultPaidOptions),
@@ -1762,7 +1762,7 @@ export const Customers: React.FC = () => {
     }
   };
 
-  // 🏗️ 현장 전용 옵션 모달 핸들러
+  //  현장 전용 옵션 모달 핸들러
   const handleOpenSiteOptionModal = (cs: CustomerSite) => {
     setEditingSiteOption(cs);
     setSiteOptionRefSearch('');
@@ -1797,7 +1797,7 @@ export const Customers: React.FC = () => {
     }
   };
 
-  // 📋 현장별 옵션관리 등록 옵션 그룹 속성 복사
+  //  현장별 옵션관리 등록 옵션 그룹 속성 복사
   const handleApplyRefSiteOptionsToOptionForm = () => {
     if (!selectedRefSite) {
       showToast('상속받을 옵션 그룹을 먼저 선택하세요.', 'error');
@@ -1813,7 +1813,7 @@ export const Customers: React.FC = () => {
     showToast(`[${selectedRefSite.name}] 옵션 그룹 속성을 적용했습니다.`);
   };
 
-  // 🏷️ 전사 표준 옵션 마스터 핸들러
+  //  전사 표준 옵션 마스터 핸들러
   const handleOpenAddOption = (category: 'PAID' | 'PROTECTION' | 'ATTACHMENT' | 'SPEC' = 'PAID') => {
     setEditingOption({
       category,
@@ -1853,7 +1853,7 @@ export const Customers: React.FC = () => {
     }
   };
 
-  // 🧭 현장별 옵션 관리 전용 메뉴 바로가기
+  //  현장별 옵션 관리 전용 메뉴 바로가기
   const handleNavigateToSiteOptionManage = (siteId?: string) => {
     setNavigationPayload({
       siteId: siteId || editingSite?.id,
@@ -1985,10 +1985,10 @@ const handleDeleteAccount = async (accId: string) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             고객 관리
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 <strong>{customers.length}</strong>개사 (조회 <strong>{filteredCustomers.length}</strong>개사)
-          </span>
+ </span>
         </div>
 
         {/* 우상단 파이프라인 액션 - 표준 횡배치: 조회 -> 저장/등록 -> 엑셀업로드 -> 엑셀다운로드 */}
@@ -1999,7 +1999,7 @@ const handleDeleteAccount = async (accId: string) => {
             disabled={refreshing}
           >
             <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} /> 조회
-          </button>
+ </button>
           {canSave && (
             <button
               data-uia="btn-add-customer"
@@ -2009,7 +2009,7 @@ const handleDeleteAccount = async (accId: string) => {
               onClick={handleOpenAddCust}
             >
               <Plus size={13} /> 신규 고객 등록
-            </button>
+ </button>
           )}
           {canSave && isDeveloper && (
             <button
@@ -2019,7 +2019,7 @@ const handleDeleteAccount = async (accId: string) => {
               title="사업자등록증 폴더를 지정하여 내부 모든 파일 일괄 등록 및 보완"
             >
               <FolderOpen size={13} /> 폴더 일괄 등록
-            </button>
+ </button>
           )}
           {canSave && (
             <button
@@ -2029,7 +2029,7 @@ const handleDeleteAccount = async (accId: string) => {
               title="국세청 홈택스 사업자 휴폐업 상태 전수 점검 및 임대자산 회수 점검"
             >
               <ShieldAlert size={13} /> 국세청 휴폐업 점검
-            </button>
+ </button>
           )}
           {canSave && (
             <button
@@ -2039,7 +2039,7 @@ const handleDeleteAccount = async (accId: string) => {
               onClick={() => setCustExcelModalOpen(true)}
             >
               <FileSpreadsheet size={13} /> 엑셀 일괄 등록
-            </button>
+ </button>
           )}
           <button
             className="btn-excel-download"
@@ -2047,20 +2047,20 @@ const handleDeleteAccount = async (accId: string) => {
             title="등록된 모든 고객 및 고객현장 담당자(장비/마감/안전/본사) 전체 엑셀 다운로드"
           >
             <Download size={13} /> 전체 담당자 엑셀
-          </button>
+ </button>
           <button
             className="btn-excel-download"
             onClick={handleExportAllSitesClosingSchedule}
             title="등록된 모든 고객의 고객현장별 명세서 마감일과 계산서 마감일 엑셀 다운로드"
           >
             <Download size={13} /> 현장별 마감일 엑셀
-          </button>
+ </button>
           <button
             className="btn-excel-download"
             onClick={handleExportAllCustomers}
           >
             <Download size={13} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -2078,7 +2078,7 @@ const handleDeleteAccount = async (accId: string) => {
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>거래제한 / 폐업</span>
           <strong style={{ fontSize: '14px', color: (kpiStats.blockedCust + kpiStats.closedCust) > 0 ? 'var(--danger)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             {kpiStats.blockedCust + kpiStats.closedCust}개사
-          </strong>
+ </strong>
         </div>
         <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>등록 현장수</span>
@@ -2162,8 +2162,8 @@ const handleDeleteAccount = async (accId: string) => {
               onChange={e => setShowOnlyIncomplete(e.target.checked)}
               style={{ margin: 0, cursor: 'pointer' }}
             />
-            ⚠️ 등록증 미첨부 고객사만 필터
-          </label>
+             등록증 미첨부 고객사만 필터
+ </label>
         </div>
 
         {(searchTerm || chosungFilter !== '전체' || statusFilter !== 'ALL' || showOnlyIncomplete) && (
@@ -2185,7 +2185,7 @@ const handleDeleteAccount = async (accId: string) => {
             }}
           >
             <RefreshCw size={11} /> 초기화
-          </button>
+ </button>
         )}
       </div>
 
@@ -2202,7 +2202,7 @@ const handleDeleteAccount = async (accId: string) => {
       }}>
         <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
           초성 필터
-        </span>
+ </span>
         <ChosungFilterBar
           selected={chosungFilter}
           onChange={setChosungFilter}
@@ -2248,7 +2248,7 @@ const handleDeleteAccount = async (accId: string) => {
             {filteredCustomers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)', fontSize: '12px' }}>
                 조회된 고객사가 없습니다.
-              </div>
+ </div>
             ) : (
               filteredCustomers.map(cust => (
                 <CustomerListItem
@@ -2296,19 +2296,19 @@ const handleDeleteAccount = async (accId: string) => {
                     {isCustomerClosedBlocked(activeCustomer) ? (
                       <span className="badge badge-danger" style={{ fontSize: '11px', backgroundColor: '#7f1d1d', color: '#ffffff' }}>
                         폐업차단 (해제불가)
-                      </span>
+ </span>
                     ) : activeCustomer.transactionStatus === 'RESTRICT_NEW' ? (
                       <span className="badge" style={{ fontSize: '11px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b' }}>
                         추가출고차단 (기존유지)
-                      </span>
+ </span>
                     ) : isCustomerTotalBlocked(activeCustomer.transactionStatus) ? (
                       <span className="badge badge-danger" style={{ fontSize: '11px' }}>
                         전면차단 (거래종료)
-                      </span>
+ </span>
                     ) : (
                       <span className="badge badge-success" style={{ fontSize: '11px' }}>
                         정상거래
-                      </span>
+ </span>
                     )}
                   </div>
 
@@ -2335,7 +2335,7 @@ const handleDeleteAccount = async (accId: string) => {
                           title="국세청 폐업 조회로 차단된 거래처는 차단을 해제할 수 없습니다"
                         >
                           <Lock size={12} /> 폐업차단 (해제불가)
-                        </button>
+ </button>
                       ) : isCustomerRestricted(activeCustomer.transactionStatus) ? (
                         <>
                           <button
@@ -2358,7 +2358,7 @@ const handleDeleteAccount = async (accId: string) => {
                             title="거래 차단 해제 및 정상 거래 복원"
                           >
                             <Unlock size={12} /> 차단 해제
-                          </button>
+ </button>
                           {activeCustomer.transactionStatus === 'RESTRICT_NEW' ? (
                             <button
                               type="button"
@@ -2380,7 +2380,7 @@ const handleDeleteAccount = async (accId: string) => {
                               title="2단계 전면 차단(추가출고 차단 + 기존거래 종료)으로 격상"
                             >
                               <Lock size={12} /> 전면차단 전환
-                            </button>
+ </button>
                           ) : (
                             <button
                               type="button"
@@ -2402,7 +2402,7 @@ const handleDeleteAccount = async (accId: string) => {
                               title="1단계 추가출고 차단(기존거래 유지)으로 변경"
                             >
                               <Lock size={12} /> 추가출고차단 전환
-                            </button>
+ </button>
                           )}
                         </>
                       ) : (
@@ -2427,7 +2427,7 @@ const handleDeleteAccount = async (accId: string) => {
                             title="기존 거래는 유지하면서 추가 출고만 차단"
                           >
                             <Lock size={12} /> 추가출고 차단
-                          </button>
+ </button>
                           <button
                             type="button"
                             onClick={() => handleQuickCustomerBlockChange(activeCustomer, 'BLOCKED_ALL')}
@@ -2448,7 +2448,7 @@ const handleDeleteAccount = async (accId: string) => {
                             title="추가 출고 차단 및 기존 거래 종료 지시"
                           >
                             <Lock size={12} /> 전면 차단
-                          </button>
+ </button>
                         </>
                       )
                     )}
@@ -2471,7 +2471,7 @@ const handleDeleteAccount = async (accId: string) => {
                       title={activeCustomer.businessCertFileUrl ? "등록된 사업자등록증 사본 열람" : "등록된 사업자등록증 파일 없음 (클릭 시 안내)"}
                     >
                       <FileText size={12} /> 사업자등록증 보기
-                    </button>
+ </button>
                     {canSave && (
                       <button data-hs-trigger="Register"
                         type="button"
@@ -2495,7 +2495,7 @@ const handleDeleteAccount = async (accId: string) => {
                         title="사업자등록증 이미지/PDF 업로드로 본 고객 정보 자동 보완"
                       >
                         <FileText size={12} /> 사업자등록증 보완
-                      </button>
+ </button>
                     )}
                     {canSave && (
                       <button
@@ -2504,7 +2504,7 @@ const handleDeleteAccount = async (accId: string) => {
                         style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <Edit2 size={12} /> 고객사 수정
-                      </button>
+ </button>
                     )}
                   </div>
                 </div>
@@ -2544,7 +2544,7 @@ const handleDeleteAccount = async (accId: string) => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>사업장 주소:</span> {activeCustomer.address || '-'}
                   </div>
-                  {/* 📄 사업자등록증 증빙 영역 */}
+                  {/*  사업자등록증 증빙 영역 */}
                   {activeCustomer.businessCertFileUrl && (
                     <div style={{ gridColumn: 'span 4', display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>사업자등록증 원본:</span>
@@ -2554,7 +2554,7 @@ const handleDeleteAccount = async (accId: string) => {
                         style={{ background: 'none', border: 'none', padding: 0, color: '#0284c7', textDecoration: 'underline', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px', cursor: 'pointer', fontSize: '11.5px' }}
                       >
                         <FileText size={12} /> 등록증 사본 열람 ↗
-                      </button>
+ </button>
                     </div>
                   )}
                 </div>
@@ -2566,7 +2566,7 @@ const handleDeleteAccount = async (accId: string) => {
                   <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                       <MapPin size={14} className="text-success" /> 고객 현장 목록 ({customerSites.length}개소)
-                    </span>
+ </span>
                     <div style={{ display: 'inline-flex', borderRadius: '5px', border: '1px solid var(--border-color)', overflow: 'hidden', backgroundColor: 'var(--bg-card)' }}>
                       <button
                         type="button"
@@ -2584,7 +2584,7 @@ const handleDeleteAccount = async (accId: string) => {
                         }}
                       >
                         유효한 현장만 보기 ({activeCustomerSitesCount})
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => setSiteViewMode('ALL')}
@@ -2600,7 +2600,7 @@ const handleDeleteAccount = async (accId: string) => {
                         }}
                       >
                         전체보기 ({allCustomerSites.length})
-                      </button>
+ </button>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
@@ -2611,7 +2611,7 @@ const handleDeleteAccount = async (accId: string) => {
                         onClick={handleOpenAddSite}
                       >
                         <PlusCircle size={11} /> 현장 추가
-                      </button>
+ </button>
                     )}
                     <button
                       type="button"
@@ -2619,7 +2619,7 @@ const handleDeleteAccount = async (accId: string) => {
                       onClick={handleExportSites}
                     >
                       <Download size={11} /> 현장 엑셀
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -2644,7 +2644,7 @@ const handleDeleteAccount = async (accId: string) => {
                               }}
                             >
                               총 계약 {customerSitesTotalStats.contractCount.toLocaleString()}건 / 합계 {customerSitesTotalStats.assetCount.toLocaleString()}대
-                            </span>
+ </span>
                           }
                           sortKey="name"
                           currentSort={sortConfigSites}
@@ -2676,7 +2676,7 @@ const handleDeleteAccount = async (accId: string) => {
                                   style={{ background: 'none', border: 'none', padding: 0, color: 'var(--primary)', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer', fontSize: '11px' }}
                                 >
                                   전체보기 전환
-                                </button>
+ </button>
                               </span>
                             ) : (
                               '등록된 현장이 없습니다. 현장을 추가해 주세요.'
@@ -2716,7 +2716,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 )}
                                 <span style={{fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400}}>
                                   (계약 {activeContractsCount}건 / {activeAssetCount}대)
-                                </span>
+ </span>
                               </td>
                               <td style={{ padding: '5px 6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                 {canSave && (
@@ -2728,7 +2728,7 @@ const handleDeleteAccount = async (accId: string) => {
                                       style={{ padding: '1px 5px', fontSize: '11.5px' }}
                                     >
                                       수정
-                                    </button>
+ </button>
                                   </div>
                                 )}
                               </td>
@@ -2750,8 +2750,8 @@ const handleDeleteAccount = async (accId: string) => {
                                     }}
                                     title="현장 주소가 등록되지 않았습니다. [수정] 버튼에서 주소를 입력할 수 있습니다."
                                   >
-                                    ⚠️ 주소 미등록
-                                  </span>
+                                     주소 미등록
+ </span>
                                 ) : (
                                   cs.address
                                 )}
@@ -2810,11 +2810,11 @@ const handleDeleteAccount = async (accId: string) => {
                                     {isReverse ? (
                                       <span style={{ padding: '1px 5px', fontSize: '10px', fontWeight: 700, borderRadius: '4px', backgroundColor: 'rgba(217, 119, 6, 0.14)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.35)', whiteSpace: 'nowrap' }}>
                                         역발행
-                                      </span>
+ </span>
                                     ) : (
                                       <span style={{ padding: '1px 5px', fontSize: '10px', fontWeight: 600, borderRadius: '4px', backgroundColor: 'rgba(37, 99, 235, 0.08)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.25)', whiteSpace: 'nowrap' }}>
                                         정발행
-                                      </span>
+ </span>
                                     )}
                                   </div>
                                 );
@@ -2886,7 +2886,7 @@ const handleDeleteAccount = async (accId: string) => {
                                     return (
                                       <span style={{ padding: '1px 6px', fontSize: '11px', borderRadius: '3px', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', border: '1px dashed var(--border-color)' }}>
                                         (기본상속)
-                                      </span>
+ </span>
                                     );
                                   }
                                   return (
@@ -2931,7 +2931,7 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <User size={14} className="text-primary" /> 고객 담당자 목록 ({customerContacts.length}명)
-                  </div>
+ </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {canSave && (
                       <button
@@ -2940,7 +2940,7 @@ const handleDeleteAccount = async (accId: string) => {
                         onClick={handleOpenAddContact}
                       >
                         <PlusCircle size={11} /> 담당자 추가
-                      </button>
+ </button>
                     )}
                     {canSave && (
                       <button
@@ -2952,7 +2952,7 @@ const handleDeleteAccount = async (accId: string) => {
                         }}
                       >
                         <User size={11} /> 명함/이메일로 추가
-                      </button>
+ </button>
                     )}
                     <button
                       type="button"
@@ -2960,7 +2960,7 @@ const handleDeleteAccount = async (accId: string) => {
                       onClick={handleExportContacts}
                     >
                       <Download size={11} /> 담당자 엑셀
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -2981,7 +2981,7 @@ const handleDeleteAccount = async (accId: string) => {
                         <tr>
                           <td colSpan={6} style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)' }}>
                             등록된 담당자가 없습니다. 담당자를 추가해 주세요.
-                          </td>
+ </td>
                         </tr>
                       ) : (
                         sortedCustomerContacts.map(cc => (
@@ -3004,7 +3004,7 @@ const handleDeleteAccount = async (accId: string) => {
                                   style={{ padding: '1px 5px', fontSize: '11.5px' }}
                                 >
                                   수정
-                                </button>
+ </button>
                               )}
                             </td>
                           </tr>
@@ -3094,7 +3094,7 @@ const handleDeleteAccount = async (accId: string) => {
           ) : (
             <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
               좌측 목록에서 고객사를 선택해 주세요.
-            </div>
+ </div>
           )}
         </div>
 
@@ -3157,8 +3157,8 @@ const handleDeleteAccount = async (accId: string) => {
                 justifyContent: 'space-between'
               }}>
                 <span style={{ fontSize: '11px', color: '#34d399', fontWeight: 600 }}>
-                  📄 사업자등록증 파일(이미지/PDF)로 자동 입력하시겠습니까?
-                </span>
+                   사업자등록증 파일로 자동 입력하시겠습니까?
+ </span>
                 <button
                   type="button"
                   onClick={() => {
@@ -3177,8 +3177,8 @@ const handleDeleteAccount = async (accId: string) => {
                     fontWeight: 700
                   }}
                 >
-                  AI 자동 판독 ➔
-                </button>
+                  AI 자동 판독 
+ </button>
               </div>
             )}
 
@@ -3195,7 +3195,7 @@ const handleDeleteAccount = async (accId: string) => {
               }}>
                 <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <FileText size={12} /> 등록된 사업자등록증 사본이 존재합니다.
-                </span>
+ </span>
                 <button
                   type="button"
                   onClick={() => handleViewBizCert(editingCust as Customer)}
@@ -3214,7 +3214,7 @@ const handleDeleteAccount = async (accId: string) => {
                   }}
                 >
                   <FileText size={10} /> 사업자등록증 보기
-                </button>
+ </button>
               </div>
             )}
 
@@ -3455,7 +3455,7 @@ const handleDeleteAccount = async (accId: string) => {
                     style={{ padding: '5px 14px', fontSize: '12px', backgroundColor: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
                   >
                     고객사 삭제
-                  </button>
+ </button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -3477,7 +3477,7 @@ const handleDeleteAccount = async (accId: string) => {
         </div>
       )}
 
-      {/* 📄 사업자등록증 사본 열람 모달 */}
+      {/*  사업자등록증 사본 열람 모달 */}
       {viewingBizCertCust && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -3491,10 +3491,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <FileText size={18} style={{ color: '#0284c7' }} />
                 <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   사업자등록증 사본 열람
-                </h3>
+ </h3>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   | {viewingBizCertCust.name} ({viewingBizCertCust.bizRegNo || '번호미상'})
-                </span>
+ </span>
               </div>
               <button
                 type="button"
@@ -3510,7 +3510,7 @@ const handleDeleteAccount = async (accId: string) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '280px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   법인명(상호) 교정
-                </span>
+ </span>
                 <input
                   type="text"
                   value={bizCertEditName}
@@ -3645,7 +3645,7 @@ const handleDeleteAccount = async (accId: string) => {
                     }}
                   >
                     <ExternalLink size={13} /> 새 탭에서 열기
-                  </a>
+ </a>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -3661,7 +3661,7 @@ const handleDeleteAccount = async (accId: string) => {
                   style={{ padding: '5px 12px', fontSize: '12px' }}
                 >
                   <FileText size={12} /> 재등록 및 보완
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-primary"
@@ -3669,14 +3669,14 @@ const handleDeleteAccount = async (accId: string) => {
                   style={{ padding: '5px 16px', fontSize: '12px' }}
                 >
                   닫기
-                </button>
+ </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📄 사업자등록증 AI 신규 등록 및 정보 보완 모달 */}
+      {/*  사업자등록증 AI 신규 등록 및 정보 보완 모달 */}
       {showBizLicenseModal && (
         <BusinessLicenseModal
           isOpen={showBizLicenseModal}
@@ -3686,7 +3686,7 @@ const handleDeleteAccount = async (accId: string) => {
         />
       )}
 
-      {/* 📂 사업자등록증 폴더 일괄 등록 모달 */}
+      {/*  사업자등록증 폴더 일괄 등록 모달 */}
       {showBatchLicenseModal && (
         <BatchBusinessLicenseModal
           isOpen={showBatchLicenseModal}
@@ -3695,7 +3695,7 @@ const handleDeleteAccount = async (accId: string) => {
         />
       )}
 
-      {/* 🏛️ 국세청 홈택스 사업자 휴폐업 전수 점검 스튜디오 */}
+      {/*  국세청 홈택스 사업자 휴폐업 전수 점검 스튜디오 */}
       {showNtsAuditModal && (
         <NtsStatusAuditModal
           isOpen={showNtsAuditModal}
@@ -3782,7 +3782,7 @@ const handleDeleteAccount = async (accId: string) => {
                 />
                 <label htmlFor="contactActiveCheck" style={{ fontSize: '12px', cursor: 'pointer', margin: 0 }}>
                   사용 여부 (퇴사 시 체크 해제)
-                </label>
+ </label>
               </div>
             </div>
 
@@ -3794,7 +3794,7 @@ const handleDeleteAccount = async (accId: string) => {
                   style={{ padding: '5px 14px', fontSize: '12px', backgroundColor: 'var(--danger-color, #ef4444)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 >
                   삭제
-                </button>
+ </button>
               )}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowContactModal(false)} style={{ padding: '5px 14px', fontSize: '12px' }}>취소</button>
@@ -3867,7 +3867,7 @@ const handleDeleteAccount = async (accId: string) => {
                     whiteSpace: 'nowrap'
                   }}>
                     연결 내역: 계약 {modalSiteStats.contractCount}건 / 장비 {modalSiteStats.assetCount}대
-                  </span>
+ </span>
                 </div>
               );
             })()}
@@ -3882,7 +3882,7 @@ const handleDeleteAccount = async (accId: string) => {
                     style={inputStyle}
                     value={editingSite.name || ''}
                     onChange={e => setEditingSite({ ...editingSite, name: e.target.value })}
-                    placeholder="고객 현장명을 입력하세요 (예: 평택 P4 복합동 현장)"
+                    placeholder="고객 현장명을 입력하세요"
                     required
                   />
                 </div>
@@ -3910,16 +3910,16 @@ const handleDeleteAccount = async (accId: string) => {
                 />
               </div>
 
-              {/* 👥 현장 담당자 섹션 (3대 유형: 장비담당자, 마감담당자, 안전담당자) */}
+              {/*  현장 담당자 섹션 (3대 유형: 장비담당자, 마감담당자, 안전담당자) */}
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '12px', backgroundColor: 'var(--bg-app)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <User size={15} className="text-primary" /> 현장 담당자 관리
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       장비담당자(배차/운용), 마감담당자(명세서 수신), 안전담당자(점검결과)
-                    </span>
+ </span>
                   </div>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button
@@ -3941,7 +3941,7 @@ const handleDeleteAccount = async (accId: string) => {
                       title="장비담당자 추가"
                     >
                       <Plus size={11} /> + 장비
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => handleAddSiteContact('CLOSING')}
@@ -3961,7 +3961,7 @@ const handleDeleteAccount = async (accId: string) => {
                       title="마감담당자 추가"
                     >
                       <Plus size={11} /> + 마감
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => handleAddSiteContact('SAFETY')}
@@ -3981,7 +3981,7 @@ const handleDeleteAccount = async (accId: string) => {
                       title="안전담당자 추가"
                     >
                       <Plus size={11} /> + 안전
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -4022,7 +4022,7 @@ const handleDeleteAccount = async (accId: string) => {
                             </span>
                             <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                               ({cfg.subLabel})
-                            </span>
+ </span>
 
                             {/* 유형 변경 선택기 */}
                             <select
@@ -4046,8 +4046,8 @@ const handleDeleteAccount = async (accId: string) => {
 
                             {sc.isPrimary ? (
                               <span className="badge badge-primary" style={{ fontSize: '9.5px', padding: '1px 5px', whiteSpace: 'nowrap' }}>
-                                ★ 대표
-                              </span>
+                                 대표
+ </span>
                             ) : (
                               <button
                                 type="button"
@@ -4064,7 +4064,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 }}
                               >
                                 대표 지정
-                              </button>
+ </button>
                             )}
                           </div>
 
@@ -4092,11 +4092,11 @@ const handleDeleteAccount = async (accId: string) => {
                               {!isInactive ? (
                                 <>
                                   <CheckCircle2 size={11} /> 사용중
-                                </>
+ </>
                               ) : (
                                 <>
                                   <X size={11} /> 미사용
-                                </>
+ </>
                               )}
                             </button>
 
@@ -4181,7 +4181,7 @@ const handleDeleteAccount = async (accId: string) => {
                 </div>
               </div>
 
-              {/* 📅 현장 마감 조건 (명세서 마감일 / 계산서 마감일 / 계산서 발행조건 / 약정 결제조건 / 약정 결제일 / 약정 결제비고) */}
+              {/*  현장 마감 조건 (명세서 마감일 / 계산서 마감일 / 계산서 발행조건 / 약정 결제조건 / 약정 결제일 / 약정 결제비고) */}
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '12px 14px', backgroundColor: 'var(--bg-app)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                   {/* 명세서 마감일 */}
@@ -4206,7 +4206,7 @@ const handleDeleteAccount = async (accId: string) => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ ...labelStyle, whiteSpace: 'nowrap' }}>
                       계산서 마감일
-                    </label>
+ </label>
                     <select
                       style={inputStyle}
                       value={editingSite.billingDay !== undefined && editingSite.billingDay !== null ? editingSite.billingDay : (activeCustomer?.defaultBillingDay !== undefined ? activeCustomer.defaultBillingDay : 30)}
@@ -4224,7 +4224,7 @@ const handleDeleteAccount = async (accId: string) => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ ...labelStyle, whiteSpace: 'nowrap' }}>
                       계산서 발행조건
-                    </label>
+ </label>
                     <select
                       style={inputStyle}
                       value={editingSite.taxInvoiceIssueType || activeCustomer?.defaultTaxInvoiceIssueType || 'FORWARD'}
@@ -4300,16 +4300,16 @@ const handleDeleteAccount = async (accId: string) => {
                 </div>
               </div>
 
-              {/* 🛠️ 현장 옵션 설정 (현장 조회 옵션 상속 + 미상속 4가지 유형별 옵션 추가 버튼) */}
+              {/*  현장 옵션 설정 (현장 조회 옵션 상속 + 미상속 4가지 유형별 옵션 추가 버튼) */}
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', padding: '12px 14px', backgroundColor: 'var(--bg-app)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <SlidersHorizontal size={14} className="text-primary" /> 현장 옵션 설정 (유상옵션 / 무상옵션 / 부착물 / 요구사양)
-                  </span>
+ </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       출고·입고 검수에 자동 연동
-                    </span>
+ </span>
                     <button
                       type="button"
                       onClick={() => {
@@ -4331,12 +4331,12 @@ const handleDeleteAccount = async (accId: string) => {
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      <Plus size={11} /> 현장별 옵션관리 이동 ➔
-                    </button>
+                      <Plus size={11} /> 현장별 옵션관리 이동 
+ </button>
                   </div>
                 </div>
 
-                {/* 🔍 옵션 그룹(현장) 조회 및 상속 선택 */}
+                {/*  옵션 그룹(현장) 조회 및 상속 선택 */}
                 <div 
                   data-mid="site-option-ref-search-box"
                   style={{
@@ -4353,7 +4353,7 @@ const handleDeleteAccount = async (accId: string) => {
                     <label style={{ ...labelStyle, fontSize: '11.5px', fontWeight: 700, color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Search size={12} color="var(--primary)" />
                       현장(옵션 그룹) 조회 및 옵션 상속 선택
-                    </label>
+ </label>
                     {editingSite.siteMasterId && (
                       <button
                         type="button"
@@ -4381,7 +4381,7 @@ const handleDeleteAccount = async (accId: string) => {
                         }}
                       >
                         상속 초기화
-                      </button>
+ </button>
                     )}
                   </div>
 
@@ -4527,7 +4527,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 }}
                                 title="클릭하여 제외"
                               >
-                                ✓ {optName} <X size={10} />
+                                 {optName} <X size={10} />
                               </button>
                             ))
                           )}
@@ -4612,7 +4612,7 @@ const handleDeleteAccount = async (accId: string) => {
                               style={{ fontSize: '10.5px', padding: '1px 6px', borderRadius: '3px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-secondary)', cursor: 'pointer' }}
                             >
                               무상옵션 없음 전환
-                            </button>
+ </button>
                           )}
                         </div>
 
@@ -4646,7 +4646,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 }}
                                 title="클릭하여 제외"
                               >
-                                ✓ {optName} <X size={10} />
+                                 {optName} <X size={10} />
                               </button>
                             ))
                           )}
@@ -4721,7 +4721,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 }}
                                 title="클릭하여 제외"
                               >
-                                ✓ {optName} <X size={10} />
+                                 {optName} <X size={10} />
                               </button>
                             ))
                           )}
@@ -4799,7 +4799,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 }}
                                 title="클릭하여 제외"
                               >
-                                ✓ {opt.name} <X size={10} />
+                                 {opt.name} <X size={10} />
                               </button>
                             ))
                           )}
@@ -4869,7 +4869,7 @@ const handleDeleteAccount = async (accId: string) => {
                 >
                   <Trash2 size={13} />
                   현장 삭제
-                </button>
+ </button>
               )}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowSiteModal(false)} style={{ padding: '5px 14px', fontSize: '12px' }}>취소</button>
@@ -4965,7 +4965,7 @@ const handleDeleteAccount = async (accId: string) => {
                 <ShieldCheck size={18} color="#0070C0" />
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
                   고객사 기본 옵션 관리 - [{activeCustomer.name}]
-                </h3>
+ </h3>
               </div>
               <button type="button" onClick={() => setShowCustOptionModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
             </div>
@@ -4976,10 +4976,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                     기본 유상옵션 (표준 항목 토글 및 직접 입력)
-                  </label>
+ </label>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                     선택: {splitOptions(custOptionForm.defaultPaidOptions).length}개
-                  </span>
+ </span>
                 </div>
                 
                 {/* 표준 유상옵션 칩 목록 */}
@@ -5012,7 +5012,7 @@ const handleDeleteAccount = async (accId: string) => {
                         {opt.defaultPrice ? (
                           <span style={{ fontSize: '11px', color: isSelected ? '#2563eb' : 'var(--text-muted)' }}>
                             ({opt.defaultPrice.toLocaleString()}원)
-                          </span>
+ </span>
                         ) : null}
                         {isSelected && <Check size={12} />}
                       </button>
@@ -5037,7 +5037,7 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                     기본 무상옵션
-                  </label>
+ </label>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                     현재: {custOptionForm.defaultProtection || '미지정'}
                   </span>
@@ -5093,10 +5093,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                     기본 부착물
-                  </label>
+ </label>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                     선택: {splitOptions(custOptionForm.defaultAttachments).length}개
-                  </span>
+ </span>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
@@ -5165,7 +5165,7 @@ const handleDeleteAccount = async (accId: string) => {
                   style={{ padding: '6px 14px', fontSize: '12px', border: '1px solid var(--primary)', color: 'var(--primary)' }}
                 >
                   고객사 기본값만 저장
-                </button>
+ </button>
                 <button data-hs-trigger="Save"
                   type="button"
                   onClick={() => handleSaveCustOptions(true)}
@@ -5173,7 +5173,7 @@ const handleDeleteAccount = async (accId: string) => {
                   style={{ padding: '6px 16px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
                 >
                   <Zap size={13} /> 저장 및 전체 현장 일괄 전파 ({customerSites.length}개소)
-                </button>
+ </button>
               </div>
             </div>
           </div>
@@ -5194,7 +5194,7 @@ const handleDeleteAccount = async (accId: string) => {
                 <div>
                   <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold' }}>
                     현장 전용 옵션 설정 - [{editingSiteOption.name}]
-                  </h3>
+ </h3>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{editingSiteOption.address}</span>
                 </div>
               </div>
@@ -5222,12 +5222,12 @@ const handleDeleteAccount = async (accId: string) => {
                   gap: '4px'
                 }}
               >
-                <SlidersHorizontal size={12} /> 현장별 옵션 관리 ➔
-              </button>
+                <SlidersHorizontal size={12} /> 현장별 옵션 관리 
+ </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
-              {/* 🔍 현장별 옵션관리 등록 옵션 그룹 검색 및 상속 적용 */}
+              {/*  현장별 옵션관리 등록 옵션 그룹 검색 및 상속 적용 */}
               <div 
                 data-mid="site-option-ref-search-box-modal"
                 style={{
@@ -5244,10 +5244,10 @@ const handleDeleteAccount = async (accId: string) => {
                   <label style={{ ...labelStyle, fontSize: '11px', fontWeight: 700, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <Search size={12} color="var(--primary)" />
                     옵션 그룹 상속 선택 (현장별 옵션관리)
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     옵션 그룹의 유상/무상/부착물/요구사양 속성 복사
-                  </span>
+ </span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr auto', gap: '6px', alignItems: 'center' }}>
@@ -5304,7 +5304,7 @@ const handleDeleteAccount = async (accId: string) => {
                   >
                     <Copy size={12} />
                     옵션 상속 적용
-                  </button>
+ </button>
                 </div>
 
                 {selectedRefSite && (
@@ -5352,10 +5352,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: '#1d4ed8', margin: 0 }}>
                     1. 유상옵션
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     적용: {splitOptions(siteOptionForm.paidOptions).length}건
-                  </span>
+ </span>
                 </div>
                 {(() => {
                   const appliedList = splitOptions(siteOptionForm.paidOptions);
@@ -5390,7 +5390,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 gap: '4px'
                               }}
                             >
-                              ✓ {optName} <X size={11} />
+                               {optName} <X size={11} />
                             </button>
                           ))
                         )}
@@ -5472,10 +5472,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: '#047857', margin: 0 }}>
                     2. 무상옵션
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     적용: {splitOptions(siteOptionForm.protection).filter(v => v !== 'NONE').length}건
-                  </span>
+ </span>
                 </div>
                 {(() => {
                   const appliedList = splitOptions(siteOptionForm.protection).filter(v => v !== 'NONE');
@@ -5510,7 +5510,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 gap: '4px'
                               }}
                             >
-                              ✓ {optName} <X size={11} />
+                               {optName} <X size={11} />
                             </button>
                           ))
                         )}
@@ -5558,10 +5558,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: '#6d28d9', margin: 0 }}>
                     3. 부착물
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     적용: {splitOptions(siteOptionForm.attachments).length}건
-                  </span>
+ </span>
                 </div>
                 {(() => {
                   const appliedList = splitOptions(siteOptionForm.attachments);
@@ -5596,7 +5596,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 gap: '4px'
                               }}
                             >
-                              ✓ {optName} <X size={11} />
+                               {optName} <X size={11} />
                             </button>
                           ))
                         )}
@@ -5643,10 +5643,10 @@ const handleDeleteAccount = async (accId: string) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ ...labelStyle, fontSize: '12px', fontWeight: 700, color: '#b45309', margin: 0 }}>
                     4. 현장 요구사양
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     적용: {standardOptions.filter(o => o.category === 'SPEC' && o.isActive && siteOptionForm.checkedSpecs?.[o.id]).length}건
-                  </span>
+ </span>
                 </div>
                 {(() => {
                   const activeSpecOpts = standardOptions.filter(o => o.category === 'SPEC' && o.isActive);
@@ -5684,7 +5684,7 @@ const handleDeleteAccount = async (accId: string) => {
                                 gap: '4px'
                               }}
                             >
-                              ✓ {opt.name} <X size={11} />
+                               {opt.name} <X size={11} />
                             </button>
                           ))
                         )}
@@ -5751,7 +5751,7 @@ const handleDeleteAccount = async (accId: string) => {
                 <Sliders size={18} color="#0284c7" />
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
                   전사 표준 옵션 마스터 관리
-                </h3>
+ </h3>
               </div>
               <button type="button" onClick={() => { setShowOptionMasterModal(false); setEditingOption(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
             </div>
@@ -5789,7 +5789,7 @@ const handleDeleteAccount = async (accId: string) => {
                     style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Plus size={12} /> 유상옵션 등록
-                  </button>
+ </button>
                   <button data-hs-trigger="Register"
                     type="button"
                     onClick={() => handleOpenAddOption('PROTECTION')}
@@ -5797,7 +5797,7 @@ const handleDeleteAccount = async (accId: string) => {
                     style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #059669', color: 'var(--success)' }}
                   >
                     <Plus size={12} /> 무상옵션 등록
-                  </button>
+ </button>
                   <button data-hs-trigger="Register"
                     type="button"
                     onClick={() => handleOpenAddOption('ATTACHMENT')}
@@ -5805,7 +5805,7 @@ const handleDeleteAccount = async (accId: string) => {
                     style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #7c3aed', color: '#7c3aed' }}
                   >
                     <Plus size={12} /> 부착물 등록
-                  </button>
+ </button>
                 </div>
               )}
             </div>
@@ -5958,14 +5958,14 @@ const handleDeleteAccount = async (accId: string) => {
                               style={{ padding: '1px 5px', fontSize: '11.5px' }}
                             >
                               수정
-                            </button>
+ </button>
                             <button data-hs-trigger="Delete"
                               type="button"
                               onClick={() => handleDeleteOption(opt)}
                               style={{ padding: '1px 5px', fontSize: '11.5px', border: '1px solid var(--border-color)', borderRadius: '3px', backgroundColor: 'transparent', color: 'var(--danger)', cursor: 'pointer' }}
                             >
                               삭제
-                            </button>
+ </button>
                           </div>
                         </td>
                       </tr>
@@ -5977,13 +5977,13 @@ const handleDeleteAccount = async (accId: string) => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
               <button type="button" className="btn-secondary" onClick={() => { setShowOptionMasterModal(false); setEditingOption(null); }} style={{ padding: '5px 16px', fontSize: '12px' }}>
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🏢 고객/현장/담당자 엑셀 일괄 등록 모달 */}
+      {/*  고객/현장/담당자 엑셀 일괄 등록 모달 */}
       <ExcelUploadModal
         isOpen={custExcelModalOpen}
         onClose={() => setCustExcelModalOpen(false)}
@@ -5993,7 +5993,7 @@ const handleDeleteAccount = async (accId: string) => {
         onUpload={handleBatchUploadCustomers}
       />
 
-      {/* 📇 명함/이메일 AI 고객/담당자 자동 등록 모달 */}
+      {/*  명함/이메일 AI 고객/담당자 자동 등록 모달 */}
       <ContactCardOcrModal
         isOpen={showContactCardModal}
         onClose={() => {

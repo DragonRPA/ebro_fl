@@ -62,7 +62,7 @@ export const PrivacyAuditPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 🛡️ 인가된 개발자 물리 단말기 상태 관리
+  //  인가된 개발자 물리 단말기 상태 관리
   const [authorizedDevices, setAuthorizedDevices] = useState<DeveloperDeviceProfile[]>(() => getAuthorizedDeveloperDevices());
   const refreshDevices = () => {
     setAuthorizedDevices(getAuthorizedDeveloperDevices());
@@ -283,7 +283,7 @@ export const PrivacyAuditPage: React.FC = () => {
 
   return (
     <div data-hs-observe="privacyauditpage" data-mid="privacy-header" data-subview="privacy_audit" data-subview-title="Generated" style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 */}
+      {/*  인앱 토스트 */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -326,7 +326,7 @@ export const PrivacyAuditPage: React.FC = () => {
           <div>
             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
               개인정보 접속 감사
-            </h2>
+ </h2>
             </div></div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -344,7 +344,7 @@ export const PrivacyAuditPage: React.FC = () => {
               }}
             >
               <FileCheck size={13} /> 접속 감사 대장
-            </button>
+ </button>
             {(isSuperAdmin || isExecutive) && (
               <button
                 type="button"
@@ -358,7 +358,7 @@ export const PrivacyAuditPage: React.FC = () => {
                 }}
               >
                 <Laptop size={13} /> 개발자 단말기 인가
-              </button>
+ </button>
             )}
           </div>
           <button data-hs-trigger="Process"
@@ -381,7 +381,7 @@ export const PrivacyAuditPage: React.FC = () => {
           >
             <Shield size={14} color="var(--primary, #4f46e5)" />
             개인정보 처리방침 전문
-          </button>
+ </button>
           <button
             type="button"
             onClick={loadAuditLogs}
@@ -403,11 +403,11 @@ export const PrivacyAuditPage: React.FC = () => {
           >
             <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
-      {/* 🛡️ 테넌트별 개인정보 보호책임자 지정 현황 바 */}
+      {/*  테넌트별 개인정보 보호책임자 지정 현황 바 */}
       {activeAuditTab === 'LOGS' && (
         <>
           {(() => {
@@ -440,7 +440,7 @@ export const PrivacyAuditPage: React.FC = () => {
               }}>
                 <UserCheck size={14} />
                 [{companyName}] 법정 개인정보 보호책임자
-              </div>
+ </div>
               <div style={{ fontSize: '13px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span>성명: <strong>{officer.name}</strong></span>
                 <span style={{ color: 'var(--border-color)' }}>|</span>
@@ -460,12 +460,12 @@ export const PrivacyAuditPage: React.FC = () => {
             >
               <Shield size={13} color="var(--primary)" />
               책임자 정보 변경 및 방침 확인
-            </button>
+ </button>
           </div>
         );
       })()}
 
-      {/* 🛡️ 법정 개인정보 암호화 저장 안전성 확보조치(제29조) 가동 현황 */}
+      {/*  법정 개인정보 암호화 저장 안전성 확보조치(제29조) 가동 현황 */}
       <div style={{
         backgroundColor: 'var(--bg-card, #ffffff)',
         borderRadius: '8px',
@@ -476,12 +476,12 @@ export const PrivacyAuditPage: React.FC = () => {
             <Lock size={15} color="var(--primary)" />
             <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
               개인정보 보호법 제29조 안전성 확보조치 (저장 암호화) 가동 현황
-            </span>
+ </span>
           </div>
           <span style={{ fontSize: '11px', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
             <CheckCircle size={13} color="#059669" />
             전사 DB 및 브라우저 스토리지 100% 양방향 암호화 적용 완료
-          </span>
+ </span>
         </div>
 
         <div style={{
@@ -540,9 +540,9 @@ export const PrivacyAuditPage: React.FC = () => {
           {/* 좌측: 상하 세로 스택 필터군 (헌장 3.4 준수) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {/* 조회 기간 */}
-            <div data-mid="privacy-scope-date" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>             <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
+            <div data-mid="privacy-scope-date" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}> <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 조회 시작일
-              </label>
+ </label>
               <input
                 type="date"
                 value={startDate}
@@ -562,7 +562,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 조회 종료일
-              </label>
+ </label>
               <input
                 type="date"
                 value={endDate}
@@ -583,7 +583,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 수행 업무 유형
-              </label>
+ </label>
               <select
                 value={selectedAction}
                 onChange={(e) => setSelectedAction(e.target.value)}
@@ -612,7 +612,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 접속자
-              </label>
+ </label>
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
@@ -630,7 +630,7 @@ export const PrivacyAuditPage: React.FC = () => {
                 {users.map(u => (
                   <option key={u.id} value={u.loginId || u.id}>
                     {u.name} ({u.position || u.role})
-                  </option>
+ </option>
                 ))}
               </select>
             </div>
@@ -639,7 +639,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 마스킹 여부
-              </label>
+ </label>
               <select
                 value={maskFilter}
                 onChange={(e) => setMaskFilter(e.target.value as any)}
@@ -663,7 +663,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 검색어
-              </label>
+ </label>
               <input
                 type="text"
                 value={searchTerm}
@@ -705,7 +705,7 @@ export const PrivacyAuditPage: React.FC = () => {
             >
               <Download size={14} />
               감사기록 엑셀 출력
-            </button>
+ </button>
           </div>
         </div>
       </div>
@@ -738,7 +738,7 @@ export const PrivacyAuditPage: React.FC = () => {
               <tr>
                 <td colSpan={6} style={{ padding: '50px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                   조회 조건에 해당하는 개인정보 접속기록이 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               sortedLogs.map((log, idx) => {
@@ -764,7 +764,7 @@ export const PrivacyAuditPage: React.FC = () => {
                       {log.userName}
                       <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', marginLeft: '4px', fontWeight: 400 }}>
                         ({log.userId})
-                      </span>
+ </span>
                     </td>
                     <td style={{ padding: '4px 8px', textAlign: 'center' }}>
                       <span style={{
@@ -799,11 +799,11 @@ export const PrivacyAuditPage: React.FC = () => {
                       {isUnmasked ? (
                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', fontWeight: 700 }}>
                           비마스킹 (전체)
-                        </span>
+ </span>
                       ) : (
                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--success-light)', color: '#047857', fontWeight: 600 }}>
                           마스킹 완료
-                        </span>
+ </span>
                       )}
                     </td>
                     <td style={{ padding: '4px 8px', color: 'var(--text-main, #0f172a)' }}>
@@ -834,9 +834,9 @@ export const PrivacyAuditPage: React.FC = () => {
         {/* 대차대조 감사 통계 HUD */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '12.5px', color: 'var(--text-secondary, #475569)', flexWrap: 'wrap' }}>
           <span>총 접속 건수: <strong style={{ color: 'var(--text-main, #0f172a)' }}>{stats.total.toLocaleString()}</strong>건</span>
-          <span>📥 엑셀 다운로드: <strong style={{ color: 'var(--warning)' }}>{stats.downloadCount.toLocaleString()}</strong>건</span>
-          <span>🔓 비마스킹(전체정보) 다운로드: <strong style={{ color: stats.unmaskedDownloads > 0 ? '#dc2626' : 'var(--text-main, #0f172a)' }}>{stats.unmaskedDownloads.toLocaleString()}</strong>건</span>
-          <span>👥 접속 임직원 수: <strong style={{ color: 'var(--primary, #4f46e5)' }}>{stats.uniqueUsers}</strong>명</span>
+          <span> 엑셀 다운로드: <strong style={{ color: 'var(--warning)' }}>{stats.downloadCount.toLocaleString()}</strong>건</span>
+          <span> 비마스킹(전체정보) 다운로드: <strong style={{ color: stats.unmaskedDownloads > 0 ? '#dc2626' : 'var(--text-main, #0f172a)' }}>{stats.unmaskedDownloads.toLocaleString()}</strong>건</span>
+          <span> 접속 임직원 수: <strong style={{ color: 'var(--primary, #4f46e5)' }}>{stats.uniqueUsers}</strong>명</span>
         </div>
 
         {/* 법정 반기 점검 승인 액션 */}
@@ -845,7 +845,7 @@ export const PrivacyAuditPage: React.FC = () => {
             <div style={{ fontSize: '11.5px', color: '#047857', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CheckCircle size={14} color="#059669" />
               반기 점검 승인됨: {auditCheckSign.checkedBy} ({auditCheckSign.checkedAt.substring(0, 10)})
-            </div>
+ </div>
           )}
           {canAudit && (
             <button data-hs-trigger="Approve"
@@ -869,7 +869,7 @@ export const PrivacyAuditPage: React.FC = () => {
             >
               <UserCheck size={14} />
               반기 점검 완료 승인
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -877,7 +877,7 @@ export const PrivacyAuditPage: React.FC = () => {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          🛡️ 인가된 개발자 물리 단말기
+           인가된 개발자 물리 단말기
           ───────────────────────────────────────────────────────────── */}
       {activeAuditTab === 'DEVICES' && (isSuperAdmin || isExecutive) && (
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -907,10 +907,10 @@ export const PrivacyAuditPage: React.FC = () => {
               <div>
                 <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
                   개발자 물리 단말기 인가 목록 및 통제 대장
-                </h3>
+ </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary, #64748b)' }}>
-                  중앙 DB(Supabase developer_authorized_devices) 기반 하드웨어 접근 통제 및 비상 복구 체계
-                </span>
+                  중앙 DB 기반 하드웨어 접근 통제 및 비상 복구 체계
+ </span>
               </div>
             </div>
 
@@ -935,7 +935,7 @@ export const PrivacyAuditPage: React.FC = () => {
               >
                 <Plus size={14} />
                 신규 개발자 / 단말기 인가 등록
-              </button>
+ </button>
 
               <button
                 type="button"
@@ -957,7 +957,7 @@ export const PrivacyAuditPage: React.FC = () => {
               >
                 <AlertOctagon size={14} />
                 비상 마스터 복구 지침 및 보안키
-              </button>
+ </button>
 
               <button
                 type="button"
@@ -979,7 +979,7 @@ export const PrivacyAuditPage: React.FC = () => {
               >
                 <RefreshCw size={13} />
                 새로고침
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1011,7 +1011,7 @@ export const PrivacyAuditPage: React.FC = () => {
                   <tr>
                     <td colSpan={8} style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                       등록된 개발자 물리 단말기가 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   authorizedDevices.map((dev) => (
@@ -1039,7 +1039,7 @@ export const PrivacyAuditPage: React.FC = () => {
                                   color: 'var(--primary, #4f46e5)'
                                 }}>
                                   대표 기기
-                                </span>
+ </span>
                               )}
                               {dev.emergencyBreakGlassUsed && (
                                 <span style={{
@@ -1051,7 +1051,7 @@ export const PrivacyAuditPage: React.FC = () => {
                                   color: '#dc2626'
                                 }}>
                                   비상 복구
-                                </span>
+ </span>
                               )}
                             </div>
                             {dev.note && (
@@ -1097,7 +1097,7 @@ export const PrivacyAuditPage: React.FC = () => {
                             border: '1px solid #86efac'
                           }}>
                             인가 활성
-                          </span>
+ </span>
                         ) : dev.status === 'EMERGENCY_TEMP' ? (
                           <span style={{
                             fontSize: '11px',
@@ -1109,7 +1109,7 @@ export const PrivacyAuditPage: React.FC = () => {
                             border: '1px solid #fde68a'
                           }}>
                             임시 복구
-                          </span>
+ </span>
                         ) : (
                           <span style={{
                             fontSize: '11px',
@@ -1121,7 +1121,7 @@ export const PrivacyAuditPage: React.FC = () => {
                             border: '1px solid #fca5a5'
                           }}>
                             차단됨
-                          </span>
+ </span>
                         )}
                       </td>
                       <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', textAlign: 'center' }}>
@@ -1145,7 +1145,7 @@ export const PrivacyAuditPage: React.FC = () => {
                           >
                             <Trash2 size={12} />
                             도난/분실 차단
-                          </button>
+ </button>
                         ) : (
                           <button
                             type="button"
@@ -1166,7 +1166,7 @@ export const PrivacyAuditPage: React.FC = () => {
                           >
                             <RotateCcw size={12} />
                             인가 재승인
-                          </button>
+ </button>
                         )}
                       </td>
                     </tr>
@@ -1215,7 +1215,7 @@ export const PrivacyAuditPage: React.FC = () => {
                 <Laptop size={18} color="var(--primary, #4f46e5)" />
                 <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
                   신규 개발자 및 물리 단말기 인가 등록
-                </h3>
+ </h3>
               </div>
               <button
                 type="button"
@@ -1231,7 +1231,7 @@ export const PrivacyAuditPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                   담당 개발자 계정 선택 / 입력
-                </label>
+ </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <select
                     value={regDevId}
@@ -1259,7 +1259,7 @@ export const PrivacyAuditPage: React.FC = () => {
                       .map(u => (
                         <option key={u.id} value={u.loginId || u.id}>
                           {u.name} ({u.position || u.role} / {u.department || '개발'})
-                        </option>
+ </option>
                       ))}
                     <option value="custom">직접 입력 (신규 채용 개발자)</option>
                   </select>
@@ -1287,7 +1287,7 @@ export const PrivacyAuditPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                   단말기 식별 명칭
-                </label>
+ </label>
                 <input
                   type="text"
                   value={regMachineName}
@@ -1311,7 +1311,7 @@ export const PrivacyAuditPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                     물리 네트워크 MAC 주소
-                  </label>
+ </label>
                   <button
                     type="button"
                     onClick={handleDetectCurrentPc}
@@ -1332,7 +1332,7 @@ export const PrivacyAuditPage: React.FC = () => {
                   >
                     <RefreshCw size={11} className={isDetecting ? 'animate-spin' : ''} />
                     현재 접속 PC 정보 감지
-                  </button>
+ </button>
                 </div>
                 <input
                   type="text"
@@ -1358,7 +1358,7 @@ export const PrivacyAuditPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                   개발자 마스터 보안 패스프레이즈
-                </label>
+ </label>
                 <input
                   type="password"
                   value={regMasterKey}
@@ -1381,7 +1381,7 @@ export const PrivacyAuditPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                   등록 사유 / 기기 비고
-                </label>
+ </label>
                 <input
                   type="text"
                   value={regNote}
@@ -1422,7 +1422,7 @@ export const PrivacyAuditPage: React.FC = () => {
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   disabled={isRegistering}
@@ -1488,10 +1488,10 @@ export const PrivacyAuditPage: React.FC = () => {
                 <div>
                   <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#b91c1c' }}>
                     비상 마스터 복구 및 재해 대비 표준 지침
-                  </h3>
+ </h3>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                     개발자 PC 고장, 도난, 분실 시 긴급 접근권 복구 및 원격 보안 조치
-                  </span>
+ </span>
                 </div>
               </div>
               <button
@@ -1538,7 +1538,7 @@ export const PrivacyAuditPage: React.FC = () => {
                   >
                     <Copy size={11} />
                     복사
-                  </button>
+ </button>
                 </div>
                 <code style={{
                   fontFamily: 'monospace',
@@ -1557,31 +1557,31 @@ export const PrivacyAuditPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
                   1. 개발자 PC 고장/파손 시 긴급 복구 절차
-                </div>
+ </div>
                 <div style={{ color: 'var(--text-secondary)', paddingLeft: '8px', borderLeft: '2px solid var(--border-color)' }}>
                   새로운 PC 또는 임시 기기에서 관리자 로그인 시도시 <strong>[물리 단말기 인가 필요]</strong> 팝업이 표출됩니다.
-                  상단의 <strong>[🚨 비상 마스터 복구 (고장/도난/분실)]</strong> 탭을 클릭하고 위 복구키와 사유를 입력하면 즉시 접속되며 새 기기로 등록됩니다.
-                </div>
+ 상단의 <strong>[ 비상 마스터 복구 (고장/도난/분실)]</strong> 탭을 클릭하고 위 복구키와 사유를 입력하면 즉시 접속되며 새 기기로 등록됩니다.
+ </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
                   2. 도난 / 분실 시 원격 킬스위치 즉시 가동
-                </div>
+ </div>
                 <div style={{ color: 'var(--text-secondary)', paddingLeft: '8px', borderLeft: '2px solid #ef4444' }}>
                   기기를 분실하였거나 도난당한 경우, 비상 복구 팝업에서 분실 기기를 선택하여 차단하거나,
-                  본 관리 대장의 <strong>[도난/분실 차단]</strong> 버튼을 1클릭하여 즉시 단말기 상태를 <strong>차단됨</strong>으로 무효화하십시오.
-                  차단 즉시 해당 단말기에서는 로컬 토큰이 파기되어 더 이상 로그인이 불가능합니다.
-                </div>
+ 본 관리 대장의 <strong>[도난/분실 차단]</strong> 버튼을 1클릭하여 즉시 단말기 상태를 <strong>차단됨</strong>으로 무효화하십시오.
+ 차단 즉시 해당 단말기에서는 로컬 토큰이 파기되어 더 이상 로그인이 불가능합니다.
+ </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
-                  3. 무누락 감사 기록 및 중앙 DB 영구 보존
-                </div>
+                  3. 무누락 감사 기록 및 중앙 DB 보관
+ </div>
                 <div style={{ color: 'var(--text-secondary)', paddingLeft: '8px', borderLeft: '2px solid var(--primary, #4f46e5)' }}>
                   모든 단말기 등록, 인증 내역, 비상 복구 시도는 <strong>Supabase 중앙 DB의 developer_authorized_devices 및 privacy_access_logs 테이블에 1원/1로그 오차 없이 영구 저장</strong>됩니다.
-                </div>
+ </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
@@ -1600,7 +1600,7 @@ export const PrivacyAuditPage: React.FC = () => {
                   }}
                 >
                   확인 완료
-                </button>
+ </button>
               </div>
             </div>
           </div>

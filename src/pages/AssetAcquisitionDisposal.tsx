@@ -61,7 +61,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
   const { isRuleEnabled, createApprovalRequest } = useApproval();
   const [disposalActionMode, setDisposalActionMode] = useState<'SALE' | 'WRITE_OFF'>('SALE');
 
-  // ── 🌟 [O(1) 룩업 해시맵 사전 인덱싱: 헌장 1.1] ──
+  // ──  [O(1) 룩업 해시맵 사전 인덱싱: 헌장 1.1] ──
   const assetMap = useMemo(() => new Map((assets || []).map(a => [a.id, a])), [assets]);
   const productByModelMap = useMemo(() => new Map((products || []).map(p => [p.modelName, p])), [products]);
 
@@ -81,7 +81,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
   };
 
   // ==========================================================================
-  // 🏢 [스튜디오 1] 자산 취득 스튜디오
+  //  [스튜디오 1] 자산 취득 스튜디오
   // ==========================================================================
   const [acqMode, setAcqMode] = useState<'SINGLE' | 'EXCEL'>('SINGLE');
 
@@ -140,7 +140,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
   const [singleManufactureYear, setSingleManufactureYear] = useState<string>(new Date().getFullYear().toString());
   const [singleAcqDate, setSingleAcqDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [singleAcqPrice, setSingleAcqPrice] = useState<number>(15000000);
-  const [singleDepMonths, setSingleDepMonths] = useState<number>(96); // 💡 기본값 96개월 (8년 고소작업대 표준)
+  const [singleDepMonths, setSingleDepMonths] = useState<number>(96); //  기본값 96개월 (8년 고소작업대 표준)
   const [singleResidualRate, setSingleResidualRate] = useState<number>(10);
   const [singleSupplier, setSingleSupplier] = useState<string>('');
   const [singleVendorId, setSingleVendorId] = useState<string>('');
@@ -150,7 +150,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
   const [singleMemo, setSingleMemo] = useState<string>('');
   const [isSubmittingAcq, setIsSubmittingAcq] = useState<boolean>(false);
 
-  // 💡 구입처 (공급사 / 중고 딜러 / 거래처) 인스펙터 선택 상태 (자산매각 매수처 UI와 1:1 표준화)
+  //  구입처 (공급사 / 중고 딜러 / 거래처) 인스펙터 선택 상태 (자산매각 매수처 UI와 1:1 표준화)
   const [supplierMode, setSupplierMode] = useState<'SELECT' | 'DIRECT'>('SELECT');
   const [isSupplierSearchModalOpen, setIsSupplierSearchModalOpen] = useState<boolean>(false);
   const [supplierSearchQuery, setSupplierSearchQuery] = useState<string>('');
@@ -177,7 +177,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
     assetNo: string;
     modelName: string;
     serialNo: string;
-    manufactureYear: string; // 💡 슬롯별 개별 제조년도 (새장비/중고 혼합 입고 지원)
+    manufactureYear: string; //  슬롯별 개별 제조년도 (새장비/중고 혼합 입고 지원)
     price: number;
   }
   const [multiSlots, setMultiSlots] = useState<AcqSlotItem[]>([]);
@@ -341,10 +341,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
       {
         id: newId,
         assetNo: nextNo,
-        modelName: selectedProduct.modelName, // 💡 메인 모델과 동일
+        modelName: selectedProduct.modelName, //  메인 모델과 동일
         serialNo: '',
-        manufactureYear: singleManufactureYear || '', // 💡 제조년도 상속
-        price: singleAcqPrice // 💡 메인 취득가와 동일
+        manufactureYear: singleManufactureYear || '', //  제조년도 상속
+        price: singleAcqPrice //  메인 취득가와 동일
       }
     ]);
   };
@@ -410,7 +410,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
     }
   };
 
-  // 🛡️ 실시간 관리번호 중복 검증 엔진 (기본 관리번호 + 추가 슬롯 전체 실시간 교차 검증)
+  //  실시간 관리번호 중복 검증 엔진 (기본 관리번호 + 추가 슬롯 전체 실시간 교차 검증)
   const assetNoValidation = useMemo(() => {
     const mainTrimmed = singleAssetNo.trim();
     const mainLower = mainTrimmed.toLowerCase();
@@ -538,7 +538,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
       return;
     }
 
-    // 💡 전체 관리번호 중복 검증 (메인 + 슬롯 상호 중복 및 기존 DB 중복 원천 차단)
+    //  전체 관리번호 중복 검증 (메인 + 슬롯 상호 중복 및 기존 DB 중복 원천 차단)
     const allAssetNos = [
       { type: '기본 자산', no: singleAssetNo.trim() },
       ...multiSlots.map((s, i) => ({ type: `추가 슬롯 #${i + 1}`, no: s.assetNo.trim() }))
@@ -613,10 +613,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
           if (!slot.assetNo.trim()) continue;
           batchPayload.push({
             ...mainPayload,
-            modelName: resolvedModelName, // 💡 동일 모델 보장
+            modelName: resolvedModelName, //  동일 모델 보장
             assetNo: slot.assetNo.trim(),
             serialNo: slot.serialNo.trim(),
-            manufactureYear: slot.manufactureYear?.trim() || singleManufactureYear.trim(), // 💡 개별 슬롯 제조년도 반영
+            manufactureYear: slot.manufactureYear?.trim() || singleManufactureYear.trim(), //  개별 슬롯 제조년도 반영
             acquisitionPrice: Number(slot.price) || Number(singleAcqPrice) || 0
           });
         }
@@ -789,7 +789,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
       '2024',
       new Date().toISOString().split('T')[0],
       18500000,
-      96, // 💡 내용월수 기본값 96개월 (8년 고소작업대 표준)
+      96, //  내용월수 기본값 96개월 (8년 고소작업대 표준)
       10,
       '한국시노붐',
       '신규 장비 입고'
@@ -833,7 +833,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
           const manufactureYear = String(r[4] || '').trim();
           const acquisitionDate = String(r[5] || '').trim() || new Date().toISOString().split('T')[0];
           const acquisitionPrice = Number(r[6]) || 0;
-          const depreciationMonths = Number(r[7]) || 96; // 💡 기본값 96개월
+          const depreciationMonths = Number(r[7]) || 96; //  기본값 96개월
           const rawResidual = r[8];
           const residualValueRate = (rawResidual !== undefined && rawResidual !== '' && !isNaN(Number(rawResidual))) ? Number(rawResidual) : 10;
           const supplier = String(r[9] || '').trim();
@@ -910,7 +910,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
 
 
   // ==========================================================================
-  // 💼 [스튜디오 2] 자산 매각 스튜디오 (Asset Disposal Studio: 좌우 50:50)
+  //  [스튜디오 2] 자산 매각 스튜디오 (Asset Disposal Studio: 좌우 50:50)
   // ==========================================================================
 
   // [좌측 50%: 자산 선별 워크벤치 상태]
@@ -1539,10 +1539,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
           <ShoppingBag size={18} color="var(--primary)" />
           <h2 data-mid="acquisition_disposal-header" style={{ margin: 0, fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             자산 취득 매각
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             장비 취득(신규/중고 입고) 및 매각(처분) 통합 관리
-          </span>
+ </span>
         </div>
         <div className="toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
@@ -1552,7 +1552,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
           >
             <RefreshCw size={14} />
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1605,7 +1605,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
             }}
           >
             <Plus size={15} /> 자산 취득
-          </button>
+ </button>
           <button
             type="button"
             className={activeStudio === 'DISPOSAL' ? 'btn-primary' : 'btn-secondary'}
@@ -1620,7 +1620,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
             }}
           >
             <DollarSign size={15} /> 자산 매각
-          </button>
+ </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
@@ -1629,7 +1629,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
       </div>
 
       {/* ==================================================================== */}
-      {/* 🏢 [스튜디오 1] 자산 취득 스튜디오 본문 */}
+      {/*  [스튜디오 1] 자산 취득 스튜디오 본문 */}
       {/* ==================================================================== */}
       {activeStudio === 'ACQUISITION' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1651,7 +1651,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
               }}
             >
               단건 즉시 등록
-            </button>
+ </button>
             <button data-hs-trigger="Register"
               type="button"
               onClick={() => setAcqMode('EXCEL')}
@@ -1667,7 +1667,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
               }}
             >
               엑셀 일괄 등록
-            </button>
+ </button>
           </div>
 
           {/* ───────────────────────────────────────────────────────────── */}
@@ -1679,7 +1679,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
               <div data-mid="acq-single-form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                 <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Plus size={16} color="var(--primary)" /> 신규 자산 취득 정보 입력
-                </h3>
+ </h3>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1687,7 +1687,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <RefreshCw size={12} /> 관리번호 재채번
-                </button>
+ </button>
               </div>
 
               {/* 폼 필드 그리드 (헌장 3.4 상하 세로 스택 원칙 준수) */}
@@ -1700,15 +1700,15 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     {selectedProduct ? (
                       <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--success)', whiteSpace: 'nowrap' }}>
                         제품 확인됨
-                      </span>
+ </span>
                     ) : acqModelSearch.trim() ? (
                       <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--danger)', whiteSpace: 'nowrap' }}>
                         목록에서 선택 필요
-                      </span>
+ </span>
                     ) : (
                       <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap' }}>
                         제품 미선택
-                      </span>
+ </span>
                     )}
                   </div>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -1737,7 +1737,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         }
                       }}
                       onFocus={() => setIsAcqModelDropdownOpen(true)}
-                      placeholder="제품 검색 후 선택 (예: OPTIMUM 8, JLG, 20ft)"
+                      placeholder="제품 검색 후 선택"
                       style={{
                         width: '100%',
                         padding: '8px 30px 8px 10px',
@@ -1777,7 +1777,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   </div>
                   {acqModelError && (
                     <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, lineHeight: 1.3 }}>
-                      ⚠️ {acqModelError}
+                       {acqModelError}
                     </span>
                   )}
 
@@ -1801,7 +1801,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       {filteredAcqProducts.length === 0 ? (
                         <div style={{ padding: '8px 12px', fontSize: '11.5px', color: 'var(--text-muted)', textAlign: 'center' }}>
                           일치하는 등록 제품 없음
-                        </div>
+ </div>
                       ) : (
                         filteredAcqProducts.map(p => {
                           const isSelected = singleModelName === p.modelName;
@@ -1831,7 +1831,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                                 {p.modelName}{' '}
                                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
                                   ({p.manufacturer || '제조사미상'} / {p.feet ? `${p.feet}ft` : '제원'})
-                                </span>
+ </span>
                               </span>
                               {isSelected && <Check size={13} color="var(--primary)" />}
                             </div>
@@ -1850,11 +1850,11 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       assetNoValidation.mainError ? (
                         <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--danger)', whiteSpace: 'nowrap' }}>
                           중복 오류
-                        </span>
+ </span>
                       ) : (
                         <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--success)', whiteSpace: 'nowrap' }}>
                           사용 가능
-                        </span>
+ </span>
                       )
                     )}
                   </div>
@@ -1876,7 +1876,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   />
                   {assetNoValidation.mainError && (
                     <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600, lineHeight: 1.3 }}>
-                      ⚠️ {assetNoValidation.mainError}
+                       {assetNoValidation.mainError}
                     </span>
                   )}
                 </div>
@@ -1968,7 +1968,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       구입처 (공급사 / 중고 딜러 / 거래처)
-                    </label>
+ </label>
                     <div style={{ display: 'flex', gap: '8px', fontSize: '11px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                         <input
@@ -1978,7 +1978,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           onChange={() => setSupplierMode('SELECT')}
                         />
                         등록 공급처/딜러 검색
-                      </label>
+ </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                         <input
                           type="radio"
@@ -1987,7 +1987,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           onChange={() => setSupplierMode('DIRECT')}
                         />
                         신규 구입처 직접 입력
-                      </label>
+ </label>
                     </div>
                   </div>
 
@@ -2032,7 +2032,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             style={{ padding: '4px 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
                           >
                             구입처 변경
-                          </button>
+ </button>
                         </div>
                       ) : (
                         <div
@@ -2054,7 +2054,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         >
                           <Search size={15} />
                           구입처 (제조공급사 / 중고 딜러 / 거래처) 검색 및 확정
-                        </div>
+ </div>
                       )}
                     </div>
                   ) : (
@@ -2120,7 +2120,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       동일 모델 일괄 입고 슬롯
-                    </span>
+ </span>
                     <span style={{
                       padding: '2px 8px',
                       borderRadius: '12px',
@@ -2130,7 +2130,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       fontWeight: 700
                     }}>
                       기본 1대 + 추가 {multiSlots.length}대 = 총 {1 + multiSlots.length}대 입고 예정
-                    </span>
+ </span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -2143,7 +2143,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <RefreshCw size={11} /> 관리번호 순차 재정렬
-                      </button>
+ </button>
                     )}
                     <button
                       type="button"
@@ -2152,7 +2152,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       style={{ padding: '5px 12px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
                     >
                       <Plus size={13} /> 슬롯 추가
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -2167,7 +2167,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     fontSize: '12px'
                   }}>
                     동일 모델 장비를 여러 대 한 번에 등록하려면 우측 상단의 <strong>[+ 슬롯 추가]</strong> 버튼을 누르세요. (동일 모델·취득가 자동 상속 및 관리번호 순차 자동 채번)
-                  </div>
+ </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {/* 슬롯 테이블 헤더 */}
@@ -2236,7 +2236,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             />
                             {slotErr && (
                               <span style={{ fontSize: '10.5px', color: 'var(--danger)', fontWeight: 700, lineHeight: 1.2 }}>
-                                ⚠️ {slotErr}
+                                 {slotErr}
                               </span>
                             )}
                           </div>
@@ -2342,12 +2342,12 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <AlertCircle size={15} />
                       관리번호 중복 또는 누락 오류가 {assetNoValidation.errorCount}건 감지되었습니다. 관리번호를 수정하거나 [관리번호 재채번]을 눌러 주세요.
-                    </span>
+ </span>
                   ) : (
                     <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <CheckCircle2 size={15} />
                       전체 {1 + multiSlots.length}대 관리번호 중복 검증 통과
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -2384,10 +2384,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div>
                   <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Upload size={16} color="var(--primary)" /> 엑셀 일괄 자산 취득
-                  </h3>
+ </h3>
                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
                     표준 엑셀 서식 파일로 수십~수백 대의 장비를 한 번에 검증하여 시스템에 입고 등록합니다.
-                  </p>
+ </p>
                 </div>
 
                 <button
@@ -2396,7 +2396,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   onClick={handleDownloadTemplate}
                 >
                   <Download size={13} /> 표준 취득 양식 다운로드
-                </button>
+ </button>
               </div>
 
               {/* 파일 업로드 영역 */}
@@ -2411,10 +2411,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <Upload size={28} style={{ margin: '0 auto 8px auto', color: 'var(--text-muted)' }} />
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                   엑셀 파일을 클릭하여 선택해 주세요
-                </div>
+ </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   업로드 즉시 관리번호 중복 및 필수 필드 유효성 검사가 자동 실행됩니다.
-                </div>
+ </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -2433,13 +2433,13 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                       <span style={{ fontSize: '12.5px', fontWeight: 700 }}>
                         파싱 결과: 총 {excelPreviewData.length}행 (정상: <span style={{ color: 'var(--success)' }}>{validRowCount}건</span> / 오류: <span style={{ color: errorRowCount > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>{errorRowCount}건</span>)
-                      </span>
+ </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {errorRowCount > 0 && (
                           <>
                             <span style={{ fontSize: '11.5px', color: 'var(--danger)', fontWeight: 700 }}>
-                              ⚠️ 표에서 관리번호를 직접 수정하거나 자동 재채번 버튼으로 즉시 보정할 수 있습니다.
-                            </span>
+                               표에서 관리번호를 직접 수정하거나 자동 재채번 버튼으로 즉시 보정할 수 있습니다.
+ </span>
                             <button
                               type="button"
                               className="btn-secondary"
@@ -2447,7 +2447,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                               style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}
                             >
                               <RefreshCw size={12} /> 중복 관리번호 자동 재채번
-                            </button>
+ </button>
                           </>
                         )}
                       </div>
@@ -2499,12 +2499,12 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                                 <td style={{ whiteSpace: 'nowrap' }}>
                                   {hasErr ? (
                                     <span style={{ color: 'var(--danger)', fontWeight: 700, fontSize: '11px' }}>
-                                      🔴 {rowErrs.join(' / ')}
+                                       {rowErrs.join(' / ')}
                                     </span>
                                   ) : (
                                     <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: '11px' }}>
-                                      🟢 정상 (사용 가능)
-                                    </span>
+                                       정상 (사용 가능)
+ </span>
                                   )}
                                 </td>
                               </tr>
@@ -2547,7 +2547,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
 
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 🔍 구입처 (공급사 / 중고 장비 딜러 / 거래처) 검색 모달 */}
+      {/*  구입처 (공급사 / 중고 장비 딜러 / 거래처) 검색 모달 */}
       {/* ───────────────────────────────────────────────────────────── */}
       {isSupplierSearchModalOpen && (
         <div style={{
@@ -2608,8 +2608,8 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   onClick={() => setSupplierSearchQuery('')}
                   style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
-                  ✕
-                </button>
+                  
+ </button>
               )}
             </div>
 
@@ -2632,7 +2632,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <tr>
                       <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                         검색 조건에 일치하는 공급처 또는 딜러가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     filteredSuppliersForSearch.map((s, idx) => (
@@ -2673,7 +2673,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             style={{ padding: '3px 10px', fontSize: '11px', fontWeight: 700 }}
                           >
                             선택
-                          </button>
+ </button>
                         </td>
                       </tr>
                     ))
@@ -2685,7 +2685,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                 총 {filteredSuppliersForSearch.length}건 검색됨 (제조사 및 거래처/중고딜러)
-              </span>
+ </span>
               <button
                 type="button"
                 className="btn-secondary"
@@ -2693,14 +2693,14 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 style={{ padding: '6px 14px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 🔍 매수처 (고객사 / 중고 장비 딜러) 검색 모달 */}
+      {/*  매수처 (고객사 / 중고 장비 딜러) 검색 모달 */}
       {/* ───────────────────────────────────────────────────────────── */}
       {isBuyerSearchModalOpen && (
         <div style={{
@@ -2761,8 +2761,8 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   onClick={() => setBuyerSearchQuery('')}
                   style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
-                  ✕
-                </button>
+                  
+ </button>
               )}
             </div>
 
@@ -2785,7 +2785,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <tr>
                       <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                         검색 조건에 일치하는 고객사 또는 딜러가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     filteredCustomersForSearch.map(c => (
@@ -2811,7 +2811,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 600 }}
                           >
                             선택
-                          </button>
+ </button>
                         </td>
                       </tr>
                     ))
@@ -2829,14 +2829,14 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 style={{ padding: '6px 14px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
       {/* ==================================================================== */}
-      {/* 💼 [스튜디오 2] 자산 매각 스튜디오 본문 (좌우 50:50 워크벤치) */}
+      {/*  [스튜디오 2] 자산 매각 스튜디오 본문 (좌우 50:50 워크벤치) */}
       {/* ==================================================================== */}
       {activeStudio === 'DISPOSAL' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -2852,10 +2852,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div>
                   <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Layers size={16} color="var(--primary)" /> 매각 대상 자산 선별
-                  </h3>
+ </h3>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     * 현장 대여중 장비는 오매각 방지를 위해 원천 차단됩니다.
-                  </span>
+ </span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -2866,14 +2866,14 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       onChange={e => setIncludeRepairing(e.target.checked)}
                     />
                     정비중 포함
-                  </label>
+ </label>
                   <button
                     type="button"
                     className="btn-excel-download btn-sm"
                     onClick={handleExportDisposalAssets}
                   >
                     <Download size={12} /> 가용 자산 엑셀
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -2882,7 +2882,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     1. 모델 선택 (가용 대수)
-                  </label>
+ </label>
                   <select
                     value={selectedDisposalModel}
                     onChange={e => setSelectedDisposalModel(e.target.value)}
@@ -2892,7 +2892,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     {availableModelList.map(m => (
                       <option key={m} value={m}>
                         {m} ({availableModelStats[m]}대 가용)
-                      </option>
+ </option>
                     ))}
                   </select>
                 </div>
@@ -2900,7 +2900,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     관리번호 / 시리얼 검색
-                  </label>
+ </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                     <Search size={13} color="var(--text-muted)" />
                     <input
@@ -2911,7 +2911,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       style={{ flex: 1, border: 'none', backgroundColor: 'transparent', fontSize: '12px', outline: 'none', color: 'var(--text-primary)' }}
                     />
                     {disposalSearchQuery && (
-                      <button onClick={() => setDisposalSearchQuery('')} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}>✕</button>
+                      <button onClick={() => setDisposalSearchQuery('')} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}></button>
                     )}
                   </div>
                 </div>
@@ -2919,7 +2919,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     정렬 기준
-                  </label>
+ </label>
                   <select
                     value={disposalSortOrder}
                     onChange={e => setDisposalSortOrder(e.target.value as any)}
@@ -2945,7 +2945,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
               }}>
                 <div>
                   선택 체크: <strong style={{ color: 'var(--primary)' }}>{checkedAssetIds.size}대</strong> / 선별 가용 {unbaskettedFilteredAssets.length}대
-                </div>
+ </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     type="button"
@@ -2962,7 +2962,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     style={{ padding: '4px 12px', fontSize: '11.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <ArrowRight size={13} /> 매각 바구니 담기 ({checkedAssetIds.size}대)
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -2991,7 +2991,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       <tr>
                         <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
                           해당 조건의 가용 자산이 없습니다.
-                        </td>
+ </td>
                       </tr>
                     ) : (
                       filteredDisposalAssets.map(a => {
@@ -3052,7 +3052,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <ShoppingBag size={15} color="var(--primary)" />
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       매각 확정 바구니
-                    </span>
+ </span>
                     <span style={{
                       backgroundColor: disposalBasket.length > 0 ? 'var(--primary)' : 'var(--bg-app)',
                       color: disposalBasket.length > 0 ? '#fff' : 'var(--text-muted)',
@@ -3062,7 +3062,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       fontWeight: 700
                     }}>
                       {disposalBasket.length}대
-                    </span>
+ </span>
                   </div>
 
                   {disposalBasket.length > 0 && (
@@ -3073,7 +3073,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         className="btn-excel-download btn-sm"
                       >
                         <Download size={11} /> 매각 바구니 엑셀
-                      </button>
+ </button>
                       <button data-hs-trigger="Apply"
                         type="button"
                         onClick={handleResetBasketPriceToBookValue}
@@ -3081,7 +3081,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         style={{ padding: '3px 8px', fontSize: '11px' }}
                       >
                         장부가 일괄적용
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={handleClearBasket}
@@ -3089,7 +3089,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                         style={{ padding: '3px 8px', fontSize: '11px', color: 'var(--danger)' }}
                       >
                         바구니 전체 비우기
-                      </button>
+ </button>
                     </div>
                   )}
                 </div>
@@ -3104,8 +3104,8 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     color: 'var(--text-muted)',
                     fontSize: '12px'
                   }}>
-                    * 상단에서 모델과 자산을 선별하여 <strong>[매각 바구니 담기 ➔]</strong> 버튼을 눌러주세요.
-                  </div>
+                    * 상단에서 모델과 자산을 선별하여 <strong>[매각 바구니 담기 ]</strong> 버튼을 눌러주세요.
+ </div>
                 ) : (
                   <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {disposalBasket.map(item => {
@@ -3128,10 +3128,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             <strong style={{ color: 'var(--primary)', fontSize: '12.5px' }}>{item.assetNo}</strong>
                             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '6px' }}>
                               ({item.modelName} / {item.manufactureYear || '-'}년)
-                            </span>
+ </span>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                               장부가: ₩{item.bookValue.toLocaleString()}원
-                            </div>
+ </div>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -3204,7 +3204,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     }}
                   >
                     자산 매각 (양도)
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setDisposalActionMode('WRITE_OFF')}
@@ -3220,7 +3220,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     }}
                   >
                     자산 폐기/망실
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -3229,7 +3229,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                     1. 매수처 (거래처 / 중고 장비 딜러) 확정
-                  </label>
+ </label>
                   <div style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
                     <button
                       type="button"
@@ -3244,7 +3244,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       }}
                     >
                       고객사/딜러 조회
-                    </button>
+ </button>
                     <button data-hs-trigger="Register"
                       type="button"
                       onClick={() => setBuyerMode('NEW')}
@@ -3258,7 +3258,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       }}
                     >
                       신규 딜러 직접 등록
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -3293,7 +3293,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           style={{ padding: '4px 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
                         >
                           매수처 변경
-                        </button>
+ </button>
                       </div>
                     ) : (
                       <div
@@ -3315,7 +3315,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       >
                         <Search size={15} />
                         매수처 (고객사 / 딜러) 검색 및 확정
-                      </div>
+ </div>
                     )}
                   </div>
                 ) : (
@@ -3378,7 +3378,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   2. 양도·양수 5대 계약 조건 설정
-                </label>
+ </label>
 
                 {/* A. 계약 기본 정보: 계약일자 & 계약 담당자 */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -3419,7 +3419,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           onChange={() => setPaymentType('LUMP_SUM')}
                         />
                         일시불
-                      </label>
+ </label>
                       <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                         <input
                           type="radio"
@@ -3428,7 +3428,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           onChange={() => setPaymentType('INSTALLMENT')}
                         />
                         분할납부 (계약금+잔금)
-                      </label>
+ </label>
                     </div>
                   </div>
 
@@ -3479,7 +3479,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                             }}
                           >
                             {r}%
-                          </button>
+ </button>
                         ))}
                       </div>
 
@@ -3488,7 +3488,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>계약금 ({installmentDownRate}% / VAT포함)</span>
                           <strong style={{ fontSize: '12px', color: 'var(--primary)' }}>
                             ₩{disposalAccounting.installmentDownAmount.toLocaleString()}원
-                          </strong>
+ </strong>
                           <input
                             type="date"
                             value={installmentDownDate}
@@ -3500,7 +3500,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>잔금 (잔여액)</span>
                           <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
                             ₩{disposalAccounting.installmentBalanceAmount.toLocaleString()}원
-                          </strong>
+ </strong>
                           <input
                             type="date"
                             value={installmentBalanceDueDate}
@@ -3588,10 +3588,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       onChange={e => setUseStandardAsIsClause(e.target.checked)}
                     />
                     현상태 인수 및 하자담보책임 면책 특약 적용
-                  </label>
+ </label>
                   <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginLeft: '20px' }}>
                     * 중고 건설기계 특성상 장비를 현상태로 인도하며, 인도 완료 후 일체의 기계적·성능적 하자담보책임을 지지 아니합니다.
-                  </span>
+ </span>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
                     <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>추가 특약 사항 (계약서 반영)</label>
@@ -3655,7 +3655,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       }}
                     >
                       매각 계약서 미리보기
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => setPreviewDocTab('INVOICE')}
@@ -3669,7 +3669,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       }}
                     >
                       매각 청구서 미리보기
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -3689,10 +3689,10 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <div>
                       <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 800, marginBottom: '8px', borderBottom: '1px solid #94a3b8', paddingBottom: '4px' }}>
                         중 고 건 설 기 계 (고 소 작 업 대) 양 도 · 양 수 계 약 서
-                      </div>
+ </div>
                       <p style={{ margin: '2px 0' }}>
                         <strong>양도인(매도인):</strong> {currentTenant?.corporateName || currentTenant?.tradeName || '당사'} (대표이사 {currentTenant?.representativeName || '-'} / 사업자등록번호: {currentTenant?.businessNumber || '-'})
-                      </p>
+ </p>
                       <p style={{ margin: '2px 0' }}>
                         <strong>양수인(매수인):</strong> {buyerMode === 'SELECT' ? (selectedBuyer?.name || '매수처 미정') : (newBuyerName || '매수처 미정')}
                         {buyerMode === 'SELECT' && selectedBuyer?.representative ? ` (대표: ${selectedBuyer.representative})` : (newBuyerRepresentative ? ` (대표: ${newBuyerRepresentative})` : '')}
@@ -3700,11 +3700,11 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       <p style={{ margin: '4px 0 2px 0', fontWeight: 700 }}>[제1조 매각 대상 자산]</p>
                       <p style={{ margin: '2px 0' }}>
                         총 {disposalBasket.length}대 ({disposalBasket.map(b => `${b.assetNo}(${b.modelName})`).join(', ') || '선택 없음'})
-                      </p>
+ </p>
                       <p style={{ margin: '4px 0 2px 0', fontWeight: 700 }}>[제2조 매각 공급대금]</p>
                       <p style={{ margin: '2px 0' }}>
                         금 ₩{disposalAccounting.totalSupplyAmount.toLocaleString()}원정 (부가가치세 ₩{disposalAccounting.vat.toLocaleString()}원 별도 / 합계 ₩{disposalAccounting.grandTotal.toLocaleString()}원정)
-                      </p>
+ </p>
                       <p style={{ margin: '4px 0 2px 0', fontWeight: 700 }}>[제3조 대금 지급 조건]</p>
                       <p style={{ margin: '2px 0' }}>
                         {paymentType === 'LUMP_SUM' ? (
@@ -3713,12 +3713,12 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                           `분할 지급: 계약금 ₩${disposalAccounting.installmentDownAmount.toLocaleString()}원 (${installmentDownDate} 한), 잔금 ₩${disposalAccounting.installmentBalanceAmount.toLocaleString()}원 (${installmentBalanceDueDate} 한)`
                         )}
                         {' '}(입금계좌: {bankAccount})
-                      </p>
+ </p>
                       <p style={{ margin: '4px 0 2px 0', fontWeight: 700 }}>[제4조 장비 인도 및 운송]</p>
                       <p style={{ margin: '2px 0' }}>
                         인도 방식: {deliveryLocationType === 'YARD' ? `당사 주기장 상차도(${deliverySiteAddress.trim() || defaultYard?.name || '당사 기본 주기장'})` : `매수처 지정장소 도착도(${deliverySiteAddress.trim() || (buyerMode === 'SELECT' ? selectedBuyer?.address : newBuyerAddress) || '지정주소'})`},
-                        운송비: {freightBearer === 'BUYER' ? '매수자 부담' : '당사 부담'},
-                        인도일자: {deliveryDate}
+ 운송비: {freightBearer === 'BUYER' ? '매수자 부담' : '당사 부담'},
+ 인도일자: {deliveryDate}
                       </p>
                       <p style={{ margin: '4px 0 2px 0', fontWeight: 700 }}>[제5조 소유권 이전 및 하자면책]</p>
                       <p style={{ margin: '2px 0', color: 'var(--text-muted)' }}>
@@ -3735,13 +3735,13 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                     <div>
                       <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 800, marginBottom: '8px', borderBottom: '1px solid #94a3b8', paddingBottom: '4px' }}>
                         거 래 명 세 서 (자산 매각 대금 청구서)
-                      </div>
+ </div>
                       <p style={{ margin: '2px 0' }}>
                         <strong>공급자:</strong> {currentTenant?.corporateName || currentTenant?.tradeName || '당사'} | <strong>공급받는자:</strong> {buyerMode === 'SELECT' ? (selectedBuyer?.name || '매수처') : (newBuyerName || '매수처')}
                       </p>
                       <p style={{ margin: '2px 0' }}>
                         <strong>청구일자:</strong> {disposalDate} | <strong>청구품목:</strong> 고소작업대 자산 매각 대금 ({disposalBasket.length}대)
-                      </p>
+ </p>
                       <div style={{ marginTop: '6px', borderTop: '1px solid #e2e8f0', paddingTop: '4px' }}>
                         <div>• 공급가액: ₩{disposalAccounting.totalSupplyAmount.toLocaleString()}원</div>
                         <div>• 부가가치세(10%): ₩{disposalAccounting.vat.toLocaleString()}원</div>
@@ -3763,7 +3763,7 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                       onChange={e => setSendEmailImmediately(e.target.checked)}
                     />
                     매각 계약서 및 청구서 이메일 즉시 발송
-                  </label>
+ </label>
                   <Mail size={14} color="var(--primary)" />
                 </div>
 
@@ -3771,14 +3771,14 @@ export const AssetAcquisitionDisposal: React.FC = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
                     <input
                       type="text"
-                      placeholder="수신 이메일 (예: dealer@machinery.co.kr)"
+                      placeholder="수신 이메일"
                       value={disposalEmailTo}
                       onChange={e => setDisposalEmailTo(e.target.value)}
                       style={{ padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px' }}
                     />
                     <input
                       type="text"
-                      placeholder="참조 이메일 (CC, 선택)"
+                      placeholder="참조 이메일"
                       value={disposalEmailCc}
                       onChange={e => setDisposalEmailCc(e.target.value)}
                       style={{ padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px' }}

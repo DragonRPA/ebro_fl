@@ -44,13 +44,13 @@ export interface VoiceGuideWizardCompleteData {
   paidOptions: string;
   protection: string;
   checkedSpecs: Record<string, boolean>;
-  saveOptionsToSite?: boolean; // 🌟 옵션 변경 시 현장 마스터 저장 여부 (false: 1회성 적용)
+  saveOptionsToSite?: boolean; //  옵션 변경 시 현장 마스터 저장 여부 (false: 1회성 적용)
   billableToCustomer: boolean;
   closingDay: string;
   paymentDay: string;
   vehicleType: string;
   isAsap: boolean;
-  isPartialHandOff?: boolean; // 🌟 작성 중 일반 폼으로 핸드오프 전환 여부
+  isPartialHandOff?: boolean; //  작성 중 일반 폼으로 핸드오프 전환 여부
 }
 
 interface VoiceGuideWizardModalProps {
@@ -88,14 +88,14 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
   const [paidOptions, setPaidOptions] = useState<string>('');
   const [protection, setProtection] = useState<string>('');
   const [checkedSpecs, setCheckedSpecs] = useState<Record<string, boolean>>({});
-  const [saveOptionsToSite, setSaveOptionsToSite] = useState<boolean>(true); // 🌟 변경된 옵션을 현장 기본값으로 저장할지 여부
+  const [saveOptionsToSite, setSaveOptionsToSite] = useState<boolean>(true); //  변경된 옵션을 현장 기본값으로 저장할지 여부
   const [billableToCustomer, setBillableToCustomer] = useState<boolean>(false);
   const [closingDay, setClosingDay] = useState<string>('');
   const [paymentDay, setPaymentDay] = useState<string>('');
   const [vehicleType, setVehicleType] = useState<string>('5톤 렉카');
   const [specialMemo, setSpecialMemo] = useState<string>('');
 
-  // 🌟 기존 현장 옵션과 현재 입력된 옵션 간 차이 발생 여부 실시간 감지
+  //  기존 현장 옵션과 현재 입력된 옵션 간 차이 발생 여부 실시간 감지
   const isOptionsDiff = useMemo(() => {
     const targetSite = selectedSite || pendingSite;
     return isOptionsChangedFromSite(targetSite, paidOptions, protection, checkedSpecs);
@@ -237,7 +237,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     }
   };
 
-  // ── 🖐️ 터치 선택/수정 핸들러군 (하이브리드 인터리빙) ──
+  // ──  터치 선택/수정 핸들러군 (하이브리드 인터리빙) ──
   // 1) 고객사 터치 선택
   const handleTouchSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -350,7 +350,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     onClose();
   };
 
-  // ── 🎙️ 녹음 시작 ──
+  // ──  녹음 시작 ──
   const startRecording = async () => {
     if (isRecording || isProcessing) return;
     setRecognizedText('');
@@ -420,14 +420,14 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
       rec.start();
       recognitionRef.current = rec;
       setIsRecording(true);
-      setStatusMessage('말씀해 주세요... (브라우저 STT)');
+      setStatusMessage('말씀해 주세요...');
     } catch (e) {
       setIsRecording(false);
       setStatusMessage('마이크 시작 실패');
     }
   };
 
-  // ── 🛑 녹음 종료 및 Groq Whisper STT 호출 ──
+  // ──  녹음 종료 및 Groq Whisper STT 호출 ──
   const stopRecording = async () => {
     if (!isRecording) return;
     setIsRecording(false);
@@ -478,7 +478,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     mediaRecorderRef.current.stop();
   };
 
-  // ── ⚡ Groq Whisper STT API 호출 (단계별 초정밀 힌트 주입) ──
+  // ──  Groq Whisper STT API 호출 (단계별 초정밀 힌트 주입) ──
   const sendToGroqStt = async (base64Data: string, mimeType: string) => {
     try {
       // 단계별 초정밀 프롬프트 힌트 구성
@@ -525,7 +525,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
   };
 
 
-  // ── 🏢 현장 선택 시 능동형 확인 인터뷰 시작 ──
+  // ──  현장 선택 시 능동형 확인 인터뷰 시작 ──
   const startSiteProactiveInterview = (s: CustomerSite) => {
     setSelectedSite(s);
     setPendingSite(s);
@@ -569,7 +569,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     if (siteSubStep === 'CONTACT_CONFIRM') {
       const yn = parseYesNoVoiceInput(text);
       if (yn === true) {
-        // "네" ➔ 기존 담당자 정보 확정!
+        // "네"  기존 담당자 정보 확정!
         setSiteContactName(pendingSite?.contactName || '');
         setSiteContactPhone(pendingSite?.contact || '');
         
@@ -592,7 +592,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
         }
         return;
       } else if (yn === false) {
-        // "아니요" ➔ 새 담당자 성함 묻기
+        // "아니요"  새 담당자 성함 묻기
         setSiteSubStep('CONTACT_NAME');
         const prompt = '그럼 누구입니까? 새 담당자 성함을 말씀해주세요.';
         setStatusMessage(prompt);
@@ -655,7 +655,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     if (siteSubStep === 'OPTIONS_CONFIRM') {
       const yn = parseYesNoVoiceInput(text);
       if (yn === true) {
-        // "예" ➔ 과거 옵션 100% 자동 상속!
+        // "예"  과거 옵션 100% 자동 상속!
         if (pendingSite?.paidOptions) setPaidOptions(typeof pendingSite.paidOptions === 'string' ? pendingSite.paidOptions : (Array.isArray(pendingSite.paidOptions) ? (pendingSite.paidOptions as any[]).join(', ') : String(pendingSite.paidOptions)));
         if (pendingSite?.protection) setProtection(typeof pendingSite.protection === 'string' ? pendingSite.protection : (Array.isArray(pendingSite.protection) ? (pendingSite.protection as any[]).join(', ') : String(pendingSite.protection)));
         if (pendingSite?.checkedSpecs) setCheckedSpecs(pendingSite.checkedSpecs);
@@ -668,7 +668,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
         }, 1000);
         return;
       } else if (yn === false) {
-        // "아니요" ➔ 옵션 초기화 후 나중에 OPTIONS_NOTE 단계에서 추가 입력
+        // "아니요"  옵션 초기화 후 나중에 OPTIONS_NOTE 단계에서 추가 입력
         setPaidOptions('');
         setProtection('');
         setCheckedSpecs({});
@@ -711,7 +711,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
     }
   };
 
-  // ── 🎯 인식된 텍스트 단계별 해석 및 다음 단계 전이 ──
+  // ──  인식된 텍스트 단계별 해석 및 다음 단계 전이 ──
   const handleRecognizedText = (text: string) => {
     setIsProcessing(false);
     if (!text || !text.trim()) {
@@ -796,7 +796,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
 
       const dtResult = parseDateTimeVoiceInput(text);
       if (dtResult.isAsap) {
-        // 긴급 감지 ➔ 사장님 지침대로 "시간 무관하게 가장 빨리로 접수할까요?" 되짚어 확인!
+        // 긴급 감지  사장님 지침대로 "시간 무관하게 가장 빨리로 접수할까요?" 되짚어 확인!
         setIsAwaitingAsapConfirmation(true);
         setPendingAsapDate(dtResult.date);
         setStatusMessage(dtResult.confirmQuestion);
@@ -961,11 +961,11 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
             </div>
             <h3 style={{ fontSize: '16px', fontWeight: '800', margin: 0, letterSpacing: '-0.3px' }}>
               대화형 음성 출고의뢰 (전체 구조)
-            </h3>
+ </h3>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* ✏️ 일반 화면에서 이어서 작성 */}
+            {/*  일반 화면에서 이어서 작성 */}
             <button
               type="button"
               onClick={handleHandOffToForm}
@@ -988,7 +988,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
               <span>일반서식 이동</span>
             </button>
 
-            {/* 🔊 TTS 음성 안내 ON/OFF 토글 버튼 */}
+            {/*  TTS 음성 안내 ON/OFF 토글 버튼 */}
             <button
               type="button"
               onClick={() => ttsService.toggle()}
@@ -1063,7 +1063,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   textOverflow: 'ellipsis'
                 }}
               >
-                {item.done ? `✓ ${item.label.split('. ')[1]}` : item.label}
+                {item.done ? ` ${item.label.split('. ')[1]}` : item.label}
               </div>
             );
           })}
@@ -1140,7 +1140,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                 }}
               >
                 반영
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setIsEditingText(false)}
@@ -1155,7 +1155,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                 }}
               >
                 취소
-              </button>
+ </button>
             </div>
           ) : recognizedText ? (
             <div
@@ -1177,7 +1177,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
               }}
               title="터치하여 직접 텍스트 수정"
             >
-              <span>🎙️ 들린 내용: <strong>"{recognizedText}"</strong></span>
+              <span> 들린 내용: <strong>"{recognizedText}"</strong></span>
               <span style={{ fontSize: '11px', color: '#93c5fd', textDecoration: 'underline', marginLeft: '6px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <Edit3 size={11} />
                 <span>터치 수정</span>
@@ -1353,7 +1353,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                     }}
                   >
                     반영
-                  </button>
+ </button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8', width: '100%' }}>성함 또는 직함 발화/터치 예시:</span>
@@ -1373,7 +1373,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                       }}
                     >
                       "{ex}"
-                    </button>
+ </button>
                   ))}
                 </div>
               </div>
@@ -1413,7 +1413,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                     }}
                   >
                     반영
-                  </button>
+ </button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8', width: '100%' }}>전화번호 발화/터치 예시:</span>
@@ -1433,7 +1433,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                       }}
                     >
                       "{ex}"
-                    </button>
+ </button>
                   ))}
                 </div>
               </div>
@@ -1507,7 +1507,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                         cursor: 'pointer'
                       }}
                     >
-                      📍 {s.name}
+                       {s.name}
                     </button>
                   ))}
                 </div>
@@ -1586,15 +1586,15 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                           color: '#fff', border: 'none', fontSize: '12px', fontWeight: 700, cursor: manualNewSiteName.trim() ? 'pointer' : 'not-allowed'
                         }}
                       >
-                        신규 현장 등록 후 다음 ➔
-                      </button>
+                        신규 현장 등록 후 다음 
+ </button>
                       <button
                         type="button"
                         onClick={() => setShowNewSiteForm(false)}
                         style={{ padding: '7px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-header)', color: '#94a3b8', border: 'none', fontSize: '12px', cursor: 'pointer' }}
                       >
                         취소
-                      </button>
+ </button>
                     </div>
                   </div>
                 )}
@@ -1609,7 +1609,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
             <div style={{ fontSize: '11px', color: '#94a3b8' }}>주요 규격 터치 선택:</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
               {[
-                { ft: '19ft', model: 'GS-1930', label: '19ft (GS-1930)' },
+                { ft: '19ft', model: 'GS-1930', label: '19ft' },
                 { ft: '26ft', model: 'SJ-3219', label: '26ft 협폭' },
                 { ft: '26ft', model: 'GS-2646', label: '26ft 광폭' },
                 { ft: '32ft', model: 'SJ-3246', label: '32ft (3246)' },
@@ -1653,7 +1653,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: 'var(--bg-header)', border: 'none', color: '#ffffff', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   -
-                </button>
+ </button>
                 <span style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', minWidth: '24px', textAlign: 'center' }}>
                   {touchEquipmentQty}
                 </span>
@@ -1663,7 +1663,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: 'var(--bg-header)', border: 'none', color: '#ffffff', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   +
-                </button>
+ </button>
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>대</span>
               </div>
 
@@ -1684,7 +1684,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   gap: '4px'
                 }}
               >
-                <span>터치 확정 ➔</span>
+                <span>터치 확정 </span>
               </button>
             </div>
           </div>
@@ -1703,8 +1703,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   border: '1px solid #334155', color: '#e2e8f0', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
                 }}
               >
-                🌅 내일 아침 08:00
-              </button>
+                 내일 아침 08:00
+ </button>
               <button
                 type="button"
                 onClick={() => handleTouchSelectDateTime(defaultTomorrowStr, '07:00', false)}
@@ -1713,8 +1713,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   border: '1px solid #334155', color: '#e2e8f0', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
                 }}
               >
-                ⚡ 내일 이른아침 07:00
-              </button>
+                 내일 이른아침 07:00
+ </button>
               <button
                 type="button"
                 onClick={() => handleTouchSelectDateTime(new Date().toISOString().split('T')[0], 'ASAP', true)}
@@ -1723,8 +1723,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
                 }}
               >
-                🚨 오늘 당장 (긴급 ASAP)
-              </button>
+                 오늘 당장
+ </button>
               <button
                 type="button"
                 onClick={() => {
@@ -1737,8 +1737,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   border: '1px solid #334155', color: '#e2e8f0', fontSize: '12px', fontWeight: '700', cursor: 'pointer'
                 }}
               >
-                📅 모레 아침 08:00
-              </button>
+                 모레 아침 08:00
+ </button>
             </div>
 
             {/* 직접 날짜/시간 피커 */}
@@ -1769,8 +1769,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   color: '#ffffff', border: 'none', fontSize: '12px', fontWeight: '700', cursor: 'pointer', marginLeft: 'auto'
                 }}
               >
-                확정 ➔
-              </button>
+                확정 
+ </button>
             </div>
           </div>
         )}
@@ -1811,7 +1811,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                       cursor: 'pointer'
                     }}
                   >
-                    {isActive ? '✓ ' : ''}{opt.label}
+                    {isActive ? '' : ''}{opt.label}
                   </button>
                 );
               })}
@@ -1831,7 +1831,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   cursor: 'pointer'
                 }}
               >
-                운송비: {billableToCustomer ? '🔴 고객청구' : '🟢 당사부담'}
+                운송비: {billableToCustomer ? '고객청구' : '당사부담'}
               </button>
             </div>
 
@@ -1875,8 +1875,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                   flexShrink: 0
                 }}
               >
-                다음 ➔
-              </button>
+                다음 
+ </button>
             </div>
           </div>
         )}
@@ -1894,20 +1894,20 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
               gap: '8px',
               fontSize: '12px'
             }}>
-              <div>🏢 <strong>고객사:</strong> {selectedCustomer?.name}</div>
-              <div>📍 <strong>현장명:</strong> {selectedSite?.name || newSiteName}</div>
-              <div style={{ gridColumn: 'span 2' }}>🏠 <strong>주소:</strong> {siteAddress || selectedSite?.address || selectedCustomer?.address || '미상'}</div>
-              <div>👤 <strong>소장:</strong> {siteContactName || selectedSite?.contactName || '미지정'} ({siteContactPhone || selectedSite?.contact || '-'})</div>
-              <div>🏗️ <strong>장비:</strong> {equipmentResult?.confirmedDescription}</div>
-              <div>⏰ <strong>하차일시:</strong> {dateTimeResult?.displayText}</div>
-              <div>🚚 <strong>운송비:</strong> {billableToCustomer ? '🔴 고객부담(청구)' : '🟢 당사부담'}</div>
-              <div>🛡️ <strong>유상옵션:</strong> {paidOptions || '표준 사양'}</div>
-              <div>📦 <strong>무상옵션:</strong> {protection || '표준 사양'}</div>
-              <div style={{ gridColumn: 'span 2' }}>📄 <strong>마감/결제:</strong> {closingDay || '말일'} 마감 / {paymentDay || '익월 25일'} 결제</div>
-              {specialMemo && <div style={{ gridColumn: 'span 2', color: '#f59e0b' }}>📝 <strong>특이사항:</strong> {specialMemo}</div>}
+              <div> <strong>고객사:</strong> {selectedCustomer?.name}</div>
+              <div> <strong>현장명:</strong> {selectedSite?.name || newSiteName}</div>
+              <div style={{ gridColumn: 'span 2' }}> <strong>주소:</strong> {siteAddress || selectedSite?.address || selectedCustomer?.address || '미상'}</div>
+              <div> <strong>소장:</strong> {siteContactName || selectedSite?.contactName || '미지정'} ({siteContactPhone || selectedSite?.contact || '-'})</div>
+              <div> <strong>장비:</strong> {equipmentResult?.confirmedDescription}</div>
+              <div> <strong>하차일시:</strong> {dateTimeResult?.displayText}</div>
+              <div> <strong>운송비:</strong> {billableToCustomer ? '고객부담(청구)' : '당사부담'}</div>
+              <div> <strong>유상옵션:</strong> {paidOptions || '표준 사양'}</div>
+              <div> <strong>무상옵션:</strong> {protection || '표준 사양'}</div>
+              <div style={{ gridColumn: 'span 2' }}> <strong>마감/결제:</strong> {closingDay || '말일'} 마감 / {paymentDay || '익월 25일'} 결제</div>
+              {specialMemo && <div style={{ gridColumn: 'span 2', color: '#f59e0b' }}> <strong>특이사항:</strong> {specialMemo}</div>}
             </div>
 
-            {/* 🌟 옵션 변경 시 현장 마스터 저장 확인 패널 */}
+            {/*  옵션 변경 시 현장 마스터 저장 확인 패널 */}
             {isOptionsDiff && (
               <div style={{
                 padding: '10px 12px',
@@ -1924,7 +1924,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                 </div>
                 <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                   변경된 옵션을 현장 기본값으로 저장할까요? (1회성 선택 시 기존 현장 옵션이 유지됩니다)
-                </div>
+ </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
                   <button
                     type="button"
@@ -1943,8 +1943,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                       cursor: 'pointer'
                     }}
                   >
-                    {saveOptionsToSite ? '✓ ' : ''}현장 기본값 저장 (유지)
-                  </button>
+                    {saveOptionsToSite ? '' : ''}현장 기본값 저장 (유지)
+ </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1962,8 +1962,8 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                       cursor: 'pointer'
                     }}
                   >
-                    {!saveOptionsToSite ? '✓ ' : ''}이번만 1회성 적용 (보존)
-                  </button>
+                    {!saveOptionsToSite ? '' : ''}이번만 1회성 적용 (보존)
+ </button>
                 </div>
               </div>
             )}
@@ -2024,7 +2024,7 @@ export const VoiceGuideWizardModal: React.FC<VoiceGuideWizardModalProps> = ({
                 }}
               >
                 건너뛰기
-              </button>
+ </button>
             </>
           ) : (
             <button

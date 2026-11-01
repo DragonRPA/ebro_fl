@@ -543,7 +543,7 @@ export const SmartDispatch2: React.FC = () => {
       return;
     }
     if (matchedCust?.transactionStatus === 'BLOCKED') {
-      showToast('🚫 거래 불가 거래처입니다.', 'error'); return;
+      showToast('거래 불가 거래처입니다.', 'error'); return;
     }
     if (matchedCustOverdue && matchedCustOverdue.overdueSum > 0 && !dispatchOverdueAcknowledged) {
       showToast('연체 채권 확인 체크박스에 동의해야 합니다.', 'error'); return;
@@ -680,19 +680,19 @@ export const SmartDispatch2: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: 800, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             출고 요청 (신설)
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--info-light)', color: 'var(--primary)' }}>
+ <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--info-light)', color: 'var(--primary)' }}>
               A/B 비교 테스트
-            </span>
+ </span>
           </h2>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
             드롭바에 카톡 줄글 붙여넣기 → 자동 파싱 → 단일 캔버스 폼 확인 → 출고 지시
-          </p>
+ </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="btn-secondary" onClick={handleResetForm}
             style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '13px' }}>
             <RotateCcw size={14} /> 초기화
-          </button>
+ </button>
         </div>
       </div>
 
@@ -722,7 +722,7 @@ export const SmartDispatch2: React.FC = () => {
                 onClick={() => parseDropBar(dropBarText)}
                 style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', fontSize: '12px', fontWeight: 800 }}>
                 <Zap size={13} /> 파싱 실행
-              </button>
+ </button>
             </div>
           </div>
           <textarea
@@ -767,17 +767,17 @@ export const SmartDispatch2: React.FC = () => {
         }}>
           <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
             <AlertTriangle size={15} color={matchedCustOverdue.isBlocked ? '#dc2626' : '#d97706'} />
-            {matchedCustOverdue.isBlocked ? '🚫 [경영진 처분] 거래 불가' : '연체 채권 경각심 통제 경보'}
+            {matchedCustOverdue.isBlocked ? '[경영진 처분] 거래 불가' : '연체 채권 경각심 통제 경보'}
           </div>
           {!matchedCustOverdue.isBlocked && (
             <>
               <div style={{ marginBottom: '6px' }}>
                 미납 청구 {matchedCustOverdue.count}건 (총 ₩{matchedCustOverdue.overdueSum.toLocaleString()}원)
-              </div>
+ </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, cursor: 'pointer' }}>
                 <input type="checkbox" checked={dispatchOverdueAcknowledged} onChange={e => setDispatchOverdueAcknowledged(e.target.checked)} />
                 [수금 책임 인지] 연체 사실을 확인하고 수금 관리에 책임을 다할 것을 확인합니다.
-              </label>
+ </label>
             </>
           )}
         </div>
@@ -798,7 +798,7 @@ export const SmartDispatch2: React.FC = () => {
               <div style={fieldWrap}>
                 <label style={labelStyle}>
                   고객사명 <span style={{ color: 'var(--danger)' }}>*</span>
-                  {currentMatchedCustomer && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>✓ 매핑됨</span>}
+                  {currentMatchedCustomer && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}> 매핑됨</span>}
                 </label>
                 <input type="text" list="sd2-customer-list" value={customerName}
                   onChange={e => handleCustomerChange(e.target.value)} placeholder="고객사명 입력" />
@@ -919,7 +919,7 @@ export const SmartDispatch2: React.FC = () => {
                             borderRadius: '10px', padding: '1px 6px', fontSize: '11px'
                           }}>
                             {existingItem.qty}대
-                          </span>
+ </span>
                         )}
                       </button>
                     );
@@ -948,7 +948,7 @@ export const SmartDispatch2: React.FC = () => {
                   }}
                   style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
                   <Plus size={13} /> 추가
-                </button>
+ </button>
               </div>
 
               {/* 장바구니 목록 */}
@@ -964,10 +964,10 @@ export const SmartDispatch2: React.FC = () => {
                   }}>
                     <ShoppingCart size={14} color="var(--primary)" />
                     신청 장비 목록 — 총 {totalEquipmentCount}대
-                    <button type="button" onClick={() => setEquipments([])}
+ <button type="button" onClick={() => setEquipments([])}
                       style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
                       전체비우기
-                    </button>
+ </button>
                   </div>
                   {equipments.map((eq, index) => (
                     <div key={index} style={{
@@ -1001,7 +1001,7 @@ export const SmartDispatch2: React.FC = () => {
                   color: 'var(--text-muted)', fontSize: '13px'
                 }}>
                   위 규격 칩을 클릭하거나 직접 입력하여 장비를 추가하세요.
-                </div>
+ </div>
               )}
             </div>
           </div>
@@ -1011,10 +1011,10 @@ export const SmartDispatch2: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
               <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
                 5. 필수 요구사항 체크리스트
-                {STANDARD_SPECS.filter(s => !!checkedSpecs[s.id]).length > 0 && (
+ {STANDARD_SPECS.filter(s => !!checkedSpecs[s.id]).length > 0 && (
                   <span style={{ fontSize: '11px', color: 'var(--success)', marginLeft: '8px', fontWeight: 700 }}>
                     ({STANDARD_SPECS.filter(s => !!checkedSpecs[s.id]).length}개 선택됨)
-                  </span>
+ </span>
                 )}
               </h4>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -1030,7 +1030,7 @@ export const SmartDispatch2: React.FC = () => {
               <div style={fieldWrap}>
                 <label style={labelStyle}>
                   유상 옵션 내역
-                  {(inheritedFieldList.includes('유상옵션(현장)') || inheritedFieldList.includes('유상옵션(고객기본)')) &&
+ {(inheritedFieldList.includes('유상옵션(현장)') || inheritedFieldList.includes('유상옵션(고객기본)')) &&
                     <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
                 </label>
                 <input type="text" value={paidOptions} onChange={e => setPaidOptions(e.target.value)} placeholder="예: 3면 함석, 감지봉 4EA" />
@@ -1038,7 +1038,7 @@ export const SmartDispatch2: React.FC = () => {
               <div style={fieldWrap}>
                 <label style={labelStyle}>
                   무상옵션 조건
-                  {(inheritedFieldList.includes('보양작업(현장)') || inheritedFieldList.includes('보양작업(고객기본)')) &&
+ {(inheritedFieldList.includes('보양작업(현장)') || inheritedFieldList.includes('보양작업(고객기본)')) &&
                     <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
                 </label>
                 <input type="text" value={protection} onChange={e => setProtection(e.target.value)} placeholder="예: 4면 망 포함 보양" />
@@ -1054,17 +1054,17 @@ export const SmartDispatch2: React.FC = () => {
             }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}>
                 <input type="checkbox" checked={isSetAsCustomerDefault} onChange={e => setIsSetAsCustomerDefault(e.target.checked)} />
-                🏢 이 옵션·보양·스펙을 '{customerName || '해당 고객사'}' 기본 설정으로 등록
-              </label>
+                 이 옵션·보양·스펙을 '{customerName || '해당 고객사'}' 기본 설정으로 등록
+ </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--primary)' }}>
                 <input type="checkbox" checked={applyToAllSites} onChange={e => setApplyToAllSites(e.target.checked)} />
-                ⚡ '{customerName || '해당 고객사'}'의 모든 현장에 일괄 적용
-              </label>
+                 '{customerName || '해당 고객사'}'의 모든 현장에 일괄 적용
+ </label>
               {currentMatchedSite && isOptionsDiff && (
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, color: '#f59e0b' }}>
                   <input type="checkbox" checked={saveOptionsToSite} onChange={e => setSaveOptionsToSite(e.target.checked)} />
-                  📍 변경된 옵션을 '{siteName || '해당 현장'}' 기본값으로 갱신
-                </label>
+                   변경된 옵션을 '{siteName || '해당 현장'}' 기본값으로 갱신
+ </label>
               )}
             </div>
 
@@ -1106,14 +1106,14 @@ export const SmartDispatch2: React.FC = () => {
               <div style={fieldWrap}>
                 <label style={labelStyle}>
                   매달 청구 마감일
-                  {inheritedFieldList.includes('마감일') && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
+ {inheritedFieldList.includes('마감일') && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
                 </label>
                 <input type="text" value={closingDay} onChange={e => setClosingDay(e.target.value)} placeholder="예: 20일" />
               </div>
               <div style={fieldWrap}>
                 <label style={labelStyle}>
                   결제 예정일
-                  {inheritedFieldList.includes('결제일') && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
+ {inheritedFieldList.includes('결제일') && <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700, marginLeft: '4px' }}>[자동 상속]</span>}
                 </label>
                 <input type="text" value={paymentDay} onChange={e => setPaymentDay(e.target.value)} placeholder="예: 익월 말일" />
               </div>
@@ -1137,18 +1137,18 @@ export const SmartDispatch2: React.FC = () => {
           {equipments.length > 0 ? (
             <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
               {equipments.map(e => `${e.modelName} × ${e.qty}대`).join(' / ')} — 총 {totalEquipmentCount}대
-            </span>
+ </span>
           ) : '장비를 선택하세요'}
         </div>
         <button type="button" className="btn-secondary" onClick={handleResetForm}
           style={{ padding: '8px 16px', fontSize: '13px' }}>
           초기화
-        </button>
+ </button>
         {canSave && (
           <button data-hs-trigger="Save" type="button" className="btn-primary" onClick={handleSave} disabled={isSubmitting}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', fontSize: '13px', fontWeight: 800 }}>
             <Zap size={15} /> 출고 지시 (자동 생성 및 저장)
-          </button>
+ </button>
         )}
       </div>
 
@@ -1182,7 +1182,7 @@ export const SmartDispatch2: React.FC = () => {
                 <button type="button" className="btn-primary" onClick={() => { setIsProcessingModalOpen(false); handleResetForm(); }}
                   style={{ padding: '8px 20px', fontWeight: 800 }}>
                   신규 입력
-                </button>
+ </button>
               </div>
             )}
           </div>

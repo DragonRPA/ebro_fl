@@ -3467,7 +3467,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     projectName: "여의도 국제금융 파이낸스타워 신축",
     mainUse: "업무시설",
     subUse: "금융센터/호텔",
-    structure: "철골구조(S조)",
+    structure: "철골구조",
     plotArea: 7800.0,
     archArea: 4500.0,
     totArea: 96500.0,
@@ -3502,7 +3502,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
         "안전발판확장핀"
       ],
       documentRequirements: [
-        "안전관리계획서(CSI승인)",
+        "안전관리계획서",
         "비파괴검사성적서",
         "장비안전검사증"
       ]
@@ -4052,7 +4052,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     projectName: "시화MTV 해양로봇 자동화 스마트 팩토리",
     mainUse: "공장",
     subUse: "정밀기계/로봇제작",
-    structure: "철골구조(S조)",
+    structure: "철골구조",
     plotArea: 15800.0,
     archArea: 9200.0,
     totArea: 26800.0,
@@ -4214,7 +4214,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
         "수평감지센서"
       ],
       documentRequirements: [
-        "안전관리계획서(CSI승인)",
+        "안전관리계획서",
         "비파괴검사성적서",
         "보험증권",
         "클린룸출입검사증"
@@ -4694,7 +4694,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     projectName: "포항 영일만산단 양극재 메가 플랜트 신축공사",
     mainUse: "공장",
     subUse: "이차전지양극재생산",
-    structure: "철골구조(S조)",
+    structure: "철골구조",
     plotArea: 45000.0,
     archArea: 28000.0,
     totArea: 115000.0,
@@ -5514,7 +5514,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     projectName: "충주 메가폴리스 전기차 구동모터 코어 생산라인",
     mainUse: "공장",
     subUse: "자동차모터제작",
-    structure: "철골구조(S조)",
+    structure: "철골구조",
     plotArea: 34000.0,
     archArea: 20000.0,
     totArea: 48000.0,
@@ -5576,7 +5576,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
     projectName: "여수 국가산단 친환경 바이오나프타 고도화 설비공사",
     mainUse: "공장",
     subUse: "석유화학정제플랜트",
-    structure: "철골구조(S조)",
+    structure: "철골구조",
     plotArea: 50000.0,
     archArea: 32000.0,
     totArea: 96000.0,
@@ -5610,7 +5610,7 @@ export const EXPANDED_INITIAL_PERMIT_DATA: ConstructionPermitItem[] = [
         "상부충돌센서"
       ],
       documentRequirements: [
-        "안전관리계획서(CSI승인)",
+        "안전관리계획서",
         "PSM(공정안전보고서)",
         "보험증권"
       ]

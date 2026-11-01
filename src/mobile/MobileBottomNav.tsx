@@ -81,7 +81,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   let rawNavItems: { id: MobileTabType; label: string; icon: any; badge: number }[] = [];
 
   if (deptMode === 'SALES') {
-    // 💼 영업부 모바일 탭 (가용재고 최우선 노출)
+    //  영업부 모바일 탭 (가용재고 최우선 노출)
     rawNavItems = [
       { id: 'home', label: '홈', icon: Home, badge: 0 },
       { id: 'assets', label: '가용재고', icon: ClipboardList, badge: 0 },
@@ -92,7 +92,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       { id: 'sales_journal', label: '영업일지', icon: BookOpen, badge: 0 },
     ];
   } else if (deptMode === 'AS') {
-    // 🔧 AS팀 모바일 탭
+    //  AS팀 모바일 탭
     rawNavItems = [
       { id: 'home', label: '홈', icon: Home, badge: 0 },
       { id: 'as', label: '현장정비', icon: Wrench, badge: pendingAsCount },
@@ -102,7 +102,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       { id: 'assets', label: '가용재고', icon: ClipboardList, badge: 0 },
     ];
   } else if (deptMode === 'OUTBOUND') {
-    // 🏗️ 출고팀 모바일 탭 (주기장 실물 관리)
+    //  출고팀 모바일 탭 (주기장 실물 관리)
     rawNavItems = [
       { id: 'home', label: '홈', icon: Home, badge: 0 },
       { id: 'assignment', label: '장비할당', icon: Layers, badge: pendingAssignmentCount },
@@ -112,7 +112,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       { id: 'assets', label: '가용재고', icon: ClipboardList, badge: 0 },
     ];
   } else if (deptMode === 'EXECUTIVE') {
-    // 👑 경영진 모바일 탭 (가용재고 직관 노출)
+    //  경영진 모바일 탭 (가용재고 직관 노출)
     rawNavItems = [
       { id: 'home', label: '경영홈', icon: Home, badge: 0 },
       { id: 'assets', label: '가용재고', icon: ClipboardList, badge: 0 },
@@ -122,7 +122,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       { id: 'sales_journal', label: '영업일지', icon: BookOpen, badge: 0 },
     ];
   } else if (deptMode === 'ADMIN') {
-    // 📊 관리부 모바일 탭 (배차 포함)
+    //  관리부 모바일 탭 (배차 포함)
     rawNavItems = [
       { id: 'home', label: '관리홈', icon: Home, badge: 0 },
       { id: 'dispatch', label: '배차관리', icon: Truck, badge: pendingDispatchCount },

@@ -23,7 +23,7 @@ const VENDOR_TYPE_CONFIG: Record<VendorTypeOption, { label: string; color: strin
   OTHER: { label: '기타', color: 'var(--text-secondary)', bg: 'var(--bg-secondary)' }
 };
 
-// 💡 거래기간 산정 헬퍼 (예: "2년 4개월 (852일)" 또는 "5개월 (152일)")
+//  거래기간 산정 헬퍼 (예: "2년 4개월 (852일)" 또는 "5개월 (152일)")
 export const calculateTradeDuration = (startDateStr?: string): string => {
   if (!startDateStr) return '-';
   const start = new Date(startDateStr);
@@ -55,7 +55,7 @@ export const Vendors: React.FC = () => {
   const [editingVendor, setEditingVendor] = useState<Partial<Vendor> | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<VendorTypeOption[]>(['RENTAL']);
 
-  // 📄 사업자등록증 & 통장사본 드롭존 상태
+  //  사업자등록증 & 통장사본 드롭존 상태
   const [isAnalyzingBizCert, setIsAnalyzingBizCert] = useState(false);
   const [bizCertDropActive, setBizCertDropActive] = useState(false);
   const [passbookDropActive, setPassbookDropActive] = useState(false);
@@ -145,7 +145,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 📄 사업자등록증 파일 처리 핵심 핸들러 (스토리지 업로드 + Vision AI 분석 + 국세청 상태 점검 + 폼 자동입력)
+  //  사업자등록증 파일 처리 핵심 핸들러 (스토리지 업로드 + Vision AI 분석 + 국세청 상태 점검 + 폼 자동입력)
   const handleProcessBizCertFile = async (file: File) => {
     if (!editingVendor) return;
     setIsAnalyzingBizCert(true);
@@ -240,7 +240,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 💳 통장사본 파일 처리 핵심 핸들러
+  //  통장사본 파일 처리 핵심 핸들러
   const handleProcessPassbookFile = async (file: File) => {
     if (!editingVendor) return;
     try {
@@ -273,7 +273,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 💳 매입처 모달 내 통장사본 첨부 선택 핸들러
+  //  매입처 모달 내 통장사본 첨부 선택 핸들러
   const handleVendorModalPassbookSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -281,7 +281,7 @@ export const Vendors: React.FC = () => {
     e.target.value = '';
   };
 
-  // 💳 매입처 목록 테이블에서 통장사본 직접 등록/변경 핸들러
+  //  매입처 목록 테이블에서 통장사본 직접 등록/변경 핸들러
   const handleDirectUploadVendorPassbook = async (v: Vendor, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -322,7 +322,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 💳 매입처 통장사본 삭제 핸들러
+  //  매입처 통장사본 삭제 핸들러
   const handleRemoveVendorPassbook = async (v: Vendor) => {
     if (!window.confirm(`[${v.name}] 매입처의 등록된 통장사본을 삭제하시겠습니까?`)) return;
     try {
@@ -337,7 +337,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 📄 매입처 목록 테이블에서 사업자등록증 직접 등록/변경 핸들러
+  //  매입처 목록 테이블에서 사업자등록증 직접 등록/변경 핸들러
   const handleDirectUploadVendorBizCert = async (v: Vendor, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -432,7 +432,7 @@ export const Vendors: React.FC = () => {
     }
   };
 
-  // 📄 매입처 사업자등록증 삭제 핸들러
+  //  매입처 사업자등록증 삭제 핸들러
   const handleRemoveVendorBizCert = async (v: Vendor) => {
     if (!window.confirm(`[${v.name}] 매입처의 등록된 사업자등록증을 삭제하시겠습니까?`)) return;
     try {
@@ -503,7 +503,7 @@ export const Vendors: React.FC = () => {
     try {
       await saveVendor(payload);
 
-      // 🌟 동일 사업자번호의 기존 고객사 동기화 (헌장 및 사용자 요구사항 반영)
+      //  동일 사업자번호의 기존 고객사 동기화 (헌장 및 사용자 요구사항 반영)
       if (cleanBizNo.length === 10) {
         const matchedCust = customers.find(c => (c.bizRegNo || '').replace(/[^0-9]/g, '') === cleanBizNo);
         if (matchedCust) {
@@ -726,16 +726,16 @@ export const Vendors: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Building2 className="text-primary" /> 매입처 (공급자 / 외주처) 관리
-          </h2>
+ </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
             장비 재임차 임차처, 소모품/장비 구매처, 운송 협력사 및 외주 수리정비 업체의 마스터 정보 및 누적거래액을 통합 관리합니다.
-          </p>
+ </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {syncResult && (
             <span style={{ fontSize: '12px', color: 'var(--success)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--success-light)', padding: '4px 10px', borderRadius: '6px' }}>
-              ✓ {syncResult.updatedCount}개사 동기화 완료 (누적 ₩{syncResult.totalAmount.toLocaleString()})
-            </span>
+               {syncResult.updatedCount}개사 동기화 완료 (누적 ₩{syncResult.totalAmount.toLocaleString()})
+ </span>
           )}
           <div className="toolbar-actions">
             <button
@@ -754,7 +754,7 @@ export const Vendors: React.FC = () => {
                 onClick={handleOpenAddModal}
               >
                 <Plus size={13} /> 신규 매입처 등록
-              </button>
+ </button>
             )}
             {canSave && (
               <button
@@ -764,7 +764,7 @@ export const Vendors: React.FC = () => {
                 title="사업자등록증 폴더를 지정하여 내부 모든 파일 일괄 등록 및 보완"
               >
                 <FolderOpen size={13} /> 폴더 일괄 등록
-              </button>
+ </button>
             )}
             {canSave && (
               <button
@@ -773,13 +773,13 @@ export const Vendors: React.FC = () => {
                 title="국세청 홈택스 사업자 휴폐업 상태 전수 점검"
               >
                 <ShieldAlert size={13} /> 국세청 휴폐업 점검
-              </button>
+ </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* 📊 매입처 등록 현황 요약 바 */}
+      {/*  매입처 등록 현황 요약 바 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: 0, flexShrink: 0 }}>
         <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입 협력처</span>
@@ -810,7 +810,7 @@ export const Vendors: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '0 0 130px' }}>
               <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 거래 유형
-              </label>
+ </label>
               <select
                 value={typeFilter}
                 onChange={e => setTypeFilter(e.target.value)}
@@ -828,7 +828,7 @@ export const Vendors: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
               <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 매입처 검색 (상호/사업자번호/대표자/담당자)
-              </label>
+ </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <Search size={15} style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)' }} />
                 <input
@@ -849,7 +849,7 @@ export const Vendors: React.FC = () => {
               onClick={() => setSearchTerm(searchInput.trim())}
             >
               <Search size={13} /> 조회
-            </button>
+ </button>
 
             <button
               className="btn-reset"
@@ -863,10 +863,10 @@ export const Vendors: React.FC = () => {
           <div className="toolbar-actions">
             <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', fontWeight: '500', marginRight: '4px' }}>
               전체 <strong style={{ color: 'var(--primary)' }}>{vendors.length}</strong>개 매입처 (검색: {filtered.length}건)
-            </span>
+ </span>
             <button className="btn-excel-download" onClick={handleExport}>
               <Download size={13} /> 엑셀 다운로드
-            </button>
+ </button>
           </div>
         </div>
       </div>
@@ -897,28 +897,28 @@ export const Vendors: React.FC = () => {
               <tr>
                 <SortableTh sortKey="name" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 10px' }}>
                   상호명
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="types" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   매입/거래 속성
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="firstTradeDate" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   거래개시일
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="tradeDuration" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   거래기간
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="totalPurchaseAmount" currentSort={sortConfig} onSort={requestSort} align="right" style={{ padding: '8px 6px' }}>
                   매입 누적거래액
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="bizRegNo" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   사업자등록번호
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="representative" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   대표자명
-                </SortableTh>
+ </SortableTh>
                 <SortableTh sortKey="contactName" currentSort={sortConfig} onSort={requestSort} style={{ padding: '8px 6px' }}>
                   담당자
-                </SortableTh>
+ </SortableTh>
                 <th style={{ padding: '8px 6px', whiteSpace: 'nowrap' }}>연락처</th>
                 <th style={{ padding: '8px 6px', whiteSpace: 'nowrap' }}>지급 계좌</th>
                 <th style={{ padding: '8px 6px', whiteSpace: 'nowrap', textAlign: 'center' }}>사업자등록증</th>
@@ -933,7 +933,7 @@ export const Vendors: React.FC = () => {
               {sortedVendors.length === 0 ? (
                 <tr>
                   <td colSpan={canSave ? 16 : 15} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                    {vendors.length === 0 ? '📭 등록된 매입처(공급자)가 없습니다.' : '조회 조건에 맞는 매입처가 없습니다. 검색 조건을 변경해 보세요.'}
+                    {vendors.length === 0 ? '등록된 매입처(공급자)가 없습니다.' : '조회 조건에 맞는 매입처가 없습니다. 검색 조건을 변경해 보세요.'}
                   </td>
                 </tr>
               ) : (
@@ -949,7 +949,7 @@ export const Vendors: React.FC = () => {
                           {renderTypePills(v)}
                         </div>
                       </td>
-                      {/* 📅 거래개시일 */}
+                      {/*  거래개시일 */}
                       <td style={{ fontSize: '12px', padding: '6px 6px', whiteSpace: 'nowrap', color: v.firstTradeDate ? 'var(--text-main)' : 'var(--text-muted)' }}>
                         {v.firstTradeDate ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -958,7 +958,7 @@ export const Vendors: React.FC = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      {/* ⏱️ 거래기간 */}
+                      {/*  거래기간 */}
                       <td style={{ fontSize: '12px', padding: '6px 6px', whiteSpace: 'nowrap', color: v.firstTradeDate ? '#2563eb' : 'var(--text-muted)', fontWeight: v.firstTradeDate ? '600' : 'normal' }}>
                         {v.firstTradeDate ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -967,15 +967,15 @@ export const Vendors: React.FC = () => {
                           </span>
                         ) : '-'}
                       </td>
-                      {/* 💰 매입 누적거래액 */}
+                      {/*  매입 누적거래액 */}
                       <td style={{ fontSize: '12.5px', padding: '6px 8px', whiteSpace: 'nowrap', textAlign: 'right', fontWeight: '700', color: (v.totalPurchaseAmount || 0) > 0 ? '#16a34a' : 'var(--text-muted)' }}>
                         {(v.totalPurchaseAmount || 0).toLocaleString()}원
-                      </td>
+ </td>
                       <td style={{ fontSize: '12px', padding: '6px 6px', whiteSpace: 'nowrap' }}>{v.bizRegNo || '-'}</td>
                       <td style={{ fontSize: '12px', padding: '6px 6px', whiteSpace: 'nowrap' }}>{v.representative || '-'}</td>
                       <td style={{ fontSize: '12px', padding: '6px 6px', fontWeight: '600', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{v.contactName || '-'}</td>
                       <td style={{ fontSize: '12px', padding: '6px 6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{v.contact || '-'}</td>
-                      {/* 💳 지급 계좌 */}
+                      {/*  지급 계좌 */}
                       <td style={{ fontSize: '12px', padding: '6px 6px', whiteSpace: 'nowrap' }}>
                         {v.bankName || v.accountNumber ? (
                           <div>
@@ -986,7 +986,7 @@ export const Vendors: React.FC = () => {
                             {v.accountHolder && (
                               <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
                                 ({v.accountHolder})
-                              </span>
+ </span>
                             )}
                           </div>
                         ) : v.bankAccount ? (
@@ -995,7 +995,7 @@ export const Vendors: React.FC = () => {
                           <span style={{ color: 'var(--text-muted)' }}>-</span>
                         )}
                       </td>
-                      {/* 📄 사업자등록증 */}
+                      {/*  사업자등록증 */}
                       <td style={{ padding: '6px 6px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                         {v.businessCertFileUrl ? (
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -1019,7 +1019,7 @@ export const Vendors: React.FC = () => {
                               title={v.businessCertFileName || '사업자등록증 열람'}
                             >
                               <FileText size={11} /> 보기
-                            </a>
+ </a>
                             {v.businessStatus && (
                               <span style={{
                                 fontSize: '10px',
@@ -1037,7 +1037,7 @@ export const Vendors: React.FC = () => {
                           <span style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>-</span>
                         )}
                       </td>
-                      {/* 📄 통장사본 */}
+                      {/*  통장사본 */}
                       <td style={{ padding: '6px 6px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                         {v.passbookFileUrl ? (
                           <a
@@ -1060,7 +1060,7 @@ export const Vendors: React.FC = () => {
                             title={v.passbookFileName || '통장사본 열람'}
                           >
                             <FileText size={11} /> 보기
-                          </a>
+ </a>
                         ) : (
                           <span style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>-</span>
                         )}
@@ -1080,7 +1080,7 @@ export const Vendors: React.FC = () => {
                         <td style={{ textAlign: 'center', padding: '6px 4px', whiteSpace: 'nowrap' }}>
                           <button className="btn-secondary" onClick={() => handleOpenEditModal(v)} style={{ padding: '3px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px' }} title="수정">
                             <Edit2 size={12} /> 수정
-                          </button>
+ </button>
                         </td>
                       )}
                     </tr>
@@ -1091,7 +1091,7 @@ export const Vendors: React.FC = () => {
           </table>
         </div>
 
-        {/* 🏛️ 헌장 3.5 Gutenberg Z-패턴 4단계 대차대조식 무결성 검증 바 */}
+        {/*  헌장 3.5 Gutenberg Z-패턴 4단계 대차대조식 무결성 검증 바 */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -1104,17 +1104,17 @@ export const Vendors: React.FC = () => {
         }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ color: 'var(--text-secondary)' }}>
-              📄 <strong>조회 매입처:</strong> <span style={{ color: 'var(--text-main)', fontWeight: 700 }}>{filteredStats.totalVendors}</span>개사
+               <strong>조회 매입처:</strong> <span style={{ color: 'var(--text-main)', fontWeight: 700 }}>{filteredStats.totalVendors}</span>개사
+ </span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+               <strong>거래개시:</strong> <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{filteredStats.startedVendors}</span>개사 
+ <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginLeft: '4px' }}>(미개시 {filteredStats.unstartedVendors}사)</span>
             </span>
             <span style={{ color: 'var(--text-secondary)' }}>
-              🟢 <strong>거래개시:</strong> <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{filteredStats.startedVendors}</span>개사 
-              <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginLeft: '4px' }}>(미개시 {filteredStats.unstartedVendors}사)</span>
-            </span>
+               <strong>상태:</strong> 정상 <span style={{ color: 'var(--success)', fontWeight: 700 }}>{filteredStats.activeCount}</span>사 / 중단 <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{filteredStats.inactiveCount}</span>사
+ </span>
             <span style={{ color: 'var(--text-secondary)' }}>
-              🏢 <strong>상태:</strong> 정상 <span style={{ color: 'var(--success)', fontWeight: 700 }}>{filteredStats.activeCount}</span>사 / 중단 <span style={{ color: 'var(--danger)', fontWeight: 700 }}>{filteredStats.inactiveCount}</span>사
-            </span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              💰 <strong>조회 누적거래액 합계:</strong> <span style={{ color: 'var(--success)', fontWeight: 700 }}>₩{filteredStats.filteredPurchaseSum.toLocaleString()}</span>
+               <strong>조회 누적거래액 합계:</strong> <span style={{ color: 'var(--success)', fontWeight: 700 }}>₩{filteredStats.filteredPurchaseSum.toLocaleString()}</span>
             </span>
           </div>
         </div>
@@ -1134,7 +1134,7 @@ export const Vendors: React.FC = () => {
             <form onSubmit={handleSaveSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
                 
-                {/* 🌟 1. 증빙 서류 첨부 (사업자등록증 AI 자동인식 & 통장사본) - 모달 최상단 배치 🌟 */}
+                {/*  1. 증빙 서류 첨부 (사업자등록증 AI 자동인식 & 통장사본) - 모달 최상단 배치  */}
                 <div style={{
                   gridColumn: 'span 2',
                   backgroundColor: 'var(--bg-app)',
@@ -1145,10 +1145,10 @@ export const Vendors: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <label style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                       <FileText size={14} style={{ color: 'var(--primary)' }} /> 증빙 서류 첨부 (선택적 드롭 또는 파일 선택)
-                    </label>
+ </label>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       ※ 사업자등록증 드롭 시 AI 판독 정보 및 국세청 상태 자동 입력
-                    </span>
+ </span>
                   </div>
 
                   {matchedNotice && (
@@ -1192,8 +1192,8 @@ export const Vendors: React.FC = () => {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FileCheck size={13} style={{ color: '#0284c7' }} /> 사업자등록증 (AI 자동인식)
-                        </span>
+                          <FileCheck size={13} style={{ color: '#0284c7' }} /> 사업자등록증
+ </span>
                         {editingVendor.businessStatus && (
                           <span style={{
                             fontSize: '10.5px',
@@ -1211,7 +1211,7 @@ export const Vendors: React.FC = () => {
                       {isAnalyzingBizCert ? (
                         <div style={{ padding: '14px 8px', textAlign: 'center', color: 'var(--primary)', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                           <Loader2 size={16} className="animate-spin" /> AI 등록증 분석 및 국세청 조회 중...
-                        </div>
+ </div>
                       ) : editingVendor.businessCertFileUrl ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginTop: '2px' }}>
                           <a
@@ -1237,7 +1237,7 @@ export const Vendors: React.FC = () => {
                             title={editingVendor.businessCertFileName || '사업자등록증 열람'}
                           >
                             <FileText size={12} /> 보기 ↗
-                          </a>
+ </a>
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                             <label style={{
                               padding: '3px 6px',
@@ -1250,7 +1250,7 @@ export const Vendors: React.FC = () => {
                               whiteSpace: 'nowrap'
                             }}>
                               변경
-                              <input
+ <input
                                 type="file"
                                 accept="image/*,application/pdf"
                                 style={{ display: 'none' }}
@@ -1274,7 +1274,7 @@ export const Vendors: React.FC = () => {
                               }}
                             >
                               삭제
-                            </button>
+ </button>
                           </div>
                         </div>
                       ) : (
@@ -1330,7 +1330,7 @@ export const Vendors: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <CreditCard size={13} style={{ color: '#f59e0b' }} /> 통장사본 증빙
-                        </span>
+ </span>
                       </div>
 
                       {editingVendor.passbookFileUrl ? (
@@ -1358,7 +1358,7 @@ export const Vendors: React.FC = () => {
                             title={editingVendor.passbookFileName || '통장사본 열람'}
                           >
                             <FileText size={12} /> 보기 ↗
-                          </a>
+ </a>
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                             <label style={{
                               padding: '3px 6px',
@@ -1371,7 +1371,7 @@ export const Vendors: React.FC = () => {
                               whiteSpace: 'nowrap'
                             }}>
                               변경
-                              <input
+ <input
                                 type="file"
                                 accept="image/*,application/pdf"
                                 style={{ display: 'none' }}
@@ -1395,7 +1395,7 @@ export const Vendors: React.FC = () => {
                               }}
                             >
                               삭제
-                            </button>
+ </button>
                           </div>
                         </div>
                       ) : (
@@ -1442,11 +1442,11 @@ export const Vendors: React.FC = () => {
                   />
                 </div>
 
-                {/* 🌟 인터랙티브 세그먼트 멀티 토글 버튼 그룹 🌟 */}
+                {/*  인터랙티브 세그먼트 멀티 토글 버튼 그룹  */}
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                     매입 / 거래 속성 (복수 토글 선택 가능) *
-                  </label>
+ </label>
                   <div style={{
                     display: 'flex',
                     gap: '6px',
@@ -1489,11 +1489,11 @@ export const Vendors: React.FC = () => {
                     })}
                   </div>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                    💡 한 거래처가 임차 및 구매를 동시 수행할 경우, 관련 버튼들을 함께 눌러 복수로 활성화할 수 있습니다.
-                  </span>
+                     한 거래처가 임차 및 구매를 동시 수행할 경우, 관련 버튼들을 함께 눌러 복수로 활성화할 수 있습니다.
+ </span>
                 </div>
 
-                {/* 📅 거래개시일 */}
+                {/*  거래개시일 */}
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>거래개시일 (최초 거래일)</label>
                   <input
@@ -1504,10 +1504,10 @@ export const Vendors: React.FC = () => {
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
                     ※ 미입력 시 첫 거래(취득/정산) 시 자동 갱신
-                  </span>
+ </span>
                 </div>
 
-                {/* 💰 매입 누적거래액 */}
+                {/*  매입 누적거래액 */}
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>매입 누적거래액 (원)</label>
                   <input
@@ -1519,7 +1519,7 @@ export const Vendors: React.FC = () => {
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
                     ※ 자산취득 및 매입정산 시 자동 가산
-                  </span>
+ </span>
                 </div>
 
                 <div>
@@ -1544,7 +1544,7 @@ export const Vendors: React.FC = () => {
                   />
                 </div>
 
-                {/* 🌟 업태 및 종목 🌟 */}
+                {/*  업태 및 종목  */}
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>업태</label>
                   <input
@@ -1623,7 +1623,7 @@ export const Vendors: React.FC = () => {
                   />
                 </div>
 
-                {/* 💳 대금 지급 계좌 */}
+                {/*  대금 지급 계좌 */}
                 <div style={{
                   gridColumn: 'span 2',
                   backgroundColor: 'var(--bg-app)',
@@ -1634,7 +1634,7 @@ export const Vendors: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                       <CreditCard size={15} style={{ color: 'var(--primary)' }} /> 대금 지급 계좌
-                    </label>
+ </label>
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: '8px' }}>
@@ -1700,7 +1700,7 @@ export const Vendors: React.FC = () => {
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 14px', fontSize: '12.5px' }}
                     >
                       <Trash2 size={13} /> 삭제
-                    </button>
+ </button>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -1713,7 +1713,7 @@ export const Vendors: React.FC = () => {
         </div>
       )}
 
-      {/* 📂 사업자등록증 폴더 일괄 등록 모달 */}
+      {/*  사업자등록증 폴더 일괄 등록 모달 */}
       {showBatchLicenseModal && (
         <BatchBusinessLicenseModal
           isOpen={showBatchLicenseModal}
@@ -1722,7 +1722,7 @@ export const Vendors: React.FC = () => {
         />
       )}
 
-      {/* 🏛️ 국세청 홈택스 사업자 휴폐업 전수 점검 스튜디오 */}
+      {/*  국세청 홈택스 사업자 휴폐업 전수 점검 스튜디오 */}
       {showNtsAuditModal && (
         <NtsStatusAuditModal
           isOpen={showNtsAuditModal}

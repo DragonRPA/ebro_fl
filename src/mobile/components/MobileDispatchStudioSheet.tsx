@@ -315,7 +315,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
               }}
             >
               상차완료
-            </span>
+ </span>
           )}
           <span
             style={{
@@ -548,7 +548,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 적용
-              </button>
+ </button>
             </div>
           )}
 
@@ -564,7 +564,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
               }}
             >
               1. 운송사 선택
-            </label>
+ </label>
             <div
               style={{
                 display: 'flex',
@@ -640,7 +640,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 2. 운송기사 선택 또는 자유입력
-              </label>
+ </label>
               {selectedCompanyName && (
                 <span
                   style={{
@@ -669,7 +669,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 고객직접운송이 선택되었습니다. 필요 시 아래에 차량번호·연락처를 자유입력할 수 있습니다.
-              </div>
+ </div>
             ) : !selectedCompanyName ? (
               <div
                 style={{
@@ -682,7 +682,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 위에서 운송사를 선택하면 등록된 운송기사 목록이 표시되며, 아래에 직접 입력도 가능합니다.
-              </div>
+ </div>
             ) : registeredDriversForCompany.length > 0 ? (
               <div
                 style={{
@@ -742,7 +742,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 해당 운송사에 등록된 기사가 없습니다. 아래 입력란에 자유입력해 주세요.
-              </div>
+ </div>
             )}
 
             {/* 운송기사 자유입력 (기사명 / 차량번호 / 연락처 - 상하 스택 레이아웃) */}
@@ -764,7 +764,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   기사명 (자유입력)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={currentVeh.driverName}
@@ -795,7 +795,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   차량번호 (자유입력)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={currentVeh.vehicleNo}
@@ -827,7 +827,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 기사 연락처 (자유입력)
-              </label>
+ </label>
               <input
                 type="tel"
                 value={currentVeh.driverContact}
@@ -869,7 +869,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
               }}
             >
               3. 차종 선택
-            </label>
+ </label>
             <div
               style={{
                 display: 'flex',
@@ -932,7 +932,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   4. 운송료 입력
-                </label>
+ </label>
                 <span
                   style={{
                     fontSize: '15px',
@@ -943,7 +943,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   ₩{currentCost.toLocaleString()}원
-                </span>
+ </span>
               </div>
 
               <div
@@ -1019,7 +1019,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
             }}
           >
             배차 구분
-          </label>
+ </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {CATEGORY_QUICK_OPTIONS.map((cat) => {
               const active = dispatchCategory === cat;
@@ -1071,10 +1071,10 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 반납 임차장비
-              </label>
+ </label>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1' }}>
                 {selectedReturnAssetIds.length}대 선택
-              </span>
+ </span>
             </div>
             {availableReturnAssets.length === 0 ? (
               <div style={{ fontSize: '12px', color: '#94a3b8' }}>반납 가능 임차장비 없음</div>
@@ -1105,7 +1105,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                       <span>{a.modelName}</span>
                       <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>
                         ({a.assetNo})
-                      </span>
+ </span>
                       {a.renter && (
                         <span style={{ fontSize: '11px', color: '#fde68a' }}>· {a.renter}</span>
                       )}
@@ -1149,7 +1149,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 상차일시
-              </span>
+ </span>
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                 {[
                   { label: '오늘', val: todayStr },
@@ -1246,7 +1246,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 하차일시
-              </span>
+ </span>
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                 {[
                   { label: '상차동일', val: loadingDate },
@@ -1343,7 +1343,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   상차지
-                </label>
+ </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <button
                     type="button"
@@ -1360,7 +1360,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                     }}
                   >
                     당사 보관소
-                  </button>
+ </button>
                 </div>
               </div>
               <input
@@ -1400,7 +1400,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                   }}
                 >
                   하차지
-                </label>
+ </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <button
                     type="button"
@@ -1417,7 +1417,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                     }}
                   >
                     당사 보관소
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() =>
@@ -1510,7 +1510,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                 }}
               >
                 + 합짐추가
-              </button>
+ </button>
               {isBundled && delivery.bundleGroupId && (
                 <button
                   type="button"
@@ -1579,7 +1579,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                         }}
                       >
                         {idx + 1}순위
-                      </span>
+ </span>
                       <span
                         style={{
                           padding: '2px 6px',
@@ -1649,7 +1649,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                         }}
                       >
                         분리
-                      </button>
+ </button>
                     </div>
                   </div>
                 );
@@ -1662,7 +1662,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
               {bundleCandidateDeliveries.length === 0 ? (
                 <span style={{ fontSize: '12px', color: '#94a3b8' }}>
                   합짐 가능한 대기/배차 건 없음
-                </span>
+ </span>
               ) : (
                 bundleCandidateDeliveries.map((cand) => (
                   <button
@@ -1703,7 +1703,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
                       }}
                     >
                       선택
-                    </span>
+ </span>
                   </button>
                 ))
               )}
@@ -1723,7 +1723,7 @@ export const MobileDispatchStudioSheet: React.FC<MobileDispatchStudioSheetProps>
             }}
           >
             배차 메모
-          </label>
+ </label>
           <input
             type="text"
             value={closingMemo}

@@ -1156,7 +1156,7 @@ export const KiyeunContractStatusPage: React.FC = () => {
           >
             <RotateCcw size={12} />
             초기화
-          </button>
+ </button>
         </div>
 
         {/* ② 우상단: 집계 요약 배지 및 엑셀 내보내기 */}
@@ -1164,18 +1164,18 @@ export const KiyeunContractStatusPage: React.FC = () => {
           <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded text-xs whitespace-nowrap">
             <span className="text-slate-600">
               대상 건수 <strong className="text-slate-900 font-bold">{summary.totalRows.toLocaleString()}</strong>건
-            </span>
+ </span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-600">
               당사자산 <strong className="text-blue-700 font-bold">{summary.ownCount.toLocaleString()}</strong>건
-              {summary.uniqueOwnCount !== summary.ownCount && (
+ {summary.uniqueOwnCount !== summary.ownCount && (
                 <span className="text-slate-500 ml-1">({summary.uniqueOwnCount.toLocaleString()}대)</span>
               )}
             </span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-600">
               임차자산 <strong className="text-purple-700 font-bold">{summary.subCount.toLocaleString()}</strong>건
-              {summary.uniqueSubCount !== summary.subCount && (
+ {summary.uniqueSubCount !== summary.subCount && (
                 <span className="text-slate-500 ml-1">({summary.uniqueSubCount.toLocaleString()}대)</span>
               )}
             </span>
@@ -1249,7 +1249,7 @@ export const KiyeunContractStatusPage: React.FC = () => {
               <tr>
                 <td colSpan={33} className="py-16 text-center text-slate-400 whitespace-nowrap">
                   조회 조건에 해당하는 계약현황 데이터가 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               filteredRows.map(row => (
@@ -1404,7 +1404,7 @@ export const KiyeunContractStatusPage: React.FC = () => {
             청구관리 기발행({summary.issuedBillingCount}건): <strong className="text-cyan-300 font-mono">₩{summary.issuedBillingSupplyTotal.toLocaleString()}</strong>
             <span className="text-slate-400 ml-1.5">
               (미발행 예상액 <strong className="text-slate-200 font-mono">₩{summary.unbilledEstimateTotal.toLocaleString()}</strong>)
-            </span>
+ </span>
           </span>
         </div>
 
@@ -1436,7 +1436,7 @@ export const KiyeunContractStatusPage: React.FC = () => {
           >
             <Download size={14} />
             계약현황 양식 다운로드
-          </button>
+ </button>
         </div>
       </div>
     </div>

@@ -124,7 +124,7 @@ export const RegularReportsPage: React.FC = () => {
       };
 
       await app.saveMonthlyIncomeStatement(payloadToSave);
-      showToast(`${targetYm}월 손익계산서 정기보고서가 발행 및 영구 보존되었습니다.`);
+      showToast(`${targetYm}월 손익계산서 정기보고서가 발행 및 보관되었습니다.`);
     } catch (err: any) {
       console.error('Failed to issue income statement:', err);
       app.showErrorModal('손익계산서 발행 중 오류가 발생했습니다: ' + (err?.message || err));
@@ -147,7 +147,7 @@ export const RegularReportsPage: React.FC = () => {
       wsData.push(['계정코드', '계정과목', '금액 (₩)', '구성비 / 마진율 (%)', '분류', '비고']);
 
       rows.forEach(r => {
-        const indentSpace = '  '.repeat(r.level - 1);
+        const indentSpace = ' '.repeat(r.level - 1);
         wsData.push([
           r.code,
           `${indentSpace}${r.name}`,
@@ -242,7 +242,7 @@ export const RegularReportsPage: React.FC = () => {
           <div>
             <h2 data-mid="regular_reports-header" style={{ margin: 0, fontSize: '17px', fontWeight: 700, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
               정기보고서 생성
-            </h2>
+ </h2>
           </div>
 
           {/* 3대 정기보고서 유형 탭 (건조한 명사 단일 표준) */}
@@ -275,7 +275,7 @@ export const RegularReportsPage: React.FC = () => {
             >
               <FileSpreadsheet size={15} />
               월간 손익계산서
-            </button>
+ </button>
             <button
               type="button"
               data-uia="tab-cash-flow"
@@ -298,7 +298,7 @@ export const RegularReportsPage: React.FC = () => {
             >
               <Wallet size={15} />
               자금수지 및 채권
-            </button>
+ </button>
             <button
               type="button"
               data-uia="tab-executive-briefing"
@@ -321,17 +321,17 @@ export const RegularReportsPage: React.FC = () => {
             >
               <FileText size={15} />
               경영진 종합 브리핑
-            </button>
+ </button>
           </div>
         </div>
 
-        {/* 우측: 귀속 연월 스코프 및 횡배치 액션 버튼군 (조회 ➔ 발행/저장 ➔ 엑셀 ➔ PDF) */}
+        {/* 우측: 귀속 연월 스코프 및 횡배치 액션 버튼군 (조회  발행/저장  엑셀  PDF) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {/* 상하 스택 레이블-입력창 구조 (헌장 3.4 준수) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)', whiteSpace: 'nowrap' }}>
               정산 귀속연월
-            </span>
+ </span>
             <input 
               type="month" 
               data-uia="input-report-target-ym"
@@ -363,11 +363,11 @@ export const RegularReportsPage: React.FC = () => {
           >
             <RefreshCw size={14} />
             조회
-          </button>
+ </button>
 
           {activeReportTab === 'INCOME_STATEMENT' && (
             <>
-              {/* 💡 월 1회 발행 완결 버튼 */}
+              {/*  월 1회 발행 완결 버튼 */}
               <button
                 type="button"
                 data-uia="btn-issue-income-statement"
@@ -418,7 +418,7 @@ export const RegularReportsPage: React.FC = () => {
               >
                 <Download size={14} />
                 엑셀 다운로드
-              </button>
+ </button>
 
               <button
                 type="button"
@@ -443,7 +443,7 @@ export const RegularReportsPage: React.FC = () => {
               >
                 <Printer size={14} />
                 인쇄
-              </button>
+ </button>
             </>
           )}
 
@@ -470,7 +470,7 @@ export const RegularReportsPage: React.FC = () => {
               }}
             >
               <Download size={15} /> PDF 정기보고서 생성
-            </button>
+ </button>
           )}
         </div>
       </header>
@@ -496,7 +496,7 @@ export const RegularReportsPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: issuedSnapshot ? '#34d399' : '#94a3b8' }}>
                   {targetYm}월 결산 상태:
-                </span>
+ </span>
                 <span style={{
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -520,8 +520,8 @@ export const RegularReportsPage: React.FC = () => {
             </div>
 
             <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>
-              * 1개월 단위로 모든 매출과 매입정산이 완료된 시점에 1회 발행하여 영구 보존합니다.
-            </span>
+              * 1개월 단위로 모든 매출과 매입정산이 완료된 시점에 1회 발행하여 보관합니다.
+ </span>
           </div>
 
           {/* 4대 핵심 재무 KPI 요약 카드뉴스 */}
@@ -548,7 +548,7 @@ export const RegularReportsPage: React.FC = () => {
                 <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>순 렌탈료 이익</span>
                 <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: metrics.pureRentalProfit >= 0 ? 'rgba(5, 150, 105, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: metrics.pureRentalProfit >= 0 ? '#34d399' : '#f87171' }}>
                   이익률 {metrics.rentalMarginRate}%
-                </span>
+ </span>
               </div>
               <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.pureRentalProfit >= 0 ? '#34d399' : 'var(--danger, #ef4444)' }}>
                 ₩{metrics.pureRentalProfit.toLocaleString()}
@@ -564,7 +564,7 @@ export const RegularReportsPage: React.FC = () => {
                 <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>매출총이익</span>
                 <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd' }}>
                   총이익률 {metrics.grossMarginRate}%
-                </span>
+ </span>
               </div>
               <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.grossProfit >= 0 ? '#60a5fa' : 'var(--danger, #ef4444)' }}>
                 ₩{metrics.grossProfit.toLocaleString()}
@@ -580,7 +580,7 @@ export const RegularReportsPage: React.FC = () => {
                 <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>영업이익 / 예상 순이익</span>
                 <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: metrics.operatingProfit >= 0 ? 'rgba(5, 150, 105, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: metrics.operatingProfit >= 0 ? '#34d399' : '#f87171' }}>
                   영업이익률 {metrics.operatingMarginRate}%
-                </span>
+ </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                 <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.projectedNetProfit >= 0 ? '#fbbf24' : 'var(--danger, #ef4444)' }}>
@@ -588,11 +588,11 @@ export const RegularReportsPage: React.FC = () => {
                 </span>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>
                   (영업이익: ₩{metrics.operatingProfit.toLocaleString()})
-                </span>
+ </span>
               </div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
                 총판관비 ₩{metrics.sgaTotal.toLocaleString()} (급여 ₩{metrics.payroll.toLocaleString()})
-              </div>
+ </div>
             </div>
           </div>
 
@@ -612,10 +612,10 @@ export const RegularReportsPage: React.FC = () => {
                 <h2 style={{ margin: 0, fontSize: '15.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <FileSpreadsheet size={17} color="#38bdf8" />
                   월간 표준 손익계산서
-                </h2>
+ </h2>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>
                   단위: 원 (₩) | 공급가액 기준
-                </span>
+ </span>
               </div>
 
               <div style={{ overflowX: 'auto' }}>
@@ -696,15 +696,15 @@ export const RegularReportsPage: React.FC = () => {
                   <h2 style={{ margin: 0, fontSize: '15.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Layers size={17} color="#34d399" />
                     기타 청구 지급정산 1:1 대사
-                  </h2>
+ </h2>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
                     청구액(가) vs 지급액(나)
-                  </span>
+ </span>
                 </div>
 
                 <p style={{ fontSize: '12.5px', color: 'var(--text-muted, #94a3b8)', margin: 0, lineHeight: 1.5 }}>
                   운송료, 외주수리비, 소모부품 등 부대 발생 청구액과 당월 매입정산 지급액을 1:1 대사하여 실질 회수/차액 마진을 검증합니다:
-                </p>
+ </p>
 
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', whiteSpace: 'nowrap' }}>
@@ -761,7 +761,7 @@ export const RegularReportsPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '9px 10px', textAlign: 'center', fontSize: '11.5px', fontWeight: 700, color: metrics.otherNetProfit >= 0 ? '#34d399' : '#f87171' }}>
                           마진 {metrics.otherRevenue > 0 ? ((metrics.otherNetProfit / metrics.otherRevenue) * 100).toFixed(1) : 0}%
-                        </td>
+ </td>
                       </tr>
                     </tbody>
                   </table>
@@ -782,10 +782,10 @@ export const RegularReportsPage: React.FC = () => {
                   <h2 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Clock size={16} color="#fbbf24" />
                     월별 손익계산서 발행 이력
-                  </h2>
+ </h2>
                   <span style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
                     총 {(app.monthlyIncomeStatements || []).length}건
-                  </span>
+ </span>
                 </div>
 
                 <div style={{ overflowX: 'auto', maxHeight: '180px', overflowY: 'auto' }}>
@@ -825,7 +825,7 @@ export const RegularReportsPage: React.FC = () => {
                               }}
                             >
                               불러오기
-                            </button>
+ </button>
                           </td>
                         </tr>
                       ))}
@@ -833,7 +833,7 @@ export const RegularReportsPage: React.FC = () => {
                         <tr>
                           <td colSpan={5} style={{ padding: '18px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                             발행된 이전 손익계산서 이력이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       )}
                     </tbody>
@@ -862,16 +862,16 @@ export const RegularReportsPage: React.FC = () => {
               <ShieldCheck size={18} color="#34d399" />
               <span style={{ fontWeight: 700, color: 'var(--text-main, #f8fafc)' }}>
                 대차대조 보존 법칙 검증:
-              </span>
+ </span>
               <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
                 매출총이익(₩{metrics.grossProfit.toLocaleString()}) = 순렌탈이익(₩{metrics.pureRentalProfit.toLocaleString()}) + 순유통이익(₩{metrics.pureDistributionProfit.toLocaleString()}) + 기타차액(₩{metrics.otherNetProfit.toLocaleString()})
-              </span>
+ </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
                 영업이익(₩{metrics.operatingProfit.toLocaleString()}) = 매출총이익 - 판관비(₩{metrics.sgaTotal.toLocaleString()})
-              </span>
+ </span>
             </div>
           </footer>
         </div>
@@ -899,7 +899,7 @@ export const RegularReportsPage: React.FC = () => {
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>현금 런웨이</span>
               <span style={{ fontSize: '24px', fontWeight: 800, color: cfReport.cashRunway < 3 ? 'var(--danger)' : 'var(--text-main, #f8fafc)' }}>
                 {cfReport.cashRunway} 개월
-              </span>
+ </span>
             </div>
             <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>데이터 무결성</span>
@@ -975,10 +975,10 @@ export const RegularReportsPage: React.FC = () => {
           <div className="card" style={{ padding: '18px 20px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 12px' }}>
               {targetYm}월 전사 경영진 정기 브리핑
-            </h2>
+ </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #94a3b8)', lineHeight: 1.6, margin: 0 }}>
               영업 실적, 플릿 가동률, 물류 배차, 정비 MTTR, 채권 연체 및 경영진 지시사항이 포함된 통합 리포트입니다. 우상단 [PDF 정기보고서 생성] 버튼을 눌러 인쇄용 3페이지 풀컬러 정식 보고서를 다운로드하실 수 있습니다.
-            </p>
+ </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
@@ -986,7 +986,7 @@ export const RegularReportsPage: React.FC = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>현장 가동 장비</span>
               <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
                 {executiveDossier.kpis.activeAssetCount}대 / {executiveDossier.kpis.totalFleetCount}대
-              </div>
+ </div>
               <span style={{ fontSize: '11.5px', color: '#60a5fa' }}>가동률 {executiveDossier.kpis.fleetUtilizationRate}%</span>
             </div>
 
@@ -994,7 +994,7 @@ export const RegularReportsPage: React.FC = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>총 배차 및 교환</span>
               <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
                 {executiveDossier.kpis.totalDispatches}건 (교환 {executiveDossier.kpis.exchangeCount}건)
-              </div>
+ </div>
               <span style={{ fontSize: '11.5px', color: '#34d399' }}>왕복절감 ₩{executiveDossier.kpis.exchangeSavedCost.toLocaleString()}</span>
             </div>
 
@@ -1002,7 +1002,7 @@ export const RegularReportsPage: React.FC = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>정비 완료 및 평균 MTTR</span>
               <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
                 {executiveDossier.kpis.totalRepairs}건
-              </div>
+ </div>
               <span style={{ fontSize: '11.5px', color: '#fbbf24' }}>평균 복구 {executiveDossier.kpis.avgMttrHours}시간</span>
             </div>
 
@@ -1010,7 +1010,7 @@ export const RegularReportsPage: React.FC = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>당월 청구 수납률</span>
               <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
                 {executiveDossier.kpis.collectionRate}%
-              </div>
+ </div>
               <span style={{ fontSize: '11.5px', color: '#38bdf8' }}>실수납 ₩{executiveDossier.kpis.collectedAmount.toLocaleString()}</span>
             </div>
           </div>

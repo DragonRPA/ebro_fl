@@ -367,7 +367,7 @@ export function resolveTargetElement(
     const el = safeQuery(main, '[data-mid*="table"], .table-container, table, [data-mid*="grid"]');
     if (el && (el as HTMLElement).offsetParent !== null) return el as HTMLElement;
   }
-  // 5단계: 개별 행 상세 보기 [상세 ➔] 액션 / 금액 및 부가세 대사 바
+  // 5단계: 개별 행 상세 보기 [상세 ] 액션 / 금액 및 부가세 대사 바
   else if (item.seq === 5) {
     const detailBtn = safeQuery(main, '[data-mid*="detail"], table tbody tr:first-child button');
     if (detailBtn && (detailBtn as HTMLElement).offsetParent !== null) return detailBtn as HTMLElement;
@@ -600,7 +600,7 @@ const BottomDossierCard: React.FC<{
     }
   };
 
-  // 💡 [지능형 타겟 회피 배치]
+  //  [지능형 타겟 회피 배치]
   // 매뉴얼 상세 카드가 타겟 UI 및 파동 효과를 가릴 경우,
   // 타겟 위치를 감지하여 카드를 왼쪽 또는 오른쪽으로 자동 비켜서 배치!
   const getPositionStyle = (): React.CSSProperties => {
@@ -712,13 +712,13 @@ const BottomDossierCard: React.FC<{
               {processTitle && (
                 <span style={{ color: bColor, fontWeight: 800 }}>
                   [단위업무: {processTitle}]
-                </span>
+ </span>
               )}
               <span>{item.label}</span>
               {!hasTarget && (
                 <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--warning, #b45309)', backgroundColor: 'rgba(180,83,9,0.12)', border: '1px solid rgba(180,83,9,0.3)', padding: '1px 7px', borderRadius: '4px' }}>
                   화면 전반
-                </span>
+ </span>
               )}
             </h4>
           </div>
@@ -732,8 +732,8 @@ const BottomDossierCard: React.FC<{
           }}
           title="설명 닫기"
         >
-          ✕
-        </button>
+          
+ </button>
       </div>
 
       {/* 카드 설명 본문 */}
@@ -751,7 +751,7 @@ const BottomDossierCard: React.FC<{
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
         <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>
           {processTitle ? `[${processTitle}] ` : ''}{item.seq} / {totalCount} 단계
-        </span>
+ </span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button
             onClick={onPrev}
@@ -762,7 +762,7 @@ const BottomDossierCard: React.FC<{
             }}
           >
             ◀ 이전
-          </button>
+ </button>
           <button
             onClick={onNext}
             style={{
@@ -773,7 +773,7 @@ const BottomDossierCard: React.FC<{
             }}
           >
             다음 ▶
-          </button>
+ </button>
         </div>
       </div>
     </div>
@@ -846,7 +846,7 @@ export const ManualOverlay: React.FC = () => {
       nextRects[item.seq] = getRect(el);
     });
 
-    // 💡 [깜빡임 및 불필요 리렌더링 원천 차단 가드]
+    //  [깜빡임 및 불필요 리렌더링 원천 차단 가드]
     // 이전 엘리먼트 및 rect 좌표(0.5px 미만 차이)와 정밀 비교하여 변경이 없을 시 setState 생략
     const prevEls = elementsRef.current;
     const prevRects = rectsRef.current;
@@ -932,7 +932,7 @@ export const ManualOverlay: React.FC = () => {
 
     // 1. DOM 변경 감시: 서브뷰 전환, 모달 열림/닫힘 실시간 감지 및 단계 뱃지 위치 재계산
     const mo = new MutationObserver((mutations) => {
-      // 💡 매뉴얼 자체 UI 변경(하단 바, 카드, 오버레이 뱃지 등)으로 인한 DOM 변형은 무시하여 피드백 루프 차단
+      //  매뉴얼 자체 UI 변경(하단 바, 카드, 오버레이 뱃지 등)으로 인한 DOM 변형은 무시하여 피드백 루프 차단
       const isPurelyManualMutation = mutations.every(m => {
         const target = m.target as HTMLElement | null;
         if (!target) return true;
@@ -943,7 +943,7 @@ export const ManualOverlay: React.FC = () => {
       });
       if (isPurelyManualMutation) return;
 
-      // 💡 [동적 서브뷰 및 모달 자동 전환]
+      //  [동적 서브뷰 및 모달 자동 전환]
       if (page) {
         const baseId = baseMenuId || (page.pageId.startsWith('modal_') ? 'dashboard' : page.pageId);
         const baseTitle = baseMenuTitle || page.pageTitle;
@@ -1073,7 +1073,7 @@ export const ManualOverlay: React.FC = () => {
           const titleAttr = isButton.getAttribute('title') || '';
           const ariaLabel = isButton.getAttribute('aria-label') || '';
           const isCloseLike = btnText.includes('닫기') || btnText.includes('취소') || btnText.includes('확인') ||
-                              btnText.includes('저장') || btnText.includes('등록') || btnText.trim() === '✕' ||
+                              btnText.includes('저장') || btnText.includes('등록') || btnText.trim() === '닫기' ||
                               btnText.trim() === 'X' || titleAttr.includes('닫기') || ariaLabel.includes('close');
           if (isCloseLike) {
             setMode('off');
@@ -1141,7 +1141,7 @@ export const ManualOverlay: React.FC = () => {
     const item = activeItems?.find(i => i.seq === seq);
     if (!item) return;
 
-    // 💡 [숨겨진 폼/탭(계약 등록 폼, 청구 마법사/통합/면제 탭 등) 능동 전개 및 재탐색]
+    //  [숨겨진 폼/탭(계약 등록 폼, 청구 마법사/통합/면제 탭 등) 능동 전개 및 재탐색]
     const didUnfold = ensureContainerUnfolded(item, document);
 
     if (didUnfold) {
@@ -1194,7 +1194,7 @@ export const ManualOverlay: React.FC = () => {
     setIsPlayingAutoTour(prev => !prev);
   }, []);
 
-  // 💡 [자동 순차 안내] 2.5초 간격으로 다음 단계(seq 1 -> 2 -> 3...)로 자동 전진하며 파동 효과 순회 표출
+  //  [자동 순차 안내] 2.5초 간격으로 다음 단계(seq 1 -> 2 -> 3...)로 자동 전진하며 파동 효과 순회 표출
   useEffect(() => {
     if (!isPlayingAutoTour || mode !== 'viewing' || activeItems.length === 0) {
       if (autoTourTimerRef.current) {
@@ -1230,7 +1230,7 @@ export const ManualOverlay: React.FC = () => {
     }
   }, [mode]);
 
-  // 💡 [외부 트리거 및 모드 진입 보장] startGuidedTour 등으로 mode === 'viewing'이 시작되었거나 단위업무 전환 시:
+  //  [외부 트리거 및 모드 진입 보장] startGuidedTour 등으로 mode === 'viewing'이 시작되었거나 단위업무 전환 시:
   // 1단계 자동 포커스 및 startTrackingLoop(1000) 트리거 보장!
   useEffect(() => {
     if (mode === 'viewing') {
@@ -1266,7 +1266,7 @@ export const ManualOverlay: React.FC = () => {
       {/* ripple & pulse CSS 주입 */}
       <style>{RIPPLE_CSS}</style>
 
-      {/* 🎯 메뉴 기능 목적 브리핑 텍스트박스 (스마트 타겟 회피 + 드래그 이동 가능) */}
+      {/*  메뉴 기능 목적 브리핑 텍스트박스 (스마트 타겟 회피 + 드래그 이동 가능) */}
       <MenuBriefingBox
         pageId={page.pageId}
         pageTitle={page.pageTitle}
@@ -1313,7 +1313,7 @@ export const ManualOverlay: React.FC = () => {
               zIndex={isExpanded ? baseZIndex + 2 : baseZIndex + 1}
             />
 
-            {/* 🌟 Click Ripple (파동 이펙트):
+            {/*  Click Ripple (파동 이펙트):
                 현재 사용자가 보고 있는 활성 단계의 UI 요소에만 파동 이펙트 집중 표출!
                 비활성 단계에 파동이 고정되어 머물러 있는 현상을 원천 방지 */}
             {isExpanded && (
@@ -1399,11 +1399,11 @@ export const ManualOverlay: React.FC = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px', flexShrink: 0 }}>
           <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-            {isModal ? '🖼️ 팝업: ' : '📖 '} {page.pageTitle}
+            {isModal ? '팝업: ' : ''} {page.pageTitle}
           </span>
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             총 {items.length}단계
-          </span>
+ </span>
         </div>
 
         {/* 1, 2, 3 번호 버튼군 */}
@@ -1460,10 +1460,10 @@ export const ManualOverlay: React.FC = () => {
           }}
           title={isPlayingAutoTour ? '자동 순차 안내 정지' : '2.5초 간격으로 단계를 자동 순회 안내합니다'}
         >
-          {isPlayingAutoTour ? '⏹ 안내 정지' : '▶ 자동 순차 안내'}
+          {isPlayingAutoTour ? '안내 정지' : '▶ 자동 순차 안내'}
         </button>
 
-        {/* 📖 기능 정의서 열기 버튼 */}
+        {/*  기능 정의서 열기 버튼 */}
         <button
           onClick={() => openDocModal(page.pageId, page.pageTitle)}
           style={{
@@ -1475,8 +1475,8 @@ export const ManualOverlay: React.FC = () => {
           }}
           title="현재 메뉴의 기능 정의서 열람 및 편집"
         >
-          📖 기능 정의서
-        </button>
+           기능 정의서
+ </button>
 
         {/* 닫기 버튼 */}
         <button
@@ -1489,7 +1489,7 @@ export const ManualOverlay: React.FC = () => {
           }}
         >
           매뉴얼 닫기
-        </button>
+ </button>
       </div>
     </>
   );

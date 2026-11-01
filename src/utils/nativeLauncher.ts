@@ -5,7 +5,7 @@ import { db, User } from '../services/db';
 import { decryptPrivacyField } from './cryptoVault';
 
 /**
- * 👤 배차 건(또는 현재 로그인하여 배차를 입력/조작 중인 임직원)을 기준으로 '당사 보관소' 담당 직원 이름 및 전화번호를 임직원 정보(users)에서 조회
+ *  배차 건(또는 현재 로그인하여 배차를 입력/조작 중인 임직원)을 기준으로 '당사 보관소' 담당 직원 이름 및 전화번호를 임직원 정보(users)에서 조회
  * 1순위: 현재 로그인하여 배차 화면에서 입력/조작 중인 임직원(currentUser) 정보
  * 2순위: 배차 메모에 기록된 [배차담당자: 이름 (연락처) | ID] 태그 및 해당 User 최신 정보
  * 3순위: cargoItems 내 requestMeta.requesterId 또는 연결된 계약의 영업담당자(salespersonId) User 정보
@@ -112,7 +112,7 @@ export function resolveDispatchStaffContact(params?: {
 
 export type NavAppType = 'TMAP' | 'KAKAO' | 'NAVER' | 'WEB';
 
-// 🌟 연속 클릭으로 인한 OS 액티비티 충돌 및 데드락 방지 락 (2초)
+//  연속 클릭으로 인한 OS 액티비티 충돌 및 데드락 방지 락 (2초)
 let lastNavLaunchTime = 0;
 
 /**
@@ -185,7 +185,7 @@ function showFloatingToast(message: string) {
 /**
  * 안전한 길안내 내비게이션 앱 실행기
  * 
- * 📌 [T맵 연동 실패 원인 및 구조적 해결]:
+ *  [T맵 연동 실패 원인 및 구조적 해결]:
  * 1. 일상에서 공유하는 티맵 링크는 티맵 서버에 이미 저장된 목적지의 위도/경도(GPS 좌표)를 품고 있습니다.
  *    반면 당사 ERP DB에는 사용자가 입력한 문자열 텍스트 주소('창업로 42')만 존재합니다.
  * 2. 티맵의 길안내 스킴은 위경도 숫자 좌표가 없으면 경로 계산을 시작하지 못하고 메인 홈 화면만 엽니다.
@@ -209,9 +209,9 @@ export async function launchNavigation(destination: string, app: NavAppType = 'T
 
   const cleanDest = destination.trim();
 
-  // 2. 📋 폰 클립보드에 고객/현장 주소 100% 선제적 자동 복사 (붙여넣기 대비)
+  // 2.  폰 클립보드에 고객/현장 주소 100% 선제적 자동 복사 (붙여넣기 대비)
   await copyToClipboard(cleanDest);
-  showFloatingToast(`📋 현장 주소가 클립보드에 복사되었습니다!\n(T맵 검색창에 길게 눌러 바로 붙여넣기 가능)`);
+  showFloatingToast(` 현장 주소가 클립보드에 복사되었습니다!\n`);
 
   // 3. 검색 쿼리 정제 (부연 설명, 괄호, 층수 등 제거하여 T맵/내비 검색 성공률 극대화)
   const cleanSearchQuery = cleanDest
@@ -228,7 +228,7 @@ export async function launchNavigation(destination: string, app: NavAppType = 'T
   let targetUrl = '';
 
   if (app === 'TMAP') {
-    // 💡 TMAP은 좌표 없는 문자열 주소 전달 시 'search' 스킴을 사용해야 검색창에 주소가 자동 입력됨
+    //  TMAP은 좌표 없는 문자열 주소 전달 시 'search' 스킴을 사용해야 검색창에 주소가 자동 입력됨
     targetUrl = `tmap://search?name=${encodedDest}`;
   } else if (app === 'KAKAO') {
     // 카카오내비 정식 길안내 모드 (텍스트 주소로도 내부 POI 길안내 자동 매핑)
@@ -426,7 +426,7 @@ export function resolveSiteDetailedAddress(params: {
 }
 
 /**
- * 🧹 배차 특이사항 정제 헬퍼
+ *  배차 특이사항 정제 헬퍼
  * - 시스템이 자동 기록했던 [마감조건], [회수조건], 유상옵션:, 무상옵션:, 보양:, 부착물:, 마감일/결제일, 납품증 링크 등
  *   장비·옵션·정산 메타데이터를 100% 제거하고, 오직 배차 직원이 직접 입력한 순수 특이사항만 추출한다.
  */
@@ -468,7 +468,7 @@ export function sanitizeDispatcherSpecialNote(rawNote?: string | null): string {
 }
 
 /**
- * 🧹 (영업)배차 및 특이사항 메모 순수 추출 헬퍼
+ *  (영업)배차 및 특이사항 메모 순수 추출 헬퍼
  * - 영업사원이 출고/교환/회수 요청 시 직접 기재한 특이사항 메모만 추출하고,
  *   시스템이 자동으로 생성/하드코딩한 태그([고객담당자:...], [배차담당자:...], [출고 요청 통합 발행]..., 현장담당:..., 상차:..., [하차일정]..., [옵션]..., [정산일정]... 등)는 전면 제거한다.
  */
@@ -542,7 +542,7 @@ export function stripOptionsFromDispatchRawText(
 }
 
 /**
- * 🚚 화물 기사 배차 안내 문자 포맷팅 파라미터
+ *  화물 기사 배차 안내 문자 포맷팅 파라미터
  */
 export interface DispatchBundleStopParam {
   order: number;
@@ -610,7 +610,7 @@ export interface DispatchSmsParams {
 }
 
 /**
- * 🚚 기사 배차 안내 문자 전문 조립기 (한글 표준 템플릿)
+ *  기사 배차 안내 문자 전문 조립기 (한글 표준 템플릿)
  */
 export function buildDispatchSmsText(params: DispatchSmsParams): string {
   const { delivery } = params;
@@ -630,9 +630,9 @@ export function buildDispatchSmsText(params: DispatchSmsParams): string {
 
   const type = delivery.type || 'OUTBOUND';
   const typeLabel = 
-    type === 'EXCHANGE' ? '🔄 [왕복 교환배차]' :
-    type === 'RETURN' || type === 'INBOUND' ? '📦 [장비 회수배차]' :
-    '🚚 [장비 출고배차]';
+    type === 'EXCHANGE' ? '[왕복 교환배차]' :
+    type === 'RETURN' || type === 'INBOUND' ? '[장비 회수배차]' :
+    '[장비 출고배차]';
 
   const category = delivery.dispatchCategory || (type === 'EXCHANGE' ? '교환' : type === 'RETURN' ? '반납' : '출고');
   const dNo = delivery.id ? delivery.id.slice(0, 8).toUpperCase() : 'NEW';
@@ -684,15 +684,15 @@ export function buildDispatchSmsText(params: DispatchSmsParams): string {
   const headerTitle = `[${companyName} 배차안내]`;
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://giyoon.ebro.run';
 
-  // 🔗 [경유/합짐 묶음 배차] 2건 이상 묶인 경우 처리 순서대로 안내문 조립
+  //  [경유/합짐 묶음 배차] 2건 이상 묶인 경우 처리 순서대로 안내문 조립
   if (params.bundleStops && params.bundleStops.length >= 2) {
     const sortedStops = [...params.bundleStops].sort((a, b) => a.order - b.order);
     const bundleLines: string[] = [
       headerTitle,
-      `■ 배차유형: 🔗 [경유/합짐 배차 (총 ${sortedStops.length}건)]`,
+      `■ 배차유형: [경유/합짐 배차 (총 ${sortedStops.length}건)]`,
       `■ 배정기사: ${driver} (${vehicle})`,
       `■ 확정운송료: ${costStr}`,
-      `※ 아래 처리 순서(1 ➔ ${sortedStops.length})대로 상·하차를 진행해 주십시오.`
+      `※ 아래 처리 순서(1 ${sortedStops.length})대로 상·하차를 진행해 주십시오.`
     ];
 
     sortedStops.forEach((stop, idx) => {
@@ -802,7 +802,7 @@ export function buildDispatchSmsText(params: DispatchSmsParams): string {
 }
 
 /**
- * 📲 폰 기본 문자메시지 앱 딥링크 호출 (sms:?body=...)
+ *  폰 기본 문자메시지 앱 딥링크 호출 (sms:?body=...)
  * - 선제 클립보드 복사를 수행하여 앱 미연동 환경에서도 1-Click 붙여넣기 지원
  */
 export async function launchDispatchSms(options: {
@@ -835,7 +835,7 @@ export async function launchDispatchSms(options: {
   }
 }
 /**
- * 💬 날짜 포맷팅 헬퍼 (MM월 DD일(요일))
+ *  날짜 포맷팅 헬퍼 (MM월 DD일(요일))
  */
 export function formatKakaoDate(dateStr?: string): { formatted: string; monthDay: string; dayOfWeek: string } {
   if (!dateStr) return { formatted: '', monthDay: '', dayOfWeek: '' };
@@ -860,7 +860,7 @@ export function formatKakaoDate(dateStr?: string): { formatted: string; monthDay
 }
 
 /**
- * 💬 차량 톤수 포맷팅 헬퍼 ((5톤), (8.5톤))
+ *  차량 톤수 포맷팅 헬퍼 ((5톤), (8.5톤))
  */
 export function formatVehicleTon(vehicleType?: string): string {
   if (!vehicleType) return '(5톤)';
@@ -874,7 +874,7 @@ export function formatVehicleTon(vehicleType?: string): string {
 }
 
 /**
- * 💬 시간 문자열 포맷팅 헬퍼
+ *  시간 문자열 포맷팅 헬퍼
  */
 export function formatKakaoTimeSlot(timeSlot?: string, defaultPrefix = '오전'): string {
   if (!timeSlot || timeSlot === 'NONE' || timeSlot === '시간미정') return '시간협의';
@@ -884,7 +884,7 @@ export function formatKakaoTimeSlot(timeSlot?: string, defaultPrefix = '오전')
 }
 
 /**
- * 💬 상차지/하차지가 '당사 보관소'(또는 '본사 주기장'/'당사 주기장')인 경우 당사 주소를 함께 표시하는 헬퍼
+ *  상차지/하차지가 '당사 보관소'(또는 '본사 주기장'/'당사 주기장')인 경우 당사 주소를 함께 표시하는 헬퍼
  */
 export function formatAddressWithCompanyYard(rawAddr: string | undefined, hqAddress?: string): string {
   const defaultYard = db.currentTenant?.yards?.find(y => y.isDefault) || db.currentTenant?.yards?.[0];
@@ -929,7 +929,7 @@ export function formatAddressWithCompanyYard(rawAddr: string | undefined, hqAddr
 }
 
 /**
- * 💬 카카오톡 배차 안내 메시지 생성 파라미터
+ *  카카오톡 배차 안내 메시지 생성 파라미터
  */
 export interface DispatchKakaoParams {
   delivery: {
@@ -971,7 +971,7 @@ export interface DispatchKakaoParams {
 }
 
 /**
- * 💬 영업사원 및 화물기사용 카카오톡 배차 안내 전문 조립기 (유형별 단일 표준 양식)
+ *  영업사원 및 화물기사용 카카오톡 배차 안내 전문 조립기 (유형별 단일 표준 양식)
  */
 export function buildDispatchKakaoTalkText(params: DispatchKakaoParams): string {
   const { delivery } = params;
@@ -1064,13 +1064,13 @@ export function buildDispatchKakaoTalkText(params: DispatchKakaoParams): string 
   lines.push(`차량톤수:${vehicleTon}`);
 
   // ───────────────────────────────────────────────
-  // 🔗 [경유/합짐 묶음 배차] 2건 이상 묶인 경우 처리 순서대로 안내문 조립
+  //  [경유/합짐 묶음 배차] 2건 이상 묶인 경우 처리 순서대로 안내문 조립
   // ───────────────────────────────────────────────
   if (params.bundleStops && params.bundleStops.length >= 2) {
     const sortedStops = [...params.bundleStops].sort((a, b) => a.order - b.order);
     lines.push(``);
     lines.push(`[경유/합짐 배차 (총 ${sortedStops.length}건)]`);
-    lines.push(`※ 아래 처리 순서(1 ➔ ${sortedStops.length})대로 상·하차를 진행해 주십시오.`);
+    lines.push(`※ 아래 처리 순서(1 ${sortedStops.length})대로 상·하차를 진행해 주십시오.`);
 
     const notesList: string[] = [];
 

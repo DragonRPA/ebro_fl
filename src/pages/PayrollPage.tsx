@@ -396,7 +396,7 @@ export const PayrollPage: React.FC = () => {
 
   return (
     <div data-hs-observe="payrollpage" data-mid="payroll-header" data-subview="payroll" data-subview-title="Generated" style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 알림 (헌장 5.2) */}
+      {/*  인앱 토스트 알림 (헌장 5.2) */}
       {toastMessage && (
         <div data-mid="payroll-toast" style={{
           position: 'fixed',
@@ -436,7 +436,7 @@ export const PayrollPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', borderRadius: '6px', border: '1px solid var(--danger)', fontSize: '13px', fontWeight: 'bold' }}>
                 <Lock size={15} color="var(--danger)" /> [{selectedMonth}] 결재 마감 완료
-              </div>
+ </div>
               {isAdmin && (
                 <button
                   type="button"
@@ -445,8 +445,8 @@ export const PayrollPage: React.FC = () => {
                   style={{ fontSize: '12px', padding: '6px 10px', color: 'var(--text-muted)' }}
                   title="관리자 전용 마감 해제"
                 >
-                  🔓 마감 해제
-                </button>
+                   마감 해제
+ </button>
               )}
             </div>
           )}
@@ -460,11 +460,11 @@ export const PayrollPage: React.FC = () => {
             {isSendingEmails ? (
               <>
                 <RefreshCw size={16} className="spin-animation" /> 전송 중...
-              </>
+ </>
             ) : (
               <>
                 <Send size={16} /> 급여명세서 이메일 일괄 전송
-              </>
+ </>
             )}
           </button>
 
@@ -475,11 +475,11 @@ export const PayrollPage: React.FC = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
           >
             <Download size={15} /> 엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
-      {/* 📊 당월 급여 집계 요약 바 */}
+      {/*  당월 급여 집계 요약 바 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '6px', flexShrink: 0, gap: '8px' }}>
         <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>정산 대상 인원</div>
@@ -539,14 +539,14 @@ export const PayrollPage: React.FC = () => {
                   style={{ padding: '4px 10px', fontSize: '11px', cursor: 'pointer', display: 'inline-block' }}
                 >
                   파일 찾기
-                </label>
+ </label>
               </div>
             </div>
 
             <div style={{ padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.08)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)', fontSize: '12px', lineHeight: '1.6' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '6px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle size={14} /> [연차관리 / OT 관리] 데이터 자동 연동
-              </div>
+ </div>
               • 귀속 월({selectedMonth}) 총 OT: <strong>{payrollList.reduce((sum, p) => sum + (p.overtimeHours || 0), 0)} 시간</strong><br/>
               • 귀속 월({selectedMonth}) 총 연차: <strong>{payrollList.reduce((sum, p) => sum + (p.leaveDays || 0), 0)} 일</strong> 소진<br/>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>* [연차관리 / OT 관리] 등록 시 급여 정산 대장에 100% 동기화 반영됩니다.</span>
@@ -555,11 +555,11 @@ export const PayrollPage: React.FC = () => {
             <div style={{ padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', lineHeight: '1.5' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <AlertTriangle size={14} color="var(--warning)" /> 통상시급 및 1일임금 기준
-              </div>
+ </div>
               • 월 소정근로시간: 209시간<br/>
               • 연장/야간/휴일수당: 법정 1.5배/0.5배 자동 산정<br/>
               • 무급휴가 공제: 1일 통상급여 차감 적용
-            </div>
+ </div>
           </div>
         </div>
 
@@ -627,8 +627,8 @@ export const PayrollPage: React.FC = () => {
                       {p.leaveDays > 0 && (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '10.5px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', fontWeight: 'bold' }}>
-                            📅 당월 연차: {p.leaveDays}일 소진
-                          </span>
+                             당월 연차: {p.leaveDays}일 소진
+ </span>
                         </div>
                       )}
                     </td>
@@ -642,10 +642,10 @@ export const PayrollPage: React.FC = () => {
                             onClick={() => handleOpenSalaryModal(p.employeeId, p.baseSalary)}
                             disabled={payrollStatus === 'APPROVED'}
                             style={{ fontSize: '10.5px', padding: '2px 6px', color: 'var(--primary)', whiteSpace: 'nowrap' }}
-                            title="임직원 계약 기본급 수정 (DB 저장)"
+                            title="임직원 계약 기본급 수정"
                           >
-                            ✏️ 수정
-                          </button>
+                             수정
+ </button>
                         )}
                       </div>
                     </td>
@@ -658,7 +658,7 @@ export const PayrollPage: React.FC = () => {
                       {totalAllowances > 0 && (
                         <div style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 'bold', marginTop: '4px' }}>
                           OT 수당계: +{totalAllowances.toLocaleString()}원 (1.5배)
-                        </div>
+ </div>
                       )}
                     </td>
                     <td>
@@ -671,7 +671,7 @@ export const PayrollPage: React.FC = () => {
                         disabled={payrollStatus === 'APPROVED'}
                         style={{ width: '45px', padding: '2px 4px', fontSize: '11px' }} 
                       />일
-                    </td>
+ </td>
                     <td>
                       <input 
                         type="number" 
@@ -705,7 +705,7 @@ export const PayrollPage: React.FC = () => {
                     </td>
                     <td style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '13.5px', color: 'var(--primary)' }}>
                       {p.netSalary.toLocaleString()}원
-                    </td>
+ </td>
                   </tr>
                 );
               })}
@@ -730,11 +730,11 @@ export const PayrollPage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>
-                ⚙️ 계약 기본급 설정 (급여 권한자 전용)
-              </h3>
+                 계약 기본급 설정 (급여 권한자 전용)
+ </h3>
               <button onClick={() => setEditingEmpId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             {(() => {
@@ -749,7 +749,7 @@ export const PayrollPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>
                       월 계약 기본급 (원):
-                    </label>
+ </label>
                     <input
                       type="number"
                       step="10000"
@@ -762,16 +762,16 @@ export const PayrollPage: React.FC = () => {
                     />
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       통상시급: 약 {Math.round(inputSalary / 209).toLocaleString()}원/시간 (월 소정근로시간 209시간 기준)
-                    </span>
+ </span>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
                     <button type="button" className="btn btn-secondary" onClick={() => setEditingEmpId(null)}>
                       취소
-                    </button>
+ </button>
                     <button data-hs-trigger="Save" type="submit" className="btn btn-primary">
                       기본급 저장
-                    </button>
+ </button>
                   </div>
                 </form>
               );
@@ -779,7 +779,7 @@ export const PayrollPage: React.FC = () => {
           </div>
         </div>
       )}
-      {/* 💬 인앱 확인 모달 (헌장 5.2: alert/confirm 퇴출) */}
+      {/*  인앱 확인 모달 (헌장 5.2: alert/confirm 퇴출) */}
       {confirmModal && confirmModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '20px' }}>
           <div className="card" style={{ width: '90%', maxWidth: '440px', backgroundColor: 'var(--bg-card)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -792,7 +792,7 @@ export const PayrollPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setConfirmModal(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn btn-primary"
@@ -811,14 +811,14 @@ export const PayrollPage: React.FC = () => {
         </div>
       )}
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 급여 정산 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 급여 정산 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         flexShrink: 0, height: '36px', backgroundColor: 'var(--bg-card)', borderTop: '2px solid var(--primary)', boxShadow: '0 -2px 10px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', zIndex: 10, borderRadius: '4px',
         fontSize: '11.5px',
         fontWeight: 600
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-          <span>👥 <strong>대상임직원:</strong> {payrollAuditSummary.totalCount}명</span>
+          <span> <strong>대상임직원:</strong> {payrollAuditSummary.totalCount}명</span>
           <span style={{ color: 'var(--border-color)' }}>|</span>
           <span><strong>지급총액(세전):</strong> ₩{payrollAuditSummary.totalGross.toLocaleString()}원</span>
           <span style={{ color: 'var(--border-color)' }}>|</span>

@@ -8,7 +8,7 @@ export interface SortConfig {
 }
 
 /**
- * 3단계 토글 정렬 훅 (오름차순 ➔ 내림차순 ➔ 정렬안함)
+ * 3단계 토글 정렬 훅 (오름차순  내림차순  정렬안함)
  * - 한국어 문자열 localeCompare('ko', { numeric: true }) 완벽 지원
  * - 쉼표 포함 숫자(₩, 건, 대, 원 등), 날짜, 불리언 자동 파싱 비교
  * - 정렬안함 시 원본 순서 100% 보존
@@ -102,7 +102,7 @@ export function useSortableData<T>(
     return sortableItems;
   }, [items, sortConfig, getSortValue]);
 
-  // 3단계 토글: None ➔ asc ➔ desc ➔ None
+  // 3단계 토글: None  asc  desc  None
   const requestSort = (key: string) => {
     let direction: SortDirection = 'asc';
     if (sortConfig && sortConfig.key === key) {

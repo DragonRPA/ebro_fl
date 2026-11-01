@@ -792,7 +792,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
           <h1 className="text-sm font-bold text-slate-100 whitespace-nowrap">장비 할당</h1>
           <span className="text-xs text-amber-300 font-bold whitespace-nowrap">
             미할당 {pendingGroups.length}건 ({totalUnassignedSlotsCount}대)
-          </span>
+ </span>
         </div>
 
         <button
@@ -828,7 +828,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-bold text-slate-200 whitespace-nowrap">
               출고 요청 ({pendingGroups.length})
-            </span>
+ </span>
             <div className="relative flex-1 max-w-[190px]">
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
@@ -853,7 +853,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
           {pendingGroups.length === 0 ? (
             <div className="py-4 text-center text-xs text-slate-400">
               미할당 출고 요청이 없습니다.
-            </div>
+ </div>
           ) : (
             <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-0.5">
               {pendingGroups.map(grp => {
@@ -888,7 +888,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                         {grp.isExchange && (
                           <span className="inline-block text-[10px] px-1.5 py-0.5 mr-1.5 rounded bg-rose-600 text-white font-bold align-middle">
                             교환
-                          </span>
+ </span>
                         )}
                         <strong className="font-bold text-slate-100">
                           {getCustomerName(c.customerId)}
@@ -913,7 +913,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                       </div>
                       <span className="text-[11px] font-bold text-amber-300 whitespace-nowrap shrink-0">
                         미할당 {grp.pendingCount}대
-                      </span>
+ </span>
                     </div>
                   </div>
                 );
@@ -928,7 +928,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-bold text-slate-200 whitespace-nowrap">
                 할당 현황 ({mappedAssetIds.length}/{activeUnassignedSlots.length}대)
-              </span>
+ </span>
 
               <div className="flex flex-wrap items-center gap-1">
                 {mappedAssetIds.length > 0 && (
@@ -1032,7 +1032,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                         }`}
                       >
                         {filledQty} / {totalQty}대
-                      </span>
+ </span>
                     </div>
 
                     {/* 선택된 관리번호 칩 표시 (있을 때만 줄바꿈 노출) */}
@@ -1078,7 +1078,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                 <span className="text-cyan-300">
                   {' '}
                   · {activeTargetModel} ({candidateAssetsForTargetModel.length}대)
-                </span>
+ </span>
               </div>
             </div>
 
@@ -1104,7 +1104,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                   className="px-2 py-1.5 text-slate-400 text-xs"
                 >
                   지우기
-                </button>
+ </button>
               )}
               <button
                 type="button"
@@ -1112,14 +1112,14 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                 className="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg whitespace-nowrap shrink-0"
               >
                 입력
-              </button>
+ </button>
             </div>
 
             {/* 3열 컴팩트 장비 그리드 (터치 즉시 해당 모델 수량 채움) */}
             {candidateAssetsForTargetModel.length === 0 ? (
               <div className="py-4 text-center text-xs text-slate-400 bg-slate-950 rounded-lg border border-slate-800">
                 {activeTargetModel} 임대가능 재고가 없습니다.
-              </div>
+ </div>
             ) : (
               <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
                 {candidateAssetsForTargetModel.map(asset => {
@@ -1165,7 +1165,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
           <section className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-1.5">
             <span className="text-xs font-bold text-slate-300">
               기할당 ({activeAssignedSlots.length}대)
-            </span>
+ </span>
             <div className="flex flex-col gap-1">
               {activeAssignedSlots.map(ca => {
                 const assignedAsset = assets.find(a => a.id === ca.assetId);
@@ -1189,7 +1189,7 @@ export const MobileAssetAssignment: React.FC<MobileAssetAssignmentProps> = ({
                       className="text-[11px] px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/80 font-bold whitespace-nowrap shrink-0"
                     >
                       취소
-                    </button>
+ </button>
                   </div>
                 );
               })}

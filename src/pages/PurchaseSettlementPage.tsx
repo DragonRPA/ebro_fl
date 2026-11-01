@@ -76,9 +76,9 @@ export const PurchaseSettlementPage: React.FC = () => {
   const [paymentForm, setPaymentForm]              = useState({ paidAmount: '', paymentDate: currentYm.slice(0,7) + '-' + String(now.getDate()).padStart(2,'0'), paymentMethod: '계좌이체', bankAccount: '', memo: '' });
   const [selectedBankTxId, setSelectedBankTxId]    = useState<string | null>(null);
 
-  // 🔍 지급 대사 상세 명세서 모달 상태 (Audit 1:N 이력)
+  //  지급 대사 상세 명세서 모달 상태 (Audit 1:N 이력)
   const [detailModalSettlementId, setDetailModalSettlementId] = useState<string | null>(null);
-  // 📄 매입거래명세서 보관 및 열람 모달 상태
+  //  매입거래명세서 보관 및 열람 모달 상태
   const [statementModalSettlementId, setStatementModalSettlementId] = useState<string | null>(null);
 
   const [memoEditId, setMemoEditId]                = useState(null as string | null);
@@ -355,7 +355,7 @@ export const PurchaseSettlementPage: React.FC = () => {
 
   return (
     <div data-hs-observe="purchasesettlementpage" data-subview="purchase_settlement" data-subview-title="Generated" style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 알림 (헌장 5.2) */}
+      {/*  인앱 토스트 알림 (헌장 5.2) */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -383,7 +383,7 @@ export const PurchaseSettlementPage: React.FC = () => {
               <CreditCard size={18} color="var(--primary)" />
               <h2 data-mid="purchase_settlement-header" style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                 월말 매입 정산
-              </h2>
+ </h2>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -412,7 +412,7 @@ export const PurchaseSettlementPage: React.FC = () => {
             >
               {isGenerating ? <RefreshCw size={13} className="animate-spin" /> : <Plus size={13} />}
               {selectedYm} 자동 집계
-            </button>
+ </button>
 
             <button
               onClick={handleExportSettlementExcel}
@@ -424,7 +424,7 @@ export const PurchaseSettlementPage: React.FC = () => {
             >
               <Download size={13} />
               엑셀 내보내기
-            </button>
+ </button>
 
             <button
               onClick={() => setIsHometaxModalOpen(true)}
@@ -436,7 +436,7 @@ export const PurchaseSettlementPage: React.FC = () => {
             >
               <Database size={13} />
               국세청 매입세금계산서 대사
-            </button>
+ </button>
           </div>
         </div>
 
@@ -498,7 +498,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                 style={{ height: '28px', padding: '0 8px', fontSize: '11px', background: 'var(--bg-app)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
                 초기화
-              </button>
+ </button>
             )}
           </div>
         </div>
@@ -528,7 +528,7 @@ export const PurchaseSettlementPage: React.FC = () => {
             <span style={{ color: 'var(--text-secondary)' }}>미지급 잔액:</span>
             <strong style={{ color: summary.remaining > 0 ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: 800 }}>
               {summary.remaining.toLocaleString()}원
-            </strong>
+ </strong>
           </div>
         </div>
       </div>
@@ -639,22 +639,22 @@ export const PurchaseSettlementPage: React.FC = () => {
                       {/* 품목수 */}
                       <td style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text-secondary)' }}>
                         {items.length}건
-                      </td>
+ </td>
 
                       {/* 총 청구액 */}
                       <td style={{ textAlign: 'right', padding: '6px 10px', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {p.totalAmount.toLocaleString()}원
-                      </td>
+ </td>
 
                       {/* 지급 완료액 */}
                       <td style={{ textAlign: 'right', padding: '6px 10px', color: p.paidAmount > 0 ? '#10B981' : 'var(--text-secondary)', fontWeight: p.paidAmount > 0 ? 700 : 400 }}>
                         {p.paidAmount.toLocaleString()}원
-                      </td>
+ </td>
 
                       {/* 미지급 잔액 */}
                       <td style={{ textAlign: 'right', padding: '6px 10px', color: remaining > 0 ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: remaining > 0 ? 800 : 400 }}>
                         {remaining.toLocaleString()}원
-                      </td>
+ </td>
 
                       {/* 지급 상태 */}
                       <td style={{ textAlign: 'center', padding: '6px 8px' }}>
@@ -684,11 +684,11 @@ export const PurchaseSettlementPage: React.FC = () => {
                           >
                             <CheckCircle2 size={11} />
                             수취 ({p.taxInvoiceNo.slice(0, 8)}...)
-                          </span>
+ </span>
                         ) : (
                           <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: 'var(--bg-app)', color: 'var(--text-muted)', border: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             미수취
-                          </span>
+ </span>
                         )}
                       </td>
 
@@ -709,7 +709,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                             }}
                           >
                             <Eye size={11} /> 증빙 ({evidences.length})
-                          </button>
+ </button>
                         ) : (
                           <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>-</span>
                         )}
@@ -729,7 +729,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                               }}
                             >
                               <CheckCircle2 size={12} /> 정산 확정
-                            </button>
+ </button>
                           )}
                           {(p.status === 'CONFIRMED' || (p.status === 'PAID' && p.paidAmount < p.totalAmount)) && remaining > 0 && (
                             <button
@@ -747,12 +747,12 @@ export const PurchaseSettlementPage: React.FC = () => {
                               }}
                             >
                               <CreditCard size={12} /> 지급 처리
-                            </button>
+ </button>
                           )}
                           {p.status === 'PAID' && remaining <= 0 && (
                             <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               <CheckCircle2 size={12} /> 지급완료
-                            </span>
+ </span>
                           )}
 
                           {/* 매입거래명세서 열람 및 저장 버튼 (소모품/운송료/임차자산 전 상태 상시 제공) */}
@@ -787,7 +787,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                               }}
                             >
                               <CreditCard size={12} /> 지급이력
-                            </button>
+ </button>
                           )}
                         </div>
                       </td>
@@ -842,7 +842,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                                               >
                                                 {evidenceUrl.startsWith('http') ? <ExternalLink size={12} /> : <Eye size={12} />}
                                                 증빙 열람
-                                              </button>
+ </button>
                                             ) : (
                                               <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>없음</span>
                                             )}
@@ -855,7 +855,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                               </div>
                             )}
 
-                            {/* 🧾 국세청 전자세금계산서 대사 정보 블록 */}
+                            {/*  국세청 전자세금계산서 대사 정보 블록 */}
                             {p.taxInvoiceNo && (
                               <div style={{
                                 padding: '8px 12px',
@@ -875,7 +875,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                                   <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#10b981' }}>{p.taxInvoiceNo}</span>
                                   <span style={{ color: 'var(--text-secondary)' }}>
                                     (작성일자: {p.taxInvoiceIssueDate || '미상'})
-                                  </span>
+ </span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'monospace' }}>
                                   <span>공급가: ₩{(p.taxInvoiceSupplyAmount || 0).toLocaleString()}</span>
@@ -918,7 +918,7 @@ export const PurchaseSettlementPage: React.FC = () => {
         </table>
       </div>
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계/매입 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계/매입 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         flexShrink: 0,
         height: '36px',
@@ -942,12 +942,12 @@ export const PurchaseSettlementPage: React.FC = () => {
           <span style={{ color: 'var(--success)' }}><strong>지급완료:</strong> ₩{settlementAuditSummary.totalPaid.toLocaleString()}원 ({settlementAuditSummary.paidCount}건)</span>
           <span style={{ color: 'var(--border)' }}>|</span>
           <span style={{ color: settlementAuditSummary.balance > 0 ? 'var(--danger)' : 'var(--text-secondary)' }}>
-            ⏳ <strong>지급잔액:</strong> ₩{settlementAuditSummary.balance.toLocaleString()}원
-          </span>
+             <strong>지급잔액:</strong> ₩{settlementAuditSummary.balance.toLocaleString()}원
+ </span>
           <span style={{ color: 'var(--border)' }}>|</span>
           <span style={{ color: settlementAuditSummary.taxInvoiceIssuedCount === settlementAuditSummary.totalCount && settlementAuditSummary.totalCount > 0 ? '#10b981' : 'var(--primary)' }}>
-            🧾 <strong>국세청 계산서:</strong> {settlementAuditSummary.taxInvoiceIssuedCount}/{settlementAuditSummary.totalCount}건 ({settlementAuditSummary.totalCount > 0 ? Math.round((settlementAuditSummary.taxInvoiceIssuedCount / settlementAuditSummary.totalCount) * 100) : 0}%)
-          </span>
+             <strong>국세청 계산서:</strong> {settlementAuditSummary.taxInvoiceIssuedCount}/{settlementAuditSummary.totalCount}건 ({settlementAuditSummary.totalCount > 0 ? Math.round((settlementAuditSummary.taxInvoiceIssuedCount / settlementAuditSummary.totalCount) * 100) : 0}%)
+ </span>
         </div>
       </div>
 
@@ -959,7 +959,7 @@ export const PurchaseSettlementPage: React.FC = () => {
               <h3 style={{ fontWeight: '800', fontSize: '17px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
                 <CreditCard size={18} style={{ color: 'var(--primary)' }} />
                 월말 매입 정산 지급 처리 및 통장 출금 대사
-              </h3>
+ </h3>
               <button onClick={() => { setPaymentModal(null); setSelectedBankTxId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={20} />
               </button>
@@ -979,7 +979,7 @@ export const PurchaseSettlementPage: React.FC = () => {
             {/* 통장 출금 내역 매칭 섹션 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12.5px', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>🏦 등록된 통장 출금 내역 대사 매칭 (Audit 증빙):</span>
+                <span> 등록된 통장 출금 내역 대사 매칭:</span>
               </label>
 
               {(() => {
@@ -989,7 +989,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                   return (
                     <div style={{ padding: '12px', borderRadius: '6px', border: '1px dashed var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center' }}>
                       등록된 통장 출금 내역이 없습니다. (아래 폼에 직조 수동 입력 가능)
-                    </div>
+ </div>
                   );
                 }
 
@@ -1043,17 +1043,17 @@ export const PurchaseSettlementPage: React.FC = () => {
                                 {isPerfect && (
                                   <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10B981', fontWeight: 'bold' }}>
                                     일치
-                                  </span>
+ </span>
                                 )}
                                 {isMatchVendor && !isPerfect && (
                                   <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: 'var(--primary)', fontWeight: 'bold' }}>
                                     상호 일치
-                                  </span>
+ </span>
                                 )}
                                 {isMatchAmount && !isPerfect && (
                                   <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 'bold' }}>
                                     금액 일치
-                                  </span>
+ </span>
                                 )}
                               </div>
                               <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
@@ -1064,7 +1064,7 @@ export const PurchaseSettlementPage: React.FC = () => {
 
                           <div style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--danger)', fontSize: '13px' }}>
                             -{tx.withdrawAmount.toLocaleString()}원
-                          </div>
+ </div>
                         </div>
                       );
                     })}
@@ -1143,7 +1143,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                 style={{ flex: 1, height: '40px', background: 'var(--bg-app)', border: '1px solid var(--border)', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', color: 'var(--text-primary)' }}
               >
                 취소
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1157,7 +1157,7 @@ export const PurchaseSettlementPage: React.FC = () => {
               <h3 style={{ fontSize: '16px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FileText size={18} color="var(--primary)" />
                 {previewEvidence.title} 증빙 파일
-              </h3>
+ </h3>
               <button onClick={() => setPreviewEvidence(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={18} /></button>
             </div>
 
@@ -1171,8 +1171,8 @@ export const PurchaseSettlementPage: React.FC = () => {
                       download={`${(previewEvidence.title || '매입증빙').replace(/[^a-zA-Z0-9가-힣_-]/g, '_')}.jpg`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 18px', background: 'var(--primary)', color: '#fff', borderRadius: '6px', fontWeight: '700', textDecoration: 'none', fontSize: '13.5px' }}
                     >
-                      <Download size={15} /> 원본 사진 파일 저장 (내PC/폰 다운로드)
-                    </a>
+                      <Download size={15} /> 원본 사진 파일 저장
+ </a>
                   </div>
                 </div>
               ) : previewEvidence.url.startsWith('data:') || previewEvidence.url.includes('pdf') ? (
@@ -1181,14 +1181,14 @@ export const PurchaseSettlementPage: React.FC = () => {
                     <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <FileText size={16} color="var(--primary)" />
                       PDF 증빙 문서 실물 미리보기
-                    </span>
+ </span>
                     <a
                       href={previewEvidence.url}
                       download={`${(previewEvidence.title || '매입증빙').replace(/[^a-zA-Z0-9가-힣_-]/g, '_')}.pdf`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--primary)', color: '#fff', borderRadius: '6px', fontWeight: '700', textDecoration: 'none', fontSize: '12.5px' }}
                     >
                       <Download size={14} /> PDF 원본 저장
-                    </a>
+ </a>
                   </div>
                   <div style={{ height: '600px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', background: '#525659' }}>
                     <object
@@ -1214,7 +1214,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--primary)', color: '#fff', borderRadius: '6px', fontWeight: '700', textDecoration: 'none', fontSize: '14px' }}
                   >
                     <ExternalLink size={15} /> 증빙 URL 원본 열기
-                  </a>
+ </a>
                 </div>
               )}
             </div>
@@ -1223,7 +1223,7 @@ export const PurchaseSettlementPage: React.FC = () => {
       )}
 
 
-      {/* 🔍 지급 대사 이력 상세 명세서 모달 (1:N 구성 내역 Audit) */}
+      {/*  지급 대사 이력 상세 명세서 모달 (1:N 구성 내역 Audit) */}
       {detailModalSettlementId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }}>
           <div style={{ background: 'var(--bg-card)', borderRadius: '12px', width: '100%', maxWidth: '750px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
@@ -1242,7 +1242,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                       <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
                         <FileText size={18} color="var(--primary)" />
                         지급 대사 이력 상세 명세서
-                      </h3>
+ </h3>
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         매입처: <strong>{targetSettlement.vendorName}</strong> | 정산 연월: {targetSettlement.settlementYm}
                       </span>
@@ -1271,7 +1271,7 @@ export const PurchaseSettlementPage: React.FC = () => {
                     {bankTx && (
                       <div style={{ padding: '12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '13px' }}>
                         <div style={{ fontWeight: 'bold', color: '#10B981', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>🏦 연결된 통장 출금 증빙</span>
+                          <span> 연결된 통장 출금 증빙</span>
                         </div>
                         <div><strong>출금 은행/상호:</strong> [{bankTx.bankName || '은행'}] {bankTx.counterparty || bankTx.senderName || '-'}</div>
                         <div><strong>출금 일시:</strong> {bankTx.transactionDate} | <strong>출금액:</strong> -{bankTx.withdrawAmount.toLocaleString()}원</div>
@@ -1282,8 +1282,8 @@ export const PurchaseSettlementPage: React.FC = () => {
                     {/* 1:N 지급 분할 이력 로그 */}
                     <div>
                       <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-main)' }}>
-                        💳 지급 수납 차감 이력 (분할 지급 Log)
-                      </h4>
+                         지급 수납 차감 이력
+ </h4>
                       {targetLogs.length === 0 ? (
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px' }}>
                           지급 일자: {targetSettlement.paymentDate || '-'} | 수단: {targetSettlement.paymentMethod || '계좌이체'} | 계좌: {targetSettlement.bankAccount || '-'}
@@ -1298,18 +1298,18 @@ export const PurchaseSettlementPage: React.FC = () => {
                               </div>
                               <div style={{ fontWeight: 'bold', color: '#10B981' }}>
                                 +{log.paidAmount.toLocaleString()}원
-                              </div>
+ </div>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    {/* 📦 지급 출금액을 구성하는 1:N 라인 아이템 명세 */}
+                    {/*  지급 출금액을 구성하는 1:N 라인 아이템 명세 */}
                     <div>
                       <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-main)' }}>
-                        📦 이 출금액을 구성하는 매입 정산 세부 내역 (1:N 라인 항목)
-                      </h4>
+                         이 출금액을 구성하는 매입 정산 세부 내역
+ </h4>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
                         <thead>
                           <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
@@ -1345,7 +1345,7 @@ export const PurchaseSettlementPage: React.FC = () => {
         </div>
       )}
 
-      {/* 📄 매입거래명세서 열람 및 원본 파일 저장 모달 */}
+      {/*  매입거래명세서 열람 및 원본 파일 저장 모달 */}
       {statementModalSettlementId && (() => {
         const targetSettlement = settlementMap.get(statementModalSettlementId);
         if (!targetSettlement) return null;
@@ -1400,7 +1400,7 @@ export const PurchaseSettlementPage: React.FC = () => {
         );
       })()}
 
-      {/* 🏛️ 국세청 매입세금계산서 대사 & 업데이트 모달 */}
+      {/*  국세청 매입세금계산서 대사 & 업데이트 모달 */}
       {isHometaxModalOpen && (
         <HometaxPurchaseInvoiceModal
           isOpen={isHometaxModalOpen}

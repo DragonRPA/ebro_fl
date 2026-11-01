@@ -194,7 +194,7 @@ const ApprovalRulesManage: React.FC = () => {
 
         await supabase.from('approval_tier_configs').upsert(payload, { onConflict: 'tenant_id,category,title' });
       } catch (err) {
-        console.warn('Supabase approval_tier_configs sync failed (graceful):', err);
+        console.warn('Supabase approval_tier_configs sync failed:', err);
       }
     }
 
@@ -312,7 +312,7 @@ const ApprovalRulesManage: React.FC = () => {
     if (error) {
       console.error('fetchRules error:', error);
     } else if (data) {
-      // '계약 해지' ➔ '계약의 해제' 명칭 자동 정규화
+      // '계약 해지'  '계약의 해제' 명칭 자동 정규화
       for (const r of data as ApprovalRule[]) {
         if (r.event_code === 'CONTRACT_TERMINATE' && r.event_name !== '계약의 해제') {
           r.event_name = '계약의 해제';
@@ -601,7 +601,7 @@ const ApprovalRulesManage: React.FC = () => {
             }}
           >
             결재선 규칙
-          </button>
+ </button>
           <button
             onClick={() => setActiveTab('TIERS')}
             style={{
@@ -618,12 +618,12 @@ const ApprovalRulesManage: React.FC = () => {
             }}
           >
             직급·직책 티어 설정
-          </button>
+ </button>
         </div>
 
         {tierMessage && (
           <span style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 600 }}>
-            ✓ {tierMessage}
+             {tierMessage}
           </span>
         )}
       </div>
@@ -638,10 +638,10 @@ const ApprovalRulesManage: React.FC = () => {
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', margin: '0 0 4px' }}>
                 결재선 규칙
-              </h2>
+ </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
                 업무 이벤트명·전결 티어·사용 여부는 셀 수정 즉시 저장됩니다. [합의선] 클릭으로 부서 합의선을 설정합니다.
-              </p>
+ </p>
             </div>
             <button
               data-mid="approvalRules-sync"
@@ -658,7 +658,7 @@ const ApprovalRulesManage: React.FC = () => {
               }}
             >
               표준 규칙 동기화
-            </button>
+ </button>
           </div>
 
           {/* ── 카테고리별 요약 바 (유형별 정렬 현황) ── */}
@@ -670,7 +670,7 @@ const ApprovalRulesManage: React.FC = () => {
           }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '6px' }}>
               결재선 유형 현황 (총 {sortedRules.length}건):
-            </span>
+ </span>
             {APPROVAL_CATEGORY_ORDER.map(cat => {
               const count = categoryCounts[cat] || 0;
               const colors = CATEGORY_COLORS[cat] || { bg: '#475569', color: '#e2e8f0' };
@@ -741,7 +741,7 @@ const ApprovalRulesManage: React.FC = () => {
                         <tr style={{ background: 'var(--bg-card-header)', borderTop: idx > 0 ? '2px solid var(--border-color)' : undefined }}>
                           <td colSpan={7} style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                             {currentCategory} ({categoryTotal})
-                          </td>
+ </td>
                         </tr>
                       )}
                       <tr style={{
@@ -850,8 +850,8 @@ const ApprovalRulesManage: React.FC = () => {
                               color: 'var(--text-muted)', fontSize: '14px', padding: '2px 4px',
                             }}
                           >
-                            ✕
-                          </button>
+                            
+ </button>
                         </td>
                       </tr>
 
@@ -874,13 +874,13 @@ const ApprovalRulesManage: React.FC = () => {
                                   }}
                                 >
                                   + 합의 부서 추가
-                                </button>
+ </button>
                               </div>
 
                               {(consensusMap[r.id!] || []).length === 0 ? (
                                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '6px 0' }}>
                                   등록된 합의 부서가 없습니다.
-                                </p>
+ </p>
                               ) : (
                                 <table style={{
                                   width: '100%', borderCollapse: 'collapse',
@@ -943,7 +943,7 @@ const ApprovalRulesManage: React.FC = () => {
                                             style={{ padding: '4px 10px', background: 'var(--danger-light)', color: 'var(--danger)', border: 'none', borderRadius: '5px', fontSize: '12px', cursor: 'pointer' }}
                                           >
                                             삭제
-                                          </button>
+ </button>
                                         </td>
                                       </tr>
                                     ))}
@@ -964,7 +964,7 @@ const ApprovalRulesManage: React.FC = () => {
                     <td colSpan={7} style={{ padding: '56px 24px', textAlign: 'center' }}>
                       <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                         등록된 결재선 규칙이 없습니다.
-                      </p>
+ </p>
                     </td>
                   </tr>
                 )}
@@ -972,7 +972,7 @@ const ApprovalRulesManage: React.FC = () => {
                   <tr>
                     <td colSpan={7} style={{ padding: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
                       불러오는 중…
-                    </td>
+ </td>
                   </tr>
                 )}
               </tbody>
@@ -992,7 +992,7 @@ const ApprovalRulesManage: React.FC = () => {
             ))}
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
               저장 중 행은 강조 표시 · 전결 티어/사용 여부는 선택 즉시 저장 · 이름은 셀 이탈 시 저장
-            </span>
+ </span>
           </div>
         </div>
       )}
@@ -1014,12 +1014,12 @@ const ApprovalRulesManage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px' }}>
-                  직급·직책 결재 티어 운영 원칙 (R&R 우선순위)
-                </h3>
+                  직급·직책 결재 티어 운영 원칙
+ </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.6' }}>
                   • <strong>직책 우선 원칙</strong>: 단위 기능조직 책임자(파트장, 팀장, 센터장, 공장장, 본부장, 총괄 등)는 직급과 무관하게 <strong>직책 티어가 최우선 전결권</strong>으로 강력하게 작동합니다.<br />
                   • <strong>직급 호환 원칙</strong>: 직책이 지정되지 않은 일반 사원 및 직책 구분이 없는 소규모 조직은 <strong>소속 직급 티어</strong>로 자동 fallback 작동합니다.
-                </p>
+ </p>
               </div>
 
               <button
@@ -1037,7 +1037,7 @@ const ApprovalRulesManage: React.FC = () => {
                 }}
               >
                 표준 기본값 복원
-              </button>
+ </button>
             </div>
 
             {/* 실시간 유효 티어 판정 시뮬레이터 */}
@@ -1056,7 +1056,7 @@ const ApprovalRulesManage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
                   유효 티어 판정 시뮬레이터:
-                </span>
+ </span>
                 
                 {/* 직급 선택 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1104,7 +1104,7 @@ const ApprovalRulesManage: React.FC = () => {
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>최종 결재 권한:</span>
                 <strong style={{ fontSize: '14px', color: simulationResult.source === 'DUTY' ? 'var(--primary)' : 'var(--text-main)' }}>
                   {simulationResult.effectiveTier}티어 ({simulationResult.title})
-                </strong>
+ </strong>
                 <span style={{
                   fontSize: '11px',
                   fontWeight: 700,
@@ -1137,10 +1137,10 @@ const ApprovalRulesManage: React.FC = () => {
                 <div>
                   <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 2px' }}>
                     직책별 티어 마스터 (단위 조직 책임자)
-                  </h4>
+ </h4>
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     총 {dutyConfigs.length}개 직책 등록됨 (결재 시 직책 티어 최우선 반영)
-                  </span>
+ </span>
                 </div>
               </div>
 
@@ -1192,7 +1192,7 @@ const ApprovalRulesManage: React.FC = () => {
                   }}
                 >
                   추가
-                </button>
+ </button>
               </div>
 
               {/* 직책 목록 테이블 */}
@@ -1254,8 +1254,8 @@ const ApprovalRulesManage: React.FC = () => {
                             }}
                             title="직책 삭제"
                           >
-                            ✕
-                          </button>
+                            
+ </button>
                         </td>
                       </tr>
                     ))}
@@ -1279,10 +1279,10 @@ const ApprovalRulesManage: React.FC = () => {
                 <div>
                   <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 2px' }}>
                     직급별 티어 마스터 (일반 사원 / 소규모 조직)
-                  </h4>
+ </h4>
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    총 {positionConfigs.length}개 직급 등록됨 (직책 미지정 시 fallback 적용)
-                  </span>
+                    총 {positionConfigs.length}개 직급 등록됨
+ </span>
                 </div>
               </div>
 
@@ -1334,7 +1334,7 @@ const ApprovalRulesManage: React.FC = () => {
                   }}
                 >
                   추가
-                </button>
+ </button>
               </div>
 
               {/* 직급 목록 테이블 */}
@@ -1396,8 +1396,8 @@ const ApprovalRulesManage: React.FC = () => {
                             }}
                             title="직급 삭제"
                           >
-                            ✕
-                          </button>
+                            
+ </button>
                         </td>
                       </tr>
                     ))}

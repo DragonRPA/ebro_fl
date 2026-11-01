@@ -115,7 +115,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               }}
             >
               경영진 전결
-            </span>
+ </span>
             <h3
               style={{
                 fontSize: '16px',
@@ -127,7 +127,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               }}
             >
               <FileText size={17} color="#7e22ce" /> 내용증명 / 법적 최고장 작성 스튜디오
-            </h3>
+ </h3>
           </div>
           <button
             type="button"
@@ -139,8 +139,8 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               fontSize: '16px'
             }}
           >
-            ✕
-          </button>
+            
+ </button>
         </div>
 
         {/* 2열 스튜디오 본체: 좌측 편집기 / 우측 A4 미리보기 */}
@@ -179,17 +179,17 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               </div>
               <div>
                 대표이사: <strong>{customer?.representative || '대표이사'}</strong> 귀하
-              </div>
+ </div>
               <div>
                 연체 총액:{' '}
                 <strong style={{ color: 'var(--danger)' }}>
                   ₩{noticeTargetDel.totalOverdueAmount.toLocaleString()}원
-                </strong>
+ </strong>
               </div>
               <div>
                 약정 결제일: <strong>{noticeTargetDel.paymentDueConditionText}</strong> (
-                {noticeTargetDel.overdueDays}일 도과)
-              </div>
+ {noticeTargetDel.overdueDays}일 도과)
+ </div>
             </div>
 
             <div>
@@ -202,7 +202,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                 }}
               >
                 문서 제목
-              </label>
+ </label>
               <input
                 type="text"
                 value={title}
@@ -229,7 +229,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                   }}
                 >
                   변제 최고 기한 (도달일로부터)
-                </label>
+ </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <input
                     type="number"
@@ -250,7 +250,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                   }}
                 >
                   우체국 등기번호 (발송 후 입력)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={trackingNo}
@@ -272,7 +272,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               >
                 <label style={{ fontSize: '11.5px', fontWeight: 700 }}>
                   내용증명 본문 (자유 편집 가능)
-                </label>
+ </label>
                 <button
                   data-hs-trigger="Save"
                   type="button"
@@ -288,7 +288,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                   }}
                 >
                   <Save size={11} /> 기본 서식으로 저장
-                </button>
+ </button>
               </div>
               <textarea
                 value={customContent}
@@ -321,7 +321,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                 alignItems: 'center'
               }}
             >
-              <span>A4 우체국 내용증명 규격 미리보기 (여백 20mm)</span>
+              <span>A4 우체국 내용증명 규격 미리보기</span>
               <button
                 type="button"
                 className="btn-secondary"
@@ -335,7 +335,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                 }}
               >
                 <Printer size={12} /> 인쇄 / PDF 출력
-              </button>
+ </button>
             </div>
 
             <div
@@ -365,7 +365,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                 }}
               >
                 최 고 장 (내 용 증 명)
-              </div>
+ </div>
 
               {/* 수신인 / 발신인 상자 */}
               <div
@@ -388,13 +388,13 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                     }}
                   >
                     [수 신 인]
-                  </div>
+ </div>
                   <div>
                     상 호: <strong>{noticeTargetDel.customerName}</strong>
                   </div>
                   <div>
                     대 표 자: <strong>{customer?.representative || '대표이사'}</strong> 귀하
-                  </div>
+ </div>
                   <div>사업자번호: {customer?.bizRegNo || '-'}</div>
                   <div>주 소: {customer?.address || '사업장 소재지'}</div>
                 </div>
@@ -408,7 +408,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                     }}
                   >
                     [발 신 인]
-                  </div>
+ </div>
                   <div>
                     상 호:{' '}
                     <strong>
@@ -420,7 +420,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                   <div>
                     대 표 자:{' '}
                     <strong>{currentTenant?.representativeName || '대표자'}</strong> (직인생략/날인)
-                  </div>
+ </div>
                   <div>등록번호: {currentTenant?.businessNumber || '138-81-83251'}</div>
                   <div>
                     주 소:{' '}
@@ -460,7 +460,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               <div style={{ textAlign: 'right', marginTop: '30px', paddingRight: '10px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>
                   {todayStr.split('-')[0]}년 {todayStr.split('-')[1]}월 {todayStr.split('-')[2]}일
-                </div>
+ </div>
                 <div
                   style={{
                     fontSize: '14px',
@@ -485,7 +485,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                     }}
                   >
                     (인)
-                  </span>
+ </span>
                 </div>
               </div>
             </div>
@@ -503,8 +503,8 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
           }}
         >
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            발송 승인 시 내용증명 발송 이력(`legalNoticeLogs`) 및 고객 타임라인에 보존됩니다.
-          </span>
+            발송 승인 시 내용증명 발송 이력 및 고객 타임라인에 보존됩니다.
+ </span>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
@@ -514,7 +514,7 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
               style={{ padding: '6px 14px', fontSize: '12px' }}
             >
               취소
-            </button>
+ </button>
             <button
               data-hs-trigger="Save"
               type="button"

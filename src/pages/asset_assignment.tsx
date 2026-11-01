@@ -86,12 +86,12 @@ export const AssetAssignment: React.FC = () => {
   const canEdit = hasPermission('dispatch_assign', 'save');
   const canView = hasPermission('dispatch_assign', 'view');
 
-  // ── 🌟 [O(1) 룩업 해시맵 및 그룹핑 사전 인덱싱: 헌장 1.1] ──
+  // ──  [O(1) 룩업 해시맵 및 그룹핑 사전 인덱싱: 헌장 1.1] ──
   const assetMap = useMemo(() => new Map((assets || []).map(a => [a.id, a])), [assets]);
   const contractMap = useMemo(() => new Map((contracts || []).map(c => [c.id, c])), [contracts]);
   const customerMap = useMemo(() => new Map((customers || []).map(c => [c.id, c])), [customers]);
   const siteMap = useMemo(() => new Map((sites || []).map(s => [s.id, s])), [sites]);
-  // 🌟 가상자산은 관리부 전용(회계/일괄 정산용)이므로 현장 실물 장비 할당 풀에서 영구 제외
+  //  가상자산은 관리부 전용(회계/일괄 정산용)이므로 현장 실물 장비 할당 풀에서 영구 제외
   const availablePool = useMemo(() => (assets || []).filter(a => !(a as any).isDeleted && !isVirtualAsset(a) && !a.actualRentReturnDate && a.status === 'AVAILABLE'), [assets]);
 
   // 이미 출고검수 승인 완료(COMPLETED)된 슬롯 ID 집합 (헌장 1.3: 기출고 대여중 장비는 할당 작업대에서 제외)
@@ -144,7 +144,7 @@ export const AssetAssignment: React.FC = () => {
     return map;
   }, [contractHistory]);
 
-  // ── 🌟 [출고 요청 건(Delivery) 단위 개별 그룹핑: 동일 계약 내 복수 출고 요청 건을 개별 카드로 분리] ──
+  // ──  [출고 요청 건(Delivery) 단위 개별 그룹핑: 동일 계약 내 복수 출고 요청 건을 개별 카드로 분리] ──
   const extractCaIdsFromDelivery = (d: any): string[] => {
     if (!d?.cargoItems) return [];
     try {
@@ -446,7 +446,7 @@ export const AssetAssignment: React.FC = () => {
     return { bg: 'var(--danger-light)', color: 'var(--danger)', border: 'var(--danger)' };
   };
 
-  // 🎯 출고 요청 그룹(또는 계약) 선택 핸들러 (첫 번째 미할당 모델 자동 단일 포커스)
+  //  출고 요청 그룹(또는 계약) 선택 핸들러 (첫 번째 미할당 모델 자동 단일 포커스)
   const handleSelectContract = (groupKey: string) => {
     setSelectedContractId(groupKey);
     setSelectedAssetIds([]);
@@ -465,7 +465,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 장비 할당 요청 그룹을 즉시 탐색·선택
+  //  대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 장비 할당 요청 그룹을 즉시 탐색·선택
   useEffect(() => {
     if (!navigationPayload || groupMap.size === 0) return;
     const targetDelivId = navigationPayload.deliveryId || '';
@@ -502,7 +502,7 @@ export const AssetAssignment: React.FC = () => {
     }
   }, [navigationPayload, groupMap]);
 
-  // 🎯 특정 모델 그룹 선택 (기존 타 모델 선택 장비는 유지하여 다수 모델 동시 할당 지원)
+  //  특정 모델 그룹 선택 (기존 타 모델 선택 장비는 유지하여 다수 모델 동시 할당 지원)
   const handleSelectModelGroupSlots = (caIds: string[]) => {
     const isCurrentlySelected = caIds.length > 0 && caIds.every(id => selectedCaIds.includes(id)) && selectedCaIds.length === caIds.length;
     if (isCurrentlySelected) {
@@ -512,7 +512,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // 🔒 특정 장비의 모델에 해당하는 전체 미할당 슬롯 요구수량 및 잔여 쿼터 계산 (선택 중인 모델과 무관하게 출고요청 전체 모델 기준)
+  //  특정 장비의 모델에 해당하는 전체 미할당 슬롯 요구수량 및 잔여 쿼터 계산 (선택 중인 모델과 무관하게 출고요청 전체 모델 기준)
   const getModelQuotaForAsset = (asset: Asset, baseSelectedIds: string[] = selectedAssetIds) => {
     const unassignedSlots = currentSlots.filter(ca => !ca.assetId);
     const matchingSlots = unassignedSlots.filter(ca => isModelMatch(asset.modelName, ca.expectedModel || ''));
@@ -532,7 +532,7 @@ export const AssetAssignment: React.FC = () => {
     };
   };
 
-  // 🔒 전체 미할당 선택 상한 (출고요청 내 모든 미할당 슬롯 수)
+  //  전체 미할당 선택 상한 (출고요청 내 모든 미할당 슬롯 수)
   const maxSelectableCount = useMemo(() => {
     return currentSlots.filter(ca => !ca.assetId).length;
   }, [currentSlots]);
@@ -569,7 +569,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // 🚀 자동 추천 선택 (현재 선택된 모델 슬롯 또는 전체 미할당 슬롯에 대해 모델별 요구수량만큼 자동 선택)
+  //  자동 추천 선택 (현재 선택된 모델 슬롯 또는 전체 미할당 슬롯에 대해 모델별 요구수량만큼 자동 선택)
   const handleAutoSelectTopAssets = () => {
     const targetSlots = selectedCaIds.length > 0
       ? currentSlots.filter(ca => selectedCaIds.includes(ca.id) && !ca.assetId)
@@ -604,7 +604,7 @@ export const AssetAssignment: React.FC = () => {
     setSelectedAssetIds(nextSelectedIds);
   };
 
-  // ⌨️ 다중 관리번호 문자열을 출고요청 전체 미할당 모델 슬롯 기준으로 매칭하는 헬퍼
+  //  다중 관리번호 문자열을 출고요청 전체 미할당 모델 슬롯 기준으로 매칭하는 헬퍼
   const resolveMultiModelQuickInput = (rawText: string, baseSelectedIds: string[]) => {
     const tokens = rawText
       .split(/[\s,]+/)
@@ -618,7 +618,7 @@ export const AssetAssignment: React.FC = () => {
     for (const token of tokens) {
       const currentCombinedIds = [...baseSelectedIds, ...matchedAssetIds];
 
-      // 1순위: 출고요청의 미할당 모델 중 잔여 쿼터가 남아있는 가용 장비에서 검색 (정확 일치 우선 ➔ 접미어/시리얼 일치)
+      // 1순위: 출고요청의 미할당 모델 중 잔여 쿼터가 남아있는 가용 장비에서 검색 (정확 일치 우선  접미어/시리얼 일치)
       const findAssignable = (exactOnly: boolean) =>
         availablePool.find(a => {
           if (currentCombinedIds.includes(a.id)) return false;
@@ -660,7 +660,7 @@ export const AssetAssignment: React.FC = () => {
     return { matchedAssetIds, matchedModelCaIds: Array.from(matchedModelCaIds), skippedOverQuota };
   };
 
-  // ⌨️ 관리번호 입력 처리 (선택 중인 모델과 무관하게 출고요청 전체 모델에 대해 동시 매칭 및 선택)
+  //  관리번호 입력 처리 (선택 중인 모델과 무관하게 출고요청 전체 모델에 대해 동시 매칭 및 선택)
   const handleQuickInputSubmit = () => {
     if (!quickInputText.trim()) return;
 
@@ -706,7 +706,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // ⚡ 장비 할당 실행 (선택 중인 모델에 무관하게 출고요청을 구성하는 다수 모델 전체에 대해 동시 할당)
+  //  장비 할당 실행 (선택 중인 모델에 무관하게 출고요청을 구성하는 다수 모델 전체에 대해 동시 할당)
   const handleBatchAssign = async (overrideAssetIds?: string[]) => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -806,7 +806,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // 🔄 단일 장비 할당 취소 (즉시 실행 ➔ 완료 시 1회 알림)
+  //  단일 장비 할당 취소 (즉시 실행  완료 시 1회 알림)
   const handleUnassignSlot = async (caId: string, assetNo?: string) => {
     if (isAssigning) return;
     if (!canEdit) {
@@ -826,7 +826,7 @@ export const AssetAssignment: React.FC = () => {
     }
   };
 
-  // 🔄 특정 모델 할당 장비 전체 원자적 일괄 취소 (즉시 실행 ➔ 완료 시 1회 알림)
+  //  특정 모델 할당 장비 전체 원자적 일괄 취소 (즉시 실행  완료 시 1회 알림)
   const handleBatchUnassignModelSlots = async (modelName: string, caIdsWithAsset: string[]) => {
     if (isAssigning || caIdsWithAsset.length === 0) return;
     if (!canEdit) {
@@ -931,11 +931,11 @@ export const AssetAssignment: React.FC = () => {
             style={{ height: '32px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0, borderColor: 'var(--success)', color: 'var(--success)' }}
           >
             <Download size={13} /> 엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
-      {/* 🔍 조회 필터 패널 (헌장 3.2 줄바꿈 방지, 3.4 상하 스택 배치, 미완결 기본값 + 기간 + 고객/현장 검색) */}
+      {/*  조회 필터 패널 (헌장 3.2 줄바꿈 방지, 3.4 상하 스택 배치, 미완결 기본값 + 기간 + 고객/현장 검색) */}
       <div style={{
         padding: '12px 14px',
         backgroundColor: 'var(--bg-card)',
@@ -950,7 +950,7 @@ export const AssetAssignment: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
             할당 상태
-          </label>
+ </label>
           <div style={{ display: 'flex', gap: '4px' }}>
             {([
               { key: 'INCOMPLETE', label: '미완결' },
@@ -988,7 +988,7 @@ export const AssetAssignment: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Calendar size={12} /> 조회 기간 (출고예정일)
-          </label>
+ </label>
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
             {([
               { key: 'TODAY', label: '오늘' },
@@ -1028,7 +1028,7 @@ export const AssetAssignment: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
             기간 설정
-          </label>
+ </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <input
               type="date"
@@ -1076,7 +1076,7 @@ export const AssetAssignment: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1 1 220px', minWidth: '200px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
             고객명 / 현장명 검색
-          </label>
+ </label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', pointerEvents: 'none' }} />
             <input
@@ -1142,7 +1142,7 @@ export const AssetAssignment: React.FC = () => {
             }}
           >
             <RotateCcw size={12} /> 초기화
-          </button>
+ </button>
           <div style={{
             height: '32px',
             padding: '0 12px',
@@ -1164,7 +1164,7 @@ export const AssetAssignment: React.FC = () => {
         </div>
       </div>
 
-      {/* 📊 현황 요약 바 (필터 설정에 따라 조회된 내용의 건수만 표시) */}
+      {/*  현황 요약 바 (필터 설정에 따라 조회된 내용의 건수만 표시) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
         <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>조회 요청 건수</span>
@@ -1193,7 +1193,7 @@ export const AssetAssignment: React.FC = () => {
         <div style={{ backgroundColor: 'var(--warning-light)', padding: '14px', borderRadius: '10px', border: '2px solid var(--warning)' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--warning)' }}>
             <AlertTriangle size={14} /> 교환 출고할당 대기 ({exchangePendingGroups.length}건)
-          </h3>
+ </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {exchangePendingGroups.map(grp => {
               const contract = grp.contract;
@@ -1240,7 +1240,7 @@ export const AssetAssignment: React.FC = () => {
         <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
           <PackageSearch size={14} color="var(--primary)" />
           {statusFilter === 'INCOMPLETE' ? '미완결 출고 요청 건' : statusFilter === 'COMPLETED' ? '할당 완료 요청 건' : '출고 요청 건'} ({pendingGroups.length}건)
-        </h3>
+ </h3>
         
         {pendingGroups.length === 0 ? (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>조회 조건에 해당하는 출고 요청이 없습니다.</div>
@@ -1354,14 +1354,14 @@ export const AssetAssignment: React.FC = () => {
               <div>
                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Layers size={14} color="var(--primary)" /> 모델별 요구 수량 ({modelGroups.length}개 모델 / 총 {currentSlots.length}대)
-                </h3>
+ </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   선택된 모델 필요 슬롯: <strong style={{ color: 'var(--primary)' }}>{selectedCaIds.length}대</strong> / 미할당: {currentSlots.filter(c => !c.assetId).length}대
-                </span>
+ </span>
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                💡 모델 카드를 클릭하여 대상 변경
-              </div>
+                 모델 카드를 클릭하여 대상 변경
+ </div>
             </div>
 
             {/* 모델명 × 수량 그룹 카드 리스트 (개별 N줄 나열 제거) */}
@@ -1424,7 +1424,7 @@ export const AssetAssignment: React.FC = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <CheckCircle size={12} /> 할당 완료 장비 ({assignedSlots.length}대)
-                          </div>
+ </div>
                           <button
                             type="button"
                             onClick={() => handleBatchUnassignModelSlots(grp.modelName, assignedSlots.map(s => s.id))}
@@ -1443,7 +1443,7 @@ export const AssetAssignment: React.FC = () => {
                             }}
                           >
                             <X size={11} /> 이 모델 할당 전체 취소
-                          </button>
+ </button>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                           {assignedSlots.map(ca => {
@@ -1488,7 +1488,7 @@ export const AssetAssignment: React.FC = () => {
                                   }}
                                 >
                                   <X size={10} /> 취소
-                                </button>
+ </button>
                               </span>
                             );
                           })}
@@ -1509,7 +1509,7 @@ export const AssetAssignment: React.FC = () => {
               <div>
                 <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success)' }}>
                   <CheckCircle size={14} /> 필터링된 임대가능 장비 ({availableAssets.length}대)
-                </h3>
+ </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                   선택됨: <strong style={{ color: 'var(--success)' }}>{selectedAssetIds.length}대</strong> / 대상 모델 요구 수량: <strong style={{ color: 'var(--primary)' }}>{selectedCaIds.length}대</strong>
                 </span>
@@ -1540,12 +1540,12 @@ export const AssetAssignment: React.FC = () => {
               )}
             </div>
 
-            {/* ⌨️ 자산번호 입력 바 (실무자 요구: 쉼표/엔터 다중 연속 입력 & 카메라 실시간 스캔) */}
+            {/*  자산번호 입력 바 (실무자 요구: 쉼표/엔터 다중 연속 입력 & 카메라 실시간 스캔) */}
             <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   자산번호 입력 (쉼표 또는 엔터로 다중 연속 입력 / 카메라 스캔)
-                </label>
+ </label>
                 <button
                   type="button"
                   onClick={() => setShowCameraOcrModal(prev => !prev)}
@@ -1601,7 +1601,7 @@ export const AssetAssignment: React.FC = () => {
                   }}
                 >
                   추가
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleAutoSelectTopAssets}
@@ -1623,11 +1623,11 @@ export const AssetAssignment: React.FC = () => {
                 >
                   <Zap size={13} />
                   추천순 자동선택
-                </button>
+ </button>
               </div>
             </div>
 
-            {/* 📷 인라인 실시간 카메라 스캔 창 (화면 가리지 않고 입력 바 바로 아래 표시) */}
+            {/*  인라인 실시간 카메라 스캔 창 (화면 가리지 않고 입력 바 바로 아래 표시) */}
             {showCameraOcrModal && (
               <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)' }}>
                 <MobileInlineCameraAssetScanner
@@ -1683,7 +1683,7 @@ export const AssetAssignment: React.FC = () => {
               </div>
             )}
 
-            {/* 🔍 검색 필터 바 */}
+            {/*  검색 필터 바 */}
             <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Search size={13} color="var(--text-muted)" />
               <input
@@ -1713,7 +1713,7 @@ export const AssetAssignment: React.FC = () => {
               {availableAssets.length === 0 ? (
                 <div style={{ gridColumn: '1 / -1', padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                   조건에 맞는 출고 가능 장비가 없습니다.
-                </div>
+ </div>
               ) : (
                 availableAssets.map(a => {
                   const isSelected = selectedAssetIds.includes(a.id);
@@ -1773,7 +1773,7 @@ export const AssetAssignment: React.FC = () => {
       )}
 
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5: 조회 필터 결과 연동) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5: 조회 필터 결과 연동) */}
       <div style={{
         padding: '8px 14px',
         backgroundColor: 'var(--bg-app)',

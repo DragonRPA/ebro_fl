@@ -192,7 +192,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
       setIsAnalyzingFuelOdo(false);
       if (res.success && res.mileage) {
         setFuelMileageStr(String(res.mileage));
-        setFuelOdoAiBadge(`⚡ AI 계기판 인식: ${res.mileage.toLocaleString()} km`);
+        setFuelOdoAiBadge(` AI 계기판 인식: ${res.mileage.toLocaleString()} km`);
         setTimeout(() => setFuelOdoAiBadge(null), 6000);
       }
     }
@@ -216,7 +216,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
         if (res.fuelType) setFuelType(res.fuelType);
         if (res.paymentMethod) setPaymentMethod(res.paymentMethod);
         if (res.fuelDate) setFuelDate(res.fuelDate);
-        setFuelReceiptAiBadge(`⚡ AI 영수증 인식 완료 (${res.gasStationName || '주유소'}, ₩${res.fuelAmount?.toLocaleString() || ''})`);
+        setFuelReceiptAiBadge(` AI 영수증 인식 완료 (${res.gasStationName || '주유소'}, ₩${res.fuelAmount?.toLocaleString() || ''})`);
         setTimeout(() => setFuelReceiptAiBadge(null), 6000);
       }
     }
@@ -236,7 +236,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
       setIsAnalyzingStartOdo(false);
       if (res.success && res.mileage) {
         setStartMileageStr(String(res.mileage));
-        setStartOdoAiBadge(`⚡ AI 출발 계기판 인식: ${res.mileage.toLocaleString()} km`);
+        setStartOdoAiBadge(` AI 출발 계기판 인식: ${res.mileage.toLocaleString()} km`);
         setTimeout(() => setStartOdoAiBadge(null), 6000);
       }
     }
@@ -256,7 +256,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
       setIsAnalyzingEndOdo(false);
       if (res.success && res.mileage) {
         setEndMileageStr(String(res.mileage));
-        setEndOdoAiBadge(`⚡ AI 도착 계기판 인식: ${res.mileage.toLocaleString()} km`);
+        setEndOdoAiBadge(` AI 도착 계기판 인식: ${res.mileage.toLocaleString()} km`);
         setTimeout(() => setEndOdoAiBadge(null), 6000);
       }
     }
@@ -342,7 +342,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
         memo: fuelMemo.trim() || undefined
       });
 
-      showToast(`⛽ ${vehicleNo} 주유 기록(${volume}L / ₩${amount.toLocaleString()})이 정상 저장되었습니다.`);
+      showToast(` ${vehicleNo} 주유 기록(${volume}L / ₩${amount.toLocaleString()})이 정상 저장되었습니다.`);
       // 폼 초기화
       setFuelVolumeStr('');
       setFuelAmountStr('');
@@ -416,7 +416,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
         status: 'SUBMITTED'
       });
 
-      showToast(`🚗 ${vehicleNo} 운행일지(${driveDistance} km)가 정상 등록되었습니다.`);
+      showToast(` ${vehicleNo} 운행일지(${driveDistance} km)가 정상 등록되었습니다.`);
       setArrivalLocation('');
       setEndMileageStr('');
       setPurposeDetail('');
@@ -469,8 +469,8 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
               <span>법인차량 주유기록</span>
             </h1>
             <p className="text-[11px] text-slate-400">
-              계기판 및 주유영수증 촬영 ➔ 주유 대장 자동 집계
-            </p>
+              계기판 및 주유영수증 촬영 주유 대장 자동 집계
+ </p>
           </div>
         </div>
       </div>
@@ -566,11 +566,11 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
                   {!fuelVehicleId && (
                     <option value="" disabled>
                       -- 차량을 선택해 주십시오 --
-                    </option>
+ </option>
                   )}
                   {sortedCorporateVehicles.map(v => (
                     <option key={v.id} value={v.id}>
-                      {v.vehicleNo} - {v.modelName} ({v.assignedDepartment}) {!v.isActive ? '[휴차]' : ''} {v.primaryDriverId === currentUser?.id ? '★내 배정차량' : ''}
+                      {v.vehicleNo} - {v.modelName} ({v.assignedDepartment}) {!v.isActive ? '[휴차]' : ''} {v.primaryDriverId === currentUser?.id ? '내 배정차량' : ''}
                     </option>
                   ))}
                 </>
@@ -638,7 +638,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
           {/* 주유량(리터) & 주유금액(원) 2열 배치 */}
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-slate-300">주유용량 (리터 L) *</label>
+              <label className="text-xs font-bold text-slate-300">주유용량 *</label>
               <input
                 type="number"
                 step="0.01"
@@ -780,11 +780,11 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
                   {!opVehicleId && (
                     <option value="" disabled>
                       -- 차량을 선택해 주십시오 --
-                    </option>
+ </option>
                   )}
                   {sortedCorporateVehicles.map(v => (
                     <option key={v.id} value={v.id}>
-                      {v.vehicleNo} - {v.modelName} ({v.assignedDepartment}) {!v.isActive ? '[휴차]' : ''} {v.primaryDriverId === currentUser?.id ? '★내 배정차량' : ''}
+                      {v.vehicleNo} - {v.modelName} ({v.assignedDepartment}) {!v.isActive ? '[휴차]' : ''} {v.primaryDriverId === currentUser?.id ? '내 배정차량' : ''}
                     </option>
                   ))}
                 </>
@@ -825,7 +825,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
             />
           </div>
 
-          {/* 출발지 ➔ 도착지 2열 */}
+          {/* 출발지  도착지 2열 */}
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300">출발지 *</label>
@@ -908,7 +908,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
             <span className="text-xs font-bold text-blue-300">주행거리 자동 계산:</span>
             <span className="text-lg font-black text-blue-400">
               {calculatedDriveDistance.toLocaleString()} km
-            </span>
+ </span>
           </div>
 
           {/* 출발 & 도착 계기판 사진 촬영 (선택 - 촬영 시 자동 판독) */}
@@ -980,7 +980,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
             {myRecentFuels.length === 0 ? (
               <div className="bg-slate-900 border border-slate-800 p-8 text-center text-slate-500 text-xs rounded-xl">
                 최근 등록된 주유 영수증 기록이 없습니다.
-              </div>
+ </div>
             ) : (
               myRecentFuels.map(f => (
                 <div key={f.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex flex-col gap-2 shadow-sm">
@@ -992,10 +992,10 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-300">
                       {f.fuelType} {f.fuelVolume.toFixed(1)} L (₩{f.fuelAmount.toLocaleString()})
-                    </span>
+ </span>
                     <span className="font-bold text-emerald-400">
                       계기판: {f.currentMileage.toLocaleString()} km
-                    </span>
+ </span>
                   </div>
 
                   {/* 사진 확인 썸네일 */}
@@ -1044,7 +1044,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
               {myRecentOperations.length === 0 ? (
                 <div className="bg-slate-900 border border-slate-800 p-8 text-center text-slate-500 text-xs rounded-xl">
                   최근 등록된 운행일지 기록이 없습니다.
-                </div>
+ </div>
               ) : (
                 myRecentOperations.map(op => (
                   <div key={op.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex flex-col gap-2 shadow-sm">
@@ -1059,16 +1059,16 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
                     </div>
 
                     <div className="text-xs text-slate-200 font-medium">
-                      {op.departureLocation} ➔ {op.arrivalLocation}
+                      {op.departureLocation} {op.arrivalLocation}
                     </div>
 
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/80">
                       <span className="text-slate-400">
-                        {op.departureMileage.toLocaleString()} ➔ {op.arrivalMileage.toLocaleString()} km
-                      </span>
+                        {op.departureMileage.toLocaleString()} {op.arrivalMileage.toLocaleString()} km
+ </span>
                       <span className="font-extrabold text-amber-400">
                         {op.driveDistance} km 주행
-                      </span>
+ </span>
                     </div>
                   </div>
                 ))

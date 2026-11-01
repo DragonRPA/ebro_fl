@@ -536,7 +536,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
         setIsInlineCameraOpen(false);
         setQuickInputText('');
         showToast(
-          `${oldAsset?.assetNo || '기존장비'} ➔ ${newAsset.assetNo} 교체 및 충족 반영 완료`,
+          `${oldAsset?.assetNo || '기존장비'} ${newAsset.assetNo} 교체 및 충족 반영 완료`,
           'success'
         );
       } catch (err: any) {
@@ -610,7 +610,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
     setIsInlineCameraOpen(false);
   };
 
-  // 출고검수 접수 (PENDING ➔ IN_PROGRESS & 자산 OUTBOUND_INSPECTION 전환)
+  // 출고검수 접수 (PENDING  IN_PROGRESS & 자산 OUTBOUND_INSPECTION 전환)
   const handleAcceptMobileGroup = async (group: InspectionRequestGroup) => {
     if (!canEdit) return;
     setIsSubmitting(true);
@@ -645,7 +645,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
     }
   };
 
-  // 출고검수 접수 취소 롤백 (IN_PROGRESS ➔ PENDING & 자산 ASSIGNED 전환)
+  // 출고검수 접수 취소 롤백 (IN_PROGRESS  PENDING & 자산 ASSIGNED 전환)
   const handleCancelAcceptMobileGroup = async (group: InspectionRequestGroup) => {
     if (!canEdit) return;
     setIsSubmitting(true);
@@ -679,7 +679,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
     }
   };
 
-  // 출고검수 완료 취소 롤백 (COMPLETED ➔ IN_PROGRESS & 자산 OUTBOUND_INSPECTION 전환)
+  // 출고검수 완료 취소 롤백 (COMPLETED  IN_PROGRESS & 자산 OUTBOUND_INSPECTION 전환)
   const handleRollbackCompletedMobileGroup = async (group: InspectionRequestGroup) => {
     if (!canEdit) return;
     setIsSubmitting(true);
@@ -969,7 +969,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
           <h1 className="text-sm font-bold text-slate-100 whitespace-nowrap">출고검수</h1>
           <span className="text-xs text-amber-300 font-bold whitespace-nowrap">
             대기 {pendingGroups.length}건 ({totalPendingAssetsCount}대)
-          </span>
+ </span>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
@@ -983,7 +983,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
             }`}
           >
             대기 ({pendingGroups.length})
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setViewMode('COMPLETED')}
@@ -994,7 +994,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
             }`}
           >
             완료 ({completedGroups.length})
-          </button>
+ </button>
         </div>
       </header>
 
@@ -1087,7 +1087,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                         {grp.isExchange && (
                           <span className="inline-block text-[10px] px-1.5 py-0.5 mr-1.5 rounded bg-rose-600 text-white font-bold align-middle">
                             교환
-                          </span>
+ </span>
                         )}
                         <strong className="font-bold text-slate-100">{grp.customerName}</strong>
                         <span className="text-slate-300"> · {grp.siteName}</span>
@@ -1143,7 +1143,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                 <span className="text-slate-400 font-normal">
                   {' '}
                   · {activeGroup.customerName} ({activeGroup.siteName})
-                </span>
+ </span>
               </div>
               <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">
                 {activeGroup.driverInfo}
@@ -1153,14 +1153,14 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
             {!hasAnySiteOptions ? (
               <div className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-400 text-left">
                 별도 현장 요구 옵션 없음 (표준 기본 사양)
-              </div>
+ </div>
             ) : (
               <div className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 flex flex-col gap-1.5 text-left">
                 {activeGroup.siteOptions.paidOptions.length > 0 && (
                   <div className="flex items-start gap-2">
                     <span className="text-[11px] font-bold text-amber-300 whitespace-nowrap shrink-0 w-16 pt-0.5">
                       유상옵션
-                    </span>
+ </span>
                     <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                       {activeGroup.siteOptions.paidOptions.map(opt => (
                         <span
@@ -1178,7 +1178,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                   <div className="flex items-start gap-2">
                     <span className="text-[11px] font-bold text-blue-300 whitespace-nowrap shrink-0 w-16 pt-0.5">
                       무상옵션
-                    </span>
+ </span>
                     <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                       {activeGroup.siteOptions.protection.map(opt => (
                         <span
@@ -1196,7 +1196,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                   <div className="flex items-start gap-2">
                     <span className="text-[11px] font-bold text-purple-300 whitespace-nowrap shrink-0 w-16 pt-0.5">
                       부착물
-                    </span>
+ </span>
                     <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                       {activeGroup.siteOptions.attachments.map(opt => (
                         <span
@@ -1214,7 +1214,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                   <div className="flex items-start gap-2">
                     <span className="text-[11px] font-bold text-emerald-300 whitespace-nowrap shrink-0 w-16 pt-0.5">
                       현장요구사양
-                    </span>
+ </span>
                     <div className="flex flex-wrap gap-1 flex-1 min-w-0">
                       {activeGroup.siteOptions.checkedSpecs.map(opt => (
                         <span
@@ -1424,7 +1424,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                         <div className="flex flex-wrap items-center gap-1">
                           <span className="text-[11px] font-bold text-slate-400 mr-1 whitespace-nowrap">
                             사유:
-                          </span>
+ </span>
                           {DEFECT_REASONS.map(r => {
                             const selectedReason = (reasonMap[oin.id] || '옵션 미비') === r;
                             return (
@@ -1453,7 +1453,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-xs font-bold text-slate-200 whitespace-nowrap">
                             교체 후보 · {modelName} ({swapCandidateAssets.length}대)
-                          </span>
+ </span>
                           <div className="flex flex-wrap items-center gap-1">
                             {swapCandidateAssets.length > 0 && (
                               <button
@@ -1478,7 +1478,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                               className="px-2 py-1 rounded bg-slate-800 text-amber-300 border border-slate-700 text-[11px] font-bold whitespace-nowrap"
                             >
                               수량조정 유지
-                            </button>
+ </button>
                           </div>
                         </div>
 
@@ -1501,8 +1501,8 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                             style={{ whiteSpace: 'normal', wordBreak: 'keep-all' }}
                           >
                             교체 가능한 동일 모델({modelName}) 임대가능 자산이 없습니다. 하단 버튼으로
-                            충족된 자산만 검수완료하고 영업사원에게 수량조정을 요청할 수 있습니다.
-                          </div>
+ 충족된 자산만 검수완료하고 영업사원에게 수량조정을 요청할 수 있습니다.
+ </div>
                         ) : (
                           <>
                             {/* 관리번호 직접 입력 / 검색 */}
@@ -1526,7 +1526,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                                 className="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg whitespace-nowrap shrink-0"
                               >
                                 교체
-                              </button>
+ </button>
                             </div>
 
                             {/* 3열 컴팩트 교체 후보 그리드 (터치 즉시 자산 교체) */}
@@ -1566,7 +1566,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
                         <span className="text-[11px] text-rose-300 font-bold">
                           검수 제외 및 영업사원 수량조정 요청 대상
-                        </span>
+ </span>
                         <button
                           type="button"
                           onClick={() => {
@@ -1576,7 +1576,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                           className="px-2 py-1 rounded bg-slate-800 text-cyan-300 border border-slate-700 text-[11px] font-bold whitespace-nowrap"
                         >
                           다른 자산으로 교체
-                        </button>
+ </button>
                       </div>
                     )}
                   </div>

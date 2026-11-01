@@ -81,14 +81,14 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
         ? `${users.find(u => u.id === selectedUserId)?.name || '지정 직원'}님에게`
         : `${DEPT_OPTIONS.find(d => d.id === selectedDept)?.name || '해당 부서'} 전체에`;
 
-      alert(`✅ 경영진 업무지시가 ${targetDesc} 성공적으로 하달되었습니다.`);
+      alert(` 경영진 업무지시가 ${targetDesc} 성공적으로 하달되었습니다.`);
       onClose();
       // 폼 초기화
       setTitle('');
       setContent('');
       setSelectedUserId('');
     } catch (err: any) {
-      showErrorModal(`⚠️ 업무지시 하달 실패:\n${err?.message || err}`);
+      showErrorModal(` 업무지시 하달 실패:\n${err?.message || err}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -125,10 +125,10 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>
                 경영진 업무지시 하달
-              </h3>
+ </h3>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
                 발행자: {currentUser?.name || '경영진'} ({currentUser?.department || '대표이사'})
-              </p>
+ </p>
             </div>
           </div>
           <button
@@ -146,7 +146,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
               지시 대상 구분
-            </label>
+ </label>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="button"
@@ -161,7 +161,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
                 }}
               >
                 <User size={16} /> 특정 인원 지정 (1:1 하달)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setTargetType('DEPT')}
@@ -174,8 +174,8 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
                   cursor: 'pointer'
                 }}
               >
-                <Users size={16} /> 특정 부서 전체 (1:N 부서 하달)
-              </button>
+                <Users size={16} /> 특정 부서 전체
+ </button>
             </div>
           </div>
 
@@ -184,7 +184,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                 수행 담당자 선택
-              </label>
+ </label>
               <select
                 value={selectedUserId}
                 onChange={e => setSelectedUserId(e.target.value)}
@@ -198,7 +198,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>
                     {u.name} ({u.department || '부서미지정'} / {u.position || u.role || '직급미지정'})
-                  </option>
+ </option>
                 ))}
               </select>
             </div>
@@ -206,7 +206,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                 수행 대상 부서 선택
-              </label>
+ </label>
               <select
                 value={selectedDept}
                 onChange={e => setSelectedDept(e.target.value)}
@@ -219,7 +219,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
                 {DEPT_OPTIONS.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.name} ({d.id})
-                  </option>
+ </option>
                 ))}
               </select>
             </div>
@@ -230,7 +230,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                 중요도 / 긴급도
-              </label>
+ </label>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {(['URGENT', 'HIGH', 'NORMAL'] as const).map(p => (
                   <button
@@ -248,7 +248,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
                       cursor: 'pointer'
                     }}
                   >
-                    {p === 'URGENT' ? '🚨 긴급' : p === 'HIGH' ? '⚡ 높음' : '📌 보통'}
+                    {p === 'URGENT' ? '긴급' : p === 'HIGH' ? '높음' : '보통'}
                   </button>
                 ))}
               </div>
@@ -257,7 +257,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Calendar size={14} /> 완료 마감 기한
-              </label>
+ </label>
               <input
                 type="date"
                 value={dueDate}
@@ -275,7 +275,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Link2 size={14} /> 바로가기 관리 화면 지정
-            </label>
+ </label>
             <select
               value={actionUrl}
               onChange={e => setActionUrl(e.target.value)}
@@ -287,7 +287,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
               {ACTION_URL_PRESETS.map(preset => (
                 <option key={preset.url} value={preset.url}>
                   {preset.label} ({preset.url})
-                </option>
+ </option>
               ))}
             </select>
           </div>
@@ -296,7 +296,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
               지시 제목
-            </label>
+ </label>
             <input
               type="text"
               value={title}
@@ -314,7 +314,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>
               지시 세부 내용 (지침 및 요구결과)
-            </label>
+ </label>
             <textarea
               rows={4}
               value={content}
@@ -343,7 +343,7 @@ export const ExecutiveDirectiveModal: React.FC<Props> = ({ isOpen, onClose }) =>
               }}
             >
               취소
-            </button>
+ </button>
             <button
               type="submit"
               disabled={isSubmitting}

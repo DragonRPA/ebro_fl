@@ -140,7 +140,7 @@ export const CourierDispatchPage: React.FC = () => {
         closingMemo: courierMemo.trim()
       });
       setCourierModalTarget(null);
-      if (showSuccessToast) showSuccessToast(`택배 송장(${courierName} / ${trimmedTracking}) 발송 등록이 완료되었습니다.`);
+      if (showSuccessToast) showSuccessToast(`택배 송장 [${courierName} / ${trimmedTracking}] 발송 등록이 완료되었습니다.`);
     } catch (err: any) {
       if (showErrorModal) showErrorModal(err.message);
       else alert(err.message);
@@ -219,7 +219,7 @@ export const CourierDispatchPage: React.FC = () => {
       receiverPhone: ob.receiverPhone || order?.receiverPhone || (cust as any)?.phone || (cust as any)?.repContact || '010-0000-0000',
       driverName: ob.driverName || ob.courierName || '지정 배송기사',
       driverContact: ob.driverContact || ob.trackingNumber || '-',
-      vehicleNo: ob.vehicleNo || (ob.courierName ? `${ob.courierName} (${ob.trackingNumber})` : '화물 운송차량'),
+      vehicleNo: ob.vehicleNo || (ob.courierName ? `${ob.courierName} · ${ob.trackingNumber}` : '화물 운송차량'),
       cargoItems: JSON.stringify(cargos.length > 0 ? cargos : [{ modelName: '유통 주문 상품', count: 1, note: '정상 납품' }]),
       closingMemo: ob.closingMemo || (ob.proofUrl ? `[${ob.proofType === 'PHOTO' ? '납품증 사진' : '전자 서명'}]: ${ob.proofUrl}` : '')
     };
@@ -533,7 +533,7 @@ export const CourierDispatchPage: React.FC = () => {
           <h2 data-mid="courier_dispatch-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <Truck size={18} color="var(--primary)" />
             택배 배송 관리
-          </h2>
+ </h2>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -557,7 +557,7 @@ export const CourierDispatchPage: React.FC = () => {
           >
             <Download size={14} color="#16a34a" />
             엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -572,7 +572,7 @@ export const CourierDispatchPage: React.FC = () => {
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>{kpiStats.waitingCount}건</div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>배송중 (송장발급)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>배송중</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#2563eb', marginTop: '2px' }}>{kpiStats.shippedCount}건</div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -665,8 +665,8 @@ export const CourierDispatchPage: React.FC = () => {
             style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
           >
             <option value="ALL">전체 상태</option>
-            <option value="ALLOCATED">할당완료 (송장대기)</option>
-            <option value="PACKED">패킹완료 (송장대기)</option>
+            <option value="ALLOCATED">할당완료</option>
+            <option value="PACKED">패킹완료</option>
             <option value="SHIPPED">배송중</option>
             <option value="DELIVERED">납품완료</option>
             <option value="CANCELLED">배차취소</option>
@@ -704,7 +704,7 @@ export const CourierDispatchPage: React.FC = () => {
         >
           <RotateCcw size={13} />
           초기화
-        </button>
+ </button>
       </div>
 
       {/* Main Content Table Area */}
@@ -728,7 +728,7 @@ export const CourierDispatchPage: React.FC = () => {
               <tr>
                 <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13.5px' }}>
                   조회 조건에 해당하는 택배/배송 내역이 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               filteredOutbounds.map(o => {
@@ -769,7 +769,7 @@ export const CourierDispatchPage: React.FC = () => {
                             >
                               <Package size={12} />
                               송장 등록/발송
-                            </button>
+ </button>
 
                             <SpecialFeatureGuard featureId="btn:courier_dispatch:direct_dispatch">
                               <button
@@ -792,7 +792,7 @@ export const CourierDispatchPage: React.FC = () => {
                               >
                                 <Truck size={12} />
                                 화물 직배
-                              </button>
+ </button>
                             </SpecialFeatureGuard>
                           </>
                         )}
@@ -819,7 +819,7 @@ export const CourierDispatchPage: React.FC = () => {
                             >
                               <Edit3 size={12} />
                               현장서명
-                            </button>
+ </button>
 
                             <button
                               onClick={() => openManualDeliverModal(o)}
@@ -841,7 +841,7 @@ export const CourierDispatchPage: React.FC = () => {
                             >
                               <CheckCircle size={12} />
                               납품완료
-                            </button>
+ </button>
 
                             <button
                               onClick={() => handleOpenDriverPortal(o)}
@@ -863,7 +863,7 @@ export const CourierDispatchPage: React.FC = () => {
                             >
                               <Link size={12} />
                               기사링크
-                            </button>
+ </button>
 
                             <button
                               onClick={() => o.deliveryType === 'DIRECT' ? openDirectDispatchModal(o) : openCourierModal(o)}
@@ -881,7 +881,7 @@ export const CourierDispatchPage: React.FC = () => {
                               }}
                             >
                               송장수정
-                            </button>
+ </button>
 
                             <button
                               onClick={() => {
@@ -907,7 +907,7 @@ export const CourierDispatchPage: React.FC = () => {
                             >
                               <Ban size={12} />
                               배차취소
-                            </button>
+ </button>
                           </>
                         )}
 
@@ -941,7 +941,7 @@ export const CourierDispatchPage: React.FC = () => {
                           >
                             <FileText size={12} />
                             납품증 보기
-                          </button>
+ </button>
                         )}
 
                         {/* Common Print & Preview */}
@@ -965,7 +965,7 @@ export const CourierDispatchPage: React.FC = () => {
                         >
                           <Printer size={12} />
                           납품증
-                        </button>
+ </button>
 
                         <button
                           onClick={() => handlePreviewReceipt(o)}
@@ -987,7 +987,7 @@ export const CourierDispatchPage: React.FC = () => {
                         >
                           <Eye size={12} />
                           미리보기
-                        </button>
+ </button>
                       </div>
                     </td>
 
@@ -1067,7 +1067,7 @@ export const CourierDispatchPage: React.FC = () => {
                     <td style={{ padding: '10px 12px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                       <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
                         {o.receiverName || order?.receiverName || '인수담당자'} ({o.receiverPhone || order?.receiverPhone || '-'})
-                      </div>
+ </div>
                       <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {o.destinationAddress || order?.deliveryLocation || '-'}
                       </div>
@@ -1077,7 +1077,7 @@ export const CourierDispatchPage: React.FC = () => {
                     <td style={{ padding: '10px 12px', fontSize: '12.5px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
                         {(o.shippingCost || 0).toLocaleString()}원
-                      </div>
+ </div>
                       <div style={{ fontSize: '11px', color: o.paidBy === 'CUSTOMER' ? '#2563eb' : 'var(--text-muted)' }}>
                         {o.paidBy === 'CUSTOMER' ? '고객부담' : '당사부담'}
                       </div>
@@ -1098,7 +1098,7 @@ export const CourierDispatchPage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Package size={18} color="#f59e0b" />
                 택배 송장 등록 및 발송 처리 ({courierModalTarget.id})
-              </h3>
+ </h3>
               <button onClick={() => setCourierModalTarget(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -1160,13 +1160,13 @@ export const CourierDispatchPage: React.FC = () => {
                   >
                     <RefreshCw size={13} />
                     자동채번
-                  </button>
+ </button>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>택배 운임비 (원)</label>
+                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>택배 운임비</label>
                   <input
                     type="number"
                     value={courierShippingCost}
@@ -1182,8 +1182,8 @@ export const CourierDispatchPage: React.FC = () => {
                     onChange={e => setCourierPaidBy(e.target.value as 'OURS' | 'CUSTOMER')}
                     style={{ padding: '8px 10px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '13px' }}
                   >
-                    <option value="OURS">당사부담 (선불)</option>
-                    <option value="CUSTOMER">고객부담 (착불/청구)</option>
+                    <option value="OURS">당사부담</option>
+                    <option value="CUSTOMER">고객부담</option>
                   </select>
                 </div>
               </div>
@@ -1238,13 +1238,13 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 onClick={handleConfirmCourierDispatch}
                 style={{ padding: '8px 18px', backgroundColor: '#f59e0b', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 송장 등록 및 발송 확정
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1293,7 +1293,7 @@ export const CourierDispatchPage: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>화물 운송비 (원)</label>
+                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>화물 운송비</label>
                   <input
                     type="number"
                     value={directShippingCost}
@@ -1315,7 +1315,7 @@ export const CourierDispatchPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>하차지 (현장 주소)</label>
+                <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>하차지 주소</label>
                 <input
                   type="text"
                   value={destinationAddress}
@@ -1352,7 +1352,7 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 onClick={async () => {
                   try {
@@ -1375,7 +1375,7 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 배차 확정 및 출고
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1428,13 +1428,13 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 onClick={handleConfirmManualDeliver}
                 style={{ padding: '8px 16px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 납품완료 확정
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1469,7 +1469,7 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ border: 'none', background: 'none', color: 'var(--danger)', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
               >
                 지우기
-              </button>
+ </button>
             </div>
 
             <canvas
@@ -1498,7 +1498,7 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-app)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 onClick={handleCompleteOnsiteSign}
                 disabled={isSigning}
@@ -1528,7 +1528,7 @@ export const CourierDispatchPage: React.FC = () => {
                 style={{ padding: '7px 16px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

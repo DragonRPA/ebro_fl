@@ -211,7 +211,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
     }
   };
 
-  // 🌟 GEMS Tool Call 실행 및 ERP DB 즉시 등록
+  //  GEMS Tool Call 실행 및 ERP DB 즉시 등록
   const handleExecuteOrder = async (msgId: string, toolCall: { name: string; args: any }) => {
     const { name, args } = toolCall;
     setIsProcessing(true);
@@ -258,7 +258,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
           deliveryTime: args.exchangeTime || '08:00',
           deliveryType: 'EXCHANGE',
           orders: [{ ft: args.newEquipmentFt || '26ft', modelName: args.newEquipmentModel || '2632', count: 1 }],
-          memo: `[GEMS 교환의뢰] 회수대상:${args.oldAssetNo} ➔ 투입:${args.newEquipmentModel} | 사유:${args.reason || '현장교체'}`,
+          memo: `[GEMS 교환의뢰] 회수대상:${args.oldAssetNo} 투입:${args.newEquipmentModel} | 사유:${args.reason || '현장교체'}`,
           requesterName: currentUser?.name || '영업담당'
         };
 
@@ -266,7 +266,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
           throw new Error(`입력된 현장명('${args.siteName || ''}')이 등록된 현장과 100% 일치하지 않습니다. 현장을 새로 등록한 후 진행해 주십시오.`);
         }
         await saveSmartDispatch(orderData as any, false);
-        orderSummary = `[교환의뢰 접수] ${args.siteName} (회수: ${args.oldAssetNo} ➔ 투입: ${args.newEquipmentModel})`;
+        orderSummary = `[교환의뢰 접수] ${args.siteName} (회수: ${args.oldAssetNo} 투입: ${args.newEquipmentModel})`;
         if (onOrderCreated) onOrderCreated('EXCHANGE', orderData);
 
       } else if (name === 'submitReturnOrder') {
@@ -318,7 +318,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
             ...m,
             toolResult: {
               success: true,
-              message: `✅ ERP 등록 완료: ${orderSummary}`
+              message: ` ERP 등록 완료: ${orderSummary}`
             }
           };
         }
@@ -481,7 +481,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
                   {msg.text}
                 </div>
 
-                {/* 🌟 완성된 서식 프리뷰 카드 (Function Call 결과) */}
+                {/*  완성된 서식 프리뷰 카드 (Function Call 결과) */}
                 {hasTool && msg.toolCall && (
                   <div style={{
                     width: '92%',
@@ -534,14 +534,14 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
                           • 요청장비: {msg.toolCall.args.equipments.map((eq: any, i: number) => (
                             <span key={i} style={{ color: '#38bdf8', fontWeight: '800', marginRight: '6px' }}>
                               {eq.ft} ({eq.modelName}) {eq.count}대
-                            </span>
+ </span>
                           ))}
                         </div>
                       )}
                       {msg.toolCall.args.oldAssetNo && (
                         <div style={{ color: '#fca5a5' }}>
                           • 회수대상: <strong>{msg.toolCall.args.oldAssetNo}</strong> (교체 후장비: {msg.toolCall.args.newEquipmentModel})
-                        </div>
+ </div>
                       )}
                       {msg.toolCall.args.targetAssetNos && (
                         <div style={{ color: '#fca5a5' }}>
@@ -640,12 +640,12 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
             }}>
               {liveTranscript ? (
                 <div style={{ fontSize: '12.5px', color: '#fef08a', fontWeight: '800', wordBreak: 'break-all' }}>
-                  💬 "{liveTranscript}"
-                </div>
+                   "{liveTranscript}"
+ </div>
               ) : (
                 <span style={{ fontSize: '11.5px', color: '#38bdf8' }}>
-                  🎙️ 음성 듣는 중... (말씀 후 버튼 터치)
-                </span>
+                   음성 듣는 중... (말씀 후 버튼 터치)
+ </span>
               )}
             </div>
           )}
@@ -681,18 +681,18 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
               <>
                 <Mic size={20} color="#ffffff" />
                 <span style={{ fontSize: '14.5px', fontWeight: '900' }}>
-                  🔴 발언 중... ({recordSeconds}초) [터치하여 전송]
-                </span>
+                   발언 중... ({recordSeconds}초) [터치하여 전송]
+ </span>
               </>
             ) : (
               <>
                 <Mic size={20} color="#ffffff" />
                 <span style={{ fontSize: '14.5px', fontWeight: '800' }}>
                   터치하고 말씀하세요
-                </span>
+ </span>
                 <span style={{ fontSize: '11px', opacity: 0.85, fontWeight: '500' }}>
                   (완료 시 다시 터치)
-                </span>
+ </span>
               </>
             )}
           </button>
@@ -777,8 +777,8 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
             </div>
 
             <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.4 }}>
-              Google AI Studio(aistudio.google.com)에서 발급받은 API 키를 입력하시면 Gemini 1.5 Flash 풀파워로 동작합니다. 미입력 시 내장 스마트 룰 엔진으로 동작합니다.
-            </div>
+              Google AI Studio에서 발급받은 API 키를 입력하시면 Gemini 1.5 Flash 풀파워로 동작합니다. 미입력 시 내장 스마트 룰 엔진으로 동작합니다.
+ </div>
 
             <input
               type="password"
@@ -816,7 +816,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
                 }}
               >
                 초기화 (룰 모드)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => {
@@ -835,7 +835,7 @@ export const MobileGemsAgentModal: React.FC<MobileGemsAgentModalProps> = ({
                 }}
               >
                 저장 완료
-              </button>
+ </button>
             </div>
           </div>
         </div>

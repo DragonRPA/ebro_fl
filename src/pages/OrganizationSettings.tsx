@@ -168,7 +168,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
     let loadedDepts: Department[] = (db.departments && db.departments.length > 0) ? db.departments : INITIAL_DEPTS;
     let loadedUsers: UserNode[] = (db.users && db.users.length > 0) ? (db.users as any) : INITIAL_USERS;
 
-    // 🛡️ [테스터 및 개발자 배제] 로컬스토리지나 DB 캐시에 잔존하는 테스터/개발자 계정 원천 차단
+    //  [테스터 및 개발자 배제] 로컬스토리지나 DB 캐시에 잔존하는 테스터/개발자 계정 원천 차단
     const isTesterOrDev = (u: any) =>
       u.id?.startsWith('usr-tester') ||
       u.name?.includes('테스터') ||
@@ -238,7 +238,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
           functionalTags: d.functionalTags || d.functional_tags || []
         } as Department;
       });
-      // 🛡️ [테스터 및 개발자 배제] 테스터/개발자 계정이 일반 직원 목록으로 유입되는 것을 원천 차단
+      //  [테스터 및 개발자 배제] 테스터/개발자 계정이 일반 직원 목록으로 유입되는 것을 원천 차단
       const isTesterOrDev = (u: any) =>
         u.id?.startsWith('usr-tester') ||
         u.name?.includes('테스터') ||
@@ -688,7 +688,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                       fontWeight: 600
                     }}>
                       {userCount}명
-                    </span>
+ </span>
 
                     {canEdit && isSelected && (
                       <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -757,7 +757,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                   color: eff.source === 'DUTY' ? '#0f766e' : '#15803d',
                 }}>
                   {eff.effectiveTier}티어
-                </span>
+ </span>
               </div>
               <span style={{ 
                 fontSize: '11px', padding: '2px 8px', borderRadius: '12px', fontWeight: '600',
@@ -804,7 +804,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
           <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Network size={24} color="var(--primary)" />
             인사 및 조직도 마스터 설정
-          </h2>
+ </h2>
           
         </div>
         
@@ -816,7 +816,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
             style={{ padding: '9px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <Download size={15} /> 엑셀 내보내기
-          </button>
+ </button>
           {/* Global Save Button */}
           {canEdit && (
             <button data-hs-trigger="Save" 
@@ -835,7 +835,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
         </div>
       </div>
 
-      {/* 📊 조직 및 임직원 현황 요약 바 */}
+      {/*  조직 및 임직원 현황 요약 바 */}
       {(() => {
         const activeUsersCount = users.filter(u => u.status === 'ACTIVE').length;
         const leaveCount = users.filter(u => u.status === 'LEAVE_OF_ABSENCE').length;
@@ -890,7 +890,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
             className={draggedUserId ? 'drop-target-active' : ''}
           >
             미배정 인력 목록
-            <div style={{ fontSize: '11.5px', color: 'var(--danger)', marginTop: '2px' }}>{unassignedCount}명 대기 중</div>
+ <div style={{ fontSize: '11.5px', color: 'var(--danger)', marginTop: '2px' }}>{unassignedCount}명 대기 중</div>
           </div>
         </div>
 
@@ -905,7 +905,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
             {canEdit && (
               <button data-mid="org-btn-add-user" data-hs-trigger="Register" className="btn-secondary" onClick={handleAddUser} style={{ padding: '6px 12px', fontSize: '13px' }}>
                 <Plus size={14} style={{ marginRight: '4px' }} /> 신규 직원 등록
-              </button>
+ </button>
             )}
           </div>
 
@@ -936,10 +936,10 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>
                       조직 기능 매핑
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      (복수 겸임 지원 • 직무별 ToDo 피드 자동 라우팅)
-                    </span>
+                      복수 겸임 지원 • 직무별 피드 자동 라우팅
+ </span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     할당 기능: <strong>{currentDeptTags.length}개</strong>
@@ -1008,7 +1008,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
             {displayedUsers.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                 이 목록에 직원이 없습니다.
-              </div>
+ </div>
             ) : (
               displayedUsers.map(user => renderUserCard(user))
             )}
@@ -1038,10 +1038,10 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                   <>
                     <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => setSelectedProfile(null)}>
                       취소
-                    </button>
+ </button>
                     <button data-hs-trigger="Save" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={applyProfileChanges}>
                       <CheckCircle size={13} style={{ marginRight: '3px' }} /> 저장 (적용)
-                    </button>
+ </button>
                   </>
                 )}
                 <button onClick={() => setSelectedProfile(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', padding: '4px', cursor: 'pointer' }} title="닫기">
@@ -1072,7 +1072,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                     />
                     <button className="btn-secondary" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '11px', padding: '3px 8px' }}>
                       <Upload size={12} style={{ marginRight: '4px' }} /> 사진 변경
-                    </button>
+ </button>
                   </>
                 )}
               </div>
@@ -1106,7 +1106,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                     />
                     <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
                       * 안전을 위해 기존 비밀번호는 표시되지 않으며 단방향 해시로 보호됩니다.
-                    </div>
+ </div>
                   </div>
                 </div>
 
@@ -1160,12 +1160,12 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                       {[...positionConfigs].sort((a, b) => a.tier_level - b.tier_level).map(p => (
                         <option key={p.title} value={p.title}>
                           {p.title} ({p.tier_level}티어)
-                        </option>
+ </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label style={{ marginBottom: '2px', fontSize: '12px', fontWeight: 600 }}>직책 (R&R 결재 우선)</label>
+                    <label style={{ marginBottom: '2px', fontSize: '12px', fontWeight: 600 }}>직책</label>
                     <select
                       style={{ 
                         padding: '4px 8px', fontSize: '12px', width: '100%', borderRadius: '4px', 
@@ -1182,13 +1182,13 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                       {[...dutyConfigs].sort((a, b) => a.tier_level - b.tier_level).map(d => (
                         <option key={d.title} value={d.title}>
                           {d.title} ({d.tier_level}티어{d.description ? ` · ${d.description}` : ''})
-                        </option>
+ </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* 🛡️ 결재 권한 티어 실시간 연동 인포 박스 */}
+                {/*  결재 권한 티어 실시간 연동 인포 박스 */}
                 {(() => {
                   const eff = getUserEffectiveTier(
                     { position: selectedProfile.position, duty: selectedProfile.duty },
@@ -1206,7 +1206,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                         <ShieldCheck size={14} color={eff.source === 'DUTY' ? '#0f766e' : '#15803d'} />
                         <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
                           결재 권한 티어
-                        </span>
+ </span>
                       </div>
                       <span style={{
                         fontWeight: 700, padding: '2px 8px', borderRadius: '8px',
@@ -1214,7 +1214,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                         color: '#fff', fontSize: '11px',
                       }}>
                         {eff.effectiveTier}티어 ({eff.source === 'DUTY' ? `직책 우선: ${eff.title}` : `직급 기준: ${eff.title}`})
-                      </span>
+ </span>
                     </div>
                   );
                 })()}
@@ -1281,8 +1281,8 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                 {canViewPayroll && (
                   <div style={{ marginTop: '6px', padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                     <label style={{ marginBottom: '4px', fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)', display: 'block' }}>
-                      💰 계약 기본급 (원) [급여 권한자 전용]
-                    </label>
+                       계약 기본급 (원) [급여 권한자 전용]
+ </label>
                     <input
                       type="number"
                       step="10000"
@@ -1294,8 +1294,8 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
                       disabled={!canEdit}
                     />
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                      * 통상시급: 약 {Math.round((selectedProfile.baseSalary || 3000000) / 209).toLocaleString()}원/시간 (209h 기준)
-                    </span>
+                      * 통상시급: 약 {Math.round((selectedProfile.baseSalary || 3000000) / 209).toLocaleString()}원/시간
+ </span>
                   </div>
                 )}
               </div>
@@ -1320,13 +1320,13 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
               <strong>{showHandoffModal.name}</strong> 직원을 '퇴사' 상태로 변경하시겠습니까?<br/><br/>
               현재 이 직원이 담당하고 있는 <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>진행 중인 미결 업무가 발견</span>되었습니다.<br/>
               퇴사 처리 시 해당 미결 업무는 직속 상급자(부서장)에게 강제 이관됩니다.
-            </p>
+ </p>
 
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <button className="btn-secondary" onClick={() => setShowHandoffModal(null)}>취소</button>
               <button data-hs-trigger="Confirm" className="btn-primary" style={{ backgroundColor: 'var(--danger)' }} onClick={confirmRetirement}>
                 확인 및 이관 실행
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1347,19 +1347,19 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
             <p style={{ fontSize: '14px', color: 'var(--text-main)', lineHeight: '1.5' }}>
               부서 <strong>[{deptToDelete.name || deptToDelete.id}]</strong>을(를) 정말 삭제하시겠습니까?<br/>
               현재 소속된 직원 및 하위 부서가 없으므로 안전하게 삭제됩니다.
-            </p>
+ </p>
 
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <button className="btn-secondary" onClick={() => setDeptToDelete(null)}>취소</button>
               <button data-hs-trigger="Delete" className="btn-primary" style={{ backgroundColor: 'var(--danger)' }} onClick={confirmDeleteDept}>
                 부서 삭제 실행
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ⚖️ 헌장 3.5 Gutenberg Z-패턴 4단계 조직/인사 대차대조 검증 바 */}
+      {/*  헌장 3.5 Gutenberg Z-패턴 4단계 조직/인사 대차대조 검증 바 */}
       <div style={{
         marginTop: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0 14px', height: '36px',
         display: 'flex',
@@ -1373,7 +1373,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-main)' }}>
             조직 및 인사 대차대조 검증:
-          </span>
+ </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 임직원 <strong style={{ color: 'var(--text-main)' }}>{totalUsersCount}명</strong>
           </span>
@@ -1392,7 +1392,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>|</span>
           <span style={{ fontSize: '12px', color: 'var(--primary)' }}>
             부서 {totalDeptsCount}개 (배정 {assignedUsersCount}명 / 미배정 {unassignedUsersCount}명)
-          </span>
+ </span>
         </div>
         {userBalanceDiff !== 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
@@ -1405,7 +1405,7 @@ const enforceManagerPolicies = (usersList: UserNode[], deptList: Department[]) =
               color: '#ef4444'
             }}>
               대차 차액 {userBalanceDiff}명 (불일치)
-            </span>
+ </span>
           </div>
         )}
       </div>

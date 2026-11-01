@@ -1,5 +1,5 @@
 // src/pages/LandingPage.tsx
-// 🌐 eBro 솔루션 공식 홍보 포털 (Enterprise Clean B2B 스타일)
+//  eBro 솔루션 공식 홍보 포털 (Enterprise Clean B2B 스타일)
 
 import React, { useState } from 'react';
 import { getAdminConsoleUrl } from '../utils/domainRouter';
@@ -38,7 +38,7 @@ export const LandingPage: React.FC = () => {
               className="hover:text-slate-900 transition cursor-pointer"
             >
               도입 컨설팅
-            </button>
+ </button>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -49,13 +49,13 @@ export const LandingPage: React.FC = () => {
               className="hidden sm:inline-flex text-sm font-medium text-slate-600 hover:text-slate-900 transition"
             >
               라이브 데모
-            </a>
+ </a>
             <button
               onClick={() => setContactModalOpen(true)}
               className="px-5 py-2.5 rounded bg-[#FF5200] hover:bg-[#E14504] text-white text-sm font-bold transition cursor-pointer"
             >
               상담 신청
-            </button>
+ </button>
           </div>
         </div>
       </header>
@@ -66,10 +66,10 @@ export const LandingPage: React.FC = () => {
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-8">
             고소작업대 렌탈의 모든 것,<br />
             <span className="text-[#FF5200]">하나의 지능형 플랫폼</span>으로.
-          </h1>
+ </h1>
           <p className="text-lg sm:text-2xl text-slate-500 max-w-3xl mx-auto leading-relaxed mb-12 font-light">
             전화 배차의 혼선, 잃어버리는 종이 인수증, 며칠씩 걸리는 월말 통장 대사를 멈추십시오. eBro는 임직원의 최소 노력으로 최대 업무 효익을 창출하는 전사 표준 통합 솔루션입니다.
-          </p>
+ </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="https://awp-demo.ebro.run"
@@ -84,7 +84,7 @@ export const LandingPage: React.FC = () => {
               className="px-8 py-4 rounded bg-[#f5f2eb] hover:bg-slate-50 border border-slate-200 text-slate-900 font-bold text-base transition cursor-pointer"
             >
               맞춤형 도입 상담
-            </button>
+ </button>
           </div>
         </div>
       </section>
@@ -101,7 +101,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="text-5xl font-bold text-slate-900 tracking-tight mb-4">100<span className="text-[#FF5200] text-3xl">%</span></div>
               <div className="text-lg font-bold text-slate-900 mb-2">매출 기여액 보존</div>
-              <p className="text-slate-500">대차 교체 시 전자산 마감 및 후장비 일할 매출을 완벽히 승계.</p>
+              <p className="text-slate-500">대차 교체 시 전자산 마감 및 후장비 일할 매출을 승계.</p>
             </div>
             <div>
               <div className="text-5xl font-bold text-slate-900 tracking-tight mb-4">21<span className="text-[#FF5200] text-3xl">대</span></div>
@@ -130,7 +130,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl font-bold text-slate-900 mb-6">배차 및 원격 인쇄</h2>
               <p className="text-lg text-slate-500 leading-relaxed mb-8">
                 영업팀이 배차를 의뢰하는 즉시, 현장 컨테이너의 네트워크 프린터로 출고요청서가 자동 출력됩니다. 담당자가 수기로 작성할 필요 없이 지연 없는 0초 배차를 실현합니다.
-              </p>
+ </p>
               <ul className="space-y-4">
                 {['단일 1건 왕복 교환 배차 정규 체인 관리', '현장 컨테이너 네트워크 프린터 0초 자동 백그라운드 스풀링', '화물 지입 기사 및 운송사 실시간 배정 & 단가 대사'].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium">
@@ -158,8 +158,8 @@ export const LandingPage: React.FC = () => {
               </div>
               <h2 className="text-3xl font-bold text-slate-900 mb-6">모바일 현장 검수 및 대여중 전환</h2>
               <p className="text-lg text-slate-500 leading-relaxed mb-8">
-                스마트폰 하나로 외관 4면을 촬영하고, 기사 서명을 받는 즉시 자산 상태가 '대여중'으로 자동 전환됩니다. 분실하기 쉬운 종이 인수증 대신 전자 계약서로 영구 보존하세요.
-              </p>
+                스마트폰 하나로 외관 4면을 촬영하고, 기사 서명을 받는 즉시 자산 상태가 '대여중'으로 자동 전환됩니다. 분실하기 쉬운 종이 인수증 대신 전자 계약서로 보관하세요.
+ </p>
               <ul className="space-y-4">
                 {['모바일 고화질 촬영 및 하자 보존', '21대 법정 안전장치 전수 검수', '검수 승인 마감 시 자산 상태 RENTED 자동 전환'].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium">
@@ -188,7 +188,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl font-bold text-slate-900 mb-6">eBro AI Agent 메신저 통합</h2>
               <p className="text-lg text-slate-500 leading-relaxed mb-8">
                 퇴근 후나 이동 중 텔레그램으로 지시문만 남기세요. "평택 삼성 35호기 교환해줘"라는 자연어 한마디로 계약 조건을 100% 자동 상속받는 배차가 즉시 생성됩니다.
-              </p>
+ </p>
               <ul className="space-y-4">
                 {['소형 경량 AI가 지시문 핵심 요소 정밀 추출', '영업부의 불필요한 자산번호 직접 지정 원천 방지', '단일 의미 전사 표준화 준수'].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium">
@@ -217,7 +217,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl font-bold text-slate-900 mb-6">은행 통장 1:1 자동 대사</h2>
               <p className="text-lg text-slate-500 leading-relaxed mb-8">
                 주요 1금융권 통장 엑셀을 업로드하면 자동 매칭 엔진이 입금자명과 고객사 상호를 매칭하여 대차 차액 0원의 완벽한 회계 무결성을 제공합니다.
-              </p>
+ </p>
               <ul className="space-y-4">
                 {['주요 은행 통장 엑셀 파싱 및 자동 매칭', '외상매출금 및 운송료 1원 단위 검증', '자산별 누적 매출 기여액 정밀 집계'].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-slate-700 font-medium">
@@ -245,7 +245,7 @@ export const LandingPage: React.FC = () => {
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-8 leading-tight">
             렌탈 비즈니스의 운영 마찰을 끝내고<br />
             최대 편익의 시스템을 경험하십시오.
-          </h2>
+ </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="https://awp-demo.ebro.run"
@@ -260,7 +260,7 @@ export const LandingPage: React.FC = () => {
               className="px-8 py-4 rounded bg-white/10 hover:bg-white/20 text-white font-bold text-base transition flex items-center justify-center gap-2 cursor-pointer"
             >
               도입 상담 문의
-            </button>
+ </button>
           </div>
         </div>
       </section>
@@ -279,7 +279,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex gap-6">
             <a href={getAdminConsoleUrl()} className="text-slate-500 hover:text-slate-900 flex items-center gap-2 font-medium transition">
               <Lock className="w-4 h-4" /> 플랫폼 관제탑
-            </a>
+ </a>
           </div>
         </div>
       </footer>
@@ -297,7 +297,7 @@ export const LandingPage: React.FC = () => {
             <h3 className="text-2xl font-bold text-slate-900 mb-2">도입 문의</h3>
             <p className="text-slate-500 mb-8 leading-relaxed">
               귀사의 고소작업대 렌탈 규모 및 현장 프로세스에 맞춘 컨설팅을 제공해 드립니다.
-            </p>
+ </p>
             <div className="bg-slate-50 rounded-xl p-6 border border-slate-100 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
                 <Mail className="w-6 h-6 text-[#FF5200]" />
@@ -306,7 +306,7 @@ export const LandingPage: React.FC = () => {
                 <div className="text-sm font-medium text-slate-500 mb-1">공식 문의 이메일</div>
                 <a href="mailto:contact@ebro.run" className="text-lg font-bold text-slate-900 hover:text-[#FF5200] transition">
                   contact@ebro.run
-                </a>
+ </a>
               </div>
             </div>
           </div>

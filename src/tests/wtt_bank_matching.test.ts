@@ -511,10 +511,10 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     if (b2.status !== 'PAID') issues.push('PINPOINT 지정 건 완납 실패');
     if (c.prepaidBalance !== 250000) issues.push(`선수금 불일치: ${c.prepaidBalance} (기대 250,000)`);
 
-    record('WTT-BANK-04', 'OVERPAYMENT', '단일 지정(PINPOINT) 매칭 시 잔여액 선수금 적립', '공간 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status, prepaid: c.prepaidBalance });
+    record('WTT-BANK-04', 'OVERPAYMENT', '단일 지정 매칭 시 잔여액 선수금 적립', '공간 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status, prepaid: c.prepaidBalance });
   })();
 
-  // WTT-BANK-05: 과대입금 매칭 후 해제(취소) ➔ 원상 100% 복구 보존
+  // WTT-BANK-05: 과대입금 매칭 후 해제(취소)  원상 100% 복구 보존
   (() => {
     db.reset();
     db.insertCustomer({ id: 'C1', name: '한화건설', prepaidBalance: 50000 } as Customer);
@@ -636,7 +636,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     if (b2.status !== 'UNPAID') issues.push('B2 비의도적 수납 발생');
     if (c.prepaidBalance !== 360000) issues.push(`선수금 오류: ${c.prepaidBalance}`);
 
-    record('WTT-BANK-10', 'OVERPAYMENT', '다중 배분(MULTI) 모드 미배분 잔액 선수금 적립', '수량 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status, prepaid: c.prepaidBalance });
+    record('WTT-BANK-10', 'OVERPAYMENT', '다중 배분 모드 미배분 잔액 선수금 적립', '수량 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status, prepaid: c.prepaidBalance });
   })();
 
   // WTT-BANK-11: 과대입금 자동 매칭 (AUTO CASCADE)
@@ -964,7 +964,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     const issues: string[] = [];
     if (b.status !== 'PAID') issues.push('PINPOINT 완납 실패');
 
-    record('WTT-BANK-28', 'EXACT', '수동 단독지정(PINPOINT) 정상 금액 일치 완납', '공간 축', issues.length === 0, issues, { bStatus: b.status });
+    record('WTT-BANK-28', 'EXACT', '수동 단독지정 정상 금액 일치 완납', '공간 축', issues.length === 0, issues, { bStatus: b.status });
   })();
 
   // WTT-BANK-29: 정상 입금 수동 MULTI 매칭 배분 검증
@@ -989,7 +989,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     const issues: string[] = [];
     if (b1.status !== 'PAID' || b2.status !== 'PAID') issues.push('MULTI 직접 배분 완납 실패');
 
-    record('WTT-BANK-29', 'EXACT', '수동 다중배분(MULTI) 정확 일치 배분 완납', '수량 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status });
+    record('WTT-BANK-29', 'EXACT', '수동 다중배분 정확 일치 배분 완납', '수량 축', issues.length === 0, issues, { b1Status: b1.status, b2Status: b2.status });
   })();
 
   // WTT-BANK-30: 일괄 자동 대사 5건 동시 처리 무결성 검증
@@ -1026,14 +1026,14 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     const remTx = db.getDepositBalance('TX31');
 
     const issues: string[] = [];
-    if (b.status !== 'PARTIAL') issues.push(`상태 불일치: ${b.status} (기대 PARTIAL)`);
+    if (b.status !== 'PARTIAL') issues.push(`상태 불일치: ${b.status}`);
     if (b.paidAmount !== 500000) issues.push(`기수납액 불일치: ${b.paidAmount}`);
     if (remTx !== 0) issues.push(`통장 입금액 전액 소진 미반영: ${remTx}`);
 
-    record('WTT-BANK-31', 'UNDERPAYMENT', '단일 청구 과소입금 부분수납(PARTIAL) 및 잔여미수 보존', '비용 축', issues.length === 0, issues, { bStatus: b.status, paid: b.paidAmount, remTx });
+    record('WTT-BANK-31', 'UNDERPAYMENT', '단일 청구 과소입금 부분수납 및 잔여미수 보존', '비용 축', issues.length === 0, issues, { bStatus: b.status, paid: b.paidAmount, remTx });
   })();
 
-  // WTT-BANK-32: 1차 부분 입금(500,000) 후 2차 추가 입금(600,000) 매칭 ➔ 최종 완납
+  // WTT-BANK-32: 1차 부분 입금(500,000) 후 2차 추가 입금(600,000) 매칭  최종 완납
   (() => {
     db.reset();
     db.insertCustomer({ id: 'C1', name: '한신공영', prepaidBalance: 0 } as Customer);
@@ -1053,7 +1053,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     if (b.paidAmount !== 1100000) issues.push(`누적 수납액 불일치: ${b.paidAmount}`);
     if (rem1 !== 0 || rem2 !== 0) issues.push('통장 잔액 소진 미완료');
 
-    record('WTT-BANK-32', 'UNDERPAYMENT', '1차 과소입금 후 2차 추가입금 누적 완납(PAID) 전이', '시간 축', issues.length === 0, issues, { bStatus: b.status, paid: b.paidAmount });
+    record('WTT-BANK-32', 'UNDERPAYMENT', '1차 과소입금 후 2차 추가입금 누적 완납 전이', '시간 축', issues.length === 0, issues, { bStatus: b.status, paid: b.paidAmount });
   })();
 
   // WTT-BANK-33: 다건 청구 중 1차 청구 완납 + 2차 청구 부분 충당
@@ -1130,7 +1130,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     record('WTT-BANK-36', 'UNDERPAYMENT', '과소입금 수납 후 청구 잔여 미수금 무결성 보존', '물리 축', issues.length === 0, issues, { unpaid });
   })();
 
-  // WTT-BANK-37: 2차 부분 입금만 선별 매칭 취소 ➔ 1차 보존 및 PARTIAL 유지
+  // WTT-BANK-37: 2차 부분 입금만 선별 매칭 취소  1차 보존 및 PARTIAL 유지
   (() => {
     db.reset();
     db.insertCustomer({ id: 'C1', name: '요진건설', prepaidBalance: 0 } as Customer);
@@ -1153,7 +1153,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     record('WTT-BANK-37', 'UNDERPAYMENT', '복수 과소입금 중 후순위 입금 선택 해제 롤백 보존', '시간 축', issues.length === 0, issues, { bStatus: b.status, bPaid: b.paidAmount, rem2 });
   })();
 
-  // WTT-BANK-38: 1차 부분 입금 매칭 취소 ➔ 2차 입금분만 남아 PARTIAL 유지
+  // WTT-BANK-38: 1차 부분 입금 매칭 취소  2차 입금분만 남아 PARTIAL 유지
   (() => {
     db.reset();
     db.insertCustomer({ id: 'C1', name: '극동건설', prepaidBalance: 0 } as Customer);
@@ -1344,7 +1344,7 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
     const issues: string[] = [];
     if (b.status !== 'PAID') issues.push('BLOCKED 고객사 채권 회수 수납 실패');
 
-    record('WTT-BANK-47', 'GOVERNANCE', '거래제한(BLOCKED) 고객사 채권 회수 수납 정상 완결 거버넌스', '공간 축', issues.length === 0, issues, { bStatus: b.status });
+    record('WTT-BANK-47', 'GOVERNANCE', '거래제한 고객사 채권 회수 수납 정상 완결 거버넌스', '공간 축', issues.length === 0, issues, { bStatus: b.status });
   })();
 
   // WTT-BANK-48: 종단 수지 보존 법칙 (Conservation of Balance)
@@ -1433,22 +1433,22 @@ export function runWttBankMatching50(): { summary: string; totalPassed: number; 
 // CLI runner
 if (process.argv[1] && process.argv[1].includes('wtt_bank_matching')) {
   console.log('================================================================');
-  console.log('🏦 WTT-BANK-50: 은행 입출금 대장 수납 대사 도메인 관통 스트레스 테스트');
+  console.log('WTT-BANK-50: 은행 입출금 대장 수납 대사 도메인 관통 스트레스 테스트');
   console.log('================================================================\n');
 
   const { summary, totalPassed, results } = runWttBankMatching50();
 
   results.forEach(r => {
-    const icon = r.passed ? '✅' : '❌';
+    const icon = r.passed ? '' : '';
     console.log(`${icon} [${r.scenarioId}] [${r.category}] [${r.axis}] ${r.name}`);
     if (!r.passed) {
-      console.log(`   ⚠️ 결함: ${r.issues.join(' | ')}`);
-      console.log(`   🔎 상세: ${JSON.stringify(r.details)}`);
+      console.log(` 결함: ${r.issues.join(' | ')}`);
+      console.log(` 상세: ${JSON.stringify(r.details)}`);
     }
   });
 
   console.log('\n================================================================');
-  console.log(`🎯 최종 결과: ${summary}`);
+  console.log(` 최종 결과: ${summary}`);
   console.log('================================================================\n');
 
   if (totalPassed < 50) {

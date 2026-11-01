@@ -47,7 +47,7 @@ export async function generateInvoices(opts: GenerateInvoicesOptions): Promise<{
 
   const { data: billings, error } = await supabase
     .from('billings')
-    .select('*, contracts(siteId)')
+    .select('*, contracts')
     .eq('billingYm', billingYm)
     .is(overwrite ? undefined : 'invoiceId', overwrite ? undefined : null);
 
@@ -237,7 +237,7 @@ export async function applyPaymentToInvoice(
 export async function cancelInvoice(invoiceId: string): Promise<{ success: boolean; message: string }> {
   const nowIso = new Date().toISOString();
 
-  // 🔒 [감사관 가드] 수납 존재 여부 확인 (수납 완료/부분수납 인보이스는 직접 취소 불가)
+  //  [감사관 가드] 수납 존재 여부 확인 (수납 완료/부분수납 인보이스는 직접 취소 불가)
   if (supabase) {
     const { data: inv } = await supabase
       .from('billing_invoices')

@@ -123,7 +123,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
           >
             <RotateCcw className="w-3.5 h-3.5" />
             다시 서명
-          </button>
+ </button>
         )}
       </div>
 
@@ -131,7 +131,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         {!hasDrawn && !savedSignature && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-600 text-sm font-medium">
             여기에 직접 서명해 주세요
-          </div>
+ </div>
         )}
         <canvas
           ref={canvasRef}

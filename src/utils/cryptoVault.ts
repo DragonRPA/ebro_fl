@@ -325,7 +325,7 @@ export function verifySessionUser<T extends { id: string; role?: string }>(encry
     const expectedSig = sha256Sync(expectedMessage);
 
     if (expectedSig !== signature) {
-      console.error('🚨 [Security Violation] 세션 위변조 감지: 사용자 Role 또는 ID가 무단 변조되었습니다.');
+      console.error('[Security Violation] 세션 위변조 감지: 사용자 Role 또는 ID가 무단 변조되었습니다.');
       return null;
     }
 

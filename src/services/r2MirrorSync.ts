@@ -1,5 +1,5 @@
 // src/services/r2MirrorSync.ts
-// e-Bro ERP Cloudflare R2 ➔ 로컬 PC (C:\eBroAgent\drive_mirror\) 100% 무인 미러링 동기화 엔진
+// e-Bro ERP Cloudflare R2  로컬 PC (C:\eBroAgent\drive_mirror\) 100% 무인 미러링 동기화 엔진
 
 import { OfficialMailConfig } from './db';
 import { subscribeMirrorProgress, MirrorProgressState, MirrorSyncResult } from './driveMirrorSync';
@@ -61,7 +61,7 @@ export async function executeR2MirrorSync(
       syncedCount: 0,
       failedCount: 0,
       files: [],
-      message: 'Cloudflare R2 설정 정보(Account ID, Bucket Name, Access Key, Secret Key)가 설정되지 않았습니다.'
+      message: 'Cloudflare R2 설정 정보가 설정되지 않았습니다.'
     };
   }
 
@@ -187,7 +187,7 @@ export async function executeR2MirrorSync(
       currentIndex: payloadFiles.length,
       totalCount: payloadFiles.length,
       percent: 90,
-      message: `로컬 PC (C:\\eBroAgent\\drive_mirror\\)에 ${payloadFiles.length}개 파일 저장 중...`
+      message: `로컬 PC에 ${payloadFiles.length}개 파일 저장 중...`
     });
 
     const agentRes = await fetchWithAgentFallback('/api/sync-drive', {
@@ -201,7 +201,7 @@ export async function executeR2MirrorSync(
     }
 
     const agentData = await agentRes.json();
-    const finalMsg = `✅ Cloudflare R2의 ${payloadFiles.length}개 파일이 C:\\eBroAgent\\drive_mirror\\ 에 미러링되었습니다.`;
+    const finalMsg = ` Cloudflare R2의 ${payloadFiles.length}개 파일이 C:\\eBroAgent\\drive_mirror\\ 에 미러링되었습니다.`;
 
     updateProgress({
       isActive: true,

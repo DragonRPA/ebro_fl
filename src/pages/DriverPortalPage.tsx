@@ -125,7 +125,7 @@ const SignaturePad: React.FC<{
           style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
         >
           지우기 / 다시 쓰기
-        </button>
+ </button>
       </div>
       <canvas
         ref={canvasRef}
@@ -573,7 +573,7 @@ export const DriverPortalPage: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 16px 0', borderBottom: '2px solid var(--border-color)', paddingBottom: '12px' }}>
             {dCategory} 정보
-          </h2>
+ </h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
             <div style={{ display: 'flex' }}>
@@ -652,7 +652,7 @@ export const DriverPortalPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#334155', fontWeight: 600, textAlign: 'center' }}>
                   완료 처리 방법을 선택해 주세요.
-                </p>
+ </p>
                 <button 
                   onClick={() => setMode('PHOTO')}
                   style={{ padding: '16px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}

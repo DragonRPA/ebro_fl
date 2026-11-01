@@ -20,7 +20,7 @@ export interface SortableThProps {
 /**
  * 3-State 정렬 헤더 셀
  * - 오름차순(▲) / 내림차순(▼) / 정렬안함(↕)
- * - 클릭 시 3단계 순환 토글: None ➔ 오름차순 ➔ 내림차순 ➔ 정렬안함
+ * - 클릭 시 3단계 순환 토글: None  오름차순  내림차순  정렬안함
  * - sticky thead 및 셀 줄바꿈 방지 내장
  */
 export const SortableTh: React.FC<SortableThProps> = ({ 

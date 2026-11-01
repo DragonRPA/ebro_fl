@@ -17,7 +17,7 @@ import { calculatePaidOptionBillingItems } from '../types/siteOption';
 import { resolveReceivableClaimMeta } from '../utils/inboundDefectClaimHelper';
 import { downloadRepairClaimPdf } from '../utils/repairClaimPdfBuilder';
 
-// 🏦 테넌트 주거래 입금 계좌 조회 및 동적 포맷팅 헬퍼 (헌장 1.4: SSOT 표준화)
+//  테넌트 주거래 입금 계좌 조회 및 동적 포맷팅 헬퍼 (헌장 1.4: SSOT 표준화)
 export const getTenantPrimaryBankAccount = (tenant?: Tenant | null): TenantBankAccount | null => {
   if (!tenant?.bankAccounts || !Array.isArray(tenant.bankAccounts) || tenant.bankAccounts.length === 0) {
     return null;
@@ -141,14 +141,14 @@ export const Billings: React.FC = () => {
     return { byBillingId, byContractYm };
   }, [contractHistory]);
 
-  // ⚡ 고속 O(1) 해시맵 인덱스 (헌장 1.1 최우선 개발 사명: 렌더링 랙 제로화)
+  //  고속 O(1) 해시맵 인덱스 (헌장 1.1 최우선 개발 사명: 렌더링 랙 제로화)
   const customerMap = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);
   const contractMap = useMemo(() => new Map(contracts.map(c => [c.id, c])), [contracts]);
   const siteMap = useMemo(() => new Map(sites.map(s => [s.id, s])), [sites]);
   const assetMap = useMemo(() => new Map(assets.map(a => [a.id, a])), [assets]);
   const billingMap = useMemo(() => new Map(billings.map(b => [b.id, b])), [billings]);
 
-  // ⚡ 청구서별 분할 원본 여부 O(1) Set 캐시
+  //  청구서별 분할 원본 여부 O(1) Set 캐시
   const splitOriginalBillingIdSet = useMemo(() => {
     const set = new Set<string>();
     for (const d of billingDetails) {
@@ -159,7 +159,7 @@ export const Billings: React.FC = () => {
     return set;
   }, [billingDetails]);
 
-  // ⚡ v2: 미납액 기준으로 입금잔액 O(1) 사전 집계 캐시 (루프 내 선형 검색 제거)
+  //  v2: 미납액 기준으로 입금잔액 O(1) 사전 집계 캐시 (루프 내 선형 검색 제거)
   const depositBalanceMap = useMemo(() => {
     const map = new Map<string, number>();
 
@@ -267,7 +267,7 @@ export const Billings: React.FC = () => {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
   });
 
-  // ⚡ Z-구텐버그 좌상단 Scope 퀵버튼 기간 설정 핸들러 (전월/당월/익월/최근 3개월/연간)
+  //  Z-구텐버그 좌상단 Scope 퀵버튼 기간 설정 핸들러 (전월/당월/익월/최근 3개월/연간)
   const handleSetWizardPeriod = (type: 'PREV_MONTH' | 'THIS_MONTH' | 'NEXT_MONTH' | 'LAST_3_MONTHS' | 'ALL_YEAR') => {
     const today = new Date();
     const y = today.getFullYear();
@@ -390,7 +390,7 @@ export const Billings: React.FC = () => {
 
   // 청구귀속월 수동 변경 핸들러
   const handleEditBillingYm = async (billingId: string, currentYmVal: string) => {
-    const newYm = prompt('✏️ 변경할 청구귀속월을 입력해 주세요 (형식: YYYY-MM, 예: 2026-08):', currentYmVal);
+    const newYm = prompt('변경할 청구귀속월을 입력해 주세요:', currentYmVal);
     if (!newYm || !newYm.trim() || newYm.trim() === currentYmVal) return;
     
     if (!/^\d{4}-\d{2}$/.test(newYm.trim())) {
@@ -414,7 +414,7 @@ export const Billings: React.FC = () => {
   // 선택된 청구서 상세
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(null);
 
-  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 청구서를 즉시 탐색·선택
+  //  대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 청구서를 즉시 탐색·선택
   useEffect(() => {
     if (!navigationPayload || billings.length === 0) return;
     const targetBillId = navigationPayload.billingId || (navigationPayload.entityType === 'BILLING' ? navigationPayload.entityId : '');
@@ -544,7 +544,7 @@ export const Billings: React.FC = () => {
   // 통합 검색 필터 (고객명/입금자명/계좌번호/비고)
   const [depSearchQuery, setDepSearchQuery] = useState(''); // 통합 검색어
 
-  // 🌟 수납 모달 완료 버튼 포커스 Ref 및 ESC 키 취소 이벤트
+  //  수납 모달 완료 버튼 포커스 Ref 및 ESC 키 취소 이벤트
   const paySubmitBtnRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -618,7 +618,7 @@ export const Billings: React.FC = () => {
       if (mFilter === 'SENT' && !isMailSent) return false;
       if (mFilter === 'UNSENT' && isMailSent) return false;
 
-      // 📑 통합 여부 필터 (단독 청구 vs 통합 인보이스 포함)
+      //  통합 여부 필터 (단독 청구 vs 통합 인보이스 포함)
       if (invFilter === 'STANDALONE' && b.invoiceId && b.invoiceId.trim() !== '') return false;
       if (invFilter === 'INTEGRATED' && (!b.invoiceId || b.invoiceId.trim() === '')) return false;
 
@@ -740,7 +740,7 @@ export const Billings: React.FC = () => {
     setSearchedBillingIds(matched);
   };
 
-  // 🌟 조회 버튼으로 고정된 스냅샷에 해당하는 청구서만 렌더링 (수납 처리 시 자동 재조회/행 삭제 없이 안정적으로 유지)
+  //  조회 버튼으로 고정된 스냅샷에 해당하는 청구서만 렌더링 (수납 처리 시 자동 재조회/행 삭제 없이 안정적으로 유지)
   const filteredBillings = useMemo(() => {
     // 최초 렌더링 시 searchedBillingIds가 null이더라도 전체 데이터를 노출하지 않고,
     // 초기 필터(기본값: 당월 initialYm)를 즉시 적용하여 메뉴 전환 시 깜빡임 원천 차단
@@ -774,7 +774,7 @@ export const Billings: React.FC = () => {
     });
   }, [filteredBillings, customerMap]);
 
-  // ⚡ 청구 및 수납 종합 집계 메모이제이션 (검색/데이터 변경 시에만 재계산)
+  //  청구 및 수납 종합 집계 메모이제이션 (검색/데이터 변경 시에만 재계산)
   const billingKpiSummary = useMemo(() => {
     const totalSupply = filteredBillings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
     const totalVat = Math.round(totalSupply * 0.1);
@@ -825,7 +825,7 @@ export const Billings: React.FC = () => {
         // ② 금액 및 세무
         '공급가액(원)': supply,
         '부가세(원)': vat,
-        '청구총액(VAT포함, 원)': grand,
+        '청구총액': grand,
         '수납 누적액(원)': actualPaid,
         '미납 잔액(원)': unpaid,
 
@@ -1009,7 +1009,7 @@ export const Billings: React.FC = () => {
     }
   };
 
-  // 🌟 수납 내역 1건 취소 (개별 롤백)
+  //  수납 내역 1건 취소 (개별 롤백)
   const handleCancelPayment = async (paymentId: string, amount: number) => {
 showToast('수납 내역 취소 및 통장 잔액을 복원합니다.');
     try {
@@ -1020,7 +1020,7 @@ showToast('수납 내역 취소 및 통장 잔액을 복원합니다.');
     }
   };
 
-  // 🌟 청구서 전체 수납 일괄 취소 (일괄 롤백)
+  //  청구서 전체 수납 일괄 취소 (일괄 롤백)
   const handleCancelAllPayments = async (billingId: string, totalPaid: number) => {
 showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니다.');
     try {
@@ -1153,7 +1153,7 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
     const contract = contracts.find(c => c.id === billing.contractId);
     const site = sites.find(s => s.id === contract?.siteId);
     
-    // 💡 수신인 후보군 자동 추출 (고객사 대표 이메일 + 해당 고객사 담당자 이메일 목록 — 콤마/슬래시 다중 이메일 자동 분리 및 중복 제거)
+    //  수신인 후보군 자동 추출 (고객사 대표 이메일 + 해당 고객사 담당자 이메일 목록 — 콤마/슬래시 다중 이메일 자동 분리 및 중복 제거)
     const rawEmails: string[] = [];
     if (customer?.repEmail && customer.repEmail !== '미상') {
       rawEmails.push(customer.repEmail.trim());
@@ -1164,7 +1164,7 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
       rawEmails.push(cc.email.trim());
     });
 
-    // 👥 현장 담당자 이메일 자동 포함 (동시 복수 담당자 지원)
+    //  현장 담당자 이메일 자동 포함 (동시 복수 담당자 지원)
     if (site?.contacts && site.contacts.length > 0) {
       site.contacts.filter(sc => sc.isActive !== false && sc.email && sc.email !== '미상').forEach(sc => {
         rawEmails.push(sc.email!.trim());
@@ -1749,7 +1749,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
     const trimmedReason = (reason || '').trim();
     if (!trimmedReason) {
-      showErrorModal('거래명세서 변환 사유를 반드시 입력해야 합니다.\n\n정상 회계 원장(계약 DB)과 다르게 고객용 거래명세서를 임의 변경하는 사유와 원본과의 차이점을 구체적으로 기재해 주십시오.', '필수 입력 누락');
+      showErrorModal('거래명세서 변환 사유를 반드시 입력해야 합니다.\n\n정상 회계 원장과 다르게 고객용 거래명세서를 임의 변경하는 사유와 원본과의 차이점을 구체적으로 기재해 주십시오.', '필수 입력 누락');
       showToast('거래명세서 변환 사유를 반드시 입력해야 합니다.', 'error');
       return;
     }
@@ -1911,7 +1911,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
   const todayStr = getTodayStr();
   const currentYm = getCurrentYm();
   
-  // 💡 사용자가 선택한 마감일 검색 기간 기준 대상 귀속월 (WIZARD 탭일 때만 연산)
+  //  사용자가 선택한 마감일 검색 기간 기준 대상 귀속월 (WIZARD 탭일 때만 연산)
   const targetYm = useMemo(() => {
     if (activeTab !== 'WIZARD') return '';
     return (wizardSearchEndDate || wizardSearchStartDate || getTodayStr()).substring(0, 7);
@@ -1929,7 +1929,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
       if (!isOverlapping) return false;
 
       // 3. 해당 대상 귀속월에 유효한 청구서가 이미 존재하는지 검사 (취소 REJECTED 제외)
-      // 💡 단, 계약 기간 연장 등으로 인해 직전 청구 종료일(lastBilledPeriodEnd)이 연장된 계약 종료일(normalEnd) 및
+      //  단, 계약 기간 연장 등으로 인해 직전 청구 종료일(lastBilledPeriodEnd)이 연장된 계약 종료일(normalEnd) 및
       //    당월 마감일보다 이전에 멈춰 있어 추가 정산할 연장 기간이 남아있는 경우에는 청구 대상에 포함!
       const hasBillingForTargetMonth = billings.some(
         b => b.contractId === c.id && b.billingYm === targetYm && b.status !== 'REJECTED'
@@ -1966,10 +1966,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     });
   }, [activeTab, contracts, billings, targetYm, wizardSearchStartDate, wizardSearchEndDate, todayStr, siteMap, customerMap, currentYm]);
 
-  // 💡 오늘 거래명세서 마감 건 우선 필터 토글 ('ALL' | 'TODAY_STATEMENT' | 'OVERDUE_STATEMENT')
+  //  오늘 거래명세서 마감 건 우선 필터 토글 ('ALL' | 'TODAY_STATEMENT' | 'OVERDUE_STATEMENT')
   const [statementDueQuickFilter, setStatementDueQuickFilter] = useState<'ALL' | 'TODAY_STATEMENT' | 'OVERDUE_STATEMENT'>('ALL');
 
-  // 💡 계약 및 고객 현장별 거래명세서 마감일 판정 헬퍼
+  //  계약 및 고객 현장별 거래명세서 마감일 판정 헬퍼
   const getTodayStatementDueStatus = (c: any) => {
     const today = new Date();
     const todayDay = today.getDate();
@@ -2014,14 +2014,14 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     const startDay = startDateObj.getDate();
     const endDay = endDateObj.getDate();
     
-    // 💡 31일(말일) 지정 건을 해당 월의 실제 마지막 날(30일/28일 등)로 동적 보정
+    //  31일(말일) 지정 건을 해당 월의 실제 마지막 날(30일/28일 등)로 동적 보정
     const getEffectiveDay = (targetDay: number | undefined) => {
       if (!targetDay) return undefined;
       const lastDayOfMonth = new Date(endDateObj.getFullYear(), endDateObj.getMonth() + 1, 0).getDate();
       return Math.min(targetDay, lastDayOfMonth);
     };
 
-    // 💡 현장 설정 마감일 최우선 상속 체인
+    //  현장 설정 마감일 최우선 상속 체인
     const siteObj = sites.find(s => s.id === c.siteId);
     const custObj = customers.find(cu => cu.id === c.customerId);
     const rawBillingDay = siteObj?.billingDay || c.billingDay || custObj?.defaultBillingDay || 30;
@@ -2030,7 +2030,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     const effectiveBillingDay = getEffectiveDay(rawBillingDay);
     const effectiveStatementDay = getEffectiveDay(rawStatementDay);
 
-    // 💡 계약 시작일이 검색 종료월 마감일보다 뒤에 있는 경우 (예: 8/31 시작 > 8/30 마감)
+    //  계약 시작일이 검색 종료월 마감일보다 뒤에 있는 경우 (예: 8/31 시작 > 8/30 마감)
     // 당월 마감 기준으로는 가동일이 0일이므로 당월 청구 대상에서 제외 (익월 청구로 이관)
     const targetClosingDay = effectiveBillingDay || effectiveStatementDay || 31;
     const yStr = endDateObj.getFullYear();
@@ -2078,7 +2078,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     setWizardSiteFilter(wizardTempSiteFilter);
   };
 
-  // 💡 오늘 거래명세서 마감 대상(미발행) 계약 목록
+  //  오늘 거래명세서 마감 대상(미발행) 계약 목록
   const todayStatementDueContracts = useMemo(() => {
     if (activeTab !== 'WIZARD') return [];
     return activeContractsForWizard.filter(c => {
@@ -2087,7 +2087,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     });
   }, [activeTab, activeContractsForWizard, siteMap, customerMap]);
 
-  // 💡 마감일 도과 미발행 계약 목록
+  //  마감일 도과 미발행 계약 목록
   const overdueStatementContracts = useMemo(() => {
     if (activeTab !== 'WIZARD') return [];
     return activeContractsForWizard.filter(c => {
@@ -2108,7 +2108,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
       const matchesContractNo = !wizardContractNoFilter || contractNoStr.includes(wizardContractNoFilter.trim().toLowerCase());
       const matchesSite = !wizardSiteFilter || matchHangul(getSiteName(c.siteId), wizardSiteFilter);
 
-      // 🔔 거래명세서 마감 퀵 필터 반영
+      //  거래명세서 마감 퀵 필터 반영
       if (statementDueQuickFilter === 'TODAY_STATEMENT') {
         const status = getTodayStatementDueStatus(c);
         if (!status.isTodayDue || status.isAlreadyBilledThisMonth) return false;
@@ -2132,7 +2132,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     );
   };
 
-  // 💡 계약 상세에서 '당월 렌탈 청구에 합산'으로 등록된 유통출고 채권인지 판별 (일괄/개별 청구 시 자동 합산 대상)
+  //  계약 상세에서 '당월 렌탈 청구에 합산'으로 등록된 유통출고 채권인지 판별 (일괄/개별 청구 시 자동 합산 대상)
   const isAutoLinkedTradeReceivable = (r: any) => {
     const desc = String(r?.internalDescription || '');
     const disp = String(r?.displayName || '');
@@ -2185,7 +2185,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     
     // 1. 귀속월 강제 프롬프트
     const userYm = window.prompt(
-      '일괄 청구를 생성할 "청구 귀속월"을 입력해주세요.\n(형식: YYYY-MM)\n\n※ 입력하신 월을 기준으로 각 계약별 정산 기간(시작/종료일)이 자동 산정됩니다.',
+      '일괄 청구를 생성할 "청구 귀속월"을 입력해주세요.\n\n\n※ 입력하신 월을 기준으로 각 계약별 정산 기간(시작/종료일)이 자동 산정됩니다.',
       targetYm
     );
     if (!userYm) return;
@@ -2287,7 +2287,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     setWizardStartDate(calcStart);
     setWizardEndDate(calcEnd);
 
-    // 💡 청구 귀속월(wizardBillingYm) 변경 시 해당 귀속월에 포함될 유통출고 합산분도 자동 재동기화
+    //  청구 귀속월(wizardBillingYm) 변경 시 해당 귀속월에 포함될 유통출고 합산분도 자동 재동기화
     const dueTradeRcvs = receivables.filter(r =>
       r.status !== 'CLEARED' &&
       ((r.totalAmount || 0) - (r.billedAmount || 0)) > 0 &&
@@ -2331,7 +2331,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
   const handleSelectContractForWizard = (c: any) => {
     setSelectedContractIdForWizard(c.id);
 
-    // 💡 계약 상세에서 '당월 렌탈 청구에 합산'으로 등록된 미청구 유통출고 건(해당 귀속월 이하)은 클릭 즉시 자동 선택 및 합산 반영
+    //  계약 상세에서 '당월 렌탈 청구에 합산'으로 등록된 미청구 유통출고 건(해당 귀속월 이하)은 클릭 즉시 자동 선택 및 합산 반영
     const autoTradeRcvs = receivables.filter(r =>
       r.status !== 'CLEARED' &&
       ((r.totalAmount || 0) - (r.billedAmount || 0)) > 0 &&
@@ -2369,7 +2369,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     const startStr = `${targetY}-${String(targetM).padStart(2, '0')}-01`;
     const endStr = `${targetY}-${String(targetM).padStart(2, '0')}-${String(lastDayNum).padStart(2, '0')}`;
     
-    // 💡 직전 청구 종료일이 있으면 익일부터 시작, 없으면 계약시작일 또는 당월 1일 적용
+    //  직전 청구 종료일이 있으면 익일부터 시작, 없으면 계약시작일 또는 당월 1일 적용
     let calcStart = startStr;
     if (c.lastBilledPeriodEnd) {
       const [py, pm, pd] = c.lastBilledPeriodEnd.slice(0, 10).split('-').map(Number);
@@ -2406,7 +2406,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
     return contractMap.get(selectedContractIdForWizard);
   }, [selectedContractIdForWizard, contractMap]);
 
-  // 💡 출고 요청 유상 옵션 자동 산출 연동 ('월': 매월 가동 대수 × 단가, '건': 출고 건당 1회, '대': 해당 출고 대수 × 1회)
+  //  출고 요청 유상 옵션 자동 산출 연동 ('월': 매월 가동 대수 × 단가, '건': 출고 건당 1회, '대': 해당 출고 대수 × 1회)
   useEffect(() => {
     if (!selectedContractForWizard || !wizardStartDate || !wizardEndDate || !wizardBillingYm) return;
 
@@ -2470,7 +2470,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
   const diffDaysForWizard = getDiffDays();
 
-  // 💡 헌장 4.1 & 사장님 지침: 계약 내 개별 자산의 대차/회수/입고 기간을 반영한 정밀 일할/월정액 계산
+  //  헌장 4.1 & 사장님 지침: 계약 내 개별 자산의 대차/회수/입고 기간을 반영한 정밀 일할/월정액 계산
   // 청구 계산은 전산 등록일시가 아닌 실제 입고일을 기준으로 100% 연동
   const calculateAssetFeeForWizard = (ca: any) => {
     if (!wizardStartDate || !wizardEndDate) return { amount: 0, days: 0, desc: '', active: false, isExchangeProRata: false };
@@ -2669,7 +2669,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         updatedAt: new Date().toISOString()
       });
 
-      // 💡 부모 청구서 원격 DB 커밋을 먼저 완료하여 자식 FK 제약조건(23503) 경합 방지
+      //  부모 청구서 원격 DB 커밋을 먼저 완료하여 자식 FK 제약조건(23503) 경합 방지
       await db.awaitPendingWrites();
 
       // 2) 기본 세부내역 저장
@@ -2698,7 +2698,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         await linkReceivableToBilling(billing.id, r.receivableId, finalAmount, r.displayName);
       }
 
-      // 💡 헌장 5.2 준수: 원격 DB 저장을 동기로 대기하여 데이터 누락 및 무음 실패 100% 방지
+      //  헌장 5.2 준수: 원격 DB 저장을 동기로 대기하여 데이터 누락 및 무음 실패 100% 방지
       syncContractBillingMilestones(selectedContractForWizard.id);
       await db.awaitPendingWrites();
 
@@ -2739,7 +2739,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         {canSave && (
           <button className={activeTab === 'WIZARD' ? 'btn-primary' : 'btn-secondary'} data-mid='tab-billing-wizard' onClick={() => setActiveTab('WIZARD')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Calendar size={14} /> 미청구 정산
-            {todayStatementDueContracts.length > 0 && (
+ {todayStatementDueContracts.length > 0 && (
               <span style={{ padding: '1px 6px', fontSize: '10.5px', fontWeight: 800, borderRadius: '10px', backgroundColor: '#dc2626', color: '#ffffff', lineHeight: '1.2' }}>
                 오늘 마감 {todayStatementDueContracts.length}
               </span>
@@ -2748,7 +2748,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         )}
         <button className={activeTab === 'LIST' ? 'btn-primary' : 'btn-secondary'} data-mid='tab-billing-list' onClick={() => setActiveTab('LIST')}>
           청구 대장
-        </button>
+ </button>
         <button
           className={activeTab === 'INVOICE' ? 'btn-primary' : 'btn-secondary'}
           data-mid='tab-billing-invoice'
@@ -2756,7 +2756,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
           style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <Layers size={14} /> 청구서통합
-        </button>
+ </button>
         <button
           className={activeTab === 'WAIVER' ? 'btn-primary' : 'btn-secondary'}
           data-mid='tab-billing-waiver'
@@ -2764,12 +2764,12 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
           style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <AlertTriangle size={14} /> 청구 면제 대장
-        </button>
+ </button>
         {isAdmin && (
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '3px 10px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
             <span style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-secondary)' }}>
               특수 거래명세서 기능:
-            </span>
+ </span>
             <button
               type="button"
               className={currentTenant?.allowCustomBillingStatement ? 'btn-primary' : 'btn-secondary'}
@@ -2803,7 +2803,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
       {activeTab === 'LIST' && (
         <div data-subview="billing" data-subview-title="청구 대장" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* ⚠️ K-1: 일괄 청구 보류 대시보드 (1행 1건 컴팩트 테이블 형태) */}
+          {/*  K-1: 일괄 청구 보류 대시보드 (1행 1건 컴팩트 테이블 형태) */}
           {skippedContracts.length > 0 && (
             <div style={{
               padding: '14px 18px',
@@ -2818,10 +2818,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <span style={{ fontSize: '16px' }}></span>
                 <strong style={{ color: 'var(--warning)', fontSize: '14px' }}>
                   일괄 청구 보류 - {skippedContracts.length}건
-                </strong>
+ </strong>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   미수금 존재 등 수동 확인이 필요하여 일괄 생성에서 제외된 계약입니다.
-                </span>
+ </span>
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary ms-auto"
@@ -2829,7 +2829,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   onClick={() => setSkippedContracts([])}
                 >
                   닫기
-                </button>
+ </button>
               </div>
               <table className="table table-sm table-bordered mb-0 align-middle" style={{ backgroundColor: 'var(--bg-card)', fontSize: '12.5px' }}>
                 <thead>
@@ -2859,8 +2859,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               setActiveTab('WIZARD');
                             }}
                           >
-                            수동 병합 발행 ➔
-                          </button>
+                            수동 병합 발행 
+ </button>
                         </td>
                       </tr>
                     );
@@ -2887,7 +2887,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700, borderColor: 'var(--primary)', color: 'var(--primary)', whiteSpace: 'nowrap' }}
                 >
                   <FileText size={12} /> 홈택스 세금계산서 엑셀 ({sortedBillings.length}건)
-                </button>
+ </button>
                 <button 
                   type="button" 
                   className="btn-excel-download btn-sm" 
@@ -2895,7 +2895,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   onClick={handleExportExcel}
                 >
                   <Download size={12} /> 엑셀 다운로드
-                </button>
+ </button>
               </div>
             </div>
 
@@ -2925,7 +2925,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 />
               </div>
 
-              {/* 📅 청구 귀속월 및 당월 퀵버튼 */}
+              {/*  청구 귀속월 및 당월 퀵버튼 */}
               <div data-mid="billing-period-scope" style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', flexShrink: 0 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>청구 귀속월</label>
@@ -2956,7 +2956,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     title="전월"
                   >
                     &lt;
-                  </button>
+ </button>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -2965,7 +2965,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     title="당월"
                   >
                     당월
-                  </button>
+ </button>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -2974,11 +2974,11 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     title="익월"
                   >
                     &gt;
-                  </button>
+ </button>
                 </div>
               </div>
 
-              {/* 💰 수납 상태 */}
+              {/*  수납 상태 */}
               <div data-mid="billing-payment-filter" style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>수납 상태</label>
                 <select 
@@ -2992,7 +2992,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 </select>
               </div>
 
-              {/* ✉️ 메일 발송 */}
+              {/*  메일 발송 */}
               <div data-mid="billing-mail-filter" style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>메일 발송</label>
                 <select 
@@ -3006,7 +3006,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 </select>
               </div>
 
-              {/* 📑 통합 여부 */}
+              {/*  통합 여부 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>통합 구분</label>
                 <select 
@@ -3028,7 +3028,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   onClick={handleSearchClick}
                 >
                   <Search size={12} /> 조회
-                </button>
+ </button>
                 <button 
                   type="button" 
                   className="btn-reset btn-sm" 
@@ -3036,11 +3036,11 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   title="검색 초기화"
                 >
                   초기화
-                </button>
+ </button>
               </div>
             </div>
 
-            {/* 📊 청구 및 수납 종합 집계 (1줄 고밀도 압축 스트립, 메모이제이션 적용) */}
+            {/*  청구 및 수납 종합 집계 (1줄 고밀도 압축 스트립, 메모이제이션 적용) */}
             <div data-mid="billing-kpi-summary" style={{
               display: 'flex',
               alignItems: 'center',
@@ -3098,7 +3098,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <tr>
                       <td colSpan={7} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
                         조회 결과가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : sortedBillings.map(b => {
                     const supply = b.totalAmount || 0;
@@ -3143,7 +3143,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                 title="수납 등록"
                               >
                                 수납
-                              </button>
+ </button>
                             )}
 
                             {/* 2. 발송 버튼: REJECTED가 아닌 모든 청구서에서 거래명세서 메일 발송 */}
@@ -3189,25 +3189,25 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               }} 
                               title={`특수 청구(명세서) 적용 건\n결재상태: ${b.approvalStatus === 'PENDING' ? '결재대기' : b.approvalStatus === 'REJECTED' ? '반려됨' : '승인완료'}\n사유: ${b.customStatementReason || '사유 미기재'}`}
                             >
-                              📄 특수청구{b.approvalStatus === 'PENDING' ? ' (대기)' : b.approvalStatus === 'REJECTED' ? ' (반려)' : ' (승인)'}
+                               특수청구{b.approvalStatus === 'PENDING' ? ' (대기)' : b.approvalStatus === 'REJECTED' ? ' (반려)' : ' (승인)'}
                             </span>
                           )}
                           {b.parentBillingId && (
                             <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 5px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '4px', fontWeight: 'bold' }} title="분할 생성된 청구건입니다">
-                              ✂️ 분할됨
-                            </span>
+                               분할됨
+ </span>
                           )}
                           {splitOriginalBillingIdSet.has(b.id) && !b.parentBillingId && (
                             <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 5px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '4px', fontWeight: 'bold' }} title="일부 금액이 다른 청구서로 분할되었습니다">
-                              ✂️ 분할(원본)
-                            </span>
+                               분할(원본)
+ </span>
                           )}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           <span>{getCustName(b.customerId)}</span>
                           {customerMap.get(b.customerId)?.transactionStatus === 'BLOCKED' && (
                             <span style={{ marginLeft: '6px', padding: '1px 5px', fontSize: '10px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', borderRadius: '3px', fontWeight: 800 }}>
                               출고제한
-                            </span>
+ </span>
                           )}
                           {b.invoiceId && (
                             <span
@@ -3268,7 +3268,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                      b.status === 'PARTIAL'   ? '일부납' : b.status}
                                   </span>
 
-                                  {/* 🌟 완납/일부납 배지 오른쪽 바로 옆 수납취소 버튼 */}
+                                  {/*  완납/일부납 배지 오른쪽 바로 옆 수납취소 버튼 */}
                                   {canSave && (b.paidAmount > 0 || isPaid) && b.status !== 'REJECTED' && (
                                     <button 
                                       type="button"
@@ -3290,7 +3290,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                       title="수납 취소 및 롤백 (통장 잔액/미수금 복원)"
                                     >
                                       수납취소
-                                    </button>
+ </button>
                                   )}
                                 </div>
                                 {subLabel && (
@@ -3331,7 +3331,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <h3 className="card-title" style={{ margin: 0, fontSize: '15px', fontWeight: '700' }}>
                         청구 명세서 ({activeBilling.billingYm})
-                      </h3>
+ </h3>
                       {canSave && (
                         <button
                           type="button"
@@ -3352,7 +3352,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           title="청구귀속월 변경"
                         >
                           <Edit3 size={11} /> 청구월 수정
-                        </button>
+ </button>
                       )}
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px', whiteSpace: 'nowrap' }}>
                         발행일자: {activeBilling.billingDate}
@@ -3380,7 +3380,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           title="이 청구서를 취소하고 계약의 최근 청구 정보를 직전 유효 상태로 롤백합니다."
                         >
                           <RotateCcw size={12} /> 청구 취소
-                        </button>
+ </button>
                       )}
                       {canSave && activeBilling.status !== 'PAID' && (
                         <button
@@ -3403,7 +3403,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           title="이 청구서를 금액 기준으로 2개의 청구서로 분할합니다."
                         >
                           <Scissors size={12} /> 청구 분할
-                        </button>
+ </button>
                       )}
                       <button 
                         type="button" 
@@ -3424,7 +3424,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         title="00.거래명세서양식.xlsx 정품 엑셀 원본 파일 다운로드"
                       >
                         <FileText size={12} /> 엑셀 다운로드
-                      </button>
+ </button>
                       <button 
                         type="button" 
                         className="btn-secondary"
@@ -3444,7 +3444,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         title="로컬 에이전트 MS Excel COM 엔진 기반 정품 A4 PDF 다운로드"
                       >
                         <Download size={12} /> PDF 다운로드
-                      </button>
+ </button>
                       {currentTenant?.allowCustomBillingStatement && canCustomBilling && activeBilling.status !== 'REJECTED' && (
                         <>
                           <button
@@ -3487,7 +3487,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               title="임의 수정 거래명세서를 제거하고 실제 원장 품목으로 복원합니다."
                             >
                               <RotateCcw size={12} /> 정상 복원
-                            </button>
+ </button>
                           )}
                         </>
                       )}
@@ -3509,7 +3509,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         }}
                       >
                         <Mail size={12} /> 거래명세서 메일 발송
-                      </button>
+ </button>
                     </div>
                   </div>
 
@@ -3525,7 +3525,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                           거래명세서 발급 및 이메일 발송 이력 ({logs.length > 0 ? `${logs.length}건` : '청구 발행 1건'})
-                        </div>
+ </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '96px', overflowY: 'auto' }}>
                           {(logs.length > 0 ? logs : fallbackCreated ? [fallbackCreated] : []).map(item => (
                             <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '11px', padding: '4px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
@@ -3554,10 +3554,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--primary)', color: '#ffffff', borderRadius: '4px' }}>
                             특수 거래명세서 적용 건
-                          </span>
+ </span>
                           <span style={{ fontSize: '12px', fontWeight: '600', color: '#5b21b6' }}>
                             실제 계약 회계 원장 DB는 보존되며, 거래명세서 품목이 임의 수정되어 발행됩니다.
-                          </span>
+ </span>
                         </div>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                           작성자: {activeBilling.customStatementCreatedBy || '담당자'} | 작성일시: {activeBilling.customStatementCreatedAt ? new Date(activeBilling.customStatementCreatedAt).toLocaleString() : '-'}
@@ -3604,8 +3604,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         onClick={() => setActiveTab('INVOICE')}
                         style={{ padding: '2px 8px', fontSize: '11px', whiteSpace: 'nowrap' }}
                       >
-                        청구서통합 탭 이동 ➔
-                      </button>
+                        청구서통합 탭 이동 
+ </button>
                     </div>
                   )}
 
@@ -3640,7 +3640,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           </div>
                           <div style={{ color: '#5b21b6', fontSize: '11px', marginTop: '2px' }}>
                             사유: {activeBilling.customStatementReason || '고객사 요청 서식/품목 단일화'} (실제 계약 원장 및 회계 청구 총액 ₩{totalGrand.toLocaleString()}과 100% 일치)
-                          </div>
+ </div>
                         </div>
                       </div>
                       {canCustomBilling && (
@@ -3654,7 +3654,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ padding: '3px 10px', fontSize: '11px', whiteSpace: 'nowrap', borderColor: '#c4b5fd', color: '#6d28d9' }}
                         >
                           명세서 서식/품목 수정
-                        </button>
+ </button>
                       )}
                     </div>
                   )}
@@ -3668,7 +3668,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         {custObj?.transactionStatus === 'BLOCKED' && (
                           <span style={{ padding: '1px 5px', fontSize: '10px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', borderRadius: '3px', fontWeight: 800 }}>
                             출고제한
-                          </span>
+ </span>
                         )}
                       </strong>
                     </div>
@@ -3725,16 +3725,16 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               borderColor: activeBillingDetailTab === 'STATEMENT' ? 'var(--primary-hover)' : undefined
                             }}
                           >
-                            📝 특수 거래명세서 품목 ({activeBilling.customStatementItems?.length || 0}건)
-                          </button>
+                             특수 거래명세서 품목 ({activeBilling.customStatementItems?.length || 0}건)
+ </button>
                           <button
                             type="button"
                             className={activeBillingDetailTab === 'ORIGINAL' ? 'btn-primary' : 'btn-secondary'}
                             onClick={() => setActiveBillingDetailTab('ORIGINAL')}
                             style={{ padding: '3px 10px', fontSize: '11.5px', fontWeight: 'bold' }}
                           >
-                            📄 실제 계약 원장 ({activeBillingDetails.length}건)
-                          </button>
+                             실제 계약 원장 ({activeBillingDetails.length}건)
+ </button>
                         </div>
                       ) : (() => {
                         const rentalCount = activeBillingDetails.filter(bd => Boolean(bd.contractAssetId)).length;
@@ -3744,7 +3744,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                             <h4 style={{ fontSize: '13px', fontWeight: '700', margin: 0 }}>세부 청구 명세 (총 {activeBillingDetails.length}건)</h4>
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
                               [장비 렌탈료: {rentalCount}대{extraCount > 0 ? ` / 부대·미수금: ${extraCount}건` : ''}]
-                            </span>
+ </span>
                           </div>
                         );
                       })()}
@@ -3772,7 +3772,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               <tr>
                                 <td colSpan={9} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
                                   등록된 거래명세서 품목이 없습니다.
-                                </td>
+ </td>
                               </tr>
                             ) : (
                               activeBilling.customStatementItems.map((ci, idx) => {
@@ -3837,7 +3837,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                             <tr>
                               <td colSpan={9} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
                                 등록된 세부 청구 내역이 없습니다.
-                              </td>
+ </td>
                             </tr>
                           ) : (
                             activeBillingDetails.map((bd, idx) => {
@@ -3938,7 +3938,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     {assetNo !== '-' && (
                                       <span style={{ marginLeft: '6px', color: 'var(--text-muted)', fontSize: '11px' }}>
                                         ({assetNo})
-                                      </span>
+ </span>
                                     )}
                                   </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right' }}>
@@ -3954,10 +3954,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                   </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text-muted)' }}>
                                     {vat.toLocaleString()}원
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
                                     {lineTotal.toLocaleString()}원
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', color: 'var(--text-secondary)' }}>
                                     {isAssetRental ? (
                                       <span>
@@ -3965,7 +3965,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                         {isPartialMonth ? (
                                           <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--warning)', fontWeight: 600 }}>
                                             (일할 {displayQuantity}일)
-                                          </span>
+ </span>
                                         ) : (
                                           bd.description && !bd.description.includes('정기') && !bd.description.includes('30일') ? (
                                             <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>({bd.description})</span>
@@ -4020,7 +4020,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   )}
                   </div>
 
-                  {/* 💰 수납 및 결제 이력 (Payment History & 수납 취소) */}
+                  {/*  수납 및 결제 이력 (Payment History & 수납 취소) */}
                   {(() => {
                     const billingPayments = payments.filter(p => p.billingId === activeBilling.id && isActivePayment(p));
                     if (billingPayments.length === 0) return null;
@@ -4029,8 +4029,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <h4 style={{ fontSize: '13px', fontWeight: '700', margin: 0, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            💰 수납 및 결제 이력 ({billingPayments.length}건)
-                          </h4>
+                             수납 및 결제 이력 ({billingPayments.length}건)
+ </h4>
                           {canSave && (
                             <button
                               type="button"
@@ -4048,7 +4048,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               title="모든 수납 내역 일괄 취소 및 통장 잔액/청구서 롤백"
                             >
                               전체 수납 취소 (롤백)
-                            </button>
+ </button>
                           )}
                         </div>
 
@@ -4111,7 +4111,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                           title="이 수납 건 취소 및 통장 잔액/청구서 롤백"
                                         >
                                           수납취소
-                                        </button>
+ </button>
                                       )}
                                     </td>
                                   </tr>
@@ -4128,11 +4128,11 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
             })() : (
               <div className="card" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', margin: 0 }}>
                 상세 청구 항목을 조회할 청구서를 왼쪽 목록에서 선택해 주세요.
-              </div>
+ </div>
             )}
           </div>
 
-        {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
+        {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
         {(() => {
           let sumTotal = 0;
           let sumPaid = 0;
@@ -4187,7 +4187,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
             <div className="card" style={{ margin: 0, marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h3 className="card-title" style={{ margin: 0 }}>정산 대상 계약 목록</h3>
 
-              {/* 🔔 오늘 거래명세서 마감 현황 알림 & 누락 방지 컨트롤 */}
+              {/*  오늘 거래명세서 마감 현황 알림 & 누락 방지 컨트롤 */}
               <div 
                 data-mid="statement-closing-today-alert"
                 style={{
@@ -4206,7 +4206,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   <FileText size={15} color={todayStatementDueContracts.length > 0 ? '#dc2626' : 'var(--primary)'} />
                   <span style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
                     오늘 거래명세서 마감:
-                  </span>
+ </span>
                   <span style={{
                     fontSize: '12px',
                     fontWeight: 800,
@@ -4231,8 +4231,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       cursor: 'pointer'
                     }}
                   >
-                    🔔 오늘 명세서 마감 ({todayStatementDueContracts.length}건)
-                  </button>
+                     오늘 명세서 마감 ({todayStatementDueContracts.length}건)
+ </button>
                   {overdueStatementContracts.length > 0 && (
                     <button
                       type="button"
@@ -4248,8 +4248,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         cursor: 'pointer'
                       }}
                     >
-                      ⚠️ 마감 도과 ({overdueStatementContracts.length}건)
-                    </button>
+                       마감 도과 ({overdueStatementContracts.length}건)
+ </button>
                   )}
                   {statementDueQuickFilter !== 'ALL' && (
                     <button
@@ -4266,7 +4266,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       }}
                     >
                       전체 해제
-                    </button>
+ </button>
                   )}
                 </div>
               </div>
@@ -4276,7 +4276,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                     마감일 기준 검색 기간
-                  </label>
+ </label>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'nowrap' }}>
                     {[
                       { id: 'PREV_MONTH', label: '전월' },
@@ -4373,7 +4373,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   onClick={handleWizardSearchClick}
                 >
                   <Search size={12} /> 조회
-                </button>
+ </button>
 
                 {canSave && (
                   <button
@@ -4411,7 +4411,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               {filteredWizardContracts.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', margin: 0 }}>
                   해당 조건의 정산 대상 계약이 없습니다.
-                </div>
+ </div>
               ) : (
                 filteredWizardContracts.map(c => {
                   const customerName = getCustName(c.customerId);
@@ -4440,23 +4440,23 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                           {statementStatus.isTodayDue && !statementStatus.isAlreadyBilledThisMonth && (
                             <span className="badge" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #ef4444', fontWeight: 'bold' }}>
-                              🔔 오늘 명세서 마감
-                            </span>
+                               오늘 명세서 마감
+ </span>
                           )}
                           {statementStatus.isOverdue && !statementStatus.isAlreadyBilledThisMonth && (
                             <span className="badge" style={{ backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b', fontWeight: 'bold' }}>
-                              ⚠️ 마감 도과
-                            </span>
+                               마감 도과
+ </span>
                           )}
                           {unbilledRcvList.length > 0 && (
                             <span className="badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', border: '1px solid rgba(245, 158, 11, 0.3)', fontWeight: 'bold' }}>
-                              ⚠️ 외상미수금 {unbilledRcvList.length}건 (수동정산)
-                            </span>
+                               외상미수금 {unbilledRcvList.length}건 (수동정산)
+ </span>
                           )}
                           {due && (
                             <span className="badge badge-danger">
-                              🔥 마감 도래
-                            </span>
+                               마감 도래
+ </span>
                           )}
                         </div>
                       </div>
@@ -4465,7 +4465,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         {customers.find(cu => cu.id === c.customerId)?.transactionStatus === 'BLOCKED' && (
                           <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', fontWeight: 800, border: '1px solid #fca5a5' }}>
                             출고제한
-                          </span>
+ </span>
                         )}
                       </h4>
                       <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
@@ -4485,12 +4485,12 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           {statementStatus.isSiteSpecific && (
                             <span style={{ fontSize: '9.5px', padding: '0 3px', borderRadius: '3px', backgroundColor: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', fontWeight: 700 }}>
                               현장지정
-                            </span>
+ </span>
                           )}
                         </div>
                       </div>
 
-                      {/* 💡 직전 청구 마일스톤 뱃지 바 */}
+                      {/*  직전 청구 마일스톤 뱃지 바 */}
                       <div style={{ padding: '6px 8px', backgroundColor: 'var(--bg-app)', borderRadius: '4px', fontSize: '11.5px', marginTop: '8px', border: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ color: 'var(--text-muted)' }}>직전 청구:</span>
@@ -4520,7 +4520,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div className="card" style={{ margin: 0, borderTop: '4px solid var(--primary)' }}>
                 <h3 className="card-title" style={{ marginBottom: '8px' }}>
                   [{getCustName(selectedContractForWizard.customerId)}] 청구 요금 계산기
-                </h3>
+ </h3>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
                   <span>계약번호: <strong>{selectedContractForWizard.contractNo}</strong></span>
                   <span>계약 기간: <strong>{selectedContractForWizard.startDate} ~ {formatContractEndDate(selectedContractForWizard.endDate)}</strong></span>
@@ -4532,18 +4532,18 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <span>계산서 마감: <strong>매월 {selDue.rawBillingDay === 31 ? '말일' : `${selDue.rawBillingDay}일`}</strong></span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           명세서 마감: 
-                          <strong style={{ color: selDue.isTodayDue && !selDue.isAlreadyBilledThisMonth ? '#dc2626' : 'inherit' }}>
+ <strong style={{ color: selDue.isTodayDue && !selDue.isAlreadyBilledThisMonth ? '#dc2626' : 'inherit' }}>
                             매월 {selDue.rawStatementDay === 31 ? '말일' : `${selDue.rawStatementDay}일`}
                           </strong>
                           {selDue.isSiteSpecific && (
                             <span style={{ fontSize: '10px', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', fontWeight: 700 }}>
                               현장지정
-                            </span>
+ </span>
                           )}
                           {selDue.isTodayDue && !selDue.isAlreadyBilledThisMonth && (
                             <span className="badge" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #ef4444', fontSize: '10px' }}>
-                              🔔 오늘 마감
-                            </span>
+                               오늘 마감
+ </span>
                           )}
                         </span>
                       </>
@@ -4557,7 +4557,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap' }}>
                       <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
                         정산 대상 기간 설정
-                      </span>
+ </span>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                         <button
                           type="button"
@@ -4574,7 +4574,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px' }}
                         >
                           권장 시작일
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -4589,7 +4589,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px' }}
                         >
                           당월
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -4607,7 +4607,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px' }}
                         >
                           전월
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -4621,7 +4621,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px' }}
                         >
                           계약 전체
-                        </button>
+ </button>
                       </div>
                     </div>
 
@@ -4652,7 +4652,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                         청구 귀속월
-                      </label>
+ </label>
                       <input
                         type="month"
                         value={wizardBillingYm}
@@ -4663,7 +4663,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                         청구 발행 일자
-                      </label>
+ </label>
                       <input
                         type="date"
                         value={wizardBillingDate}
@@ -4673,7 +4673,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     </div>
                   </div>
 
-                  {/* 💡 직전 청구 마일스톤 및 권장 청구 기간 안내 박스 */}
+                  {/*  직전 청구 마일스톤 및 권장 청구 기간 안내 박스 */}
                   <div style={{
                     padding: '12px 14px',
                     backgroundColor: 'var(--bg-app)',
@@ -4696,13 +4696,13 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       {selectedContractForWizard.lastBilledPeriodStart && selectedContractForWizard.lastBilledPeriodEnd ? (
                         <>
                           • 직전 청구 기간: <strong style={{ color: 'var(--text-primary)' }}>{selectedContractForWizard.lastBilledPeriodStart} ~ {selectedContractForWizard.lastBilledPeriodEnd}</strong> ({selectedContractForWizard.lastBilledYm || ''}월분 / {selectedContractForWizard.lastBillingDate || ''} 발행)<br />
-                          • 💡 <strong>권장 당월 시작일:</strong> 직전 청구 종료 익일인 <strong style={{ color: 'var(--primary)' }}>{wizardStartDate}</strong>부터 자동 산정됨.
-                        </>
+                          • <strong>권장 당월 시작일:</strong> 직전 청구 종료 익일인 <strong style={{ color: 'var(--primary)' }}>{wizardStartDate}</strong>부터 자동 산정됨.
+ </>
                       ) : (
                         <>
                           • 직전 청구 이력이 없는 <strong>최초 청구 계약</strong>입니다.<br />
                           • 계약 시작일인 <strong style={{ color: 'var(--primary)' }}>{selectedContractForWizard.startDate}</strong>부터 자동 산정됨.
-                        </>
+ </>
                       )}
                     </div>
                   </div>
@@ -4720,7 +4720,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ width: '16px', height: '16px' }}
                         />
                         월단가 계산 (월렌탈료 전액 적용)
-                      </label>
+ </label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 'normal' }}>
                         <input
                           type="radio"
@@ -4730,14 +4730,14 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           style={{ width: '16px', height: '16px' }}
                         />
                         일할청구 계산 (일단가 * 사용일수)
-                      </label>
+ </label>
                     </div>
                   </div>
 
                   {calcMethod === 'PRORATED' && (
                     <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', fontSize: '13px', color: 'var(--primary)', fontWeight: '600' }}>
-                      💡 계산된 대여 기간: {diffDaysForWizard}일
-                    </div>
+                       계산된 대여 기간: {diffDaysForWizard}일
+ </div>
                   )}
                 </div>
 
@@ -4751,11 +4751,11 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         onChange={() => setWizardSelectedCaIds(new Set())}
                       />
                       전체 선택 ({wizardContractAssets.length}대)
-                    </label>
+ </label>
                     {wizardSelectedCaIds.size > 0 && wizardSelectedCaIds.size < wizardContractAssets.length && (
                       <span style={{ color: '#f59e0b', fontWeight: 600 }}>
-                        ⚠️ 부분 청구 ({wizardSelectedCaIds.size}/{wizardContractAssets.length}대 선택)
-                      </span>
+                         부분 청구 ({wizardSelectedCaIds.size}/{wizardContractAssets.length}대 선택)
+ </span>
                     )}
                   </div>
                 )}
@@ -4804,12 +4804,12 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                 {feeInfo.isExchangeProRata && (
                                   <span className="badge badge-warning" style={{ fontSize: '10px', padding: '1px 5px' }}>
                                     대차/일할
-                                  </span>
+ </span>
                                 )}
                                 {!feeInfo.active && (
                                   <span className="badge badge-secondary" style={{ fontSize: '10px', padding: '1px 5px' }}>
                                     제외
-                                  </span>
+ </span>
                                 )}
                               </div>
                             </td>
@@ -4822,7 +4822,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                             </td>
                             <td style={{ textAlign: 'right', fontWeight: '700', color: feeInfo.active ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                               {feeInfo.amount.toLocaleString()}원
-                            </td>
+ </td>
                           </tr>
                         );
                       })}
@@ -4833,7 +4833,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 {/* 추가 청구 항목 입력 섹션 */}
                 <div style={{ marginTop: '24px', borderTop: '1px dashed var(--border-color)', paddingTop: '16px', marginBottom: '20px' }}>
                   
-                  {/* 💡 미청구 고객 과실 수리비 / 옵션 장착비 자동 추천 패널 */}
+                  {/*  미청구 고객 과실 수리비 / 옵션 장착비 자동 추천 패널 */}
                   {(() => {
                     const contractAssetIds = wizardContractAssets.map(ca => ca.assetId).filter(Boolean);
                     const unbilledRepairs = repairs.filter(r => 
@@ -4879,7 +4879,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               }}
                             >
                               전체 일괄 추가
-                            </button>
+ </button>
                           )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -4892,7 +4892,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                 <div>
                                   <span style={{ fontWeight: 700, color: label.includes('옵션') ? 'var(--primary)' : 'var(--danger)', marginRight: '6px' }}>{label}</span>
                                   <strong>{ast?.modelName || '장비'} ({ast?.assetNo || '현장확인'})</strong> — {rep.details || '현장 조치'} ({cost.toLocaleString()}원)
-                                </div>
+ </div>
                                 <div style={{ display: 'flex', gap: '6px' }}>
                                   <button
                                     type="button"
@@ -4910,7 +4910,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     style={{ fontSize: '11.5px', padding: '3px 8px', color: 'var(--primary)', fontWeight: 'bold' }}
                                   >
                                     + 청구 추가
-                                  </button>
+ </button>
                                   <button
                                     type="button"
                                     className="btn-secondary"
@@ -4929,8 +4929,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     }}
                                     style={{ fontSize: '11.5px', padding: '3px 8px', color: 'var(--danger)', borderColor: '#fca5a5', fontWeight: 'bold' }}
                                   >
-                                    🚫 영업 면제
-                                  </button>
+                                     영업 면제
+ </button>
                                 </div>
                               </div>
                             );
@@ -4940,7 +4940,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     );
                   })()}
 
-                  {/* 💡 미청구 고객부담 운송료 자동 추천 패널 */}
+                  {/*  미청구 고객부담 운송료 자동 추천 패널 */}
                   {(() => {
                     const unbilledDeliveries = deliveries.filter(d =>
                       d.billableToCustomer &&
@@ -4968,7 +4968,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                   return {
                                     id: `EXTRA-DEL-${d.id}`,
                                     category: 'TRANSPORT',
-                                    customName: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ➔ ${d.destinationAddress || '현장'})`,
+                                    customName: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ${d.destinationAddress || '현장'})`,
                                     quantity: 1,
                                     unitPrice: cost
                                   };
@@ -4978,7 +4978,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               }}
                             >
                               전체 일괄 추가
-                            </button>
+ </button>
                           )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -4987,8 +4987,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                             return (
                               <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', backgroundColor: 'var(--bg-card)', padding: '6px 10px', borderRadius: '6px' }}>
                                 <div>
-                                  <strong>운송 {d.dispatchCategory || d.type}</strong> {d.originAddress || '주기장'} ➔ {d.destinationAddress || '현장'} ({cost.toLocaleString()}원)
-                                </div>
+                                  <strong>운송 {d.dispatchCategory || d.type}</strong> {d.originAddress || '주기장'} {d.destinationAddress || '현장'} ({cost.toLocaleString()}원)
+ </div>
                                 <div style={{ display: 'flex', gap: '6px' }}>
                                   <button
                                     type="button"
@@ -4998,7 +4998,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                       setExtraCharges([...extraCharges, {
                                         id: `EXTRA-DEL-${d.id}`,
                                         category: 'TRANSPORT',
-                                        customName: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ➔ ${d.destinationAddress || '현장'})`,
+                                        customName: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ${d.destinationAddress || '현장'})`,
                                         quantity: 1,
                                         unitPrice: cost
                                       }]);
@@ -5006,7 +5006,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     style={{ fontSize: '11.5px', padding: '3px 8px', color: 'var(--primary)', fontWeight: 'bold' }}
                                   >
                                     + 청구 추가
-                                  </button>
+ </button>
                                   <button
                                     type="button"
                                     className="btn-secondary"
@@ -5014,7 +5014,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                       handleOpenWaiverModal({
                                         type: 'DELIVERY',
                                         id: d.id,
-                                        title: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ➔ ${d.destinationAddress || '현장'})`,
+                                        title: `[고객부담 운송료] ${d.dispatchCategory || d.type} (${d.originAddress || '주기장'} ${d.destinationAddress || '현장'})`,
                                         originalCost: cost,
                                         customerName: selectedContractForWizard ? getCustName(selectedContractForWizard.customerId) : undefined,
                                         contractNo: selectedContractForWizard?.contractNo,
@@ -5023,8 +5023,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     }}
                                     style={{ fontSize: '11.5px', padding: '3px 8px', color: 'var(--danger)', borderColor: '#fca5a5', fontWeight: 'bold' }}
                                   >
-                                    🚫 영업 면제
-                                  </button>
+                                     영업 면제
+ </button>
                                 </div>
                               </div>
                             );
@@ -5034,7 +5034,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     );
                   })()}
 
-                  {/* 💡 미청구 외상미수금 대장 자동 추천 패널 */}
+                  {/*  미청구 외상미수금 대장 자동 추천 패널 */}
                   {(() => {
                     const unbilledReceivables = receivables.filter(r => {
                       if (r.status === 'CLEARED') return false;
@@ -5083,7 +5083,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               }}
                             >
                               전체 일괄 추가
-                            </button>
+ </button>
                           )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -5123,8 +5123,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                   <span>{rcv.displayName || rcv.internalDescription}</span>
                                   {claimMeta && claimMeta.initialEstimatedAmount !== rcv.totalAmount ? (
                                     <span className="text-muted">
-                                      (최초예상: {claimMeta.initialEstimatedAmount.toLocaleString()}원 ➔ 합의잔액: <strong style={{ color: 'var(--danger)' }}>{remaining.toLocaleString()}원</strong>)
-                                    </span>
+                                      (최초예상: {claimMeta.initialEstimatedAmount.toLocaleString()}원 합의잔액: <strong style={{ color: 'var(--danger)' }}>{remaining.toLocaleString()}원</strong>)
+ </span>
                                   ) : (
                                     <span className="text-muted">(잔액: <strong style={{ color: 'var(--danger)' }}>{remaining.toLocaleString()}원</strong>)</span>
                                   )}
@@ -5138,7 +5138,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                       style={{ fontSize: '11px', padding: '3px 8px', fontWeight: 600 }}
                                     >
                                       수리비 내역서 PDF
-                                    </button>
+ </button>
                                   )}
                                   <button
                                     type="button"
@@ -5160,7 +5160,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     style={{ fontSize: '11.5px', padding: '3px 8px', color: 'var(--primary)', fontWeight: 'bold' }}
                                   >
                                     + 당월 청구에 포함
-                                  </button>
+ </button>
                                 </div>
                               </div>
                             );
@@ -5172,8 +5172,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                      ➕ 추가 청구 등록 (운송료, 수리비 등)
-                    </h4>
+                       추가 청구 등록 (운송료, 수리비 등)
+ </h4>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -5187,13 +5187,13 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       style={{ padding: '4px 10px', fontSize: '12px' }}
                     >
                       + 추가항목 생성
-                    </button>
+ </button>
                   </div>
 
                   {extraCharges.length === 0 ? (
                     <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0', border: '1px dashed var(--border-color)', borderRadius: '6px' }}>
                       등록된 추가 청구 항목이 없습니다.
-                    </div>
+ </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {extraCharges.map((ec, idx) => (
@@ -5268,7 +5268,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           {/* 금액 표시 */}
                           <span style={{ fontSize: '13px', fontWeight: '600', minWidth: '80px', textAlign: 'right', color: 'var(--text-primary)' }}>
                             {(ec.quantity * ec.unitPrice).toLocaleString()}원
-                          </span>
+ </span>
 
                           {/* 삭제 버튼 */}
                           <button data-hs-trigger="Delete"
@@ -5301,7 +5301,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                             title="항목 삭제"
                           >
                             ×
-                          </button>
+ </button>
                         </div>
                       ))}
                     </div>
@@ -5323,23 +5323,23 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     <span style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>총 정산 예상 금액</span>
                     <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)' }}>
                       {(totalAmountForWizard + extraCharges.reduce((sum, ec) => sum + ec.quantity * ec.unitPrice, 0)).toLocaleString()}원
-                    </span>
+ </span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                   <button type="button" className="btn-secondary" onClick={() => setSelectedContractIdForWizard(null)}>
                     취소
-                  </button>
+ </button>
                   <button type="button" data-mid="wizard-submit-btn" className="btn-primary" onClick={handleGenerateWizardBilling} disabled={(totalAmountForWizard + extraCharges.reduce((sum, ec) => sum + ec.quantity * ec.unitPrice, 0)) <= 0}>
                     청구 생성
-                  </button>
+ </button>
                 </div>
               </div>
             ) : (
               <div className="card" style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)', margin: 0 }}>
                 왼쪽 계약 목록에서 청구를 진행할 카드를 선택해 주세요.
-              </div>
+ </div>
             )}
           </div>
         </div>
@@ -5414,7 +5414,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               contractNo: cntr?.contractNo || '-',
               customerName: cust?.name || '-',
               siteName: st?.name || (cntr?.siteId ? getSiteName(cntr.siteId) : '-'),
-              assetInfo: `${d.originAddress || '주기장'} ➔ ${d.destinationAddress || '현장'}`,
+              assetInfo: `${d.originAddress || '주기장'} ${d.destinationAddress || '현장'}`,
               originalCost: orig,
               waivedAmount: d.waivedAmount || orig,
               waivedReason: d.waivedReason || '영업 사유 면제',
@@ -5544,7 +5544,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <div data-mid="waiver-period-scope" style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     면제 연월 범위
-                  </label>
+ </label>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <input
                       type="month"
@@ -5566,7 +5566,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <div data-mid="waiver-category-filter" style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     항목 구분
-                  </label>
+ </label>
                   <select
                     value={waiverCategoryFilter}
                     onChange={e => setWaiverCategoryFilter(e.target.value as any)}
@@ -5583,7 +5583,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <div data-mid="waiver-search-input" style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '220px', flexShrink: 0 }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     검색 (고객사 / 계약 / 담당자 / 사유)
-                  </label>
+ </label>
                   <input
                     type="text"
                     placeholder="검색어 입력..."
@@ -5603,7 +5603,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   onClick={handleExportWaiverExcel}
                 >
                   <Download size={13} /> 차감 대장 엑셀
-                </button>
+ </button>
               </div>
             </div>
 
@@ -5613,40 +5613,40 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>총 영업 면제 손실액</div>
                 <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--danger)' }}>
                   ₩{totalWaivedAmount.toLocaleString()}원
-                </div>
+ </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   총 {totalWaivedCount}건 면제 승인
-                </div>
+ </div>
               </div>
 
               <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid #2563eb' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>현장 AS 비용 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
                   ₩{fieldAsAmount.toLocaleString()}원
-                </div>
+ </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {fieldAsWaived.length}건 (고객 과실 현장 출동)
-                </div>
+ </div>
               </div>
 
               <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid var(--primary)' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>반납 입고 정비비 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
                   ₩{inboundAmount.toLocaleString()}원
-                </div>
+ </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {inboundWaived.length}건 (입고 검수 결함 파손)
-                </div>
+ </div>
               </div>
 
               <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid #ea580c' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>고객부담 운송료 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: '#ea580c' }}>
                   ₩{deliveryAmount.toLocaleString()}원
-                </div>
+ </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {deliveryWaived.length}건 (배차 및 추가 운송비)
-                </div>
+ </div>
               </div>
             </div>
 
@@ -5658,15 +5658,15 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   {topReasons.slice(0, 4).map(([rs, data]) => (
                     <span key={rs} style={{ backgroundColor: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
                       <strong>{rs}</strong>: {data.count}건 (₩{data.amount.toLocaleString()})
-                    </span>
+ </span>
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>👤 담당자별 면제:</span>
+                  <span style={{ fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}> 담당자별 면제:</span>
                   {topSalespeople.slice(0, 4).map(([sp, data]) => (
                     <span key={sp} style={{ backgroundColor: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
                       <strong>{sp}</strong>: ₩{data.amount.toLocaleString()} ({data.count}건)
-                    </span>
+ </span>
                   ))}
                 </div>
               </div>
@@ -5697,7 +5697,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       <tr>
                         <td colSpan={12} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
                           조회 조건에 부합하는 영업 청구 면제 내역이 없습니다.
-                        </td>
+ </td>
                       </tr>
                     ) : (
                       filteredWaived.map(it => (
@@ -5712,7 +5712,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                               title="면제를 취소하고 미청구 정산 대장으로 복원합니다."
                             >
                               면제 취소
-                            </button>
+ </button>
                           </td>
                           <td style={{ textAlign: 'center', padding: '4px 10px', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
                             {it.waivedAt ? it.waivedAt.slice(0, 10) : '-'}
@@ -5736,10 +5736,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           </td>
                           <td style={{ textAlign: 'right', padding: '4px 10px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
                             {it.originalCost.toLocaleString()}원
-                          </td>
+ </td>
                           <td style={{ textAlign: 'right', padding: '4px 10px', whiteSpace: 'nowrap', fontWeight: 800, color: 'var(--danger)' }}>
                             ₩{it.waivedAmount.toLocaleString()}원
-                          </td>
+ </td>
                           <td style={{ textAlign: 'left', padding: '4px 10px', whiteSpace: 'nowrap', fontWeight: 600 }}>
                             {it.waivedReason}
                           </td>
@@ -5761,29 +5761,29 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
             <div data-mid="waiver-bottom-audit-bar" className="card" style={{ margin: 0, padding: '12px 18px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', flexWrap: 'wrap' }}>
                 <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-                  📄 총 유료비용 발생: <span style={{ color: 'var(--text-primary)' }}>₩{grandTotalDiscoveredCosts.toLocaleString()}원</span>
+                   총 유료비용 발생: <span style={{ color: 'var(--text-primary)' }}>₩{grandTotalDiscoveredCosts.toLocaleString()}원</span>
                 </span>
                 <span style={{ color: 'var(--text-muted)' }}>=</span>
                 <span style={{ color: 'var(--success)', fontWeight: 700 }}>
-                  🟢 정상 청구액: ₩{totalBilledBillableCosts.toLocaleString()}원
-                </span>
+                   정상 청구액: ₩{totalBilledBillableCosts.toLocaleString()}원
+ </span>
                 <span style={{ color: 'var(--text-muted)' }}>+</span>
                 <span style={{ color: 'var(--danger)', fontWeight: 700 }}>
-                  🚫 영업 면제액: ₩{totalWaivedAmount.toLocaleString()}원
-                </span>
+                   영업 면제액: ₩{totalWaivedAmount.toLocaleString()}원
+ </span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   대장 {filteredWaived.length}건 표시
-                </span>
+ </span>
               </div>
             </div>
           </div>
         );
       })()}
 
-      {/* 🛠️ 기존 청구건 대상 특수 거래명세서 편집 모달 (독립 컴포넌트로 분리하여 키 입력 시 대형 부모 리렌더링 차단) */}
+      {/*  기존 청구건 대상 특수 거래명세서 편집 모달 (독립 컴포넌트로 분리하여 키 입력 시 대형 부모 리렌더링 차단) */}
       {customStatementModalOpen && customStatementTargetBillingId && (() => {
         const targetBilling = billings.find(b => b.id === customStatementTargetBillingId);
         if (!targetBilling) return null;
@@ -5923,7 +5923,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 </div>
               </div>
 
-              {/* 🌟 2개 탭 버튼 단일화: 통장입금액 수납 / 카드결제 */}
+              {/*  2개 탭 버튼 단일화: 통장입금액 수납 / 카드결제 */}
               <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '16px' }}>
                 <button type="button" onClick={() => setPayMode('DEPOSIT')}
                   style={{
@@ -5932,7 +5932,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     color: payMode === 'DEPOSIT' ? 'var(--primary)' : 'var(--text-secondary)'
                   }}>
                   통장입금액 수납
-                </button>
+ </button>
                 <button type="button" onClick={() => {
                   setPayMode('CARD');
                   setCardAmount(unpaid);
@@ -5943,7 +5943,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     color: payMode === 'CARD' ? 'var(--primary)' : 'var(--text-secondary)'
                   }}>
                   카드결제
-                </button>
+ </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
@@ -5951,7 +5951,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 {/* ═══════════════ [탭 1: 통장입금액 수납] ═══════════════ */}
                 {payMode === 'DEPOSIT' && (
                   <>
-                    {/* 🌟 1. 상단 5단 정산 서머리 테이블 (이미지 1 표준) */}
+                    {/*  1. 상단 5단 정산 서머리 테이블 (이미지 1 표준) */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', border: '1px solid var(--border)', background: 'var(--bg-app)', borderRadius: '6px', overflow: 'hidden' }}>
                       <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)' }}>
@@ -5968,7 +5968,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                           <td style={{ padding: '10px 6px', borderRight: '1px solid var(--border)' }}>{billingGrandTotal.toLocaleString()} 원</td>
                           <td style={{ padding: '10px 6px', borderRight: '1px solid var(--border)', color: isOverMatch ? '#EF4444' : 'var(--primary)' }}>
                             {payAmount.toLocaleString()} 원
-                          </td>
+ </td>
                           <td style={{ padding: '10px 6px', borderRight: '1px solid var(--border)', color: remainingBilling === 0 ? '#10B981' : isOverMatch ? '#EF4444' : 'var(--text-primary)' }}>
                             {isOverMatch ? `+${(payAmount - unpaid).toLocaleString()}원 초과` : `${remainingBilling.toLocaleString()} 원`}
                             {remainingBilling === 0 && !isOverMatch && <span style={{ fontSize: '11px', color: '#10B981', marginLeft: '4px' }}> (0 원)</span>}
@@ -5990,18 +5990,18 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <button type="button" onClick={() => { setDepSearchQuery(''); setDepositLinkDraft({}); }}
                           style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}>
                           초기화
-                        </button>
+ </button>
                       </div>
 
                       {filteredDeposits.filter(d => d.balance > 0).length > 0 && (
                         <button type="button" onClick={autoDistributeFifo}
                           style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-                          ⚡ 선입선출 자동수납
-                        </button>
+                           선입선출 자동수납
+ </button>
                       )}
                     </div>
 
-                    {/* 🌟 2. 입금 내역 대사 그리드 테이블 (이미지 1 표준) */}
+                    {/*  2. 입금 내역 대사 그리드 테이블 (이미지 1 표준) */}
                     {filteredDeposits.length === 0 ? (
                       <div style={{ padding: '24px', borderRadius: '8px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--danger)', fontSize: '13px', textAlign: 'center' }}>
                         조회된 통장 입금 내역이 없습니다.<br />
@@ -6041,7 +6041,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     {/* 입금액 (가용잔액) */}
                                     <td style={{ padding: '7px 10px', textAlign: 'right', borderRight: '1px solid var(--border)', fontWeight: '600', whiteSpace: 'nowrap' }}>
                                       {dep.balance.toLocaleString()} 원
-                                    </td>
+ </td>
                                     {/* 버튼배치 (전액 / 0원) */}
                                     <td style={{ padding: '7px 10px', textAlign: 'center', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                                       <div style={{ display: 'inline-flex', gap: '4px' }}>
@@ -6050,12 +6050,12 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                           disabled={dep.balance <= 0}
                                           style={{ padding: '2px 6px', fontSize: '11px', borderRadius: '4px', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
                                           전액
-                                        </button>
+ </button>
                                         <button type="button"
                                           onClick={() => removeDeposit(dep.id)}
                                           style={{ padding: '2px 6px', fontSize: '11px', borderRadius: '4px', background: 'var(--bg-app)', color: 'var(--text-secondary)', border: '1px solid var(--border)', cursor: 'pointer' }}>
                                           0원
-                                        </button>
+ </button>
                                       </div>
                                     </td>
                                     {/* 수납액 인풋 */}
@@ -6076,7 +6076,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                                     {/* 수납후잔액 */}
                                     <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: '600', color: postBal === 0 ? 'var(--text-secondary)' : '#10B981', whiteSpace: 'nowrap' }}>
                                       {postBal.toLocaleString()} 원
-                                    </td>
+ </td>
                                   </tr>
                                 );
                               })}
@@ -6105,7 +6105,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
                           <th style={{ padding: '10px 14px', background: 'var(--bg-app)', width: '170px', textAlign: 'left', fontSize: '13px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             결제일
-                          </th>
+ </th>
                           <td style={{ padding: '8px 14px' }}>
                             <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} required style={{ padding: '6px 10px', fontSize: '13px' }} />
                           </td>
@@ -6113,7 +6113,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
                           <th style={{ padding: '10px 14px', background: 'var(--bg-app)', textAlign: 'left', fontSize: '13px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             카드전표번호(승인번호) *
-                          </th>
+ </th>
                           <td style={{ padding: '8px 14px' }}>
                             <input type="text" value={cardApprovalNo} onChange={e => setCardApprovalNo(e.target.value)} placeholder="승인번호 8자리 입력 (예: 30012345)" required style={{ width: '100%', maxWidth: '320px', padding: '6px 10px', fontSize: '13px' }} />
                           </td>
@@ -6121,34 +6121,34 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
                           <th style={{ padding: '10px 14px', background: 'var(--bg-app)', textAlign: 'left', fontSize: '13px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             결제금액 *
-                          </th>
+ </th>
                           <td style={{ padding: '8px 14px' }}>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', maxWidth: '320px' }}>
                               <input type="number" min={0} value={cardAmount || ''} onChange={e => setCardAmount(Math.max(0, parseInt(e.target.value) || 0))} required style={{ flex: 1, padding: '6px 10px', fontSize: '14px', fontWeight: '700' }} />
                               <button type="button" onClick={() => setCardAmount(unpaid)} style={{ padding: '6px 10px', fontSize: '11px', borderRadius: '4px', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: '600' }}>
                                 전액
-                              </button>
+ </button>
                               <button type="button" onClick={() => setCardAmount(0)} style={{ padding: '6px 10px', fontSize: '11px', borderRadius: '4px', background: 'var(--bg-app)', color: 'var(--text-secondary)', border: '1px solid var(--border)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                 0원
-                              </button>
+ </button>
                             </div>
                           </td>
                         </tr>
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
                           <th style={{ padding: '10px 14px', background: 'var(--bg-app)', textAlign: 'left', fontSize: '13px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             공급가 (자동)
-                          </th>
+ </th>
                           <td style={{ padding: '10px 14px', fontSize: '14px', fontWeight: '600' }}>
                             {cardSupply.toLocaleString()} 원
-                          </td>
+ </td>
                         </tr>
                         <tr>
                           <th style={{ padding: '10px 14px', background: 'var(--bg-app)', textAlign: 'left', fontSize: '13px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap' }}>
                             부가세 (자동)
-                          </th>
+ </th>
                           <td style={{ padding: '10px 14px', fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>
                             {cardVat.toLocaleString()} 원
-                          </td>
+ </td>
                         </tr>
                       </tbody>
                     </table>
@@ -6199,8 +6199,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
             <form onSubmit={handleSendStatementSubmit} className="card" style={{ width: '100%', maxWidth: '680px', backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '12px', maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                 <h3 className="card-title" style={{ margin: 0, fontSize: '17px', fontWeight: '700' }}>
-                  📄 {currentTenant?.tradeName || '표준'} 거래명세서 이메일 발송
-                </h3>
+                   {currentTenant?.tradeName || '표준'} 거래명세서 이메일 발송
+ </h3>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
@@ -6255,7 +6255,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       return (
                         <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                           {pri.bankName} {pri.accountNumber} ({pri.accountHolder})
-                          {currentTenant?.bankAccounts && currentTenant.bankAccounts.length > 1 && ` 외 ${currentTenant.bankAccounts.length - 1}개 계좌 등록됨`}
+ {currentTenant?.bankAccounts && currentTenant.bankAccounts.length > 1 && ` 외 ${currentTenant.bankAccounts.length - 1}개 계좌 등록됨`}
                         </span>
                       );
                     })()}
@@ -6305,7 +6305,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
                 >
                   <FileText size={14} /> 엑셀 다운로드
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -6313,7 +6313,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
                 >
                   <Download size={14} /> PDF 거래명세서 다운로드
-                </button>
+ </button>
                 <button type="submit" className="btn-success" disabled={isSending} style={{ fontWeight: 'bold' }}>
                   {isSending ? '발송 중...' : <><Send size={14} /> PDF 거래명세서 이메일 전송</>}
                 </button>
@@ -6323,7 +6323,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         );
       })()}
 
-      {/* 🔄 청구 수정 및 재생성 모달 */}
+      {/*  청구 수정 및 재생성 모달 */}
       {showRegenerateModal && (() => {
         const targetB = billings.find(b => b.id === regenBillingId);
         const targetCust = customers.find(c => c.id === targetB?.customerId);
@@ -6339,11 +6339,11 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                 <div>
                   <h3 className="card-title" style={{ margin: 0, fontSize: '17px', fontWeight: '700' }}>
-                    🔄 청구서 내역 수정 및 재생성
-                  </h3>
+                     청구서 내역 수정 및 재생성
+ </h3>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                     고객사: <strong>{targetCust?.name || '고객사'}</strong> | 기존 청구: <strong style={{ color: 'var(--text-muted)' }}>{targetB?.id}</strong> ({targetB?.billingYm})
-                  </div>
+ </div>
                 </div>
                 <span className="badge badge-warning">기존 건 자동 취소 후 재발행</span>
               </div>
@@ -6386,8 +6386,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '13px', fontWeight: '700', margin: 0 }}>
-                    📋 청구 항목 목록 ({regenDetails.length}건)
-                  </label>
+                     청구 항목 목록 ({regenDetails.length}건)
+ </label>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -6404,7 +6404,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                     style={{ padding: '4px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Plus size={12} /> + 항목 추가
-                  </button>
+ </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
@@ -6470,7 +6470,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>금액</label>
                         <strong style={{ fontSize: '13px', color: (det.amount || 0) < 0 ? '#dc2626' : 'var(--text-primary)' }}>
                           {(det.amount || ((det.quantity || 1) * (det.unitPrice || 0))).toLocaleString()}원
-                        </strong>
+ </strong>
                       </div>
                       <button data-hs-trigger="Delete"
                         type="button"
@@ -6481,7 +6481,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                         title="항목 삭제"
                       >
                         ×
-                      </button>
+ </button>
                     </div>
                   ))}
                 </div>
@@ -6495,13 +6495,13 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)' }}>
                   {totalCalcAmount.toLocaleString()}원
-                </div>
+ </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowRegenerateModal(false)}>
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Process" type="submit" className="btn-primary" disabled={isRegenerating || regenDetails.length === 0} style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <RotateCcw size={14} />
                   {isRegenerating ? '재생성 처리 중...' : '수정사항 반영 청구서 재생성'}
@@ -6513,7 +6513,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         );
       })()}
 
-      {/* 🌟 유료 비용 영업 청구 면제 승인 모달 */}
+      {/*  유료 비용 영업 청구 면제 승인 모달 */}
       {waiverModalTarget && (
         <div style={{
           position: 'fixed',
@@ -6539,18 +6539,18 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px' }}>🚫</span>
+                <span style={{ fontSize: '18px' }}></span>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--danger)' }}>
                   유료 비용 영업 청구 면제 승인
-                </h3>
+ </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setWaiverModalTarget(null)}
                 style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             {/* 대상 항목 요약 카드 */}
@@ -6589,7 +6589,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   면제 금액 (원)
-                </label>
+ </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <input
                     type="number"
@@ -6608,19 +6608,19 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                       style={{ fontSize: '11px', padding: '6px 10px', whiteSpace: 'nowrap' }}
                     >
                       전액 복원
-                    </button>
+ </button>
                   )}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   * 전액 면제 또는 고객 협의에 따른 일부 감면 금액을 입력하십시오.
-                </div>
+ </div>
               </div>
 
               {/* 면제 사유 카테고리 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   면제 사유 구분
-                </label>
+ </label>
                 <select
                   value={waiverInputCategory}
                   onChange={e => setWaiverInputCategory(e.target.value)}
@@ -6640,7 +6640,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   상세 사유 및 비고
-                </label>
+ </label>
                 <input
                   type="text"
                   placeholder="예: 발주사 현장소장 요청 합의, 차월 계약 연장 조건 등..."
@@ -6654,7 +6654,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   면제 처리 승인자
-                </label>
+ </label>
                 <input
                   type="text"
                   disabled
@@ -6673,7 +6673,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 disabled={isWaiverSubmitting}
               >
                 취소
-              </button>
+ </button>
               <button data-hs-trigger="Process"
                 type="button"
                 className="btn-primary"
@@ -6681,7 +6681,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 disabled={isWaiverSubmitting || waiverInputAmount <= 0}
                 style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                {isWaiverSubmitting ? '면제 처리 중...' : `🚫 ₩${waiverInputAmount.toLocaleString()}원 영업 면제 확정`}
+                {isWaiverSubmitting ? '면제 처리 중...' : ` ₩${waiverInputAmount.toLocaleString()}원 영업 면제 확정`}
               </button>
             </div>
           </div>
@@ -6704,7 +6704,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
             <div style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
               원본 청구서의 금액 중 일부를 덜어내어 <strong>새로운 청구서로 독립</strong>시킵니다.<br />
               <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>총액 보존:</span> 분할된 두 청구서의 합은 원본과 동일하게 유지됩니다.
-            </div>
+ </div>
             
             {(() => {
               const origBilling = billings.find(b => b.id === splitTargetId);
@@ -6721,7 +6721,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   </div>
                   
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>분할되어 독립할 금액 (새 청구서 B)</label>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>분할되어 독립할 금액</label>
                     <input 
                       type="text" 
                       className="input-field" 
@@ -6736,10 +6736,10 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   </div>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: remainingAmount < 0 ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)', borderRadius: '6px', border: remainingAmount < 0 ? '1px solid var(--danger)' : '1px solid var(--primary)' }}>
-                    <span>분할 후 원본에 남을 금액 (청구서 A):</span>
+                    <span>분할 후 원본에 남을 금액:</span>
                     <strong style={{ color: remainingAmount < 0 ? 'var(--danger)' : 'var(--primary)' }}>
                       {remainingAmount.toLocaleString()}원
-                    </strong>
+ </strong>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
@@ -6778,7 +6778,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         </React.Suspense>
       )}
 
-      {/* 🔔 전역 플로팅 토스트 알림 컴포넌트 */}
+      {/*  전역 플로팅 토스트 알림 컴포넌트 */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -6813,8 +6813,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               fontWeight: 800
             }}
           >
-            ✕
-          </button>
+            
+ </button>
         </div>
       )}
     </div>

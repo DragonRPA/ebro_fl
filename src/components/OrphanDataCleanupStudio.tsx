@@ -204,7 +204,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             categoryLabel: '고아 계약자산 매핑',
             tableKey: 'contractAssets',
             targetId: ca.id,
-            title: `자산 [${ca.assetNo || ca.assetId || '-'}] ➔ 계약 [${ca.contractId || '-'}]`,
+            title: `자산 [${ca.assetNo || ca.assetId || '-'}] 계약 [${ca.contractId || '-'}]`,
             reason,
             extraInfo: `상태: ${ca.status || '-'} | 투입일: ${ca.startDate || '-'}`,
             createdAt: ca.createdAt,
@@ -474,11 +474,11 @@ export const OrphanDataCleanupStudio: React.FC = () => {
               <ShieldAlert size={22} color="#ef4444" />
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                 불부합 데이터 조회 및 정리
-              </h2>
+ </h2>
             </div>
             <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
               고객/계약/자산 마스터가 유실되었거나 참조 무결성이 결손된 고아 계약, 고아 배차·AS 의뢰, 매핑 레코드를 전수 탐지하여 안전하게 일괄 정리합니다.
-            </p>
+ </p>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -502,7 +502,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             >
               <RefreshCw size={15} className={isScanning ? 'animate-spin' : ''} />
               스캔 실행
-            </button>
+ </button>
 
             {items.length > 0 && (
               <button
@@ -526,7 +526,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
               >
                 <Trash2 size={15} />
                 전체 불부합 일괄 정리 ({items.length}건)
-              </button>
+ </button>
             )}
           </div>
         </div>
@@ -612,7 +612,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
 
           <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             조회 {filteredItems.length}건 / 선택 {selectedIds.size}건
-          </span>
+ </span>
         </div>
 
         {/* 액션 버튼군 */}
@@ -638,7 +638,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             >
               <Trash2 size={14} />
               선택 항목 삭제 ({selectedIds.size}건)
-            </button>
+ </button>
           )}
 
           {filteredItems.length > 0 && (
@@ -662,7 +662,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             >
               <Trash2 size={14} />
               현재 목록 일괄 삭제 ({filteredItems.length}건)
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -698,10 +698,10 @@ export const OrphanDataCleanupStudio: React.FC = () => {
                     <CheckCircle2 size={36} color="#16a34a" />
                     <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)' }}>
                       불부합 데이터가 존재하지 않습니다.
-                    </span>
+ </span>
                     <span style={{ fontSize: '12.5px' }}>
                       모든 계약, 배차 의뢰, AS 의뢰, 청구서의 참조 무결성이 정상입니다.
-                    </span>
+ </span>
                   </div>
                 </td>
               </tr>
@@ -809,7 +809,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             <RefreshCw size={18} className="animate-spin" color="#2563eb" />
             <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
               불부합 데이터 정리 중...
-            </span>
+ </span>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
             {deleteProgress.message}
@@ -842,7 +842,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   삭제 대상: 총 {confirmModal.targetItems.length}건
-                </span>
+ </span>
               </div>
             </div>
 
@@ -851,8 +851,8 @@ export const OrphanDataCleanupStudio: React.FC = () => {
             </p>
 
             <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.06)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', fontSize: '12px', color: 'var(--danger)' }}>
-              ⚠️ 본 작업은 선택된 불부합 레코드를 데이터베이스에서 완전히 삭제하며, 삭제 즉시 원격 Supabase DB 쓰기 큐를 완결 동기화합니다.
-            </div>
+               본 작업은 선택된 불부합 레코드를 데이터베이스에서 완전히 삭제하며, 삭제 즉시 원격 Supabase DB 쓰기 큐를 완결 동기화합니다.
+ </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
               <button
@@ -871,7 +871,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
                 }}
               >
                 취소
-              </button>
+ </button>
 
               <button
                 onClick={() => executeDelete(confirmModal.targetItems)}
@@ -889,7 +889,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
                 }}
               >
                 삭제 실행
-              </button>
+ </button>
             </div>
           </div>
         </div>

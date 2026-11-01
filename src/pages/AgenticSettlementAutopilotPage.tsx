@@ -42,7 +42,7 @@ export const AgenticSettlementAutopilotPage: React.FC = () => {
       bankDepositAmount: 1200000,
       difference: 0,
       status: 'MATCHED',
-      auditNote: '전자산 전일 마감 ➔ 후장비 당일 승계 1원 오차 없음 (차액 ₩0)'
+      auditNote: '전자산 전일 마감 후장비 당일 승계 1원 오차 없음 (차액 ₩0)'
     },
     {
       id: 'REC-002',
@@ -111,7 +111,7 @@ export const AgenticSettlementAutopilotPage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>월말 대사 정산</h2>
           <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: '700' }}>
             헌장 4.1 일할 매출 기여액 1원 오차 검증
-          </span>
+ </span>
         </div>
       </div>
 
@@ -251,7 +251,7 @@ export const AgenticSettlementAutopilotPage: React.FC = () => {
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981', fontSize: '12px', fontWeight: '700' }}>
             <ShieldCheck size={14} />
             헌장 4.1 일할 매출 기여액 1원 오차 없음 확정
-          </span>
+ </span>
         </div>
 
         <button data-hs-trigger="Approve"

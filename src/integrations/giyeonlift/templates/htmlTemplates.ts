@@ -102,9 +102,9 @@ const QUOTATION_TEMPLATE = `<!DOCTYPE html>
                             <img class="stamp" src="{{lessorStampImg}}" alt="대표인">
                         </div>
                     </div>
-                    <div class="info-row"><div class="info-label">상호</div><div class="info-value"><strong>{{lessorTradeName}}</strong> (대표자: {{lessorCeo}})</div></div>
+                    <div class="info-row"><div class="info-label">상호</div><div class="info-value"><strong>{{lessorTradeName}}</strong></div></div>
                     <div class="info-row"><div class="info-label">등록번호</div><div class="info-value">{{lessorBizNo}}</div></div>
-                    <div class="info-row"><div class="info-label">담당자</div><div class="info-value">{{salespersonName}} ({{salespersonPhone}})</div></div>
+                    <div class="info-row"><div class="info-label">담당자</div><div class="info-value">{{salespersonName}}</div></div>
                     <div class="info-row"><div class="info-label">이메일</div><div class="info-value">{{lessorEmail}}</div></div>
                     <div class="info-row"><div class="info-label">TEL / FAX</div><div class="info-value">{{lessorTel}} / {{lessorFax}}</div></div>
                 </div>
@@ -298,7 +298,7 @@ const CONTRACT_TEMPLATE = `<!DOCTYPE html>
     <div class="footer-info">
         <strong>본사/공장:</strong> {{lessorAddress}} &nbsp;&nbsp;|&nbsp;&nbsp; 
         <strong>A/S 접수 문의:</strong> {{lessorTel}} &nbsp;&nbsp;|&nbsp;&nbsp; 
-        <strong>업무 담당자:</strong> {{salespersonName}} ({{salespersonPhone}})
+        <strong>업무 담당자:</strong> {{salespersonName}}
     </div>
 </body>
 </html>`;
@@ -340,7 +340,7 @@ const SAFETY_INSPECTION_TEMPLATE = `<!DOCTYPE html>
             <td style="width: 20%;">수직상승형 고소작업대</td>
             <th style="width: 12%;">제조사(렌탈사)</th>
             <td style="width: 24%;">
-                <span class="fluid-manufacturer">{{manufacturer}} ({{lessorTradeName}})</span>
+                <span class="fluid-manufacturer">{{manufacturer}}</span>
             </td>
         </tr>
         <tr>
@@ -486,9 +486,9 @@ const CHECK_LIST_TEMPLATE = `<!DOCTYPE html>
 </head>
 <body>
     <div class="header">
-        <span>( 모델명: {{modelName}} )</span>
+        <span></span>
         <span style="font-size: 15px; text-decoration: underline;">■ 반입 전 CHECK LIST</span>
-        <span>( 관리번호: {{assetNo}} )</span>
+        <span></span>
     </div>
     <div class="container">
         <div class="column">
@@ -699,9 +699,9 @@ const TRANSACTION_STATEMENT_TEMPLATE = `<!DOCTYPE html>
         </table>
 
         <div class="meta-bar">
-            <span>🗓️ 청구귀속월: {{billingYm}}</span>
-            <span>📅 발행일자: {{billingDate}}</span>
-            <span>📑 계약번호: {{contractNo}}</span>
+            <span> 청구귀속월: {{billingYm}}</span>
+            <span> 발행일자: {{billingDate}}</span>
+            <span> 계약번호: {{contractNo}}</span>
         </div>
 
         <div class="amount-summary-box">
@@ -711,7 +711,7 @@ const TRANSACTION_STATEMENT_TEMPLATE = `<!DOCTYPE html>
             </div>
             <div style="text-align: right;">
                 <div class="amount-value">일금 {{totalAmountKorean}} 원정</div>
-                <div style="font-size: 13px; color: #1e40af; font-weight: 800;">(₩{{totalAmountFormatted}})</div>
+                <div style="font-size: 13px; color: #1e40af; font-weight: 800;"></div>
             </div>
         </div>
 
@@ -742,7 +742,7 @@ const TRANSACTION_STATEMENT_TEMPLATE = `<!DOCTYPE html>
             <div><strong>[입금 계좌 안내]</strong> {{lessorBankAccount}}</div>
             <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">
                 • 본 거래명세서는 ERP 표준 양식 기반으로 자동 발행되었습니다.<br>
-                • 대금 입금 시 반드시 입금자명을 상호명으로 지정하여 주시기 바랍니다. (문의: {{lessorTel}})
+                • 대금 입금 시 반드시 입금자명을 상호명으로 지정하여 주시기 바랍니다.
             </div>
         </div>
     </div>

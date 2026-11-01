@@ -45,10 +45,10 @@ let currentDiagnostics: ErpReadinessDiagnostics = {
   activeMenu: 'booting',
   domSelectorReady: 'body[data-erp-status="ready"]',
   guardrailsActive: [
-    'GUARD-1.3 (출고 승인 시 RENTED 전환 강제)',
-    'GUARD-2.3 (단일 EXCHANGE 및 ₩60,000 왕복할인)',
+    'GUARD-1.3',
+    'GUARD-2.3',
     'GUARD-4.1 (일할 매출 기여액 ₩0 차액 보존)',
-    'GUARD-5.2 (동기 DB 저장 및 무음 실패 방지)'
+    'GUARD-5.2'
   ],
   dbConnected: true,
   pendingWritesCount: 0
@@ -102,10 +102,10 @@ export const markErpReady = (options: {
     activeMenu: menu,
     domSelectorReady: 'body[data-erp-status="ready"]',
     guardrailsActive: [
-      'GUARD-1.3 (출고 승인 시 RENTED 전환 강제)',
-      'GUARD-2.3 (단일 EXCHANGE 및 ₩60,000 왕복할인)',
+      'GUARD-1.3',
+      'GUARD-2.3',
       'GUARD-4.1 (일할 매출 기여액 ₩0 차액 보존)',
-      'GUARD-5.2 (동기 DB 저장 및 무음 실패 방지)'
+      'GUARD-5.2'
     ],
     dbConnected: true,
     pendingWritesCount: 0

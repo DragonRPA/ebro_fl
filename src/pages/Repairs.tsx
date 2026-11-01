@@ -43,7 +43,7 @@ export const Repairs: React.FC = () => {
   const [yardSearchTerm, setYardSearchTerm] = useState('');
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
 
-  // 🌟 입고 결함 연계 상태
+  //  입고 결함 연계 상태
   const [selectedRepairId, setSelectedRepairId] = useState<string>('');
   const [inboundDefects, setInboundDefects] = useState<InboundDefectDetail[]>([]);
   const [inboundPhotos, setInboundPhotos] = useState<string[]>([]);
@@ -175,7 +175,7 @@ export const Repairs: React.FC = () => {
     return { repairsByAssetIdMap: map, externalInProgressCount: extCount };
   }, [repairs]);
 
-  // 🏢 조직도 최상위에 속하지 않으면서 repair 권한을 보유한 담당자 목록
+  //  조직도 최상위에 속하지 않으면서 repair 권한을 보유한 담당자 목록
   const eligibleAssignees = useMemo(() => {
     const depts = db.departments || [];
     const rootDeptIds = new Set<string>(['DEPT-0000001', 'DEPT-1']);
@@ -428,7 +428,7 @@ export const Repairs: React.FC = () => {
     setDegradationScore(asset.maintenanceScore || 0);
 
     if (pendingOutbound) {
-      // 🌟 출고 불량 교체 건 정비 모드로 프리셋
+      //  출고 불량 교체 건 정비 모드로 프리셋
       setMaintenanceType('INHOUSE_REPAIR');
       setSelectedVendorId('');
       setExternalCost(0);
@@ -440,7 +440,7 @@ export const Repairs: React.FC = () => {
       const symptom = pendingOutbound.issueDescription || pendingOutbound.details;
       setRepairDetails(`[출고불량 긴급정비]\n• 불량 증상: ${symptom}\n• 점검 및 부품 수리/교체 조치 완료\n• 장비 시운전 및 안전 기능 검증 완료`);
     } else if (pendingInbound) {
-      // 🌟 입고 결함 정비 모드로 프리셋
+      //  입고 결함 정비 모드로 프리셋
       setMaintenanceType('INHOUSE_REPAIR');
       setSelectedVendorId('');
       setExternalCost(0);
@@ -496,7 +496,7 @@ export const Repairs: React.FC = () => {
     }
   };
 
-  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 정비 자산/수리건을 즉시 탐색·스튜디오 오픈
+  //  대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 정비 자산/수리건을 즉시 탐색·스튜디오 오픈
   useEffect(() => {
     if (!navigationPayload || assets.length === 0) return;
     const targetRepairId = navigationPayload.repairId || (navigationPayload.entityType === 'REPAIR' ? navigationPayload.entityId : '');
@@ -527,7 +527,7 @@ export const Repairs: React.FC = () => {
     }
   }, [navigationPayload, assets, repairs]);
 
-  // 📝 입고 결함 점검 조치내용 자동 반영
+  //  입고 결함 점검 조치내용 자동 반영
   const handleAutoFillDefectDetails = () => {
     if (inboundDefects.length === 0) return;
     const lines = inboundDefects.map(d => {
@@ -540,7 +540,7 @@ export const Repairs: React.FC = () => {
     showToast('입고 결함 항목 조치 내용이 입력되었습니다.');
   };
 
-  // 📦 추천 소모품 일괄 자동 담기
+  //  추천 소모품 일괄 자동 담기
   const handleAutoAddRecommendedConsumables = () => {
     if (inboundDefects.length === 0) {
       showToast('입고 결함 항목이 없습니다.', 'error');
@@ -668,7 +668,7 @@ export const Repairs: React.FC = () => {
     }
   };
 
-  // ✅ 정비 완료 ➔ AVAILABLE 전환
+  //  정비 완료  AVAILABLE 전환
   const handleCompleteRepair = async () => {
     if (isSubmittingRepair) return;
     if (!canSave) return;
@@ -688,7 +688,7 @@ export const Repairs: React.FC = () => {
       if (afterImage) evidenceImages.push(afterImage);
 
       const payload: Partial<Repair> = {
-        id: selectedRepairId || undefined, // 🟢 기존 PENDING 티켓(입고결함 등)이 있으면 업데이트, 없으면 신규
+        id: selectedRepairId || undefined, //  기존 PENDING 티켓(입고결함 등)이 있으면 업데이트, 없으면 신규
         assetId: selectedAsset.id,
         assetNo: selectedAsset.assetNo,
         modelName: selectedAsset.modelName,
@@ -771,7 +771,7 @@ export const Repairs: React.FC = () => {
     }
   };
 
-  // ⏸️ 부품대기 (수리중 REPAIRING 유지)
+  //  부품대기 (수리중 REPAIRING 유지)
   const handleHoldRepair = async () => {
     if (!selectedAsset) return;
     setShowUnresolvedModal(true);
@@ -835,7 +835,7 @@ export const Repairs: React.FC = () => {
     }
   };
 
-  // 🚚 외주위탁 등록
+  //  외주위탁 등록
   const handleOutsourceRepair = async () => {
     if (isSubmittingRepair) return;
     if (!canSave || !selectedAsset) return;
@@ -911,7 +911,7 @@ export const Repairs: React.FC = () => {
         <div>
           <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             주기장 정비 관리
-          </h2>
+ </h2>
         </div>
 
         {/* 탭 버튼군 */}
@@ -936,7 +936,7 @@ export const Repairs: React.FC = () => {
             }}
           >
             <Wrench size={14} /> 주기장 정비입력
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setActiveTab('LEDGER')}
@@ -957,7 +957,7 @@ export const Repairs: React.FC = () => {
             }}
           >
             <FileText size={14} /> 정비 관리 대장 ({repairs.length}건)
-          </button>
+ </button>
         </div>
       </div>
 
@@ -972,10 +972,10 @@ export const Repairs: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <Package size={15} color="var(--primary)" /> 정비 대상 자산 ({yardAssets.length}대)
-              </div>
+ </div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 총 비임대 {queueCounts.all}대
-              </span>
+ </span>
             </div>
 
             {/* 필터 탭 */}
@@ -1007,7 +1007,7 @@ export const Repairs: React.FC = () => {
                   }}
                 >
                   {f.label} ({f.count})
-                </button>
+ </button>
               ))}
             </div>
 
@@ -1028,7 +1028,7 @@ export const Repairs: React.FC = () => {
               {yardAssets.length === 0 ? (
                 <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                   해당 조건의 정비 대상 자산이 없습니다.
-                </div>
+ </div>
               ) : (
                 yardAssets.map(asset => {
                   const isSelected = selectedAssetId === asset.id;
@@ -1067,12 +1067,12 @@ export const Repairs: React.FC = () => {
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                           {pendingOutbound ? (
                             <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--danger)', color: '#ffffff' }}>
-                              ⚡ 출고불량
-                            </span>
+                               출고불량
+ </span>
                           ) : pendingInbound ? (
                             <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--danger)', color: '#ffffff' }}>
-                              🚨 입고결함
-                            </span>
+                               입고결함
+ </span>
                           ) : activeExternal ? (
                             <span className="badge" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--primary)', color: '#ffffff' }}>
                               외주:{getVendorName(activeExternal.vendorId)}
@@ -1080,7 +1080,7 @@ export const Repairs: React.FC = () => {
                           ) : unresolvedRepair ? (
                             <span className="badge badge-warning" style={{ fontSize: '10px', padding: '2px 6px' }}>
                               소모품대기
-                            </span>
+ </span>
                           ) : (
                             <span className={`badge ${
                               isRepairing ? 'badge-danger' :
@@ -1093,7 +1093,7 @@ export const Repairs: React.FC = () => {
                           {(asset.maintenanceScore || 0) > 0 && (
                             <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 5px' }}>
                               {asset.maintenanceScore}점
-                            </span>
+ </span>
                           )}
                         </div>
                       </div>
@@ -1103,35 +1103,35 @@ export const Repairs: React.FC = () => {
                         {asset.serialNo && <span>S/N: {asset.serialNo}</span>}
                       </div>
 
-                      {/* 🌟 일반 자산 비고(임차처, 결제조건 등)는 절대 빨간색 경고가 아닌 차분한 중립 회색 메타정보로 표기 */}
+                      {/*  일반 자산 비고(임차처, 결제조건 등)는 절대 빨간색 경고가 아닌 차분한 중립 회색 메타정보로 표기 */}
                       {asset.memo && (
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           비고: {asset.memo}
                         </div>
                       )}
 
-                      {/* ⚡ 1. 출고 수행 중 불량 발견으로 교체된 장비의 불량 증상 */}
+                      {/*  1. 출고 수행 중 불량 발견으로 교체된 장비의 불량 증상 */}
                       {pendingOutbound && (
                         <div style={{ fontSize: '11px', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '3px 6px', borderRadius: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          ⚡ 출고불량: {pendingOutbound.issueDescription || pendingOutbound.details}
+                           출고불량: {pendingOutbound.issueDescription || pendingOutbound.details}
                         </div>
                       )}
 
-                      {/* 🚨 2. 입고 등록 시 입력된 불량 상태 */}
+                      {/*  2. 입고 등록 시 입력된 불량 상태 */}
                       {pendingInbound && (
                         <div style={{ fontSize: '11px', color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '3px 6px', borderRadius: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          🚨 입고결함 {pendingInbound.inboundNo ? `(${pendingInbound.inboundNo})` : ''}: {pendingInbound.details.split('\n')[1] || pendingInbound.details}
+                           입고결함 {pendingInbound.inboundNo ? `(${pendingInbound.inboundNo})` : ''}: {pendingInbound.details.split('\n')[1] || pendingInbound.details}
                         </div>
                       )}
 
-                      {/* ⏸️ 3. 소모품 대기 사유 */}
+                      {/*  3. 소모품 대기 사유 */}
                       {unresolvedRepair && unresolvedRepair.unresolvedReason && (
                         <div style={{ fontSize: '11px', color: 'var(--warning)', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          ⏸️ 소모품대기: {unresolvedRepair.unresolvedReason}
+                           소모품대기: {unresolvedRepair.unresolvedReason}
                         </div>
                       )}
 
-                      {/* 🔧 4. 기타 정비 필요 메모 (미완료 수리중 또는 반납검수 대기 자산에 남겨진 정비 사유) */}
+                      {/*  4. 기타 정비 필요 메모 (미완료 수리중 또는 반납검수 대기 자산에 남겨진 정비 사유) */}
                       {!pendingOutbound && !pendingInbound && !unresolvedRepair && asset.note && !asset.note.startsWith('[정비완료') && asset.note !== '정상 입고 점검 완료' && (
                         <div style={{ fontSize: '11px', color: asset.status === 'REPAIRING' ? '#b91c1c' : '#b45309', backgroundColor: asset.status === 'REPAIRING' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(245, 158, 11, 0.08)', padding: '3px 6px', borderRadius: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {asset.status === 'REPAIRING' ? '정비요구' : '점검메모'}: {asset.note}
@@ -1152,7 +1152,7 @@ export const Repairs: React.FC = () => {
                 <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main)' }}>정비 대상 자산 미선택</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   좌측 정비 대상 자산 큐에서 점검 또는 수리할 장비를 선택하십시오.
-                </div>
+ </div>
               </div>
             ) : (
               <>
@@ -1207,8 +1207,8 @@ export const Repairs: React.FC = () => {
                       if (assetInboundNote && assetInboundNote.type === 'INBOUND' && assetInboundNote.memo) {
                         return (
                           <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-muted)', backgroundColor: 'var(--bg-card)', padding: '4px 8px', borderRadius: '4px' }}>
-                            📌 최근 반납일자: {assetInboundNote.eventDate} ({assetInboundNote.memo})
-                          </div>
+                             최근 반납일자: {assetInboundNote.eventDate} ({assetInboundNote.memo})
+ </div>
                         );
                       }
                       return null;
@@ -1218,14 +1218,14 @@ export const Repairs: React.FC = () => {
                       <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#6d28d9', backgroundColor: 'rgba(139, 92, 246, 0.1)', padding: '5px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Truck size={14} />
                         <strong>외주정비 위탁 진행 중:</strong> 협력업체 정비 완료 후 수리내역 확인 및 [외주 입고 검수 완료]를 실행하면 '임대가능'으로 복원됩니다.
-                      </div>
+ </div>
                     )}
                     {/* 소모품대기 안내 배너 */}
                     {Boolean(repairsByAssetIdMap.get(selectedAsset.id)?.unresolvedRepair) && (
                       <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--warning)', backgroundColor: 'rgba(245, 158, 11, 0.12)', padding: '5px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <AlertTriangle size={14} />
                         <strong>소모품 수급 대기 중인 장비:</strong> 입고된 소모품을 아래 소모품 투입 관리에서 선택한 후 [정비 완료]를 실행하면 정상 임대가능으로 전환됩니다.
-                      </div>
+ </div>
                     )}
                   </div>
                   <button
@@ -1260,7 +1260,7 @@ export const Repairs: React.FC = () => {
                         )}
                         <span className="badge badge-danger" style={{ fontSize: '11px' }}>
                           총 결함 {inboundDefects.length}건 (+{degradationScore}점)
-                        </span>
+ </span>
                       </div>
 
                       <div style={{ display: 'flex', gap: '6px' }}>
@@ -1271,7 +1271,7 @@ export const Repairs: React.FC = () => {
                           style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
                         >
                           <Check size={12} /> 조치내용 자동 반영
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={handleAutoAddRecommendedConsumables}
@@ -1279,7 +1279,7 @@ export const Repairs: React.FC = () => {
                           style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
                         >
                           <Package size={12} /> 추천 소모품 일괄 담기
-                        </button>
+ </button>
                       </div>
                     </div>
 
@@ -1300,7 +1300,7 @@ export const Repairs: React.FC = () => {
                           <span style={{ fontWeight: '700', color: 'var(--danger)' }}>{defect.checkitemName}</span>
                           <span style={{ fontSize: '10.5px', color: 'var(--danger)', fontWeight: '700', backgroundColor: 'var(--danger-light)', padding: '1px 4px', borderRadius: '3px' }}>
                             +{defect.score}점
-                          </span>
+ </span>
                         </div>
                       ))}
                     </div>
@@ -1457,8 +1457,8 @@ export const Repairs: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-                      정비 항목 선택 (정비항목관리 마스터 DB)
-                    </label>
+                      정비 항목 선택
+ </label>
                     {inspectionItemCode && (
                       <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
                         선택 코드: {inspectionItemCode}
@@ -1520,7 +1520,7 @@ export const Repairs: React.FC = () => {
                               >
                                 <Plus size={10} color="var(--primary)" />
                                 [{item.category}] {item.name} ({item.standardManHours || 0.5} M/H)
-                              </button>
+ </button>
                             );
                           })}
                       </div>
@@ -1528,13 +1528,13 @@ export const Repairs: React.FC = () => {
                   ) : (
                     <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', padding: '6px 10px', backgroundColor: 'var(--bg-app)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>
                       등록된 정비 항목 마스터가 없습니다. [정비 항목 관리] 메뉴에서 표준 항목을 등록하면 여기에 자동 연동됩니다.
-                    </div>
+ </div>
                   )}
 
                   {/* SOP 조치 가이드 배너 */}
                   {selectedInspectionItemActionGuide && (
                     <div style={{ fontSize: '11.5px', padding: '6px 10px', backgroundColor: 'rgba(59, 130, 246, 0.08)', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.2)', color: 'var(--text-main)' }}>
-                      📘 <strong>표준 조치 가이드:</strong> {selectedInspectionItemActionGuide}
+                       <strong>표준 조치 가이드:</strong> {selectedInspectionItemActionGuide}
                     </div>
                   )}
                 </div>
@@ -1544,10 +1544,10 @@ export const Repairs: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap' }}>
                       정비 소요시간 *
-                    </label>
+ </label>
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
                       투입 공수: {(durationMinutes / 60).toFixed(1)} M/H ({durationMinutes}분)
-                    </span>
+ </span>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {[15, 30, 45, 60, 90, 120, 180].map(mins => (
@@ -1567,7 +1567,7 @@ export const Repairs: React.FC = () => {
                         }}
                       >
                         {mins}분
-                      </button>
+ </button>
                     ))}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
                       <input
@@ -1601,10 +1601,10 @@ export const Repairs: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', margin: 0, whiteSpace: 'nowrap' }}>
                       <Layers size={14} color="var(--primary)" /> 소모품 투입 관리
-                    </label>
+ </label>
                     <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
                       소모품 투입 합계: {totalConsumablesCost.toLocaleString()}원
-                    </span>
+ </span>
                   </div>
 
                   {/* 소모품 선택 입력줄 */}
@@ -1620,7 +1620,7 @@ export const Repairs: React.FC = () => {
                         {consumables.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.modelName} (재고: {c.stockQty || 0} {c.unit} | ₩{c.unitPrice.toLocaleString()})
-                          </option>
+ </option>
                         ))}
                       </select>
                     </div>
@@ -1643,7 +1643,7 @@ export const Repairs: React.FC = () => {
                       style={{ padding: '6px 12px', height: '33px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       <Plus size={13} /> 투입
-                    </button>
+ </button>
                   </div>
 
                   {/* 투입된 소모품 목록 테이블 */}
@@ -1718,7 +1718,7 @@ export const Repairs: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '4px' }}>
                   <div style={{ fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap' }}>
                     총 정비 원가: <strong style={{ color: 'var(--primary)', fontSize: '15px' }}>{totalCost.toLocaleString()}</strong>원
-                  </div>
+ </div>
 
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button data-hs-trigger="Register"
@@ -1861,7 +1861,7 @@ export const Repairs: React.FC = () => {
               onClick={handleExportExcel}
             >
               <Download size={13} /> 엑셀 다운로드
-            </button>
+ </button>
           </div>
 
           {/* 고밀도 정비 대장 그리드 */}
@@ -1890,7 +1890,7 @@ export const Repairs: React.FC = () => {
                   <tr>
                     <td colSpan={14} style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회 조건에 해당하는 주기장 정비 이력이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedLedgerRepairs.map((r, idx) => {
@@ -1921,7 +1921,7 @@ export const Repairs: React.FC = () => {
                           {r.unresolvedReason && (
                             <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: '700', marginRight: '6px' }}>
                               [소모품대기: {r.unresolvedReason}]
-                            </span>
+ </span>
                           )}
                           <span style={{ fontSize: '12px' }}>{r.details}</span>
                         </td>
@@ -1932,7 +1932,7 @@ export const Repairs: React.FC = () => {
                         </td>
                         <td style={{ padding: '8px', textAlign: 'right', fontWeight: '700', whiteSpace: 'nowrap' }}>
                           {(r.totalCost || 0).toLocaleString()}원
-                        </td>
+ </td>
                         <td style={{ padding: '8px', textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           {r.inspectionItemCode || '-'}
                         </td>
@@ -1961,7 +1961,7 @@ export const Repairs: React.FC = () => {
                               title="정비 및 결함 증빙 사진 열람"
                             >
                               <Camera size={12} /> {photos.length}매
-                            </button>
+ </button>
                           ) : (
                             <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>-</span>
                           )}
@@ -1982,7 +1982,7 @@ export const Repairs: React.FC = () => {
                             style={{ padding: '3px 8px', fontSize: '11px' }}
                           >
                             상세
-                          </button>
+ </button>
                         </td>
                       </tr>
                     );
@@ -1994,7 +1994,7 @@ export const Repairs: React.FC = () => {
         </div>
       )}
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
       {(() => {
         const { repairingAssets, availableAssets, monthlyCompletedRepairs, totalConsumableCost } = auditFooterStats;
 
@@ -2034,7 +2034,7 @@ export const Repairs: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Clock size={16} color="var(--danger)" /> 소모품대기 (정비중 유지) 등록
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowUnresolvedModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <X size={16} />
               </button>
@@ -2043,7 +2043,7 @@ export const Repairs: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
                 <strong>{selectedAsset?.assetNo}</strong> 장비를 정비 완료하지 않고 '정비중' 상태로 유지합니다.
-              </div>
+ </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: '600' }}>미완료/대기 사유 *</label>
@@ -2063,7 +2063,7 @@ export const Repairs: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowUnresolvedModal(false)} style={{ padding: '6px 12px', fontSize: '12px' }}>
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Register" type="button" className="btn-primary" onClick={handleConfirmHoldRepair} disabled={isSubmittingRepair} style={{ padding: '6px 14px', fontSize: '12px', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }}>
                   {isSubmittingRepair ? '처리중...' : '정비중 유지 등록'}
                 </button>
@@ -2099,7 +2099,7 @@ export const Repairs: React.FC = () => {
                   <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>정비구분 / 상태</div>
                   <span style={{ fontWeight: '700' }}>
                     {selectedDetailRepair.maintenanceType === 'EXTERNAL' ? '외주공업사 위탁' : selectedDetailRepair.maintenanceType === 'PREVENTIVE' ? '예방점검' : '주기장 내 정비'} ({selectedDetailRepair.status})
-                  </span>
+ </span>
                 </div>
                 <div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>정비일자</div>
@@ -2130,7 +2130,7 @@ export const Repairs: React.FC = () => {
 
               {selectedDetailRepair.unresolvedReason && (
                 <div style={{ color: 'var(--danger)', backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '8px', borderRadius: '6px' }}>
-                  ⚠️ <strong>미완료/소모품대기 사유:</strong> {selectedDetailRepair.unresolvedReason}
+                   <strong>미완료/소모품대기 사유:</strong> {selectedDetailRepair.unresolvedReason}
                 </div>
               )}
 
@@ -2138,7 +2138,7 @@ export const Repairs: React.FC = () => {
                 <span style={{ fontWeight: '700' }}>총 정비 비용</span>
                 <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>
                   {(selectedDetailRepair.totalCost || 0).toLocaleString()}원
-                </strong>
+ </strong>
               </div>
 
               {(selectedDetailRepair.beforeImage || selectedDetailRepair.afterImage) && (
@@ -2161,7 +2161,7 @@ export const Repairs: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setSelectedDetailRepair(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                   닫기
-                </button>
+ </button>
               </div>
             </div>
           </div>
@@ -2187,7 +2187,7 @@ export const Repairs: React.FC = () => {
                   <Camera size={18} color="var(--primary)" />
                   <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0 }}>
                     정비 증빙 사진 열람 {viewingPhotoRepair.assetNo || getAssetNo(viewingPhotoRepair.assetId)} ({photos.length}매)
-                  </h3>
+ </h3>
                 </div>
                 <button type="button" onClick={() => setViewingPhotoRepair(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                   <X size={18} />
@@ -2205,7 +2205,7 @@ export const Repairs: React.FC = () => {
                       <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--primary)' }}>{p.label}</span>
                       <a href={p.url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'underline' }}>
                         새 창 확대 ↗
-                      </a>
+ </a>
                     </div>
                     <img
                       src={p.url}
@@ -2219,7 +2219,7 @@ export const Repairs: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setViewingPhotoRepair(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                   닫기
-                </button>
+ </button>
               </div>
             </div>
           </div>

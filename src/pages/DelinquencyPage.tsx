@@ -226,7 +226,7 @@ export const DelinquencyPage: React.FC = () => {
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const todayMs = useMemo(() => new Date(todayStr).getTime(), [todayStr]);
 
-  // ── 🗺️ O(1) 고속 조회용 인덱스 맵 ──
+  // ──  O(1) 고속 조회용 인덱스 맵 ──
   const customerMap = useMemo(() => {
     const map = new Map<string, Customer>();
     customers.forEach(c => map.set(c.id, c));
@@ -295,7 +295,7 @@ export const DelinquencyPage: React.FC = () => {
     return map;
   }, [legalNoticeLogs]);
 
-  // 🌟 고객현장(CustomerSite) ➔ 계약(Contract) ➔ 고객사(Customer) 우선순위 기반 약정 납기일 동적 산출 함수
+  //  고객현장(CustomerSite)  계약(Contract)  고객사(Customer) 우선순위 기반 약정 납기일 동적 산출 함수
   const getAgreedDueDate = (
     billing: Billing,
     customer?: Customer,
@@ -608,7 +608,7 @@ export const DelinquencyPage: React.FC = () => {
     showToast(`미수 채권 연체 대장 ${rows.length}건 엑셀 내보내기 완료`);
   };
 
-  // 📜 내용증명 작성 스튜디오 오픈
+  //  내용증명 작성 스튜디오 오픈
   const handleOpenNoticeModal = async (del: CalculatedDelinquency) => {
     if (!isExecutive) {
       showToast('내용증명 작성 및 발송은 경영진 고유 권한입니다.', 'error');
@@ -617,7 +617,7 @@ export const DelinquencyPage: React.FC = () => {
     const customer = customers.find(c => c.id === del.customerId);
     setNoticeTargetDel(del);
 
-    // 🌐 [중앙 DB 연동 SSOT] 중앙 표준 서식을 우선 적용하고, 로컬 폴백을 안전망으로 유지
+    //  [중앙 DB 연동 SSOT] 중앙 표준 서식을 우선 적용하고, 로컬 폴백을 안전망으로 유지
     let templateTitle = '고소작업대 임대료 미납에 따른 대금 변제 최고 및 계약 해지·장비 회수 예고 통보서';
     let templateDeadlineDays = 7;
     let templateContent = '';
@@ -680,7 +680,7 @@ export const DelinquencyPage: React.FC = () => {
         deadlineDays: noticeDeadlineDays
       });
 
-      // 2. 🌐 [중앙 DB 연동 SSOT] ebro-platform-core 중앙 표준 서식 동기 저장
+      // 2.  [중앙 DB 연동 SSOT] ebro-platform-core 중앙 표준 서식 동기 저장
       await saveCentralLegalNoticeTemplate({
         id: 'STD-NOTICE-AWP-01',
         template_code: 'STD_DELINQUENCY_NOTICE_AWP',
@@ -792,7 +792,7 @@ export const DelinquencyPage: React.FC = () => {
     }
   };
 
-  // 🌟 경영진 ➔ 담당 영업사원 채권회수 독촉 지시 하달
+  //  경영진  담당 영업사원 채권회수 독촉 지시 하달
   const handleOpenDirectiveModal = (del: CalculatedDelinquency, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setDirectiveTargetDel(del);
@@ -1103,10 +1103,10 @@ export const DelinquencyPage: React.FC = () => {
           <AlertTriangle size={18} color="var(--primary)" />
           <h2 data-mid="delinquency-header" style={{ margin: 0, fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             미수 채권 연체 관리
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 {calculatedDelinquencies.length}개사 연체 관리 대상
-          </span>
+ </span>
         </div>
         <div className="toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
@@ -1116,7 +1116,7 @@ export const DelinquencyPage: React.FC = () => {
           >
             <RefreshCw size={14} />
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1164,7 +1164,7 @@ export const DelinquencyPage: React.FC = () => {
           </div>
           <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--danger)' }}>
             {highRiskCount}개사
-          </h3>
+ </h3>
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>60일 초과 또는 약속 2회 위반</span>
         </div>
 
@@ -1175,7 +1175,7 @@ export const DelinquencyPage: React.FC = () => {
           </div>
           <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--primary)' }}>
             {pendingDirectiveCount}건
-          </h3>
+ </h3>
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>영업 담당자 연동</span>
         </div>
 
@@ -1183,12 +1183,12 @@ export const DelinquencyPage: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-secondary)', fontWeight: 700 }}>
               지시 미이행 (3일 초과)
-            </span>
+ </span>
             <AlertCircle size={15} color={neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-muted)'} />
           </div>
           <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-muted)' }}>
             {neglectedDirectiveCount}건
-          </h3>
+ </h3>
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>독촉 지시 후 조치 미등록</span>
         </div>
 
@@ -1199,7 +1199,7 @@ export const DelinquencyPage: React.FC = () => {
           </div>
           <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--warning)' }}>
             {brokenPromises}건
-          </h3>
+ </h3>
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>약속 {totalPromises}건 중 {keptPromises}건 이행</span>
         </div>
       </div>
@@ -1213,7 +1213,7 @@ export const DelinquencyPage: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertTriangle size={15} color="var(--danger)" /> 미수 채권 연체 관리 대장 ({filteredDelinquencies.length}건)
-            </h3>
+ </h3>
 
             {/* 필터 탭 */}
             <div data-mid="delinquency-scope-period" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1223,45 +1223,45 @@ export const DelinquencyPage: React.FC = () => {
                   onClick={() => setStatusFilter('ALL')}
                 >
                   전체
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'HIGH_RISK' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('HIGH_RISK')}
                   style={statusFilter === 'HIGH_RISK' ? {} : { color: 'var(--danger)' }}
                 >
                   고위험
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'NEGLECTED' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('NEGLECTED')}
                   style={statusFilter === 'NEGLECTED' ? {} : { color: 'var(--danger)' }}
                 >
                   지시미이행
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'OVERDUE_30' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('OVERDUE_30')}
                 >
                   30일 초과
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'BLOCKED' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('BLOCKED')}
                 >
                   거래차단업체
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'RESTRICT_NEW' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('RESTRICT_NEW')}
                 >
                   추가출고차단
-                </button>
+ </button>
                 <button 
                   className={`segmented-tab-item ${statusFilter === 'BLOCKED_ALL' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('BLOCKED_ALL')}
                 >
                   전면차단
-                </button>
+ </button>
               </div>
 
               <button
@@ -1309,7 +1309,7 @@ export const DelinquencyPage: React.FC = () => {
                   <tr>
                     <td colSpan={9} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       현재 약정 납기일을 도과한 연체 채권이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedDelinquencies.map(del => {
@@ -1329,15 +1329,15 @@ export const DelinquencyPage: React.FC = () => {
                           {del.riskTier === 'HIGH' ? (
                             <span style={{ padding: '2px 6px', borderRadius: '3px', fontSize: '11px', fontWeight: 800, backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }}>
                               고위험
-                            </span>
+ </span>
                           ) : del.riskTier === 'MID' ? (
                             <span style={{ padding: '2px 6px', borderRadius: '3px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--warning-light)', color: 'var(--warning)' }}>
                               중위험
-                            </span>
+ </span>
                           ) : (
                             <span style={{ padding: '2px 6px', borderRadius: '3px', fontSize: '11px', fontWeight: 600, backgroundColor: 'var(--success-light)', color: 'var(--success)' }}>
                               일반
-                            </span>
+ </span>
                           )}
                         </td>
                         <td style={{ padding: '6px 8px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
@@ -1345,19 +1345,19 @@ export const DelinquencyPage: React.FC = () => {
                           {del.isClosed ? (
                             <span style={{ marginLeft: '6px', padding: '1px 5px', fontSize: '10px', backgroundColor: '#7f1d1d', color: '#ffffff', border: '1px solid #991b1b', borderRadius: '3px', fontWeight: 800 }}>
                               폐업차단(해제불가)
-                            </span>
+ </span>
                           ) : del.transactionStatus === 'RESTRICT_NEW' ? (
                             <span style={{ marginLeft: '6px', padding: '1px 5px', fontSize: '10px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '3px', fontWeight: 800 }}>
                               추가출고차단(기존유지)
-                            </span>
+ </span>
                           ) : (del.transactionStatus === 'BLOCKED_ALL' || del.transactionStatus === 'BLOCKED') ? (
                             <span style={{ marginLeft: '6px', padding: '1px 5px', fontSize: '10px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '3px', fontWeight: 800 }}>
                               전면차단(거래종료)
-                            </span>
+ </span>
                           ) : null}
                           <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>
                             {del.paymentDueConditionText} (도과 {del.overdueInvoicesCount}건)
-                          </span>
+ </span>
                         </td>
                         <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '800', color: 'var(--danger)', whiteSpace: 'nowrap' }}>
                           ₩ {del.totalOverdueAmount.toLocaleString()}
@@ -1372,13 +1372,13 @@ export const DelinquencyPage: React.FC = () => {
                             color: del.overdueDays >= 60 ? '#dc2626' : del.overdueDays >= 30 ? '#d97706' : '#2563eb'
                           }}>
                             {del.overdueDays}일
-                          </span>
+ </span>
                         </td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {del.brokenPromisesCount > 0 ? (
                             <span style={{ color: 'var(--danger)', fontWeight: 700, fontSize: '11px' }}>
                               {del.brokenPromisesCount}회 위반
-                            </span>
+ </span>
                           ) : (
                             <span style={{ color: 'var(--text-muted)', fontSize: '10.5px' }}>-</span>
                           )}
@@ -1390,11 +1390,11 @@ export const DelinquencyPage: React.FC = () => {
                           {del.directiveNeglectedDays >= 3 ? (
                             <span style={{ padding: '2px 6px', borderRadius: '3px', fontSize: '10px', fontWeight: 800, backgroundColor: '#7f1d1d', color: '#ffffff', animation: 'pulse 1.5s infinite' }}>
                               방치 {del.directiveNeglectedDays}일
-                            </span>
+ </span>
                           ) : del.hasPendingDirective ? (
                             <span style={{ padding: '2px 6px', borderRadius: '3px', fontSize: '10px', fontWeight: 700, backgroundColor: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--primary)' }}>
                               지시 진행중
-                            </span>
+ </span>
                           ) : (
                             <button
                               type="button"
@@ -1404,7 +1404,7 @@ export const DelinquencyPage: React.FC = () => {
                               title="경영진 수금지시 하달"
                             >
                               지시하달
-                            </button>
+ </button>
                           )}
                         </td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -1414,7 +1414,7 @@ export const DelinquencyPage: React.FC = () => {
                               title="국세청 폐업 조회로 차단된 거래처는 차단을 해제할 수 없습니다"
                             >
                               <Lock size={10} /> 폐업(해제불가)
-                            </span>
+ </span>
                           ) : canControlBlock ? (
                             isCustomerRestricted(del.transactionStatus) ? (
                               <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
@@ -1429,7 +1429,7 @@ export const DelinquencyPage: React.FC = () => {
                                   style={{ padding: '2px 6px', fontSize: '10.5px', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                                 >
                                   <Unlock size={11} /> 차단해제
-                                </button>
+ </button>
                                 <button
                                   type="button"
                                   className="btn-secondary"
@@ -1441,7 +1441,7 @@ export const DelinquencyPage: React.FC = () => {
                                   style={{ padding: '2px 5px', fontSize: '10.5px', color: 'var(--text-secondary)' }}
                                 >
                                   단계변경
-                                </button>
+ </button>
                               </div>
                             ) : (
                               <button
@@ -1455,17 +1455,17 @@ export const DelinquencyPage: React.FC = () => {
                                 style={{ padding: '2px 6px', fontSize: '10.5px', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                               >
                                 <Lock size={11} /> 차단
-                              </button>
+ </button>
                             )
                           ) : (
                             del.transactionStatus === 'RESTRICT_NEW' ? (
                               <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706' }}>
                                 추가출고차단
-                              </span>
+ </span>
                             ) : isCustomerTotalBlocked(del.transactionStatus) ? (
                               <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }}>
                                 전면차단
-                              </span>
+ </span>
                             ) : (
                               <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>정상</span>
                             )
@@ -1492,15 +1492,15 @@ export const DelinquencyPage: React.FC = () => {
                   {selectedDelinquency.isClosed ? (
                     <span style={{ padding: '2px 8px', fontSize: '11px', backgroundColor: '#7f1d1d', color: '#ffffff', border: '1px solid #991b1b', borderRadius: '4px', fontWeight: 800 }}>
                       폐업차단 (해제불가)
-                    </span>
+ </span>
                   ) : selectedDelinquency.transactionStatus === 'RESTRICT_NEW' ? (
                     <span style={{ padding: '2px 8px', fontSize: '11px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '4px', fontWeight: 800 }}>
                       추가출고차단 (기존유지)
-                    </span>
+ </span>
                   ) : (selectedDelinquency.transactionStatus === 'BLOCKED_ALL' || selectedDelinquency.transactionStatus === 'BLOCKED') ? (
                     <span style={{ padding: '2px 8px', fontSize: '11px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '4px', fontWeight: 800 }}>
                       전면차단 (기존거래 종료)
-                    </span>
+ </span>
                   ) : null}
                 </h3>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1519,7 +1519,7 @@ export const DelinquencyPage: React.FC = () => {
                       title="폐업자 조회에서 차단한 거래처는 차단을 해제할 수 없습니다"
                     >
                       <Lock size={12} /> 폐업차단 (해제불가)
-                    </span>
+ </span>
                   ) : isCustomerRestricted(selectedDelinquency.transactionStatus) ? (
                     <>
                       <button 
@@ -1530,7 +1530,7 @@ export const DelinquencyPage: React.FC = () => {
                         title="차단 해제 및 정상거래 복원"
                       >
                         <Unlock size={12} /> 차단 해제
-                      </button>
+ </button>
                       <button 
                         type="button" 
                         className="btn-secondary" 
@@ -1539,7 +1539,7 @@ export const DelinquencyPage: React.FC = () => {
                         title="차단 단계 변경"
                       >
                         <Lock size={12} /> 차단단계 변경
-                      </button>
+ </button>
                     </>
                   ) : (
                     <button 
@@ -1550,7 +1550,7 @@ export const DelinquencyPage: React.FC = () => {
                       title="거래처 거래차단 처분"
                     >
                       <Lock size={12} /> 거래 차단
-                    </button>
+ </button>
                   )
                 )}
                 {isExecutive && (
@@ -1563,7 +1563,7 @@ export const DelinquencyPage: React.FC = () => {
                     title="경영진 고유권한: 최고장/내용증명 작성 및 인쇄"
                   >
                     <FileText size={12} /> 내용증명 작성
-                  </button>
+ </button>
                 )}
                 <button
                   type="button"
@@ -1574,7 +1574,7 @@ export const DelinquencyPage: React.FC = () => {
                   title="회수 불능 연체 채권 대손 상각 처리"
                 >
                   <Trash2 size={12} /> 대손 상각
-                </button>
+ </button>
                 <button 
                   type="button" 
                   className="btn-primary" 
@@ -1582,7 +1582,7 @@ export const DelinquencyPage: React.FC = () => {
                   style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <Send size={12} /> 경영진 지시
-                </button>
+ </button>
               </div>
             </div>
 
@@ -1604,7 +1604,7 @@ export const DelinquencyPage: React.FC = () => {
                         style={{ padding: '4px 10px', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
                       >
                         <Truck size={12} /> 회수 요청 발행 (반납관리)
-                      </button>
+ </button>
                     </div>
                     <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', gap: '12px' }}>
                       <span>현재 계약: <strong>{rented.contractCount}건</strong></span>
@@ -1629,7 +1629,7 @@ export const DelinquencyPage: React.FC = () => {
                         style={{ padding: '2px 8px', fontSize: '11px', color: '#b91c1c', borderColor: '#f87171' }}
                       >
                         2단계 전면차단(기존거래 종료)으로 격상
-                      </button>
+ </button>
                     )}
                   </div>
                 );
@@ -1707,7 +1707,7 @@ export const DelinquencyPage: React.FC = () => {
                   style={{ padding: '6px 14px', fontSize: '12px' }}
                 >
                   조치 내역 저장
-                </button>
+ </button>
               </div>
             </div>
 
@@ -1717,7 +1717,7 @@ export const DelinquencyPage: React.FC = () => {
               {selectedCustLogs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '11.5px' }}>
                   등록된 과거 조치 및 지시 내역이 없습니다.
-                </div>
+ </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {selectedCustLogs.map(log => (
@@ -1734,7 +1734,7 @@ export const DelinquencyPage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <span style={{ fontWeight: '700', color: log.actionType === 'DIRECTIVE' ? '#3b82f6' : 'var(--text-main)' }}>
                           {log.actionType === 'DIRECTIVE' ? '[경영진 수금지시]' : log.actionType === 'CALL' ? '[전화독촉]' : log.actionType === 'VISIT' ? '[현장방문]' : log.actionType === 'NOTICE_SENT' ? '[최고장]' : '[법적조치]'} ({log.recordedBy})
-                        </span>
+ </span>
                         <span style={{ color: 'var(--text-muted)', fontSize: '10.5px' }}>
                           {log.createdAt.replace('T', ' ').slice(0, 16)}
                         </span>
@@ -1754,7 +1754,7 @@ export const DelinquencyPage: React.FC = () => {
                               style={{ padding: '2px 8px', fontSize: '11px', color: '#7e22ce', display: 'flex', alignItems: 'center', gap: '4px' }}
                             >
                               <Eye size={11} /> 발송 내용증명 원문 보기
-                            </button>
+ </button>
                           </div>
                         );
                       })()}
@@ -1764,19 +1764,19 @@ export const DelinquencyPage: React.FC = () => {
                           <div>
                             <strong style={{ color: log.promiseStatus === 'KEPT' ? '#16a34a' : log.promiseStatus === 'BROKEN' ? '#dc2626' : '#2563eb' }}>
                               약속일: {log.promiseDate} (₩{log.promiseAmount?.toLocaleString()}원)
-                            </strong>
+ </strong>
                             <span style={{ fontSize: '10.5px', marginLeft: '6px' }}>
                               [{log.promiseStatus === 'KEPT' ? '이행 완료' : log.promiseStatus === 'BROKEN' ? '약속 파기' : '대기중'}]
-                            </span>
+ </span>
                           </div>
                           {log.promiseStatus === 'PENDING' && (
                             <div style={{ display: 'flex', gap: '4px' }}>
                               <button type="button" className="btn-secondary" onClick={() => handleUpdatePromiseStatus(log.id, 'KEPT')} style={{ padding: '2px 6px', fontSize: '10px', color: 'var(--success)' }}>
                                 준수
-                              </button>
+ </button>
                               <button type="button" className="btn-secondary" onClick={() => handleUpdatePromiseStatus(log.id, 'BROKEN')} style={{ padding: '2px 6px', fontSize: '10px', color: 'var(--danger)' }}>
                                 파기
-                              </button>
+ </button>
                             </div>
                           )}
                         </div>
@@ -1792,7 +1792,7 @@ export const DelinquencyPage: React.FC = () => {
 
       </div>
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         padding: '8px 14px',
         backgroundColor: 'var(--bg-app)',
@@ -1855,10 +1855,10 @@ export const DelinquencyPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>
                 발송 내용증명 원문 (발송일: {viewingNoticeLog.sentDate})
-              </h3>
+ </h3>
               <button type="button" onClick={() => setViewingNoticeLog(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px', borderRadius: '6px', fontSize: '11.5px', border: '1px solid var(--border-color)' }}>
@@ -1879,7 +1879,7 @@ export const DelinquencyPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button type="button" className="btn-secondary" onClick={() => setViewingNoticeLog(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1895,10 +1895,10 @@ export const DelinquencyPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Send size={16} color="var(--primary)" /> 경영진 수금독촉 지시 하달
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowDirectiveModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px', borderRadius: '6px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1950,10 +1950,10 @@ export const DelinquencyPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
               <button type="button" className="btn-secondary" onClick={() => setShowDirectiveModal(false)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 취소
-              </button>
+ </button>
               <button type="button" className="btn-primary" onClick={handleSubmitDirective} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 지시 하달
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1973,7 +1973,7 @@ export const DelinquencyPage: React.FC = () => {
                 <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ShieldAlert size={18} color="var(--danger)" />
                   거래처 거래제한(차단) 처분
-                </h3>
+ </h3>
                 <button 
                   type="button" 
                   onClick={() => {
@@ -1982,8 +1982,8 @@ export const DelinquencyPage: React.FC = () => {
                   }} 
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--text-secondary)' }}
                 >
-                  ✕
-                </button>
+                  
+ </button>
               </div>
 
               {/* 대상 정보 요약 */}
@@ -2028,11 +2028,11 @@ export const DelinquencyPage: React.FC = () => {
                     </div>
                     <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 800 }}>
                       기존 거래 유지 + 추가출고 차단
-                    </span>
+ </span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '22px', lineHeight: '1.4' }}>
                     기존의 거래(현장 투입 장비 {rented.assetCount}대)는 그대로 유지하여 렌탈료를 정상 청구하고, <strong>영업사원의 추가 출고요청만 차단</strong>합니다.
-                  </div>
+ </div>
                 </div>
 
                 {/* 유형 2: 전면 차단 (장비 회수) */}
@@ -2061,11 +2061,11 @@ export const DelinquencyPage: React.FC = () => {
                     </div>
                     <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#b91c1c', fontWeight: 800 }}>
                       기존 거래 종료 및 장비 전량 회수
-                    </span>
+ </span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '22px', lineHeight: '1.4' }}>
                     <strong>추가 출고를 차단</strong>하는 것은 물론이고, 현재 현장에 투입된 <strong>기존 거래(가동 장비 {rented.assetCount}대)까지 즉시 종료 및 전량 회수를 지시</strong>합니다.
-                  </div>
+ </div>
                 </div>
               </div>
 
@@ -2097,7 +2097,7 @@ export const DelinquencyPage: React.FC = () => {
                     style={{ padding: '6px 14px', fontSize: '12px' }}
                   >
                     취소
-                  </button>
+ </button>
                   <button 
                     type="button" 
                     className={selectedBlockType === 'BLOCKED_ALL' ? 'btn-danger' : 'btn-primary'}
@@ -2185,7 +2185,7 @@ export const DelinquencyPage: React.FC = () => {
                 style={{ padding: '6px 14px', fontSize: '12px' }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-danger"

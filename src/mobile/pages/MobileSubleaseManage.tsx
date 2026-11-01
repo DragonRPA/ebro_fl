@@ -236,7 +236,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
         // 2. 고객사 현장 가동중: status === 'RENTED'
         const isDeployedToCustomer = a.status === 'RENTED' && !isReturnedToVendor;
 
-        // 3. 🚨 주기장 유휴 누수 위험: 임차처에 아직 안 돌려줬는데(미반납), 현장에도 안 나가있는 상태
+        // 3.  주기장 유휴 누수 위험: 임차처에 아직 안 돌려줬는데(미반납), 현장에도 안 나가있는 상태
         const isIdleLeakRisk = !isReturnedToVendor && !isDeployedToCustomer;
 
         // 유휴 누수 일수 계산 (당일 입고 시 0일 보정 - 과제 10)
@@ -447,7 +447,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
               <span>전대 장비 관리</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-sky-400 border border-blue-500/30">
                 관리부
-              </span>
+ </span>
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">외부 임차 장비 운용 및 누수 차단 관제</p>
           </div>
@@ -490,7 +490,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
           </div>
         </div>
 
-        {/* 🚨 주기장 반납대기 누수 위험 */}
+        {/*  주기장 반납대기 누수 위험 */}
         <div className={`rounded-2xl p-3.5 flex flex-col justify-between shadow-lg border transition-all ${
           idleLeakCount > 0 
             ? 'bg-rose-950/40 border-rose-500/60 ring-1 ring-rose-500/30' 
@@ -504,7 +504,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             {idleLeakCount > 0 && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white animate-pulse whitespace-nowrap flex-shrink-0">
                 누수 경보
-              </span>
+ </span>
             )}
           </div>
           <div className="mt-2">
@@ -517,7 +517,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             {idleLeakCount > 0 && showUnitPrice && (
               <div className="text-[11px] font-mono text-rose-300 mt-1 truncate">
                 손실: -₩{totalLeakAmount.toLocaleString()}원
-              </div>
+ </div>
             )}
           </div>
         </div>
@@ -532,7 +532,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             <div className="mt-2 flex items-baseline gap-1.5">
               <span className="text-lg sm:text-xl font-mono font-black text-slate-200">
                 ₩{(Math.round(totalMonthlyCost / 10000)).toLocaleString()}만
-              </span>
+ </span>
               <span className="text-[10px] text-slate-500">/월 원가</span>
             </div>
           </div>
@@ -663,7 +663,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                     {asset.vendorAssetNo && asset.vendorAssetNo !== asset.assetNo && (
                       <span className="text-[11px] font-mono text-slate-400 whitespace-nowrap flex-shrink-0">
                         (임차처번호: {asset.vendorAssetNo})
-                      </span>
+ </span>
                     )}
                   </div>
                   <div className="text-xs font-bold text-slate-300 mt-1 flex items-center gap-2">
@@ -673,7 +673,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                         <span className="text-slate-500">•</span>
                         <span className="text-slate-400 font-mono text-[11px]">
                           월 ₩{(asset.monthlyRentFee || 0).toLocaleString()}원
-                        </span>
+ </span>
                       </>
                     )}
                   </div>
@@ -694,7 +694,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                   ) : (
                     <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 font-medium text-[11px] whitespace-nowrap flex-shrink-0">
                       임차처 반납완료
-                    </span>
+ </span>
                   )}
                 </div>
               </div>
@@ -790,12 +790,12 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                       className="py-1.5 px-3 rounded-lg bg-slate-800 text-slate-500 font-bold text-xs cursor-not-allowed opacity-60 whitespace-nowrap"
                     >
                       임차처 반납 불가
-                    </button>
+ </button>
                   </div>
                 ) : (
                   <div className="w-full py-1.5 text-center text-xs text-slate-500 font-medium">
                     임차처 최종 반납 처리 완료 (정산 마감됨)
-                  </div>
+ </div>
                 )}
               </div>
             </div>
@@ -855,7 +855,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                   임차처
-                </label>
+ </label>
                 <select
                   value={newVendorId}
                   onChange={(e) => setNewVendorId(e.target.value)}
@@ -882,7 +882,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     임차처 번호
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={newVendorAssetNo}
@@ -895,7 +895,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     당사 관리번호
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={newAssetNo}
@@ -911,7 +911,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     장비 모델 규격 (필수)
-                  </label>
+ </label>
                   <span className={`text-[10px] font-bold ${newModelName ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {newModelName ? `선택됨: ${newModelName}` : '제품 미선택'}
                   </span>
@@ -927,7 +927,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                     );
                     setNewModelName(exact ? exact.modelName : '');
                   }}
-                  placeholder="제품 모델명 검색 (예: GS-1930, 2646)"
+                  placeholder="제품 모델명 검색"
                   className="w-full py-2 px-3 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500"
                 />
                 <select
@@ -953,7 +953,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                     .map(p => (
                       <option key={p.id} value={p.modelName}>
                         {p.modelName} ({p.manufacturer || '제조사미상'}{p.feet ? ` / ${p.feet}ft` : ''})
-                      </option>
+ </option>
                     ))}
                 </select>
               </div>
@@ -964,7 +964,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     연식
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={newManufactureYear}
@@ -985,7 +985,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     임차 시작일
-                  </label>
+ </label>
                   <input
                     type="date"
                     value={newRentStart}
@@ -1002,7 +1002,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                     <span>임차처 월 차입단가 (매입원가)</span>
                     <span className="text-[11px] font-mono text-sky-400">
                       일할: ₩{Math.floor(newMonthlyRentFee / 30).toLocaleString()}원/일
-                    </span>
+ </span>
                   </label>
                   <input
                     type="number"
@@ -1093,7 +1093,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                 실제 임차처 반납일
-              </label>
+ </label>
               <input
                 type="date"
                 value={actualReturnDate}
@@ -1110,7 +1110,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
               </div>
               <div className="text-[11px] text-rose-300/80 leading-relaxed">
                 반납이 확정되면 자산 상태가 [임차처 반납완료]로 종결되며, 추가 임차료 계상이 중단되고 월말 매입 계산서에 확정 일수로 전송됩니다.
-              </div>
+ </div>
             </div>
 
             {/* 제출 버튼 */}
@@ -1156,7 +1156,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300 whitespace-nowrap">
                 투입 고객사 *
-              </label>
+ </label>
               <select
                 value={deployCustomerId}
                 onChange={(e) => handleDeployCustomerChange(e.target.value)}
@@ -1175,7 +1175,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300 whitespace-nowrap">
                 투입 현장
-              </label>
+ </label>
               <select
                 value={deploySiteId}
                 onChange={(e) => setDeploySiteId(e.target.value)}
@@ -1197,7 +1197,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-300 whitespace-nowrap">
                   투입 일자
-                </label>
+ </label>
                 <input
                   type="date"
                   value={deployStartDate}
@@ -1210,7 +1210,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap">
                     월 렌탈료 (상속단가)
-                  </label>
+ </label>
                   <input
                     type="number"
                     value={deployMonthlyRent}
@@ -1235,7 +1235,7 @@ export const MobileSubleaseManage: React.FC<MobileSubleaseManageProps> = ({
                 className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs active:scale-95"
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isDeploying || !deployCustomerId}

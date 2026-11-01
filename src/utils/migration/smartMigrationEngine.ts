@@ -237,7 +237,7 @@ export function getIntegratedSampleDataset(tenantId: string = 'giyeonlift'): Int
       gradeability: '25%',
       maxWindSpeed: '12.5 m/s 이내',
       asContact: '031-334-5296',
-      spec: '시저리프트(폭 0.76m 실내/협소작업 최적화)',
+      spec: '시저리프트',
       isActive: true,
       tenant_id: tenantId,
       createdAt: now,
@@ -309,7 +309,7 @@ export function getIntegratedSampleDataset(tenantId: string = 'giyeonlift'): Int
       gradeability: '30%',
       maxWindSpeed: '12.5 m/s 이내',
       asContact: '031-334-5296',
-      spec: '굴절 붐 리프트(작업반경 6.45m)',
+      spec: '굴절 붐 리프트',
       isActive: true,
       tenant_id: tenantId,
       createdAt: now,
@@ -489,7 +489,7 @@ export function getIntegratedSampleDataset(tenantId: string = 'giyeonlift'): Int
 
   // 6. 부품 및 소모품 (마스터 및 구매입고)
   const consumables = [
-    { id: 'con-hyd-oil', modelName: 'ISO-VG46 유압유(20리터)', unit: '통', unitPrice: 55000, stockQty: 30, category: '오일류', supplier: 'GS칼텍스', note: '사계절용 프리미엄 내마모성 유압작동유', tenant_id: tenantId, createdAt: now, updatedAt: now },
+    { id: 'con-hyd-oil', modelName: 'ISO-VG46 유압유(20리터)', unit: '통', unitPrice: 55000, stockQty: 30, category: '오일류', supplier: 'GS칼텍스', note: '사계절용 내마모성 유압작동유', tenant_id: tenantId, createdAt: now, updatedAt: now },
     { id: 'con-bat-trojan', modelName: '트로잔 T-105 딥사이클 배터리(6볼트)', unit: '개', unitPrice: 195000, stockQty: 24, category: '배터리', supplier: '트로잔코리아', note: '225Ah 고용량 납축전지', tenant_id: tenantId, createdAt: now, updatedAt: now },
     { id: 'con-fuse-250', modelName: '메인 퓨즈(250암페어)', unit: '개', unitPrice: 12000, stockQty: 50, category: '전장부품', supplier: '대한전장', note: '시저리프트 주전원 보호용 고전류 퓨즈', tenant_id: tenantId, createdAt: now, updatedAt: now },
     { id: 'con-limit-sw', modelName: '협착방지 리미트스위치(방수)', unit: '개', unitPrice: 35000, stockQty: 18, category: '안전부품', supplier: '안전솔루션', note: 'IP67 방수/방진 등급', tenant_id: tenantId, createdAt: now, updatedAt: now }
@@ -566,7 +566,7 @@ export function generateIntegratedTemplateWorkbook(tenantName: string = '기연�
 
   // 2. 제품_장비 시트 (10대 상세제원 및 장비호기)
   const ws2Data = [
-    ['관리번호(호기)*', '모델명*', '제조사*', '작업높이(미터)', '발판높이(미터)', '장비규격(전장x폭x고)', '작업대규격', '자중(킬로그램)', '동력원', '적재하중(킬로그램)', '소유구분(자사/전대)*', '현재상태(가용/대여중/정비중)*', '제조번호', '연식', '취득가액', '월렌탈료', '일렌탈료', '비고'],
+    ['관리번호(호기)*', '모델명*', '제조사*', '작업높이(미터)', '발판높이(미터)', '장비규격', '작업대규격', '자중(킬로그램)', '동력원', '적재하중(킬로그램)', '소유구분(자사/전대)*', '현재상태(가용/대여중/정비중)*', '제조번호', '연식', '취득가액', '월렌탈료', '일렌탈료', '비고'],
     ['KY-001', 'GS-1930', 'Genie', 7.8, 5.8, '1.87 x 0.76 x 1.98 m', '1.63 x 0.74 m', '1500', '배터리(전동)', '227', '자사', '대여중', 'GS1930-1001', '2023', 12000000, 350000, 25000, '본사 주기장'],
     ['KY-002', 'SJ-3219', 'SKYJACK', 7.8, 5.8, '1.78 x 0.81 x 2.00 m', '1.63 x 0.71 m', '1312', '배터리(전동)', '227', '자사', '대여중', 'SJ3219-5891', '2024', 12500000, 350000, 25000, '정기점검 완료'],
     ['KY-003', 'JCPT1008HD', 'Dingli', 10.0, 8.0, '2.40 x 0.81 x 2.10 m', '2.27 x 0.81 m', '2150', '배터리(전동)', '230', '자사', '가용', 'DL1008-8821', '2024', 14000000, 450000, 30000, '출고 대기'],
@@ -764,7 +764,7 @@ function parseMultiSheetWorkbook(
         feet: inferFeetFromModel(modelName, height),
         workingHeight: height || 7.8,
         platformHeight,
-        machineDimensions: String(row['장비규격(전장x폭x고)'] || row['장비규격'] || '').trim() || null,
+        machineDimensions: String(row['장비규격'] || row['장비규격'] || '').trim() || null,
         platformDimensions: String(row['작업대규격'] || '').trim() || null,
         weight: String(row['자중(킬로그램)'] || row['자중'] || '').trim() || null,
         powerSource: String(row['동력원'] || '배터리(전동)').trim(),
@@ -1653,7 +1653,7 @@ export async function ingestIntegratedEntitiesToDatabase(
   const tableResults: Array<{ table: string; count: number; success: boolean; error?: string }> = [];
   let totalInserted = 0;
 
-  // 🛡️ 헌장 1.5 준수: customerSites는 고객사 소속 현장으로 직접 적재되며, siteMasters(옵션 그룹)에 물리 현장을 자동 생성하지 않음
+  //  헌장 1.5 준수: customerSites는 고객사 소속 현장으로 직접 적재되며, siteMasters(옵션 그룹)에 물리 현장을 자동 생성하지 않음
   const siteMasterList = [...(entities.siteMasters || [])];
   const customerSiteList = (entities.customerSites || []).map(cs => {
     const matchedSm = cs.siteMasterId ? siteMasterList.find(sm => sm.id === cs.siteMasterId) : null;

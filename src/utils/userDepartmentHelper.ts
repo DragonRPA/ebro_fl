@@ -4,7 +4,7 @@ import { User, Department } from '../services/db';
 export type MobileDeptMode = 'SALES' | 'AS' | 'OUTBOUND' | 'EXECUTIVE' | 'ADMIN';
 
 /**
- * 🏛️ 조직도 기반 사용자의 소속 부서명 도출
+ *  조직도 기반 사용자의 소속 부서명 도출
  */
 export function getUserDepartmentName(
   user: User | { departmentId?: string | null; department?: string } | null,
@@ -33,7 +33,7 @@ export function getUserDepartmentName(
 }
 
 /**
- * 🏛️ 조직계층 레벨 계산 (1: 최상위 조직/본사/경영진, 2: 1차 사업부서, 3: 하위부서/외국인, 999: 미배정)
+ *  조직계층 레벨 계산 (1: 최상위 조직/본사/경영진, 2: 1차 사업부서, 3: 하위부서/외국인, 999: 미배정)
  */
 export function getUserHierarchyLevel(
   user: User | { id?: string; loginId?: string; departmentId?: string | null; department?: string; position?: string; role?: string } | null,
@@ -90,7 +90,7 @@ export function getUserHierarchyLevel(
 }
 
 /**
- * 🏛️ 개발자(특수 존재) 여부 판정
+ *  개발자(특수 존재) 여부 판정
  * "개발자는 조직이 어디로 되어있던지 실존하는 직원이 아니므로 무시하되 그냥 모든 권한이 있는 예외적인 존재로 작동해야 한다."
  */
 export function isDeveloperUser(user: { id?: string; loginId?: string; role?: string; name?: string } | null): boolean {
@@ -105,7 +105,7 @@ export function isDeveloperUser(user: { id?: string; loginId?: string; role?: st
 }
 
 /**
- * 🏛️ 직원의 실제 소속에 따른 MobileDeptMode 단일 결정
+ *  직원의 실제 소속에 따른 MobileDeptMode 단일 결정
  */
 export function resolveUserMobileDeptMode(
   user: User | { id?: string; loginId?: string; role?: string; position?: string; departmentId?: string | null; department?: string } | null,
@@ -139,7 +139,7 @@ export function resolveUserMobileDeptMode(
 }
 
 /**
- * 🔒 영업정보 보호 및 부서 간 권한 분리 (Domain R&R Policy):
+ *  영업정보 보호 및 부서 간 권한 분리 (Domain R&R Policy):
  * 렌탈료 단가, 임차료 단가, 부품/소모품 단가 등 각종 단가 정보는
  * 오직 '영업부(SALES)'와 '관리부(ADMIN)'(및 경영진 EXECUTIVE)에만 노출하며,
  * 출고팀(OUTBOUND) 및 AS팀(AS) 등 타 부서 화면에서는 노출을 엄격히 차단한다.

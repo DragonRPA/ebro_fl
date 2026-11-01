@@ -1,6 +1,6 @@
 // src/services/hindsightMemoryService.ts
-// 🧠 eBro Hindsight 4-Tier Memory & Real-DB Cognitive Core Service
-// 🏛️ 무목업 · 무시드 · 100% 실DB(Central + Tenant) 직접 연동 엔진
+//  eBro Hindsight 4-Tier Memory & Real-DB Cognitive Core Service
+//  무목업 · 무시드 · 100% 실DB(Central + Tenant) 직접 연동 엔진
 
 import { centralSupabase } from './centralDb';
 import { db, supabase } from './db';
@@ -503,8 +503,8 @@ class HindsightMemoryService {
           tenant_id: tenantId,
           domain: cl.domain,
           cluster_key: `REAL_EXP_${cl.menu}_${cl.action}`,
-          belief_title: `[실측 행동패턴] ${cl.menu} ➔ '${cl.action}' 반복 수행 (${cl.count}회)`,
-          belief_statement: `Central DB(awp_shared_memories) 최근 로그 분석 결과, [${cl.menu}] 메뉴에서 [${cl.action}] 액션이 총 ${cl.count}회 실행되었으며 이 중 실제 DB 변경(SQL 캡처)은 ${cl.sqlCount}회 발생함.`,
+          belief_title: `[실측 행동패턴] ${cl.menu} '${cl.action}' 반복 수행 (${cl.count}회)`,
+          belief_statement: `Central DB 최근 로그 분석 결과, [${cl.menu}] 메뉴에서 [${cl.action}] 액션이 총 ${cl.count}회 실행되었으며 이 중 실제 DB 변경은 ${cl.sqlCount}회 발생함.`,
           proof_count: cl.count,
           confidence: conf,
           supporting_quotes: cl.quotes,
@@ -776,8 +776,8 @@ class HindsightMemoryService {
         `# 실제 DB 자산·제원·정비 집계 (시드/목업 제외)`,
         `- **총 등록 자산**: ${assets.length.toLocaleString()}대 (${statusSummaryLine || '데이터 없음'})`,
         `- **등록 장비 모델**: ${products.length.toLocaleString()}종`,
-        `- **출고 검수 이력**: ${outboundInspections.length.toLocaleString()}건 ${outboundInspections.length === 0 ? '(현재 실제 DB에 적재된 검수 레코드 0건)' : ''}`,
-        `- **정비/수리 이력**: ${repairs.length.toLocaleString()}건 ${repairs.length === 0 ? '(현재 실제 DB에 적재된 수리 레코드 0건 — 예지정비 분석을 위해 수리 데이터 축적 필요)' : ''}`
+        `- **출고 검수 이력**: ${outboundInspections.length.toLocaleString()}건 ${outboundInspections.length === 0 ? '' : ''}`,
+        `- **정비/수리 이력**: ${repairs.length.toLocaleString()}건 ${repairs.length === 0 ? '' : ''}`
       ].join('\n'),
       structured_data: {
         totalAssets: assets.length,
@@ -845,9 +845,9 @@ class HindsightMemoryService {
     });
 
     // 6-5. SYSTEM 텔레메트리 멘탈 모델 (Central DB awp_shared_memories 실측 상태)
-    const wfTableStatus = this.diagnostics.remoteTables.hindsight_world_facts.exists ? '존재함' : '미생성 (실제 ERP 테이블에서 동적 추출 중)';
-    const obsTableStatus = this.diagnostics.remoteTables.hindsight_observations.exists ? '존재함' : '미생성 (실제 ERP + 경험 테이블에서 실시간 귀납 추출 중)';
-    const mmTableStatus = this.diagnostics.remoteTables.hindsight_mental_models.exists ? '존재함' : '미생성 (실제 ERP 원장에서 실시간 합성 중)';
+    const wfTableStatus = this.diagnostics.remoteTables.hindsight_world_facts.exists ? '존재함' : '미생성';
+    const obsTableStatus = this.diagnostics.remoteTables.hindsight_observations.exists ? '존재함' : '미생성';
+    const mmTableStatus = this.diagnostics.remoteTables.hindsight_mental_models.exists ? '존재함' : '미생성';
 
     derivedModels.push({
       id: 'mm_real_system_telemetry',
@@ -858,7 +858,7 @@ class HindsightMemoryService {
       standing_query: 'Hindsight DB 테이블 생성 여부, awp_shared_memories 수집 건수, 아키텍처 보완점',
       content_markdown: [
         `# Hindsight 데이터베이스 실측 연동 상태`,
-        `- **Central DB \`awp_shared_memories\` (Experiences)**: 테이블 존재함 (총 ${this.diagnostics.remoteTables.awp_shared_memories.totalCount}건 적재, 최근 300건 중 SQL 캡처 ${this.diagnostics.remoteTables.awp_shared_memories.sqlCapturedCount}건)`,
+        `- **Central DB \`awp_shared_memories\`**: 테이블 존재함 (총 ${this.diagnostics.remoteTables.awp_shared_memories.totalCount}건 적재, 최근 300건 중 SQL 캡처 ${this.diagnostics.remoteTables.awp_shared_memories.sqlCapturedCount}건)`,
         `- **Central DB \`hindsight_world_facts\`**: ${wfTableStatus}`,
         `- **Central DB \`hindsight_observations\`**: ${obsTableStatus}`,
         `- **Central DB \`hindsight_mental_models\`**: ${mmTableStatus}`
@@ -1105,13 +1105,13 @@ class HindsightMemoryService {
           return `${mName}(월 ₩${mFee.toLocaleString()}${dFee > 0 ? `/일 ₩${dFee.toLocaleString()}` : ''})`;
         });
         lines.push(
-          `  • 계약 [${c.contractNo || c.id}] (${c.status}) | 고객: ${custName} | 현장: ${sInfo.name} | 기간: ${c.startDate}~${c.endDate} | 투입장비 ${cas.length}대: ${rateSummaries.join(', ') || '자산미배정'}`
+          ` • 계약 [${c.contractNo || c.id}] (${c.status}) | 고객: ${custName} | 현장: ${sInfo.name} | 기간: ${c.startDate}~${c.endDate} | 투입장비 ${cas.length}대: ${rateSummaries.join(', ') || '자산미배정'}`
         );
       }
 
       if (matchedContracts.length === 0 && matchedSites.length > 0) {
         for (const sm of matchedSites.slice(0, 5)) {
-          lines.push(`  • 등록 현장 [${sm.name}] (ID: ${sm.id}) | 주소: ${sm.address || '미입력'} | 상태: ${sm.isActive !== false ? '가동중' : '완공/종료'} (연결된 계약 레코드 0건)`);
+          lines.push(` • 등록 현장 [${sm.name}] (ID: ${sm.id}) | 주소: ${sm.address || '미입력'} | 상태: ${sm.isActive !== false ? '가동중' : '완공/종료'} (연결된 계약 레코드 0건)`);
         }
       }
       sections.push(lines.join('\n'));
@@ -1134,7 +1134,7 @@ class HindsightMemoryService {
       for (const d of matchedDeliveries.slice(0, 6)) {
         const cost = Number(d.confirmedCost || d.finalCost || d.deliveryCost || 0);
         lines.push(
-          `  • 배차 [${d.id}] (${d.type}/${d.status}) | 일자: ${d.requestDate || d.loadingDate || '-'} | 기사: ${d.driverName || '미배정'}(${d.vehicleType || '차종미상'}) | 하차지: ${d.destinationAddress || '미입력'} | 운송비: ₩${cost.toLocaleString()}`
+          ` • 배차 [${d.id}] (${d.type}/${d.status}) | 일자: ${d.requestDate || d.loadingDate || '-'} | 기사: ${d.driverName || '미배정'}(${d.vehicleType || '차종미상'}) | 하차지: ${d.destinationAddress || '미입력'} | 운송비: ₩${cost.toLocaleString()}`
         );
       }
       sections.push(lines.join('\n'));
@@ -1146,14 +1146,14 @@ class HindsightMemoryService {
       lines.push(`■ [실DB 상품제원/보유자산 매칭 결과] 모델 ${matchedProducts.length}종 | 보유자산 ${matchedAssets.length}대`);
       for (const p of matchedProducts.slice(0, 5)) {
         lines.push(
-          `  • 모델 [${p.modelName}] (${p.manufacturer || '-'}, ${p.feet || '-'}ft) | 작업높이: ${p.workingHeight || '-'} | 중량: ${p.weight || '-'} | 적재하중: ${p.capacityPreExt || '-'} | 동력: ${p.powerSource || '-'}`
+          ` • 모델 [${p.modelName}] (${p.manufacturer || '-'}, ${p.feet || '-'}ft) | 작업높이: ${p.workingHeight || '-'} | 중량: ${p.weight || '-'} | 적재하중: ${p.capacityPreExt || '-'} | 동력: ${p.powerSource || '-'}`
         );
       }
       if (matchedAssets.length > 0) {
         const stMap: Record<string, number> = {};
         for (const a of matchedAssets) stMap[a.status || 'UNKNOWN'] = (stMap[a.status || 'UNKNOWN'] || 0) + 1;
         const stLine = Object.entries(stMap).map(([k, v]) => `${k} ${v}대`).join(', ');
-        lines.push(`  • 매칭 자산 상태 분포: ${stLine}`);
+        lines.push(` • 매칭 자산 상태 분포: ${stLine}`);
       }
       sections.push(lines.join('\n'));
     }
@@ -1172,7 +1172,7 @@ class HindsightMemoryService {
         const custName = customerMap.get(b.customerId)?.name || b.customerId;
         const diff = Number(b.totalAmount || 0) - Number(b.paidAmount || 0);
         lines.push(
-          `  • 청구 [${b.billingYm}] 고객: ${custName} | 상태: ${b.status} | 청구: ₩${Number(b.totalAmount || 0).toLocaleString()} | 수납: ₩${Number(b.paidAmount || 0).toLocaleString()} | 미수차액: ₩${diff.toLocaleString()}`
+          ` • 청구 [${b.billingYm}] 고객: ${custName} | 상태: ${b.status} | 청구: ₩${Number(b.totalAmount || 0).toLocaleString()} | 수납: ₩${Number(b.paidAmount || 0).toLocaleString()} | 미수차액: ₩${diff.toLocaleString()}`
         );
       }
       sections.push(lines.join('\n'));
@@ -1181,14 +1181,14 @@ class HindsightMemoryService {
     // E. Hindsight 4대 메모리 매칭 결과
     if (recallResult.observations.length > 0) {
       const obsLines = recallResult.observations.slice(0, 4).map(
-        o => `  • ${o.belief_title}: ${o.belief_statement} (증거 ${o.proof_count}건)`
+        o => ` • ${o.belief_title}: ${o.belief_statement} (증거 ${o.proof_count}건)`
       );
       sections.push(`■ [Hindsight 귀납 관찰 매칭 ${recallResult.observations.length}건]\n${obsLines.join('\n')}`);
     }
 
     if (recallResult.experiences.length > 0) {
       const expLines = recallResult.experiences.slice(0, 4).map(
-        e => `  • [${new Date(e.created_at).toLocaleString('ko-KR')}] ${e.menu_path} ➔ ${e.action_name}${e.raw_sql ? ` | SQL: ${e.raw_sql.slice(0, 90)}...` : ''}`
+        e => ` • [${new Date(e.created_at).toLocaleString('ko-KR')}] ${e.menu_path} ${e.action_name}${e.raw_sql ? ` | SQL: ${e.raw_sql.slice(0, 90)}...` : ''}`
       );
       sections.push(`■ [Hindsight 사용자 경험 매칭 ${recallResult.experiences.length}건]\n${expLines.join('\n')}`);
     }
@@ -1211,7 +1211,7 @@ class HindsightMemoryService {
     if (totalLiveMatches === 0 && totalMemoryMatches === 0) {
       sections.push(
         `■ [실DB 조회 결과: 일치하는 레코드 없음 (0건)]\n` +
-        `  • 입력하신 질의 키워드(${tokens.map(t => `'${t}'`).join(', ')})와 일치하는 레코드가 현재 실제 DB(계약 ${contracts.length}건, 현장 ${siteMasters.length}개, 배차 ${deliveries.length}건, 청구 ${billings.length}건, 상품 ${products.length}종, 경험로그 ${this.cachedExperiences.length}건)에 존재하지 않습니다.`
+        ` • 입력하신 질의 키워드(${tokens.map(t => `'${t}'`).join(', ')})와 일치하는 레코드가 현재 실제 DB(계약 ${contracts.length}건, 현장 ${siteMasters.length}개, 배차 ${deliveries.length}건, 청구 ${billings.length}건, 상품 ${products.length}종, 경험로그 ${this.cachedExperiences.length}건)에 존재하지 않습니다.`
       );
     }
 

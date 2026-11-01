@@ -1,5 +1,5 @@
 // src/services/driveMirrorSync.ts
-// e-Bro ERP Cloudflare R2 ➔ 로컬 PC (C:\eBroAgent\drive_mirror\) 단방향 미러링 동기화 엔진
+// e-Bro ERP Cloudflare R2  로컬 PC (C:\eBroAgent\drive_mirror\) 단방향 미러링 동기화 엔진
 // 원칙: CF R2가 유일한 마스터 원본, 로컬 drive_mirror는 항상 CF R2를 따라가는 읽기 전용 사본
 
 import { OfficialMailConfig } from './db';
@@ -124,7 +124,7 @@ export async function executeDriveMirrorSync(
   const publicDomain = config?.r2PublicDomain?.trim() || DEFAULT_CF_PUBLIC_DOMAIN;
   const r2BucketName = config?.r2BucketName?.trim() || 'giyeon-storage';
 
-  // 🌟 1순위: 로컬 에이전트 자체 SigV4 동기화 엔진 직접 가동
+  //  1순위: 로컬 에이전트 자체 SigV4 동기화 엔진 직접 가동
   try {
     updateProgress({
       isActive: true,
@@ -241,7 +241,7 @@ export async function executeDriveMirrorSync(
     return { success: false, syncedCount: 0, failedCount: failCount, files: [], message: msg };
   }
 
-  // 로컬 에이전트로 전송 (CF ➔ 로컬 단방향 덮어쓰기)
+  // 로컬 에이전트로 전송 (CF  로컬 단방향 덮어쓰기)
   updateProgress({
     phase: 'TRANSFERRING',
     currentFile: '로컬 에이전트 전송 중...',
@@ -259,7 +259,7 @@ export async function executeDriveMirrorSync(
     if (!agentRes.ok) throw new Error(`에이전트 오류 HTTP ${agentRes.status}`);
 
     const agentData = await agentRes.json();
-    const finalMsg = `✅ CF R2 ${payloadFiles.length}개 파일이 C:\\eBroAgent\\drive_mirror\\ 에 미러링되었습니다.`;
+    const finalMsg = ` CF R2 ${payloadFiles.length}개 파일이 C:\\eBroAgent\\drive_mirror\\ 에 미러링되었습니다.`;
 
     updateProgress({
       isActive: true,

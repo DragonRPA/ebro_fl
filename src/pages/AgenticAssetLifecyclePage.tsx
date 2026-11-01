@@ -30,7 +30,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
       maintenanceScore: 0,
       customerName: '현대건설(주)',
       siteName: '판교 복합센터 현장',
-      recommendedAction: '출고 검수 승인 대기 ➔ 승인 즉시 RENTED 전환 (헌장 1.3)',
+      recommendedAction: '출고 검수 승인 대기 승인 즉시 RENTED 전환 (헌장 1.3)',
       safetyCertifiedUntil: '2027-03-31'
     },
     {
@@ -52,7 +52,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
       status: 'IN_REPAIR',
       operatingHours: 3100,
       maintenanceScore: 45,
-      recommendedAction: '유압 실린더 씰링 교체 진행 중 ➔ 완료 시 0점 리셋 및 AVAILABLE 복원',
+      recommendedAction: '유압 실린더 씰링 교체 진행 중 완료 시 0점 리셋 및 AVAILABLE 복원',
       safetyCertifiedUntil: '2026-12-31'
     },
     {
@@ -64,12 +64,12 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
       maintenanceScore: 60,
       customerName: '대우건설(주)',
       siteName: '인천 청라 물류센터',
-      recommendedAction: '모터 과열 센서 감지 ➔ 동일 모델 대차 교체 권고 (헌장 2.3)',
+      recommendedAction: '모터 과열 센서 감지 동일 모델 대차 교체 권고 (헌장 2.3)',
       safetyCertifiedUntil: '2026-10-31'
     }
   ]);
 
-  // 출고 검수 승인 마감 ➔ 자산 상태 RENTED 즉시 전환 (헌장 1.3)
+  // 출고 검수 승인 마감  자산 상태 RENTED 즉시 전환 (헌장 1.3)
   const handleApproveOutbound = async (assetId: string) => {
     setLoading(true);
     setStatusMessage('에이전틱 AI가 출고 검수 승인 마감을 집행하고 헌장 1.3 RENTED 전환을 강제합니다...');
@@ -89,7 +89,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
     }
   };
 
-  // 정비 완료 처리 ➔ 점수 0점 리셋 및 AVAILABLE 복원
+  // 정비 완료 처리  점수 0점 리셋 및 AVAILABLE 복원
   const handleCompleteRepair = async (assetId: string) => {
     setLoading(true);
     setStatusMessage('정비 완료 보고를 수신하여 정비점수를 0점으로 리셋하고 AVAILABLE로 복원합니다...');
@@ -100,7 +100,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
         ...item,
         status: 'AVAILABLE',
         maintenanceScore: 0,
-        recommendedAction: '정비 완료 ➔ 임대 가능 상태로 복원 완료 (정비점수 0점)'
+        recommendedAction: '정비 완료 임대 가능 상태로 복원 완료 (정비점수 0점)'
       } : item));
       setStatusMessage('정비 완료: 정비점수 0점 복원 및 임대가능 상태 전환 완료.');
     } catch (err: any) {
@@ -119,7 +119,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>자산 라이프사이클 관제</h2>
           <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', fontWeight: '700' }} data-uia="badge-guard-rented">
             헌장 1.3 출고 검수 마감 시 RENTED 전환 강제
-          </span>
+ </span>
         </div>
       </div>
 
@@ -177,7 +177,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
                 {asset.customerName && (
                   <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--primary)' }}>
                     [{asset.customerName} - {asset.siteName}]
-                  </span>
+ </span>
                 )}
               </div>
 
@@ -202,7 +202,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
                     data-uia="btn-execute-lifecycle-action"
                   >
                     출고 검수 승인 마감 (대여중 전환)
-                  </button>
+ </button>
                 )}
 
                 {asset.status === 'IN_REPAIR' && (
@@ -213,7 +213,7 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
                     style={{ padding: '4px 10px', fontSize: '12px', fontWeight: '700', backgroundColor: 'var(--success)' }}
                   >
                     정비 완료 보고 (점수 리셋)
-                  </button>
+ </button>
                 )}
               </div>
             </div>

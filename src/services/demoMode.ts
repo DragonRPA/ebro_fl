@@ -521,7 +521,7 @@ export async function resetDemoDataToGolden(onProgress?: (msg: string) => void):
     }
 
     clearLocalErpCache();
-    if (onProgress) onProgress('✅ 데모 데이터 복원 완료!');
+    if (onProgress) onProgress('데모 데이터 복원 완료!');
     return { success: true };
   } catch (err: any) {
     console.error('Failed to reset demo data:', err);

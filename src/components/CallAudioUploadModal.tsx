@@ -43,7 +43,7 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
 
     // 오디오 확장자도 아니고 오디오 MIME도 아닌 경우 안내
     if (!isAudioExt && !isAudioMime && selected.type) {
-      setErrorMsg('오디오 파일(.m4a, .mp3, .wav 등)만 업로드할 수 있습니다.');
+      setErrorMsg('오디오 파일만 업로드할 수 있습니다.');
       return;
     }
 
@@ -63,7 +63,7 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
       if (droppedFile.type.startsWith('audio/') || droppedFile.name.match(/\.(m4a|mp3|wav|ogg|aac|amr|flac)$/i)) {
         handleFileChange(droppedFile);
       } else {
-        setErrorMsg('오디오 파일(.m4a, .mp3, .wav 등)만 업로드할 수 있습니다.');
+        setErrorMsg('오디오 파일만 업로드할 수 있습니다.');
       }
     }
   }, [audioUrl]);
@@ -235,11 +235,11 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>탭하여 음성/녹음 파일 선택</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                     .m4a · .mp3 · .wav · .aac · .amr
-                  </div>
+ </div>
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2, background: 'rgba(15,23,42,0.6)', padding: '3px 8px', borderRadius: 6 }}>
-                  폰: [내 파일] ➔ [Recordings] ➔ [Call]
-                </div>
+                  폰: [내 파일] [Recordings] [Call]
+ </div>
               </label>
             ) : (
               <div
@@ -309,7 +309,7 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
                     }}
                   >
                     제거
-                  </button>
+ </button>
                 </div>
               </div>
             )}
@@ -341,7 +341,7 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {sel && '✓ '}{ctx.label}
+                    {sel && ''}{ctx.label}
                   </button>
                 );
               })}
@@ -392,7 +392,7 @@ export const CallAudioUploadModal: React.FC<CallAudioUploadModalProps> = ({
             style={{ padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600, background: 'var(--bg-card)', border: '1px solid #334155', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             취소
-          </button>
+ </button>
           {(() => {
             const canSubmit = !uploading && (!!file || summaryText.trim().length > 0) && selectedContexts.size > 0;
             return (

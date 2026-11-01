@@ -87,7 +87,7 @@ export const SiteOptionManage: React.FC = () => {
 
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
 
-  // ── 🧭 외부 네비게이션 페이로드 수신 처리 ──
+  // ──  외부 네비게이션 페이로드 수신 처리 ──
   useEffect(() => {
     if (navigationPayload) {
       if (navigationPayload.siteId) {
@@ -134,7 +134,7 @@ export const SiteOptionManage: React.FC = () => {
     onConfirm: () => {}
   });
 
-  // ── 🗺️ O(1) 고속 조회용 인덱스 맵 ──
+  // ──  O(1) 고속 조회용 인덱스 맵 ──
   const customerMap = useMemo(() => {
     const map = new Map<string, Customer>();
     (customers || []).forEach((c: Customer) => map.set(c.id, c));
@@ -158,7 +158,7 @@ export const SiteOptionManage: React.FC = () => {
     return map;
   }, [sites]);
 
-  // ── 🏢 각 옵션 그룹별 상속받은 고객현장 집계 ──
+  // ──  각 옵션 그룹별 상속받은 고객현장 집계 ──
   const siteCustomerStatsMap = useMemo(() => {
     const stats: Record<string, {
       linkedSiteCount: number;
@@ -185,7 +185,7 @@ export const SiteOptionManage: React.FC = () => {
     return stats;
   }, [siteMasters, sitesByMasterMap, customerMap]);
 
-  // ── 🎯 필터링된 옵션 그룹 목록 ──
+  // ──  필터링된 옵션 그룹 목록 ──
   const filteredSites = useMemo(() => {
     const kw = searchSiteKeyword.trim();
     const matcher = kw ? createHangulMatcher(kw) : null;
@@ -217,7 +217,7 @@ export const SiteOptionManage: React.FC = () => {
     return siteMasterMap.get(selectedSiteId) || null;
   }, [siteMasterMap, selectedSiteId]);
 
-  // ── 🔄 옵션 그룹 선택 시 옵션품목마스터에서 옵션값 로드 ──
+  // ──  옵션 그룹 선택 시 옵션품목마스터에서 옵션값 로드 ──
   useEffect(() => {
     if (!activeSite) {
       setWorkingOptionItems([]);
@@ -236,7 +236,7 @@ export const SiteOptionManage: React.FC = () => {
     setWorkingOptionItems(inherited);
   }, [activeSite, standardOptions]);
 
-  // ── 🔧 작업대 옵션 배열(SiteOptionItem[])을 SiteMaster 저장 포맷으로 직렬화 ──
+  // ──  작업대 옵션 배열(SiteOptionItem[])을 SiteMaster 저장 포맷으로 직렬화 ──
   const serializeOptionItems = (items: SiteOptionItem[], baseSpecs?: Record<string, any>) => {
     const paidNames = items
       .filter(item => item.category === 'PAID' && item.isEnabled)
@@ -474,7 +474,7 @@ export const SiteOptionManage: React.FC = () => {
     });
   };
 
-  // ── 💡 옵션 적용 여부 토글 핸들러 ──
+  // ──  옵션 적용 여부 토글 핸들러 ──
   const handleToggleOption = (optionId: string) => {
     setWorkingOptionItems(prev => prev.map(item => {
       if (item.optionId === optionId) {
@@ -484,7 +484,7 @@ export const SiteOptionManage: React.FC = () => {
     }));
   };
 
-  // ── 💡 보양작업 복수 선택 토글 핸들러 ──
+  // ──  보양작업 복수 선택 토글 핸들러 ──
   const handleToggleProtection = (optionId: string) => {
     setWorkingOptionItems(prev => {
       const targetItem = prev.find(item => item.optionId === optionId);
@@ -535,7 +535,7 @@ export const SiteOptionManage: React.FC = () => {
     });
   };
 
-  // ── 💰 특약 단가 변경 핸들러 ──
+  // ──  특약 단가 변경 핸들러 ──
   const handlePriceChange = (optionId: string, newPrice: number) => {
     setWorkingOptionItems(prev => prev.map(item => {
       if (item.optionId === optionId) {
@@ -545,7 +545,7 @@ export const SiteOptionManage: React.FC = () => {
     }));
   };
 
-  // ── ⭐ 필수 장착 여부 토글 핸들러 ──
+  // ──  필수 장착 여부 토글 핸들러 ──
   const handleToggleRequired = (optionId: string) => {
     setWorkingOptionItems(prev => prev.map(item => {
       if (item.optionId === optionId) {
@@ -555,7 +555,7 @@ export const SiteOptionManage: React.FC = () => {
     }));
   };
 
-  // ── 📝 메모 변경 핸들러 ──
+  // ──  메모 변경 핸들러 ──
   const handleNoteChange = (optionId: string, note: string) => {
     setWorkingOptionItems(prev => prev.map(item => {
       if (item.optionId === optionId) {
@@ -565,7 +565,7 @@ export const SiteOptionManage: React.FC = () => {
     }));
   };
 
-  // ── 📊 작업대 옵션 카테고리별 분류 및 월 유상옵션 총액 1-Pass 집계 ──
+  // ──  작업대 옵션 카테고리별 분류 및 월 유상옵션 총액 1-Pass 집계 ──
   const {
     paidDisabledOptions,
     paidEnabledOptions,
@@ -638,7 +638,7 @@ export const SiteOptionManage: React.FC = () => {
     };
   }, [workingOptionItems]);
 
-  // ── 💾 옵션 그룹 설정 저장 ──
+  // ──  옵션 그룹 설정 저장 ──
   const handleSaveSiteOptions = async () => {
     if (!activeSite) return;
     setIsSaving(true);
@@ -671,7 +671,7 @@ export const SiteOptionManage: React.FC = () => {
     }
   };
 
-  // ── 📥 엑셀 내보내기 ──
+  // ──  엑셀 내보내기 ──
   const handleExportExcel = () => {
     const rows = filteredSites.map(s => {
       const stats = siteCustomerStatsMap[s.id];
@@ -687,7 +687,7 @@ export const SiteOptionManage: React.FC = () => {
     exportToExcel(rows, `현장별옵션그룹_${new Date().toISOString().split('T')[0]}`);
   };
 
-  // ── 🏷️ 옵션 품목 마스터 저장 (신규/수정) ──
+  // ──  옵션 품목 마스터 저장 (신규/수정) ──
   const handleSaveMasterOption = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMasterOption || !editingMasterOption.name?.trim()) {
@@ -699,7 +699,7 @@ export const SiteOptionManage: React.FC = () => {
       const suggestedName = rawName.replace(/\s*,\s*/g, '·');
       setEditingMasterOption(prev => prev ? { ...prev, name: suggestedName } : prev);
       showErrorModal(
-        `옵션 품목명에는 쉼표(,)를 사용할 수 없습니다.\n(다중 옵션 저장 시 구분자와 충돌하여 항목이 분리될 수 있습니다.)\n\n• 입력하신 쉼표(,)를 가운뎃점(·)으로 자동 변환했습니다:\n  [${suggestedName}]\n\n확인 후 다시 [저장] 버튼을 눌러주세요.`
+        `옵션 품목명에는 쉼표(,)를 사용할 수 없습니다.\n(다중 옵션 저장 시 구분자와 충돌하여 항목이 분리될 수 있습니다.)\n\n• 입력하신 쉼표(,)를 가운뎃점(·)으로 자동 변환했습니다:\n [${suggestedName}]\n\n확인 후 다시 [저장] 버튼을 눌러주세요.`
       );
       return;
     }
@@ -763,7 +763,7 @@ export const SiteOptionManage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Edit3 size={16} color="var(--primary)" />
                 현장명(옵션 그룹명) 수정
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowEditSiteMasterModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -797,7 +797,7 @@ export const SiteOptionManage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Copy size={16} color="var(--primary)" />
                 옵션 그룹 복사 등록
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowCopySiteMasterModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -869,7 +869,7 @@ export const SiteOptionManage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Layers size={16} color="var(--primary)" />
                 신규 현장 등록
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowQuickSiteModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -947,10 +947,10 @@ export const SiteOptionManage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             현장별 옵션 관리
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             옵션 그룹 <strong>{siteMasters?.length || 0}</strong>개 (조회 <strong>{filteredSites.length}</strong>개)
-          </span>
+ </span>
         </div>
       </div>
 
@@ -978,7 +978,7 @@ export const SiteOptionManage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               옵션 그룹 검색
-            </span>
+ </span>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Search size={14} style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)' }} />
               <input
@@ -1036,7 +1036,7 @@ export const SiteOptionManage: React.FC = () => {
             >
               <Building2 size={13} />
               현장별 옵션 관리
-            </button>
+ </button>
           </div>
 
           <button
@@ -1062,7 +1062,7 @@ export const SiteOptionManage: React.FC = () => {
           >
             <Sliders size={13} color="#ffffff" />
             옵션 품목 마스터
-          </button>
+ </button>
 
           <button
             type="button"
@@ -1085,7 +1085,7 @@ export const SiteOptionManage: React.FC = () => {
           >
             <Plus size={14} />
             신규 현장 등록
-          </button>
+ </button>
 
           <button
             type="button"
@@ -1108,7 +1108,7 @@ export const SiteOptionManage: React.FC = () => {
           >
             <Download size={13} />
             엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1143,10 +1143,10 @@ export const SiteOptionManage: React.FC = () => {
             }}>
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 옵션 그룹 목록 ({filteredSites.length}개)
-              </span>
+ </span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 클릭 시 옵션 설정
-              </span>
+ </span>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1216,7 +1216,7 @@ export const SiteOptionManage: React.FC = () => {
                             }}
                           >
                             <Copy size={11} /> 복사
-                          </button>
+ </button>
                           <ChevronRight size={14} color={isSelected ? 'var(--primary)' : 'var(--text-muted)'} />
                         </div>
                       </div>
@@ -1225,7 +1225,7 @@ export const SiteOptionManage: React.FC = () => {
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <span className={`badge ${paidCount > 0 ? 'badge-primary' : 'badge-secondary'}`} style={{ fontSize: '10.5px', whiteSpace: 'nowrap' }}>
                           유상옵션 {paidCount}개
-                        </span>
+ </span>
 
                         {hasProt && (
                           <span className="badge badge-success" style={{ fontSize: '10.5px', whiteSpace: 'nowrap' }}>
@@ -1236,19 +1236,19 @@ export const SiteOptionManage: React.FC = () => {
                         {attachmentCount > 0 && (
                           <span className="badge" style={{ fontSize: '10.5px', whiteSpace: 'nowrap', backgroundColor: 'rgba(124, 58, 237, 0.12)', color: '#7c3aed', fontWeight: 700 }}>
                             부착물 {attachmentCount}개
-                          </span>
+ </span>
                         )}
 
                         {specCount > 0 && (
                           <span className="badge badge-warning" style={{ fontSize: '10.5px', whiteSpace: 'nowrap' }}>
                             요구사양 {specCount}개
-                          </span>
+ </span>
                         )}
 
                         {linkedCount > 0 && (
                           <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                             상속 {linkedCount}곳
-                          </span>
+ </span>
                         )}
                       </div>
                     </div>
@@ -1312,7 +1312,7 @@ export const SiteOptionManage: React.FC = () => {
                               whiteSpace: 'nowrap'
                             }}>
                               상속 고객현장 {activeStats.linkedSiteCount}곳
-                            </span>
+ </span>
                           </div>
 
                           {activeStats.linkedSiteCount > 0 && (
@@ -1344,7 +1344,7 @@ export const SiteOptionManage: React.FC = () => {
                             }}
                           >
                             <Copy size={13} /> 옵션 그룹 복사
-                          </button>
+ </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEditMaster(activeSite)}
@@ -1364,7 +1364,7 @@ export const SiteOptionManage: React.FC = () => {
                             }}
                           >
                             <Edit3 size={13} /> 그룹명 수정
-                          </button>
+ </button>
                           <button
                             type="button"
                             data-mid="btn-delete-site"
@@ -1385,7 +1385,7 @@ export const SiteOptionManage: React.FC = () => {
                             }}
                           >
                             <Trash2 size={13} /> 그룹 삭제
-                          </button>
+ </button>
                         </div>
                       </>
                     );
@@ -1400,7 +1400,7 @@ export const SiteOptionManage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Shield size={15} color="#2563eb" /> 1. 유상 옵션
-                      </span>
+ </span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
@@ -1481,7 +1481,7 @@ export const SiteOptionManage: React.FC = () => {
                             <tr>
                               <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                                 추가된 유상 옵션이 없습니다. 상단 항목을 클릭하여 추가해주세요.
-                              </td>
+ </td>
                             </tr>
                           ) : (
                             paidEnabledOptions.map(item => (
@@ -1499,7 +1499,7 @@ export const SiteOptionManage: React.FC = () => {
                                     style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', border: '1px solid #fca5a5', backgroundColor: '#fef2f2', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}
                                   >
                                     제외
-                                  </button>
+ </button>
                                 </td>
                                 <td style={{ padding: '8px 10px', fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>
                                   {item.name}
@@ -1563,7 +1563,7 @@ export const SiteOptionManage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Shield size={15} color="#059669" /> 2. 무상 옵션
-                      </span>
+ </span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
@@ -1600,7 +1600,7 @@ export const SiteOptionManage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Layers size={15} color="#7c3aed" /> 3. 부착물
-                      </span>
+ </span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
@@ -1631,7 +1631,7 @@ export const SiteOptionManage: React.FC = () => {
                       {attachmentEnabledOptions.length === 0 ? (
                         <div style={{ padding: '16px', textAlign: 'center', width: '100%', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '6px', fontSize: '12px' }}>
                           적용된 부착물이 없습니다. 상단 항목을 클릭하여 추가해주세요.
-                        </div>
+ </div>
                       ) : (
                         attachmentEnabledOptions.map(item => (
                           <div
@@ -1665,7 +1665,7 @@ export const SiteOptionManage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <CheckSquare size={15} color="#d97706" /> 4. 현장 요구 사양
-                      </span>
+ </span>
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
@@ -1696,7 +1696,7 @@ export const SiteOptionManage: React.FC = () => {
                       {specEnabledOptions.length === 0 ? (
                         <div style={{ padding: '16px', textAlign: 'center', width: '100%', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '6px', fontSize: '12px' }}>
                           적용된 요구 사양이 없습니다. 상단 항목을 클릭하여 추가해주세요.
-                        </div>
+ </div>
                       ) : (
                         specEnabledOptions.map(item => (
                           <div
@@ -1771,7 +1771,7 @@ export const SiteOptionManage: React.FC = () => {
                           style={{ width: '15px', height: '15px', cursor: 'pointer' }}
                         />
                         연결된 고객현장({siteCustomerStatsMap[activeSite.id]?.linkedSiteCount || 0}곳)에 옵션 일괄 반영
-                      </label>
+ </label>
                     )}
 
                     <button
@@ -1794,7 +1794,7 @@ export const SiteOptionManage: React.FC = () => {
                     >
                       <Copy size={14} />
                       다른 이름으로 복사 등록
-                    </button>
+ </button>
 
                     <button data-hs-trigger="Save"
                       type="button"
@@ -1847,7 +1847,7 @@ export const SiteOptionManage: React.FC = () => {
             <div>
               <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
                 옵션 품목 마스터
-              </h3>
+ </h3>
             </div>
 
             <button data-hs-trigger="Register"
@@ -1881,7 +1881,7 @@ export const SiteOptionManage: React.FC = () => {
             >
               <Plus size={14} />
               신규 옵션 품목 등록
-            </button>
+ </button>
           </div>
 
           {/* 마스터 그리드 */}
@@ -1968,7 +1968,7 @@ export const SiteOptionManage: React.FC = () => {
                           }}
                         >
                           수정
-                        </button>
+ </button>
                       </td>
                     </tr>
                   );
@@ -1979,7 +1979,7 @@ export const SiteOptionManage: React.FC = () => {
         </div>
       )}
 
-      {/* ── 🏷️ 옵션 품목 마스터 등록/수정 모달 ── */}
+      {/* ──  옵션 품목 마스터 등록/수정 모달 ── */}
       {showMasterModal && editingMasterOption && (
         <div style={{
           position: 'fixed',
@@ -2013,7 +2013,7 @@ export const SiteOptionManage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                 옵션 분류 *
-              </label>
+ </label>
               <select
                 value={editingMasterOption.category || 'PAID'}
                 onChange={e => setEditingMasterOption({ ...editingMasterOption, category: e.target.value as any })}
@@ -2037,7 +2037,7 @@ export const SiteOptionManage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                 옵션 품목명 *
-              </label>
+ </label>
               <input
                 type="text"
                 required
@@ -2058,14 +2058,14 @@ export const SiteOptionManage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '2px', padding: '5px 8px', borderRadius: '6px', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444' }}>
                     품목명에 쉼표(,)는 사용할 수 없습니다. 가운뎃점(·)을 사용해 주세요.
-                  </span>
+ </span>
                   <button
                     type="button"
                     onClick={() => setEditingMasterOption({ ...editingMasterOption, name: (editingMasterOption.name || '').replace(/\s*,\s*/g, '·') })}
                     style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ef4444', backgroundColor: '#ef4444', color: '#ffffff', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                   >
                     · 로 변환
-                  </button>
+ </button>
                 </div>
               )}
             </div>
@@ -2074,7 +2074,7 @@ export const SiteOptionManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                   기준 단가 (₩)
-                </label>
+ </label>
                 <input
                   type="number"
                   value={editingMasterOption.defaultPrice || 0}
@@ -2095,7 +2095,7 @@ export const SiteOptionManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                   단위
-                </label>
+ </label>
                 <select
                   value={editingMasterOption.unit || '월'}
                   onChange={e => setEditingMasterOption({ ...editingMasterOption, unit: e.target.value })}
@@ -2120,7 +2120,7 @@ export const SiteOptionManage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                 품목 설명
-              </label>
+ </label>
               <input
                 type="text"
                 placeholder="규격 및 안전 점검 내용"
@@ -2148,7 +2148,7 @@ export const SiteOptionManage: React.FC = () => {
               />
               <label htmlFor="optActive" style={{ fontSize: '12.5px', fontWeight: 700, cursor: 'pointer' }}>
                 전사 옵션 상속 풀에 사용 활성화
-              </label>
+ </label>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
@@ -2179,7 +2179,7 @@ export const SiteOptionManage: React.FC = () => {
                     }}
                   >
                     삭제
-                  </button>
+ </button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -2200,7 +2200,7 @@ export const SiteOptionManage: React.FC = () => {
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Save"
                   type="submit"
                   style={{
@@ -2215,7 +2215,7 @@ export const SiteOptionManage: React.FC = () => {
                   }}
                 >
                   저장
-                </button>
+ </button>
               </div>
             </div>
           </form>
@@ -2253,7 +2253,7 @@ export const SiteOptionManage: React.FC = () => {
                   }}
                 >
                   취소
-                </button>
+ </button>
               )}
               <button
                 type="button"

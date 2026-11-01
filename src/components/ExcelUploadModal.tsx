@@ -259,10 +259,10 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
                 엑셀 표준 서식 다운로드
-              </span>
+ </span>
               <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                 표준 양식에 맞추어 작성 후 업로드하면 1초 만에 일괄 적재됩니다.
-              </span>
+ </span>
             </div>
             <button
               type="button"
@@ -313,10 +313,10 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
             <Upload size={28} color="var(--primary)" style={{ margin: '0 auto 8px auto', display: 'block' }} />
             <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
               엑셀 파일을 드래그하거나 클릭하여 선택
-            </div>
+ </div>
             <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
               지원 형식: .xlsx, .xls, .csv
-            </div>
+ </div>
           </div>
 
           {/* 3단계: 유효성 검증 오류 메시지 표출 */}
@@ -358,7 +358,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
               <CheckCircle2 size={16} />
               <span>
                 성공적으로 <strong>{uploadResult.successCount}건</strong>이 데이터베이스에 일괄 등록되었습니다.
-                {uploadResult.message ? ` (${uploadResult.message})` : ''}
+ {uploadResult.message ? ` (${uploadResult.message})` : ''}
               </span>
             </div>
           )}
@@ -369,14 +369,14 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>
                   업로드 대상 데이터 미리보기 (총 {parsedRows.length}건)
-                </span>
+ </span>
                 <button
                   type="button"
                   onClick={handleReset}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '11.5px', textDecoration: 'underline' }}
                 >
                   초기화
-                </button>
+ </button>
               </div>
 
               <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
@@ -406,7 +406,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
               {parsedRows.length > 15 && (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right' }}>
                   * 화면에는 상위 15건만 표시되며, 총 {parsedRows.length}건 전체가 등록됩니다.
-                </div>
+ </div>
               )}
             </div>
           )}
@@ -429,7 +429,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
             style={{ padding: '7px 16px', fontSize: '12.5px', fontWeight: '600' }}
           >
             닫기
-          </button>
+ </button>
           <button
             type="button"
             onClick={handleConfirmUpload}

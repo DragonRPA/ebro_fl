@@ -100,7 +100,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
             <Monitor size={18} color="var(--primary)" />
             <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
               PC 에이전트 실행 안내
-            </h3>
+ </h3>
           </div>
           <button
             onClick={onClose}
@@ -129,10 +129,10 @@ export const AgentRequiredModal: React.FC<Props> = ({
               <CheckCircle2 size={32} color="#16a34a" />
               <div style={{ fontSize: '15px', fontWeight: 700, color: '#15803d' }}>
                 에이전트 연결 완료
-              </div>
+ </div>
               <div style={{ fontSize: '12px', color: '#166534' }}>
                 로컬 에이전트(포트 5175)와 정상 연결되었습니다. 잠시 후 창이 닫힙니다.
-              </div>
+ </div>
             </div>
           ) : (
             <>
@@ -148,7 +148,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
                 <AlertTriangle size={20} color="#d97706" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ lineHeight: 1.5, color: '#92400e' }}>
                   <b>[{actionName}]</b> 처리를 위해 PC의 <b>eBro 에이전트</b> 연결이 필요합니다. 에이전트가 실행 중인지 확인해 주세요.
-                </div>
+ </div>
               </div>
 
               <div style={{
@@ -180,7 +180,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
                   fontWeight: 600
                 }}>
                   아직 에이전트가 응답하지 않습니다. 프로그램을 실행한 후 다시 시도해 주세요.
-                </div>
+ </div>
               )}
             </>
           )}
@@ -214,7 +214,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
           >
             <Download size={13} color="var(--primary)" />
             통합 설치 프로그램 다운로드
-          </button>
+ </button>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -231,7 +231,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
               }}
             >
               닫기
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleRetry}
@@ -252,7 +252,7 @@ export const AgentRequiredModal: React.FC<Props> = ({
             >
               <RefreshCw size={12} className={isRetrying ? 'animate-spin' : ''} />
               재연결 시도
-            </button>
+ </button>
           </div>
         </div>
       </div>

@@ -434,7 +434,7 @@ export function mergeVoiceFragmentToDraft(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🛡️ 유상옵션, 보양작업, 요구사양 음성 파서
+//  유상옵션, 보양작업, 요구사양 음성 파서
 // ─────────────────────────────────────────────────────────────
 export interface ParsedOptionsSpecsResult {
   paidOptions: string;
@@ -549,7 +549,7 @@ export function parseOptionsAndSpecsVoiceInput(text: string): ParsedOptionsSpecs
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🚚 운송비 부담주체, 배차 차종 및 청구 마감조건 음성 파서
+//  운송비 부담주체, 배차 차종 및 청구 마감조건 음성 파서
 // ─────────────────────────────────────────────────────────────
 export interface ParsedLogisticsBillingResult {
   billableToCustomer?: boolean;
@@ -640,7 +640,7 @@ export function parseLogisticsAndBillingVoiceInput(text: string): ParsedLogistic
 
 
 // ─────────────────────────────────────────────────────────────
-// 🔧 2. 현장 AS 접수 통화 텍스트 파서
+//  2. 현장 AS 접수 통화 텍스트 파서
 // ─────────────────────────────────────────────────────────────
 export interface AsCallParseResult {
   customerName: string;
@@ -815,7 +815,7 @@ export function parseAsCallTranscript(
 
 
 // ─────────────────────────────────────────────────────────────
-// 🚚 3. 배차 담당자 기사 배정 통화 파서
+//  3. 배차 담당자 기사 배정 통화 파서
 // ─────────────────────────────────────────────────────────────
 export interface DispatchDriverParseResult {
   matchedDeliveryId?: string;
@@ -957,7 +957,7 @@ export function parseDispatchDriverCallTranscript(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🏗️ 4. 장비 규격 및 제조사 지식 매트릭스
+//  4. 장비 규격 및 제조사 지식 매트릭스
 // ─────────────────────────────────────────────────────────────
 export interface EquipmentSpecMatrixItem {
   manufacturer: string;
@@ -971,30 +971,30 @@ export interface EquipmentSpecMatrixItem {
 
 export const EQUIPMENT_SPEC_MATRIX: EquipmentSpecMatrixItem[] = [
   // 19ft
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '19ft', modelName: 'GS-1930', modelNumberAliases: ['1930', '일구삼공', '19', '십구'], widthType: 'STANDARD', displayName: '지니 GS-1930 (19ft 표준)' },
-  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', '스카이자켓', 'SKYJACK'], ft: '19ft', modelName: 'SJ-3219', modelNumberAliases: ['3219', '삼이일구', '3215', '삼이일오'], widthType: 'STANDARD', displayName: '스카이잭 SJ-3219 (19ft 표준)' },
-  { manufacturer: 'Dingli', manufacturerAliases: ['딩리', '딩글리', 'DINGLI'], ft: '19ft', modelName: 'JCPT0608', modelNumberAliases: ['0608', '공육공팔'], widthType: 'NARROW', displayName: '딩리 JCPT0608 (19ft 소형)' },
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '19ft', modelName: 'GS-1930', modelNumberAliases: ['1930', '일구삼공', '19', '십구'], widthType: 'STANDARD', displayName: '지니 GS-1930' },
+  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', '스카이자켓', 'SKYJACK'], ft: '19ft', modelName: 'SJ-3219', modelNumberAliases: ['3219', '삼이일구', '3215', '삼이일오'], widthType: 'STANDARD', displayName: '스카이잭 SJ-3219' },
+  { manufacturer: 'Dingli', manufacturerAliases: ['딩리', '딩글리', 'DINGLI'], ft: '19ft', modelName: 'JCPT0608', modelNumberAliases: ['0608', '공육공팔'], widthType: 'NARROW', displayName: '딩리 JCPT0608' },
 
   // 26ft
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '26ft', modelName: 'GS-2632', modelNumberAliases: ['2632', '이육삼이', '26', '이십육'], widthType: 'NARROW', displayName: '지니 GS-2632 (26ft 협폭)' },
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '26ft', modelName: 'GS-2646', modelNumberAliases: ['2646', '이육사육'], widthType: 'WIDE', displayName: '지니 GS-2646 (26ft 광폭)' },
-  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '26ft', modelName: 'SJ-3226', modelNumberAliases: ['3226', '삼이이육'], widthType: 'NARROW', displayName: '스카이잭 SJ-3226 (26ft 협폭)' },
-  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '26ft', modelName: 'SJ-4626', modelNumberAliases: ['4626', '사육이육'], widthType: 'WIDE', displayName: '스카이잭 SJ-4626 (26ft 광폭)' },
-  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '26ft', modelName: 'GTJZ0812', modelNumberAliases: ['0812', '공팔일이', '812', '팔일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ0812 (26ft 광폭)' },
-  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '26ft', modelName: 'GTJZ0808', modelNumberAliases: ['0808', '공팔공팔'], widthType: 'NARROW', displayName: '시노붐 GTJZ0808 (26ft 협폭)' },
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '26ft', modelName: 'GS-2632', modelNumberAliases: ['2632', '이육삼이', '26', '이십육'], widthType: 'NARROW', displayName: '지니 GS-2632' },
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '26ft', modelName: 'GS-2646', modelNumberAliases: ['2646', '이육사육'], widthType: 'WIDE', displayName: '지니 GS-2646' },
+  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '26ft', modelName: 'SJ-3226', modelNumberAliases: ['3226', '삼이이육'], widthType: 'NARROW', displayName: '스카이잭 SJ-3226' },
+  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '26ft', modelName: 'SJ-4626', modelNumberAliases: ['4626', '사육이육'], widthType: 'WIDE', displayName: '스카이잭 SJ-4626' },
+  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '26ft', modelName: 'GTJZ0812', modelNumberAliases: ['0812', '공팔일이', '812', '팔일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ0812' },
+  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '26ft', modelName: 'GTJZ0808', modelNumberAliases: ['0808', '공팔공팔'], widthType: 'NARROW', displayName: '시노붐 GTJZ0808' },
 
   // 32ft
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '32ft', modelName: 'GS-3246', modelNumberAliases: ['3246', '삼이사육', '32', '삼십이'], widthType: 'WIDE', displayName: '지니 GS-3246 (32ft 광폭)' },
-  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '32ft', modelName: 'SJ-4632', modelNumberAliases: ['4632', '사육삼이'], widthType: 'WIDE', displayName: '스카이잭 SJ-4632 (32ft 광폭)' },
-  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '32ft', modelName: 'GTJZ1012', modelNumberAliases: ['1012', '일공일이', '열일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ1012 (32ft 광폭)' },
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '32ft', modelName: 'GS-3246', modelNumberAliases: ['3246', '삼이사육', '32', '삼십이'], widthType: 'WIDE', displayName: '지니 GS-3246' },
+  { manufacturer: 'Skyjack', manufacturerAliases: ['스카이잭', '스카이', 'SKYJACK'], ft: '32ft', modelName: 'SJ-4632', modelNumberAliases: ['4632', '사육삼이'], widthType: 'WIDE', displayName: '스카이잭 SJ-4632' },
+  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '32ft', modelName: 'GTJZ1012', modelNumberAliases: ['1012', '일공일이', '열일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ1012' },
 
   // 40ft
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '40ft', modelName: 'GS-4047', modelNumberAliases: ['4047', '사공사칠', '40', '사십'], widthType: 'WIDE', displayName: '지니 GS-4047 (40ft 광폭)' },
-  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '40ft', modelName: 'GTJZ1212', modelNumberAliases: ['1212', '일이일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ1212 (40ft 광폭)' },
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '40ft', modelName: 'GS-4047', modelNumberAliases: ['4047', '사공사칠', '40', '사십'], widthType: 'WIDE', displayName: '지니 GS-4047' },
+  { manufacturer: 'Sinoboom', manufacturerAliases: ['시노붐', '시노', 'SINOBOOM'], ft: '40ft', modelName: 'GTJZ1212', modelNumberAliases: ['1212', '일이일이'], widthType: 'WIDE', displayName: '시노붐 GTJZ1212' },
 
   // 46ft & 53ft
-  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '46ft', modelName: 'GS-4655', modelNumberAliases: ['4655', '사육오오', '46', '사십육', '1412'], widthType: 'WIDE', displayName: '지니 GS-4655 (46ft 광폭)' },
-  { manufacturer: 'Dingli', manufacturerAliases: ['딩리', 'DINGLI'], ft: '53ft', modelName: 'S1614AC+', modelNumberAliases: ['1614', '일육일사', '1612', '53', '오십삼'], widthType: 'WIDE', displayName: '딩리 S1614AC+ (53ft 초대형)' }
+  { manufacturer: 'Genie', manufacturerAliases: ['지니', '제니', 'GENIE'], ft: '46ft', modelName: 'GS-4655', modelNumberAliases: ['4655', '사육오오', '46', '사십육', '1412'], widthType: 'WIDE', displayName: '지니 GS-4655' },
+  { manufacturer: 'Dingli', manufacturerAliases: ['딩리', 'DINGLI'], ft: '53ft', modelName: 'S1614AC+', modelNumberAliases: ['1614', '일육일사', '1612', '53', '오십삼'], widthType: 'WIDE', displayName: '딩리 S1614AC+' }
 ];
 
 export interface ParsedEquipmentResult {
@@ -1117,7 +1117,7 @@ export function parseEquipmentVoiceInput(text: string): ParsedEquipmentResult | 
 }
 
 // ─────────────────────────────────────────────────────────────
-// 📅 5. 하차일시 정규화 엔진
+//  5. 하차일시 정규화 엔진
 // ─────────────────────────────────────────────────────────────
 export interface ParsedDateTimeResult {
   date: string;         // YYYY-MM-DD
@@ -1239,7 +1239,7 @@ export function parseDateTimeVoiceInput(text: string, baseDate: Date = new Date(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 👤 6. 단계별 단답형 초정밀 파서
+//  6. 단계별 단답형 초정밀 파서
 // ─────────────────────────────────────────────────────────────
 export function parseCustomerVoiceInput(text: string, customers: Customer[]): Customer | null {
   const clean = decomposeComplexConsonants(text).replace(/주식회사|\(주\)|\s/g, '').toLowerCase();
@@ -1389,7 +1389,7 @@ export function parseSiteVoiceInput(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🤝 7. 대화형 예/아니오 및 담당자 핀포인트 파서
+//  7. 대화형 예/아니오 및 담당자 핀포인트 파서
 // ─────────────────────────────────────────────────────────────
 
 /**
@@ -1490,7 +1490,7 @@ export function isOptionsChangedFromSite(
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🎯 5대 출고의뢰 핵심 항목 충족 검증
+//  5대 출고의뢰 핵심 항목 충족 검증
 // ─────────────────────────────────────────────────────────────
 export interface SlotItemStatus {
   isComplete: boolean;

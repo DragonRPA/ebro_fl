@@ -60,8 +60,8 @@ interface ScoredField {
 interface EquipmentItem { 
   modelName: string; 
   qty: number; 
-  monthlyRate?: number; // 🔒 월단가 (영업사원, 관리부, 경영진 전용)
-  dailyRate?: number;   // 🔒 일단가 (영업사원, 관리부, 경영진 전용)
+  monthlyRate?: number; //  월단가 (영업사원, 관리부, 경영진 전용)
+  dailyRate?: number;   //  일단가 (영업사원, 관리부, 경영진 전용)
 }
 
 export type PaidBy = 'CUSTOMER' | 'OURS' | 'SPLIT';
@@ -175,10 +175,10 @@ export const VoiceDispatch: React.FC = () => {
   }, [inspectionChecklistItems]);
 
   const canSave = hasPermission('smart_dispatch', 'save') || hasPermission('delivery', 'save') || hasPermission('smart_dispatch4', 'save');
-  // 🔒 단가/재무 정보 접근 통제 (영업사원, 관리부/청구담당자, 경영진만 단가 입력 및 조회 허용)
+  //  단가/재무 정보 접근 통제 (영업사원, 관리부/청구담당자, 경영진만 단가 입력 및 조회 허용)
   const hasFinancialAccess = canViewFinancials(currentUser);
 
-  // 🖨️ 원격 분산 인쇄 큐 타겟 스테이션 설정 (1회 선택 시 기억)
+  //  원격 분산 인쇄 큐 타겟 스테이션 설정 (1회 선택 시 기억)
   const PREFERRED_DISPATCH_STATION_KEY = 'preferred_print_station_dispatch';
   const [isAgentPrinting, setIsAgentPrinting] = useState<boolean>(false);
 
@@ -214,11 +214,11 @@ export const VoiceDispatch: React.FC = () => {
     }
   };
 
-  // 🚀 [출고의뢰 정식 생성 및 초안 연계 상태]
+  //  [출고의뢰 정식 생성 및 초안 연계 상태]
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [isSubmittingDispatch, setIsSubmittingDispatch] = useState<boolean>(false);
 
-  // 🟢 출고 요청 및 배차 등록 완료 모달 상태
+  //  출고 요청 및 배차 등록 완료 모달 상태
   interface DispatchSuccessInfo {
     contractId: string;
     contractNo: string;
@@ -269,7 +269,7 @@ export const VoiceDispatch: React.FC = () => {
   const selectedUpload = useMemo(() => callUploads.find(u => u.id === selectedUploadId) || null, [callUploads, selectedUploadId]);
   const selectedDraft = useMemo(() => queue.find(d => d.id === selectedDraftId) || null, [queue, selectedDraftId]);
 
-  // 🌟 [메모 직렬화 파서] DB note 필드에 보존된 배차 핵심 파라미터 역직렬화
+  //  [메모 직렬화 파서] DB note 필드에 보존된 배차 핵심 파라미터 역직렬화
   const parseNoteMeta = useCallback((noteText: string) => {
     let siteAddress = '';
     let unloadingDate = '';
@@ -455,12 +455,12 @@ export const VoiceDispatch: React.FC = () => {
   // ── 업무 유형 (기본값: 기존현장 출고) ──
   const [selectedContext, setSelectedContext] = useState<CallContext>('ADDITIONAL');
 
-  // 🏷️ 옵션 분할 헬퍼 (표준 옵션 마스터의 쉼표 포함 품목명 보존 및 마스터 외 비등록/목업 데이터 원천 차단)
+  //  옵션 분할 헬퍼 (표준 옵션 마스터의 쉼표 포함 품목명 보존 및 마스터 외 비등록/목업 데이터 원천 차단)
   const parseOptionString = useCallback((str?: any): string[] => {
     return splitMasterAwareOptions(str, standardOptions, { onlyMasterOptions: true, stripPrice: true });
   }, [standardOptions]);
 
-  // 🛡️ 보양/부착물/유상옵션 정밀 분류 헬퍼 (하드코딩 배제 — 등록된 옵션 마스터 카테고리만 준수)
+  //  보양/부착물/유상옵션 정밀 분류 헬퍼 (하드코딩 배제 — 등록된 옵션 마스터 카테고리만 준수)
   const isProtectionOption = useCallback((label: string): boolean => {
     const clean = stripOptionPrice(label);
     const protDefs = (standardOptions || []).filter(o => o.category === 'PROTECTION').map(o => o.name);
@@ -473,7 +473,7 @@ export const VoiceDispatch: React.FC = () => {
     return attDefs.includes(clean);
   }, [standardOptions]);
 
-  // 🌟 [현장 마스터 + 연결된 옵션 그룹에서 등록된 옵션 마스터 항목만 자동 로드]
+  //  [현장 마스터 + 연결된 옵션 그룹에서 등록된 옵션 마스터 항목만 자동 로드]
   const loadSiteSafetyOptions = useCallback((site: CustomerSite | null, cust: Customer | null) => {
     const inherited = new Set<string>();
 
@@ -577,13 +577,13 @@ export const VoiceDispatch: React.FC = () => {
   // ── 추가출고 옵션 첨삭 확인 모달 상태 ────────────────────────────────────
   const [optionConfirmModalOpen, setOptionConfirmModalOpen] = useState(false);
 
-  // 🌟 검색어가 없을 때는 고객사를 일절 추천/제시하지 않음 (사용자 피드백 100% 반영)
+  //  검색어가 없을 때는 고객사를 일절 추천/제시하지 않음 (사용자 피드백 100% 반영)
   const filteredCustomers = useMemo(() => {
     if (!customerQuery.trim()) return [];
     return sortCustomersByName(customers.filter(c => matchHangul(c.name, customerQuery))).slice(0, 16);
   }, [customers, customerQuery]);
 
-  // 🌟 [고객 지정 전 현장 노출 완전 차단] 고객사 미선택 시 현장 목록 일절 노출 금지!
+  //  [고객 지정 전 현장 노출 완전 차단] 고객사 미선택 시 현장 목록 일절 노출 금지!
   const filteredSites = useMemo(() => {
     if (!selectedCustomer) return [];
     const base = sites.filter(s => s.customerId === selectedCustomer.id);
@@ -633,7 +633,7 @@ export const VoiceDispatch: React.FC = () => {
   const [activeFt, setActiveFt] = useState(FT_GROUPS[0] || '19ft');
   const [modelSearchQuery, setModelSearchQuery] = useState('');
 
-  // 🌟 전사 제품 마스터(53종), 자산 대장, 제원 매트릭스 100% 통합 풀링
+  //  전사 제품 마스터(53종), 자산 대장, 제원 매트릭스 100% 통합 풀링
   const catalogModels = useMemo(() => {
     const map = new Map<string, {
       modelName: string;
@@ -775,7 +775,7 @@ export const VoiceDispatch: React.FC = () => {
 
   const [note, setNote] = useState('');
 
-  // ── 🌟 [대차 회수 대상 전자산 다수 매핑 및 "모름" 지원] ────────────────────
+  // ──  [대차 회수 대상 전자산 다수 매핑 및 "모름" 지원] ────────────────────
   const [retrievalAssetIds, setRetrievalAssetIds] = useState<string[]>([]);
   const retrievalAssetId = retrievalAssetIds[0] || '';
 
@@ -806,17 +806,17 @@ export const VoiceDispatch: React.FC = () => {
     return assets.filter(a => a.status === 'RENTED' && a.currentCustomerId === selectedCustomer.id);
   }, [selectedCustomer, assets]);
 
-  // ── 🌟 [운송비 귀속선: 기본값 null, 사용자 직접 선택 강제] ───────────────
+  // ──  [운송비 귀속선: 기본값 null, 사용자 직접 선택 강제] ───────────────
   const [paidBy, setPaidBy] = useState<PaidBy | null>(null);
   const [vehicleType, setVehicleType] = useState<string>('5T');
 
-  // ── 🌟 [고객 요청 옵션: 있는 그대로 기록하는 자유 태그 + 현장 연동] ───────
+  // ──  [고객 요청 옵션: 있는 그대로 기록하는 자유 태그 + 현장 연동] ───────
   const [newOptionInput, setNewOptionInput] = useState<string>('');
   const [selectedSafetyOptions, setSelectedSafetyOptions] = useState<Set<string>>(new Set());
   const [initialSiteOptions, setInitialSiteOptions] = useState<Set<string>>(new Set());
   const [saveOptionsToSite, setSaveOptionsToSite] = useState<boolean>(true);
 
-  // 🌟 전사 표준 옵션 마스터 추천 칩 (목업/하드코딩 배제 — 등록된 옵션 마스터만 노출)
+  //  전사 표준 옵션 마스터 추천 칩 (목업/하드코딩 배제 — 등록된 옵션 마스터만 노출)
   const availableOptionSuggestions = useMemo(() => {
     const list: string[] = [];
     (standardOptions || [])
@@ -907,7 +907,7 @@ export const VoiceDispatch: React.FC = () => {
     return false;
   }, [selectedContext, selectedSite, selectedSafetyOptions, initialSiteOptions]);
 
-  // ── 🌟 [다수 장비 시차 출고 메모] ───────────────────────────────────────
+  // ──  [다수 장비 시차 출고 메모] ───────────────────────────────────────
   const [staggeredMemo, setStaggeredMemo] = useState('');
 
   // DB 상속 (현장/고객 변경 시 담당자, 연락처, 마감일정 100% 자동 동기화)
@@ -972,7 +972,7 @@ export const VoiceDispatch: React.FC = () => {
     setSiteQuery('');
     applyInheritance(selectedCustomer, site);
 
-    // 🌟 과거 기록(현장 마스터 또는 배차 대장)에서 옵션 자동 승계
+    //  과거 기록(현장 마스터 또는 배차 대장)에서 옵션 자동 승계
     loadSiteSafetyOptions(site, selectedCustomer);
     setOpenBlock('EQUIPMENT');
   };
@@ -1370,11 +1370,11 @@ export const VoiceDispatch: React.FC = () => {
         targetBlock: 'SCHEDULE',
         status: hasTime ? 'VALID' : 'INVALID',
         currentVal: timeDisplay,
-        hint: '상차 예정 시간 (ASAP, 오전, 오후 또는 시간지정)',
+        hint: '상차 예정 시간',
       },
     ];
 
-    // 🌟 신규현장(신규고객 또는 기존고객 신규현장) 출고 시 청구/거래명세서/결제일정 검증
+    //  신규현장(신규고객 또는 기존고객 신규현장) 출고 시 청구/거래명세서/결제일정 검증
     if (isNewCustomerMode || isRegisteringNewSite) {
       rules.push({
         id: 'BILLING_SCHEDULE',
@@ -1386,7 +1386,7 @@ export const VoiceDispatch: React.FC = () => {
       });
     }
 
-    // 🌟 교환 업무일 때만 회수 전자산 검증 항목 추가 (일반 출고 시 거짓 녹색불 방지)
+    //  교환 업무일 때만 회수 전자산 검증 항목 추가 (일반 출고 시 거짓 녹색불 방지)
     if (isExchangeMode) {
       rules.push({
         id: 'RETRIEVAL_ASSET',
@@ -1415,7 +1415,7 @@ export const VoiceDispatch: React.FC = () => {
 
   // ── 출고 지시 (DB 무누락 저장 & 방어 차단) ───────────────────────────
   const handleSaveDraft = async () => {
-    // 🛡️ 1차 방어 차단: 필수 스키마 누락 체크
+    //  1차 방어 차단: 필수 스키마 누락 체크
     if (!isFormValid) {
       const firstInvalid = invalidRules[0];
       setOpenBlock(firstInvalid.targetBlock);
@@ -1423,7 +1423,7 @@ export const VoiceDispatch: React.FC = () => {
       return;
     }
 
-    // 🌟 [추가출고 첨삭 저장 확인] 기존 옵션에서 첨삭이 발생한 경우 확인 모달 표출
+    //  [추가출고 첨삭 저장 확인] 기존 옵션에서 첨삭이 발생한 경우 확인 모달 표출
     if (isOptionsModified) {
       setOptionConfirmModalOpen(true);
       return;
@@ -1444,7 +1444,7 @@ export const VoiceDispatch: React.FC = () => {
     try {
       setIsSubmittingDispatch(true);
 
-      // 🌟 [첨삭 저장 확인] 현장 기본값으로 저장 선택 시 CustomerSite DB 업데이트
+      //  [첨삭 저장 확인] 현장 기본값으로 저장 선택 시 CustomerSite DB 업데이트
       if (saveToSite && selectedSite) {
         const optionLabels = Array.from(selectedSafetyOptions);
         const paidOpts = optionLabels.filter(label => !isProtectionOption(label) && !isAttachmentOption(label)).join(', ');
@@ -1547,7 +1547,7 @@ export const VoiceDispatch: React.FC = () => {
       const effProtOptStr = allSelOpts.filter(label => isProtectionOption(label)).join(', ') || undefined;
       const effAttOptStr = allSelOpts.filter(label => isAttachmentOption(label)).join(', ') || undefined;
 
-      // 🚀 [실제 출고의뢰 풀 파이프라인 생성: 고객사·현장 신규생성, 계약체결, 배차대장 등록, 장비할당 가상매핑]
+      //  [실제 출고의뢰 풀 파이프라인 생성: 고객사·현장 신규생성, 계약체결, 배차대장 등록, 장비할당 가상매핑]
       const dispatchData = {
         customerName: effectiveCustomerName,
         siteName: effectiveSiteName,
@@ -1598,7 +1598,7 @@ export const VoiceDispatch: React.FC = () => {
           }
         }
 
-        // 🖨️ 출고요청서 HTML 생성 (모달에서 즉시 또는 수동 인쇄 가능)
+        //  출고요청서 HTML 생성 (모달에서 즉시 또는 수동 인쇄 가능)
         let generatedHtmlDoc = '';
         try {
           const { html } = generateDispatchOrderHtml();
@@ -1607,7 +1607,7 @@ export const VoiceDispatch: React.FC = () => {
           console.error('출고 HTML 생성 오류:', printErr);
         }
 
-        // 🛡️ 강제 브라우저 인쇄 모달을 바로 띄워 메인 화면을 가리고 폼이 사라지는 UX 결함 전면 개선:
+        //  강제 브라우저 인쇄 모달을 바로 띄워 메인 화면을 가리고 폼이 사라지는 UX 결함 전면 개선:
         // 성공 확인 전용 모달을 띄워 계약번호, 배차 생성, 이동 링크를 명확히 제시!
         setSuccessModalInfo({
           contractId: res.contractId || '',
@@ -1825,14 +1825,14 @@ export const VoiceDispatch: React.FC = () => {
     if (selectedQueueIds.size < 2) { showToast('2건 이상 선택하세요.', 'error'); return; }
     const selected = queue.filter(d => selectedQueueIds.has(d.id));
 
-    // 🛡️ [고객사 일치 검증 가드]
+    //  [고객사 일치 검증 가드]
     const firstCustomer = selected[0].customerName.value;
     if (selected.some(d => d.customerName.value !== firstCustomer)) {
       showToast('서로 다른 거래처(고객사)의 요청 초안은 하나로 병합할 수 없습니다.', 'error');
       return;
     }
 
-    // 🛡️ [동일 규격 장비 수량 합산]
+    //  [동일 규격 장비 수량 합산]
     const modelQtyMap = new Map<string, number>();
     selected.flatMap(d => d.equipments || []).forEach(e => {
       modelQtyMap.set(e.modelName, (modelQtyMap.get(e.modelName) || 0) + (Number(e.qty) || 1));
@@ -1858,7 +1858,7 @@ export const VoiceDispatch: React.FC = () => {
     }
   };
 
-  // ── 🌟 [WTT 결함 해결 2] 출고 확정 시 실제 배차 대장 생성 ──
+  // ──  [WTT 결함 해결 2] 출고 확정 시 실제 배차 대장 생성 ──
   const handleSubmitDraft = async (draft: DraftOrder) => {
     // 신규 고객 차단 해제 조건: 고객 마스터(고객 관리)에 동일 상호가 등록되어 있을 것.
     // customerRegistered 플래그는 초안 생성 시점에만 설정되고 이후 갱신 경로가 없으므로, 마스터 등록 여부를 직접 조회한다.
@@ -1875,7 +1875,7 @@ export const VoiceDispatch: React.FC = () => {
       return;
     }
 
-    // 🛡️ [현장 100% 일치(===) 검증 및 상세 주소 복원/해결]
+    //  [현장 100% 일치(===) 검증 및 상세 주소 복원/해결]
     const custObj = customers.find(c => c.name === draft.customerName.value) || findCustomerByNormalizedName(customers, draft.customerName.value);
     const trimmedDraftSite = (draft.siteName?.value || '').trim();
     const siteObj = custObj ? sites.find(s => s.customerId === custObj.id && s.name.trim() === trimmedDraftSite) : null;
@@ -1956,7 +1956,7 @@ export const VoiceDispatch: React.FC = () => {
     }
   };
 
-  // ── 통화 파일 ➔ 초안 즉시 생성 ─────────────────────────────
+  // ── 통화 파일  초안 즉시 생성 ─────────────────────────────
   const handleConvertUploadToDraft = async (uploadId: string) => {
     try {
       setIsConvertingId(uploadId);
@@ -1970,7 +1970,7 @@ export const VoiceDispatch: React.FC = () => {
     }
   };
 
-  // ── 통화 파일 ➔ 새 의뢰 작성 폼으로 로드 ──────────────────
+  // ── 통화 파일  새 의뢰 작성 폼으로 로드 ──────────────────
   const handleLoadUploadToForm = (upload: CallUploadRecord) => {
     const phone = upload.callerPhone || parsePhoneFromFileName(upload.fileName);
     const rawCtx = (upload.callContext && upload.callContext[0]) ? upload.callContext[0] : 'ADDITIONAL';
@@ -2044,7 +2044,7 @@ export const VoiceDispatch: React.FC = () => {
   };
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 🖨️ 출고요청서 인쇄 엔진 (A4 세로 정규 서식 & 원격 무인 큐 / 브라우저 직접 인쇄)
+  //  출고요청서 인쇄 엔진 (A4 세로 정규 서식 & 원격 무인 큐 / 브라우저 직접 인쇄)
   // ─────────────────────────────────────────────────────────────────────────
   const generateDispatchOrderHtml = useCallback((targetDraft?: DraftOrder | null) => {
     let customerName = '';
@@ -2457,7 +2457,7 @@ export const VoiceDispatch: React.FC = () => {
     currentUser, sites, closingDay, statementClosingDay, paymentDueDay
   ]);
 
-  // 🖨️ 브라우저 직접 인쇄 모달
+  //  브라우저 직접 인쇄 모달
   const handlePrint = useCallback((htmlDoc: string) => {
     const uniqueName = new Date().getTime();
     const printWindow = window.open('', `Print_${uniqueName}`, 'left=150,top=100,width=880,height=950,menubar=no,toolbar=no,location=no,status=no');
@@ -2483,7 +2483,7 @@ export const VoiceDispatch: React.FC = () => {
     printWindow.document.close();
   }, [showToast]);
 
-  // 🖨️ 현장 분산 인쇄 큐 전송 메소드 (원격지 로컬 프린터 무인 자동 출력)
+  //  현장 분산 인쇄 큐 전송 메소드 (원격지 로컬 프린터 무인 자동 출력)
   const handleRemoteQueuePrint = useCallback(async (htmlDoc: string, custName: string, sName: string) => {
     try {
       setIsAgentPrinting(true);
@@ -2520,7 +2520,7 @@ export const VoiceDispatch: React.FC = () => {
     }
   }, [printStations, targetStationId, enqueuePrintJob, currentUser, showToast, showPrintSuccessModal]);
 
-  // 🖨️ 통합 1-클릭 인쇄 실행 핸들러 (원격 인쇄 큐 전송)
+  //  통합 1-클릭 인쇄 실행 핸들러 (원격 인쇄 큐 전송)
   const handlePrintAction = useCallback(async (targetDraft?: DraftOrder | null) => {
     let draftToPrint: DraftOrder | null = null;
     if (targetDraft) {
@@ -2577,7 +2577,7 @@ export const VoiceDispatch: React.FC = () => {
           <div className="flex items-center justify-between px-1 py-0.5 text-xs text-slate-400">
             <span className="text-[11px] font-semibold text-slate-400">
               5단계 요청 서식 ({openBlocks.size}/5 블록 열림)
-            </span>
+ </span>
             <button
               data-mid="dispatch4-btn-toggle-blocks"
               type="button"
@@ -2638,7 +2638,7 @@ export const VoiceDispatch: React.FC = () => {
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
                     >
                       닫기
-                    </button>
+ </button>
                     <button
                       data-mid="dispatch4-btn-parse"
                       type="button"
@@ -2673,7 +2673,7 @@ export const VoiceDispatch: React.FC = () => {
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-200'
                     }`}
                   >
-                    {active && <span className="mr-1">✓</span>}
+                    {active && <span className="mr-1"></span>}
                     {opt.label}
                   </button>
                 );
@@ -2688,7 +2688,7 @@ export const VoiceDispatch: React.FC = () => {
               <div>
                 <strong className="text-purple-300 font-bold block mb-0.5">신규 고객 2단계 승인 프로세스</strong>
                 영업사원은 기본 정보를 입력해 출고 요청을 발행할 수 있으며, 관리부의 사업자등록 검증 완료 전까지 배차가 자동 차단됩니다.
-              </div>
+ </div>
             </div>
           )}
 
@@ -2705,13 +2705,13 @@ export const VoiceDispatch: React.FC = () => {
                 <span>1. 거래처 (고객사)</span>
                 {!isNewCustomerMode && selectedCustomer && (
                   <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
-                    ✓ {selectedCustomer.name}
+                     {selectedCustomer.name}
                   </span>
                 )}
                 {isNewCustomerMode && newCustomerName && (
                   <span className="text-[11px] font-semibold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded border border-purple-500/30">
-                    ✓ {newCustomerName} (신규)
-                  </span>
+                     {newCustomerName} (신규)
+ </span>
                 )}
               </div>
               {openBlocks.has('CUSTOMER') ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
@@ -2754,7 +2754,7 @@ export const VoiceDispatch: React.FC = () => {
                           className="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 transition"
                         >
                           고객 변경
-                        </button>
+ </button>
                       </div>
                     ) : (
                       <>
@@ -2783,13 +2783,13 @@ export const VoiceDispatch: React.FC = () => {
                             {filteredCustomers.length === 0 && (
                               <div className="text-xs text-slate-500 py-2 px-3">
                                 일치하는 거래처가 없습니다.
-                              </div>
+ </div>
                             )}
                           </div>
                         ) : (
                           <div className="text-xs text-slate-500 py-3 text-center bg-slate-950/40 rounded-lg border border-slate-800/60">
                             거래처명 또는 초성을 입력하면 검색 결과가 표시됩니다.
-                          </div>
+ </div>
                         )}
                       </>
                     )}
@@ -2823,12 +2823,12 @@ export const VoiceDispatch: React.FC = () => {
                 )}
                 {!isNewCustomerMode && !isRegisteringNewSite && selectedSite && (
                   <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
-                    ✓ {selectedSite.name}{contactPerson ? ` (${contactPerson})` : ''}
+                     {selectedSite.name}{contactPerson ? ` (${contactPerson})` : ''}
                   </span>
                 )}
                 {isNewCustomerMode && newSiteName && (
                   <span className="text-[11px] font-semibold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded border border-purple-500/30">
-                    ✓ {newSiteName}{contactPerson ? ` (${contactPerson})` : ''}
+                     {newSiteName}{contactPerson ? ` (${contactPerson})` : ''}
                   </span>
                 )}
               </div>
@@ -2887,7 +2887,7 @@ export const VoiceDispatch: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    {/* 🌟 신규현장 청구 및 결제 마감 일정 (3대 필수 일정) */}
+                    {/*  신규현장 청구 및 결제 마감 일정 (3대 필수 일정) */}
                     <div data-mid="dispatch4-site-schedule" className="pt-2 border-t border-slate-800 flex flex-col gap-2">
                       <div className="text-xs font-bold text-amber-300 flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
@@ -2922,7 +2922,7 @@ export const VoiceDispatch: React.FC = () => {
                           </select>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-semibold text-slate-300">약정 결제일 (익월 N일) *</label>
+                          <label className="text-xs font-semibold text-slate-300">약정 결제일 *</label>
                           <select
                             className="bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:border-cyan-500"
                             value={paymentDueDay}
@@ -3013,7 +3013,7 @@ export const VoiceDispatch: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    {/* 🌟 신규 현장 청구 및 결제 마감 일정 (고객사 기본값 상속 & 현장별 특약 수정) */}
+                    {/*  신규 현장 청구 및 결제 마감 일정 (고객사 기본값 상속 & 현장별 특약 수정) */}
                     <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
                       <div className="text-xs font-bold text-amber-300 flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
@@ -3048,7 +3048,7 @@ export const VoiceDispatch: React.FC = () => {
                           </select>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-semibold text-slate-300">약정 결제일 (익월 N일) *</label>
+                          <label className="text-xs font-semibold text-slate-300">약정 결제일 *</label>
                           <select
                             className="bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:border-purple-500"
                             value={paymentDueDay}
@@ -3072,7 +3072,7 @@ export const VoiceDispatch: React.FC = () => {
                           <span className="font-extrabold text-white text-sm">{selectedSite.name}</span>
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
                             기존 등록 현장
-                          </span>
+ </span>
                         </div>
                         <button
                           type="button"
@@ -3126,7 +3126,7 @@ export const VoiceDispatch: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* 🌟 기존 현장 정산/결제 마감 일정 요약 & 수정 토글 */}
+                      {/*  기존 현장 정산/결제 마감 일정 요약 & 수정 토글 */}
                       <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
@@ -3176,7 +3176,7 @@ export const VoiceDispatch: React.FC = () => {
                               </select>
                             </div>
                             <div className="flex flex-col gap-1">
-                              <label className="text-xs font-semibold text-slate-300">약정 결제일 (익월 N일)</label>
+                              <label className="text-xs font-semibold text-slate-300">약정 결제일</label>
                               <select
                                 className="bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:border-cyan-500"
                                 value={paymentDueDay}
@@ -3268,8 +3268,8 @@ export const VoiceDispatch: React.FC = () => {
                 <span>3. 출고 장비 규격</span>
                 {totalQty > 0 && (
                   <span className="text-xs font-normal text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/50">
-                    ✓ 총 {totalQty}대 선택됨
-                  </span>
+                     총 {totalQty}대 선택됨
+ </span>
                 )}
               </div>
               {openBlocks.has('EQUIPMENT') ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
@@ -3318,8 +3318,8 @@ export const VoiceDispatch: React.FC = () => {
                           onClick={() => setModelSearchQuery('')}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
                         >
-                          ✕
-                        </button>
+                          
+ </button>
                       )}
                     </div>
                   </div>
@@ -3331,7 +3331,7 @@ export const VoiceDispatch: React.FC = () => {
                     </span>
                     <span className="text-xs" style={{ color: 'var(--warning)', fontWeight: 400 }}>
                       * 가용 0대 모델도 출고 요청 가능 (출고/자산 부서에서 외부 임차 장비 매핑 지원)
-                    </span>
+ </span>
                   </div>
                 </div>
 
@@ -3350,11 +3350,11 @@ export const VoiceDispatch: React.FC = () => {
                         {m.availableCount > 0 ? (
                           <span className="dispatch4-qty-badge available">
                             가용 {m.availableCount}대
-                          </span>
+ </span>
                         ) : (
                           <span className="dispatch4-qty-badge shortage">
                             가용 0대 (임차필요)
-                          </span>
+ </span>
                         )}
                       </button>
                     );
@@ -3362,7 +3362,7 @@ export const VoiceDispatch: React.FC = () => {
                   {displayedModels.length === 0 && (
                     <div className="w-full py-4 text-center text-xs text-slate-400 font-normal">
                       일치하는 모델이 없습니다.
-                    </div>
+ </div>
                   )}
                 </div>
 
@@ -3383,7 +3383,7 @@ export const VoiceDispatch: React.FC = () => {
                         <div className="flex items-center justify-between px-1 flex-wrap gap-1">
                           <span className="text-xs font-normal" style={{ color: 'var(--text-main)' }}>
                             선택된 출고 장비 목록 ({equipments.length}종 / 총 {totalQty}대):
-                          </span>
+ </span>
                           {totalAvailShortage > 0 ? (
                             <span className="dispatch4-qty-badge shortage text-xs font-normal px-2 py-0.5 shadow-sm">
                               <span>외부 임차 {totalAvailShortage}대 필요</span>
@@ -3391,7 +3391,7 @@ export const VoiceDispatch: React.FC = () => {
                             </span>
                           ) : (
                             <span className="dispatch4-qty-badge available text-xs font-normal px-2 py-0.5 shadow-sm">
-                              <span>✓ 전량 자사 가용재고 출고 가능</span>
+                              <span> 전량 자사 가용재고 출고 가능</span>
                             </span>
                           )}
                         </div>
@@ -3430,13 +3430,13 @@ export const VoiceDispatch: React.FC = () => {
                                   {spec.manufacturer}
                                 </span>
                               )}
-                              {/* 🌟 가용재고 vs 신청수량 대조 상태 배지 */}
+                              {/*  가용재고 vs 신청수량 대조 상태 배지 */}
                               {isShortage ? (
                                 <span className="dispatch4-qty-badge shortage">
                                   <span>가용 {availCount}대</span>
                                   <span className="underline underline-offset-2 font-normal">
                                     ({availCount === 0 ? '전량' : `${shortage}대`} 임차 필요)
-                                  </span>
+ </span>
                                 </span>
                               ) : (
                                 <span className="dispatch4-qty-badge available">
@@ -3449,7 +3449,7 @@ export const VoiceDispatch: React.FC = () => {
 
                           {/* 우측: 단가 입력(영업/관리/경영진) 및 수량 조절기 & 삭제 액션 */}
                           <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-                            {/* 🔒 영업사원 / 관리부 / 경영진 전용: 단가(월단가/일단가) 입력 UI */}
+                            {/*  영업사원 / 관리부 / 경영진 전용: 단가(월단가/일단가) 입력 UI */}
                             {hasFinancialAccess && (
                               <div className="flex items-center gap-2 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800 shadow-inner">
                                 <div className="flex items-center gap-1">
@@ -3540,7 +3540,7 @@ export const VoiceDispatch: React.FC = () => {
                 ) : (
                   <div className="text-center py-4 px-3 bg-slate-950/60 rounded-lg border border-dashed border-slate-800 flex flex-col items-center justify-center gap-1.5 text-xs text-slate-500">
                     <Package size={20} className="text-slate-600" />
-                    <span>상단 규격 탭(19ft, 26ft 등)에서 모델을 클릭하여 출고 장비를 추가하세요.</span>
+                    <span>상단 규격 탭에서 모델을 클릭하여 출고 장비를 추가하세요.</span>
                   </div>
                 )}
                 </div>
@@ -3561,7 +3561,7 @@ export const VoiceDispatch: React.FC = () => {
                 <span>4. 출고 및 하차 일정</span>
                 {loadingDate && (
                   <span className="text-xs font-black text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/50 font-mono">
-                    ✓ 상차: {loadingDate} {loadingTimeType === 'ASAP' ? '[최우선]' : loadingTimeType === 'MORNING' ? '[오전]' : loadingTimeType === 'AFTERNOON' ? '[오후]' : loadingTimeVal || ''}
+                     상차: {loadingDate} {loadingTimeType === 'ASAP' ? '[최우선]' : loadingTimeType === 'MORNING' ? '[오전]' : loadingTimeType === 'AFTERNOON' ? '[오후]' : loadingTimeVal || ''}
                   </span>
                 )}
               </div>
@@ -3596,8 +3596,8 @@ export const VoiceDispatch: React.FC = () => {
                       <div className="dispatch4-slot-group">
                         {[
                           { id: 'ASAP', label: '최우선' },
-                          { id: 'MORNING', label: '🌅 오전' },
-                          { id: 'AFTERNOON', label: '🌇 오후' },
+                          { id: 'MORNING', label: '오전' },
+                          { id: 'AFTERNOON', label: '오후' },
                           { id: 'EXACT', label: '시간지정' },
                         ].map(slot => (
                           <button
@@ -3650,8 +3650,8 @@ export const VoiceDispatch: React.FC = () => {
                       <div className="dispatch4-slot-group">
                         {[
                           { id: 'ASAP', label: 'ASAP' },
-                          { id: 'MORNING', label: '🌅 오전' },
-                          { id: 'AFTERNOON', label: '🌇 오후' },
+                          { id: 'MORNING', label: '오전' },
+                          { id: 'AFTERNOON', label: '오후' },
                           { id: 'EXACT', label: '시간지정' },
                         ].map(slot => (
                           <button
@@ -3694,7 +3694,7 @@ export const VoiceDispatch: React.FC = () => {
             )}
           </div>
 
-          {/* 🌟 SAFETY & COST 블록 — 안전옵션, 교환회수 ───────────── */}
+          {/*  SAFETY & COST 블록 — 안전옵션, 교환회수 ───────────── */}
           <div data-mid="dispatch4-block-safety" className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden shadow-sm">
             <div
               className={`dispatch4-block-header ${
@@ -3735,7 +3735,7 @@ export const VoiceDispatch: React.FC = () => {
                       )}
                     </div>
 
-                    {/* 🌟 "모름 (현장 확인 후 회수)" 퀵 선택 카드 */}
+                    {/*  "모름 (현장 확인 후 회수)" 퀵 선택 카드 */}
                     <div
                       onClick={toggleUnknownRetrieval}
                       className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer select-none transition ${
@@ -3758,7 +3758,7 @@ export const VoiceDispatch: React.FC = () => {
                         isUnknownRetrieval ? 'bg-amber-900/80 text-amber-200 border-amber-650' : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}>
                         미확정
-                      </span>
+ </span>
                     </div>
 
                     {activeCustomerAssets.length > 0 ? (
@@ -3807,7 +3807,7 @@ export const VoiceDispatch: React.FC = () => {
                       {selectedSafetyOptions.size > 0 && (
                         <span className="text-[10px] text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/50">
                           {selectedSafetyOptions.size}개 등록됨
-                        </span>
+ </span>
                       )}
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -3857,7 +3857,7 @@ export const VoiceDispatch: React.FC = () => {
                   ) : (
                     <div className="text-xs text-slate-500 p-2.5 bg-slate-950/40 rounded-lg border border-slate-850 text-center">
                       등록된 고객 요청 옵션이 없습니다. (아래 입력창에 직접 입력하거나 추천 칩 클릭)
-                    </div>
+ </div>
                   )}
 
                   {/* 추가 가능한 옵션 (미선택 마스터 옵션만 표시) */}
@@ -3922,7 +3922,7 @@ export const VoiceDispatch: React.FC = () => {
             />
           </div>
 
-          {/* 🌟 Gutenberg Z-Pattern 왼쪽 하단 집계 및 감사 요약 바 */}
+          {/*  Gutenberg Z-Pattern 왼쪽 하단 집계 및 감사 요약 바 */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-xs mt-1">
             <div className="flex items-center gap-2.5">
               <div>
@@ -3967,7 +3967,7 @@ export const VoiceDispatch: React.FC = () => {
         <div className="dispatch4-right-pane">
           <div className="dispatch4-right-scroll dispatch4-scrollbar">
 
-          {/* 🛡️ [1] 9대 필수 스키마 유효성 검증 실드 */}
+          {/*  [1] 9대 필수 스키마 유효성 검증 실드 */}
           <div data-mid="dispatch4-validation-shield" className={`rounded-xl border p-4 shadow-lg transition-all ${
             isFormValid
               ? 'bg-emerald-950/50 border-2 border-emerald-500 text-white'
@@ -4038,7 +4038,7 @@ export const VoiceDispatch: React.FC = () => {
             </div>
           </div>
 
-          {/* 📄 [2] 정형화된 출고요청서 요약 */}
+          {/*  [2] 정형화된 출고요청서 요약 */}
           <div data-mid="dispatch4-preview-dossier" className="bg-slate-900 border border-slate-700/80 rounded-xl p-3 shadow-lg select-text flex flex-col gap-2.5">
             {/* 서식 헤더 */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -4048,7 +4048,7 @@ export const VoiceDispatch: React.FC = () => {
                 </span>
                 <h3 className="text-xs font-black text-white tracking-tight">
                   출고요청서
-                </h3>
+ </h3>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -4077,7 +4077,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4 border-b border-slate-700">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   고객사명
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-black text-white text-xs">
                   {custDisplay}
                 </div>
@@ -4085,7 +4085,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4 border-b border-slate-700">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   투입현장
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-black text-slate-100 text-xs">
                   {siteDisplay}
                 </div>
@@ -4093,7 +4093,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4 border-b border-slate-700">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   현장주소
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-bold text-slate-200 break-all text-xs">
                   {addrDisplay}
                 </div>
@@ -4101,7 +4101,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4 border-b border-slate-700">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   현장담당자
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-bold text-slate-100 text-xs">
                   {contactPerson ? `${contactPerson} (${contactPhone || '연락처 미등록'})` : '(담당자 미등록)'}
                 </div>
@@ -4109,7 +4109,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   정산/결제일
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-black text-amber-300 text-xs">
                   청구 {closingDay === 31 ? '말일' : `${closingDay}일`} · 명세서 {statementClosingDay === 31 ? '말일' : `${statementClosingDay}일`} · 결제 익월 {paymentDueDay === 31 ? '말일' : `${paymentDueDay}일`}
                 </div>
@@ -4121,7 +4121,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className="grid grid-cols-4 border-b border-slate-700">
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   상차일시
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-black text-blue-400 font-mono text-xs">
                   {loadingDate
                     ? `${loadingDate} ${loadingTimeType === 'ASAP' ? '[최우선]' : loadingTimeType === 'MORNING' ? '[오전]' : loadingTimeType === 'AFTERNOON' ? '[오후]' : loadingTimeVal || ''}`
@@ -4131,7 +4131,7 @@ export const VoiceDispatch: React.FC = () => {
               <div className={`grid grid-cols-4 ${staggeredMemo ? 'border-b border-slate-700' : ''}`}>
                 <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                   하차일시
-                </div>
+ </div>
                 <div className="col-span-3 bg-slate-900 p-2 font-black text-cyan-400 font-mono text-xs">
                   {unloadingDate || loadingDate
                     ? `${unloadingDate || loadingDate} ${unloadingTimeType === 'ASAP' ? '[최우선]' : unloadingTimeType === 'MORNING' ? '[오전]' : unloadingTimeType === 'AFTERNOON' ? '[오후]' : unloadingTimeVal || '(상차직송)'}`
@@ -4142,7 +4142,7 @@ export const VoiceDispatch: React.FC = () => {
                 <div className="grid grid-cols-4">
                   <div className="col-span-1 bg-slate-800 p-2 font-black text-slate-200 border-r border-slate-700 flex items-center text-xs">
                     시차출고
-                  </div>
+ </div>
                   <div className="col-span-3 bg-slate-900 p-2 font-bold text-slate-200 text-xs">
                     {staggeredMemo}
                   </div>
@@ -4166,11 +4166,11 @@ export const VoiceDispatch: React.FC = () => {
                       {totalAvailShortage > 0 ? (
                         <span className="text-[11px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded font-mono shadow-sm">
                           (임차 {totalAvailShortage}대 필요)
-                        </span>
+ </span>
                       ) : equipments.length > 0 ? (
                         <span className="text-[11px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded font-mono shadow-sm">
                           (자사 가용 충족)
-                        </span>
+ </span>
                       ) : null}
                     </span>
                     <span className="text-blue-400 font-mono font-black text-xs">합계: {totalQty}대</span>
@@ -4199,7 +4199,7 @@ export const VoiceDispatch: React.FC = () => {
                           ) : (
                             <span className="text-[11px] font-black px-2 py-0.5 rounded bg-emerald-600 text-white whitespace-nowrap shadow-sm">
                               자사 가용
-                            </span>
+ </span>
                           )}
                         </div>
                         <div className="col-span-1 text-right font-mono font-black text-blue-400 text-xs">{eq.qty}대</div>
@@ -4209,7 +4209,7 @@ export const VoiceDispatch: React.FC = () => {
                 ) : (
                   <div className="p-3 text-center text-slate-400 font-bold bg-slate-900 text-xs">
                     선택된 장비가 없습니다.
-                  </div>
+ </div>
                 )}
               </div>
             </div>
@@ -4246,7 +4246,7 @@ export const VoiceDispatch: React.FC = () => {
           </div>
         </div>
 
-        {/* 🚀 [3] Gutenberg Z-Pattern Terminal Action — 최하단 고정 완결 바 */}
+        {/*  [3] Gutenberg Z-Pattern Terminal Action — 최하단 고정 완결 바 */}
         <div className="dispatch4-terminal-bar">
           <div className="flex items-center gap-2">
             <button
@@ -4327,7 +4327,7 @@ export const VoiceDispatch: React.FC = () => {
                 }`}
               >
                 좌우 1:1 분할
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setViewFilter('UPLOADS_ONLY')}
@@ -4397,7 +4397,7 @@ export const VoiceDispatch: React.FC = () => {
                   <span className="text-white font-bold">통화 녹음 대장</span>
                   <span className="px-1.5 py-0.2 rounded bg-blue-950 text-blue-300 font-mono text-[10px] font-bold">
                     {callUploads.length}건
-                  </span>
+ </span>
                 </div>
                 <span className="text-[11px] text-slate-400 font-mono">
                   {selectedUpload ? `선택: ${selectedUpload.callerPhone || selectedUpload.fileName}` : '행 클릭 시 상세 표출'}
@@ -4423,7 +4423,7 @@ export const VoiceDispatch: React.FC = () => {
                       <tr>
                         <td colSpan={8} className="text-center py-8 text-slate-500">
                           대기 중인 통화 녹음 파일이 없습니다.
-                        </td>
+ </td>
                       </tr>
                     ) : (
                       callUploads.map(upload => {
@@ -4500,7 +4500,7 @@ export const VoiceDispatch: React.FC = () => {
                                 ) : (
                                   <>
                                     <Zap className="w-3 h-3 text-amber-300" />
-                                    <span>초안 ➔</span>
+                                    <span>초안 </span>
                                   </>
                                 )}
                               </button>
@@ -4534,7 +4534,7 @@ export const VoiceDispatch: React.FC = () => {
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">
                         ({new Date(selectedUpload.createdAt).toLocaleString('ko-KR')})
-                      </span>
+ </span>
                     </div>
                     <button
                       type="button"
@@ -4542,8 +4542,8 @@ export const VoiceDispatch: React.FC = () => {
                       className="text-slate-500 hover:text-white text-xs font-bold"
                       title="선택 해제"
                     >
-                      닫기 ✕
-                    </button>
+                      닫기 
+ </button>
                   </div>
 
                   {selectedUpload.publicUrl ? (
@@ -4551,7 +4551,7 @@ export const VoiceDispatch: React.FC = () => {
                   ) : (
                     <div className="text-[11px] text-slate-400 bg-slate-950 p-1.5 rounded">
                       재생 URL 미등록 ({selectedUpload.fileName})
-                    </div>
+ </div>
                   )}
 
                   {selectedUpload.summaryText ? (
@@ -4563,7 +4563,7 @@ export const VoiceDispatch: React.FC = () => {
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
                           {selectedUpload.summaryText.length}자
-                        </span>
+ </span>
                       </div>
                       <div className="text-xs text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-blue-900/40 max-h-28 overflow-y-auto leading-relaxed whitespace-pre-wrap font-sans dispatch4-scrollbar selection:bg-blue-600">
                         {selectedUpload.summaryText}
@@ -4572,7 +4572,7 @@ export const VoiceDispatch: React.FC = () => {
                   ) : (
                     <div className="text-[11px] text-slate-500 bg-slate-950/60 p-2 rounded border border-slate-800/40 text-center">
                       등록된 모바일 통화 텍스트(메모) 없음
-                    </div>
+ </div>
                   )}
 
                   <div className="flex items-center justify-between pt-1">
@@ -4591,7 +4591,7 @@ export const VoiceDispatch: React.FC = () => {
                         className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 transition"
                       >
                         새 요청 폼으로 복사
-                      </button>
+ </button>
                       <button
                         type="button"
                         disabled={isConvertingId === selectedUpload.id}
@@ -4599,7 +4599,7 @@ export const VoiceDispatch: React.FC = () => {
                         className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm"
                       >
                         <Zap className="w-3 h-3 text-amber-300" />
-                        <span>초안 생성 ➔</span>
+                        <span>초안 생성 </span>
                       </button>
                     </div>
                   </div>
@@ -4614,7 +4614,7 @@ export const VoiceDispatch: React.FC = () => {
                       className="text-blue-400 hover:underline font-bold text-[10.5px]"
                     >
                       첫 번째 녹음 선택
-                    </button>
+ </button>
                   )}
                 </div>
               )}
@@ -4630,7 +4630,7 @@ export const VoiceDispatch: React.FC = () => {
                   <span className="text-white font-bold">출고 요청 초안 대장</span>
                   <span className="px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 font-mono text-[10px] font-bold">
                     {activeQueue.length}건
-                  </span>
+ </span>
                 </div>
                 <span className="text-[11px] text-slate-400 font-mono">
                   {selectedDraft ? `선택: ${selectedDraft.customerName.value || '미정'}` : '행 클릭 시 상세 제원 표출'}
@@ -4658,7 +4658,7 @@ export const VoiceDispatch: React.FC = () => {
                       <tr>
                         <td colSpan={10} className="text-center py-8 text-slate-500">
                           대기 중인 출고 요청 초안이 없습니다.
-                        </td>
+ </td>
                       </tr>
                     ) : (
                       activeQueue.map(draft => {
@@ -4721,7 +4721,7 @@ export const VoiceDispatch: React.FC = () => {
                                 className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10.5px] transition shadow-sm"
                                 title="출고 요청 작성 폼으로 초안 데이터 로드"
                               >
-                                {draft.context.includes('ADDITIONAL') ? '추가출고 작성 ➔' : draft.context.includes('EXCHANGE') ? '대차 요청 작성 ➔' : '출고 요청 작성 ➔'}
+                                {draft.context.includes('ADDITIONAL') ? '추가출고 작성' : draft.context.includes('EXCHANGE') ? '대차 요청 작성' : '출고 요청 작성'}
                               </button>
                             </td>
                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
@@ -4748,7 +4748,7 @@ export const VoiceDispatch: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-white">
-                        {selectedDraft.customerName.value || '(고객사 미정)'} ➔ {selectedDraft.siteName.value || '(현장 미정)'}
+                        {selectedDraft.customerName.value || '(고객사 미정)'} {selectedDraft.siteName.value || '(현장 미정)'}
                       </span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                         selectedDraft.urgency === 'HIGH' ? 'bg-red-950 text-red-300 border-red-800' : 'bg-emerald-950 text-emerald-300 border-emerald-800'
@@ -4762,8 +4762,8 @@ export const VoiceDispatch: React.FC = () => {
                       className="text-slate-500 hover:text-white text-xs font-bold"
                       title="선택 해제"
                     >
-                      닫기 ✕
-                    </button>
+                      닫기 
+ </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-950/70 p-2 rounded border border-slate-800">
@@ -4775,7 +4775,7 @@ export const VoiceDispatch: React.FC = () => {
                       <span className="text-slate-500 block text-[10px]">인수 담당자</span>
                       <span className="text-slate-200">
                         {selectedDraft.contactPerson.value || '-'} ({typeof selectedDraft.contactPhone === 'string' ? selectedDraft.contactPhone : (selectedDraft.contactPhone as any)?.value || '-'})
-                      </span>
+ </span>
                     </div>
                     <div>
                       <span className="text-slate-500 block text-[10px]">상차/하차 일정</span>
@@ -4791,7 +4791,7 @@ export const VoiceDispatch: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 📄 원본 통화 텍스트 대조 (초안 완성도 검증 뷰) */}
+                  {/*  원본 통화 텍스트 대조 (초안 완성도 검증 뷰) */}
                   {(() => {
                     const linkedUpload = callUploads.find(u => (selectedDraft.sourceCallIds || []).includes(u.id));
                     const rawText = linkedUpload?.summaryText || (selectedDraft.note && selectedDraft.note.includes('[통화요약]') ? selectedDraft.note.replace(/^\[통화요약\]\s*/, '').split(' | ')[0] : null);
@@ -4851,7 +4851,7 @@ export const VoiceDispatch: React.FC = () => {
                         className="px-3.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black transition flex items-center gap-1 shadow-sm whitespace-nowrap cursor-pointer"
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
-                        <span>{selectedDraft.context.includes('ADDITIONAL') ? '추가출고 작성 ➔' : selectedDraft.context.includes('EXCHANGE') ? '대차 요청 작성 ➔' : '출고 요청 작성 ➔'}</span>
+                        <span>{selectedDraft.context.includes('ADDITIONAL') ? '추가출고 작성' : selectedDraft.context.includes('EXCHANGE') ? '대차 요청 작성' : '출고 요청 작성'}</span>
                       </button>
                       <button data-hs-trigger="Register"
                         type="button"
@@ -4875,7 +4875,7 @@ export const VoiceDispatch: React.FC = () => {
                       className="text-emerald-400 hover:underline font-bold text-[10.5px]"
                     >
                       첫 번째 초안 선택
-                    </button>
+ </button>
                   )}
                 </div>
               )}
@@ -4899,7 +4899,7 @@ export const VoiceDispatch: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 🖨️ 출력 프린터 지정 & 출고요청서 인쇄 */}
+          {/*  출력 프린터 지정 & 출고요청서 인쇄 */}
           <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 flex-shrink-0">
             <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">출력 프린터</span>
             <select
@@ -4912,12 +4912,12 @@ export const VoiceDispatch: React.FC = () => {
                 printStations.map(st => (
                   <option key={st.id} value={st.id} className="bg-slate-900 text-slate-200">
                     {st.stationName} ({st.localPrinterName})
-                  </option>
+ </option>
                 ))
               ) : (
                 <option value="" className="bg-slate-900 text-slate-400">
                   등록된 프린터 없음
-                </option>
+ </option>
               )}
             </select>
           </div>
@@ -4960,7 +4960,7 @@ export const VoiceDispatch: React.FC = () => {
         }}
       />
 
-      {/* 🌟 [추가출고 현장 옵션 첨삭 저장 확인 모달] */}
+      {/*  [추가출고 현장 옵션 첨삭 저장 확인 모달] */}
       {optionConfirmModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95">
@@ -4977,7 +4977,7 @@ export const VoiceDispatch: React.FC = () => {
             <div className="text-xs text-slate-300 leading-relaxed bg-slate-800/60 p-3.5 rounded-xl border border-slate-750 flex flex-col gap-2">
               <p>
                 현장의 기존 기본 안전/보양 옵션과 다르게 <span className="text-amber-400 font-bold">첨삭(변경)</span>되었습니다.
-              </p>
+ </p>
               <div className="text-[11px] text-slate-400">
                 <p className="font-semibold text-slate-300 mb-1">• 현재 선택된 옵션:</p>
                 <div className="flex flex-wrap gap-1">
@@ -4994,7 +4994,7 @@ export const VoiceDispatch: React.FC = () => {
               </div>
               <p className="text-[11px] text-slate-400 pt-1">
                 변경된 옵션을 이 현장의 마스터 기본값으로 갱신하시겠습니까, 아니면 이번 출고에만 1회성으로 적용하시겠습니까?
-              </p>
+ </p>
             </div>
 
             <div className="flex flex-col gap-2 pt-2">
@@ -5018,13 +5018,13 @@ export const VoiceDispatch: React.FC = () => {
                 className="w-full py-1.5 text-center text-xs font-semibold text-slate-500 hover:text-slate-300 transition"
               >
                 취소 (서식으로 돌아가기)
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🟢 출고 요청 및 배차 등록 완료 모달 */}
+      {/*  출고 요청 및 배차 등록 완료 모달 */}
       {successModalInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
           <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
@@ -5060,7 +5060,7 @@ export const VoiceDispatch: React.FC = () => {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">진행 상태</span>
                   <span className="text-sm font-black text-emerald-400 flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" /> 출고 의뢰 완료
-                  </span>
+ </span>
                 </div>
               </div>
 
@@ -5092,7 +5092,7 @@ export const VoiceDispatch: React.FC = () => {
                   {(successModalInfo.equipments || []).map((eq, idx) => (
                     <span key={idx} className="px-2.5 py-1 rounded-lg bg-blue-950/60 border border-blue-800/60 text-blue-200 text-xs font-mono font-bold">
                       {eq.modelName} × {eq.qty}대
-                    </span>
+ </span>
                   ))}
                 </div>
               </div>
@@ -5102,7 +5102,7 @@ export const VoiceDispatch: React.FC = () => {
                 <Info className="w-4 h-4 flex-shrink-0 text-blue-400 mt-0.5" />
                 <span>
                   출고 의뢰가 정상 접수되었습니다. 출고요청서를 인쇄할 수 있습니다.
-                </span>
+ </span>
               </div>
             </div>
 
@@ -5129,7 +5129,7 @@ export const VoiceDispatch: React.FC = () => {
                 className="py-2 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer whitespace-nowrap"
               >
                 확인
-              </button>
+ </button>
             </div>
           </div>
         </div>

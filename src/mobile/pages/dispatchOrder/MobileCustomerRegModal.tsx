@@ -274,7 +274,7 @@ export const MobileCustomerRegModal: React.FC<MobileCustomerRegModalProps> = ({
                 className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs whitespace-nowrap"
               >
                 취소
-              </button>
+ </button>
               <button
                 type="submit"
                 disabled={isSubmittingCust}

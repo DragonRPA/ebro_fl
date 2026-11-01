@@ -6,13 +6,13 @@ import { Tenant, db } from '../services/db';
 import { isDemoMode } from '../services/demoMode';
 
 /**
- * 🛡️ [특수 기능 가드 판정 함수]
+ *  [특수 기능 가드 판정 함수]
  * 
  * [동작 원칙]:
  * 1. featureId가 SPECIAL_FEATURES_REGISTRY에 등록되지 않은 일반 기능이면?
- *    ➔ return true (일반 기능이므로 100% 무조건 노출, 관리 불필요)
+ *     return true (일반 기능이므로 100% 무조건 노출, 관리 불필요)
  * 2. featureId가 레지스트리에 등록된 '특수 기능'이면?
- *    ➔ currentTenant.specialFeatures 목록에 포함되어 있을 때만 true (미인가 시 false ➔ 숨김)
+ *     currentTenant.specialFeatures 목록에 포함되어 있을 때만 true (미인가 시 false  숨김)
  */
 export function isSpecialFeatureGranted(featureId: string, tenant?: Tenant | null): boolean {
   // 0. 데모 모드(awp-demo 등)에서는 모든 특수 기능(운송료 대사 탭, 통합 지급요청 등)을 100% 허용하여 테스트 보장
@@ -67,7 +67,7 @@ export function isSpecialFeatureGranted(featureId: string, tenant?: Tenant | nul
 }
 
 /**
- * 🎣 React Hook: 현재 테넌트 기준 특수 기능 노출 여부 반환
+ *  React Hook: 현재 테넌트 기준 특수 기능 노출 여부 반환
  */
 export function useSpecialFeature(featureId: string): boolean {
   const { currentTenant } = useApp();
@@ -83,7 +83,7 @@ interface SpecialFeatureGuardProps {
 }
 
 /**
- * 🛡️ 선언적 특수 기능 가드 컴포넌트
+ *  선언적 특수 기능 가드 컴포넌트
  * - 인가된 경우 자식 컴포넌트 렌더링
  * - 미인가 시 fallback (기본 null) 렌더링
  */

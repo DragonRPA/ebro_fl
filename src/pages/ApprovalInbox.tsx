@@ -65,7 +65,7 @@ const ApprovalInbox: React.FC = () => {
           *,
           approval_requests (
             id, event_code, target_table, target_record_id, status, current_step, originator_id, payload,
-            approval_rules ( event_code, event_name, required_tier, is_enabled )
+            approval_rules
           )
         `)
         .eq('approver_id', currentUser.id)
@@ -83,7 +83,7 @@ const ApprovalInbox: React.FC = () => {
             *,
             approval_requests (
               id, event_code, target_table, target_record_id, status, current_step, originator_id,
-              approval_rules ( event_code, event_name, required_tier, is_enabled )
+              approval_rules
             )
           `)
           .eq('approver_id', currentUser.id)
@@ -96,7 +96,7 @@ const ApprovalInbox: React.FC = () => {
     }
 
     if (rawData) {
-      // 🛡️ 결재선 설정에서 사용 안함(is_enabled === false) 항목 제외 + 로컬스토리지 보존 payload 병합
+      //  결재선 설정에서 사용 안함(is_enabled === false) 항목 제외 + 로컬스토리지 보존 payload 병합
       const mergedSteps: InboxStep[] = rawData
         .filter(st => {
           const req = st.approval_requests;
@@ -156,7 +156,7 @@ const ApprovalInbox: React.FC = () => {
     }
     if (targetTable === 'deliveries') {
       const d = (db.deliveries || []).find(x => x.id === targetId);
-      return d ? `배차 [${d.id}] ${d.originAddress || '상차지'} ➔ ${d.destinationAddress || '하차지'}` : targetId;
+      return d ? `배차 [${d.id}] ${d.originAddress || '상차지'} ${d.destinationAddress || '하차지'}` : targetId;
     }
     if (targetTable === 'leave_requests' || targetTable === 'leave_usages') {
       const l = (db.leaveUsages || []).find(x => x.id === targetId);
@@ -454,7 +454,7 @@ const ApprovalInbox: React.FC = () => {
                   });
                 }
                 diffLines.push(
-                  `${it.assetNo || '장비'}(${it.modelName || ''}): 월 ${oldMonthly.toLocaleString()}원(일 ${oldDaily.toLocaleString()}원) ➔ 월 ${newMonthly.toLocaleString()}원(일 ${newDaily.toLocaleString()}원)`
+                  `${it.assetNo || '장비'}(${it.modelName || ''}): 월 ${oldMonthly.toLocaleString()}원(일 ${oldDaily.toLocaleString()}원) 월 ${newMonthly.toLocaleString()}원(일 ${newDaily.toLocaleString()}원)`
                 );
               });
 
@@ -571,7 +571,7 @@ const ApprovalInbox: React.FC = () => {
                 changeDate: new Date().toISOString().split('T')[0],
                 prevEndDate: payload?.asIs?.endDate,
                 newEndDate: parentMaxEnd,
-                description: `[결재 승인 완료] 계약 기간 ${isShortened ? '단축' : '연장'}: ${payload?.asIs?.endDate || '미정'} ➔ ${parentMaxEnd} (사유: ${payload?.reason || '승인 처리'})`,
+                description: `[결재 승인 완료] 계약 기간 ${isShortened ? '단축' : '연장'}: ${payload?.asIs?.endDate || '미정'} ${parentMaxEnd} (사유: ${payload?.reason || '승인 처리'})`,
                 createdAt: new Date().toISOString()
               });
 
@@ -770,7 +770,7 @@ const ApprovalInbox: React.FC = () => {
             <h2 data-mid="approvalInbox-header" style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main, #1e293b)', margin: 0, whiteSpace: 'nowrap' }}>결재함 (수신)</h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)', margin: '2px 0 0' }}>
               대기 중인 결재: {steps.length}건 (현재 접속: {currentUser?.name || '미인증'} [{currentUser?.duty || currentUser?.position || '사원'} | Tier {currentUser ? getUserEffectiveTier(currentUser).effectiveTier : 0}])
-            </p>
+ </p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -794,7 +794,7 @@ const ApprovalInbox: React.FC = () => {
                 return (
                   <option key={u.id} value={u.id}>
                     {u.name} [{posStr} | Tier {effTier}]
-                  </option>
+ </option>
                 );
               })}
             </select>
@@ -805,7 +805,7 @@ const ApprovalInbox: React.FC = () => {
             style={{ padding: '6px 14px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text-main, #475569)' }}
           >
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
@@ -815,7 +815,7 @@ const ApprovalInbox: React.FC = () => {
       {!loading && steps.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', fontSize: '14px', border: '2px dashed var(--border-color, #e2e8f0)', borderRadius: '12px' }}>
           대기 중인 결재 건이 없습니다.
-        </div>
+ </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -854,7 +854,7 @@ const ApprovalInbox: React.FC = () => {
                     background: '#dbeafe', color: '#1d4ed8', fontWeight: 600,
                   }}>
                     {s.step_type === 'CONSENSUS' ? '합의' : '결재'} — {TIER_LABELS[requiredTier] ?? `${requiredTier}티어`} 이상
-                  </span>
+ </span>
                 </div>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>
                   {new Date(s.created_at).toLocaleString('ko-KR')}
@@ -874,7 +874,7 @@ const ApprovalInbox: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 🌟 [As-Is vs To-Be 대조 스튜디오] (Staging Diff Panel) */}
+                {/*  [As-Is vs To-Be 대조 스튜디오] (Staging Diff Panel) */}
                 {payload && (
                   <div style={{
                     margin: '12px 0 14px',
@@ -886,7 +886,7 @@ const ApprovalInbox: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontSize: '12px', fontWeight: 800, color: '#4f46e5' }}>
                         변경 요청 상세 내역 (승인 시 자동 반영 대상)
-                      </span>
+ </span>
                       {payload.reason && (
                         <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                           사유: {payload.reason}
@@ -900,7 +900,7 @@ const ApprovalInbox: React.FC = () => {
                         {payload.toBe.originalSummary && (
                           <div style={{ fontSize: '11px', color: '#0369a1', background: '#f0f9ff', padding: '6px 10px', borderRadius: '4px', marginBottom: '8px', border: '1px solid #bae6fd' }}>
                             {payload.toBe.originalSummary} (특수명세서 품목 합계와 100% 일치 보존 검증 완료)
-                          </div>
+ </div>
                         )}
                         <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                           <thead>
@@ -946,14 +946,14 @@ const ApprovalInbox: React.FC = () => {
                             {payload.asIs?.endDate || '미정'}
                           </div>
                         </div>
-                        <div style={{ fontSize: '18px', color: '#4f46e5', fontWeight: 800 }}>➔</div>
+                        <div style={{ fontSize: '18px', color: '#4f46e5', fontWeight: 800 }}></div>
                         <div>
                           <div style={{ fontSize: '11px', color: '#4f46e5', fontWeight: 700 }}>변경 요청 종료일</div>
                           <div style={{ fontSize: '14px', fontWeight: 800, color: '#4f46e5', marginTop: '2px' }}>
                             {payload.toBe?.endDate || '미정'}
                             <span style={{ fontSize: '11px', marginLeft: '6px', color: payload.actionType === 'CONTRACT_SHORTEN' ? '#dc2626' : '#16a34a' }}>
                               ({payload.actionType === 'CONTRACT_SHORTEN' ? '단축' : '연장'})
-                            </span>
+ </span>
                           </div>
                         </div>
                       </div>
@@ -973,7 +973,7 @@ const ApprovalInbox: React.FC = () => {
                             {(payload.asIs?.equipments || []).map((eq: any, i: number) => (
                               <div key={i} style={{ fontFamily: 'monospace', fontSize: '11.5px' }}>
                                 • {eq.modelName} × {eq.qty}대 (월 {(Number(eq.monthlyRate) || 0).toLocaleString()}원 / 일 {(Number(eq.dailyRate) || 0).toLocaleString()}원)
-                              </div>
+ </div>
                             ))}
                           </div>
                           <div>
@@ -982,7 +982,7 @@ const ApprovalInbox: React.FC = () => {
                               (payload.asIs?.paidOptions || []).map((opt: any, i: number) => (
                                 <div key={i} style={{ fontFamily: 'monospace', fontSize: '11.5px' }}>
                                   • {opt.name} ({(Number(opt.price) || 0).toLocaleString()}원/{opt.unit || '월'}{opt.unit === '대' && (opt.perUnitQty || 1) > 1 ? ` · 1대당 ${opt.perUnitQty}개` : ''})
-                                </div>
+ </div>
                               ))
                             ) : (
                               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>없음</div>
@@ -990,7 +990,7 @@ const ApprovalInbox: React.FC = () => {
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', color: '#4f46e5', fontWeight: 800 }}>➔</div>
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '18px', color: '#4f46e5', fontWeight: 800 }}></div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
                           <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#4f46e5' }}>변경 희망 상태 (승인 시 자동 반영)</div>
@@ -1003,7 +1003,7 @@ const ApprovalInbox: React.FC = () => {
                             {(payload.toBe?.equipments || []).map((eq: any, i: number) => (
                               <div key={i} style={{ fontFamily: 'monospace', fontSize: '11.5px', fontWeight: 700, color: '#4f46e5' }}>
                                 • {eq.modelName} × {eq.qty}대 (월 {(Number(eq.monthlyRate) || 0).toLocaleString()}원 / 일 {(Number(eq.dailyRate) || 0).toLocaleString()}원)
-                              </div>
+ </div>
                             ))}
                           </div>
                           <div>
@@ -1012,7 +1012,7 @@ const ApprovalInbox: React.FC = () => {
                               (payload.toBe?.paidOptions || []).map((opt: any, i: number) => (
                                 <div key={i} style={{ fontFamily: 'monospace', fontSize: '11.5px', fontWeight: 700, color: '#4f46e5' }}>
                                   • {opt.name} ({(Number(opt.price) || 0).toLocaleString()}원/{opt.unit || '월'}{opt.unit === '대' && (opt.perUnitQty || 1) > 1 ? ` · 1대당 ${opt.perUnitQty}개` : ''})
-                                </div>
+ </div>
                               ))
                             ) : (
                               <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>없음</div>
@@ -1030,7 +1030,7 @@ const ApprovalInbox: React.FC = () => {
                             할인 적용 기준일: <strong>{payload.toBe.effectiveDate || '-'}</strong>
                           </span>
                           <span>
-                            월 렌탈료 합계: <strong>{(Number(payload.asIs?.totalOldMonthlyFee) || 0).toLocaleString()}원</strong> ➔{' '}
+                            월 렌탈료 합계: <strong>{(Number(payload.asIs?.totalOldMonthlyFee) || 0).toLocaleString()}원</strong> {' '}
                             <strong style={{ color: '#7c3aed' }}>{(Number(payload.toBe?.totalNewMonthlyFee) || 0).toLocaleString()}원</strong>
                           </span>
                         </div>
@@ -1053,14 +1053,14 @@ const ApprovalInbox: React.FC = () => {
                                 <tr key={idx} style={{ borderTop: '1px solid var(--border-color, #f1f5f9)' }}>
                                   <td style={{ padding: '6px 8px', fontWeight: 700, whiteSpace: 'nowrap' }}>
                                     {it.assetNo} ({it.modelName})
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>{it.startDate || '-'}</td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                                     월 {oldM.toLocaleString()}원 (일 {(Number(it.oldDailyRentalFee) || 0).toLocaleString()}원)
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: '#7c3aed', whiteSpace: 'nowrap' }}>
                                     월 {newM.toLocaleString()}원 (일 {(Number(it.newDailyRentalFee) || 0).toLocaleString()}원)
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: diffM > 0 ? '#7c3aed' : '#dc2626', whiteSpace: 'nowrap' }}>
                                     {diffM >= 0 ? `-${diffM.toLocaleString()}원` : `+${Math.abs(diffM).toLocaleString()}원`}
                                   </td>
@@ -1090,7 +1090,7 @@ const ApprovalInbox: React.FC = () => {
                         )}
                         {(payload.actionType === 'CONTRACT_SUCCEED' || payload.eventCode === 'CONTRACT_SUCCEED') && (
                           <>
-                            <div>승계 방향: <strong>{payload.asIs?.customerName || '기존 고객'}</strong> ➔ <strong style={{ color: '#4f46e5' }}>{payload.toBe?.successorCustomerName || payload.toBe?.newCustomerName || '신규 승계 고객'}</strong></div>
+                            <div>승계 방향: <strong>{payload.asIs?.customerName || '기존 고객'}</strong> <strong style={{ color: '#4f46e5' }}>{payload.toBe?.successorCustomerName || payload.toBe?.newCustomerName || '신규 승계 고객'}</strong></div>
                             <div>승계 기준일: <strong>{payload.toBe?.successionDate || payload.toBe?.transferDate || '-'}</strong> / 승계 대상 장비: <strong>{payload.asIs?.assetCount || (payload.toBe?.selectedAssetIds || payload.toBe?.targetAssetIds || []).length}대</strong></div>
                           </>
                         )}
@@ -1175,7 +1175,7 @@ const ApprovalInbox: React.FC = () => {
                             fontWeight: isCurrentActive ? 700 : 500,
                             border: isCurrentActive ? '1.5px solid #3b82f6' : '1px solid var(--border-color, #e2e8f0)',
                           }}>
-                            {idx + 1}단계: {approverName}{approverPos ? ` (${approverPos})` : ''} {st.step_type === 'CONSENSUS' ? '[합의]' : ''} {st.status === 'APPROVED' ? '✓' : st.status === 'REJECTED' ? '✗' : st.status === 'CANCELLED' ? '(취소)' : isCurrentActive ? '← 심사중' : '(대기)'}
+                            {idx + 1}단계: {approverName}{approverPos ? ` (${approverPos})` : ''} {st.step_type === 'CONSENSUS' ? '[합의]' : ''} {st.status === 'APPROVED' ? '' : st.status === 'REJECTED' ? '' : st.status === 'CANCELLED' ? '(취소)' : isCurrentActive ? '← 심사중' : '(대기)'}
                           </span>
                           {idx < allSteps.length - 1 && <span style={{ color: '#cbd5e1', fontSize: '12px' }}>→</span>}
                         </React.Fragment>
@@ -1191,7 +1191,7 @@ const ApprovalInbox: React.FC = () => {
                     style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px', textDecoration: 'underline' }}
                   >
                     결재 진행 현황 보기
-                  </button>
+ </button>
                 )}
 
                 {/* 반려 사유 입력 */}
@@ -1222,14 +1222,14 @@ const ApprovalInbox: React.FC = () => {
                         style={{ padding: '7px 16px', background: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
                       >
                         취소
-                      </button>
+ </button>
                       <button data-hs-trigger="ConfirmReject"
                         onClick={() => handleAction(s.id, req.id, 'REJECTED')}
                         disabled={loading}
                         style={{ padding: '7px 20px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
                       >
                         반려 확정
-                      </button>
+ </button>
                     </>
                   ) : (
                     <>
@@ -1239,14 +1239,14 @@ const ApprovalInbox: React.FC = () => {
                         style={{ padding: '7px 16px', background: 'var(--bg-card)', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
                       >
                         반려
-                      </button>
+ </button>
                       <button data-mid="approvalInbox-btn-approve" data-hs-trigger="Approve"
                         onClick={() => handleAction(s.id, req.id, 'APPROVED')}
                         disabled={loading}
                         style={{ padding: '7px 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
                       >
                         승인 →
-                      </button>
+ </button>
                     </>
                   )}
                 </div>

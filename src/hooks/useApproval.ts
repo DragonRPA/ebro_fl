@@ -150,7 +150,7 @@ export function useApproval() {
         resolvedRuleEventName = ruleData?.event_name || ruleData?.event_code || '품의';
       }
 
-      // 🛡️ FK 무결성 보장: sys-admin, usr-admin 등 가상 계정 방어 및 실제 DB 사용자(u-1 등) 매핑
+      //  FK 무결성 보장: sys-admin, usr-admin 등 가상 계정 방어 및 실제 DB 사용자(u-1 등) 매핑
       const VIRTUAL_USER_IDS = new Set(['sys-admin', 'usr-admin', 'sys-anon', 'system', 'admin']);
       const isValidUser = originatorId && !VIRTUAL_USER_IDS.has(originatorId) && (db.users || []).some((u: any) => u && u.id === originatorId && !VIRTUAL_USER_IDS.has(u.id));
       const safeOriginatorId = isValidUser ? originatorId : ((db.users || []).find((u: any) => u && u.id === 'u-1')?.id || (db.users || []).find((u: any) => u && !VIRTUAL_USER_IDS.has(u.id))?.id || null);
@@ -232,7 +232,7 @@ export function useApproval() {
       const origTier = originator ? getUserEffectiveTier(originator).effectiveTier : 0;
       const origDeptId = originator?.departmentId;
 
-      // 🛡️ 책임 분리 & 셀프 승인 방지 원칙:
+      //  책임 분리 & 셀프 승인 방지 원칙:
       // 기안자 본인은 어떠한 결재 스텝에도 승인권자로 참여할 수 없음
       const assignedUserIds = new Set<string>();
       if (originatorId) assignedUserIds.add(originatorId);
@@ -249,7 +249,7 @@ export function useApproval() {
         }
       } else if (targetTier <= 6) {
         if (origTier < 4) {
-          milestoneTiers = [4, targetTier]; // 1차 팀장 심사 ➔ 2차 임원 전결
+          milestoneTiers = [4, targetTier]; // 1차 팀장 심사  2차 임원 전결
         } else if (origTier < targetTier) {
           milestoneTiers = [targetTier]; // 임원 전결
         } else {
@@ -258,7 +258,7 @@ export function useApproval() {
       } else {
         // targetTier === 7 (중대/대표이사 결재)
         if (origTier < 4) {
-          milestoneTiers = [4, 7]; // 1차 팀장 심사 ➔ 2차 대표이사 최종 승인
+          milestoneTiers = [4, 7]; // 1차 팀장 심사  2차 대표이사 최종 승인
         } else {
           milestoneTiers = [7]; // 대표이사 최종 승인
         }

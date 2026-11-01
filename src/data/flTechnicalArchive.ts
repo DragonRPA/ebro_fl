@@ -233,7 +233,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     liftingSpeedMms: '440 / 480',
     gradeabilityPercent: 20,
     serviceWeightKg: 4720,
-    powerSpecDetail: '커민스·신차이·구보타 Stage-V 친환경 고출력 디젤 엔진 (DPF+DOC 장착)',
+    powerSpecDetail: '커민스·신차이·구보타 Stage-V 디젤 엔진 · DPF+DOC 장착',
     motorOrEngineDetail: '정격출력 42.6kW / 2,400rpm · 배기량 2,670cc 고토크 커먼레일 엔진',
     chargerOrFuelDetail: '연료탱크 용량 70L · 유체식 토크컨버터 전진1단/후진1단 자동변속기',
     tireSpecFrontRear: '전륜 28×9-15-14PR / 후륜 6.50-10-10PR 중량물 타이어',
@@ -300,7 +300,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     liftingSpeedMms: '430 / 550',
     gradeabilityPercent: 18,
     serviceWeightKg: 3820,
-    powerSpecDetail: '80V / 230Ah CATL 리튬인산철 배터리셀 모듈 (280Ah/410Ah 선택 가능)',
+    powerSpecDetail: '80V / 230Ah CATL 리튬인산철 배터리셀 모듈 · 280Ah/410Ah 선택 가능',
     motorOrEngineDetail: '영구자석 동기모터 시스템 적용으로 기존 AC 모터 대비 에너지 효율 15% 향상',
     chargerOrFuelDetail: '80V 고주파 지능형 충전기 · 2시간 내 완충',
     tireSpecFrontRear: '전륜 7.00-12 / 후륜 6.00-9 솔리드 타이어',
@@ -526,7 +526,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
       '마스트 틸트 각도 센서 및 주차 브레이크 경고 부저 확인'
     ],
     periodicMaintenance: [
-      '매 500시간: 순정 엔진오일(CJ-4/CK-4 저회분 DPF 전용유) 및 필터 교환',
+      '매 500시간: 순정 엔진오일 · CJ-4/CK-4 저회분 DPF 전용유 및 필터 교환',
       '매 1,000시간: 미션오일, 액슬오일 및 유압 필터 교환',
       '매 3,000시간: DPF 내부 애쉬(재) 클리닝 점검'
     ],
@@ -556,7 +556,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     manufacturerName: '두산밥캣',
     originCountry: '국내 매입',
     modelName: 'D25S-7 / D30S-7',
-    seriesName: '7시리즈 프리미엄 디젤 카운터밸런스 2.5톤~3.3톤',
+    seriesName: '7시리즈 디젤 카운터밸런스 2.5톤~3.3톤',
     equipmentClass: '디젤 카운터밸런스',
     powerType: '디젤 내연기관',
     ratedCapacityKg: 3000,
@@ -613,7 +613,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         issuedDate: '2025-10-12',
         r2Url: `${R2_BASE}/DOOSAN_7Series_Diesel_D25S7_D30S7_Brochure.pdf`,
         localUrl: '/archive/fl-docs/DOOSAN_7Series_Diesel_D25S7_D30S7_Brochure.pdf',
-        summary: '두산 7시리즈 디젤지게차 12페이지 공식 풀 카탈로그 및 VDI 상세 제원표 원본 (G2 엔진·ODB 브레이크·마스트 조견표 포함)'
+        summary: '두산 7시리즈 디젤지게차 12페이지 카탈로그 및 VDI 상세 제원표 원본 · G2 엔진·ODB 브레이크·마스트 조견표 포함'
       }
     ]
   },
@@ -735,7 +735,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         id: 'DOC-TOYOTA-8FB25-01',
         docCategory: 'BROCHURE',
         docCategoryLabel: '공식 카탈로그 · 제원서 원본',
-        title: '도요타 8FB 시리즈 (1.0톤~3.5톤, 8FB25 포함) 공식 기술 브로슈어 및 제원표 원본',
+        title: '도요타 8FB 시리즈 · 1.0톤~3.5톤, 8FB25 포함 공식 기술 브로슈어 및 제원표 원본',
         docNo: 'TMHI-8FB-2212',
         language: '영문 공식 원본 + 한국어 요약',
         pageCount: 16,
@@ -743,7 +743,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         issuedDate: '2025-12-01',
         r2Url: `${R2_BASE}/TOYOTA_8FB25_Electric_Brochure.pdf`,
         localUrl: '/archive/fl-docs/TOYOTA_8FB25_Electric_Brochure.pdf',
-        summary: '도요타 머티리얼 핸들링 공식 발행 8FB 전동지게차 16페이지 브로슈어 원본 (SAS 전도방지 기술 및 전 모델 상세 제원 수록)'
+        summary: '도요타 머티리얼 핸들링 공식 발행 8FB 전동지게차 16페이지 브로슈어 원본 · SAS 전도방지 기술 및 전 모델 상세 제원 수록'
       }
     ]
   },
@@ -798,7 +798,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         id: 'DOC-TOYOTA-8FD30-01',
         docCategory: 'BROCHURE',
         docCategoryLabel: '공식 카탈로그 · 제원서 원본',
-        title: '도요타 8FG / 8FD 시리즈 (1.0톤~8.0톤, 8FD25/8FD30 포함) 마스터 카탈로그 원본',
+        title: '도요타 8FG / 8FD 시리즈 · 1.0톤~8.0톤, 8FD25/8FD30 포함 마스터 카탈로그 원본',
         docNo: 'TMHI-8FG8FD-MASTER',
         language: '영문 공식 원본 + 한국어 요약',
         pageCount: 28,

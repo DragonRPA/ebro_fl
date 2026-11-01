@@ -57,14 +57,14 @@ class RealGmailService {
 
   private setEmails(data: SentEmail[]) {
     try {
-      // 💡 [LocalStorage 쿼터 초과 방지] 최근 20건만 유지하고, 긴 본문은 요약본(최대 200자)만 보관
+      //  [LocalStorage 쿼터 초과 방지] 최근 20건만 유지하고, 긴 본문은 요약본(최대 200자)만 보관
       const trimmed = (data || []).slice(0, 20).map(item => ({
         ...item,
         body: item.body && item.body.length > 200 ? item.body.slice(0, 200) + '...' : (item.body || '')
       }));
       localStorage.setItem('sent_emails', JSON.stringify(trimmed));
     } catch (err) {
-      console.warn('⚠️ localStorage sent_emails 저장 쿼터 초과, 안전 정리 모드 실행:', err);
+      console.warn('localStorage sent_emails 저장 쿼터 초과, 안전 정리 모드 실행:', err);
       try {
         // 쿼터 초과 시 본문 제거 후 최소 메타데이터 5건만 보존
         const minimal = (data || []).slice(0, 5).map(item => ({
@@ -185,7 +185,7 @@ class RealGmailService {
     const smtpPort = tenantSmtpFallback?.smtpPort || dbConfig?.smtpPort || lsConfig?.smtpPort || 465;
 
     if (!googleEmail || !gmailAppPassword || gmailAppPassword.includes('•')) {
-      // 🛡️ [전사 표준 헌장 5.9조 테스트 격리 지원] 테스트 모드이거나 개발자 격리 발송인 경우 로컬 모의 발송 보존
+      //  [전사 표준 헌장 5.9조 테스트 격리 지원] 테스트 모드이거나 개발자 격리 발송인 경우 로컬 모의 발송 보존
       if (to === 'admin@ebro.co.kr' || subject.includes('[테스트 격리 발송]')) {
         const testEmail: SentEmail = {
           id: `mail-test-${Math.random().toString(36).substr(2, 9)}`,

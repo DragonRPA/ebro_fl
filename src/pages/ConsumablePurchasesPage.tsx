@@ -332,7 +332,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
 
   return (
     <div data-hs-observe="consumablepurchasespage" data-mid="consumable_purchase-header" data-subview="consumable_purchase" data-subview-title="Generated" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* 🔔 인앱 토스트 알림 */}
+      {/*  인앱 토스트 알림 */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -360,7 +360,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '3px' }}>
             소모품 구매 신청 등록 및 구매 신청 대장
-          </div>
+ </div>
         </div>
 
         {/* 우측 파이프라인 버튼군 - 표준 횡배치: 엑셀업로드 -> 엑셀다운로드 */}
@@ -394,28 +394,28 @@ export const ConsumablePurchasesPage: React.FC = () => {
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 총 구매신청</div>
           <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--text-main)' }}>
             {purchaseSummary.totalRequested}건
-          </div>
+ </div>
         </div>
 
         <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>승인 대기 건수</div>
           <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: purchaseSummary.pendingCount > 0 ? '#f59e0b' : 'var(--text-main)' }}>
             {purchaseSummary.pendingCount}건
-          </div>
+ </div>
         </div>
 
         <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>입고 완료 건수</div>
           <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: '#10b981' }}>
             {purchaseSummary.completedCount}건
-          </div>
+ </div>
         </div>
 
         <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 예상 총 구매액</div>
           <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--primary)' }}>
             ₩{purchaseSummary.totalAmount.toLocaleString()}원
-          </div>
+ </div>
         </div>
       </div>
 
@@ -529,7 +529,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                   <tr>
                     <td colSpan={11} style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                       조회 조건에 해당하는 구매 신청 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedPurchases.map(p => {
@@ -553,7 +553,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                           {isInbounded && (
                             <span style={{ fontSize: '11px', color: isFullyInbounded ? '#059669' : '#0284c7', marginLeft: '4px', fontWeight: '600' }}>
                               ({isFullyInbounded ? `입고: ${p.receivedQty}개` : `부분: ${p.receivedQty}/${p.requestedQty}`})
-                            </span>
+ </span>
                           )}
                         </td>
                         <td style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -577,15 +577,15 @@ export const ConsumablePurchasesPage: React.FC = () => {
                                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)' }}
                                   title="단가 수정"
                                 >
-                                  ✏️
-                                </button>
+                                  
+ </button>
                               )}
                             </div>
                           )}
                         </td>
                         <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
                           ₩{((p.requestedQty || 0) * (p.unitPrice || 0)).toLocaleString()}원
-                        </td>
+ </td>
                         <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             <span>{p.sellerName || '-'}</span>
@@ -668,7 +668,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                               style={{ padding: '3px 8px', fontSize: '11px', whiteSpace: 'nowrap' }}
                             >
                               승인
-                            </button>
+ </button>
                           )}
 
                           {/* 2. 승인접수 및 실물입고됨: 구매신청자의 최종 완결 및 지급요청 버튼 */}
@@ -709,7 +709,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                                   title="실물 입고 없이 즉시 구매완결 및 지급요청"
                                 >
                                   즉시완결
-                                </button>
+ </button>
                               )}
                             </div>
                           )}
@@ -748,7 +748,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
         <div className="card" style={{ maxWidth: '640px', margin: '0 auto', width: '100%', padding: '20px' }}>
           <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
             소모품 구매 신청서 작성
-          </h3>
+ </h3>
 
           <form onSubmit={handleRequestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <datalist id="consumable-models">
@@ -765,8 +765,8 @@ export const ConsumablePurchasesPage: React.FC = () => {
                       onClick={() => setReqItems(prev => prev.filter((_, i) => i !== index))}
                       style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', padding: 0 }}
                     >
-                      삭제 ✕
-                    </button>
+                      삭제 
+ </button>
                   )}
                 </div>
 
@@ -866,7 +866,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                       {item.paymentMethod && (
                         <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: item.paymentMethod === 'CARD' ? 'rgba(59, 130, 246, 0.12)' : 'rgba(16, 185, 129, 0.12)', color: item.paymentMethod === 'CARD' ? '#2563eb' : '#059669', fontWeight: 'bold' }}>
                           {item.paymentMethod === 'CARD' ? '법인카드' : '외상매입'} 자동지정됨
-                        </span>
+ </span>
                       )}
                     </div>
                     <input
@@ -956,7 +956,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>예상 총 구매비용:</span>
               <strong style={{ fontSize: '16px', color: 'var(--primary)' }}>
                 ₩{reqItems.reduce((acc, item) => acc + (item.qty * item.unitPrice), 0).toLocaleString()}원
-              </strong>
+ </strong>
             </div>
 
             {/* 하단 액션 버튼 */}
@@ -968,7 +968,7 @@ export const ConsumablePurchasesPage: React.FC = () => {
                 style={{ padding: '8px 16px', fontSize: '12.5px' }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="submit"
                 className="btn-primary"

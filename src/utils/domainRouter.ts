@@ -1,8 +1,8 @@
 ﻿// src/utils/domainRouter.ts
-// 🌐 멀티테넌트 도메인 라우팅 엔진 (전사 표준 헌장 1.1, 7.1)
-// 1. ebro.run (루트) ➔ 공식 홍보 및 마케팅 랜딩 페이지
-// 2. admin.ebro.run ➔ 플랫폼 최고관리자 전용 테넌트 관리 센터
-// 3. *.ebro.run (서브도메인) ➔ 개별 렌탈사 전용 ERP (TENANT)
+//  멀티테넌트 도메인 라우팅 엔진 (전사 표준 헌장 1.1, 7.1)
+// 1. ebro.run (루트)  공식 홍보 및 마케팅 랜딩 페이지
+// 2. admin.ebro.run  플랫폼 최고관리자 전용 테넌트 관리 센터
+// 3. *.ebro.run (서브도메인)  개별 렌탈사 전용 ERP (TENANT)
 
 export type DomainMode = 'LANDING' | 'ADMIN' | 'TENANT';
 
@@ -15,7 +15,7 @@ export function getDomainMode(): DomainMode {
   const hostname = (window.location.hostname || '').toLowerCase();
   const search = (window.location.search || '').toLowerCase();
 
-  // 🧪 개발 및 테스트용 URL 쿼리 파라미터 강제 시뮬레이션 지원 (?mode=landing | ?mode=admin | ?mode=tenant)
+  //  개발 및 테스트용 URL 쿼리 파라미터 강제 시뮬레이션 지원 (?mode=landing | ?mode=admin | ?mode=tenant)
   if (search.includes('mode=landing') || search.includes('view=landing')) return 'LANDING';
   if (search.includes('mode=admin') || search.includes('view=admin')) return 'ADMIN';
   if (search.includes('mode=tenant') || search.includes('view=tenant')) return 'TENANT';

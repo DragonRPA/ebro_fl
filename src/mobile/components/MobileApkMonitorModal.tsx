@@ -97,15 +97,15 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-1">
                   <User className="w-3.5 h-3.5" /> 로그인 사용자
-                </span>
+ </span>
                 <span className="font-semibold text-white">
                   {currentUser?.name || '담당자'} ({currentUser?.role === 'ADMIN' ? '개발자' : currentUser?.role === 'MECHANIC' ? '정비기사' : '임직원'})
-                </span>
+ </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> 출근 시각
-                </span>
+ </span>
                 <span className="font-mono text-white">
                   {startedAt || '퇴근 상태 (기록 없음)'}
                 </span>
@@ -113,7 +113,7 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-1">
                   <PhoneCall className="w-3.5 h-3.5" /> 통화 감지 백그라운드
-                </span>
+ </span>
                 <span className={isWorking ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
                   {isWorking ? '자동 감지 활성' : '정지됨'}
                 </span>
@@ -132,7 +132,7 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
                     : 'bg-emerald-900/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-800/60'
                 }`}
               >
-                <span className="text-sm">{isWorkLoading ? '⏳' : isWorking ? '⚫' : '🟢'}</span>
+                <span className="text-sm">{isWorkLoading ? '' : isWorking ? '' : ''}</span>
                 <span>{isWorkLoading ? '처리 중...' : isWorking ? '퇴근 처리' : '출근 처리'}</span>
               </button>
             </div>
@@ -143,7 +143,7 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-blue-300 flex items-center gap-1.5">
                 <Download className="w-3.5 h-3.5" /> 안드로이드 APK 설치 파일
-              </span>
+ </span>
               <span className="text-[10px] font-mono text-blue-400 bg-blue-900/50 px-2 py-0.5 rounded border border-blue-500/40">
                 {release.version}
               </span>
@@ -175,7 +175,7 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
             </a>
             <p className="text-[10px] text-slate-400 text-center">
               다운로드 후 알림창 또는 다운로드 폴더에서 탭하여 설치를 진행하세요.
-            </p>
+ </p>
           </div>
 
           {/* 3. 웹 직접 업로드 카드 (APK 미설치 / 아이폰 대응) */}
@@ -183,14 +183,14 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
                 <UploadCloud className="w-3.5 h-3.5 text-amber-400" /> 통화 녹음 직접 업로드
-              </span>
+ </span>
               <span className="text-[10px] text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-600/30">
                 아이폰 / 미설치 대응
-              </span>
+ </span>
             </div>
             <p className="text-[10px] text-slate-400">
               APK 앱을 설치하지 않았거나 아이폰 사용자의 경우, 기기에 저장된 통화 녹음 파일을 웹에서 직접 등록할 수 있습니다.
-            </p>
+ </p>
             <button
               type="button"
               onClick={() => {
@@ -213,7 +213,7 @@ export const MobileApkMonitorModal: React.FC<MobileApkMonitorModalProps> = ({
             className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
           >
             닫기
-          </button>
+ </button>
         </div>
       </div>
     </div>

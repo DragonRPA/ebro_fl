@@ -112,7 +112,7 @@ export const PipelineConsole: React.FC<PipelineConsoleProps> = ({
               <div key={log.id} className="flex items-start gap-2 hover:bg-slate-900/50 px-1.5 py-0.5 rounded">
                 <span className="text-slate-500 text-[10px] flex-shrink-0 font-mono">
                   [{new Date(log.createdAt).toLocaleTimeString('ko-KR')}]
-                </span>
+ </span>
                 <span className={`text-[9.5px] font-bold px-1.5 rounded flex-shrink-0 ${
                   log.level === 'SUCCESS' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
                   log.level === 'ERROR' ? 'bg-rose-950 text-rose-400 border border-rose-800' :

@@ -1,6 +1,6 @@
 // src/services/excelTemplateEngine.ts
 // e-Bro ERP 엑셀 원본 템플릿 기반 데이터 주입 엔진 (사이트 미연결 독립 모듈)
-// ⚠️ 원칙: HTML/CSS 눈대중 모방을 100% 배제하고, 사장님의 실제 .xlsx 엑셀 파일 서식을 100% 보존하며 셀 값만 정밀 주입합니다.
+//  원칙: HTML/CSS 눈대중 모방을 100% 배제하고, 사장님의 실제 .xlsx 엑셀 파일 서식을 100% 보존하며 셀 값만 정밀 주입합니다.
 
 import ExcelJS from 'exceljs';
 import { db } from './db';
@@ -108,7 +108,7 @@ export interface ContractExcelData {
   managerPhone: string;        // 현장 담당자 연락처
   /**
    * 체결 장비 목록
-   * ⚠️ 비즈니스 룰:
+   *  비즈니스 룰:
    * - 12대 이하: 본문 테이블 12줄 내 1:1 직접 표기
    * - 13대 이상: 본문 1행 요약 ('GS-1930 외 N대 (총 N대)') + [별지 제1호: 체결 장비 상세 명세표] 자동 생성
    */
@@ -126,7 +126,7 @@ export interface ContractExcelData {
 
 /**
  * 반입전 체크리스트 데이터 주입 맵퍼 규격
- * ⚠️ 실무 규칙:
+ *  실무 규칙:
  * - 점검자(김관주) 및 점검결과(양호), 충전기 작동값은 원본 템플릿에 고정 인쇄되어 있으므로 편집 불필요.
  * - 도장 날인하지 않음.
  * - 오직 상단의 [모델명]과 [관리번호] 2개 항목만 동적 주입.
@@ -140,7 +140,7 @@ export interface PreDeliveryChecklistExcelData {
 
 /**
  * 안전점검 결과서 데이터 주입 맵퍼 규격
- * ⚠️ 실무 규칙:
+ *  실무 규칙:
  * - 제조사/장비중량/운행속도/작업높이/안전인증일은 ERP [제품관리] 마스터에서 100% 자동 호출.
  * - 점검자(김관주) 및 도장 날인은 원본 템플릿에 이미 박혀 있으므로 수정 불필요 (100% 원본 보존).
  */
@@ -586,7 +586,7 @@ export function resolveStatementRowColumns(item: TransactionStatementItem, fallb
 
 /**
  * 4. ERP 공식 표준 거래명세서 정품 A4 PDF 생성 엔진 (MS Excel COM 전용)
- * ⚠️ 원칙: 2D Canvas 눈대중 모방을 100% 배제하고, 로컬 사이드카 에이전트의 정품 MS Excel COM 엔진(00.거래명세서양식.xlsx 정품 원본 기반)만을 사용합니다.
+ *  원칙: 2D Canvas 눈대중 모방을 100% 배제하고, 로컬 사이드카 에이전트의 정품 MS Excel COM 엔진(00.거래명세서양식.xlsx 정품 원본 기반)만을 사용합니다.
  */
 export async function generateTransactionStatementPdf(data: TransactionStatementPdfData): Promise<Uint8Array> {
   try {
@@ -717,7 +717,7 @@ export async function generateTransactionStatementExcel(data: TransactionStateme
     resp = await fetch(`/거래명세서양식.xlsx`);
   }
   if (!resp.ok) {
-    throw new Error(`거래명세서 엑셀 마스터 템플릿(00.거래명세서양식.xlsx)을 불러올 수 없습니다. (${tenantId})`);
+    throw new Error(`거래명세서 엑셀 마스터 템플릿을 불러올 수 없습니다. (${tenantId})`);
   }
   const templateBytes = await resp.arrayBuffer();
 
@@ -1048,7 +1048,7 @@ export async function generateTradeContractExcel(data: TradeContractExcelData): 
   buyerHead.alignment = { horizontal: 'center', vertical: 'middle' };
 
   const partyRows = [
-    { labelS: '상    호', valS: data.seller.corpName, labelB: '상    호', valB: data.buyer.corpName },
+    { labelS: '상 호', valS: data.seller.corpName, labelB: '상 호', valB: data.buyer.corpName },
     { labelS: '등록번호', valS: data.seller.bizNo, labelB: '등록번호', valB: data.buyer.bizNo },
     { labelS: '대 표 자', valS: data.seller.ceo, labelB: '대 표 자', valB: data.buyer.ceo },
     { labelS: '소 재 지', valS: data.seller.address, labelB: '소 재 지', valB: data.buyer.address },
@@ -1162,7 +1162,7 @@ export async function generateTradeContractExcel(data: TradeContractExcelData): 
   // 품목 합계 행
   ws.mergeCells(`B${curRow}:D${curRow}`);
   const sumLabel = ws.getCell(`B${curRow}`);
-  sumLabel.value = '합    계';
+  sumLabel.value = '합 계';
   sumLabel.fill = headerFill;
   sumLabel.font = { name: '맑은 고딕', size: 9, bold: true };
   sumLabel.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -1228,13 +1228,13 @@ export async function generateTradeContractExcel(data: TradeContractExcelData): 
   // 매도인 / 매수인 날인 영역
   ws.mergeCells(`B${curRow}:D${curRow}`);
   const sellerSign = ws.getCell(`B${curRow}`);
-  sellerSign.value = `매도인: ${data.seller.corpName}  대표이사 ${data.seller.ceo}  (인)`;
+  sellerSign.value = `매도인: ${data.seller.corpName} 대표이사 ${data.seller.ceo} (인)`;
   sellerSign.font = { name: '맑은 고딕', size: 9, bold: true };
   sellerSign.alignment = { horizontal: 'center', vertical: 'middle' };
 
   ws.mergeCells(`E${curRow}:H${curRow}`);
   const buyerSign = ws.getCell(`E${curRow}`);
-  buyerSign.value = `매수인: ${data.buyer.corpName}  대표이사 ${data.buyer.ceo}  (인)`;
+  buyerSign.value = `매수인: ${data.buyer.corpName} 대표이사 ${data.buyer.ceo} (인)`;
   buyerSign.font = { name: '맑은 고딕', size: 9, bold: true };
   buyerSign.alignment = { horizontal: 'center', vertical: 'middle' };
   ws.getRow(curRow).height = 36;

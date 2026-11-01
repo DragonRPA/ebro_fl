@@ -34,7 +34,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
 
-  // 💡 [지능형 타겟 회피 및 드래그 위치 계산]
+  //  [지능형 타겟 회피 및 드래그 위치 계산]
   const isDesktop = typeof window !== 'undefined' && window.innerWidth > 1024;
   const defaultLeftPos = isDesktop ? 280 : 16;
 
@@ -119,7 +119,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
     const screenCenterX = vw / 2;
     const isWide = targetRect.width > vw * 0.45;
 
-    // 💡 [지능형 회피 1] 타겟이 가로로 넓은 컨테이너인 경우:
+    //  [지능형 회피 1] 타겟이 가로로 넓은 컨테이너인 경우:
     if (isWide) {
       // 타겟이 상단부에 위치하면 -> 우하단으로 회피!
       if (targetRect.top < vh * 0.35) {
@@ -144,7 +144,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
       }
     }
 
-    // 💡 [지능형 회피 2] 일반 요소인 경우 (수평 중심점 기준 반대편 상단 배치)
+    //  [지능형 회피 2] 일반 요소인 경우 (수평 중심점 기준 반대편 상단 배치)
     if (targetCenterX < screenCenterX) {
       // 타겟이 화면 좌측에 있으면 -> 우측 상단으로 회피!
       return {
@@ -212,7 +212,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
         title="드래그하여 이동 / 더블클릭 시 위치 초기화"
       >
         <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          🎯 {summary.title}
+           {summary.title}
           {activeProcess && (
             <span style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '11.5px' }}>
               · {activeProcess.title}
@@ -229,7 +229,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
             fontWeight: 700,
           }}>
             단위업무 {activeProcess.stepCount}단계
-          </span>
+ </span>
         ) : summary.buttons.length > 0 ? (
           <span style={{
             fontSize: '11px',
@@ -240,7 +240,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
             fontWeight: 700,
           }}>
             기본 {summary.buttons.length}단계
-          </span>
+ </span>
         ) : null}
         {manualPos && (
           <button
@@ -350,8 +350,8 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
             fontSize: '13px',
             flexShrink: 0,
           }}>
-            🎯
-          </span>
+            
+ </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{
@@ -480,7 +480,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
             </span>
             <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 600 }}>
               클릭 시 화면 단계 가이드 즉시 전환
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
             <button
@@ -502,7 +502,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                 transition: 'all 0.15s ease',
               }}
             >
-              <span>📋 화면 기본 안내</span>
+              <span> 화면 기본 안내</span>
             </button>
             {processes.map(proc => {
               const isSelected = activeProcessId === proc.processId;
@@ -528,7 +528,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                   }}
                   title={`${proc.title} (${proc.stepCount}단계): ${proc.description}`}
                 >
-                  <span>🔄 {proc.title}</span>
+                  <span> {proc.title}</span>
                   <span style={{
                     fontSize: '9.5px',
                     padding: '1px 5px',
@@ -538,7 +538,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                     fontWeight: 700,
                   }}>
                     {proc.stepCount}단계
-                  </span>
+ </span>
                 </button>
               );
             })}
@@ -596,7 +596,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                 marginBottom: '6px',
               }}>
                 수행 단계 ({activeProcess.steps.length}단계) · 클릭 시 화면 내 위치 강조
-              </div>
+ </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {activeProcess.steps.map(s => {
                   const sColor = getStepBadgeColor(s.seq, s.badgeColor);
@@ -691,7 +691,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                   marginBottom: '6px',
                 }}>
                   화면 구성 요소 ({summary.buttons.length}개) · 클릭 시 화면 내 위치 강조
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {summary.buttons.map(b => {
                     const bColor = getStepBadgeColor(b.seq, b.color);
@@ -747,7 +747,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px' }}>
                   하위 탭 구성 ({summary.subTabs.length})
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {summary.subTabs.map(t => (
                     <span
@@ -762,7 +762,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                         fontWeight: 600,
                       }}
                     >
-                      📌 {t}
+                       {t}
                     </span>
                   ))}
                 </div>
@@ -774,7 +774,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px' }}>
                   연동 모달 워크플로우 ({summary.modals.length})
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {summary.modals.map(m => (
                     <span
@@ -789,7 +789,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
                         fontWeight: 600,
                       }}
                     >
-                      🖼️ {m}
+                       {m}
                     </span>
                   ))}
                 </div>
@@ -834,7 +834,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
             title="도구 및 다운로드 > 업무매뉴얼 화면으로 바로 이동하여 전사 51개 메뉴 및 184개 단위업무 전체 편람 열람"
           >
             <BookOpen size={13} />
-            <span>전사 업무매뉴얼 열람 ➔</span>
+            <span>전사 업무매뉴얼 열람 </span>
           </button>
 
           <button
@@ -874,7 +874,7 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
           }}
         >
           화면 조작 복귀 (접기)
-        </button>
+ </button>
       </div>
     </div>
   );

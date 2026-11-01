@@ -22,7 +22,7 @@ export const AssetHistory: React.FC = () => {
     inspectionChecklistItems, registerInboundAsset, cancelInboundAsset, fullRefreshFromServer, officialMailConfigs, showErrorModal, currentTenant, currentUser
   } = useApp();
 
-  // ── 🌟 [O(1) 룩업 해시맵 사전 인덱싱: 헌장 1.1] ──
+  // ──  [O(1) 룩업 해시맵 사전 인덱싱: 헌장 1.1] ──
   const canCancelInbound = isSystemDeveloperUser(currentUser) || isDemoMode();
   const assetMap = useMemo(() => new Map((assets || []).map(a => [a.id, a])), [assets]);
   const assetByLowerNoMap = useMemo(() => {
@@ -89,7 +89,7 @@ export const AssetHistory: React.FC = () => {
   });
 
 
-  // 💡 [입고 등록 폼 상태] (수동 점수 입력 제거 ➔ 정비 필요 항목 체크박스 선택 연동 + 사진 첨부)
+  //  [입고 등록 폼 상태] (수동 점수 입력 제거  정비 필요 항목 체크박스 선택 연동 + 사진 첨부)
   const [inboundAssetNoInput, setInboundAssetNoInput] = useState('');
   const [selectedInboundAssetId, setSelectedInboundAssetId] = useState('');
   const [inboundDate, setInboundDate] = useState(todayStr);
@@ -98,7 +98,7 @@ export const AssetHistory: React.FC = () => {
   const [inboundMemo, setInboundMemo] = useState('');
   const [isSubmittingInbound, setIsSubmittingInbound] = useState(false);
 
-  // 💡 [사장님 지시] 사전 정의 정비 필요 항목 점수 100% 자동 합산 (수동 입력 휴먼에러 전면 제거)
+  //  [사장님 지시] 사전 정의 정비 필요 항목 점수 100% 자동 합산 (수동 입력 휴먼에러 전면 제거)
   const selectedChecklistObjects = useMemo(
     () => inspectionChecklistItems.filter(item => selectedChecklistIds.includes(item.id)),
     [inspectionChecklistItems, selectedChecklistIds]
@@ -112,7 +112,7 @@ export const AssetHistory: React.FC = () => {
     [selectedChecklistObjects]
   );
 
-  // 💡 정비 점검 항목 퀵버튼 토글
+  //  정비 점검 항목 퀵버튼 토글
   const toggleChecklistItem = (itemId: string) => {
     let newIds: string[];
     if (selectedChecklistIds.includes(itemId)) {
@@ -129,10 +129,10 @@ export const AssetHistory: React.FC = () => {
     setSelectedChecklistIds(newIds);
     try { sessionStorage.setItem('inbound_draft_checklist', JSON.stringify(newIds)); } catch (err) {}
   };
-  // 💡 [입고 취소 롤백] 전용 모달 상태 (window.prompt 퇴출)
+  //  [입고 취소 롤백] 전용 모달 상태 (window.prompt 퇴출)
   const [cancelModal, setCancelModal] = useState<{ isOpen: boolean; log: any; reason: string } | null>(null);
 
-  // 💡 모바일 카메라 촬영 앱 전환 후 복귀 시 자동 복원
+  //  모바일 카메라 촬영 앱 전환 후 복귀 시 자동 복원
   useEffect(() => {
     try {
       const savedAssetNo = sessionStorage.getItem('inbound_draft_assetNo');
@@ -147,7 +147,7 @@ export const AssetHistory: React.FC = () => {
     } catch (e) {}
   }, []);
 
-  // 💡 [사진 업로드 처리] (모바일 고해상도 카메라 10MB+ ➔ 100KB 경량화 압축)
+  //  [사진 업로드 처리] (모바일 고해상도 카메라 10MB+  100KB 경량화 압축)
   const handlePhotoFileChange = async (itemId: string, file: File | null) => {
     if (!file) return;
     try {
@@ -169,7 +169,7 @@ export const AssetHistory: React.FC = () => {
     }
   }, [navigationPayload]);
 
-  // 💡 명시적 [조회] 버튼 실행 헬퍼 (Supabase 클라우드 원격 DB 동기화 연동)
+  //  명시적 [조회] 버튼 실행 헬퍼 (Supabase 클라우드 원격 DB 동기화 연동)
   const handleSearch = async (overrideStart?: string, overrideEnd?: string) => {
     if (fullRefreshFromServer) {
       try { await fullRefreshFromServer(); } catch (e) {}
@@ -181,7 +181,7 @@ export const AssetHistory: React.FC = () => {
     });
   };
 
-  // 💡 기간 선택 (오늘 / 1주 / 1개월 / 전체)
+  //  기간 선택 (오늘 / 1주 / 1개월 / 전체)
   const setQuickRange = (rangeType: 'TODAY' | 'WEEK' | 'MONTH' | 'ALL') => {
     const today = new Date();
     let newStart = '';
@@ -207,7 +207,7 @@ export const AssetHistory: React.FC = () => {
   };
 
   // =========================================================================
-  // 🌟 [핵심 엔진 1: 정밀 모델명 보정 엔진 (100% Precision O(1) Matcher)]
+  //  [핵심 엔진 1: 정밀 모델명 보정 엔진 (100% Precision O(1) Matcher)]
   // =========================================================================
   const resolvePrecisionModelName = (assetId?: string, assetNo?: string, rawModel?: string): string => {
     // 1. assets 마스터 데이터 O(1) 해시맵 교차 검증 (자산 식별자 1:1 매칭)
@@ -239,7 +239,7 @@ export const AssetHistory: React.FC = () => {
     return matchedAsset?.modelName || 'GS-1930';
   };
 
-  // 💡 입출고 탭용 로그 필터링
+  //  입출고 탭용 로그 필터링
   const filteredTabLogs = useMemo(() => {
     if (activeTab === 'INBOUND_REGISTER') return [];
     const term = activeSearchParams.searchTerm.trim();
@@ -269,7 +269,7 @@ export const AssetHistory: React.FC = () => {
 
   const { items: sortedTabLogs, requestSort, sortConfig } = useSortableData(filteredTabLogs);
 
-  // 💡 [오타방지 및 유연매칭] 입고 등록용 선택된 자산 정보 및 대여 계약 O(1) 자동 매칭 탐색
+  //  [오타방지 및 유연매칭] 입고 등록용 선택된 자산 정보 및 대여 계약 O(1) 자동 매칭 탐색
   const inboundTargetAsset = useMemo(() => {
     if (selectedInboundAssetId) {
       const byId = assetMap.get(selectedInboundAssetId);
@@ -378,7 +378,7 @@ export const AssetHistory: React.FC = () => {
     }
   };
 
-  // 💡 [입고 취소 롤백]
+  //  [입고 취소 롤백]
   const handleCancelInbound = (log: any) => {
     setCancelModal({
       isOpen: true,
@@ -435,14 +435,14 @@ export const AssetHistory: React.FC = () => {
           <h2 style={{ fontWeight: '700', marginBottom: '4px' }}>입고등록/입출고조회</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             장비의 출하, 반납 입고 및 검수 결과를 조회 추적합니다.
-          </p>
+ </p>
         </div>
         <button className="btn-secondary" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
           <Download size={14} /> 엑셀 다운로드
-        </button>
+ </button>
       </div>
 
-      {/* 📊 자산 라이프사이클 이벤트 요약 바 */}
+      {/*  자산 라이프사이클 이벤트 요약 바 */}
       {(() => {
         const { inboundCount, outboundCount } = inOutSummaryCounts;
 
@@ -469,7 +469,7 @@ export const AssetHistory: React.FC = () => {
           style={{ padding: '8px 18px', fontSize: '13.5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}
         >
           <CheckCircle2 size={16} /> 입고 등록 (반납)
-        </button>
+ </button>
 
         <button
           type="button"
@@ -478,7 +478,7 @@ export const AssetHistory: React.FC = () => {
           style={{ padding: '8px 18px', fontSize: '13.5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}
         >
           <ArrowDownLeft size={16} /> 입고 조회
-        </button>
+ </button>
 
         <button
           type="button"
@@ -487,7 +487,7 @@ export const AssetHistory: React.FC = () => {
           style={{ padding: '8px 18px', fontSize: '13.5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}
         >
           <ArrowUpRight size={16} /> 출고 조회
-        </button>
+ </button>
       </div>
 
       {/* 3. [신설] 입고 등록 전용 워크보드 (activeTab === 'INBOUND_REGISTER') */}
@@ -503,7 +503,7 @@ export const AssetHistory: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 조회 기간 설정 (상한: 오늘)
-              </label>
+ </label>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 <input
                   type="date"
@@ -530,7 +530,7 @@ export const AssetHistory: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 기간 선택
-              </label>
+ </label>
               <div style={{ display: 'flex', gap: '4px' }}>
                 <button
                   type="button"
@@ -539,7 +539,7 @@ export const AssetHistory: React.FC = () => {
                   style={{ flex: 1, padding: '6px 4px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   오늘
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -547,7 +547,7 @@ export const AssetHistory: React.FC = () => {
                   style={{ flex: 1, padding: '6px 4px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   1주
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -555,7 +555,7 @@ export const AssetHistory: React.FC = () => {
                   style={{ flex: 1, padding: '6px 4px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   1개월
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -563,7 +563,7 @@ export const AssetHistory: React.FC = () => {
                   style={{ flex: 1, padding: '6px 4px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   전체
-                </button>
+ </button>
               </div>
             </div>
 
@@ -571,7 +571,7 @@ export const AssetHistory: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 통합 검색 (모델명 / 관리번호 / 고객사 / 현장 / 조치내역)
-              </label>
+ </label>
               <div style={{ position: 'relative' }}>
                 <input
                   type="text"
@@ -589,7 +589,7 @@ export const AssetHistory: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'transparent', whiteSpace: 'nowrap', userSelect: 'none' }}>
                 조회 실행
-              </label>
+ </label>
               <button
                 type="button"
                 className="btn-query"
@@ -609,7 +609,7 @@ export const AssetHistory: React.FC = () => {
                 }}
               >
                 <Search size={15} /> 조회
-              </button>
+ </button>
             </div>
 
           </div>
@@ -647,8 +647,8 @@ export const AssetHistory: React.FC = () => {
                 onClick={() => setSelectedAssetId('')}
                 style={{ fontSize: '11px', padding: '2px 8px', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                ✕ 전체 보기로 복귀
-              </button>
+                 전체 보기로 복귀
+ </button>
             </div>
           </div>
 
@@ -678,7 +678,7 @@ export const AssetHistory: React.FC = () => {
               {selectedAssetTimeline.length === 0 ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
                   등록된 이력 로그가 없습니다.
-                </div>
+ </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderLeft: '2px solid var(--border-color)', paddingLeft: '14px', marginLeft: '6px' }}>
                   {selectedAssetTimeline.map(log => (
@@ -694,7 +694,7 @@ export const AssetHistory: React.FC = () => {
                       <div style={{ padding: '10px', fontSize: '12.5px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <strong style={{ color: log.type === 'OUTBOUND' ? 'var(--primary)' : log.type === 'INBOUND' ? 'var(--success)' : log.type === 'INBOUND_CANCEL' ? 'var(--danger)' : 'var(--warning)' }}>
-                            {log.type === 'OUTBOUND' ? '📤 출고' : log.type === 'INBOUND' ? '📥 입고' : log.type === 'INBOUND_CANCEL' ? '🔄 입고취소' : '정비'}
+                            {log.type === 'OUTBOUND' ? '출고' : log.type === 'INBOUND' ? '입고' : log.type === 'INBOUND_CANCEL' ? '입고취소' : '정비'}
                           </strong>
                           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>{log.eventDate}</span>
                         </div>
@@ -717,13 +717,13 @@ export const AssetHistory: React.FC = () => {
           {/* 결과 요약 헤더 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
             <div style={{ fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {activeTab === 'OUTBOUND' && <span>📤 출고 이력 목록</span>}
-              {activeTab === 'INBOUND' && <span>📥 입고 이력 목록</span>}
+              {activeTab === 'OUTBOUND' && <span> 출고 이력 목록</span>}
+              {activeTab === 'INBOUND' && <span> 입고 이력 목록</span>}
             </div>
 
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               총 <strong style={{ color: 'var(--primary)', fontSize: '15px' }}>{filteredTabLogs.length}</strong>건 조회됨
-            </div>
+ </div>
           </div>
 
           {/* 데이터 테이블 (헌장 3.2: 줄바꿈 방지 nowrap) */}
@@ -761,7 +761,7 @@ export const AssetHistory: React.FC = () => {
                   <tr>
                     <td colSpan={activeTab === 'INBOUND' ? (canCancelInbound ? 10 : 9) : 7} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                       선택한 탭 및 검색 조건에 부합하는 자산 이력 데이터가 존재하지 않습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                     sortedTabLogs.map((log, idx) => {
@@ -800,7 +800,7 @@ export const AssetHistory: React.FC = () => {
                               <td style={{ whiteSpace: 'nowrap' }}>
                                 <span className={`badge ${(log.maintenanceScore || 0) === 0 ? 'badge-success' : 'badge-warning'}`}>
                                   {log.maintenanceScore || 0}점
-                                </span>
+ </span>
                               </td>
                               <td style={{ fontSize: '12px' }}>
                                 {parsedDefects.length > 0 ? (
@@ -831,7 +831,7 @@ export const AssetHistory: React.FC = () => {
                                     title="[개발자 전용] 사용자 휴먼에러 입고 오타 시 원래 대여중 상태로 롤백 복원합니다."
                                   >
                                     <RotateCcw size={12} /> 입고 취소
-                                  </button>
+ </button>
                                 </td>
                               )}
                             </>
@@ -904,11 +904,11 @@ export const AssetHistory: React.FC = () => {
               <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: 'var(--danger)' }}>입고 취소 및 계약종료일 원상복구</h4>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                 자산번호 <strong>{targetLog.assetNo}</strong> 입고 건을 취소하고 대여중 상태 및 단축 전 계약종료일로 원상복구합니다.
-              </p>
+ </p>
               <div style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px', marginBottom: '14px', fontSize: '12.5px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>대상 장비</span>
-                  <strong>{targetLog.assetNo} ({targetLog.modelName}) ➔ 대여중</strong>
+                  <strong>{targetLog.assetNo} ({targetLog.modelName}) 대여중</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>연관 계약</span>
@@ -916,7 +916,7 @@ export const AssetHistory: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>계약 종료일 복원</span>
-                  <strong style={{ color: 'var(--primary)' }}>{inboundDateStr} (단축됨) ➔ {previewPrevEndDate} (원복)</strong>
+                  <strong style={{ color: 'var(--primary)' }}>{inboundDateStr} (단축됨) {previewPrevEndDate} (원복)</strong>
                 </div>
                 {linkedPendingRepair && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -942,7 +942,7 @@ export const AssetHistory: React.FC = () => {
                   onClick={handleConfirmCancelInbound}
                 >
                   입고 취소 롤백 실행
-                </button>
+ </button>
               </div>
             </div>
           </div>

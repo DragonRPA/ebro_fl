@@ -5,7 +5,7 @@ function testHolidayUtils() {
 
   // Test 1: Weekend Bridge (Fri ~ Mon)
   const res1 = calculateLeaveDaysInfo('ANNUAL', '2026-10-16', '2026-10-19');
-  console.log('Test 1 (Fri~Mon):', {
+  console.log('Test 1:', {
     totalCalendarDays: res1.totalCalendarDays,
     workingDays: res1.workingDays,
     weekendDays: res1.weekendDays,
@@ -37,7 +37,7 @@ function testHolidayUtils() {
 
   // Test 3: Only Weekend (Sat ~ Sun)
   const res3 = calculateLeaveDaysInfo('ANNUAL', '2026-10-17', '2026-10-18');
-  console.log('Test 3 (Sat~Sun):', {
+  console.log('Test 3:', {
     totalCalendarDays: res3.totalCalendarDays,
     workingDays: res3.workingDays,
     deductedDays: res3.deductedDays,
@@ -50,30 +50,30 @@ function testHolidayUtils() {
 
   // Test 4: Half Day on Weekday vs Weekend/Holiday
   const res4_workday = calculateLeaveDaysInfo('HALF_AM', '2026-10-16', '2026-10-16');
-  console.log('Test 4 (Half AM on Friday):', {
+  console.log('Test 4:', {
     deductedDays: res4_workday.deductedDays,
     isValid: res4_workday.isValid
   });
   if (res4_workday.deductedDays !== 0.5 || !res4_workday.isValid) {
-    throw new Error('Test 4 failed (workday)!');
+    throw new Error('Test 4 failed!');
   }
 
   const res4_weekend = calculateLeaveDaysInfo('HALF_PM', '2026-10-17', '2026-10-17');
-  console.log('Test 4 (Half PM on Saturday):', {
+  console.log('Test 4:', {
     isValid: res4_weekend.isValid,
     errorMessage: res4_weekend.errorMessage
   });
   if (res4_weekend.isValid !== false) {
-    throw new Error('Test 4 failed (weekend)!');
+    throw new Error('Test 4 failed!');
   }
 
   const res4_holiday = calculateLeaveDaysInfo('HALF_AM', '2026-10-05', '2026-10-05');
-  console.log('Test 4 (Half AM on Substitute Holiday):', {
+  console.log('Test 4:', {
     isValid: res4_holiday.isValid,
     errorMessage: res4_holiday.errorMessage
   });
   if (res4_holiday.isValid !== false) {
-    throw new Error('Test 4 failed (holiday)!');
+    throw new Error('Test 4 failed!');
   }
 
   console.log('ALL HOLIDAY UTILS TESTS PASSED!');

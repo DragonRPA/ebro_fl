@@ -158,7 +158,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
 
       const json = await res.json();
       if (!json.success || !Array.isArray(json.items) || json.items.length === 0) {
-        showErrorModal(json.message || '로컬 수집 폴더(C:\\eBroAgent\\hometax_invoices\\)에 세금계산서 파일이 없습니다.');
+        showErrorModal(json.message || '로컬 수집 폴더에 세금계산서 파일이 없습니다.');
         return;
       }
 
@@ -292,13 +292,13 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
             <div>
               <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
                 국세청 매입세금계산서 대사 및 업데이트
-                <span className="text-xs px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30 font-mono">
+ <span className="text-xs px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30 font-mono">
                   {selectedYm} 정산분
-                </span>
+ </span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                홈택스 전자세금계산서 목록(엑셀/XML)을 읽어 당월 매입 정산 건과 1:1 대사 후 승인번호를 일괄 업데이트합니다.
-              </p>
+                홈택스 전자세금계산서 목록을 읽어 당월 매입 정산 건과 1:1 대사 후 승인번호를 일괄 업데이트합니다.
+ </p>
             </div>
           </div>
           <button
@@ -340,7 +340,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
             >
               <Upload size={14} />
               홈택스 엑셀/XML 선택
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleCollectLocal}
@@ -349,7 +349,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
             >
               <RefreshCw size={14} className={isCollectingLocal ? 'animate-spin text-blue-400' : ''} />
               로컬 eBroAgent 수집
-            </button>
+ </button>
           </div>
         </div>
 
@@ -374,13 +374,13 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
               </div>
               <p className="text-sm font-semibold text-white mb-1">
                 홈택스 전자세금계산서 매입목록 파일 드래그 앤 드롭
-              </p>
+ </p>
               <p className="text-xs text-slate-400 max-w-md mb-4">
                 국세청 홈택스 [조회/발급 &gt; 전자세금계산서 &gt; 목록조회 &gt; 매입 &gt; 엑셀 다운로드] 파일을 여기에 떨구면 자동 대사가 실행됩니다.
-              </p>
+ </p>
               <span className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium">
                 파일 열기
-              </span>
+ </span>
             </div>
           )}
 
@@ -410,7 +410,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                     }`}
                   >
                     전체 ({stats.totalCount}건)
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setFilterTab('MATCHED')}
@@ -419,7 +419,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                     }`}
                   >
                     완전일치 ({stats.matchedCount}건)
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setFilterTab('MISMATCH')}
@@ -428,7 +428,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                     }`}
                   >
                     금액차이 ({stats.mismatchCount}건)
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setFilterTab('UNMATCHED')}
@@ -437,7 +437,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                     }`}
                   >
                     미등록 매입처 ({stats.unmatchedCount}건)
-                  </button>
+ </button>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -447,14 +447,14 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                     className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
                   >
                     전체 선택/해제
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => { setParseResult(null); setReconciledRows([]); }}
                     className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
                   >
                     파일 초기화
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -502,17 +502,17 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                             {isMatched && (
                               <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">
                                 완전일치
-                              </span>
+ </span>
                             )}
                             {isMismatch && (
                               <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">
                                 금액차이
-                              </span>
+ </span>
                             )}
                             {isUnmatched && (
                               <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-medium">
                                 미등록
-                              </span>
+ </span>
                             )}
                           </td>
                           <td className="p-2.5 font-semibold text-white">
@@ -568,23 +568,23 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
           {/* 4단계 본질 질문 4: 최하단 대차대조 검증식 */}
           <div className="flex flex-wrap items-center gap-3 text-slate-300">
             <div className="flex items-center gap-1.5 font-medium">
-              <span>📄 국세청 매입총액:</span>
+              <span> 국세청 매입총액:</span>
               <span className="font-mono text-white">₩{stats.totalInvoiceAmt.toLocaleString()}</span>
             </div>
             <span>=</span>
             <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <span>🟢 일치 확정액:</span>
+              <span> 일치 확정액:</span>
               <span className="font-mono">₩{stats.matchedInvoiceAmt.toLocaleString()}</span>
             </div>
             <span>+</span>
             <div className="flex items-center gap-1.5 text-amber-400 font-medium">
-              <span>⚠️ 차액/미일치:</span>
+              <span> 차액/미일치:</span>
               <span className="font-mono">₩{stats.mismatchDiffAmt.toLocaleString()}</span>
             </div>
             <span className="text-slate-600">|</span>
             <div className="text-slate-400">
               반영 대상: <span className="text-blue-400 font-semibold">{stats.selectedCount}건</span> 선택됨
-            </div>
+ </div>
           </div>
 
           {/* 우하단 최종 완결 버튼 */}
@@ -596,7 +596,7 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
               className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors cursor-pointer"
             >
               닫기
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleApplyUpdates}
@@ -607,12 +607,12 @@ export const HometaxPurchaseInvoiceModal: React.FC<HometaxPurchaseInvoiceModalPr
                 <>
                   <RefreshCw size={14} className="animate-spin" />
                   정산 대장 반영 중...
-                </>
+ </>
               ) : (
                 <>
                   <ShieldCheck size={14} />
                   매입 정산 승인번호 일괄 업데이트 ({stats.selectedCount}건)
-                </>
+ </>
               )}
             </button>
           </div>

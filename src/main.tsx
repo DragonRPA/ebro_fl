@@ -8,7 +8,7 @@ import { TradeProvider } from './context/TradeContext.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { initClientSecurityDefense } from './utils/clientSecurityDefense'
 
-// 🛡️ 역공학 방어: 프로덕션 콘솔 소탕, 개발자 도구 변조 및 우클릭/단축키 방어 활성화
+//  역공학 방어: 프로덕션 콘솔 소탕, 개발자 도구 변조 및 우클릭/단축키 방어 활성화
 initClientSecurityDefense();
 
 // [System Optimization] Global Unhandled Promise Rejection Handler
@@ -20,7 +20,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 initializeHindsightTracker();
 
-// 🧹 브라우저 주소창 임시 캐시무효화 파라미터 자동 정리 (히스토리 오염 방지)
+//  브라우저 주소창 임시 캐시무효화 파라미터 자동 정리 (히스토리 오염 방지)
 try {
   if (typeof window !== 'undefined' && window.location.search) {
     const url = new URL(window.location.href);

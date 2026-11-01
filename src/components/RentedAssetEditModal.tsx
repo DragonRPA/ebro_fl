@@ -244,7 +244,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
                     }}
                   >
                     신규 채번
-                  </button>
+ </button>
                 )}
               </div>
               <input
@@ -266,7 +266,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
               {(formData as any).isReactivating && (
                 <div style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                   <CheckCircle2 size={12} /> 과거 반납 이력 자산 (재임차 승계)
-                </div>
+ </div>
               )}
             </div>
 
@@ -299,21 +299,21 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
               {currentMatchedProduct ? (
                 <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--success)', whiteSpace: 'nowrap' }}>
                   제품 확인됨
-                </span>
+ </span>
               ) : modelSearch.trim() ? (
                 <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--danger)', whiteSpace: 'nowrap' }}>
                   목록에서 선택 필요
-                </span>
+ </span>
               ) : (
                 <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--warning)', whiteSpace: 'nowrap' }}>
                   제품 미선택
-                </span>
+ </span>
               )}
             </div>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
                 type="text"
-                placeholder="제품 검색 후 선택 (예: 1230ES, JLG, 20ft)"
+                placeholder="제품 검색 후 선택"
                 value={modelSearch}
                 onChange={e => {
                   const val = e.target.value;
@@ -379,7 +379,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
             </div>
             {modelError && (
               <div style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600 }}>
-                ⚠️ {modelError}
+                 {modelError}
               </div>
             )}
 
@@ -403,7 +403,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
                 {filteredProducts.length === 0 ? (
                   <div style={{ padding: '8px 12px', fontSize: '11.5px', color: 'var(--text-muted)', textAlign: 'center' }}>
                     일치하는 등록 제품 없음
-                  </div>
+ </div>
                 ) : (
                   filteredProducts.map(p => {
                     const isSelected = (formData.modelName || modelSearch) === p.modelName;
@@ -440,7 +440,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
                           {p.modelName}{' '}
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
                             ({p.manufacturer || '제조사미상'} / {p.feet ? `${p.feet}ft` : '제원'})
-                          </span>
+ </span>
                         </span>
                         {isSelected && <Check size={13} color="var(--primary)" />}
                       </div>
@@ -488,11 +488,11 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>
                 임차처 (필수, 초성검색 지원)
-              </label>
+ </label>
               {isRenterDisabled && (
                 <span style={{ fontSize: '10px', color: 'var(--warning)', fontWeight: 700, backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
                   임차 중 변경 불가
-                </span>
+ </span>
               )}
             </div>
 
@@ -574,7 +574,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
                 {filteredRenterVendors.length === 0 ? (
                   <div style={{ padding: '8px 12px', fontSize: '11.5px', color: 'var(--text-muted)', textAlign: 'center' }}>
                     일치하는 임차처 없음 (입력한 상호명으로 등록)
-                  </div>
+ </div>
                 ) : (
                   filteredRenterVendors.map(name => {
                     const isSelected = (formData.renter || renterSearch) === name;
@@ -621,15 +621,15 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>
                 협착방지봉 옵션 소유권 (입고 시 오탈거 방지)
-              </label>
+ </label>
               {formData.antiEntrapmentOwnership === 'VENDOR' ? (
                 <span style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 700, backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
                   주기장 입고 시 탈거 절대 금지
-                </span>
+ </span>
               ) : formData.antiEntrapmentOwnership === 'OURS' ? (
                 <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 700, backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
                   원사 반납 시 탈거 회수
-                </span>
+ </span>
               ) : null}
             </div>
             <select
@@ -642,8 +642,8 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
               <option value="NONE">미장착 (협착방지봉 없음)</option>
             </select>
             <div style={{ fontSize: '10.5px', color: formData.antiEntrapmentOwnership === 'VENDOR' ? 'var(--danger)' : 'var(--text-muted)', lineHeight: '1.4' }}>
-              {formData.antiEntrapmentOwnership === 'VENDOR' && '⚠️ 주기장 입고 시 출고/정비팀이 임의 탈거하지 않도록 입고 검수 경고가 자동 연동됩니다.'}
-              {formData.antiEntrapmentOwnership === 'OURS' && '🔧 당사 소유 부품이므로 임차처 최종 반납 시 탈거하여 부품실로 회수 안내가 표출됩니다.'}
+              {formData.antiEntrapmentOwnership === 'VENDOR' && '주기장 입고 시 출고/정비팀이 임의 탈거하지 않도록 입고 검수 경고가 자동 연동됩니다.'}
+              {formData.antiEntrapmentOwnership === 'OURS' && '당사 소유 부품이므로 임차처 최종 반납 시 탈거하여 부품실로 회수 안내가 표출됩니다.'}
               {(!formData.antiEntrapmentOwnership || formData.antiEntrapmentOwnership === 'NONE') && '장비에 협착방지봉이 장착되어 있지 않습니다.'}
             </div>
           </div>
@@ -715,7 +715,7 @@ export const RentedAssetEditModal: React.FC<RentedAssetEditModalProps> = ({
               style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '12px', cursor: 'pointer' }}
             >
               취소
-            </button>
+ </button>
             <button
               data-hs-trigger="Save"
               type="submit"

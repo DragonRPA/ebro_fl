@@ -839,7 +839,7 @@ export const InspectionChecklistManage: React.FC = () => {
     }
 
     if (manualFormMediaType === 'PDF' && !manualFormFileUrl) {
-      showToast('매뉴얼 문서(PDF 등) 파일을 선택해 주세요.', 'error');
+      showToast('매뉴얼 문서 파일을 선택해 주세요.', 'error');
       return;
     }
 
@@ -964,7 +964,7 @@ export const InspectionChecklistManage: React.FC = () => {
 
   return (
     <div data-hs-observe="inspection_checklist_manage" data-mid="inspection_checklist-header" style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 알림 (헌장 5.2) */}
+      {/*  인앱 토스트 알림 (헌장 5.2) */}
       {toastMessage && (
         <div
           style={{
@@ -998,7 +998,7 @@ export const InspectionChecklistManage: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ShieldCheck className="text-primary" size={22} /> 정비 항목 관리
-          </h2>
+ </h2>
         </div>
 
         {/* 3대 탭 스위처 */}
@@ -1030,7 +1030,7 @@ export const InspectionChecklistManage: React.FC = () => {
             }}
           >
             <Layers size={14} /> 정비 항목 마스터
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setActiveTab('ANALYTICS')}
@@ -1050,7 +1050,7 @@ export const InspectionChecklistManage: React.FC = () => {
             }}
           >
             <BarChart2 size={14} /> 조직역량 & 비용 분석
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setActiveTab('MANUALS')}
@@ -1070,7 +1070,7 @@ export const InspectionChecklistManage: React.FC = () => {
             }}
           >
             <BookOpen size={14} /> 장비 매뉴얼 라이브러리
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1141,7 +1141,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, flexShrink: 0 }}>부품연계 항목</span>
               <strong style={{ fontSize: '15px', color: 'var(--primary)', flexShrink: 0 }}>
                 {masterAuditSummary.linkedPartsCount}개 ({masterAuditSummary.totalCount > 0 ? ((masterAuditSummary.linkedPartsCount / masterAuditSummary.totalCount) * 100).toFixed(0) : 0}%)
-              </strong>
+ </strong>
             </div>
           </div>
 
@@ -1176,7 +1176,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)', border: '1px solid var(--border-color)', padding: '6px 12px', borderRadius: '4px', backgroundColor: filterDefectSymptomOnly ? '#eef2ff' : 'var(--bg-main)' }}>
                 <input type="checkbox" checked={filterDefectSymptomOnly} onChange={e => setFilterDefectSymptomOnly(e.target.checked)} style={{ width: '14px', height: '14px', cursor: 'pointer' }} />
                 불량증상 프리셋만 보기
-              </label>
+ </label>
 
               {/* 카테고리 칩 필터 */}
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -1212,7 +1212,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '12px' }}
               >
                 <FileDown size={14} /> 정비 항목 엑셀
-              </button>
+ </button>
               <button data-hs-trigger="Register"
                 type="button"
                 className="btn-primary"
@@ -1220,7 +1220,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', fontSize: '12px', fontWeight: 600 }}
               >
                 <Plus size={15} /> 신규 정비 항목 등록
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1247,7 +1247,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     <tr>
                       <td colSpan={10} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                         조회 조건에 해당하는 정비 점검 항목이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedMasterItems.map((item, idx) => {
@@ -1267,7 +1267,7 @@ export const InspectionChecklistManage: React.FC = () => {
                               {item.isDefectSymptom && (
                                 <span style={{ padding: '2px 6px', fontSize: '10px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '4px', fontWeight: 600 }}>
                                   불량증상 칩
-                                </span>
+ </span>
                               )}
                             </div>
                           </td>
@@ -1277,12 +1277,12 @@ export const InspectionChecklistManage: React.FC = () => {
                               style={{ fontSize: '11.5px', fontWeight: 'bold', padding: '2px 7px' }}
                             >
                               +{item.score}점
-                            </span>
+ </span>
                           </td>
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
                               {item.standardManHours || 0.5} M/H
-                            </span>
+ </span>
                           </td>
                           <td>
                             {recommendedParts.length > 0 ? (
@@ -1314,7 +1314,7 @@ export const InspectionChecklistManage: React.FC = () => {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', alignItems: 'flex-end' }}>
                                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--primary)' }}>
                                   {stat.count.toLocaleString()}건
-                                </span>
+ </span>
                                 {stat.lastOccurred && (
                                   <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>최근 {stat.lastOccurred}</span>
                                 )}
@@ -1344,7 +1344,7 @@ export const InspectionChecklistManage: React.FC = () => {
                                 style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
                               >
                                 <Edit2 size={12} /> 수정
-                              </button>
+ </button>
                               <button data-hs-trigger="Delete"
                                 type="button"
                                 className="btn-secondary"
@@ -1352,7 +1352,7 @@ export const InspectionChecklistManage: React.FC = () => {
                                 style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--danger)' }}
                               >
                                 <Trash2 size={12} /> 삭제
-                              </button>
+ </button>
                             </div>
                           </td>
                         </tr>
@@ -1412,7 +1412,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ padding: '3px 8px', fontSize: '11px' }}
                 >
                   당월
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1420,7 +1420,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ padding: '3px 8px', fontSize: '11px' }}
                 >
                   전월
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1428,7 +1428,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ padding: '3px 8px', fontSize: '11px' }}
                 >
                   최근 3개월
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1436,7 +1436,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ padding: '3px 8px', fontSize: '11px' }}
                 >
                   전체
-                </button>
+ </button>
               </div>
 
               {/* 카테고리 필터 */}
@@ -1466,7 +1466,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '12px' }}
               >
                 <FileDown size={14} /> 정산 분석 엑셀
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1489,10 +1489,10 @@ export const InspectionChecklistManage: React.FC = () => {
               </div>
               <strong style={{ fontSize: '18px', color: 'var(--primary)' }}>
                 {analyticsData.totalRepairCount.toLocaleString()}건
-              </strong>
+ </strong>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 실제 {analyticsData.grandTotalManHours} M/H (표준 {analyticsData.grandTotalStandardManHours} M/H)
-              </span>
+ </span>
             </div>
 
             <div
@@ -1515,7 +1515,7 @@ export const InspectionChecklistManage: React.FC = () => {
               </strong>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 소모품비 + 외주비 합계
-              </span>
+ </span>
             </div>
 
             <div
@@ -1538,7 +1538,7 @@ export const InspectionChecklistManage: React.FC = () => {
               </strong>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 비중: {analyticsData.grandTotalCost > 0 ? ((analyticsData.grandPartCost / analyticsData.grandTotalCost) * 100).toFixed(1) : 0}%
-              </span>
+ </span>
             </div>
 
             <div
@@ -1582,7 +1582,7 @@ export const InspectionChecklistManage: React.FC = () => {
               </strong>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 총비용 - 고객청구액
-              </span>
+ </span>
             </div>
           </div>
 
@@ -1611,7 +1611,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     <tr>
                       <td colSpan={12} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                         지정된 기간 내 정비 활동 데이터가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedAnalyticsItems.map((item, idx) => {
@@ -1631,10 +1631,10 @@ export const InspectionChecklistManage: React.FC = () => {
                           </td>
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
                             {item.count}건
-                          </td>
+ </td>
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'right', fontSize: '12px' }}>
                             {item.totalManHours.toFixed(1)} M/H
-                          </td>
+ </td>
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'right', fontSize: '12px' }}>
                             ₩{item.partCost.toLocaleString()}
                           </td>
@@ -1653,7 +1653,7 @@ export const InspectionChecklistManage: React.FC = () => {
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
                             <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                               {share}%
-                            </span>
+ </span>
                           </td>
                         </tr>
                       );
@@ -1700,7 +1700,7 @@ export const InspectionChecklistManage: React.FC = () => {
             >
               <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <FileText size={12} /> PDF 문서
-              </span>
+ </span>
               <strong style={{ fontSize: '15px', color: '#334155' }}>{manualSummary.pdfCount}건</strong>
             </div>
             <div
@@ -1716,7 +1716,7 @@ export const InspectionChecklistManage: React.FC = () => {
             >
               <span style={{ fontSize: '11.5px', color: 'var(--danger)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Youtube size={13} /> 유튜브 영상
-              </span>
+ </span>
               <strong style={{ fontSize: '15px', color: 'var(--danger)' }}>{manualSummary.youtubeCount}건</strong>
             </div>
             <div
@@ -1732,7 +1732,7 @@ export const InspectionChecklistManage: React.FC = () => {
             >
               <span style={{ fontSize: '11.5px', color: '#4338ca', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Globe size={12} /> 웹 기술문서
-              </span>
+ </span>
               <strong style={{ fontSize: '15px', color: '#4338ca' }}>{manualSummary.webLinkCount}건</strong>
             </div>
             <div
@@ -1776,10 +1776,10 @@ export const InspectionChecklistManage: React.FC = () => {
             >
               <span style={{ fontSize: '11.5px', color: manualSummary.aiPendingCount > 0 ? '#c2410c' : 'var(--text-secondary)', fontWeight: 600 }}>
                 AI 분석대기
-              </span>
+ </span>
               <strong style={{ fontSize: '15px', color: manualSummary.aiPendingCount > 0 ? '#ea580c' : 'var(--text-muted)' }}>
                 {manualSummary.aiPendingCount}건
-              </strong>
+ </strong>
             </div>
           </div>
 
@@ -1815,7 +1815,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   장비 모델:
-                </span>
+ </span>
                 <select
                   value={selectedManualModel}
                   onChange={e => setSelectedManualModel(e.target.value)}
@@ -1834,12 +1834,12 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                 <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   자료 형태:
-                </span>
+ </span>
                 {[
                   { key: '전체', label: '전체' },
                   { key: 'PDF', label: 'PDF' },
-                  { key: 'YOUTUBE', label: '🎬 유튜브' },
-                  { key: 'WEB_LINK', label: '🌐 웹문서' }
+                  { key: 'YOUTUBE', label: '유튜브' },
+                  { key: 'WEB_LINK', label: '웹문서' }
                 ].map(item => (
                   <button
                     key={item.key}
@@ -1926,7 +1926,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}
               >
                 <Download size={14} /> 매뉴얼 목록 엑셀
-              </button>
+ </button>
 
               <button data-hs-trigger="Register"
                 type="button"
@@ -1935,7 +1935,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', fontSize: '12px', fontWeight: 600 }}
               >
                 <UploadCloud size={15} /> 신규 기술자료 등록
-              </button>
+ </button>
             </div>
 
             {/* 일괄 진행 프로그레스 바 */}
@@ -1954,12 +1954,12 @@ export const InspectionChecklistManage: React.FC = () => {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span>
-                    ⚡ AI 메타데이터 자동 추출 중: <strong>{indexingProgress.title}</strong>
+                     AI 메타데이터 자동 추출 중: <strong>{indexingProgress.title}</strong>
                   </span>
                   <strong>
                     {indexingProgress.current} / {indexingProgress.total}건 (
-                    {Math.round((indexingProgress.current / indexingProgress.total) * 100)}%)
-                  </strong>
+ {Math.round((indexingProgress.current / indexingProgress.total) * 100)}%)
+ </strong>
                 </div>
                 <div style={{ height: '5px', backgroundColor: 'var(--info-light)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div
@@ -1983,7 +1983,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ gridColumn: '1 / -1', padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}
               >
                 조건에 맞는 장비 기술 자료가 없습니다. [신규 기술자료 등록] 버튼으로 PDF, 유튜브 정비영상 또는 웹 문서를 등록해 주세요.
-              </div>
+ </div>
             ) : (
               filteredManuals.map(manual => (
                 <div
@@ -2021,7 +2021,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <Youtube size={12} /> 유튜브 영상
-                          </span>
+ </span>
                         ) : manual.mediaType === 'WEB_LINK' ? (
                           <span
                             style={{
@@ -2038,7 +2038,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <Globe size={11} /> 웹 문서
-                          </span>
+ </span>
                         ) : (
                           <span
                             style={{
@@ -2055,7 +2055,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <FileText size={11} /> PDF 문서
-                          </span>
+ </span>
                         )}
 
                         <span className={`badge ${getCategoryBadgeClass(manual.category)}`} style={{ fontSize: '10.5px' }}>
@@ -2090,7 +2090,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <Sparkles size={10} /> AI 색인됨
-                          </span>
+ </span>
                         ) : (
                           <span
                             style={{
@@ -2104,7 +2104,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             AI 대기
-                          </span>
+ </span>
                         )}
                       </div>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{manual.version}</span>
@@ -2223,7 +2223,7 @@ export const InspectionChecklistManage: React.FC = () => {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, marginBottom: '2px' }}>
                           <Sparkles size={11} /> AI 수록 요약
-                        </div>
+ </div>
                         {manual.aiSummary}
                       </div>
                     )}
@@ -2264,7 +2264,7 @@ export const InspectionChecklistManage: React.FC = () => {
                                 fontWeight: 600
                               }}
                             >
-                              🚨 {ec}
+                               {ec}
                             </span>
                           ))}
                         </div>
@@ -2287,7 +2287,7 @@ export const InspectionChecklistManage: React.FC = () => {
                                 fontWeight: 500
                               }}
                             >
-                              ⚠️ {sym}
+                               {sym}
                             </span>
                           ))}
                         </div>
@@ -2310,7 +2310,7 @@ export const InspectionChecklistManage: React.FC = () => {
                                 fontWeight: 500
                               }}
                             >
-                              🔧 {part}
+                               {part}
                             </span>
                           ))}
                           {manual.majorParts.length > 3 && (
@@ -2335,7 +2335,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   >
                     <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                       등록: {manual.uploadedBy} ({manual.uploadDate})
-                    </span>
+ </span>
 
                     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                       {manual.mediaType === 'YOUTUBE' ? (
@@ -2355,7 +2355,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <Play size={12} fill="#ffffff" /> 영상재생
-                          </button>
+ </button>
                           <a
                             href={manual.externalUrl || manual.fileUrl}
                             target="_blank"
@@ -2372,7 +2372,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             title="YouTube 원본 링크 새창 열기"
                           >
                             <ExternalLink size={12} /> YouTube
-                          </a>
+ </a>
                         </>
                       ) : manual.mediaType === 'WEB_LINK' ? (
                         <>
@@ -2383,7 +2383,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             style={{ padding: '4px 9px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
                           >
                             <Eye size={12} /> 열람
-                          </button>
+ </button>
                           <a
                             href={manual.externalUrl || manual.fileUrl}
                             target="_blank"
@@ -2400,7 +2400,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             title="외부 웹 문서 새창 열기"
                           >
                             <ExternalLink size={12} /> 웹열기
-                          </a>
+ </a>
                         </>
                       ) : (
                         <>
@@ -2411,7 +2411,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             style={{ padding: '4px 9px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
                           >
                             <Eye size={12} /> 열람
-                          </button>
+ </button>
                           <a
                             href={manual.fileUrl}
                             download={manual.fileName}
@@ -2426,7 +2426,7 @@ export const InspectionChecklistManage: React.FC = () => {
                             }}
                           >
                             <Download size={12} /> 다운로드
-                          </a>
+ </a>
                         </>
                       )}
 
@@ -2446,7 +2446,7 @@ export const InspectionChecklistManage: React.FC = () => {
                         title="AI 메타데이터 단건 재색인"
                       >
                         <Sparkles size={12} /> AI 색인
-                      </button>
+ </button>
                       <button
                         type="button"
                         className="btn-secondary"
@@ -2455,7 +2455,7 @@ export const InspectionChecklistManage: React.FC = () => {
                         title="메타데이터 태그 수동 편집"
                       >
                         <Tag size={12} /> 태그
-                      </button>
+ </button>
                       <button data-hs-trigger="Delete"
                         type="button"
                         className="btn-secondary"
@@ -2599,7 +2599,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 />
                 <label htmlFor="chk-isDefectSymptom" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', cursor: 'pointer' }}>
                   불량증상 프리셋 지정
-                </label>
+ </label>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -2654,7 +2654,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   {formRecommendedConsumables.length > 0 && (
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                       {formRecommendedConsumables.length}개 부품 선택됨
-                    </span>
+ </span>
                   )}
                 </div>
                 <div
@@ -2718,7 +2718,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   {formRelatedManualIds.length > 0 && (
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                       {formRelatedManualIds.length}개 매뉴얼 선택됨
-                    </span>
+ </span>
                   )}
                 </div>
                 <div
@@ -2823,14 +2823,14 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ flex: 1, padding: '8px' }}
                 >
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Save"
                   type="submit"
                   className="btn-primary"
                   style={{ flex: 1, padding: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
                 >
                   <Save size={14} /> 저장
-                </button>
+ </button>
               </div>
             </form>
           </div>
@@ -2878,7 +2878,7 @@ export const InspectionChecklistManage: React.FC = () => {
             >
               <h3 style={{ margin: 0, fontWeight: '700', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <UploadCloud className="text-primary" size={18} /> 신규 기술자료 등록
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setIsManualModalOpen(false)}
@@ -2895,8 +2895,8 @@ export const InspectionChecklistManage: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                   {[
                     { type: 'PDF', label: 'PDF / 파일' },
-                    { type: 'YOUTUBE', label: '🎬 유튜브 영상' },
-                    { type: 'WEB_LINK', label: '🌐 웹 기술문서' }
+                    { type: 'YOUTUBE', label: '유튜브 영상' },
+                    { type: 'WEB_LINK', label: '웹 기술문서' }
                   ].map(m => (
                     <button
                       key={m.type}
@@ -3011,7 +3011,7 @@ export const InspectionChecklistManage: React.FC = () => {
               {manualFormMediaType === 'PDF' ? (
                 /* PDF 파일 업로드 */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>매뉴얼 문서 파일 (PDF 등) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>매뉴얼 문서 파일 *</label>
                   <div
                     style={{
                       border: '2px dashed var(--border-color)',
@@ -3034,11 +3034,11 @@ export const InspectionChecklistManage: React.FC = () => {
                     {manualFormFileName ? (
                       <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--primary)' }}>
                         선택된 파일: {manualFormFileName} ({manualFormFileSizeLabel})
-                      </div>
+ </div>
                     ) : (
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                         클릭하여 PDF 문서 또는 매뉴얼 파일 선택
-                      </div>
+ </div>
                     )}
                   </div>
                 </div>
@@ -3048,7 +3048,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 'bold' }}>
                       유튜브 동영상 링크 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       placeholder="https://www.youtube.com/watch?v=... 또는 https://youtu.be/..."
@@ -3105,7 +3105,7 @@ export const InspectionChecklistManage: React.FC = () => {
               ) : (
                 /* 웹 기술문서 링크 등록 */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>웹페이지 링크 URL (Web Link) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>웹페이지 링크 URL *</label>
                   <input
                     type="text"
                     placeholder="https://support.example.com/manuals/..."
@@ -3116,7 +3116,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     제조사 기술지원 웹사이트 또는 온라인 매뉴얼 웹 주소를 입력하세요.
-                  </span>
+ </span>
                 </div>
               )}
 
@@ -3127,7 +3127,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   {manualFormInspectionItemCodes.length > 0 && (
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                       {manualFormInspectionItemCodes.length}개 불량증상 선택됨
-                    </span>
+ </span>
                   )}
                 </div>
                 <div
@@ -3204,14 +3204,14 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ flex: 1, padding: '8px' }}
                 >
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Register"
                   type="submit"
                   className="btn-primary"
                   style={{ flex: 1, padding: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
                 >
                   <Save size={14} /> 자료 등록 완료
-                </button>
+ </button>
               </div>
             </form>
           </div>
@@ -3276,7 +3276,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     }}
                   >
                     <Youtube size={13} /> 유튜브 영상
-                  </span>
+ </span>
                 ) : previewManual.mediaType === 'WEB_LINK' ? (
                   <span
                     style={{
@@ -3293,7 +3293,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     }}
                   >
                     <Globe size={12} /> 웹 기술문서
-                  </span>
+ </span>
                 ) : (
                   <span className={`badge ${getCategoryBadgeClass(previewManual.category)}`}>
                     {getCategoryLabel(previewManual.category)}
@@ -3321,7 +3321,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     }}
                   >
                     <ExternalLink size={13} /> YouTube 원본 열기
-                  </a>
+ </a>
                 ) : previewManual.mediaType === 'WEB_LINK' ? (
                   <a
                     href={previewManual.externalUrl || previewManual.fileUrl}
@@ -3339,7 +3339,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     }}
                   >
                     <ExternalLink size={13} /> 새창에서 열기
-                  </a>
+ </a>
                 ) : (
                   <a
                     href={previewManual.fileUrl}
@@ -3355,7 +3355,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     }}
                   >
                     <Download size={13} /> 다운로드
-                  </a>
+ </a>
                 )}
 
                 <button
@@ -3407,7 +3407,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     style={{ padding: '8px 18px', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     <ExternalLink size={15} /> 새 창에서 공식 웹 기술문서 열기
-                  </a>
+ </a>
                 </div>
               ) : previewManual.fileUrl.startsWith('data:application/pdf') || previewManual.fileName.endsWith('.pdf') ? (
                 /* PDF 인앱 뷰어 */
@@ -3435,7 +3435,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   <div style={{ fontSize: '16px', fontWeight: 700 }}>{previewManual.title}</div>
                   <div style={{ fontSize: '13px', color: '#d1d5db' }}>
                     파일 형식: {previewManual.fileName} ({previewManual.fileSizeLabel || '0 KB'})
-                  </div>
+ </div>
                   <p style={{ maxWidth: '500px', textAlign: 'center', fontSize: '12.5px', color: 'var(--text-muted)' }}>
                     {previewManual.memo || '브라우저 내장 뷰어가 지원되지 않는 문서 형식입니다. [다운로드] 버튼을 눌러 원본 파일을 확인하세요.'}
                   </p>
@@ -3446,7 +3446,7 @@ export const InspectionChecklistManage: React.FC = () => {
                     style={{ padding: '8px 16px', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     <Download size={15} /> 로컬 다운로드 및 열기
-                  </a>
+ </a>
                 </div>
               )}
             </div>
@@ -3518,7 +3518,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 style={{ padding: '6px 14px', fontSize: '12px' }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-primary"
@@ -3572,7 +3572,7 @@ export const InspectionChecklistManage: React.FC = () => {
                 <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Tag size={16} style={{ color: 'var(--primary)' }} />
                   AI 메타데이터 색인 태그 편집
-                </h3>
+ </h3>
                 <p style={{ margin: '3px 0 0 0', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                   [{editingMetadataManual.modelName}] {editingMetadataManual.title}
                 </p>
@@ -3591,7 +3591,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                   AI 수록 요약 (트러블슈팅/정비 포인트)
-                </label>
+ </label>
                 <textarea
                   rows={3}
                   value={editAiSummaryInput}
@@ -3605,7 +3605,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                   진단 에러코드 (콤마로 구분)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={editErrorCodesInput}
@@ -3619,7 +3619,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                   주요 고장증상 (콤마로 구분)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={editSymptomsInput}
@@ -3633,7 +3633,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                   주요 부품 / 품번 (콤마로 구분)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={editMajorPartsInput}
@@ -3647,7 +3647,7 @@ export const InspectionChecklistManage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                   추천 검색 키워드 (콤마로 구분)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={editKeywordsInput}
@@ -3685,7 +3685,7 @@ export const InspectionChecklistManage: React.FC = () => {
                   style={{ padding: '6px 12px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', color: '#ea580c' }}
                 >
                   <Sparkles size={13} /> AI 자동 다시채우기
-                </button>
+ </button>
 
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
@@ -3695,14 +3695,14 @@ export const InspectionChecklistManage: React.FC = () => {
                     style={{ padding: '6px 14px', fontSize: '12px' }}
                   >
                     취소
-                  </button>
+ </button>
                   <button data-hs-trigger="Save"
                     type="submit"
                     className="btn-primary"
                     style={{ padding: '6px 16px', fontSize: '12px' }}
                   >
                     메타데이터 저장
-                  </button>
+ </button>
                 </div>
               </div>
             </form>
@@ -3736,11 +3736,11 @@ export const InspectionChecklistManage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
             <span><strong>정비점검항목:</strong> {masterAuditSummary.totalCount}개</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
-            <span>📂 <strong>관리분류:</strong> {masterAuditSummary.categoryCount}개 카테고리</span>
+            <span> <strong>관리분류:</strong> {masterAuditSummary.categoryCount}개 카테고리</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
-            <span style={{ color: 'var(--warning)' }}>⭐ <strong>배점총합:</strong> {masterAuditSummary.totalScore}점 (평균 {masterAuditSummary.avgScore}점)</span>
+            <span style={{ color: 'var(--warning)' }}> <strong>배점총합:</strong> {masterAuditSummary.totalScore}점 (평균 {masterAuditSummary.avgScore}점)</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
-            <span>⏱️ <strong>표준공수 총계:</strong> {masterAuditSummary.totalManHours} M/H</span>
+            <span> <strong>표준공수 총계:</strong> {masterAuditSummary.totalManHours} M/H</span>
           </div>
         )}
 
@@ -3760,13 +3760,13 @@ export const InspectionChecklistManage: React.FC = () => {
 
         {activeTab === 'MANUALS' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-            <span>📚 <strong>매뉴얼 총계:</strong> {manualSummary.total}건</span>
+            <span> <strong>매뉴얼 총계:</strong> {manualSummary.total}건</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
             <span style={{ color: 'var(--success)' }}><strong>AI 색인완료:</strong> {manualSummary.aiIndexedCount}건</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
             <span style={{ color: manualSummary.aiPendingCount > 0 ? '#ea580c' : 'var(--text-muted)' }}>
-              🟡 <strong>AI 분석대기:</strong> {manualSummary.aiPendingCount}건
-            </span>
+               <strong>AI 분석대기:</strong> {manualSummary.aiPendingCount}건
+ </span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
             <span>파츠북 {manualSummary.partsBookCount}건</span>
             <span style={{ color: 'var(--border-color)' }}>|</span>

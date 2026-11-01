@@ -809,7 +809,7 @@ export const MobileDispatchList: React.FC = () => {
       (printStations || [])[0];
     const docNo = ct?.contractNo || d.id;
     const docTitle = `${labelName}_${cust?.name || '고객사'}_${site?.name || d.id}`;
-    const simpleHtml = `<html><body style="font-family:sans-serif;padding:16px;"><h2>${labelName} (${docNo})</h2><p>고객사: ${cust?.name || '-'} / 현장: ${site?.name || d.destinationAddress || '-'}</p><p>일정: ${d.loadingDate || ''} (${d.loadingTimeSlot || '오전'}) ➔ ${d.unloadingDate || ''} (${d.unloadingTimeSlot || '오전'})</p><p>장비: ${cargoSummary}</p><p>기사: ${d.driverName || '-'} (${d.vehicleNo || '-'} / ${d.driverContact || '-'})</p><p>메모: ${d.closingMemo || d.memo || '-'}</p></body></html>`;
+    const simpleHtml = `<html><body style="font-family:sans-serif;padding:16px;"><h2>${labelName} (${docNo})</h2><p>고객사: ${cust?.name || '-'} / 현장: ${site?.name || d.destinationAddress || '-'}</p><p>일정: ${d.loadingDate || ''} (${d.loadingTimeSlot || '오전'}) ${d.unloadingDate || ''} (${d.unloadingTimeSlot || '오전'})</p><p>장비: ${cargoSummary}</p><p>기사: ${d.driverName || '-'} (${d.vehicleNo || '-'} / ${d.driverContact || '-'})</p><p>메모: ${d.closingMemo || d.memo || '-'}</p></body></html>`;
 
     try {
       await enqueuePrintJob({
@@ -1084,7 +1084,7 @@ export const MobileDispatchList: React.FC = () => {
             contractId: parentContract.id,
             changeType: 'FEE_CHANGE',
             changeDate: getDateOffsetStr(0),
-            description: `[배차 일정 변경] 배차 ${selectedDelivery.id}: 하차일(계약개시일) [${prevUnloadDate || '-'} ➔ ${unloadingDate}] 동기화`,
+            description: `[배차 일정 변경] 배차 ${selectedDelivery.id}: 하차일(계약개시일) [${prevUnloadDate || '-'} ${unloadingDate}] 동기화`,
             createdAt: new Date().toISOString(),
           });
         }
@@ -1199,7 +1199,7 @@ export const MobileDispatchList: React.FC = () => {
     );
     if (readiness.isOutboundLike && !readiness.ready) {
       showErrorModal(
-        `출고 절차가 완료되지 않아 상차 완료를 진행할 수 없습니다.\n\n• 사유: ${readiness.reason}\n\n[장비 할당] ➔ [출고 검수 승인]을 먼저 완료해 주십시오.`,
+        `출고 절차가 완료되지 않아 상차 완료를 진행할 수 없습니다.\n\n• 사유: ${readiness.reason}\n\n[장비 할당] [출고 검수 승인]을 먼저 완료해 주십시오.`,
         '상차 완료 불가'
       );
       return;
@@ -1269,7 +1269,7 @@ export const MobileDispatchList: React.FC = () => {
     }
   };
 
-  // 상차 완료 취소 / 운송 완료 취소 원복 (자산 RENTED ➔ AWAITING_TRANSPORT 롤백)
+  // 상차 완료 취소 / 운송 완료 취소 원복 (자산 RENTED  AWAITING_TRANSPORT 롤백)
   const handleRevertLoadingStatus = async (deliveryId: string) => {
     if (!canSave) return;
     const targetDelivery = (deliveries || []).find((d) => d.id === deliveryId);
@@ -1791,7 +1791,7 @@ export const MobileDispatchList: React.FC = () => {
           <Truck className="w-5 h-5 text-sky-400 flex-shrink-0" />
           <h2 className="text-lg font-black text-white whitespace-nowrap flex-shrink-0">
             배차관리
-          </h2>
+ </h2>
         </div>
 
         {canSave && (
@@ -1818,7 +1818,7 @@ export const MobileDispatchList: React.FC = () => {
             >
               <Plus className="w-4 h-4" />
               배차등록
-            </button>
+ </button>
           </div>
         )}
       </div>
@@ -1837,7 +1837,7 @@ export const MobileDispatchList: React.FC = () => {
         >
           <span className="text-sm font-bold text-indigo-200 whitespace-nowrap flex-shrink-0">
             합짐 선택: {selectedBundleIds.length}건
-          </span>
+ </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
@@ -1848,7 +1848,7 @@ export const MobileDispatchList: React.FC = () => {
               className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold whitespace-nowrap flex-shrink-0"
             >
               취소
-            </button>
+ </button>
             <button
               type="button"
               disabled={selectedBundleIds.length < 2}
@@ -1856,7 +1856,7 @@ export const MobileDispatchList: React.FC = () => {
               className="px-3.5 py-1.5 rounded-lg bg-indigo-600 disabled:opacity-40 text-white text-xs font-black whitespace-nowrap flex-shrink-0"
             >
               {selectedBundleIds.length}건 합짐 확정
-            </button>
+ </button>
           </div>
         </div>
       )}
@@ -1977,7 +1977,7 @@ export const MobileDispatchList: React.FC = () => {
       {filteredDeliveries.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
           조회된 배차 내역이 없습니다.
-        </div>
+ </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filteredDeliveries.map((d) => {
@@ -2062,8 +2062,8 @@ export const MobileDispatchList: React.FC = () => {
                             : 'bg-slate-950 border-slate-600 text-transparent'
                         }`}
                       >
-                        ✓
-                      </span>
+                        
+ </span>
                     )}
                     <span
                       className={`px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap flex-shrink-0 ${catColor}`}
@@ -2091,7 +2091,7 @@ export const MobileDispatchList: React.FC = () => {
                     {d.loadingCompletedAt && (
                       <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black whitespace-nowrap flex-shrink-0">
                         상차완료
-                      </span>
+ </span>
                     )}
                     {printJob && (
                       <span className="px-2 py-0.5 rounded bg-slate-800 text-sky-300 text-xs font-bold whitespace-nowrap flex-shrink-0">
@@ -2101,8 +2101,8 @@ export const MobileDispatchList: React.FC = () => {
                   </div>
 
                   <span className="text-xs font-mono font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
-                    {loadShort}({d.loadingTimeSlot || '오전'})➔{unloadShort}({d.unloadingTimeSlot || '오전'})
-                  </span>
+                    {loadShort}({d.loadingTimeSlot || '오전'}){unloadShort}({d.unloadingTimeSlot || '오전'})
+ </span>
                 </div>
 
                 {/* Row 2: 고객사·현장 + 장비 요약 (줄바꿈 배치) */}
@@ -2125,7 +2125,7 @@ export const MobileDispatchList: React.FC = () => {
                   )}
                 </div>
 
-                {/* Row 3: 상차지 ➔ 하차지 + 날씨/내비 */}
+                {/* Row 3: 상차지  하차지 + 날씨/내비 */}
                 <div
                   style={{
                     display: 'flex',
@@ -2138,7 +2138,7 @@ export const MobileDispatchList: React.FC = () => {
                 >
                   <div className="text-xs text-slate-300 min-w-0 break-words">
                     <span className="text-slate-400">{d.originAddress || '당사 보관소'}</span>
-                    <span className="mx-1.5 text-slate-500">➔</span>
+                    <span className="mx-1.5 text-slate-500"></span>
                     <span className="text-slate-100 font-bold">
                       {d.destinationAddress || '현장'}
                     </span>
@@ -2242,14 +2242,14 @@ export const MobileDispatchList: React.FC = () => {
                           className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-black whitespace-nowrap text-center"
                         >
                           배차하기
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleCancelOrRevertDelivery(d.id)}
                           className="py-2.5 px-2.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-bold whitespace-nowrap"
                         >
                           취소
-                        </button>
+ </button>
                       </>
                     )}
 
@@ -2265,14 +2265,14 @@ export const MobileDispatchList: React.FC = () => {
                             >
                               <Check className="w-4 h-4" />
                               운송완료
-                            </button>
+ </button>
                             <button
                               type="button"
                               onClick={() => handleRevertLoadingStatus(d.id)}
                               className="py-2.5 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-amber-300 text-xs font-bold whitespace-nowrap"
                             >
                               상차취소
-                            </button>
+ </button>
                           </>
                         ) : (
                           <button
@@ -2283,7 +2283,7 @@ export const MobileDispatchList: React.FC = () => {
                           >
                             <Truck className="w-4 h-4" />
                             상차완료
-                          </button>
+ </button>
                         )}
                         <button
                           type="button"
@@ -2291,7 +2291,7 @@ export const MobileDispatchList: React.FC = () => {
                           className="py-2.5 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-bold whitespace-nowrap"
                         >
                           수정
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleSendDriverSms(d)}
@@ -2299,7 +2299,7 @@ export const MobileDispatchList: React.FC = () => {
                         >
                           <Send className="w-3.5 h-3.5" />
                           문자
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleCopyKakaoDispatchMessage(d)}
@@ -2307,7 +2307,7 @@ export const MobileDispatchList: React.FC = () => {
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           카톡
-                        </button>
+ </button>
                       </>
                     )}
 
@@ -2320,7 +2320,7 @@ export const MobileDispatchList: React.FC = () => {
                           className="py-2.5 px-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-bold whitespace-nowrap text-center"
                         >
                           상세/수정
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleRevertLoadingStatus(d.id)}
@@ -2328,14 +2328,14 @@ export const MobileDispatchList: React.FC = () => {
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           완료취소
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleCopyKakaoDispatchMessage(d)}
                           className="py-2.5 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold whitespace-nowrap"
                         >
                           카톡
-                        </button>
+ </button>
                       </>
                     )}
 
@@ -2348,14 +2348,14 @@ export const MobileDispatchList: React.FC = () => {
                           className="py-2.5 px-3 rounded-xl bg-blue-600 text-white text-xs font-bold whitespace-nowrap text-center"
                         >
                           재배차
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => handleCancelOrRevertDelivery(d.id)}
                           className="py-2.5 px-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold whitespace-nowrap"
                         >
                           대기원복
-                        </button>
+ </button>
                       </>
                     )}
                   </div>
@@ -2497,7 +2497,7 @@ export const MobileDispatchList: React.FC = () => {
                 className="px-4 py-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold whitespace-nowrap"
               >
                 닫기
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={async () => {
@@ -2508,7 +2508,7 @@ export const MobileDispatchList: React.FC = () => {
               >
                 <Copy className="w-4 h-4" />
                 전문 다시 복사
-              </button>
+ </button>
             </div>
           </div>
         </div>

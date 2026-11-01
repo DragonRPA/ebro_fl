@@ -350,7 +350,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
               <span>음성 메모 출고의뢰</span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-950 border border-blue-800 text-blue-300">
                 핸즈프리
-              </span>
+ </span>
             </div>
             <div className="text-[10px] text-slate-400 whitespace-nowrap">음성 녹음 입력</div>
           </div>
@@ -395,7 +395,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
 
       {/* 2. 중앙 스튜디오 본문 (스크롤 영역) */}
       <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3.5 max-w-lg mx-auto w-full">
-        {/* 🌟 2-1. 대형 음성 제어 센터 */}
+        {/*  2-1. 대형 음성 제어 센터 */}
         <div className="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-3xl p-4 flex flex-col items-center justify-center gap-3 relative shadow-xl">
           {/* 연속 청취 모드 토글 칩 */}
           <div className="w-full flex items-center justify-between text-[11px]">
@@ -413,7 +413,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
             </button>
 
             <span className="text-slate-400 font-mono text-[10px]">
-              {isListening ? '🎙️ 청취 중...' : '마이크 정지'}
+              {isListening ? '청취 중...' : '마이크 정지'}
             </span>
           </div>
 
@@ -455,7 +455,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           ) : (
             <div className="text-xs font-bold text-slate-300">
               마이크를 눌러 음성 메모를 시작하세요
-            </div>
+ </div>
           )}
 
           {/* 실시간 전사 말풍선 */}
@@ -463,20 +463,20 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
             {interimText ? (
               <span className="text-xs text-blue-300 font-medium animate-pulse">
                 "{interimText}"
-              </span>
+ </span>
             ) : recentSpokenText ? (
               <span className="text-xs text-slate-300">
                 "{recentSpokenText}"
-              </span>
+ </span>
             ) : (
               <span className="text-[11px] text-slate-400">
                 예: "내일 아침 8시 동탄 포스코 현장에 19피트 2대, 김반장 010-1234-5678"
-              </span>
+ </span>
             )}
           </div>
         </div>
 
-        {/* 🌟 2-2. 핵심 5대 슬롯 충족 진행률 바 및 상태 배너 */}
+        {/*  2-2. 핵심 5대 슬롯 충족 진행률 바 및 상태 배너 */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-xs px-1">
             <span className="font-extrabold text-slate-200 flex items-center gap-1.5">
@@ -523,7 +523,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           )}
         </div>
 
-        {/* 🌟 2-3. 5대 핵심 항목 HUD 체크리스트 카드 (2열 그리드) */}
+        {/*  2-3. 5대 핵심 항목 HUD 체크리스트 카드 (2열 그리드) */}
         <div className="grid grid-cols-2 gap-2">
           {/* [1] 고객사 */}
           <div className={`p-3 rounded-2xl border flex flex-col gap-1 transition-all ${
@@ -656,7 +656,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           </div>
         </div>
 
-        {/* 🌟 2-4. 보조 운송/옵션 정보 (1줄 요약 바) */}
+        {/*  2-4. 보조 운송/옵션 정보 (1줄 요약 바) */}
         <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between text-[11px] text-slate-400">
           <span className="truncate flex-1">
             운송: <strong className="text-slate-300">{slotsStatus.transport.value}</strong>
@@ -667,7 +667,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           </span>
         </div>
 
-        {/* 🌟 2-5. 음성 메모 누적 피드 */}
+        {/*  2-5. 음성 메모 누적 피드 */}
         {(draft.snippets || []).length > 0 && (
           <div className="flex flex-col gap-1.5 pt-1">
             <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between px-1">

@@ -1122,7 +1122,7 @@ export const DailyInOutStatus: React.FC = () => {
                 )}
               </div>
 
-              {/* 🔵 입고 확정 칩 */}
+              {/*  입고 확정 칩 */}
               {totalIn > 0 && (
                 <div
                   data-mid="chip-inbound"
@@ -1143,12 +1143,12 @@ export const DailyInOutStatus: React.FC = () => {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap', color: isDark ? '#ffffff' : '#1e3a8a' }}>
                     <ArrowDownLeft size={10} color={isDark ? '#ffffff' : '#1e3a8a'} /> 입고
-                  </span>
+ </span>
                   <span style={{ whiteSpace: 'nowrap', color: isDark ? '#fde047' : '#1e3a8a', fontWeight: 800 }}>{totalIn}대</span>
                 </div>
               )}
 
-              {/* 🔴 출고 확정 칩 */}
+              {/*  출고 확정 칩 */}
               {totalOut > 0 && (
                 <div
                   data-mid="chip-outbound"
@@ -1169,12 +1169,12 @@ export const DailyInOutStatus: React.FC = () => {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap', color: isDark ? '#ffffff' : '#111827' }}>
                     <ArrowUpRight size={10} color={isDark ? '#ffffff' : '#dc2626'} /> 출고
-                  </span>
+ </span>
                   <span style={{ whiteSpace: 'nowrap', color: isDark ? '#fde047' : '#111827', fontWeight: 800 }}>{totalOut}대</span>
                 </div>
               )}
 
-              {/* 🟢 입고 예정 칩 (기존 입고와 구분되는 청록/에메랄드 컬러) */}
+              {/*  입고 예정 칩 (기존 입고와 구분되는 청록/에메랄드 컬러) */}
               {includeScheduled && totalSchedIn > 0 && (
                 <div
                   data-mid="chip-scheduled-inbound"
@@ -1195,12 +1195,12 @@ export const DailyInOutStatus: React.FC = () => {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                     <ArrowDownLeft size={10} color={isDark ? '#5eead4' : '#0f766e'} /> 입고예정
-                  </span>
+ </span>
                   <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>{totalSchedIn}대</span>
                 </div>
               )}
 
-              {/* 🟠 출고 예정 칩 (기존 출고와 구분되는 주황/앰버 컬러) */}
+              {/*  출고 예정 칩 (기존 출고와 구분되는 주황/앰버 컬러) */}
               {includeScheduled && totalSchedOut > 0 && (
                 <div
                   data-mid="chip-scheduled-outbound"
@@ -1221,7 +1221,7 @@ export const DailyInOutStatus: React.FC = () => {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                     <ArrowUpRight size={10} color={isDark ? '#fcd34d' : '#b45309'} /> 출고예정
-                  </span>
+ </span>
                   <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>{totalSchedOut}대</span>
                 </div>
               )}
@@ -1266,10 +1266,10 @@ export const DailyInOutStatus: React.FC = () => {
             <Calendar size={15} color="var(--primary)" />
             <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               {selectedDate} 일일 입출고 확정 내역
-            </h4>
+ </h4>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               총 {selectedDateData.allList.length}건
-            </span>
+ </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
@@ -1320,7 +1320,7 @@ export const DailyInOutStatus: React.FC = () => {
             fontWeight: 800,
             whiteSpace: 'nowrap'
           }}>
-            🔵 입고 확정 <strong style={{ color: isDark ? '#fde047' : '#1e3a8a' }}>{selectedDateData.totalIn}대</strong>
+             입고 확정 <strong style={{ color: isDark ? '#fde047' : '#1e3a8a' }}>{selectedDateData.totalIn}대</strong>
           </span>
           <span style={{
             padding: '2px 8px',
@@ -1331,7 +1331,7 @@ export const DailyInOutStatus: React.FC = () => {
             fontWeight: 800,
             whiteSpace: 'nowrap'
           }}>
-            🔴 출고 확정 <strong style={{ color: isDark ? '#fde047' : '#111827' }}>{selectedDateData.totalOut}대</strong>
+             출고 확정 <strong style={{ color: isDark ? '#fde047' : '#111827' }}>{selectedDateData.totalOut}대</strong>
           </span>
           {includeScheduled && (
             <>
@@ -1345,7 +1345,7 @@ export const DailyInOutStatus: React.FC = () => {
                 fontWeight: 800,
                 whiteSpace: 'nowrap'
               }}>
-                🟢 입고 예정 <strong>{selectedDateData.totalSchedIn}대</strong>
+                 입고 예정 <strong>{selectedDateData.totalSchedIn}대</strong>
               </span>
               <span style={{
                 padding: '2px 8px',
@@ -1357,7 +1357,7 @@ export const DailyInOutStatus: React.FC = () => {
                 fontWeight: 800,
                 whiteSpace: 'nowrap'
               }}>
-                🟠 출고 예정 <strong>{selectedDateData.totalSchedOut}대</strong>
+                 출고 예정 <strong>{selectedDateData.totalSchedOut}대</strong>
               </span>
             </>
           )}
@@ -1392,7 +1392,7 @@ export const DailyInOutStatus: React.FC = () => {
               <tr>
                 <td colSpan={8} style={{ padding: '36px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                   해당 일자({selectedDate})에는 {includeScheduled ? '확정 또는 예정된' : '확정된'} 입고·출고 내역이 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               selectedDateData.allList.map(item => {
@@ -1432,7 +1432,7 @@ export const DailyInOutStatus: React.FC = () => {
                               ? (isDark ? '#ffffff' : '#1e3a8a')
                               : (isDark ? '#fde047' : '#111827'))
                       }}>
-                        {isSched ? (isIn ? '🟢 입고예정' : '🟠 출고예정') : (isIn ? '🔵 입고' : '🔴 출고')}
+                        {isSched ? (isIn ? '입고예정' : '출고예정') : (isIn ? '입고' : '출고')}
                       </span>
                     </td>
                     <td style={{ padding: '5px 8px', whiteSpace: 'nowrap' }}>
@@ -1445,10 +1445,10 @@ export const DailyInOutStatus: React.FC = () => {
                     </td>
                     <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', fontWeight: 800, color: 'var(--text-primary)' }}>
                       {item.modelName} * {item.quantity}대
-                    </td>
+ </td>
                     <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', fontWeight: 700 }}>
                       {item.quantity}대
-                    </td>
+ </td>
                     <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontWeight: 600 }}>
                       {item.assetNos.join(', ') || '-'}
                     </td>
@@ -1459,7 +1459,7 @@ export const DailyInOutStatus: React.FC = () => {
                       {item.siteName && (
                         <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginLeft: '6px' }}>
                           ({item.siteName})
-                        </span>
+ </span>
                       )}
                     </td>
                     <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -1553,10 +1553,10 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               {calYear}년 {calMonth}월 입출고 상세 일정표
-            </span>
+ </span>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-              표기 순서: 고객명 (현장명) ➔ 하차일시, 운송거래처명 ➔ 자산모델명 * 수량
-            </span>
+              표기 순서: 고객명 (현장명) 하차일시, 운송거래처명 자산모델명 * 수량
+ </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', fontSize: '11px', fontWeight: 700 }}>
@@ -1569,7 +1569,7 @@ export const DailyInOutStatus: React.FC = () => {
               whiteSpace: 'nowrap'
             }}>
               상단: 출고 확정
-            </span>
+ </span>
             <span style={{
               padding: '2px 7px',
               borderRadius: '4px',
@@ -1579,7 +1579,7 @@ export const DailyInOutStatus: React.FC = () => {
               whiteSpace: 'nowrap'
             }}>
               하단: 입고 확정
-            </span>
+ </span>
             {includeScheduled && (
               <>
                 <span style={{
@@ -1591,7 +1591,7 @@ export const DailyInOutStatus: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}>
                   출고 예정
-                </span>
+ </span>
                 <span style={{
                   padding: '2px 7px',
                   borderRadius: '4px',
@@ -1601,7 +1601,7 @@ export const DailyInOutStatus: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}>
                   입고 예정
-                </span>
+ </span>
               </>
             )}
           </div>
@@ -1721,7 +1721,7 @@ export const DailyInOutStatus: React.FC = () => {
                         color: dayOfWeek === 0 ? '#ef4444' : dayOfWeek === 6 ? '#3b82f6' : 'var(--text-primary)'
                       }}>
                         {day}일
-                      </span>
+ </span>
                       {(totalOutCnt > 0 || totalInCnt > 0) && (
                         <div style={{ display: 'flex', gap: '4px', fontSize: '10.5px', fontWeight: 800 }}>
                           {totalOutCnt > 0 && (
@@ -1783,7 +1783,7 @@ export const DailyInOutStatus: React.FC = () => {
                                 fontWeight: 800
                               }}>
                                 출고예정
-                              </span>
+ </span>
                             )}
                           </div>
                           {/* 2행: 하차일시, 운송거래처명 */}
@@ -1847,7 +1847,7 @@ export const DailyInOutStatus: React.FC = () => {
                                 fontWeight: 800
                               }}>
                                 입고예정
-                              </span>
+ </span>
                             )}
                           </div>
                           {/* 2행: 하차일시, 운송거래처명 */}
@@ -1893,7 +1893,7 @@ export const DailyInOutStatus: React.FC = () => {
           <Calendar size={16} color="var(--primary)" />
           <h2 data-mid="daily_inout-header" style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             일일 입출고 조회
-          </h2>
+ </h2>
           <span style={{
             fontSize: '10.5px',
             fontWeight: 700,
@@ -1915,7 +1915,7 @@ export const DailyInOutStatus: React.FC = () => {
           >
             <RefreshCw size={12} />
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1950,17 +1950,17 @@ export const DailyInOutStatus: React.FC = () => {
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
               <CheckCircle2 size={12} color="var(--primary)" />
               전체 확정 합계
-            </span>
+ </span>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               총 {fleetCountsByCategory.total.toLocaleString()}대 운용
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
             <span style={{ color: '#2563eb', whiteSpace: 'nowrap' }}>입고 {categoryMonthStats.ALL.inQty}대</span>
             <span style={{ color: '#dc2626', whiteSpace: 'nowrap' }}>출고 {categoryMonthStats.ALL.outQty}대</span>
             <span style={{ color: 'var(--text-secondary)', fontSize: '10px', whiteSpace: 'nowrap' }}>
               순유동 {categoryMonthStats.ALL.net > 0 ? `+${categoryMonthStats.ALL.net}` : categoryMonthStats.ALL.net}대
-            </span>
+ </span>
           </div>
         </div>
 
@@ -1982,17 +1982,17 @@ export const DailyInOutStatus: React.FC = () => {
             <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? ASSET_CATEGORY_META.OWNED_PHYSICAL.darkColor : ASSET_CATEGORY_META.OWNED_PHYSICAL.color, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
               <Box size={12} />
               당사 실물자산
-            </span>
+ </span>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               보유 {fleetCountsByCategory.OWNED_PHYSICAL.toLocaleString()}대
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
             <span style={{ color: '#2563eb', whiteSpace: 'nowrap' }}>입고 {categoryMonthStats.OWNED_PHYSICAL.inQty}대</span>
             <span style={{ color: '#dc2626', whiteSpace: 'nowrap' }}>출고 {categoryMonthStats.OWNED_PHYSICAL.outQty}대</span>
             <span style={{ color: 'var(--text-secondary)', fontSize: '10px', whiteSpace: 'nowrap' }}>
               순유동 {categoryMonthStats.OWNED_PHYSICAL.net > 0 ? `+${categoryMonthStats.OWNED_PHYSICAL.net}` : categoryMonthStats.OWNED_PHYSICAL.net}대
-            </span>
+ </span>
           </div>
         </div>
 
@@ -2014,17 +2014,17 @@ export const DailyInOutStatus: React.FC = () => {
             <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? ASSET_CATEGORY_META.OWNED_VIRTUAL.darkColor : ASSET_CATEGORY_META.OWNED_VIRTUAL.color, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
               <Cpu size={12} />
               당사 가상자산
-            </span>
+ </span>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               등록 {fleetCountsByCategory.OWNED_VIRTUAL.toLocaleString()}대
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
             <span style={{ color: '#2563eb', whiteSpace: 'nowrap' }}>입고 {categoryMonthStats.OWNED_VIRTUAL.inQty}대</span>
             <span style={{ color: '#dc2626', whiteSpace: 'nowrap' }}>출고 {categoryMonthStats.OWNED_VIRTUAL.outQty}대</span>
             <span style={{ color: 'var(--text-secondary)', fontSize: '10px', whiteSpace: 'nowrap' }}>
               순유동 {categoryMonthStats.OWNED_VIRTUAL.net > 0 ? `+${categoryMonthStats.OWNED_VIRTUAL.net}` : categoryMonthStats.OWNED_VIRTUAL.net}대
-            </span>
+ </span>
           </div>
         </div>
 
@@ -2046,17 +2046,17 @@ export const DailyInOutStatus: React.FC = () => {
             <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? ASSET_CATEGORY_META.RENTED.darkColor : ASSET_CATEGORY_META.RENTED.color, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
               <Building2 size={12} />
               임차자산
-            </span>
+ </span>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               임차 {fleetCountsByCategory.RENTED.toLocaleString()}대
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
             <span style={{ color: '#2563eb', whiteSpace: 'nowrap' }}>입고 {categoryMonthStats.RENTED.inQty}대</span>
             <span style={{ color: '#dc2626', whiteSpace: 'nowrap' }}>출고 {categoryMonthStats.RENTED.outQty}대</span>
             <span style={{ color: 'var(--text-secondary)', fontSize: '10px', whiteSpace: 'nowrap' }}>
               순유동 {categoryMonthStats.RENTED.net > 0 ? `+${categoryMonthStats.RENTED.net}` : categoryMonthStats.RENTED.net}대
-            </span>
+ </span>
           </div>
         </div>
       </div>
@@ -2086,7 +2086,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               조회 연월
-            </span>
+ </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <button
                 type="button"
@@ -2116,7 +2116,7 @@ export const DailyInOutStatus: React.FC = () => {
                 whiteSpace: 'nowrap'
               }}>
                 {calYear}년 {calMonth}월
-              </span>
+ </span>
               <button
                 type="button"
                 onClick={handleNextMonth}
@@ -2152,7 +2152,7 @@ export const DailyInOutStatus: React.FC = () => {
                 }}
               >
                 오늘
-              </button>
+ </button>
             </div>
           </div>
 
@@ -2160,7 +2160,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               자산속성 구분
-            </span>
+ </span>
             <select
               data-mid="asset-category-filter"
               value={categoryFilter}
@@ -2189,7 +2189,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               입출구분
-            </span>
+ </span>
             <select
               data-mid="inout-type-filter"
               value={filterType}
@@ -2208,8 +2208,8 @@ export const DailyInOutStatus: React.FC = () => {
               }}
             >
               <option value="ALL">{includeScheduled ? '전체 (입·출고 확정+예정)' : '전체 (입·출고 확정)'}</option>
-              <option value="INBOUND">{includeScheduled ? '🔵 입고 (확정+예정)' : '🔵 입고 확정만'}</option>
-              <option value="OUTBOUND">{includeScheduled ? '🔴 출고 (확정+예정)' : '🔴 출고 확정만'}</option>
+              <option value="INBOUND">{includeScheduled ? '입고 (확정+예정)' : '입고 확정만'}</option>
+              <option value="OUTBOUND">{includeScheduled ? '출고 (확정+예정)' : '출고 확정만'}</option>
             </select>
           </div>
 
@@ -2217,7 +2217,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               모델 선택
-            </span>
+ </span>
             <select
               value={modelFilter}
               onChange={e => setModelFilter(e.target.value)}
@@ -2241,11 +2241,11 @@ export const DailyInOutStatus: React.FC = () => {
             </select>
           </div>
 
-          {/* 🔴 [빨간색 표시 위치] 예정사항도 표시 체크박스 */}
+          {/*  [빨간색 표시 위치] 예정사항도 표시 체크박스 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               예정 포함
-            </span>
+ </span>
             <label
               data-mid="checkbox-include-scheduled"
               style={{
@@ -2275,14 +2275,14 @@ export const DailyInOutStatus: React.FC = () => {
                 style={{ width: '13px', height: '13px', accentColor: '#d97706', cursor: 'pointer', margin: 0 }}
               />
               예정사항도 표시
-            </label>
+ </label>
           </div>
 
-          {/* 🔵 [파란색 표시 위치] 상세보기 버튼 (엑셀 양식 참고 월간 상세 캘린더) */}
+          {/*  [파란색 표시 위치] 상세보기 버튼 (엑셀 양식 참고 월간 상세 캘린더) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               상세 일정표
-            </span>
+ </span>
             <button
               type="button"
               data-mid="btn-detail-calendar-view"
@@ -2306,7 +2306,7 @@ export const DailyInOutStatus: React.FC = () => {
             >
               <Calendar size={12} />
               상세보기
-            </button>
+ </button>
           </div>
         </div>
 
@@ -2316,7 +2316,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               통합 검색
-            </span>
+ </span>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Search size={13} style={{ position: 'absolute', left: '8px', color: 'var(--text-muted)' }} />
               <input
@@ -2376,7 +2376,7 @@ export const DailyInOutStatus: React.FC = () => {
             >
               <Layers size={12} />
               좌우 분할
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setViewMode('TABLE')}
@@ -2400,7 +2400,7 @@ export const DailyInOutStatus: React.FC = () => {
             >
               <Table size={12} />
               표 형태
-            </button>
+ </button>
           </div>
 
           {/* 엑셀 내보내기 버튼 */}
@@ -2427,7 +2427,7 @@ export const DailyInOutStatus: React.FC = () => {
           >
             <Download size={13} />
             엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
@@ -2477,7 +2477,7 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               {calYear}년 {calMonth}월 입출고 {includeScheduled ? '확정·예정 통합' : '확정'} 대장 (총 {currentMonthEvents.length}건)
-            </span>
+ </span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               {includeScheduled ? '확정 실적 및 예정 사항이 구분된 색상으로 함께 표시됩니다' : '확정된 입고·출고 실적만 표시됩니다 (예정 및 취소 건 제외)'}
             </span>
@@ -2513,7 +2513,7 @@ export const DailyInOutStatus: React.FC = () => {
                   <tr>
                     <td colSpan={10} style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회 조건에 부합하는 입출고 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedEvents.map(item => {
@@ -2556,7 +2556,7 @@ export const DailyInOutStatus: React.FC = () => {
                                   ? (isDark ? '#ffffff' : '#1e3a8a')
                                   : (isDark ? '#fde047' : '#111827'))
                           }}>
-                            {isSched ? (isIn ? '🟢 입고예정' : '🟠 출고예정') : (isIn ? '🔵 입고' : '🔴 출고')}
+                            {isSched ? (isIn ? '입고예정' : '출고예정') : (isIn ? '입고' : '출고')}
                           </span>
                         </td>
                         <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
@@ -2569,10 +2569,10 @@ export const DailyInOutStatus: React.FC = () => {
                         </td>
                         <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', fontWeight: 800, color: 'var(--text-primary)' }}>
                           {item.modelName} * {item.quantity}대
-                        </td>
+ </td>
                         <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', fontWeight: 700, textAlign: 'center' }}>
                           {item.quantity}대
-                        </td>
+ </td>
                         <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontWeight: 600 }}>
                           {item.assetNos.join(', ') || '-'}
                         </td>
@@ -2625,10 +2625,10 @@ export const DailyInOutStatus: React.FC = () => {
           <Layers size={14} color="var(--primary)" />
           <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
             {calYear}년 {calMonth}월 확정 입출고 대차대조 집계
-          </span>
+ </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
             (당사 실물: 입 {monthStats.catBreakdown.OWNED_PHYSICAL.inQty}·출 {monthStats.catBreakdown.OWNED_PHYSICAL.outQty} / 당사 가상: 입 {monthStats.catBreakdown.OWNED_VIRTUAL.inQty}·출 {monthStats.catBreakdown.OWNED_VIRTUAL.outQty} / 임차: 입 {monthStats.catBreakdown.RENTED.inQty}·출 {monthStats.catBreakdown.RENTED.outQty})
-          </span>
+ </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -2636,20 +2636,20 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               확정 입고 총계:
-            </span>
+ </span>
             <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#1d4ed8', whiteSpace: 'nowrap' }}>
-              🔵 {monthStats.totalIn}대
-            </span>
+               {monthStats.totalIn}대
+ </span>
           </div>
 
           {includeScheduled && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 입고예정 총계:
-              </span>
+ </span>
               <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#0d9488', whiteSpace: 'nowrap' }}>
-                🟢 {monthStats.totalSchedIn}대
-              </span>
+                 {monthStats.totalSchedIn}대
+ </span>
             </div>
           )}
 
@@ -2657,20 +2657,20 @@ export const DailyInOutStatus: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               확정 출고 총계:
-            </span>
+ </span>
             <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#b91c1c', whiteSpace: 'nowrap' }}>
-              🔴 {monthStats.totalOut}대
-            </span>
+               {monthStats.totalOut}대
+ </span>
           </div>
 
           {includeScheduled && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 출고예정 총계:
-              </span>
+ </span>
               <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#d97706', whiteSpace: 'nowrap' }}>
-                🟠 {monthStats.totalSchedOut}대
-              </span>
+                 {monthStats.totalSchedOut}대
+ </span>
             </div>
           )}
 
@@ -2679,8 +2679,8 @@ export const DailyInOutStatus: React.FC = () => {
           {/* 주기장 순유동 대차 차액 검증 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-              ⚖️ 확정 순유동:
-            </span>
+               확정 순유동:
+ </span>
             <span style={{
               fontSize: '11.5px',
               fontWeight: 800,

@@ -78,6 +78,6 @@ export async function uploadToGoogleDriveCloud(
     success: true,
     fileUrl: base64Data,
     fileName,
-    message: 'DB 안전 보존 완료 (구글 Apps Script URL 등록 시 자동 동기화 활성화)'
+    message: 'DB 안전 보존 완료'
   };
 }

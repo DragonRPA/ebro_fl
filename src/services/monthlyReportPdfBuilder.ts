@@ -187,7 +187,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     curY = rowY + 20;
     ctx.fillStyle = '#DC2626';
     ctx.font = 'bold ' + (11 * scale) + 'px "Malgun Gothic", sans-serif';
-    ctx.fillText('⚠️ 30일 이상 장기 유휴 장비 리스트 (기회손실 발생 집중영업 대상)', 40 * scale, curY * scale);
+    ctx.fillText('30일 이상 장기 유휴 장비 리스트 (기회손실 발생 집중영업 대상)', 40 * scale, curY * scale);
 
     const idleHeaderY = curY + 8;
     ctx.fillStyle = '#FEF2F2';
@@ -228,7 +228,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     ctx.fillStyle = '#94A3B8';
     ctx.font = '500 ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`Page 1 of 3  •  e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
+    ctx.fillText(`Page 1 of 3 • e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
   });
 
   // =========================================================================
@@ -310,7 +310,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     let specTableY = logiBoxY + 40;
     ctx.fillStyle = '#DC2626';
     ctx.font = 'bold ' + (10 * scale) + 'px "Malgun Gothic", sans-serif';
-    ctx.fillText('🚨 현장 진입불가 / 스펙 오발주로 인한 당사 손실 배차 건', 40 * scale, specTableY * scale);
+    ctx.fillText('현장 진입불가 / 스펙 오발주로 인한 당사 손실 배차 건', 40 * scale, specTableY * scale);
 
     const specHdrY = specTableY + 8;
     ctx.fillStyle = '#FEF2F2';
@@ -351,7 +351,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     curY = specRowY + 25;
     ctx.fillStyle = '#1E293B';
     ctx.font = 'bold ' + (12 * scale) + 'px "Malgun Gothic", sans-serif';
-    ctx.fillText('5. 정비 및 현장 AS 품질 관리 (PDI 품질 지표)', 40 * scale, curY * scale);
+    ctx.fillText('5. 정비 및 현장 AS 품질 관리', 40 * scale, curY * scale);
 
     const maintBoxY = curY + 10;
     ctx.fillStyle = '#F8FAFC';
@@ -362,13 +362,13 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     ctx.fillStyle = '#334155';
     ctx.font = '600 ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
     ctx.fillText(`• 당월 완료 정비: 총 ${operations.maintenanceByType.total}건 (현장 AS ${operations.maintenanceByType.fieldAs} / 오버홀 ${operations.maintenanceByType.overhaul})`, 50 * scale, (maintBoxY + 19) * scale);
-    ctx.fillText(`• 평균 복구시간: ${kpis.avgMttrHours} 시간  |  출고 7일내 조기고장: ${kpis.earlyFailuresCount}건`, 310 * scale, (maintBoxY + 19) * scale);
+    ctx.fillText(`• 평균 복구시간: ${kpis.avgMttrHours} 시간 | 출고 7일내 조기고장: ${kpis.earlyFailuresCount}건`, 310 * scale, (maintBoxY + 19) * scale);
 
     // 2페이지 하단 페이지 번호
     ctx.fillStyle = '#94A3B8';
     ctx.font = '500 ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`Page 2 of 3  •  e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
+    ctx.fillText(`Page 2 of 3 • e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
   });
 
   // =========================================================================
@@ -489,7 +489,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
     ctx.font = 'bold ' + (9.5 * scale) + 'px "Malgun Gothic", sans-serif';
     ctx.fillText('[차월 중점 과제]', 55 * scale, (directiveBoxY + 70) * scale);
     ctx.font = '500 ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
-    const tasks = executiveDirective.priorityTasks || '1. 32ft 장기 유휴 장비 대형 현장 우선 투입  2. 스펙 오발주 교환 손실 방지를 위한 계약 전 실측 강화  3. 연체 200만원 이상 거래처 직권 결재 집행';
+    const tasks = executiveDirective.priorityTasks || '1. 32ft 장기 유휴 장비 대형 현장 우선 투입 2. 스펙 오발주 교환 손실 방지를 위한 계약 전 실측 강화 3. 연체 200만원 이상 거래처 직권 결재 집행';
     ctx.fillText(tasks.slice(0, 56), 55 * scale, (directiveBoxY + 84) * scale);
 
     // ── 팀별 코멘트 요약 섹션 ─────────────────────────────────────────
@@ -534,7 +534,7 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
         if (tc.links && tc.links.length > 0 && tc.links[0].url) {
           ctx.fillStyle = '#6366F1';
           ctx.font = '500 ' + (8 * scale) + 'px "Malgun Gothic", sans-serif';
-          ctx.fillText(`🔗 ${tc.links[0].title || tc.links[0].url.slice(0, 40)}`, 118 * scale, (tcRowY + 28) * scale);
+          ctx.fillText(` ${tc.links[0].title || tc.links[0].url.slice(0, 40)}`, 118 * scale, (tcRowY + 28) * scale);
         }
 
         tcRowY += tcBoxH + 6;
@@ -548,17 +548,17 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
       ctx.fillStyle = '#38BDF8';
       ctx.font = 'bold ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`📄 매출청구총액 ₩${kpis.totalRevenue.toLocaleString()} = 🟢 수납액 ₩${kpis.collectedAmount.toLocaleString()} + 🔴 미수잔액 ₩${kpis.unpaidAmount.toLocaleString()}`, 55 * scale, (auditBarY + 21) * scale);
+      ctx.fillText(` 매출청구총액 ₩${kpis.totalRevenue.toLocaleString()} = 수납액 ₩${kpis.collectedAmount.toLocaleString()} + 미수잔액 ₩${kpis.unpaidAmount.toLocaleString()}`, 55 * scale, (auditBarY + 21) * scale);
 
       ctx.fillStyle = '#4ADE80';
-      ctx.fillText(`⚖️ 대차 차액 ₩${conservation.delta.toLocaleString()} (100% 일치)`, 390 * scale, (auditBarY + 21) * scale);
+      ctx.fillText(` 대차 차액 ₩${conservation.delta.toLocaleString()} (100% 일치)`, 390 * scale, (auditBarY + 21) * scale);
 
       // 대표이사 결재란
       const signBoxY = auditBarY + 45;
       ctx.fillStyle = '#1E293B';
       ctx.font = 'bold ' + (10 * scale) + 'px "Malgun Gothic", sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`보고 확정일: ${period.generatedAt.slice(0, 10)}    |    대표이사:  (인) / 서명`, (a4W - 45) * scale, signBoxY * scale);
+      ctx.fillText(`보고 확정일: ${period.generatedAt.slice(0, 10)} | 대표이사: (인) / 서명`, (a4W - 45) * scale, signBoxY * scale);
     } else {
       // 4. 최하단 Gutenberg 대차대조식 검증 바 및 결재/서명란
       const auditBarY = teamCommentY;
@@ -568,24 +568,24 @@ export async function downloadExecutiveReportPdf(data: ExecutiveMonthlyReport): 
       ctx.fillStyle = '#38BDF8';
       ctx.font = 'bold ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`📄 매출청구총액 ₩${kpis.totalRevenue.toLocaleString()} = 🟢 수납액 ₩${kpis.collectedAmount.toLocaleString()} + 🔴 미수잔액 ₩${kpis.unpaidAmount.toLocaleString()}`, 55 * scale, (auditBarY + 21) * scale);
+      ctx.fillText(` 매출청구총액 ₩${kpis.totalRevenue.toLocaleString()} = 수납액 ₩${kpis.collectedAmount.toLocaleString()} + 미수잔액 ₩${kpis.unpaidAmount.toLocaleString()}`, 55 * scale, (auditBarY + 21) * scale);
 
       ctx.fillStyle = '#4ADE80';
-      ctx.fillText(`⚖️ 대차 차액 ₩${conservation.delta.toLocaleString()} (100% 일치)`, 390 * scale, (auditBarY + 21) * scale);
+      ctx.fillText(` 대차 차액 ₩${conservation.delta.toLocaleString()} (100% 일치)`, 390 * scale, (auditBarY + 21) * scale);
 
       // 대표이사 결재란
       const signBoxY = auditBarY + 45;
       ctx.fillStyle = '#1E293B';
       ctx.font = 'bold ' + (10 * scale) + 'px "Malgun Gothic", sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`보고 확정일: ${period.generatedAt.slice(0, 10)}    |    대표이사:  (인) / 서명`, (a4W - 45) * scale, signBoxY * scale);
+      ctx.fillText(`보고 확정일: ${period.generatedAt.slice(0, 10)} | 대표이사: (인) / 서명`, (a4W - 45) * scale, signBoxY * scale);
     }
 
     // 3페이지 하단 페이지 번호
     ctx.fillStyle = '#94A3B8';
     ctx.font = '500 ' + (9 * scale) + 'px "Malgun Gothic", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`Page 3 of 3  •  e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
+    ctx.fillText(`Page 3 of 3 • e-Bro ERP 시스템 자동 생성`, (a4W / 2) * scale, (a4H - 25) * scale);
   });
 
 

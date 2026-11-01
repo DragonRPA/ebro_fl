@@ -703,7 +703,7 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     warrantyMonths: 24,
     status: 'ACTIVE',
     cogsMethod: 'FIFO',
-    memo: '도요타 특허 SAS 능동형 안정화 제어 시스템 탑재 프리미엄 전동지게차',
+    memo: '도요타 특허 SAS 능동형 안정화 제어 시스템 탑재 전동지게차',
     createdAt: '2026-06-20T09:00:00.000Z',
     updatedAt: '2026-09-28T09:00:00.000Z'
   },
@@ -2001,7 +2001,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     recipientEmail: 'dealer-gg@example.com',
     sentAt: '2026-09-25T10:00:00.000Z',
     paidAt: '2026-10-05T14:30:00.000Z',
-    memo: '9월분 대리점 출고 대금 및 장착 옵션(사이드시프트·덧발 1,800mm) 합산 전액 수납 완료',
+    memo: '9월분 대리점 출고 대금 및 장착 옵션 합산 전액 수납 완료',
     createdAt: '2026-09-25T09:00:00.000Z',
     updatedAt: '2026-10-05T14:30:00.000Z'
   },

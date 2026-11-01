@@ -30,7 +30,7 @@ export interface ClearHandoverTasksParams {
 }
 
 /**
- * 🚀 [1] 물리적 ToDo 발행 + 브로드캐스트 원스톱 파이프라인
+ *  [1] 물리적 ToDo 발행 + 브로드캐스트 원스톱 파이프라인
  */
 export async function issueHandoverTask(params: IssueHandoverTaskParams): Promise<Todo> {
   const nowIso = new Date().toISOString();
@@ -111,7 +111,7 @@ export async function issueHandoverTask(params: IssueHandoverTaskParams): Promis
 }
 
 /**
- * 🟢 [2] 비즈니스 액션 완료 시 선행 ToDo 원자적 자동 상계
+ *  [2] 비즈니스 액션 완료 시 선행 ToDo 원자적 자동 상계
  */
 export async function clearHandoverTasks(params: ClearHandoverTasksParams): Promise<number> {
   const nowIso = new Date().toISOString();
@@ -138,7 +138,7 @@ export async function clearHandoverTasks(params: ClearHandoverTasksParams): Prom
 }
 
 /**
- * 🛡️ [2.5] 도메인 원장 상태 교차 검증을 통한 기완료 ToDo 자동 판별 및 상계
+ *  [2.5] 도메인 원장 상태 교차 검증을 통한 기완료 ToDo 자동 판별 및 상계
  * - 업무 처리 경로(장비 할당, 배차 확정, 출고검수 승인, 입고 완료, 정비 완료, 수납 완료, 계약서 재발송 등)에서
  *   개별 엔티티 ID 차이로 인해 미상계 상태로 남은 고아/기완료 ToDo를 실시간 감지하여 자동 상계 처리한다.
  */
@@ -549,7 +549,7 @@ export function isTaskEntityAlreadyResolved(t: Todo): boolean {
 }
 
 /**
- * 🧹 [2.6] 기완료된 미결 ToDo를 일괄 스캔하여 DB 상에서 완료(isCompleted: true) 처리하는 정리 헬퍼
+ *  [2.6] 기완료된 미결 ToDo를 일괄 스캔하여 DB 상에서 완료(isCompleted: true) 처리하는 정리 헬퍼
  */
 export function reconcileCompletedTodosInDb(): number {
   const nowIso = new Date().toISOString();
@@ -684,7 +684,7 @@ export function resolveContractSalespersonName(
 }
 
 /**
- * 🔄 [2.7] 실시간 도메인 원장(장비 할당, 출고 검수, 배차 운송, 현장 AS, 입고 수리)에서
+ *  [2.7] 실시간 도메인 원장(장비 할당, 출고 검수, 배차 운송, 현장 AS, 입고 수리)에서
  * 실제 미완결 상태인 업무를 스캔하여, DB todos에 누락된 건이 있더라도 대시보드에 100% 직결 노출시키는 동기화 엔진
  */
 export function synthesizeMissingDomainTasks(existingOpenTodos: Todo[]): Todo[] {
@@ -1184,7 +1184,7 @@ export function resolveTaskMenuId(t: Todo): string {
 }
 
 /**
- * 🏛️ 부서 모드('SALES' | 'OUTBOUND' | 'AS' | 'ADMIN' | 'EXECUTIVE')별 단일 업무 매칭 SSOT
+ *  부서 모드('SALES' | 'OUTBOUND' | 'AS' | 'ADMIN' | 'EXECUTIVE')별 단일 업무 매칭 SSOT
  * PC 대시보드(Dashboard.tsx)와 모바일 웹앱(MobileHome / MobileAdminHome / MobileExecutiveHome)이
  * 100% 동일한 조건으로 부서별 담당 업무를 판별하도록 보장한다.
  */
@@ -1264,7 +1264,7 @@ export function matchesDepartmentTask(
 }
 
 /**
- * 📱 모바일 웹앱에서 각 업무(Todo)의 `[처리 이동]` 클릭 시 연결될 모바일 탭 ID 반환 SSOT
+ *  모바일 웹앱에서 각 업무(Todo)의 `[처리 이동]` 클릭 시 연결될 모바일 탭 ID 반환 SSOT
  */
 export function resolveMobileTabForTask(t: Todo): string {
   const menuId = resolveTaskMenuId(t);
@@ -1302,7 +1302,7 @@ export function resolveMobileTabForTask(t: Todo): string {
 }
 
 /**
- * 🏷️ PC 대시보드 및 모바일 웹앱 공통 업무 배지(메뉴명 + 담당부서명) 반환 SSOT
+ *  PC 대시보드 및 모바일 웹앱 공통 업무 배지(메뉴명 + 담당부서명) 반환 SSOT
  */
 export function getTaskDisplayBadges(t: Todo): { menuLabel: string; deptLabel: string; categoryKey: 'ASSIGN' | 'INSPECT' | 'DISPATCH' | 'REPAIR' } {
   const menuId = resolveTaskMenuId(t);
@@ -1343,7 +1343,7 @@ export function getTaskDisplayBadges(t: Todo): { menuLabel: string; deptLabel: s
 }
 
 /**
- * 🔍 [3] 로그인 사용자의 직무·권한·부서에 특화된 활성 ToDo 필터링 헬퍼
+ *  [3] 로그인 사용자의 직무·권한·부서에 특화된 활성 ToDo 필터링 헬퍼
  */
 export function findActiveTasksForUser(
   todos: Todo[],
@@ -1371,7 +1371,7 @@ export function findActiveTasksForUser(
   const naturalDispatch = rawDept.includes('DISPATCH') || rawDept.includes('배차') || rawDept.includes('운송') || rawRole.includes('LOGISTICS');
   const naturalAdmin = rawDept.includes('관리') || rawDept.includes('총무') || rawDept.includes('회계') || naturalDispatch;
 
-  // 🏛️ overrideDeptMode(모바일 부서 퀵체인저 등)가 지정된 경우 해당 부서 모드 적용
+  //  overrideDeptMode(모바일 부서 퀵체인저 등)가 지정된 경우 해당 부서 모드 적용
   const activeMode = overrideDeptMode?.toUpperCase() as ('SALES' | 'OUTBOUND' | 'AS' | 'ADMIN' | 'EXECUTIVE' | undefined);
   const isDeptOverride = !!activeMode && activeMode !== 'EXECUTIVE';
   const isExec = !isDeptOverride && (activeMode === 'EXECUTIVE' || rawIsExec);
@@ -1472,7 +1472,7 @@ export function findActiveTasksForUser(
       if (isOwnDeptView) return true;
     }
 
-    // 5. 🛡️ PC 대시보드(overrideDeptMode 미지정)에서도 로그인 사용자의 소속 부서 R&R과 100% 동일한 조건 적용
+    // 5.  PC 대시보드(overrideDeptMode 미지정)에서도 로그인 사용자의 소속 부서 R&R과 100% 동일한 조건 적용
     if (naturalSales && !naturalYard && !naturalAs && !naturalAdmin) {
       return matchesDepartmentTask(t, 'SALES');
     }
@@ -1484,7 +1484,7 @@ export function findActiveTasksForUser(
     if (naturalAdmin && matchesDepartmentTask(t, 'ADMIN')) matchedByDept = true;
     if (matchedByDept) return true;
 
-    // 6. 🎯 권한 기반 대시보드 직결 (소속 부서가 미지정이거나 복합 권한 담당자인 경우)
+    // 6.  권한 기반 대시보드 직결 (소속 부서가 미지정이거나 복합 권한 담당자인 경우)
     if (hasPermission && taskMenuId) {
       if (hasPermission(taskMenuId, 'view')) {
         return true;
@@ -1523,7 +1523,7 @@ export function findActiveTasksForUser(
 }
 
 /**
- * 🎯 [3.5] ToDo 항목에서 대상 메뉴 이동 시 즉시 해당 건을 자동 선택/포커스하기 위한 딥링크 페이로드 빌더
+ *  [3.5] ToDo 항목에서 대상 메뉴 이동 시 즉시 해당 건을 자동 선택/포커스하기 위한 딥링크 페이로드 빌더
  */
 export interface TaskNavigationPayload {
   todoId?: string;
@@ -1616,7 +1616,7 @@ export function buildTaskNavigationPayload(task: Todo): TaskNavigationPayload {
 }
 
 /**
- * 🚀 [4] 출고 진행 중 자산 변경 감지 시 계약서패키지 재발송 ToDo 자동 발행
+ *  [4] 출고 진행 중 자산 변경 감지 시 계약서패키지 재발송 ToDo 자동 발행
  */
 export async function checkAndIssuePackageResendTask(params: {
   contractId: string;
@@ -1655,7 +1655,7 @@ export async function checkAndIssuePackageResendTask(params: {
   );
 
   const title = `[계약서패키지 재발송 필요] ${contract.contractNo} (${custName})`;
-  const content = `출고 진행 중 자산이 변경(${oldAssetStr} ➔ ${newAssetStr})되었습니다.\n` +
+  const content = `출고 진행 중 자산이 변경(${oldAssetStr} ${newAssetStr})되었습니다.\n` +
     `기존 발송된 패키지 구성 서류(반입전점검표, 안전인증서, 제원표 등)와 실출고 장비가 불일치하므로, 서류를 갱신하여 고객사(${custName})로 재발송해 주십시오.` +
     (params.reason ? `\n• 교체 사유: ${params.reason}` : '');
 

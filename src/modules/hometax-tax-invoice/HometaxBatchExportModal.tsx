@@ -267,7 +267,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <FileSpreadsheet size={18} color="var(--primary)" />
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
               홈택스 전자세금계산서 일괄발급 엑셀 생성
-            </h3>
+ </h3>
             <span
               style={{
                 padding: '2px 8px',
@@ -315,7 +315,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 발행 묶음 기준
-              </label>
+ </label>
               <select
                 value={consolidationMode}
                 onChange={e => setConsolidationMode(e.target.value as HometaxConsolidationMode)}
@@ -329,7 +329,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 홈택스 업로드 양식 및 건수 분할
-              </label>
+ </label>
               <select
                 value={templateMode}
                 onChange={e => setTemplateMode(e.target.value as HometaxTemplateMode)}
@@ -345,7 +345,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 작성일자 일괄 지정 (선택)
-              </label>
+ </label>
               <input
                 type="date"
                 value={overrideWriteDate}
@@ -357,7 +357,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 영수(01) / 청구(02) 구분
-              </label>
+ </label>
               <select
                 value={overrideReceiptOrClaim}
                 onChange={e => setOverrideReceiptOrClaim(e.target.value as any)}
@@ -372,7 +372,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1 1 180px', minWidth: '160px' }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 거래처 / 사업자번호 검색
-              </label>
+ </label>
               <div style={{ position: 'relative' }}>
                 <Search size={12} style={{ position: 'absolute', left: '8px', top: '8px', color: 'var(--text-muted)' }} />
                 <input
@@ -486,7 +486,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                 style={{ height: '26px', padding: '0 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
               >
                 전체 ({records.length}건)
-              </button>
+ </button>
               <button
                 type="button"
                 className={filterView === 'ISSUE_ONLY' ? 'btn-primary' : 'btn-secondary'}
@@ -494,7 +494,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                 style={{ height: '26px', padding: '0 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
               >
                 사업자번호/성명 미비 확인 ({records.filter(r => cleanBizRegNo(r.buyer.bizRegNo).length < 10 || !r.buyer.ceoName?.trim()).length}건)
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-secondary"
@@ -502,7 +502,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                 style={{ height: '26px', padding: '0 10px', fontSize: '11.5px', whiteSpace: 'nowrap', borderColor: 'var(--success)', color: 'var(--success)' }}
               >
                 필수항목 정상건만 체크
-              </button>
+ </button>
             </div>
 
             <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -547,7 +547,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                 <tr>
                   <td colSpan={12} style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                     조건에 해당하는 세금계산서 발행 대상 내역이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 displayedRecords.map((rec, idx) => {
@@ -591,15 +591,15 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                         {!isBizValid ? (
                           <span style={{ color: 'var(--danger)', fontWeight: 800, fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <AlertTriangle size={12} /> 번호오류
-                          </span>
+ </span>
                         ) : !isCeoPresent ? (
                           <span style={{ color: 'var(--warning)', fontWeight: 700, fontSize: '11px' }}>
                             성명미입력
-                          </span>
+ </span>
                         ) : (
                           <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <CheckCircle2 size={12} /> 정상
-                          </span>
+ </span>
                         )}
                       </td>
                       <td style={{ padding: '6px 10px', textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>
@@ -672,7 +672,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
                         {extraItemBadge && (
                           <strong style={{ marginLeft: '4px', color: 'var(--primary)', fontSize: '11px' }}>
                             ({extraItemBadge})
-                          </strong>
+ </strong>
                         )}
                       </td>
                       <td style={{ padding: '6px 10px' }}>
@@ -732,7 +732,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             <span>|</span>
             <span>
               생성 파일: <strong>{expectedFileCount}개</strong> ({templatePlan.templateType === 'STANDARD_59COL' ? '59열 일반양식' : '51열 대량양식'})
-            </span>
+ </span>
             <span>|</span>
             <span>
               공급가액 합계: <strong>₩{totals.supply.toLocaleString()}</strong> + 세액 합계: <strong>₩{totals.tax.toLocaleString()}</strong> = 총 합계: <strong style={{ color: 'var(--primary)', fontSize: '14px' }}>₩{totals.grand.toLocaleString()}</strong>
@@ -740,7 +740,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             {errorCount > 0 && (
               <span style={{ color: 'var(--danger)', fontWeight: 700 }}>
                 (등록번호 미비 {errorCount}건 확인 필요)
-              </span>
+ </span>
             )}
           </div>
 
@@ -752,7 +752,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
               style={{ height: '34px', padding: '0 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
             >
               닫기
-            </button>
+ </button>
             <button
               type="button"
               className="btn-primary"
@@ -771,7 +771,7 @@ export const HometaxBatchExportModal: React.FC<HometaxBatchExportModalProps> = (
             >
               <Download size={14} />
               홈택스 일괄발급 엑셀 다운로드 ({selectedRecords.length}건 / {expectedFileCount}파일)
-            </button>
+ </button>
           </div>
         </div>
       </div>

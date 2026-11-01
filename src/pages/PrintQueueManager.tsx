@@ -1,5 +1,5 @@
 // src/pages/PrintQueueManager.tsx
-// 🖨️ 분산 무인 인쇄 큐 모니터 및 프린터 스테이션 관리 (다중 프린터 무제한 증설 지원, 전사 표준 헌장 준수)
+//  분산 무인 인쇄 큐 모니터 및 프린터 스테이션 관리 (다중 프린터 무제한 증설 지원, 전사 표준 헌장 준수)
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
@@ -430,10 +430,10 @@ export const PrintQueueManager: React.FC = () => {
           <div>
             <h2 data-mid="print_queue_monitor-header" style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0, whiteSpace: 'nowrap' }}>
               프린트 큐 모니터
-            </h2>
+ </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
               로컬 프린터 원격 무인 인쇄 및 다중 프린터 스테이션 관리 (당일 이전 작업 매일 자동 삭제)
-            </p>
+ </p>
           </div>
         </div>
 
@@ -555,7 +555,7 @@ export const PrintQueueManager: React.FC = () => {
                 <Server size={16} color="var(--primary)" />
                 <h2 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)', margin: 0 }}>
                   등록 프린터 목록
-                </h2>
+ </h2>
                 <span
                   style={{
                     fontSize: '11px',
@@ -567,7 +567,7 @@ export const PrintQueueManager: React.FC = () => {
                   }}
                 >
                   총 {printStations.length}대
-                </span>
+ </span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -625,10 +625,10 @@ export const PrintQueueManager: React.FC = () => {
                 <Printer size={36} style={{ opacity: 0.35, marginBottom: '6px' }} />
                 <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                   등록된 인쇄 스테이션이 없습니다.
-                </div>
+ </div>
                 <div style={{ fontSize: '12px' }}>
                   우측 폼에서 현재 PC의 로컬 프린터를 선택하여 새 프린터를 원하는 만큼 등록하십시오.
-                </div>
+ </div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -863,11 +863,11 @@ export const PrintQueueManager: React.FC = () => {
                   }}
                 >
                   + 새 프린터 추가로 전환
-                </button>
+ </button>
               ) : (
                 <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                   원하는 만큼 추가 가능
-                </span>
+ </span>
               )}
             </div>
 
@@ -885,7 +885,7 @@ export const PrintQueueManager: React.FC = () => {
             >
               <span style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                 용도 선택
-              </span>
+ </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px' }}>
                 <button
                   type="button"
@@ -907,7 +907,7 @@ export const PrintQueueManager: React.FC = () => {
                   }}
                 >
                   출고 전용
-                </button>
+ </button>
 
                 <button
                   type="button"
@@ -929,7 +929,7 @@ export const PrintQueueManager: React.FC = () => {
                   }}
                 >
                   입고 전용
-                </button>
+ </button>
 
                 <button
                   type="button"
@@ -951,7 +951,7 @@ export const PrintQueueManager: React.FC = () => {
                   }}
                 >
                   출고·입고 통합
-                </button>
+ </button>
               </div>
             </div>
 
@@ -961,7 +961,7 @@ export const PrintQueueManager: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                   프린터 명칭 (식별자)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={stationName}
@@ -974,8 +974,8 @@ export const PrintQueueManager: React.FC = () => {
               {/* 2. 연결 로컬 프린터 드라이버 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-                  연결 프린터 (OS 드라이버)
-                </label>
+                  연결 프린터
+ </label>
 
                 {agentStatus.online && agentStatus.printers.length > 0 ? (
                   <select
@@ -996,7 +996,7 @@ export const PrintQueueManager: React.FC = () => {
                       type="text"
                       value={selectedPrinter}
                       onChange={e => setSelectedPrinter(e.target.value)}
-                      placeholder="직접 프린터 드라이버 명칭 입력 (예: Apeos C2060)"
+                      placeholder="직접 프린터 드라이버 명칭 입력"
                       required
                     />
                     <div style={{
@@ -1009,10 +1009,10 @@ export const PrintQueueManager: React.FC = () => {
                       lineHeight: '1.5'
                     }}>
                       <div style={{ color: 'var(--danger)', fontWeight: '700', marginBottom: '2px' }}>
-                        💡 에이전트 창이 켜져 있는데 프린터 목록이 안 뜰 때:
-                      </div>
-                      브라우저 주소창 좌측 <b>[설정/조정 아이콘]</b> ➔ <b>[기기의 앱: 허용]</b>으로 변경 후 <b>[새로고침]</b>하면 자동 감지됩니다. (콘솔 창 제목에 '선택'이 있으면 Enter 키를 누르세요)
-                    </div>
+                         에이전트 창이 켜져 있는데 프린터 목록이 안 뜰 때:
+ </div>
+                      브라우저 주소창 좌측 <b>[설정/조정 아이콘]</b> <b>[기기의 앱: 허용]</b>으로 변경 후 <b>[새로고침]</b>하면 자동 감지됩니다.
+ </div>
                   </>
                 )}
               </div>
@@ -1021,7 +1021,7 @@ export const PrintQueueManager: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                   출력 용도 (문서 구분)
-                </label>
+ </label>
                 <select
                   value={docTypeDefault}
                   onChange={e => setDocTypeDefault(e.target.value as any)}
@@ -1035,8 +1035,8 @@ export const PrintQueueManager: React.FC = () => {
               {/* 4. 컴퓨터 명칭 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-                  컴퓨터 식별명 (호스트 PC)
-                </label>
+                  컴퓨터 식별명
+ </label>
                 <input
                   type="text"
                   value={machineName}
@@ -1049,7 +1049,7 @@ export const PrintQueueManager: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
                   설치 위치 및 비고
-                </label>
+ </label>
                 <input
                   type="text"
                   value={description}
@@ -1196,10 +1196,10 @@ export const PrintQueueManager: React.FC = () => {
                 whiteSpace: 'nowrap'
               }}>
                 매일 자정 이전 작업 자동 삭제
-              </span>
+ </span>
               <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 조회 {filteredQueue.length}건
-              </span>
+ </span>
               <button
                 type="button"
                 className="btn-secondary"
@@ -1268,7 +1268,7 @@ export const PrintQueueManager: React.FC = () => {
                       }}
                     >
                       인쇄 대기 작업이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   filteredQueue.map(item => {
@@ -1327,7 +1327,7 @@ export const PrintQueueManager: React.FC = () => {
                           <span style={{ fontWeight: '700' }}>{st?.stationName || item.stationId}</span>
                           <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
                             ({item.localPrinterName || st?.localPrinterName || '-'})
-                          </span>
+ </span>
                         </td>
                         <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
                           {item.requestedByName || '-'}
@@ -1349,7 +1349,7 @@ export const PrintQueueManager: React.FC = () => {
                               }}
                             >
                               <Clock size={11} /> 대기중
-                            </span>
+ </span>
                           )}
                           {item.status === 'PRINTING' && (
                             <span
@@ -1367,7 +1367,7 @@ export const PrintQueueManager: React.FC = () => {
                               }}
                             >
                               <RefreshCw size={11} className="animate-spin" /> 출력중
-                            </span>
+ </span>
                           )}
                           {item.status === 'COMPLETED' && (
                             <span
@@ -1385,7 +1385,7 @@ export const PrintQueueManager: React.FC = () => {
                               }}
                             >
                               <CheckCircle2 size={11} /> 완료
-                            </span>
+ </span>
                           )}
                           {item.status === 'FAILED' && (
                             <span
@@ -1403,7 +1403,7 @@ export const PrintQueueManager: React.FC = () => {
                               }}
                             >
                               <AlertCircle size={11} /> 오류
-                            </span>
+ </span>
                           )}
                           {item.status === 'CANCELLED' && (
                             <span
@@ -1421,7 +1421,7 @@ export const PrintQueueManager: React.FC = () => {
                               }}
                             >
                               <XCircle size={11} /> 취소
-                            </span>
+ </span>
                           )}
                         </td>
                         <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', textAlign: 'center' }}>
@@ -1597,7 +1597,7 @@ export const PrintQueueManager: React.FC = () => {
                 style={{ padding: '8px 18px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

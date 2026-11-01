@@ -425,7 +425,7 @@ export const OfficialMailPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               거래처 선택
-            </label>
+ </label>
             <select
               value={selectedCustomerId}
               onChange={(e) => handleCustomerChange(e.target.value)}
@@ -452,7 +452,7 @@ export const OfficialMailPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               담당자 선택
-            </label>
+ </label>
             <select
               value={selectedContactId}
               onChange={(e) => handleContactChange(e.target.value)}
@@ -483,7 +483,7 @@ export const OfficialMailPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               관련 현장 선택
-            </label>
+ </label>
             <select
               value={selectedSiteId}
               onChange={(e) => setSelectedSiteId(e.target.value)}
@@ -513,7 +513,7 @@ export const OfficialMailPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 수신자 호칭 / 성명
-              </label>
+ </label>
               <input
                 type="text"
                 value={recipientName}
@@ -561,7 +561,7 @@ export const OfficialMailPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 참조 이메일
-              </label>
+ </label>
               <input
                 type="text"
                 value={ccEmail}
@@ -604,7 +604,7 @@ export const OfficialMailPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 발송 서식 템플릿 선택
-              </label>
+ </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
                 {[
                   { key: 'COMPANY_PROFILE', label: '회사소개서' },
@@ -665,10 +665,10 @@ export const OfficialMailPage: React.FC = () => {
                     maxWidth: '300px'
                   }}
                 >
-                  <option value="GS-1930">Genie GS-1930 (6m 작업높이 7.8m)</option>
-                  <option value="GS-3246">Genie GS-3246 (10m 작업높이 11.7m)</option>
-                  <option value="GS-4047">Genie GS-4047 (12m 작업높이 13.9m)</option>
-                  <option value="Z-34/22">Genie Z-34/22 (굴절 붐 12m)</option>
+                  <option value="GS-1930">Genie GS-1930</option>
+                  <option value="GS-3246">Genie GS-3246</option>
+                  <option value="GS-4047">Genie GS-4047</option>
+                  <option value="Z-34/22">Genie Z-34/22</option>
                 </select>
               </div>
             )}
@@ -677,7 +677,7 @@ export const OfficialMailPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 메일 제목
-              </label>
+ </label>
               <input
                 type="text"
                 value={subject}
@@ -746,7 +746,7 @@ export const OfficialMailPage: React.FC = () => {
                   gap: '4px'
                 }}>
                   + PC 파일 추가
-                  <input type="file" multiple onChange={handleUserFileUpload} style={{ display: 'none' }} />
+ <input type="file" multiple onChange={handleUserFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
 
@@ -801,7 +801,7 @@ export const OfficialMailPage: React.FC = () => {
           <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               수신: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{recipientEmail || '(미지정)'}</span> | 
-              발신: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{senderBrand}</span>
+ 발신: <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{senderBrand}</span>
             </div>
 
             <button
@@ -916,7 +916,7 @@ export const OfficialMailPage: React.FC = () => {
                           border: '1px solid var(--success)'
                         }}>
                           발송 완료
-                        </span>
+ </span>
                       ) : (
                         <span style={{
                           padding: '2px 8px',
@@ -928,7 +928,7 @@ export const OfficialMailPage: React.FC = () => {
                           border: '1px solid var(--danger)'
                         }}>
                           실패
-                        </span>
+ </span>
                       )}
                     </td>
                   </tr>

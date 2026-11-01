@@ -233,7 +233,7 @@ export const MobileVehicleStock: React.FC = () => {
           effectiveMechanicId,
           processingConsumable.id,
           processQty,
-          processMemo || `[차량 반납] ${mechName} 탑차 ➔ 주기장 반납 (${processQty}개)`
+          processMemo || `[차량 반납] ${mechName} 탑차 주기장 반납 (${processQty}개)`
         );
       } else if (processType === 'USE') {
         // [유형 3: 현장 AS 즉시 소모]
@@ -272,7 +272,7 @@ export const MobileVehicleStock: React.FC = () => {
             effectiveMechanicId,
             processingConsumable.id,
             processQty,
-            processMemo || `[고품 수거] ${mechName} 차량 ➔ 고품 격리 (${disp})`,
+            processMemo || `[고품 수거] ${mechName} 차량 고품 격리 (${disp})`,
             true,
             disp
           );
@@ -339,7 +339,7 @@ export const MobileVehicleStock: React.FC = () => {
           fromLocation: `${mechName} 차량`,
           toLocation: `${mechName} 차량 실사보정`,
           actionDate: new Date().toISOString().split('T')[0],
-          description: `[실사 보정] ${vQty}개 ➔ ${newQty}개 (${diff >= 0 ? `+${diff}` : diff}개) - 사유: ${processMemo || '실물 수량 실사'}`,
+          description: `[실사 보정] ${vQty}개 ${newQty}개 (${diff >= 0 ? `+${diff}` : diff}개) - 사유: ${processMemo || '실물 수량 실사'}`,
           createdAt: new Date().toISOString()
         });
         await db.awaitPendingWrites();
@@ -367,13 +367,13 @@ export const MobileVehicleStock: React.FC = () => {
             <div className="min-w-0 flex-1">
               <span className="text-[11px] font-bold text-amber-400 tracking-wider whitespace-nowrap block">
                 서비스 탑차 재고
-              </span>
+ </span>
               <h2 className="text-sm font-black text-white whitespace-nowrap truncate flex items-center gap-1.5">
                 <span>{activeMechanic?.name || currentUser?.name || '본인'} 기사 탑차</span>
                 {effectiveMechanicId === currentUser?.id && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full flex-shrink-0">
                     본인
-                  </span>
+ </span>
                 )}
               </h2>
             </div>
@@ -384,7 +384,7 @@ export const MobileVehicleStock: React.FC = () => {
             <div className="flex flex-col items-end flex-shrink-0">
               <span className="text-[9px] text-amber-400/80 font-semibold mb-0.5 whitespace-nowrap">
                 AS팀원 선택
-              </span>
+ </span>
               <button
                 type="button"
                 onClick={() => setIsMechanicSheetOpen(true)}
@@ -446,7 +446,7 @@ export const MobileVehicleStock: React.FC = () => {
               const mechName = activeMechanic?.name || '정비사';
               try {
                 const audit = await createStocktakingAudit('VEHICLE', effectiveMechanicId, `${mechName} 차량 모바일 현장 실사`);
-                showErrorModal(`✅ 차량 실사 전표(${audit.auditNo})가 성공적으로 발행되었습니다.\n\n전산 재고가 스냅샷으로 고정되었으며, 관리자 검토 후 최종 확정됩니다.`, '차량 실사 전표 발행 완료');
+                showErrorModal(` 차량 실사 전표(${audit.auditNo})가 성공적으로 발행되었습니다.\n\n전산 재고가 스냅샷으로 고정되었으며, 관리자 검토 후 최종 확정됩니다.`, '차량 실사 전표 발행 완료');
               } catch (err: any) {
                 showErrorModal(err?.message || '실사 전표 생성 실패');
               }
@@ -529,7 +529,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 전체 품목 ({consumables.length})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setFilterTab('LOADED')}
@@ -540,7 +540,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 차량 적재중 ({stockSummary.totalLoadedItems})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setFilterTab('EMPTY')}
@@ -551,7 +551,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 미적재/소진 ({consumables.length - stockSummary.totalLoadedItems})
-              </button>
+ </button>
             </div>
           </div>
 
@@ -560,7 +560,7 @@ export const MobileVehicleStock: React.FC = () => {
             {filteredConsumables.length === 0 ? (
               <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-xs">
                 검색 조건에 일치하는 소모품이 없습니다.
-              </div>
+ </div>
             ) : (
               filteredConsumables.map((c) => {
                 const ms = myStocksMap.get(c.id);
@@ -601,7 +601,7 @@ export const MobileVehicleStock: React.FC = () => {
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
                           주기장 {hqQty}개 보유
-                        </span>
+ </span>
                       </div>
                     </div>
 
@@ -669,7 +669,7 @@ export const MobileVehicleStock: React.FC = () => {
           {myLogs.length === 0 ? (
             <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-xs">
               기록된 소모품 수불 이력이 없습니다.
-            </div>
+ </div>
           ) : (
             myLogs.map((log) => {
               const c = (consumables || []).find(item => item.id === log.consumableId);
@@ -710,7 +710,7 @@ export const MobileVehicleStock: React.FC = () => {
                       isPlus ? 'text-blue-400' : 'text-rose-400'
                     }`}>
                       {isPlus ? `+${log.quantity}` : `-${log.quantity}`}개
-                    </span>
+ </span>
                     <span className="text-[10px] text-slate-500 font-mono mt-0.5">
                       {log.actionDate || log.createdAt?.split('T')[0]}
                     </span>
@@ -722,7 +722,7 @@ export const MobileVehicleStock: React.FC = () => {
         </div>
       )}
 
-      {/* 📋 6. 통합 재고 처리 모달 */}
+      {/*  6. 통합 재고 처리 모달 */}
       {processingConsumable && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
@@ -754,7 +754,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 보충수령
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setProcessType('RETURN')}
@@ -763,7 +763,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 주기장반납
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setProcessType('USE')}
@@ -772,7 +772,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 현장소모
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setProcessType('DEFECTIVE')}
@@ -781,7 +781,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 고품회수
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setProcessType('ADJUST')}
@@ -790,7 +790,7 @@ export const MobileVehicleStock: React.FC = () => {
                 }`}
               >
                 실사보정
-              </button>
+ </button>
             </div>
 
             {/* 현재 상황 안내 */}
@@ -799,13 +799,13 @@ export const MobileVehicleStock: React.FC = () => {
                 <span className="text-slate-400">차량 현재고: </span>
                 <strong className="text-white font-mono font-bold">
                   {myStocksMap.get(processingConsumable.id)?.stockQty || 0}개
-                </strong>
+ </strong>
               </div>
               <div>
                 <span className="text-slate-400">주기장 잔여재고: </span>
                 <strong className="text-emerald-400 font-mono font-bold">
                   {processingConsumable.stockQty || 0}개
-                </strong>
+ </strong>
               </div>
             </div>
 
@@ -822,7 +822,7 @@ export const MobileVehicleStock: React.FC = () => {
                     className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white active:scale-95 font-bold"
                   >
                     -
-                  </button>
+ </button>
                   <input
                     type="number"
                     min={processType === 'ADJUST' ? 0 : 1}
@@ -842,7 +842,7 @@ export const MobileVehicleStock: React.FC = () => {
                     className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white active:scale-95 font-bold"
                   >
                     +
-                  </button>
+ </button>
                 </div>
 
                 {/* 퀵 수량 버튼 */}
@@ -855,7 +855,7 @@ export const MobileVehicleStock: React.FC = () => {
                       className="flex-1 py-1 rounded-lg bg-slate-800 text-[11px] font-bold text-slate-300 hover:bg-slate-700"
                     >
                       {q}개
-                    </button>
+ </button>
                   ))}
                   {processType === 'RETURN' && (
                     <button
@@ -864,7 +864,7 @@ export const MobileVehicleStock: React.FC = () => {
                       className="py-1 px-2 rounded-lg bg-amber-950/60 text-amber-300 border border-amber-800/40 text-[11px] font-bold"
                     >
                       전량
-                    </button>
+ </button>
                   )}
                   {processType === 'RESTOCK' && (
                     <button
@@ -873,7 +873,7 @@ export const MobileVehicleStock: React.FC = () => {
                       className="py-1 px-2 rounded-lg bg-blue-950/60 text-blue-300 border border-blue-800/40 text-[11px] font-bold"
                     >
                       주기장 전량
-                    </button>
+ </button>
                   )}
                 </div>
               </div>
@@ -884,7 +884,7 @@ export const MobileVehicleStock: React.FC = () => {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                       장비 번호 (선택)
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={selectedAssetNo}
@@ -902,7 +902,7 @@ export const MobileVehicleStock: React.FC = () => {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                       현장명 (선택)
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={selectedSiteId}
@@ -925,7 +925,7 @@ export const MobileVehicleStock: React.FC = () => {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                     탈거 고품 상태
-                  </label>
+ </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -937,7 +937,7 @@ export const MobileVehicleStock: React.FC = () => {
                       }`}
                     >
                       재생 수리 대상
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => setDefectiveCondition('SCRAP')}
@@ -948,7 +948,7 @@ export const MobileVehicleStock: React.FC = () => {
                       }`}
                     >
                       폐기 대상 (파손/수명종료)
-                    </button>
+ </button>
                   </div>
                 </div>
               )}
@@ -986,7 +986,7 @@ export const MobileVehicleStock: React.FC = () => {
                   className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold"
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -1005,7 +1005,7 @@ export const MobileVehicleStock: React.FC = () => {
         </div>
       )}
 
-      {/* ── 📱 대안 2: 전사 표준 다크 커스텀 바텀시트 (AS팀원 차량 선택 모달) ── */}
+      {/* ──  대안 2: 전사 표준 다크 커스텀 바텀시트 (AS팀원 차량 선택 모달) ── */}
       {isMechanicSheetOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-sm animate-fade-in">
           <div className="bg-slate-900 border-t border-slate-700 rounded-t-3xl p-5 max-w-md w-full max-h-[75vh] flex flex-col gap-3.5 shadow-2xl overflow-hidden">
@@ -1065,7 +1065,7 @@ export const MobileVehicleStock: React.FC = () => {
                           {isSelf && (
                             <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9.5px] font-bold whitespace-nowrap">
                               본인
-                            </span>
+ </span>
                           )}
                           <span className="text-[10px] text-slate-400 whitespace-nowrap">
                             {m.role === 'MANAGER' ? '팀장' : '기사'}

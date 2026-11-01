@@ -346,7 +346,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                 사업자등록증 폴더 일괄 등록
-              </h3>
+ </h3>
             </div>
           </div>
 
@@ -418,7 +418,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <Building2 size={13} />
                 매출처 (고객사)
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isProcessing}
@@ -445,7 +445,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <Layers size={13} />
                 매입처 (협력사)
-              </button>
+ </button>
             </div>
 
             {targetType === 'VENDOR' && (
@@ -503,7 +503,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <FolderOpen size={14} color="#d97706" />
                 폴더 선택
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isProcessing}
@@ -525,7 +525,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <FileText size={14} color="#0284c7" />
                 파일 선택
-              </button>
+ </button>
             </div>
           </div>
 
@@ -554,7 +554,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <Play size={14} style={{ fill: '#ffffff' }} />
                 일괄 분석 및 등록 시작
-              </button>
+ </button>
             ) : (
               <button
                 type="button"
@@ -576,7 +576,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               >
                 <Pause size={14} style={{ fill: '#ffffff' }} />
                 일시 정지 / 중단
-              </button>
+ </button>
             )}
 
             <button
@@ -629,7 +629,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               {isProcessing && (
                 <span style={{ color: '#0284c7', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
                   <RefreshCw size={12} className="animate-spin" /> 분석 중...
-                </span>
+ </span>
               )}
               {isAborted && (
                 <span style={{ color: 'var(--warning)', fontWeight: 700 }}>[중단됨]</span>
@@ -678,11 +678,11 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
               </div>
               <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>
                 사업자등록증 폴더를 이곳으로 드래그하거나 클릭하여 선택하십시오
-              </h4>
+ </h4>
               <p style={{ margin: '8px 0 20px 0', fontSize: '12px', color: 'var(--text-muted, #64748b)', maxWidth: '460px', lineHeight: '1.5' }}>
                 PDF 및 이미지가 포함된 폴더를 통째로 지정하면 모든 파일을 순회하여 
-                {targetType === 'CUSTOMER' ? ' 매출처(고객사)' : ' 매입처(협력사)'}에 자동으로 등록하거나 보완합니다.
-              </p>
+ {targetType === 'CUSTOMER' ? ' 매출처(고객사)' : ' 매입처(협력사)'}에 자동으로 등록하거나 보완합니다.
+ </p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   type="button"
@@ -705,7 +705,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
                   }}
                 >
                   <FolderOpen size={14} /> 폴더 열기
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -727,7 +727,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
                   }}
                 >
                   <FileText size={14} /> 파일 선택
-                </button>
+ </button>
               </div>
             </div>
           ) : (
@@ -782,32 +782,32 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
                         {isNew && (
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--success-light)', color: 'var(--success)', border: '1px solid #86efac', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <CheckCircle2 size={12} /> 신규등록
-                          </span>
+ </span>
                         )}
                         {isUpdated && (
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--info-light)', color: 'var(--info)', border: '1px solid #7dd3fc', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <CheckCircle2 size={12} /> 정보보완
-                          </span>
+ </span>
                         )}
                         {isCurProcessing && (
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--info-light)', color: 'var(--primary)', border: '1px solid #93c5fd', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <RefreshCw size={12} className="animate-spin" /> 분석중
-                          </span>
+ </span>
                         )}
                         {isFail && (
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid #fca5a5', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <AlertCircle size={12} /> 오류
-                          </span>
+ </span>
                         )}
                         {isPending && (
                           <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', color: 'var(--text-muted, #94a3b8)', backgroundColor: 'var(--bg-header)' }}>
                             대기
-                          </span>
+ </span>
                         )}
                         {row.status === 'SKIPPED' && (
                           <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', color: 'var(--warning)', backgroundColor: 'var(--warning-light)' }}>
                             건너뜀
-                          </span>
+ </span>
                         )}
                       </td>
 
@@ -894,7 +894,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
             >
               <Download size={14} color="#059669" />
               결과 엑셀 다운로드
-            </button>
+ </button>
 
             <button
               type="button"
@@ -917,7 +917,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
             >
               <ShieldCheck size={15} />
               완료 및 닫기
-            </button>
+ </button>
           </div>
         </div>
       </div>

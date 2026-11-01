@@ -12,9 +12,9 @@ import { resolveTargetElement } from './ManualOverlay';
 /* ─── 상수 ────────────────────────────────────────────────────── */
 const ANNOTATION_TYPES: { value: AnnotationType; label: string; icon: string }[] = [
   { value: 'stamp',        label: '순번 뱃지',   icon: '①' },
-  { value: 'callout',      label: '말풍선',      icon: '💬' },
-  { value: 'click_ripple', label: '클릭 리플',   icon: '🔵' },
-  { value: 'highlight',    label: '강조 박스',   icon: '📌' },
+  { value: 'callout',      label: '말풍선',      icon: '' },
+  { value: 'click_ripple', label: '클릭 리플',   icon: '' },
+  { value: 'highlight',    label: '강조 박스',   icon: '' },
 ];
 const POSITION_HINTS: { value: PositionHint; label: string }[] = [
   { value: 'bottom', label: '아래' },
@@ -116,7 +116,7 @@ export const ManualAuthorPanel: React.FC = () => {
         setInspectItem(p => (p && p.seq === item.seq ? null : p));
       }, 3500);
     } else {
-      alert(`⚠️ [${item.seq}단계] "${item.label}"\n\n화면에서 지정된 셀렉터(${item.selector || '없음'})에 해당하는 UI 요소를 찾을 수 없습니다.\n작성 모드의 '🎯' 버튼이나 '✏️' 편집 버튼으로 화면 요소를 직접 클릭하여 지정해 주세요.`);
+      alert(` [${item.seq}단계] "${item.label}"\n\n화면에서 지정된 셀렉터(${item.selector || '없음'})에 해당하는 UI 요소를 찾을 수 없습니다.\n작성 모드의 '' 버튼이나 '' 편집 버튼으로 화면 요소를 직접 클릭하여 지정해 주세요.`);
     }
   }, []);
 
@@ -385,7 +385,7 @@ export const ManualAuthorPanel: React.FC = () => {
               pointerEvents: 'auto',
             }}
           >
-            <span>🎯 단계를 지정할 화면 요소를 마우스로 직접 클릭하세요</span>
+            <span> 단계를 지정할 화면 요소를 마우스로 직접 클릭하세요</span>
             <button
               onClick={() => { setSelectMode(false); setHoveredRect(null); }}
               style={{
@@ -395,7 +395,7 @@ export const ManualAuthorPanel: React.FC = () => {
               }}
             >
               취소
-            </button>
+ </button>
           </div>
         </>
       )}
@@ -456,7 +456,7 @@ export const ManualAuthorPanel: React.FC = () => {
               animation: 'manual-card-in 0.2s ease-out',
             }}
           >
-            <span>🎯 [{inspectItem.seq}단계 UI 위치]</span>
+            <span> [{inspectItem.seq}단계 UI 위치]</span>
             <span style={{ fontWeight: 600, opacity: 0.95 }}>{inspectItem.label}</span>
           </div>
         </div>
@@ -499,11 +499,11 @@ export const ManualAuthorPanel: React.FC = () => {
               <span style={{ fontSize: '13px', opacity: 0.7, cursor: isDragging ? 'grabbing' : 'grab' }}>⠿</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  ✏️ 매뉴얼 작성
-                </div>
+                   매뉴얼 작성
+ </div>
                 <div style={{ fontSize: '11px', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {currentPageTitle || currentPageId} · {items.length}건
-                  {saving && <span style={{ marginLeft: '6px', opacity: 0.75 }}>저장 중…</span>}
+ {saving && <span style={{ marginLeft: '6px', opacity: 0.75 }}>저장 중…</span>}
                 </div>
               </div>
             </div>
@@ -521,8 +521,8 @@ export const ManualAuthorPanel: React.FC = () => {
               title="매뉴얼 작성 종료"
               style={{ ...btnBase, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 8px' }}
             >
-              ✕
-            </button>
+              
+ </button>
           </div>
         </div>
 
@@ -554,10 +554,10 @@ export const ManualAuthorPanel: React.FC = () => {
                 <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button onClick={() => startNew()} style={{ ...btnBase, flex: 2, padding: '7px', background: 'var(--primary)', color: '#fff', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                     + 항목 추가
-                  </button>
+ </button>
                   <button onClick={handleResetToSeed} style={{ ...btnBase, flex: 1, padding: '7px 8px', background: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', fontSize: '11.5px', whiteSpace: 'nowrap' }} title="현재 메뉴를 표준 기본 매뉴얼로 복원">
-                    🔄 기본 복원
-                  </button>
+                     기본 복원
+ </button>
                   <button onClick={handleSeedAll} disabled={seeding} style={{ ...btnBase, width: '100%', padding: '6px 8px', background: 'var(--warning, #b45309)', color: '#fff', fontSize: '11.5px', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }} title="시스템에 존재하는 51개 모든 메뉴의 매뉴얼을 DB에 일괄 주입">
                     {seeding ? '전사 매뉴얼 주입 중…' : '전사 51개 표준 매뉴얼 DB 일괄 주입'}
                   </button>
@@ -567,7 +567,7 @@ export const ManualAuthorPanel: React.FC = () => {
                   <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                     등록된 매뉴얼 항목이 없습니다.<br />
                     「+ 항목 추가」로 시작하세요.
-                  </div>
+ </div>
                 ) : (
                   <div style={{ padding: '6px 8px' }}>
                     {items.map((item, idx) => {
@@ -607,11 +607,11 @@ export const ManualAuthorPanel: React.FC = () => {
                                 {isFound ? (
                                   <span style={{ fontSize: '9.5px', color: 'var(--success)', background: 'rgba(4,120,87,0.1)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
                                     UI 연결
-                                  </span>
+ </span>
                                 ) : (
                                   <span style={{ fontSize: '9.5px', color: 'var(--warning, #b45309)', background: 'rgba(180,83,9,0.1)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }} title="화면에서 요소를 찾지 못함 (폴백 적용)">
                                     미탐색
-                                  </span>
+ </span>
                                 )}
                               </div>
                               <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginTop: '2px' }}>
@@ -705,7 +705,7 @@ export const ManualAuthorPanel: React.FC = () => {
                       onClick={() => setSelectMode(true)}
                       title="화면에서 직접 요소 클릭 선택"
                       style={{ ...btnBase, padding: '6px 10px', background: 'var(--primary)', color: '#fff', fontSize: '16px', flexShrink: 0 }}
-                    >🎯</button>
+                    ></button>
                   </div>
                   {form.autoExtracted && (
                     <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -811,7 +811,7 @@ export const ManualAuthorPanel: React.FC = () => {
                       color: form.spotlight ? '#fff' : 'var(--text-muted)',
                     }}
                   >
-                    💡 Spotlight {form.spotlight ? 'ON' : 'OFF'}
+                     Spotlight {form.spotlight ? 'ON' : 'OFF'}
                   </button>
                   <button
                     onClick={() => setForm(p => ({ ...p, arrow: p.arrow ? undefined : { style: 'elbow' as const, route: 'HV' as const } }))}
@@ -850,14 +850,14 @@ export const ManualAuthorPanel: React.FC = () => {
                     onClick={saveForm}
                     style={{ ...btnBase, flex: 1, padding: '10px', fontSize: '13px', background: 'var(--primary)', color: '#fff' }}
                   >
-                    {editingSeq !== null ? '✓ 수정 저장' : '+ 추가 저장'}
+                    {editingSeq !== null ? '수정 저장' : '+ 추가 저장'}
                   </button>
                   <button
                     onClick={() => { setEditingSeq(null); setForm(emptyForm()); setInsertAfterSeq(null); setPanelTab('list'); }}
                     style={{ ...btnBase, padding: '10px 14px', background: 'var(--bg-secondary)', color: 'var(--text-main)' }}
                   >
                     취소
-                  </button>
+ </button>
                 </div>
               </div>
             )}

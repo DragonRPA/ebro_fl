@@ -176,8 +176,8 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
             onClick={onClose}
             style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--text-muted)' }}
           >
-            ✕
-          </button>
+            
+ </button>
         </div>
 
         {/* 탭 네비게이션 */}
@@ -198,7 +198,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
             }}
           >
             R2 버킷 파일 탐색
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setActiveTab('url')}
@@ -215,7 +215,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
             }}
           >
             직접 링크 / URL 입력
-          </button>
+ </button>
         </div>
 
         {/* 바디 */}
@@ -232,7 +232,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                   style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', whiteSpace: 'nowrap' }}
                 >
                   <ArrowLeft size={14} /> 상위
-                </button>
+ </button>
               )}
 
               {/* 브레드크럼 */}
@@ -242,7 +242,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                   style={{ cursor: 'pointer', fontWeight: !currentPrefix ? '700' : '500', color: !currentPrefix ? 'var(--primary)' : 'inherit' }}
                 >
                   root ({bucketName})
-                </span>
+ </span>
                 {currentPrefix && currentPrefix.split('/').map((part, idx, arr) => (
                   <React.Fragment key={idx}>
                     <ChevronRight size={12} />
@@ -313,7 +313,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                           style={{ padding: '3px 8px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap' }}
                         >
                           폴더 선택
-                        </button>
+ </button>
                       )}
                     </div>
                   ))}
@@ -331,7 +331,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                         </span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           ({(file.size / 1024).toFixed(1)} KB)
-                        </span>
+ </span>
                       </div>
                       <button
                         type="button"
@@ -340,7 +340,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                         style={{ padding: '4px 10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap' }}
                       >
                         선택
-                      </button>
+ </button>
                     </div>
                   ))}
                 </div>
@@ -354,7 +354,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
                 스토리지 파일 URL 또는 경로 직접 입력
-              </label>
+ </label>
               <input
                 type="text"
                 value={rawUrlInput}
@@ -371,7 +371,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                 style={{ padding: '6px 14px', fontSize: '12px' }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-primary"
@@ -386,7 +386,7 @@ export const CloudStoragePickerModal: React.FC<CloudStoragePickerModalProps> = (
                 style={{ padding: '6px 16px', fontSize: '12px', fontWeight: '700' }}
               >
                 적용
-              </button>
+ </button>
             </div>
           </div>
         )}

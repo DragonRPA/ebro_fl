@@ -17,7 +17,7 @@ export const Assets: React.FC = () => {
   } = useApp();
 
   const canEdit = hasPermission('asset', 'save');
-  // 🔒 부서별 단가/재무 정보 접근 통제 (경영진, 관리부, 영업부만 열람 허용)
+  //  부서별 단가/재무 정보 접근 통제 (경영진, 관리부, 영업부만 열람 허용)
   const hasFinancialAccess = canViewFinancials(currentUser);
 
   // 토스트 알림 상태
@@ -46,7 +46,7 @@ export const Assets: React.FC = () => {
   const [showHistoryToggle, setShowHistoryToggle] = useState(false);
   const [isSavingAsset, setIsSavingAsset] = useState(false);
 
-  // ── 🌟 [초고속 O(1) 룩업 인덱싱 해시맵: 헌장 1.1] ──
+  // ──  [초고속 O(1) 룩업 인덱싱 해시맵: 헌장 1.1] ──
   const customerMap = useMemo(() => new Map((customers || []).map(c => [c.id, c.name])), [customers]);
   const siteMap = useMemo(() => new Map((sites || []).map(s => [s.id, s.name])), [sites]);
   const vendorMap = useMemo(() => new Map((vendors || []).map(v => [v.id, v.name])), [vendors]);
@@ -213,7 +213,7 @@ export const Assets: React.FC = () => {
         r.partsUsed && r.partsUsed.length > 0
           ? ` / 사용소모품: ${r.partsUsed.map(p => `${p.modelName} ${p.quantity}개`).join(', ')}`
           : '';
-      return `${r.ticketNo || 'AS'} ${r.issueDescription || r.details || '정비점검'} ➔ ${r.actionTaken || '조치완료'}${partsSummary} (정비사: ${r.mechanicName || '-'})`;
+      return `${r.ticketNo || 'AS'} ${r.issueDescription || r.details || '정비점검'} ${r.actionTaken || '조치완료'}${partsSummary} (정비사: ${r.mechanicName || '-'})`;
     };
 
     // 레거시 assetInOutLogs(repairId 또는 memo 누락분)와 repairs 매칭 및 보강
@@ -450,7 +450,7 @@ export const Assets: React.FC = () => {
     };
   }, [managedAssets]);
 
-  // 🌟 [초고속 렌더링 청크 윈도우: 헌장 1.1] 초기 50건 우선 렌더링으로 10만 개 DOM 프리징 원천 방어
+  //  [초고속 렌더링 청크 윈도우: 헌장 1.1] 초기 50건 우선 렌더링으로 10만 개 DOM 프리징 원천 방어
   const [visibleCount, setVisibleCount] = useState(50);
 
   // 반응형 필터링 및 정렬
@@ -512,7 +512,7 @@ export const Assets: React.FC = () => {
     });
   }, [managedAssets, searchTerm, statusFilter, ownerFilter, natureFilter, yardFilter, feetFilter, manufacturerFilter, customerFilter, productByModelMap, productFeetMap, vendorMap]);
 
-  // 📊 필터링된 결과에 대한 요약 통계 (총 대수, 실물[당사+임차] + 가상 대수, 가상자산을 제외한 순수 실물자산 가동률 및 당사/임차별 가동상황)
+  //  필터링된 결과에 대한 요약 통계 (총 대수, 실물[당사+임차] + 가상 대수, 가상자산을 제외한 순수 실물자산 가동률 및 당사/임차별 가동상황)
   const filteredStats = useMemo(() => {
     const totalCount = filtered.length;
     let physicalCount = 0;
@@ -783,7 +783,7 @@ export const Assets: React.FC = () => {
         '계산서마감일': a.billingDay ? `${a.billingDay}일` : '-'
       };
 
-      // 🔒 경영진, 관리부, 영업부 전용 단가/매출/이익/비용/취득가액 재무 필드
+      //  경영진, 관리부, 영업부 전용 단가/매출/이익/비용/취득가액 재무 필드
       if (hasFinancialAccess) {
         baseRow['월 렌탈료(원)'] = a.monthlyRentalFee || 0;
         baseRow['임차처'] = getAssetRenterName(a);
@@ -856,10 +856,10 @@ export const Assets: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             자산 관리 대장
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 <strong>{managedAssets.length}</strong>대 (조회 <strong>{filtered.length}</strong>대)
-          </span>
+ </span>
         </div>
 
         {/* 우상단 파이프라인 버튼군 - 표준 횡배치: 조회 -> 엑셀다운로드 */}
@@ -870,14 +870,14 @@ export const Assets: React.FC = () => {
             onClick={() => showToast('조회되었습니다.', 'success')}
           >
             <Search size={13} /> 조회
-          </button>
+ </button>
           <button
             className="btn-excel-download"
             data-mid="btn-asset-export"
             onClick={handleExport}
           >
             <Download size={13} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -889,7 +889,7 @@ export const Assets: React.FC = () => {
             <strong style={{ fontSize: '14px', color: 'var(--success)' }}>{kpiStats.physicalAvailableCount}대</strong>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               (당사 {kpiStats.ownedPhysicalAvailable}·임차 {kpiStats.rentedPhysicalAvailable} | 가상 {kpiStats.virtualAvailableCount})
-            </span>
+ </span>
           </div>
         </div>
         <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
@@ -898,7 +898,7 @@ export const Assets: React.FC = () => {
             <strong style={{ fontSize: '14px', color: 'var(--primary)' }}>{kpiStats.physicalRentedOpCount}대</strong>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               (당사 {kpiStats.ownedPhysicalRented}·임차 {kpiStats.rentedPhysicalRented}{kpiStats.virtualOperatingCount > 0 ? ` | 가상 ${kpiStats.virtualOperatingCount}` : ''})
-            </span>
+ </span>
           </div>
         </div>
         <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
@@ -907,7 +907,7 @@ export const Assets: React.FC = () => {
             <strong style={{ fontSize: '14px', color: '#0070C0' }}>{kpiStats.physicalAssignedCount}대</strong>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               (당사 {kpiStats.ownedPhysicalAssigned}·임차 {kpiStats.rentedPhysicalAssigned})
-            </span>
+ </span>
           </div>
         </div>
         <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
@@ -926,7 +926,7 @@ export const Assets: React.FC = () => {
             <strong style={{ fontSize: '14px', color: 'var(--primary)' }}>{kpiStats.opRate}%</strong>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               (당사 {kpiStats.ownedPhysicalOpRate}%·임차 {kpiStats.rentedPhysicalOpRate}%)
-            </span>
+ </span>
           </div>
         </div>
       </div>
@@ -956,7 +956,7 @@ export const Assets: React.FC = () => {
                 (당사 <strong>{filteredStats.ownedPhysicalTotal}</strong>
                 {filteredStats.ownedPhysicalDisposed > 0 ? `[운용 ${filteredStats.ownedPhysicalActive}·매각 ${filteredStats.ownedPhysicalDisposed}]` : ''}
                 {' + '}임차 <strong style={{ color: '#0284c7' }}>{filteredStats.rentedPhysicalTotal}</strong>)
-              </span>
+ </span>
               {' + '}가상 <strong style={{ color: '#7c3aed' }}>{filteredStats.virtualCount}대</strong>
             </span>
             <span style={{ color: 'var(--border-color)' }}>|</span>
@@ -964,10 +964,10 @@ export const Assets: React.FC = () => {
               실물자산 가동률: <strong style={{ color: 'var(--success)' }}>{filteredStats.physicalOpRate}%</strong>
               <span style={{ color: 'var(--text-secondary)', fontSize: '10.5px', marginLeft: '4px', fontWeight: 600 }}>
                 [당사 {filteredStats.ownedPhysicalOpRate}% · 임차 {filteredStats.rentedPhysicalOpRate}%]
-              </span>
+ </span>
               <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', marginLeft: '4px' }}>
                 (가동 {filteredStats.physicalOperatingCount}대[당사 {filteredStats.ownedPhysicalOperating}·임차 {filteredStats.rentedPhysicalOperating}] / 실물운용 {filteredStats.physicalActiveCount}대[당사 {filteredStats.ownedPhysicalActive}·임차 {filteredStats.rentedPhysicalActive}], 임대가능 {filteredStats.physicalAvailableCount}대[당사 {filteredStats.ownedPhysicalAvailable}·임차 {filteredStats.rentedPhysicalAvailable}]{filteredStats.physicalRepairingCount > 0 ? `, 수리중 ${filteredStats.physicalRepairingCount}대` : ''})
-              </span>
+ </span>
             </span>
           </div>
         </div>
@@ -1111,7 +1111,7 @@ export const Assets: React.FC = () => {
                 }}
               >
                 <RefreshCw size={11} /> 초기화
-              </button>
+ </button>
             )}
           </div>
         </div>
@@ -1207,7 +1207,7 @@ export const Assets: React.FC = () => {
                 <tr>
                   <td colSpan={hasFinancialAccess ? 28 : 21} style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                     조회 조건에 해당하는 자산이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 visibleAssets.map((a, idx) => {
@@ -1250,7 +1250,7 @@ export const Assets: React.FC = () => {
                           }}
                         >
                           보기
-                        </button>
+ </button>
                       </td>
 
                       {/* 2. 관리번호 (고정) */}
@@ -1293,12 +1293,12 @@ export const Assets: React.FC = () => {
                           {a.ownerType === 'RENTED' && a.antiEntrapmentOwnership === 'VENDOR' && (
                             <span style={{ fontSize: '9px', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#dc2626', fontWeight: 700, border: '1px solid rgba(220, 38, 38, 0.25)', whiteSpace: 'nowrap' }}>
                               원사협착봉
-                            </span>
+ </span>
                           )}
                           {a.ownerType === 'RENTED' && a.antiEntrapmentOwnership === 'OURS' && (
                             <span style={{ fontSize: '9px', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', fontWeight: 700, border: '1px solid rgba(37, 99, 235, 0.25)', whiteSpace: 'nowrap' }}>
                               당사협착봉
-                            </span>
+ </span>
                           )}
                         </div>
                       </td>
@@ -1319,7 +1319,7 @@ export const Assets: React.FC = () => {
                             }}
                           >
                             가상
-                          </span>
+ </span>
                         ) : (
                           <span
                             style={{
@@ -1334,7 +1334,7 @@ export const Assets: React.FC = () => {
                             }}
                           >
                             실물
-                          </span>
+ </span>
                         )}
                       </td>
 
@@ -1455,7 +1455,7 @@ export const Assets: React.FC = () => {
                       <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         <span className={`badge ${(a.maintenanceScore || 0) === 0 ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '10px' }}>
                           {a.maintenanceScore || 0}점
-                        </span>
+ </span>
                       </td>
 
                       {/* 26. 비고 */}
@@ -1467,28 +1467,28 @@ export const Assets: React.FC = () => {
                 })
               )}
 
-              {/* 🌟 [청크 로딩 안내 & 전체 확장 행: 헌장 1.1] */}
+              {/*  [청크 로딩 안내 & 전체 확장 행: 헌장 1.1] */}
               {visibleCount < filtered.length && (
                 <tr style={{ backgroundColor: 'var(--bg-app)', borderTop: '2px dashed var(--border-color)' }}>
                   <td colSpan={hasFinancialAccess ? 28 : 21} style={{ padding: '10px 16px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                         현재 <strong>{visibleAssets.length}</strong>대 표시 중 (전체 {filtered.length}대 중 잔여 {filtered.length - visibleAssets.length}대)
-                      </span>
+ </span>
                       <button
                         onClick={() => setVisibleCount(prev => Math.min(prev + 100, filtered.length))}
                         className="btn-secondary"
                         style={{ padding: '3px 10px', fontSize: '11px', cursor: 'pointer' }}
                       >
                         +100대 더 보기
-                      </button>
+ </button>
                       <button
                         onClick={() => setVisibleCount(filtered.length)}
                         className="btn-primary"
                         style={{ padding: '3px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 600 }}
                       >
                         전체 {filtered.length}대 한 번에 펼치기
-                      </button>
+ </button>
                     </div>
                   </td>
                 </tr>
@@ -1578,7 +1578,7 @@ export const Assets: React.FC = () => {
                     style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Edit2 size={12} /> 수정
-                  </button>
+ </button>
                 )}
                 {isEditing && (
                   <>
@@ -1596,7 +1596,7 @@ export const Assets: React.FC = () => {
                       style={{ padding: '3px 8px', fontSize: '11px' }}
                     >
                       취소
-                    </button>
+ </button>
                   </>
                 )}
                 <button
@@ -1820,7 +1820,7 @@ export const Assets: React.FC = () => {
                     style={{ padding: '2px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Download size={11} /> 이력 엑셀
-                  </button>
+ </button>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--bg-app)', padding: '8px 10px', borderRadius: '4px', fontSize: '11.5px' }}>
@@ -1874,7 +1874,7 @@ export const Assets: React.FC = () => {
                 style={{ padding: '5px 14px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         );

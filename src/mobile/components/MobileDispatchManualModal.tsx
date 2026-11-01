@@ -258,7 +258,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
             }}
           >
             배차 등록
-          </span>
+ </span>
         </div>
         <button
           type="button"
@@ -318,7 +318,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
             }}
           >
             구분
-          </label>
+ </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {MANUAL_CATEGORY_QUICK_OPTIONS.map((cat) => {
               const active = category === cat;
@@ -370,10 +370,10 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                 }}
               >
                 반납 임차장비 선택
-              </label>
+ </label>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1' }}>
                 {returnAssetIds.length}대 선택
-              </span>
+ </span>
             </div>
             {availableReturnAssets.length === 0 ? (
               <div style={{ fontSize: '12px', color: '#94a3b8' }}>반납 대상 임차장비 없음</div>
@@ -404,7 +404,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                       <span>{a.modelName}</span>
                       <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>
                         ({a.assetNo})
-                      </span>
+ </span>
                       {a.renter && (
                         <span style={{ fontSize: '11px', color: '#fde68a' }}>· {a.renter}</span>
                       )}
@@ -436,7 +436,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
               }}
             >
               거래처 선택
-            </label>
+ </label>
             <div style={{ position: 'relative' }}>
               <Search
                 size={15}
@@ -551,7 +551,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                 }}
               >
                 상차일시
-              </span>
+ </span>
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                 {[
                   { label: '오늘', val: todayStr },
@@ -648,7 +648,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                 }}
               >
                 하차일시
-              </span>
+ </span>
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                 {[
                   { label: '상차동일', val: loadingDate },
@@ -729,7 +729,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
                   상차지
-                </label>
+ </label>
                 <button
                   type="button"
                   onClick={() => setOriginAddress('당사 보관소')}
@@ -745,7 +745,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                   }}
                 >
                   당사 보관소
-                </button>
+ </button>
               </div>
               <input
                 type="text"
@@ -768,7 +768,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
                   하차지
-                </label>
+ </label>
                 <button
                   type="button"
                   onClick={() => setDestinationAddress('당사 보관소')}
@@ -784,7 +784,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                   }}
                 >
                   당사 보관소
-                </button>
+ </button>
               </div>
               <input
                 type="text"
@@ -820,7 +820,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
           >
             <label style={{ fontSize: '12px', fontWeight: 800, color: '#cbd5e1', margin: 0 }}>
               장비 선택
-            </label>
+ </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {quickModels.map((mName) => (
                 <button
@@ -876,7 +876,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                 }}
               >
                 추가
-              </button>
+ </button>
             </div>
             {cargos.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '4px' }}>
@@ -944,7 +944,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
         >
           <label style={{ fontSize: '12px', fontWeight: 800, color: '#cbd5e1', margin: 0 }}>
             차종 선택
-          </label>
+ </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {VEHICLE_TYPE_OPTIONS.map((vt) => {
               const active = vehicleType === vt;
@@ -987,7 +987,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#cbd5e1', margin: 0 }}>
                 운송료 입력
-              </label>
+ </label>
               <span
                 style={{
                   fontSize: '15px',
@@ -997,7 +997,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
                 }}
               >
                 ₩{expectedCost.toLocaleString()}원
-              </span>
+ </span>
             </div>
 
             <div
@@ -1054,7 +1054,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '12px', fontWeight: 700, color: '#cbd5e1', margin: 0 }}>
             메모
-          </label>
+ </label>
           <input
             type="text"
             value={memo}
@@ -1100,7 +1100,7 @@ export const MobileDispatchManualModal: React.FC<MobileDispatchManualModalProps>
           }}
         >
           닫기
-        </button>
+ </button>
         <button
           type="button"
           disabled={isSubmitting}

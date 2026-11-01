@@ -86,7 +86,7 @@ export function useManual() {
           const dbVersion = data.version || ann.version || 1;
           const seedVersion = seed.version || 1;
 
-          // 💡 [SSOT 버전 정합성 보장] 코드 시드 버전이 DB보다 더 높으면 최신 시드를 반환하고 DB 자동 갱신
+          //  [SSOT 버전 정합성 보장] 코드 시드 버전이 DB보다 더 높으면 최신 시드를 반환하고 DB 자동 갱신
           if (seedVersion > dbVersion) {
             const enrichedSeed = {
               ...seed,

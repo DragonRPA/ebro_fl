@@ -779,7 +779,7 @@ export const DevDataUploader: React.FC = () => {
 
     const converted = parsedRows.map((row, idx) => convertRow(row, schema, idx));
 
-    // 🛡️ 헌장 1.5 준수: customer_sites 단일 테이블 업로드 시 물리 현장 마스터 선행 생성 및 siteMasterId 자동 매핑
+    //  헌장 1.5 준수: customer_sites 단일 테이블 업로드 시 물리 현장 마스터 선행 생성 및 siteMasterId 자동 매핑
     if (schema.supabaseTable === 'customer_sites') {
       const nowIso = new Date().toISOString();
       const newMastersToUpsert: any[] = [];
@@ -1008,7 +1008,7 @@ export const DevDataUploader: React.FC = () => {
     
     try {
       const sheetNames = Object.keys(bulkParsedData);
-      // 🛡️ 헌장 1.5 준수: site_masters가 항상 customer_sites보다 먼저 처리되도록 정렬
+      //  헌장 1.5 준수: site_masters가 항상 customer_sites보다 먼저 처리되도록 정렬
       sheetNames.sort((a, b) => {
         if (a === 'site_masters' && b === 'customer_sites') return -1;
         if (a === 'customer_sites' && b === 'site_masters') return 1;
@@ -1077,7 +1077,7 @@ export const DevDataUploader: React.FC = () => {
             totalFailed += batch.length;
             console.error(`Bulk upsert error for ${schema.supabaseTable}:`, error);
             const isRlsError = error.code === '42501' || error.message.includes('row-level security');
-            const rlsSolution = isRlsError ? `\n[원인 및 복구 가이드] ${schema.supabaseTable} 테이블의 RLS(행 수준 보안) 정책이 쓰기를 차단하고 있습니다.\n아래 Policy DDL을 Supabase SQL Editor에서 실행하세요 (RLS는 유지됨):\n\nDROP POLICY IF EXISTS "allow_anon_select" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_anon_insert" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_anon_update" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_select" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_insert" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_update" ON "${schema.supabaseTable}";\nCREATE POLICY "allow_anon_select" ON "${schema.supabaseTable}" FOR SELECT TO anon USING (true);\nCREATE POLICY "allow_anon_insert" ON "${schema.supabaseTable}" FOR INSERT TO anon WITH CHECK (true);\nCREATE POLICY "allow_anon_update" ON "${schema.supabaseTable}" FOR UPDATE TO anon USING (true) WITH CHECK (true);\nCREATE POLICY "allow_authenticated_select" ON "${schema.supabaseTable}" FOR SELECT TO authenticated USING (true);\nCREATE POLICY "allow_authenticated_insert" ON "${schema.supabaseTable}" FOR INSERT TO authenticated WITH CHECK (true);\nCREATE POLICY "allow_authenticated_update" ON "${schema.supabaseTable}" FOR UPDATE TO authenticated USING (true) WITH CHECK (true);\n\n(상단 'DB 스키마 정합성 검증 실행' 버튼을 누르시면 전체 테이블 Policy DDL이 자동 생성됩니다.)\n` : '';
+            const rlsSolution = isRlsError ? `\n[원인 및 복구 가이드] ${schema.supabaseTable} 테이블의 RLS(행 수준 보안) 정책이 쓰기를 차단하고 있습니다.\n아래 Policy DDL을 Supabase SQL Editor에서 실행하세요:\n\nDROP POLICY IF EXISTS "allow_anon_select" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_anon_insert" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_anon_update" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_select" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_insert" ON "${schema.supabaseTable}";\nDROP POLICY IF EXISTS "allow_authenticated_update" ON "${schema.supabaseTable}";\nCREATE POLICY "allow_anon_select" ON "${schema.supabaseTable}" FOR SELECT TO anon USING (true);\nCREATE POLICY "allow_anon_insert" ON "${schema.supabaseTable}" FOR INSERT TO anon WITH CHECK (true);\nCREATE POLICY "allow_anon_update" ON "${schema.supabaseTable}" FOR UPDATE TO anon USING (true) WITH CHECK (true);\nCREATE POLICY "allow_authenticated_select" ON "${schema.supabaseTable}" FOR SELECT TO authenticated USING (true);\nCREATE POLICY "allow_authenticated_insert" ON "${schema.supabaseTable}" FOR INSERT TO authenticated WITH CHECK (true);\nCREATE POLICY "allow_authenticated_update" ON "${schema.supabaseTable}" FOR UPDATE TO authenticated USING (true) WITH CHECK (true);\n\n\n` : '';
             errDetailsMsg += `[시트/테이블: ${schema.supabaseTable}]\n[Supabase 에러 코드: ${error.code || '미지정'}]\n[메시지: ${error.message}]${rlsSolution}\n[상세 내역: ${error.details || '없음'}]\n\n`;
           } else {
             totalSuccess += batch.length;
@@ -1133,7 +1133,7 @@ export const DevDataUploader: React.FC = () => {
     if (supabase) {
       const { data, error } = await supabase.from(schema.supabaseTable).select('*');
       if (error) {
-        console.error('Download error (Supabase):', error);
+        console.error('Download error:', error);
         showErrorModal(`[${schema.supabaseTable}] 다운로드 오류:\n\n${error.message}`);
         return;
       }
@@ -1189,7 +1189,7 @@ export const DevDataUploader: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────
-  // ✅ 재설계된 DB 스키마 정합성 검증 도구
+  //  재설계된 DB 스키마 정합성 검증 도구
   // 본질 목적: 개발자가 schema.sql 변경 후 수동으로 SQL Editor에서 DDL 실행하는 수작업을 ZERO화
   // 핵심 개선:
   //   1. 검증: PostgREST API(schema cache 오염) 대신 information_schema 직접 조회
@@ -1308,12 +1308,12 @@ export const DevDataUploader: React.FC = () => {
           `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "solutionType" TEXT;`,
           `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "stampImageUrl" TEXT;`,
           `ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "stampBase64" TEXT;`,
-          `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='permissions' AND column_name='user_id') THEN UPDATE "permissions" SET "userId" = user_id WHERE "userId" IS NULL AND user_id IS NOT NULL; END IF; END $$;`,
-          `UPDATE consumable_purchases SET "consumableId" = NULL WHERE "consumableId" IS NOT NULL AND "consumableId" NOT IN (SELECT id FROM consumables);`
+          `DO $$ BEGIN IF EXISTS THEN UPDATE "permissions" SET "userId" = user_id WHERE "userId" IS NULL AND user_id IS NOT NULL; END IF; END $$;`,
+          `UPDATE consumable_purchases SET "consumableId" = NULL WHERE "consumableId" IS NOT NULL AND "consumableId" NOT IN;`
         ];
         stmts.push(...permMigrateStmts);
         sqlPatchDisplay += `-- [보완] permissions "userId" 이관 및 tenants 신규 컬럼, consumable_purchases 레거시 FK 클리닝\n${permMigrateStmts.join('\n')}\n\n`;
-        sqlPatchDisplay += `\n-- ✅ PostgREST 스키마 캐시 즉시 갱신 (dev_exec_ddl 자동 실행)\nNOTIFY pgrst, 'reload schema';\n`;
+        sqlPatchDisplay += `\n-- PostgREST 스키마 캐시 즉시 갱신\nNOTIFY pgrst, 'reload schema';\n`;
       }
 
       setSchemaAuditResults(audit);
@@ -1349,7 +1349,7 @@ export const DevDataUploader: React.FC = () => {
         const results = Array.isArray(data) ? data : [];
         const failed = results.filter((r: any) => !r.ok);
         if (failed.length > 0) {
-          setApplyResult({ ok: false, msg: `일부 DDL 실패:\n${failed.map((r: any) => `• ${r.sql}\n  → ${r.err}`).join('\n')}` });
+          setApplyResult({ ok: false, msg: `일부 DDL 실패:\n${failed.map((r: any) => `• ${r.sql}\n → ${r.err}`).join('\n')}` });
         } else {
           setApplyResult({ ok: true, msg: `${results.length}개 DDL 구문 실행 완료! PostgREST 스키마 캐시도 자동 갱신되었습니다.` });
           // 패치 성공 후 자동 재검증
@@ -1566,7 +1566,7 @@ export const DevDataUploader: React.FC = () => {
 
             {fileName && parsedRows.length > 0 && (
               <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-                📄 <strong>{fileName}</strong> — 총 <strong>{parsedRows.length}행</strong> 인식됨
+                 <strong>{fileName}</strong> — 총 <strong>{parsedRows.length}행</strong> 인식됨
               </div>
             )}
 
@@ -1658,7 +1658,7 @@ export const DevDataUploader: React.FC = () => {
                       gap: '6px', fontSize: '12px', padding: '8px 12px'
                     }}
                   >
-                    🔍 실패 원인 자세히 보기 (오류 복사)
+                     실패 원인 자세히 보기 (오류 복사)
                   </button>
                 )}
               </div>
@@ -1680,7 +1680,7 @@ export const DevDataUploader: React.FC = () => {
           borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', fontSize: '13px', color: 'var(--text-muted)'
         }}>
           <Info size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} />
-          <span>엑셀 파일(`.xlsx`)의 각 시트명은 <code>customers</code>, <code>contacts</code>, <code>sites</code> 등 테이블명이어야 합니다. 첫 행의 컬럼명은 한글 라벨 또는 영문 키를 지원합니다.</span>
+          <span>엑셀 파일의 각 시트명은 <code>customers</code>, <code>contacts</code>, <code>sites</code> 등 테이블명이어야 합니다. 첫 행의 컬럼명은 한글 라벨 또는 영문 키를 지원합니다.</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: '20px' }}>
@@ -1792,7 +1792,7 @@ export const DevDataUploader: React.FC = () => {
                       gap: '4px', fontSize: '11px', padding: '6px 10px'
                     }}
                   >
-                    🔍 실패 원인 자세히 보기 (오류 복사)
+                     실패 원인 자세히 보기 (오류 복사)
                   </button>
                 )}
               </div>
@@ -1830,7 +1830,7 @@ export const DevDataUploader: React.FC = () => {
         {helperFunctionsExist === false && (
           <div style={{ padding: '14px 16px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid var(--danger)', borderRadius: '8px', marginBottom: '16px' }}>
             <p style={{ fontWeight: '700', color: 'var(--danger)', margin: '0 0 8px 0', fontSize: '13px' }}>[1회 초기 셋업 필요] Supabase SQL Editor에서 아래 SQL을 실행한 후 다시 검증하세요.</p>
-            <textarea readOnly value={`-- ✅ DB 스키마 자동화 도구 Helper 함수 (최초 1회만 실행)
+            <textarea readOnly value={`--  DB 스키마 자동화 도구 Helper 함수 (최초 1회만 실행)
 CREATE OR REPLACE FUNCTION dev_get_columns(p_table TEXT)
 RETURNS TABLE(column_name TEXT) AS $$
   SELECT column_name::TEXT FROM information_schema.columns
@@ -1960,7 +1960,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`}
                     <th style={{ padding: '10px 12px', fontWeight: '700', width: '50px' }}>#</th>
                     <th style={{ padding: '10px 12px', fontWeight: '700' }}>테이블명</th>
                     <th style={{ padding: '10px 12px', fontWeight: '700', width: '110px' }}>상태</th>
-                    <th style={{ padding: '10px 12px', fontWeight: '700' }}>검증 결과 (information_schema 기준)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: '700' }}>검증 결과</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1989,7 +1989,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`}
               <div style={{ padding: '16px', backgroundColor: 'rgba(239,68,68,0.05)', border: '1.5px dashed var(--danger)', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                   <h4 style={{ fontWeight: '700', fontSize: '14px', color: 'var(--danger)', margin: 0 }}>
-                    ⚠️ {patchStatements.length}개 DDL 구문 패치 필요 — 자동 적용 또는 수동 복사
+                     {patchStatements.length}개 DDL 구문 패치 필요 — 자동 적용 또는 수동 복사
                   </h4>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button data-hs-trigger="Apply"
@@ -2002,7 +2002,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`}
                       }}
                     >
                       {applyingPatch ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <DatabaseIcon size={14} />}
-                      {applyingPatch ? 'DDL 실행 중...' : '패치 자동 적용 (DB 직접 실행)'}
+                      {applyingPatch ? 'DDL 실행 중...' : '패치 자동 적용'}
                     </button>
                     <button
                       onClick={() => { navigator.clipboard.writeText(generatedPatchSql); alert('클립보드에 복사되었습니다.'); }}
@@ -2037,7 +2037,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;`}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 16px', backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e', borderRadius: '8px', color: 'var(--success)' }}>
                 <CheckCircle size={16} />
                 <span style={{ fontSize: '13px', fontWeight: '700' }}>
-                  ✅ 검증 완전 충족: information_schema 기준 DB 컬럼 구조가 schema.sql 정의와 100% 일치합니다.
+                   검증 완전 충족: information_schema 기준 DB 컬럼 구조가 schema.sql 정의와 100% 일치합니다.
                 </span>
               </div>
             )}

@@ -741,7 +741,7 @@ export const AvailableInventoryPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--text-main)', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
             가용재고조회
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
             조회 모델 <strong style={{ color: 'var(--primary)' }}>{filteredRows.length}종</strong>
           </span>
@@ -758,7 +758,7 @@ export const AvailableInventoryPage: React.FC = () => {
             style={{ height: '30px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             <RefreshCw size={12} /> 새로고침
-          </button>
+ </button>
           <button
             type="button"
             className="btn-secondary"
@@ -766,7 +766,7 @@ export const AvailableInventoryPage: React.FC = () => {
             style={{ height: '30px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', flexShrink: 0, borderColor: 'var(--primary)', color: 'var(--primary)' }}
           >
             {copied ? <Check size={12} /> : <Copy size={12} />} 출고예정 텍스트 복사
-          </button>
+ </button>
           <button
             type="button"
             className="btn-secondary"
@@ -774,7 +774,7 @@ export const AvailableInventoryPage: React.FC = () => {
             style={{ height: '30px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', flexShrink: 0, borderColor: 'var(--success)', color: 'var(--success)' }}
           >
             <Download size={12} /> 엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
@@ -784,7 +784,7 @@ export const AvailableInventoryPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>계약가능 재고 합계</span>
           <strong style={{ fontSize: '15px', color: totals.availableContractQty < 0 ? 'var(--danger)' : 'var(--primary)', fontWeight: 800 }}>
             {totals.availableContractQty}대
-          </strong>
+ </strong>
         </div>
         <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>재고 (당사자산)</span>
@@ -936,7 +936,7 @@ export const AvailableInventoryPage: React.FC = () => {
             }}
           >
             <RefreshCw size={11} /> 초기화
-          </button>
+ </button>
         )}
       </div>
 
@@ -1019,7 +1019,7 @@ export const AvailableInventoryPage: React.FC = () => {
                     }}
                   >
                     계약가능
-                  </th>
+ </th>
                   <th
                     colSpan={2}
                     style={{
@@ -1031,7 +1031,7 @@ export const AvailableInventoryPage: React.FC = () => {
                     }}
                   >
                     재고
-                  </th>
+ </th>
                   <th
                     colSpan={2}
                     style={{
@@ -1042,7 +1042,7 @@ export const AvailableInventoryPage: React.FC = () => {
                     }}
                   >
                     출고예정
-                  </th>
+ </th>
                 </tr>
                 {/* 2단 헤더 */}
                 <tr style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-secondary)', fontWeight: 700 }}>
@@ -1126,7 +1126,7 @@ export const AvailableInventoryPage: React.FC = () => {
                   <tr>
                     <td colSpan={8} style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회 조건에 해당하는 모델 재고 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   filteredRows.map(row => (
@@ -1191,7 +1191,7 @@ export const AvailableInventoryPage: React.FC = () => {
                     }}
                   >
                     합계
-                  </td>
+ </td>
                   <td style={{
                     padding: '8px 12px',
                     textAlign: 'center',
@@ -1268,7 +1268,7 @@ export const AvailableInventoryPage: React.FC = () => {
               <span>----------출고 예정------------</span>
               <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                 ({scheduledOutboundLines.length}건 / 총 {scheduledOutboundLines.reduce((s, l) => s + l.totalQty, 0)}대)
-              </span>
+ </span>
             </div>
             <button
               type="button"
@@ -1290,7 +1290,7 @@ export const AvailableInventoryPage: React.FC = () => {
             >
               {copied ? <Check size={11} color="var(--success)" /> : <Copy size={11} />}
               복사
-            </button>
+ </button>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
@@ -1303,7 +1303,7 @@ export const AvailableInventoryPage: React.FC = () => {
                   <tr>
                     <td style={{ padding: '20px 14px', color: 'var(--text-muted)', textAlign: 'center', fontSize: '12px' }}>
                       미완결된 출고 예정 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   scheduledOutboundLines.map(line => (
@@ -1320,7 +1320,7 @@ export const AvailableInventoryPage: React.FC = () => {
                       </td>
                       <td style={{ padding: '6px 14px', color: 'var(--primary)', fontWeight: 700, fontSize: '11.5px', width: '90px', textAlign: 'right' }}>
                         총 {line.totalQty}대
-                      </td>
+ </td>
                     </tr>
                   ))
                 )}

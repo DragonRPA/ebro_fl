@@ -99,16 +99,16 @@ export const ManualsManage: React.FC = () => {
         <h2 style={{ margin: 0, fontWeight: '700', fontSize: '18px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={20} color="var(--primary)" />
           메뉴별 매뉴얼 매핑 관리
-        </h2>
+ </h2>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={fetchManuals} className="btn-secondary" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
             새로고침
-          </button>
+ </button>
           <button onClick={addRow} className="btn-primary" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Plus size={14} />
             새 연결 추가
-          </button>
+ </button>
         </div>
       </div>
 
@@ -117,7 +117,7 @@ export const ManualsManage: React.FC = () => {
           <thead>
             <tr>
               <th style={{ width: '200px' }}>메뉴 ID (메뉴코드)</th>
-              <th>매뉴얼 HTML/URL (cf 주소 등)</th>
+              <th>매뉴얼 HTML/URL</th>
               <th style={{ width: '80px', textAlign: 'center' }}>테스트</th>
               <th style={{ width: '120px', textAlign: 'center' }}>작업</th>
             </tr>

@@ -279,10 +279,10 @@ export const DepreciationExecution: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: '800', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
             <TrendingUp size={22} color="var(--primary)" /> 감가상각 마감 실행
-          </h2>
+ </h2>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
             자사 소유 자산 정액법 감가상각 월말 결산 및 장부가치 확정 대장
-          </p>
+ </p>
         </div>
         <div>
           <button
@@ -292,7 +292,7 @@ export const DepreciationExecution: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
           >
             <Download size={13} /> 상각 대상 자산 엑셀
-          </button>
+ </button>
         </div>
       </div>
 
@@ -303,7 +303,7 @@ export const DepreciationExecution: React.FC = () => {
         <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--bg-card)' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Calculator size={17} /> 당월 감가상각 결산 실행
-          </h3>
+ </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -320,7 +320,7 @@ export const DepreciationExecution: React.FC = () => {
               <div data-mid="dep-status-banner" style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--success)', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CheckCircle2 size={16} /> [해당 연월 마감 완료] {executedLog?.executedAt.substring(0, 10)} 마감됨 (상각액: ₩{executedLog?.totalDepreciationAmount.toLocaleString()})
-                </div>
+ </div>
                 {canExecute && (
                   <button
                     type="button"
@@ -329,13 +329,13 @@ export const DepreciationExecution: React.FC = () => {
                     style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(239,68,68,0.4)', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--danger)', cursor: 'pointer', fontWeight: 'bold' }}
                   >
                     결산 마감 취소 (롤백)
-                  </button>
+ </button>
                 )}
               </div>
             ) : (
               <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: 'var(--primary)', fontSize: '12px' }}>
                 미마감 상태입니다. 마감 실행 시 대상 당사자산의 장부가치가 당월분만큼 차감됩니다.
-              </div>
+ </div>
             )}
           </div>
 
@@ -382,23 +382,23 @@ export const DepreciationExecution: React.FC = () => {
         <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: 'var(--bg-card)' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)' }}>
             <ShieldAlert size={16} color="var(--warning)" /> 회계 ERP 감가상각 결산 원칙
-          </h3>
+ </h3>
 
           <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.65', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <strong>1. 수시 연산 배제 및 고정 데이터 보존</strong><br />
               자산 관리 대장의 조회 성능을 극대화하기 위해 기존의 매 렌더링 수시 계산 방식을 전면 배제하고, 실제 DB에 저장된 <code>accumDepreciation</code> 및 <code>bookValue</code> 스냅샷 값을 사용합니다.
-            </div>
+ </div>
 
             <div>
               <strong>2. 월 1회 월말 수동 마감 실행</strong><br />
-              경영관리 담당자가 매월 말일 당월 감가상각 마감을 실행하면, 당사 소유 자산(`OWNED`)에 한해 정액법 기준으로 당월 감가상각액이 자동 산출되어 자산 레코드가 업데이트됩니다.
-            </div>
+              경영관리 담당자가 매월 말일 당월 감가상각 마감을 실행하면, 당사 소유 자산에 한해 정액법 기준으로 당월 감가상각액이 자동 산출되어 자산 레코드가 업데이트됩니다.
+ </div>
 
             <div>
               <strong>3. 상각 잔존가액 한도 준수</strong><br />
               취득가액과 잔존가치율에 기반한 상각 한도(잔존가액)에 도달한 자산은 더 이상 감가상각이 발생하지 않으며 장부가치가 잔존가액으로 고정됩니다.
-            </div>
+ </div>
           </div>
         </div>
 
@@ -409,7 +409,7 @@ export const DepreciationExecution: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
             <History size={16} /> 월별 감가상각 결산 마감 이력 ({depreciationLogs.length}건)
-          </h3>
+ </h3>
           <button
             type="button"
             className="btn-secondary"
@@ -417,7 +417,7 @@ export const DepreciationExecution: React.FC = () => {
             style={{ padding: '4px 10px', fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
           >
             <Download size={12} /> 결산 이력 엑셀
-          </button>
+ </button>
         </div>
 
         <div className="table-container" style={{ maxHeight: 'calc(100vh - 350px)', overflowX: 'auto', overflowY: 'auto' }}>
@@ -438,7 +438,7 @@ export const DepreciationExecution: React.FC = () => {
                 <tr>
                   <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     아직 실행된 감가상각 결산 마감 내역이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 sortedDepLogs.map(log => (
@@ -473,7 +473,7 @@ export const DepreciationExecution: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
               <button type="button" className="btn-secondary" onClick={() => setConfirmModal(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-primary"

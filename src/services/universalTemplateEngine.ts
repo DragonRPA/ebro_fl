@@ -247,16 +247,16 @@ const DEFAULT_STATEMENT_TEMPLATE = `<!DOCTYPE html>
       <td style="width: 50%; vertical-align: top; padding: 10px;">
         <strong>[공급자 (임대인)]</strong><br>
         등록번호: {{tenant.businessNumber}}<br>
-        상호: {{tenant.corporateName}} (대표: {{tenant.representative}})<br>
+        상호: {{tenant.corporateName}}<br>
         사업장: {{tenant.address}}<br>
         전화: {{tenant.tel}} / 팩스: {{tenant.fax}}
       </td>
       <td style="width: 50%; vertical-align: top; padding: 10px;">
         <strong>[공급받는자 (임차인)]</strong><br>
         등록번호: {{customer.businessNumber}}<br>
-        상호: {{customer.name}} (대표: {{customer.representative}})<br>
+        상호: {{customer.name}}<br>
         현장명: {{contract.siteName}}<br>
-        담당자: {{customer.contactPerson}} ({{customer.phone}})
+        담당자: {{customer.contactPerson}}
       </td>
     </tr>
   </table>
@@ -281,7 +281,7 @@ const DEFAULT_STATEMENT_TEMPLATE = `<!DOCTYPE html>
       {{#assets}}
       <tr>
         <td class="text-center">{{index}}</td>
-        <td>{{modelName}} ({{workHeight}})</td>
+        <td>{{modelName}}</td>
         <td class="text-center">{{serialNumber}}</td>
         <td class="text-center">{{period}}</td>
         <td class="text-right">{{unitPrice}}</td>
@@ -324,7 +324,7 @@ const DEFAULT_QUOTATION_TEMPLATE = `<!DOCTYPE html>
     <tr>
       <td style="width: 50%; vertical-align: top; padding: 10px;">
         <div style="font-size: 15px; font-weight: 800; margin-bottom: 6px;">수신: {{customer.name}} 귀하</div>
-        담당자: {{customer.contactPerson}} ({{customer.phone}})<br>
+        담당자: {{customer.contactPerson}}<br>
         현장명: {{contract.siteName}}<br>
         견적일자: {{contract.startDate}}<br>
         유효기간: 견적일로부터 30일간
@@ -411,7 +411,7 @@ const DEFAULT_RECEIPT_TEMPLATE = `<!DOCTYPE html>
     </tr>
     <tr>
       <td style="background-color: #f8fafc; font-weight: 700;">납품 현장</td>
-      <td colspan="3">{{contract.siteName}} ({{contract.siteAddress}})</td>
+      <td colspan="3">{{contract.siteName}}</td>
     </tr>
   </table>
 
@@ -440,9 +440,9 @@ const DEFAULT_RECEIPT_TEMPLATE = `<!DOCTYPE html>
 
   <div class="inspect-box">
     <strong>[현장 인수 확인 체크리스트]</strong><br>
-    ☑ 외관 파손 및 누유 없음 확인 완료<br>
-    ☑ 비상정지 스위치 및 경보장치 정상 작동 확인 완료<br>
-    ☑ 장비 안전사용 수칙 및 조작법 안내 수령 완료
+     외관 파손 및 누유 없음 확인 완료<br>
+     비상정지 스위치 및 경보장치 정상 작동 확인 완료<br>
+     장비 안전사용 수칙 및 조작법 안내 수령 완료
   </div>
 
   <div class="sign-section">
@@ -633,7 +633,7 @@ export function renderTokens(templateHtml: string, payload: TemplateDataPayload)
 }
 
 /**
- * 테넌트 전용 커스텀 서식 조회 (LocalStorage/R2 캐시 ➔ 없으면 기본 서식 폴백)
+ * 테넌트 전용 커스텀 서식 조회 (LocalStorage/R2 캐시  없으면 기본 서식 폴백)
  */
 export function getTenantTemplate(tenantCode: string, docType: TemplateDocType): string | null {
   const normCode = (tenantCode || 'GIYEUN').toUpperCase();

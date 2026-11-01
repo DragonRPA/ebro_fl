@@ -285,7 +285,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               }`}
             >
               전체 ({summary.totalKinds})
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setStockStatusFilter('IN_STOCK')}
@@ -296,7 +296,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               }`}
             >
               재고 보유 ({summary.inStockKinds})
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setStockStatusFilter('OUT_OF_STOCK')}
@@ -307,7 +307,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               }`}
             >
               품절/부족 ({summary.outOfStockKinds})
-            </button>
+ </button>
           </div>
 
           {/* 카테고리 칩 (동적) */}
@@ -323,7 +323,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
                 }`}
               >
                 전체 분류
-              </button>
+ </button>
               {categories.map(cat => (
                 <button
                   key={cat}
@@ -402,7 +402,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
                         {isOutOfStock ? (
                           <span className="inline-flex items-center gap-1 text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full font-bold">
                             품절 (0{unit})
-                          </span>
+ </span>
                         ) : (
                           <span>{yardQty}<span className="text-xs font-normal text-slate-400 ml-0.5">{unit}</span></span>
                         )}
@@ -529,14 +529,14 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-blue-400" />
                 기사 차량별 분산 적재 현황
-              </h4>
+ </h4>
               {(() => {
                 const vInfo = vehicleStocksByConsumable.get(selectedConsumable.id);
                 if (!vInfo || vInfo.mechanics.length === 0) {
                   return (
                     <div className="p-3 rounded-xl bg-slate-800/40 text-center text-xs text-slate-500">
                       정비 차량에 적재된 수량이 없습니다.
-                    </div>
+ </div>
                   );
                 }
                 return (
@@ -557,11 +557,11 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
                 최근 입출고 수불 내역 (최근 5건)
-              </h4>
+ </h4>
               {selectedLogs.length === 0 ? (
                 <div className="p-3 rounded-xl bg-slate-800/40 text-center text-xs text-slate-500">
                   수불 기록이 없습니다.
-                </div>
+ </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
                   {selectedLogs.map(l => {
@@ -590,7 +590,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm mt-2 transition-all border border-slate-700"
             >
               닫기
-            </button>
+ </button>
           </div>
         </div>
       )}

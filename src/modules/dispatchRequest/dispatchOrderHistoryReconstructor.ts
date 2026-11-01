@@ -674,7 +674,7 @@ export function findUnsentContractOutboundRows(
     });
   }
 
-  // 정렬: 진행중인 출고건(배차대기/배차완료) 우선 ➔ 상차예정일/생성일 최신순
+  // 정렬: 진행중인 출고건(배차대기/배차완료) 우선  상차예정일/생성일 최신순
   return result.sort((a, b) => {
     const isADone = a.row.dispatchStatus === 'DELIVERED' || a.row.dispatchStatus === 'COMPLETED' ? 1 : 0;
     const isBDone = b.row.dispatchStatus === 'DELIVERED' || b.row.dispatchStatus === 'COMPLETED' ? 1 : 0;

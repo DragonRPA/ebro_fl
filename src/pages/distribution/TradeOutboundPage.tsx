@@ -152,9 +152,9 @@ export const TradeOutboundPage: React.FC = () => {
     });
 
     const optionCargos = appliedOpts.map(opt => ({
-      modelName: `[장착옵션·${opt.optionGroupLabel}] ${opt.name} (${opt.subVariant})`,
+      modelName: `[장착옵션·${opt.optionGroupLabel}] ${opt.name} · ${opt.subVariant}`,
       count: opt.qty,
-      note: opt.isFreeApplied ? '무상기본시공 (₩0)' : `옵션청구 ₩${opt.supplyAmount.toLocaleString()}원`
+      note: opt.isFreeApplied ? '무상기본시공 ₩0' : `옵션청구 ₩${opt.supplyAmount.toLocaleString()}원`
     }));
 
     const cargos = [...baseCargos, ...optionCargos];
@@ -174,7 +174,7 @@ export const TradeOutboundPage: React.FC = () => {
         receiverPhone: ob.receiverPhone || order?.receiverPhone || cust?.repContact || '010-0000-0000',
         driverName: ob.driverName || ob.courierName || '지정 배송기사',
         driverContact: ob.driverContact || ob.trackingNumber || '-',
-        vehicleNo: ob.vehicleNo || (ob.courierName ? `${ob.courierName} (${ob.trackingNumber})` : '화물 운송차량'),
+        vehicleNo: ob.vehicleNo || (ob.courierName ? `${ob.courierName} · ${ob.trackingNumber}` : '화물 운송차량'),
         cargoItems: JSON.stringify(
           cargos.length > 0 ? cargos : [{ modelName: '유통 주문 상품', count: 1, note: '정상 납품' }]
         ),
@@ -491,7 +491,7 @@ export const TradeOutboundPage: React.FC = () => {
       연락처: r.receiverPhone,
       배송지주소: r.destination,
       진행상태: r.o.status,
-      운송정보: r.o.trackingNumber ? `${r.o.courierName} (${r.o.trackingNumber})` : r.o.driverName || '-'
+      운송정보: r.o.trackingNumber ? `${r.o.courierName} · ${r.o.trackingNumber}` : r.o.driverName || '-'
     }));
     exportToExcel(
       data,
@@ -570,9 +570,6 @@ export const TradeOutboundPage: React.FC = () => {
             <Package size={20} color="var(--primary)" />
             <span>출고 요청 및 재고 할당</span>
           </h2>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
-            유통 수주 물류 창고 재고 할당(접수), 패킹 검수, 납품증 출력 및 출고 지시 관리
-          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -594,7 +591,7 @@ export const TradeOutboundPage: React.FC = () => {
               }}
             >
               <List size={13} /> 대장 뷰
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setViewMode('CARD')}
@@ -612,7 +609,7 @@ export const TradeOutboundPage: React.FC = () => {
               }}
             >
               <LayoutGrid size={13} /> 카드 뷰
-            </button>
+ </button>
           </div>
 
           <button
@@ -622,7 +619,7 @@ export const TradeOutboundPage: React.FC = () => {
             style={{ padding: '7px 14px', fontSize: '12.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
             <Plus size={15} /> 출고 요청 등록
-          </button>
+ </button>
 
           <button
             type="button"
@@ -632,7 +629,7 @@ export const TradeOutboundPage: React.FC = () => {
             style={{ padding: '7px 14px', fontSize: '12.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
             <Download size={14} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -784,7 +781,7 @@ export const TradeOutboundPage: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
             <RefreshCw size={12} /> 필터 초기화
-          </button>
+ </button>
         )}
       </div>
 
@@ -826,7 +823,7 @@ export const TradeOutboundPage: React.FC = () => {
                   <tr>
                     <td colSpan={12} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       해당 조건의 출고 요청 데이터가 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   displayedOutbounds.map(({ o, custName, itemSummary, totalQty, reqDate, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver, receiverPhone }) => (
@@ -854,7 +851,7 @@ export const TradeOutboundPage: React.FC = () => {
                               title="백레스트, 사이드시프트, 캐빈, 에어컨, 덧발, 센서, 경광등, 장비보호 옵션 추가 및 청구 합산"
                             >
                               <SlidersHorizontal size={11} /> 옵션장착·청구({appliedOpts.length})
-                            </button>
+ </button>
                           )}
 
                           {(o.status === 'REQUESTED' || o.status === 'CANCELLED') && (
@@ -865,7 +862,7 @@ export const TradeOutboundPage: React.FC = () => {
                               style={{ padding: '4px 10px', backgroundColor: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                             >
                               <Check size={11} /> 재고 할당
-                            </button>
+ </button>
                           )}
 
                           {o.status === 'ALLOCATED' && (
@@ -875,7 +872,7 @@ export const TradeOutboundPage: React.FC = () => {
                               style={{ padding: '4px 8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
                             >
                               패킹완료
-                            </button>
+ </button>
                           )}
 
                           {o.status !== 'REQUESTED' && o.status !== 'CANCELLED' && (
@@ -886,14 +883,14 @@ export const TradeOutboundPage: React.FC = () => {
                                 style={{ padding: '4px 8px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                               >
                                 <Printer size={11} /> 납품증
-                              </button>
+ </button>
                               <button
                                 type="button"
                                 onClick={() => handlePreviewReceipt(o)}
                                 style={{ padding: '4px 8px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                               >
                                 <Eye size={11} /> 미리보기
-                              </button>
+ </button>
                             </>
                           )}
 
@@ -904,7 +901,7 @@ export const TradeOutboundPage: React.FC = () => {
                               style={{ padding: '4px 8px', backgroundColor: '#059669', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                             >
                               <FileText size={11} /> 서명확인
-                            </button>
+ </button>
                           )}
 
                           {o.status !== 'CANCELLED' && (
@@ -914,7 +911,7 @@ export const TradeOutboundPage: React.FC = () => {
                               style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                             >
                               <Edit2 size={11} /> 수정
-                            </button>
+ </button>
                           )}
 
                           {o.status !== 'DELIVERED' && o.status !== 'CANCELLED' && (
@@ -924,7 +921,7 @@ export const TradeOutboundPage: React.FC = () => {
                               style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}
                             >
                               취소
-                            </button>
+ </button>
                           )}
 
                           {(o.status === 'CANCELLED' || o.status === 'REQUESTED') && (
@@ -1034,13 +1031,13 @@ export const TradeOutboundPage: React.FC = () => {
                   <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
                     <td colSpan={6} style={{ padding: '10px 12px', color: 'var(--text-main)' }}>
                       조회 합계 ({displayedOutbounds.length}건)
-                    </td>
+ </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
                       총 {displayedOutbounds.reduce((s, r) => s + r.totalQty, 0).toLocaleString()}개
-                    </td>
+ </td>
                     <td style={{ padding: '10px 12px', color: '#6d28d9' }}>
                       옵션 장착 {displayedOutbounds.filter(r => r.appliedOpts.length > 0).length}건
-                    </td>
+ </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: '#6d28d9', fontFamily: 'monospace' }}>
                       옵션청구 +₩{displayedOutbounds.reduce((s, r) => s + r.optionBillingAmount, 0).toLocaleString()} / 합산 ₩{displayedOutbounds.reduce((s, r) => s + r.totalBillingSupply, 0).toLocaleString()}
                     </td>
@@ -1057,7 +1054,7 @@ export const TradeOutboundPage: React.FC = () => {
           {displayedOutbounds.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', padding: '48px', textAlign: 'center', color: 'var(--text-muted)', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               해당 조건의 출고 데이터가 없습니다.
-            </div>
+ </div>
           ) : (
             displayedOutbounds.map(({ o, custName, itemSummary, totalQty, appliedOpts, optionBillingAmount, totalBillingSupply, destination, receiver }) => (
               <div
@@ -1115,7 +1112,7 @@ export const TradeOutboundPage: React.FC = () => {
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>주문번호: {o.orderId}</div>
                   <div style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, marginBottom: '6px' }}>
                     품목: {itemSummary} (총 {totalQty}개)
-                  </div>
+ </div>
                   <div style={{ padding: '7px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', marginBottom: '6px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: 700, color: '#6d28d9', marginBottom: '3px' }}>
                       <span>장착 옵션 ({appliedOpts.length}종)</span>
@@ -1137,7 +1134,7 @@ export const TradeOutboundPage: React.FC = () => {
                     style={{ padding: '7px 10px', backgroundColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9', border: '1px solid rgba(124, 58, 237, 0.35)', borderRadius: '4px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     옵션·청구추가
-                  </button>
+ </button>
                   {o.status === 'REQUESTED' ? (
                     <button
                       type="button"
@@ -1146,7 +1143,7 @@ export const TradeOutboundPage: React.FC = () => {
                       style={{ flex: 1, padding: '8px', backgroundColor: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
                     >
                       재고 할당
-                    </button>
+ </button>
                   ) : (
                     <>
                       <button
@@ -1155,14 +1152,14 @@ export const TradeOutboundPage: React.FC = () => {
                         style={{ flex: 1, padding: '7px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                       >
                         <Printer size={13} /> 납품증
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => handlePreviewReceipt(o)}
                         style={{ flex: 1, padding: '7px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                       >
                         <Eye size={13} /> 미리보기
-                      </button>
+ </button>
                     </>
                   )}
                   <button
@@ -1171,7 +1168,7 @@ export const TradeOutboundPage: React.FC = () => {
                     style={{ padding: '7px 10px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
                   >
                     수정
-                  </button>
+ </button>
                 </div>
               </div>
             ))
@@ -1185,7 +1182,7 @@ export const TradeOutboundPage: React.FC = () => {
           <div style={{ backgroundColor: 'var(--bg-card)', width: '620px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)' }}>
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                {editingOutbound ? `출고 지시 정보 수정 (${editingOutbound.id})` : '신규 유통 출고 등록 (수주 정보 자동 생성)'}
+                {editingOutbound ? `출고 지시 정보 수정 · ${editingOutbound.id}` : '신규 유통 출고 등록'}
               </h3>
               <button type="button" onClick={() => setIsOutboundModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -1211,7 +1208,7 @@ export const TradeOutboundPage: React.FC = () => {
                     }}
                   >
                     출고 + 수주 자동 생성
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1238,7 +1235,7 @@ export const TradeOutboundPage: React.FC = () => {
                     }}
                   >
                     기존 수주 건에서 출고 지시
-                  </button>
+ </button>
                 </div>
               )}
 
@@ -1246,7 +1243,7 @@ export const TradeOutboundPage: React.FC = () => {
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>연동 렌탈 계약 선택 (선택 시 수주·현장 자동 입력)</label>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>연동 렌탈 계약</label>
                       <select
                         value={formContractId}
                         onChange={e => {
@@ -1256,7 +1253,7 @@ export const TradeOutboundPage: React.FC = () => {
                         }}
                         style={{ padding: '8px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                       >
-                        <option value="">-- 계약 미지정 (고객사 직접 선택) --</option>
+                        <option value="">-- 계약 미지정 --</option>
                         {(contracts || []).map(c => {
                             const sName = (sites || []).find(s => s.id === c.siteId)?.name || '';
                             return (
@@ -1283,9 +1280,9 @@ export const TradeOutboundPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 출고 품목 원클릭 선택 */}
+                  {/* 출고 품목 선택 */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>출고 품목 선택 (클릭 시 담기) *</label>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>출고 품목 선택 *</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', maxHeight: '120px', overflowY: 'auto' }}>
                       {(products || []).filter(p => p.status !== 'DISCONTINUED').map(prod => {
                         const sel = formSelectedItems.find(it => it.productId === prod.id);
@@ -1319,7 +1316,7 @@ export const TradeOutboundPage: React.FC = () => {
                             <span>+ {prod.name}</span>
                             <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                               (₩{(prod.standardPrice || 0).toLocaleString()} / 재고 {getProductStock(prod.id).availableQty}{prod.unit})
-                            </span>
+ </span>
                             {sel && (
                               <span style={{ padding: '1px 5px', borderRadius: '999px', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '10px', fontWeight: 800 }}>
                                 {sel.quantity}
@@ -1337,7 +1334,7 @@ export const TradeOutboundPage: React.FC = () => {
                             <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
                               <th style={{ padding: '6px 8px', textAlign: 'left' }}>품목명</th>
                               <th style={{ padding: '6px 8px', textAlign: 'center', width: '80px' }}>수량</th>
-                              <th style={{ padding: '6px 8px', textAlign: 'right', width: '110px' }}>판매단가 (원)</th>
+                              <th style={{ padding: '6px 8px', textAlign: 'right', width: '110px' }}>판매단가</th>
                               <th style={{ padding: '6px 8px', textAlign: 'right', width: '100px' }}>공급가액</th>
                               <th style={{ padding: '6px 6px', textAlign: 'center', width: '40px' }}>삭제</th>
                             </tr>
@@ -1375,15 +1372,15 @@ export const TradeOutboundPage: React.FC = () => {
                                   </td>
                                   <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace' }}>
                                     ₩{rowAmt.toLocaleString()}원
-                                  </td>
+ </td>
                                   <td style={{ padding: '5px 6px', textAlign: 'center' }}>
                                     <button
                                       type="button"
                                       onClick={() => setFormSelectedItems(prev => prev.filter((_, i) => i !== idx))}
                                       style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '13px' }}
                                     >
-                                      ✕
-                                    </button>
+                                      
+ </button>
                                   </td>
                                 </tr>
                               );
@@ -1417,7 +1414,7 @@ export const TradeOutboundPage: React.FC = () => {
                     {salesOrders.map(so => (
                       <option key={so.id} value={so.id}>
                         [{so.id}] {getCustomerName(so.customerId)} (₩{so.totalSalesAmount.toLocaleString()})
-                      </option>
+ </option>
                     ))}
                   </select>
                 </div>
@@ -1428,10 +1425,10 @@ export const TradeOutboundPage: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: 800, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <SlidersHorizontal size={14} /> 출고 장착 옵션 선택 · 청구 자동 합산
-                  </label>
+ </label>
                   <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#6d28d9', fontFamily: 'monospace' }}>
                     옵션 청구추가액: +₩{formAppliedOptions.reduce((s, o) => s + (o.isFreeApplied ? 0 : o.qty * o.unitPrice), 0).toLocaleString()}원
-                  </span>
+ </span>
                 </div>
 
                 {/* 분류 탭 */}
@@ -1451,7 +1448,7 @@ export const TradeOutboundPage: React.FC = () => {
                     }}
                   >
                     전체
-                  </button>
+ </button>
                   {FORKLIFT_OPTION_GROUPS.map(g => (
                     <button
                       key={g.id}
@@ -1473,7 +1470,7 @@ export const TradeOutboundPage: React.FC = () => {
                   ))}
                 </div>
 
-                {/* 옵션 마스터 원클릭 버튼 */}
+                {/* 옵션 마스터 선택 버튼 */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '115px', overflowY: 'auto', padding: '6px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
                   {optionMasters
                     .filter(m => m.isActive && (formOptionCategoryFilter === 'ALL' || m.optionGroup === formOptionCategoryFilter))
@@ -1505,7 +1502,7 @@ export const TradeOutboundPage: React.FC = () => {
                             gap: '4px'
                           }}
                         >
-                          <span>{exists ? '✓' : '+'} {opt.name} [{opt.subVariant}]</span>
+                          <span>{exists ? '[선택]' : '+'} {opt.name} [{opt.subVariant}]</span>
                           <span style={{ fontSize: '10px', color: opt.isFreeDefault ? '#047857' : 'var(--text-muted)', fontFamily: 'monospace' }}>
                             {opt.isFreeDefault ? '무상기본' : `+₩${opt.unitPrice.toLocaleString()}`}
                           </span>
@@ -1560,16 +1557,16 @@ export const TradeOutboundPage: React.FC = () => {
                               />
                             </td>
                             <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 700, color: ao.isFreeApplied ? '#047857' : '#6d28d9', fontFamily: 'monospace' }}>
-                              {ao.isFreeApplied ? '무상 (₩0)' : `+₩${(ao.qty * ao.unitPrice).toLocaleString()}`}
+                              {ao.isFreeApplied ? '무상 ₩0' : `+₩${(ao.qty * ao.unitPrice).toLocaleString()}`}
                             </td>
                             <td style={{ padding: '5px 6px', textAlign: 'center' }}>
                               <button
                                 type="button"
                                 onClick={() => setFormAppliedOptions(prev => prev.filter((_, i) => i !== idx))}
-                                style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}
+                                style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
                               >
-                                ✕
-                              </button>
+                                삭제
+ </button>
                             </td>
                           </tr>
                         ))}
@@ -1645,7 +1642,7 @@ export const TradeOutboundPage: React.FC = () => {
                   style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   className="btn-primary"
@@ -1697,7 +1694,7 @@ export const TradeOutboundPage: React.FC = () => {
                   </h3>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
                     주문번호: {optionModalOutbound.orderId} · 거래처: {getCustomerName(targetOrder?.customerId)} · 선택된 옵션은 수주 금액 및 매출 명세서 청구액에 자동 추가됩니다.
-                  </div>
+ </div>
                 </div>
                 <button type="button" onClick={() => setOptionModalOutbound(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                   <X size={20} />
@@ -1724,7 +1721,7 @@ export const TradeOutboundPage: React.FC = () => {
                       }}
                     >
                       전체 옵션 ({optionMasters.filter(m => m.isActive).length})
-                    </button>
+ </button>
                     {FORKLIFT_OPTION_GROUPS.map(grp => (
                       <button
                         key={grp.id}
@@ -1768,7 +1765,7 @@ export const TradeOutboundPage: React.FC = () => {
                       style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '5px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#1d4ed8', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
                       대리점 공급단가 일괄적용
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -1783,7 +1780,7 @@ export const TradeOutboundPage: React.FC = () => {
                       style={{ padding: '6px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '5px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#059669', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
                       표준 청구단가 일괄적용
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -1823,7 +1820,7 @@ export const TradeOutboundPage: React.FC = () => {
                           </span>
                         </div>
                         <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-                          {isSelected ? '✓ ' : '+ '}{opt.name}
+                          {isSelected ? '[선택] ' : '+ '}{opt.name}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                           세부규격: {opt.subVariant}
@@ -1841,16 +1838,16 @@ export const TradeOutboundPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
                     선택된 출고 장착 옵션 및 청구 반영 명세 ({modalAppliedOptions.length}건)
-                  </div>
+ </div>
                   <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
                       <thead>
                         <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                           <th style={{ padding: '8px 10px', textAlign: 'left' }}>옵션분류</th>
-                          <th style={{ padding: '8px 10px', textAlign: 'left' }}>장착 옵션명 / 세부규격(문열림·길이)</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left' }}>장착 옵션명 / 세부규격</th>
                           <th style={{ padding: '8px 10px', textAlign: 'center', width: '75px' }}>수량</th>
                           <th style={{ padding: '8px 10px', textAlign: 'center', width: '90px' }}>유/무상 구분</th>
-                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '130px' }}>청구단가 (원)</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '130px' }}>청구단가</th>
                           <th style={{ padding: '8px 10px', textAlign: 'right', width: '125px' }}>옵션 청구공급가</th>
                           <th style={{ padding: '8px 10px', textAlign: 'left' }}>장착·시공 메모</th>
                           <th style={{ padding: '8px 10px', textAlign: 'center', width: '55px' }}>삭제</th>
@@ -1861,7 +1858,7 @@ export const TradeOutboundPage: React.FC = () => {
                           <tr>
                             <td colSpan={8} style={{ padding: '26px', textAlign: 'center', color: 'var(--text-muted)' }}>
                               상단 옵션 카드를 클릭하여 출고 지게차에 장착할 옵션(백레스트, 사이드시프트, 캐빈, 에어컨, 덧발, 센서, 경광등, 무상옵션)을 추가하세요.
-                            </td>
+ </td>
                           </tr>
                         ) : (
                           modalAppliedOptions.map((ao, idx) => {
@@ -1959,8 +1956,8 @@ export const TradeOutboundPage: React.FC = () => {
                                     onClick={() => setModalAppliedOptions(prev => prev.filter((_, i) => i !== idx))}
                                     style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}
                                   >
-                                    ✕
-                                  </button>
+                                    삭제
+ </button>
                                 </td>
                               </tr>
                             );
@@ -1981,7 +1978,7 @@ export const TradeOutboundPage: React.FC = () => {
                   <span>=</span>
                   <span style={{ color: 'var(--primary)', fontSize: '13.5px' }}>
                     변경 후 총 청구 공급가액: <strong style={{ fontFamily: 'monospace' }}>₩{combinedSupply.toLocaleString()}</strong> (부가세 포함 ₩{combinedTotal.toLocaleString()})
-                  </span>
+ </span>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -1992,7 +1989,7 @@ export const TradeOutboundPage: React.FC = () => {
                     style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
                   >
                     취소
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={handleSaveOptionModal}
@@ -2000,7 +1997,7 @@ export const TradeOutboundPage: React.FC = () => {
                     style={{ padding: '8px 18px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', cursor: 'pointer', backgroundColor: '#6d28d9', border: 'none', color: '#fff' }}
                   >
                     옵션 장착 확정 및 청구액 즉시 반영
-                  </button>
+ </button>
                 </div>
               </div>
             </div>
@@ -2031,7 +2028,7 @@ export const TradeOutboundPage: React.FC = () => {
             <div style={{ padding: '14px 20px', backgroundColor: '#064e3b', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle size={18} /> 납품증빙 서명 확인
-              </h3>
+ </h3>
               <button onClick={() => setProofUrl(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={18} /></button>
             </div>
             <div style={{ flex: 1, padding: '20px', overflow: 'auto', textAlign: 'center', backgroundColor: 'var(--bg-app)' }}>

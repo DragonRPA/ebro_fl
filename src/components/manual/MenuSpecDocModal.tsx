@@ -304,11 +304,11 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
                   backgroundColor: 'rgba(59,130,246,0.15)', color: 'var(--primary)', fontFamily: 'monospace'
                 }}>
                   {menuId}.md
-                </span>
+ </span>
               </div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 메뉴 목적 · 버튼/모달 기능 정의 · 헌장 준수 · MCP 에이전트 연동 명세
-              </span>
+ </span>
             </div>
           </div>
 
@@ -407,13 +407,13 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
           {loading ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
               기능 정의서를 불러오는 중입니다...
-            </div>
+ </div>
           ) : isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
                   마크다운 문법을 사용하여 메뉴의 목적, 버튼 기능, 모달 스펙을 직접 수정할 수 있습니다.
-                </span>
+ </span>
                 <button
                   type="button"
                   onClick={handleResetToDefault}
@@ -450,7 +450,7 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   <strong style={{ color: 'var(--primary)', fontWeight: 800 }}>MCP & AI Agent Grounding 명세: </strong>
                   이 마크다운은 AI 에이전트가 본 메뉴를 조작할 때 업무 목적과 R&R 헌장을 준수하도록 주입되는 단일 진실 원천 명세입니다.
-                </div>
+ </div>
               </div>
 
               {/* 렌더링된 마크다운 본문 */}
@@ -468,7 +468,7 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
         }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
             글자 수: {markdown.length.toLocaleString()}자 · 줄 수: {markdown.split('\n').length}줄
-          </span>
+ </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isEditing ? (
@@ -483,7 +483,7 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleSave}
@@ -511,7 +511,7 @@ export const MenuSpecDocModal: React.FC<MenuSpecDocModalProps> = ({
                 }}
               >
                 닫기
-              </button>
+ </button>
             )}
           </div>
         </div>

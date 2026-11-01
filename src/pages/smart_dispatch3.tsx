@@ -425,7 +425,7 @@ export const SmartDispatch3: React.FC = () => {
     if (!canSave) { showToast('저장 권한이 없습니다.', 'error'); return; }
     if (!selectedCustomer) { showToast('고객사를 선택하세요.', 'error'); setOpenBlock('WHO'); return; }
     if (!selectedSite) { showToast('등록된 현장과 100% 일치하는 현장을 선택해야 합니다. 미등록 현장은 먼저 현장을 새로 등록해 주십시오.', 'error'); setOpenBlock('WHERE'); return; }
-    if (selectedCustomer.transactionStatus === 'BLOCKED') { showToast('🚫 거래 불가 거래처입니다.', 'error'); return; }
+    if (selectedCustomer.transactionStatus === 'BLOCKED') { showToast('거래 불가 거래처입니다.', 'error'); return; }
     if (matchedOverdue && matchedOverdue.sum > 0 && !overdueAck) { showToast('연체 확인 체크박스에 동의하세요.', 'error'); return; }
     if (!siteAddress.trim()) { showToast('현장 주소를 입력하세요.', 'error'); setOpenBlock('DETAILS'); return; }
     if (!siteContactPhone.trim()) { showToast('현장 담당자 연락처를 입력하세요.', 'error'); setOpenBlock('DETAILS'); return; }
@@ -547,17 +547,17 @@ export const SmartDispatch3: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: 800, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             출고 요청 (재설계)
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', backgroundColor: '#fef9c3', color: '#a16207' }}>v3 A/B</span>
+ <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', backgroundColor: '#fef9c3', color: '#a16207' }}>v3 A/B</span>
           </h2>
           <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: 0 }}>
-            4문 구조 (WHO → WHERE → WHAT → WHEN) · DB 칩 선택 · 네이티브 피커
-          </p>
+            4문 구조 · DB 칩 선택 · 네이티브 피커
+ </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="btn-secondary" onClick={handleReset}
             style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '13px' }}>
             <RotateCcw size={13} /> 초기화
-          </button>
+ </button>
         </div>
       </div>
 
@@ -571,13 +571,13 @@ export const SmartDispatch3: React.FC = () => {
         }}>
           <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
             <AlertTriangle size={14} />
-            {matchedOverdue.isBlocked ? '🚫 거래 불가' : '연체 채권 경고'}
+            {matchedOverdue.isBlocked ? '거래 불가' : '연체 채권 경고'}
           </div>
           {!matchedOverdue.isBlocked && (
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 700, marginTop: '4px' }}>
               <input type="checkbox" checked={overdueAck} onChange={e => setOverdueAck(e.target.checked)} />
               미납 {matchedOverdue.count}건 (₩{matchedOverdue.sum.toLocaleString()}) — 수금 책임 인지 확인
-            </label>
+ </label>
           )}
         </div>
       )}
@@ -594,7 +594,7 @@ export const SmartDispatch3: React.FC = () => {
           <ClipboardPaste size={15} color="var(--text-muted)" />
           <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>
             카톡/메신저 줄글 붙여넣기 파싱 (관리부 보조 도구)
-          </span>
+ </span>
           {pasteZoneOpen ? <ChevronUp size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />
             : <ChevronDown size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />}
         </button>
@@ -616,7 +616,7 @@ export const SmartDispatch3: React.FC = () => {
                 onClick={() => runParse(pasteText)}
                 style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', fontSize: '12px', fontWeight: 800 }}>
                 <Zap size={13} /> 파싱 실행
-              </button>
+ </button>
             </div>
           </div>
         )}
@@ -640,7 +640,7 @@ export const SmartDispatch3: React.FC = () => {
                 fontWeight: 700, fontSize: '12px',
                 borderBottom: `3px solid ${item.done ? '#16a34a' : openBlock === item.id ? 'var(--primary)' : 'var(--border-color)'}`
               }}>
-              {item.done ? '✓ ' : ''}{item.label}
+              {item.done ? '' : ''}{item.label}
             </button>
             {i < 3 && <div style={{ width: '16px', height: '2px', backgroundColor: 'var(--border-color)', flexShrink: 0 }} />}
           </React.Fragment>
@@ -664,7 +664,7 @@ export const SmartDispatch3: React.FC = () => {
             <button type="button" onClick={() => { setSelectedCustomer(null); setSelectedSite(null); setOpenBlock('WHO'); }}
               style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
               변경
-            </button>
+ </button>
           </div>
         )}
         {openBlock === 'WHO' && (
@@ -694,7 +694,7 @@ export const SmartDispatch3: React.FC = () => {
                     color: selectedCustomer?.id === c.id ? '#fff' : 'var(--text-main)'
                   }}>
                   {c.name}
-                  {c.transactionStatus === 'BLOCKED' && <span style={{ color: 'var(--danger)', marginLeft: '4px' }}>🚫</span>}
+                  {c.transactionStatus === 'BLOCKED' && <span style={{ color: 'var(--danger)', marginLeft: '4px' }}></span>}
                 </button>
               ))}
               {filteredCustomers.length === 0 && (
@@ -721,7 +721,7 @@ export const SmartDispatch3: React.FC = () => {
             <button type="button" onClick={() => { setSelectedSite(null); setOpenBlock('WHERE'); }}
               style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
               변경
-            </button>
+ </button>
           </div>
         )}
         {openBlock === 'WHERE' && (
@@ -729,7 +729,7 @@ export const SmartDispatch3: React.FC = () => {
             {!selectedCustomer && (
               <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', fontSize: '12.5px', color: 'var(--warning)', fontWeight: 600 }}>
                 먼저 고객사를 선택하세요.
-              </div>
+ </div>
             )}
             {selectedCustomer && (
               <>
@@ -765,7 +765,7 @@ export const SmartDispatch3: React.FC = () => {
                   {filteredSites.length === 0 && (
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '4px' }}>
                       등록된 현장 없음 — 아래에 주소 직접 입력
-                    </div>
+ </div>
                   )}
                 </div>
                 {/* 신규 현장: 주소 직접 입력 */}
@@ -828,7 +828,7 @@ export const SmartDispatch3: React.FC = () => {
                     {existing && (
                       <span style={{ display: 'inline-block', marginTop: '3px', backgroundColor: 'var(--primary)', color: '#fff', borderRadius: '10px', padding: '1px 7px', fontSize: '11px' }}>
                         {existing.qty}대
-                      </span>
+ </span>
                     )}
                   </button>
                 );
@@ -852,7 +852,7 @@ export const SmartDispatch3: React.FC = () => {
                 }}
                 style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
                 <Plus size={12} /> 추가
-              </button>
+ </button>
               <MicButton fieldId="equipment" onResult={t => {
                 const m = EQUIPMENT_SPEC_MATRIX.find(item =>
                   item.modelNumberAliases.some(a => t.includes(a)) || t.includes(item.modelName)
@@ -867,10 +867,10 @@ export const SmartDispatch3: React.FC = () => {
                 <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 800 }}>
                   <ShoppingCart size={14} color="var(--primary)" />
                   신청 장바구니 — 총 {totalQty}대
-                  <button type="button" onClick={() => setEquipments([])}
+ <button type="button" onClick={() => setEquipments([])}
                     style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
                     비우기
-                  </button>
+ </button>
                 </div>
                 {equipments.map((eq, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderBottom: i < equipments.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
@@ -901,7 +901,7 @@ export const SmartDispatch3: React.FC = () => {
                   onClick={() => setOpenBlock('WHEN')}
                   style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 14px', fontSize: '12.5px', fontWeight: 700 }}>
                   일정 입력으로 이동 (총 {totalQty}대) →
-                </button>
+ </button>
               </div>
             )}
           </div>
@@ -1056,13 +1056,13 @@ export const SmartDispatch3: React.FC = () => {
             {currentMatchedSite && isOptionsDiff && (
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 600, color: '#f59e0b', padding: '8px 12px', backgroundColor: 'rgba(245,158,11,0.08)', borderRadius: '6px', border: '1px solid rgba(245,158,11,0.4)' }}>
                 <input type="checkbox" checked={saveOptionsToSite} onChange={e => setSaveOptionsToSite(e.target.checked)} />
-                📍 변경된 옵션을 '{selectedSite?.name}' 현장 기본값으로 갱신
-              </label>
+                 변경된 옵션을 '{selectedSite?.name}' 현장 기본값으로 갱신
+ </label>
             )}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 600 }}>
               <input type="checkbox" checked={isSetAsCustomerDefault} onChange={e => setIsSetAsCustomerDefault(e.target.checked)} />
-              🏢 이 옵션·스펙을 '{selectedCustomer?.name || '고객사'}' 기본 설정으로 등록
-            </label>
+               이 옵션·스펙을 '{selectedCustomer?.name || '고객사'}' 기본 설정으로 등록
+ </label>
 
             {/* 정산 */}
             <div>
@@ -1100,7 +1100,7 @@ export const SmartDispatch3: React.FC = () => {
             <button type="button" className="btn-primary" onClick={handleSave} disabled={isSubmitting}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 20px', fontSize: '13px', fontWeight: 800 }}>
               <Zap size={15} /> 출고 지시
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -1123,7 +1123,7 @@ export const SmartDispatch3: React.FC = () => {
               <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn-primary" onClick={() => { setProcessingOpen(false); handleReset(); }} style={{ padding: '8px 20px', fontWeight: 800 }}>
                   신규 입력
-                </button>
+ </button>
               </div>
             )}
           </div>

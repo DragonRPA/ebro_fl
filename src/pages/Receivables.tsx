@@ -89,7 +89,7 @@ export const Receivables: React.FC = () => {
     setPreviewPhotoUrl(null);
   };
 
-  // ── 🗺️ O(1) 고속 조회용 인덱스 맵 ──
+  // ──  O(1) 고속 조회용 인덱스 맵 ──
   const customerMap = useMemo(() => {
     const map = new Map<string, typeof customers[0]>();
     customers.forEach(c => map.set(c.id, c));
@@ -143,7 +143,7 @@ export const Receivables: React.FC = () => {
     return map;
   }, [contracts]);
 
-  // 🔍 모달 검색어 기반 필터링된 고객사 목록 (초성 검색 지원)
+  //  모달 검색어 기반 필터링된 고객사 목록 (초성 검색 지원)
   const modalFilteredCustomers = useMemo(() => {
     const q = modalSearchTerm.trim().toLowerCase();
     if (!q) return sortedCustomers;
@@ -171,7 +171,7 @@ export const Receivables: React.FC = () => {
     return sortCustomersByName(matched);
   }, [customers, sortedCustomers, customerMap, sitesByCustomerMap, contractsByCustomerMap, modalSearchTerm, modalSelectedCustId]);
 
-  // 🔍 모달 검색어 기반 필터링된 현장 목록
+  //  모달 검색어 기반 필터링된 현장 목록
   const modalFilteredSites = useMemo(() => {
     let baseSites = sites;
     if (modalSelectedCustId) {
@@ -199,7 +199,7 @@ export const Receivables: React.FC = () => {
     return matched;
   }, [sites, siteMap, customerMap, contractsByCustomerMap, modalSelectedCustId, modalSearchTerm, modalSelectedSiteId]);
 
-  // 🔍 모달 검색어 기반 필터링된 계약 목록
+  //  모달 검색어 기반 필터링된 계약 목록
   const modalFilteredContracts = useMemo(() => {
     const q = modalSearchTerm.trim().toLowerCase();
     const matcher = q ? createHangulMatcher(q) : null;
@@ -613,7 +613,7 @@ export const Receivables: React.FC = () => {
               border: '1px solid var(--border-color)', fontWeight: 600, color: 'var(--text-main)'
             }}>
               조회 <strong>{filtered.length}</strong>건
-            </span>
+ </span>
             <span style={{
               padding: '3px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)', color: 'var(--text-primary)'
@@ -646,14 +646,14 @@ export const Receivables: React.FC = () => {
               onClick={() => setShowAddModal(true)}
             >
               <Plus size={13} /> 신규 외상 등록
-            </button>
+ </button>
           )}
           <button
             className="btn-excel-download"
             onClick={handleExportExcel}
           >
             <Download size={13} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -783,7 +783,7 @@ export const Receivables: React.FC = () => {
               onClick={handleApplyFilter}
             >
               <Search size={13} /> 조회
-            </button>
+ </button>
             <button
               type="button"
               className="btn-reset"
@@ -842,7 +842,7 @@ export const Receivables: React.FC = () => {
                             onClick={() => handleOpenClaimModal(r)}
                           >
                             수리비 협상·PDF
-                          </button>
+ </button>
                         )}
                         {r.status !== 'CLEARED' ? (
                           <button
@@ -852,7 +852,7 @@ export const Receivables: React.FC = () => {
                             onClick={() => handleStandaloneIssue(r.id)}
                           >
                             단독 청구
-                          </button>
+ </button>
                         ) : !claimMeta ? (
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>-</span>
                         ) : null}
@@ -864,7 +864,7 @@ export const Receivables: React.FC = () => {
                       {cu?.transactionStatus === 'BLOCKED' && (
                         <span style={{ marginLeft: '6px', padding: '1px 5px', fontSize: '10px', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', borderRadius: '3px', fontWeight: 800 }}>
                           출고제한
-                        </span>
+ </span>
                       )}
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>
@@ -921,7 +921,7 @@ export const Receivables: React.FC = () => {
                       {claimPhotoCount > 0 && (
                         <span style={{ marginRight: '6px', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontWeight: 700, fontSize: '10px' }}>
                           사진 {claimPhotoCount}장
-                        </span>
+ </span>
                       )}
                       {claimMeta?.registeredByName && (
                         <span style={{ marginRight: '6px', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '10px' }}>
@@ -932,19 +932,19 @@ export const Receivables: React.FC = () => {
                       {claimMeta?.inspectorMemo && (
                         <span style={{ marginLeft: '6px', fontSize: '10.5px', color: '#f59e0b', fontWeight: 600 }}>
                           [출고팀메모: {claimMeta.inspectorMemo}]
-                        </span>
+ </span>
                       )}
                     </td>
                     <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{r.displayName || '-'}</td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600 }}>
                       {r.totalAmount.toLocaleString()}원
-                    </td>
+ </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--success)' }}>
                       {r.billedAmount.toLocaleString()}원
-                    </td>
+ </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: remaining > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>
                       {remaining.toLocaleString()}원
-                    </td>
+ </td>
                     <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                       <span className={`badge ${
                         r.status === 'PENDING' ? 'badge-secondary' :
@@ -961,7 +961,7 @@ export const Receivables: React.FC = () => {
                 <tr>
                   <td colSpan={11} style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
                     조회된 외상미수금 내역이 없습니다.
-                  </td>
+ </td>
                 </tr>
               )}
             </tbody>
@@ -997,7 +997,7 @@ export const Receivables: React.FC = () => {
               style={{ padding: '6px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Plus size={14} /> 외상미수금 등록
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -1030,14 +1030,14 @@ export const Receivables: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '14px', marginBottom: '18px' }}>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Plus size={18} color="var(--primary)" /> 외상미수금 등록
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
                 style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', padding: '4px' }}
               >
-                ✕
-              </button>
+                
+ </button>
             </div>
             
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1066,7 +1066,7 @@ export const Receivables: React.FC = () => {
               }}>
                 <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Search size={14} /> 귀속 계약 / 고객사 / 현장 조회 & 선택 (현재 유효한 계약 현장)
-                </div>
+ </div>
 
                 {/* 검색창 */}
                 <div data-mid="rec-modal-search-box" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1075,14 +1075,14 @@ export const Receivables: React.FC = () => {
                     {modalSearchTerm.trim() && (
                       <span style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700 }}>
                         검색 결과: 고객사 {modalFilteredCustomers.length}건 | 현장 {modalFilteredSites.length}건 | 계약 {modalFilteredContracts.length}건
-                      </span>
+ </span>
                     )}
                   </div>
                   <div style={{ position: 'relative' }}>
                     <Search size={14} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                     <input
                       type="text"
-                      placeholder="계약번호(예: C202603-0005), 고객사명, 초성(예: ㅅㅂ), 현장명 검색..."
+                      placeholder="계약번호, 고객사명, 초성(예: ㅅㅂ), 현장명 검색..."
                       value={modalSearchTerm}
                       onChange={e => handleModalSearchChange(e.target.value)}
                       style={{ width: '100%', padding: '6px 28px 6px 28px', fontSize: '12px', boxSizing: 'border-box' }}
@@ -1107,8 +1107,8 @@ export const Receivables: React.FC = () => {
                         }}
                         title="검색어 초기화"
                       >
-                        ✕
-                      </button>
+                        
+ </button>
                     )}
                   </div>
                 </div>
@@ -1180,7 +1180,7 @@ export const Receivables: React.FC = () => {
                         return (
                           <option key={c.id} value={c.id}>
                             {c.contractNo} ({cu?.name || '고객사'} - {s?.name || '현장미지정'})
-                          </option>
+ </option>
                         );
                       })}
                     </select>
@@ -1193,7 +1193,7 @@ export const Receivables: React.FC = () => {
                   if (!selectedC) return (
                     <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', padding: '2px' }}>
                       ※ 특정 계약/현장이 아닌 고객사 공통 외상으로 등록하려면 '계약 미지정'을 유지하세요.
-                    </div>
+ </div>
                   );
 
                   const cu = customerMap.get(selectedC.customerId);
@@ -1212,12 +1212,12 @@ export const Receivables: React.FC = () => {
                     }}>
                       <div>
                         <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '12.5px' }}>
-                          🏢 {cu?.name} ➔ 📍 {s?.name || '현장미지정'}
+                           {cu?.name} {s?.name || '현장미지정'}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
                           계약번호: <strong style={{ color: 'var(--text-primary)' }}>{selectedC.contractNo}</strong> | 
-                          기간: <strong>{selectedC.startDate} ~ {selectedC.endDate || '미정'}</strong> | 
-                          계산서 마감: <strong>매월 {selectedC.billingDay}일</strong>
+ 기간: <strong>{selectedC.startDate} ~ {selectedC.endDate || '미정'}</strong> | 
+ 계산서 마감: <strong>매월 {selectedC.billingDay}일</strong>
                         </div>
                       </div>
                       <button
@@ -1234,8 +1234,8 @@ export const Receivables: React.FC = () => {
                           fontWeight: 600
                         }}
                       >
-                        선택 해제 ✕
-                      </button>
+                        선택 해제 
+ </button>
                     </div>
                   );
                 })()}
@@ -1278,7 +1278,7 @@ export const Receivables: React.FC = () => {
               <div data-mid="rec-modal-internal-desc" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>
                   내부 기재명 (실제 발생 내역) *
-                </label>
+ </label>
                 <input
                   type="text"
                   placeholder="예: 스카이잭 3219 현장 파손 수리비 (조이스틱 교체)"
@@ -1293,7 +1293,7 @@ export const Receivables: React.FC = () => {
               <div data-mid="rec-modal-display-name" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>
                   명세서 표기명 (고객 노출용 - 선택)
-                </label>
+ </label>
                 <input
                   type="text"
                   placeholder="예: 렌탈 장비 정비료 (입력 안하면 내부 기재명 사용됨)"
@@ -1303,7 +1303,7 @@ export const Receivables: React.FC = () => {
                 />
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   ※ 고객에게 '파손' 등 민감한 단어를 노출하지 않고 명세서에 표기할 대체 명칭을 적습니다.
-                </div>
+ </div>
               </div>
 
               {/* 하단 버튼 그룹 */}
@@ -1315,7 +1315,7 @@ export const Receivables: React.FC = () => {
                   style={{ padding: '6px 14px', fontSize: '12px' }}
                 >
                   닫기
-                </button>
+ </button>
                 <button data-hs-trigger="Register"
                   data-mid="rec-modal-submit-btn"
                   type="submit"
@@ -1323,7 +1323,7 @@ export const Receivables: React.FC = () => {
                   style={{ padding: '6px 18px', fontSize: '12px', fontWeight: 700 }}
                 >
                   외상 등록 완료
-                </button>
+ </button>
               </div>
 
             </form>
@@ -1371,7 +1371,7 @@ export const Receivables: React.FC = () => {
                   <FileText size={18} color="var(--primary)" />
                   <h3 style={{ margin: 0, fontSize: '16.5px', fontWeight: 800 }}>
                     입고 불량 수리비 내역서 (문서 전달 및 고객 협상 합의)
-                  </h3>
+ </h3>
                   {isSublease ? (
                     <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'rgba(139, 92, 246, 0.16)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.4)' }}>
                       임차처: {baseMeta.vendorName || '외부임차'}
@@ -1379,7 +1379,7 @@ export const Receivables: React.FC = () => {
                   ) : (
                     <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                       자사보유
-                    </span>
+ </span>
                   )}
                 </div>
                 <button
@@ -1387,8 +1387,8 @@ export const Receivables: React.FC = () => {
                   onClick={() => setSelectedClaimRcv(null)}
                   style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', padding: '4px' }}
                 >
-                  ✕
-                </button>
+                  
+ </button>
               </div>
 
               {/* 1. 영업사원 협상용 통합 컨텍스트 (자산·계약·연락처·검수자 정보) */}
@@ -1459,7 +1459,7 @@ export const Receivables: React.FC = () => {
                 <div style={{ padding: '10px 12px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.35)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
                   <span style={{ padding: '2px 7px', borderRadius: '4px', backgroundColor: '#d97706', color: '#fff', fontSize: '10.5px', fontWeight: 800, flexShrink: 0 }}>
                     출고팀 전달 메모
-                  </span>
+ </span>
                   <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{baseMeta.inspectorMemo}</span>
                 </div>
               )}
@@ -1468,7 +1468,7 @@ export const Receivables: React.FC = () => {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37, 99, 235, 0.25)', marginBottom: '14px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 700 }}>
                   불량 증상 {claimEditItems.length}건 및 촬영 사진을 내역서 문서로 생성하여 고객에게 전달합니다.
-                </div>
+ </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
@@ -1488,7 +1488,7 @@ export const Receivables: React.FC = () => {
                     }}
                   >
                     <Share2 size={13} /> 모바일·카톡 공유
-                  </button>
+ </button>
                   <button
                     type="button"
                     disabled={isClaimBusy}
@@ -1497,7 +1497,7 @@ export const Receivables: React.FC = () => {
                     onClick={() => setShowClaimEmailBox(prev => !prev)}
                   >
                     <Mail size={13} /> 이메일 발송
-                  </button>
+ </button>
                   <button
                     type="button"
                     disabled={isClaimBusy}
@@ -1516,7 +1516,7 @@ export const Receivables: React.FC = () => {
                     }}
                   >
                     <Download size={13} /> 내역서 다운로드
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -1576,7 +1576,7 @@ export const Receivables: React.FC = () => {
                       }}
                     >
                       첨부 발송 실행
-                    </button>
+ </button>
                   </div>
                 </div>
               )}
@@ -1631,7 +1631,7 @@ export const Receivables: React.FC = () => {
                               <img src={url} alt={`증빙사진 ${pIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                               <span style={{ position: 'absolute', bottom: '6px', right: '6px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', fontSize: '10.5px', fontWeight: 700 }}>
                                 사진 {pIdx + 1} (클릭 확대)
-                              </span>
+ </span>
                             </div>
                           ))}
                         </div>
@@ -1689,7 +1689,7 @@ export const Receivables: React.FC = () => {
                     onClick={() => setSelectedClaimRcv(null)}
                   >
                     닫기
-                  </button>
+ </button>
                   <button
                     type="button"
                     disabled={isClaimBusy}
@@ -1716,7 +1716,7 @@ export const Receivables: React.FC = () => {
                     }}
                   >
                     조정 금액 저장 (협상중)
-                  </button>
+ </button>
                   <button
                     type="button"
                     disabled={isClaimBusy}
@@ -1743,7 +1743,7 @@ export const Receivables: React.FC = () => {
                     }}
                   >
                     <CheckCircle size={13} /> 최종 합의 완료 (당월 청구 연동)
-                  </button>
+ </button>
                 </div>
               </div>
             </div>
@@ -1772,7 +1772,7 @@ export const Receivables: React.FC = () => {
                 />
                 <div style={{ marginTop: '12px', color: '#fff', fontSize: '13px', fontWeight: 700 }}>
                   화면을 클릭하면 닫힙니다
-                </div>
+ </div>
               </div>
             )}
           </div>

@@ -62,18 +62,18 @@ export interface SmartDispatchData {
   unloadingTime: string;
   equipments: { modelName: string; qty: number; monthlyRate?: number; dailyRate?: number; monthlyRentalFee?: number; dailyRentalFee?: number }[];
   paidOptions?: string;
-  paidOptionPrices?: Record<string, number>; // 🌟 출고 요청 시 1회성 변경 유상옵션 단가 (현장 기본 단가는 마스터 기본 단가 유지)
-  paidOptionUnits?: Record<string, '월' | '대' | '건' | '수량'>; // 🌟 출고 요청 시 1회성 변경 유상옵션 청구조건
-  paidOptionQtys?: Record<string, number>; // 🌟 출고 요청 시 유상옵션 수량 (1대당 수량 또는 직접 수량)
+  paidOptionPrices?: Record<string, number>; //  출고 요청 시 1회성 변경 유상옵션 단가 (현장 기본 단가는 마스터 기본 단가 유지)
+  paidOptionUnits?: Record<string, '월' | '대' | '건' | '수량'>; //  출고 요청 시 1회성 변경 유상옵션 청구조건
+  paidOptionQtys?: Record<string, number>; //  출고 요청 시 유상옵션 수량 (1대당 수량 또는 직접 수량)
   protection?: string;
   attachments?: string;
   checkedSpecs?: Record<string, any>;
-  saveOptionsToSite?: boolean; // 🌟 옵션 변경 시 현장 마스터 저장 여부 (false: 이번 출고만 1회성 적용, true: 현장 마스터 갱신)
+  saveOptionsToSite?: boolean; //  옵션 변경 시 현장 마스터 저장 여부 (false: 이번 출고만 1회성 적용, true: 현장 마스터 갱신)
   isSetAsCustomerDefault?: boolean;
   applyToAllSites?: boolean;
   closingDay?: string;
   paymentDay?: string;
-  siteMasterId?: string; // 🌟 물리 현장 ID (헌장 1.5 Strict N:M)
+  siteMasterId?: string; //  물리 현장 ID (헌장 1.5 Strict N:M)
   note: string;
   rawText?: string;
 }
@@ -609,7 +609,7 @@ interface AppContextType {
   historyStack: Array<{ tab: string; payload?: any }>;
   historyIndex: number;
 
-  // 🛡️ 전자결재 파이프라인
+  //  전자결재 파이프라인
   fetchRuleForEvent: (eventCode: string) => Promise<{ rule: ApprovalRule | null; consensus: RuleConsensus[] }>;
   createApprovalRequest: (
     ruleId: string,
@@ -682,7 +682,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await db.awaitPendingWrites();
     setTenants([...db.tenants]);
     
-    // 🌐 [중앙 플랫폼 SSOT & 운영 DB 이중 동기화] ebro-platform-core 프로젝트 및 운영 DB에 실시간 복제 완결 대기 (헌장 5.2)
+    //  [중앙 플랫폼 SSOT & 운영 DB 이중 동기화] ebro-platform-core 프로젝트 및 운영 DB에 실시간 복제 완결 대기 (헌장 5.2)
     if (saved && saved.id) {
       try {
         await saveCentralTenant(saved);
@@ -714,7 +714,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     db.deleteRow('tenants', tenantId);
     await db.awaitPendingWrites();
 
-    // 🌐 [중앙 플랫폼 SSOT 동기화] ebro-platform-core 중앙 DB 삭제 완결 대기
+    //  [중앙 플랫폼 SSOT 동기화] ebro-platform-core 중앙 DB 삭제 완결 대기
     try {
       await deleteCentralTenant(tenantId);
     } catch (err: any) {
@@ -1103,7 +1103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTransportDrivers([...db.transportDrivers]);
     setTransportNegotiations([...db.transportNegotiations]);
     setSubleaseNegotiations([...db.subleaseNegotiations]);
-    // 🧹 원장 상태와 교차 검증하여 이미 처리 완료된 ToDo 자동 상계 정리
+    //  원장 상태와 교차 검증하여 이미 처리 완료된 ToDo 자동 상계 정리
     try {
       const cleanedTodos = reconcileCompletedTodosInDb();
       if (cleanedTodos > 0) {
@@ -1175,7 +1175,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 🌐 [중앙 DB SSOT 동기화] 테넌트 원장 동기화 (중앙 DB가 SSOT이므로 중앙 데이터로 100% 동기화하여 로컬 가짜 시드 소탕)
+    //  [중앙 DB SSOT 동기화] 테넌트 원장 동기화 (중앙 DB가 SSOT이므로 중앙 데이터로 100% 동기화하여 로컬 가짜 시드 소탕)
     try {
       const centralTenants = await fetchCentralTenants();
       if (centralTenants && centralTenants.length > 0) {
@@ -1354,7 +1354,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
     
-    // 🛡️ [세션 위변조 방어 로드]
+    //  [세션 위변조 방어 로드]
     const normalizeDeveloperIdentity = (u: User): User => {
       if (isSystemDeveloperUser(u)) {
         return {
@@ -1387,7 +1387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (isDev && !isDemoMode() && !isFlDemoHost) {
             isCurrentDeviceAuthorizedForDeveloper().then(auth => {
               if (!auth.isAuthorized) {
-                console.warn('🚨 [보안 차단] 비인가 물리 단말기에서의 개발자 세션 복원 차단');
+                console.warn('[보안 차단] 비인가 물리 단말기에서의 개발자 세션 복원 차단');
                 sessionStorage.removeItem('user');
                 setCurrentUser(null);
               }
@@ -1412,7 +1412,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (isDev && !isDemoMode() && !isFlDemoHost) {
             isCurrentDeviceAuthorizedForDeveloper().then(auth => {
               if (!auth.isAuthorized) {
-                console.warn('🚨 [보안 차단] 비인가 물리 단말기에서의 개발자 자동 로그인 차단');
+                console.warn('[보안 차단] 비인가 물리 단말기에서의 개발자 자동 로그인 차단');
                 localStorage.removeItem('auto_user');
                 sessionStorage.removeItem('user');
                 setCurrentUser(null);
@@ -1439,7 +1439,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fullRefreshFromServer();
   }, []);
 
-  // 💡 [사용자 편의성 최우선 정책] 미사용(30분 등)으로 인한 강제 자동 로그아웃 기능 영구 비활성화 (사장님 지시사항)
+  //  [사용자 편의성 최우선 정책] 미사용(30분 등)으로 인한 강제 자동 로그아웃 기능 영구 비활성화 (사장님 지시사항)
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -1481,7 +1481,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 1. 개발자 / 최고관리자 마스터 계정 (DB/네트워크 상태와 무관하게 100% 무조건 보장)
     if (cleanId.toLowerCase() === 'admin' && cleanPw === 'admin123') {
-      // 🛡️ [물리 단말기 2단계 인가 검증]
+      //  [물리 단말기 2단계 인가 검증]
       if (!bypassDeviceCheck && !isDemoMode() && !isFlDemoHost) {
         const deviceAuth = await isCurrentDeviceAuthorizedForDeveloper();
         if (!deviceAuth.isAuthorized) {
@@ -1492,7 +1492,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return {
             success: false,
             requireDeviceVerification: true,
-            reason: '🚨 [물리 단말기 인가 필요] 개발자 권한은 사전에 등록 및 인가된 물리적 개발자 PC(MAC 주소/하드웨어 지문)에서만 로그인이 허용됩니다.',
+            reason: '[물리 단말기 인가 필요] 개발자 권한은 사전에 등록 및 인가된 물리적 개발자 PC에서만 로그인이 허용됩니다.',
             detectedFingerprint: deviceAuth.detectedFingerprint,
             detectedMacs: deviceAuth.detectedMacs
           };
@@ -1523,7 +1523,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: true };
     }
 
-    // 🌐 플랫폼 최고관리자 도메인 접속 시 일반 계정 차단
+    //  플랫폼 최고관리자 도메인 접속 시 일반 계정 차단
     if (getDomainMode() === 'ADMIN') {
       return {
         success: false,
@@ -1640,7 +1640,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
 
-      // 🛡️ 평문 비밀번호 자동 SHA-256 해시 업그레이드
+      //  평문 비밀번호 자동 SHA-256 해시 업그레이드
       if (user.passwordHash && !/^[a-f0-9]{64}$/i.test(user.passwordHash)) {
         const upgradedHash = hashPassword(cleanPw);
         user.passwordHash = upgradedHash;
@@ -1652,7 +1652,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 7-1. 🏢 [테넌트 구독 만료 및 정지 가드]
+    // 7-1.  [테넌트 구독 만료 및 정지 가드]
     // 테넌트 상태가 SUSPENDED이거나 구독이 만료되고 유예기간이 지난 경우,
     // 일반 직원의 로그인을 차단하고 명확한 안내 에러 메시지 반환
     const targetTenant = (user as any).tenantId 
@@ -1722,7 +1722,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 🛡️ [물리 단말기 2단계 인가 검증 - 시스템 개발자 계정 전용]
+    //  [물리 단말기 2단계 인가 검증 - 시스템 개발자 계정 전용]
     const isDevAdmin = isSystemDeveloperUser(user);
     if (isDevAdmin && !bypassDeviceCheck && !isDemoMode() && !isFlDemoHost) {
       const deviceAuth = await isCurrentDeviceAuthorizedForDeveloper();
@@ -1734,7 +1734,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           success: false,
           requireDeviceVerification: true,
-          reason: '🚨 [물리 단말기 인가 필요] 개발자 권한은 사전에 등록 및 인가된 물리적 개발자 PC(MAC 주소/하드웨어 지문)에서만 로그인이 허용됩니다.',
+          reason: '[물리 단말기 인가 필요] 개발자 권한은 사전에 등록 및 인가된 물리적 개발자 PC에서만 로그인이 허용됩니다.',
           detectedFingerprint: deviceAuth.detectedFingerprint,
           detectedMacs: deviceAuth.detectedMacs
         };
@@ -1843,12 +1843,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentUser.department === '개발자';
     const isSuperAdmin = isDeveloper || currentUser.role === 'ADMIN';
 
-    // 🛡️ [특급 보안] 테넌트가 사용하는 사이트(giyeon.ebro.run 등)에서는 테넌트 관리 메뉴 원천 차단 (오직 admin.ebro.run 전용)
+    //  [특급 보안] 테넌트가 사용하는 사이트(giyeon.ebro.run 등)에서는 테넌트 관리 메뉴 원천 차단 (오직 admin.ebro.run 전용)
     if (normMenuId === 'tenant_management') {
       return getDomainMode() === 'ADMIN' && isSuperAdmin;
     }
 
-    // 0-2. 🏢 [테넌트별 페이지 노출/숨김 격리 (관리자 포함 테넌트 전원 적용)]
+    // 0-2.  [테넌트별 페이지 노출/숨김 격리 (관리자 포함 테넌트 전원 적용)]
     if (currentTenant) {
       const rawHidden = Array.isArray(currentTenant.hiddenPages) ? currentTenant.hiddenPages : [];
       const rawAllowed = Array.isArray(currentTenant.allowedPages) ? currentTenant.allowedPages : [];
@@ -1958,7 +1958,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: nowStr
         }));
 
-        const lastCommandInfo = `supabase.from('permissions').upsert(payload[${payload.length}건], { onConflict: 'id' })`;
+        const lastCommandInfo = `supabase.from.upsert(payload[${payload.length}건], { onConflict: 'id' })`;
         const samplePayloadJson = JSON.stringify(payload.slice(0, 2), null, 2);
 
         const { error } = await supabase.from('permissions').upsert(payload as any[], { onConflict: 'id' });
@@ -1967,18 +1967,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const rawErrorDetails = 
             `■ [마지막 실행 시도 명령]: ${lastCommandInfo}\n` +
             `■ [PostgREST Raw Error]:\n` +
-            `  - Code: ${error.code || 'N/A'}\n` +
-            `  - Message: ${error.message || 'N/A'}\n` +
-            `  - Details: ${error.details || 'N/A'}\n` +
-            `  - Hint: ${error.hint || 'N/A'}\n\n` +
+            ` - Code: ${error.code || 'N/A'}\n` +
+            ` - Message: ${error.message || 'N/A'}\n` +
+            ` - Details: ${error.details || 'N/A'}\n` +
+            ` - Hint: ${error.hint || 'N/A'}\n\n` +
             `■ [시도된 페이로드 샘플 (최대 2건)]:\n${samplePayloadJson}\n\n` +
-            `■ [조치 안내 (개발자 도구 패치 적용 또는 Supabase SQL Editor 실행 DDL)]:\n` +
+            `■ [조치 안내]:\n` +
             (isSchemaCacheOrColumnError
-              ? `💡 원인: Supabase DB의 permissions 테이블 컬럼 미비 또는 PostgREST 스키마 캐시 미갱신 현상입니다.\n` +
-                `1) [개발자 도구] ➔ [[개발] DB 데이터 업로더] 메뉴 하단의 [⚡ 패치 자동 적용 (DB 직접 실행)] 버튼 클릭\n` +
+              ? ` 원인: Supabase DB의 permissions 테이블 컬럼 미비 또는 PostgREST 스키마 캐시 미갱신 현상입니다.\n` +
+                `1) [개발자 도구] [[개발] DB 데이터 업로더] 메뉴 하단의 [ 패치 자동 적용] 버튼 클릭\n` +
                 `2) 또는 Supabase SQL Editor에서 아래 DDL 직접 실행:\n` +
-                `   ALTER TABLE "permissions" ADD COLUMN IF NOT EXISTS "userId" TEXT;\n` +
-                `   NOTIFY pgrst, 'reload schema';`
+                ` ALTER TABLE "permissions" ADD COLUMN IF NOT EXISTS "userId" TEXT;\n` +
+                ` NOTIFY pgrst, 'reload schema';`
               : `ALTER TABLE "permissions" ADD COLUMN IF NOT EXISTS "userId" TEXT;\nNOTIFY pgrst, 'reload schema';`);
 
           throw new Error(rawErrorDetails);
@@ -2057,7 +2057,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshAllData();
     } catch (err: any) {
       console.error('updateOfficialMailConfig Error:', err);
-      showErrorModal(`⚠️ 공식메일설정 원격 DB 저장 실패:\n\n${err?.message || err}`, '원격 DB 저장 오류');
+      showErrorModal(` 공식메일설정 원격 DB 저장 실패:\n\n${err?.message || err}`, '원격 DB 저장 오류');
       throw err;
     }
   };
@@ -2122,7 +2122,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const now = new Date().toISOString();
 
-      // 🛡️ [FK 무결성 보장] role_permissions 저장 전 부모 테이블에 해당 roleId가 반드시 존재하도록 선행 동기화
+      //  [FK 무결성 보장] role_permissions 저장 전 부모 테이블에 해당 roleId가 반드시 존재하도록 선행 동기화
       const existingRoles = db.customRoles && db.customRoles.length > 0 ? [...db.customRoles] : [];
       if (!existingRoles.some(r => r.id === roleId)) {
         existingRoles.push({
@@ -2154,7 +2154,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       await db.upsertRows('rolePermissions', newPerms);
 
-      // 🔄 해당 roleId를 보유한 임직원들의 permissions(805행 호환 테이블)도 100% 동기화
+      //  해당 roleId를 보유한 임직원들의 permissions(805행 호환 테이블)도 100% 동기화
       const affectedUsers = db.users.filter(u => u.customRoleId === roleId);
       if (affectedUsers.length > 0) {
         const syncPerms: MenuPermission[] = [];
@@ -2215,7 +2215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         await db.upsertRows('users', [updatedUser]);
 
-        // 🔄 상속된 역할의 권한을 permissions 테이블(레거시/글로벌 호환)에도 1:1 동기화
+        //  상속된 역할의 권한을 permissions 테이블(레거시/글로벌 호환)에도 1:1 동기화
         if (customRoleId) {
           const now = new Date().toISOString();
           const roleRules = db.rolePermissions.filter(p => p.roleId === customRoleId);
@@ -2249,7 +2249,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveUser = (userData: Omit<User, 'id' | 'createdAt'> & { id?: string }) => {
-    // 🛡️ 비밀번호 해싱 처리 (평문 비밀번호를 SHA-256으로 변환하여 DB 평문 노출 방어)
+    //  비밀번호 해싱 처리 (평문 비밀번호를 SHA-256으로 변환하여 DB 평문 노출 방어)
     const sanitizedData = {
       ...userData,
       passwordHash: userData.passwordHash ? hashPassword(userData.passwordHash) : userData.passwordHash
@@ -2258,7 +2258,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (sanitizedData.id) {
       db.updateRow<User>('users', sanitizedData.id, sanitizedData);
     } else {
-      // 🛡️ [수량 한도 제한 인터셉터]
+      //  [수량 한도 제한 인터셉터]
       const maxUsers = currentTenant?.subscription?.maxUsers;
       if (typeof maxUsers === 'number' && maxUsers > 0) {
         if (users.length >= maxUsers) {
@@ -2412,17 +2412,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const custBillings = db.billings.filter(b => b.customerId === id);
     const custReceivables = (db.receivables || []).filter((r: any) => r.customerId === id);
 
-    // ⚠️ 계약, 보호 대상 현장, 투입 장비, 청구 이력 중 하나라도 존재하면 고객 삭제 원천 차단 및 안내 모달 출력
+    //  계약, 보호 대상 현장, 투입 장비, 청구 이력 중 하나라도 존재하면 고객 삭제 원천 차단 및 안내 모달 출력
     if (custContracts.length > 0 || lockedSites.length > 0 || custAssets.length > 0 || custBillings.length > 0 || custReceivables.length > 0) {
       const sampleContract = activeContracts[0] || custContracts[0];
       const lockedSiteNames = lockedSites.slice(0, 3).map(s => s.name);
 
-      let detailLines = `⚠️ [${custName}] 고객사를 삭제할 수 없습니다.\n\n`;
+      let detailLines = ` [${custName}] 고객사를 삭제할 수 없습니다.\n\n`;
       detailLines += `■ 삭제 불가 사유 (연결 데이터 보호):\n`;
       if (custContracts.length > 0) {
         detailLines += `• 연결된 계약 이력: 총 ${custContracts.length}건 (유지/진행중 ${activeContracts.length}건 / 종료 ${custContracts.length - activeContracts.length}건)\n`;
         if (sampleContract) {
-          detailLines += `  - 대표 계약번호: ${sampleContract.contractNo || sampleContract.id}\n`;
+          detailLines += ` - 대표 계약번호: ${sampleContract.contractNo || sampleContract.id}\n`;
         }
       }
       if (lockedSites.length > 0) {
@@ -2462,7 +2462,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const existingContact = contact.id ? db.contacts.find(c => c.id === contact.id) : null;
     if (existingContact) {
       const res = db.updateRow<CustomerContact>('contacts', existingContact.id, contact as CustomerContact);
-      if (!res) throw new Error("Contact update failed (not found).");
+      if (!res) throw new Error("Contact update failed.");
       savedObj = res;
     } else {
       savedObj = db.insertRow<CustomerContact>('contacts', {
@@ -2485,11 +2485,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteContact = async (id: string) => {
-    // ✅ 고아 레코드 방지: 계약에 등록된 담당자 삭제 차단
+    //  고아 레코드 방지: 계약에 등록된 담당자 삭제 차단
     const linkedContracts = db.contracts.filter(c => c.contactId === id);
     if (linkedContracts.length > 0) {
       showErrorModal(
-        `⚠️ 해당 담당자를 삭제할 수 없습니다.\n\n연결된 계약이 ${linkedContracts.length}건 존재합니다.\n계약에서 담당자를 먼저 변경/해제하십시오.`,
+        ` 해당 담당자를 삭제할 수 없습니다.\n\n연결된 계약이 ${linkedContracts.length}건 존재합니다.\n계약에서 담당자를 먼저 변경/해제하십시오.`,
         '담당자 삭제 불가'
       );
       return;
@@ -2609,14 +2609,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteSite = async (id: string): Promise<boolean> => {
     const targetSite = db.sites.find(s => s.id === id);
 
-    // ✅ 고아 레코드 방지: 해당 고객 현장과 연결된 계약 또는 투입 장비가 있으면 삭제 차단
+    //  고아 레코드 방지: 해당 고객 현장과 연결된 계약 또는 투입 장비가 있으면 삭제 차단
     const linkedContracts = db.contracts.filter(c => c.siteId === id);
     const linkedAssets = db.assets.filter(a => a.currentSiteId === id);
     if (linkedContracts.length > 0 || linkedAssets.length > 0) {
       const activeCnt = linkedContracts.filter(c => c.status === 'ACTIVE' || c.status === 'EXTENDED').length;
       const siteDisplayName = targetSite?.name || id;
       showErrorModal(
-        `⚠️ [${siteDisplayName}] 고객 현장을 삭제할 수 없습니다.\n\n` +
+        ` [${siteDisplayName}] 고객 현장을 삭제할 수 없습니다.\n\n` +
         (linkedContracts.length > 0 ? `■ 연결된 계약: 총 ${linkedContracts.length}건 (유지중 ${activeCnt}건)\n` : '') +
         (linkedAssets.length > 0 ? `■ 투입 중인 장비: ${linkedAssets.length}대\n` : '') +
         `\n계약 이력이나 장비가 배정된 고객 현장은 삭제 대신 [완공/종료] 상태 변경을 이용해 주십시오.`,
@@ -2766,7 +2766,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (err: any) {
       console.error("Supabase write await error:", err);
-      showErrorModal(`⚠️ 제품 카탈로그 저장 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
+      showErrorModal(` 제품 카탈로그 저장 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
       throw err;
     }
     
@@ -2774,7 +2774,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return result;
   };
 
-  // 💡 [신규] 입고 검수 필요 항목 및 점수 기준 CUD
+  //  [신규] 입고 검수 필요 항목 및 점수 기준 CUD
   const saveInspectionChecklistItem = async (itemData: Omit<InspectionChecklistItem, 'id' | 'createdAt'> & { id?: string }) => {
     if (itemData.id) {
       db.updateRow<InspectionChecklistItem>('inspectionChecklistItems', itemData.id, {
@@ -2815,7 +2815,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     db.deleteRow('equipmentManuals', id);
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 🏷️ 전사 표준 옵션 마스터 CUD
+  //  전사 표준 옵션 마스터 CUD
   const saveStandardOption = async (optionData: Omit<StandardOption, 'id' | 'createdAt'> & { id?: string }): Promise<StandardOption> => {
     const sanitizedName = (optionData.name || '').replace(/\s*,\s*/g, '·').trim();
     const cleanData = { ...optionData, name: sanitizedName };
@@ -2843,7 +2843,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     db.deleteRow('standardOptions', id);
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 📊 월간 결산 손익계산서 영구 발행 및 보존
+  //  월간 결산 손익계산서 영구 발행 및 보존
   const saveMonthlyIncomeStatement = async (stmt: MonthlyIncomeStatement): Promise<MonthlyIncomeStatement> => {
     const existing = db.monthlyIncomeStatements.find(s => s.targetYm === stmt.targetYm || s.id === stmt.id);
     let saved: MonthlyIncomeStatement;
@@ -2864,7 +2864,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved;
   };
 
-  // 📝 영업일지 저장 및 삭제 (Groq LLM 추출 데이터 + 원문 통합 보관)
+  //  영업일지 저장 및 삭제 (Groq LLM 추출 데이터 + 원문 통합 보관)
   const saveSalesJournal = async (journal: Omit<SalesJournal, 'id' | 'createdAt'> & { id?: string }): Promise<SalesJournal> => {
     const existing = journal.id ? (db.salesJournals || []).find(j => j.id === journal.id) : null;
     const nowIso = new Date().toISOString();
@@ -2909,7 +2909,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const existingAsset = asset.id ? db.assets.find(a => a.id === asset.id) : null;
     const isNew = !existingAsset;
 
-    // 🛡️ 관리번호(assetNo) 중복 검증 가드 (휴먼에러 원천 차단)
+    //  관리번호(assetNo) 중복 검증 가드 (휴먼에러 원천 차단)
     const trimmedAssetNo = (asset.assetNo || '').trim();
     if (!trimmedAssetNo) {
       const errMsg = '관리번호(자산번호)를 입력해 주세요.';
@@ -2943,7 +2943,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (existingAsset) {
       result = db.updateRow<Asset>('assets', existingAsset.id, normalizedAsset as Asset);
     } else {
-      // 🛡️ [수량 한도 제한 인터셉터]
+      //  [수량 한도 제한 인터셉터]
       const maxAssets = currentTenant?.subscription?.maxAssets;
       if (typeof maxAssets === 'number' && maxAssets > 0) {
         if (assets.length >= maxAssets) {
@@ -2992,14 +2992,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await db.awaitPendingWrites();
     } catch (err: any) {
       console.error('saveAsset Supabase sync error:', err);
-      showErrorModal(`⚠️ 장비 자산 저장 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
+      showErrorModal(` 장비 자산 저장 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
       throw err;
     }
     refreshAllData();
     return result;
   };
 
-  // 💡 자산 상태 SSOT 실시간 자동 변동 헬퍼 메소드
+  //  자산 상태 SSOT 실시간 자동 변동 헬퍼 메소드
   const changeAssetStatus = async (assetId: string, newStatus: Asset['status'], extraData?: Partial<Asset>) => {
     try {
       const targetAsset = db.assets.find(a => a.id === assetId);
@@ -3019,7 +3019,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         modelName: targetAsset.modelName || '',
         type: (newStatus === 'RENTED' || newStatus === 'ASSIGNED') ? 'OUTBOUND' : 'INBOUND',
         eventDate: new Date().toISOString().split('T')[0],
-        memo: `[자산상태 변동] ${targetAsset.status || 'AVAILABLE'} ➔ ${newStatus}`,
+        memo: `[자산상태 변동] ${targetAsset.status || 'AVAILABLE'} ${newStatus}`,
         createdAt: new Date().toISOString()
       });
 
@@ -3029,7 +3029,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshAllData();
     } catch (err: any) {
       console.error('changeAssetStatus error:', err);
-      showErrorModal(`⚠️ 자산 상태 변동 처리 중 오류가 발생했습니다:\n\n${err?.message || err}`);
+      showErrorModal(` 자산 상태 변동 처리 중 오류가 발생했습니다:\n\n${err?.message || err}`);
       throw err;
     }
   };
@@ -3051,9 +3051,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     db.contracts.forEach(c => {
       if (!c || !c.contractNo) return;
-      const match = c.contractNo.match(new RegExp(`^${prefix}-(\\d{4})`)) || 
-                    c.contractNo.match(new RegExp(`^${prefix}(\\d{4})`)) ||
-                    c.contractNo.match(new RegExp(`${yymm}(\\d{4})`));
+      const match = c.contractNo.match(new RegExp(`^${prefix}-`)) || 
+                    c.contractNo.match(new RegExp(`^${prefix}`)) ||
+                    c.contractNo.match(new RegExp(`${yymm}`));
       if (match) {
         const seq = parseInt(match[1], 10);
         if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
@@ -3090,7 +3090,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
 
-    await notify('🔍 [1/5] 고객사 명칭 정규화 및 거래 상태 확인 중...', 10);
+    await notify('[1/5] 고객사 명칭 정규화 및 거래 상태 확인 중...', 10);
 
     // 약칭("세보엠이씨") 또는 표기 형태(" (주) 세보엠이씨 ") 검색 시 기존 정식 법인명("주식회사 세보엠이씨") 자동 탐색 & 보정
     let customer = findCustomerByNormalizedName(db.customers, data.customerName);
@@ -3099,10 +3099,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       data.customerName = customer.name;
     }
     if (customer && customer.transactionStatus === 'BLOCKED') {
-      return { success: false, errorMessage: '⚠️ 해당 고객사는 [거래불가] 상태로 설정되어 있어 신규 출고 및 계약 등록이 원천 차단됩니다.' };
+      return { success: false, errorMessage: '해당 고객사는 [거래불가] 상태로 설정되어 있어 신규 출고 및 계약 등록이 원천 차단됩니다.' };
     }
     
-    // 🛡️ [1. 방어 가드 - Validation Guard]
+    //  [1. 방어 가드 - Validation Guard]
     // 현장명은 반드시 100% 정확히 일치(===)해야만 기존 현장으로 매칭하며, 부분/포함 매칭을 원천 차단한다.
     const currentCust = customer;
     const trimmedInputSiteName = (data.siteName || '').trim();
@@ -3110,7 +3110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ? db.sites.find(s => s.customerId === currentCust.id && s.name.trim() === trimmedInputSiteName)
       : null;
 
-    // 🚫 기존 현장과 100% 일치하지 않는 현장명인데 신규 현장 등록(autoRegister)이 명시되지 않은 경우 입력 원천 차단
+    //  기존 현장과 100% 일치하지 않는 현장명인데 신규 현장 등록(autoRegister)이 명시되지 않은 경우 입력 원천 차단
     if (currentCust && !existingSite && !autoRegister) {
       return {
         success: false,
@@ -3149,23 +3149,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!effectiveAddress) {
       return {
         success: false,
-        errorMessage: `⚠️ [현장 상세 주소 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 기존 DB에 등록된 주소가 없으며, 현재 입력창에도 주소가 생략되어 있습니다.\n\n배차 기사 운송 및 계약 체결을 위해 현장 상세 주소를 반드시 입력해주세요.`
+        errorMessage: ` [현장 상세 주소 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 기존 DB에 등록된 주소가 없으며, 현재 입력창에도 주소가 생략되어 있습니다.\n\n배차 기사 운송 및 계약 체결을 위해 현장 상세 주소를 반드시 입력해주세요.`
       };
     }
     if (!effectiveContactName) {
       return {
         success: false,
-        errorMessage: `⚠️ [현장 담당자 성명 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 기존 현장담당자 성명이 미입력(공백) 상태입니다.\n\n현장담당자의 부족한 정보(성명 및 연락처)를 입력해 주시면 해당 현장 정보에 즉시 업데이트됩니다.`
+        errorMessage: ` [현장 담당자 성명 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 기존 현장담당자 성명이 미입력(공백) 상태입니다.\n\n현장담당자의 부족한 정보(성명 및 연락처)를 입력해 주시면 해당 현장 정보에 즉시 업데이트됩니다.`
       };
     }
     if (!effectivePhone) {
       return {
         success: false,
-        errorMessage: `⚠️ [현장 담당자 연락처 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 현장 담당자 연락처가 기존 DB에 없으며 입력창에도 생략되었습니다.\n\n장비 하차 인계 및 기사 비상 연락을 위해 현장 담당자 연락처를 반드시 입력해주세요.`
+        errorMessage: ` [현장 담당자 연락처 필수 누락]\n\n고객사 '${data.customerName}' / 현장 '${data.siteName}'의 현장 담당자 연락처가 기존 DB에 없으며 입력창에도 생략되었습니다.\n\n장비 하차 인계 및 기사 비상 연락을 위해 현장 담당자 연락처를 반드시 입력해주세요.`
       };
     }
 
-    // ⚡ [2. 기존 정보 상속] 누락 필드 자동 승계
+    //  [2. 기존 정보 상속] 누락 필드 자동 승계
     data.siteAddress = effectiveAddress;
     data.siteContactName = effectiveContactName;
     data.siteContactPhone = effectivePhone;
@@ -3175,9 +3175,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       data.taxBillEmail = customer.repEmail;
     }
 
-    // 🛡️ [장비 수량 검증 가드]
+    //  [장비 수량 검증 가드]
     if (!data.equipments || data.equipments.length === 0) {
-      return { success: false, errorMessage: '⚠️ 출고 대상 장비 규격 및 수량이 누락되었습니다.' };
+      return { success: false, errorMessage: '출고 대상 장비 규격 및 수량이 누락되었습니다.' };
     }
     const sanitizedEquipments = data.equipments.map(eq => ({
       ...eq,
@@ -3185,7 +3185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
     const totalEqQty = sanitizedEquipments.reduce((sum, e) => sum + e.qty, 0);
     if (totalEqQty <= 0) {
-      return { success: false, errorMessage: '⚠️ 출고 수량은 최소 1대 이상이어야 합니다.' };
+      return { success: false, errorMessage: '출고 수량은 최소 1대 이상이어야 합니다.' };
     }
     data.equipments = sanitizedEquipments;
 
@@ -3214,7 +3214,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const contractPaymentDueDay = parseDayNumber(rawData.paymentDay || rawData.paymentDueDay, customer?.paymentDueDay || 15);
 
     if (!customer) {
-      await notify(`🏢 [신규 고객] DB에 없는 고객사 '${data.customerName}' 자동 신규 생성 중...`, 20);
+      await notify(` [신규 고객] DB에 없는 고객사 '${data.customerName}' 자동 신규 생성 중...`, 20);
       customer = db.insertRow<Customer>('customers', {
         name: data.customerName,
         bizRegNo: '미상',
@@ -3229,12 +3229,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date().toISOString()
       });
 
-      // ⚠️ FK 제약 방지: 신규 고객이 Supabase에 완전히 저장된 후에만 contacts/sites 생성 가능
+      //  FK 제약 방지: 신규 고객이 Supabase에 완전히 저장된 후에만 contacts/sites 생성 가능
       try {
         await db.awaitPendingWrites();
       } catch (err: any) {
         console.error('Supabase new customer sync error:', err);
-        showErrorModal(`⚠️ 신규 고객 DB 저장 중 오류:\n${err.message || JSON.stringify(err)}`, '출고 오류');
+        showErrorModal(` 신규 고객 DB 저장 중 오류:\n${err.message || JSON.stringify(err)}`, '출고 오류');
         return { success: false, errorMessage: err.message };
       }
 
@@ -3249,16 +3249,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       }
     } else {
-      await notify(`✅ [고객 확인] 기존 등록 고객사 '${customer.name}' 매핑 완료`, 25);
+      await notify(` [고객 확인] 기존 등록 고객사 '${customer.name}' 매핑 완료`, 25);
       
-      // 🔄 [3. 최신 정보 업데이트] 고객 마스터 정보 동기화
+      //  [3. 최신 정보 업데이트] 고객 마스터 정보 동기화
       const custUpdates: Partial<Customer> = {};
       if (data.taxBillEmail && data.taxBillEmail !== '미상' && data.taxBillEmail !== customer.repEmail) {
         custUpdates.repEmail = data.taxBillEmail;
       }
       if (Object.keys(custUpdates).length > 0) {
         customer = db.updateRow<Customer>('customers', customer.id, { ...custUpdates, updatedAt: new Date().toISOString() }) as Customer;
-        await notify(`🏢 [고객 정보 갱신] 계산서 수신처('${data.taxBillEmail}')가 고객 마스터에 업데이트되었습니다.`, 28);
+        await notify(` [고객 정보 갱신] 계산서 수신처('${data.taxBillEmail}')가 고객 마스터에 업데이트되었습니다.`, 28);
       }
 
       // 담당자 정보 업데이트 및 신규 추가
@@ -3285,10 +3285,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ...contactUpdates,
               updatedAt: new Date().toISOString()
             });
-            await notify(`👤 [담당자 최신화] 담당자 '${data.siteContactName}' 정보가 최신값으로 업데이트되었습니다.`, 30);
+            await notify(` [담당자 최신화] 담당자 '${data.siteContactName}' 정보가 최신값으로 업데이트되었습니다.`, 30);
           }
         } else {
-          await notify(`👤 [신규 담당자] 현장 담당자 '${data.siteContactName}' 등록 중...`, 30);
+          await notify(` [신규 담당자] 현장 담당자 '${data.siteContactName}' 등록 중...`, 30);
           db.insertRow<CustomerContact>('contacts', {
             customerId: targetCustomerId,
             name: data.siteContactName,
@@ -3323,7 +3323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const selectedOptionGroup = data.siteMasterId ? db.siteMasters.find(m => m.id === data.siteMasterId) : undefined;
 
     if (!site) {
-      await notify(`📍 [2/5 현장 등록] 고객 현장 '${data.siteName}' 등록 중...`, 40);
+      await notify(` [2/5 현장 등록] 고객 현장 '${data.siteName}' 등록 중...`, 40);
       const initialSiteContacts = (!isBlankContactField(data.siteContactName) || !isBlankContactField(data.siteContactPhone))
         ? [{
             id: `sc-eq-${Date.now()}`,
@@ -3410,7 +3410,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         siteUpdates.email = data.siteContactEmail;
       }
 
-      // 🌟 [현장담당자 목록(contacts) 1:1 동기화]: 기존 현장의 담당자가 공백이었거나 추가 정보가 입력된 경우 contacts 배열 동시 업데이트
+      //  [현장담당자 목록(contacts) 1:1 동기화]: 기존 현장의 담당자가 공백이었거나 추가 정보가 입력된 경우 contacts 배열 동시 업데이트
       if (!isBlankContactField(data.siteContactName) || !isBlankContactField(data.siteContactPhone) || !isBlankContactField(data.siteContactPosition) || !isBlankContactField(data.siteContactEmail)) {
         const existingContactsList = Array.isArray(site.contacts) ? site.contacts.map(c => ({ ...c })) : [];
         const eqIdx = existingContactsList.findIndex(c => c.contactType === 'EQUIPMENT');
@@ -3515,7 +3515,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
         }
       }
-      // 🌟 [헌장 1.5] 옵션/보양/부착물/표준사양은 고객 현장에 직접 저장
+      //  [헌장 1.5] 옵션/보양/부착물/표준사양은 고객 현장에 직접 저장
       if (data.saveOptionsToSite !== false) {
         if (data.paidOptions !== undefined && data.paidOptions !== site.paidOptions) {
           siteUpdates.paidOptions = data.paidOptions;
@@ -3546,13 +3546,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       if (Object.keys(siteUpdates).length > 0) {
         site = db.updateRow<CustomerSite>('sites', site.id, { ...siteUpdates, updatedAt: new Date().toISOString() }) as CustomerSite;
-        await notify(`📍 [현장 정보 최신화] 고객 현장 '${site.name}'의 정보(주소/옵션/보양)가 업데이트되었습니다.`, 45);
+        await notify(` [현장 정보 최신화] 고객 현장 '${site.name}'의 정보(주소/옵션/보양)가 업데이트되었습니다.`, 45);
       } else {
-        await notify(`📍 [2/5 현장 매핑] 기존 고객 현장 '${site.name}' 매핑 완료`, 45);
+        await notify(` [2/5 현장 매핑] 기존 고객 현장 '${site.name}' 매핑 완료`, 45);
       }
     }
 
-    // 🌟 고객사 기본 옵션/보양 등록 및 전체 현장 일괄 전파 처리 (1회성 출고 적용 시에는 고객사 기본값 오염 방지)
+    //  고객사 기본 옵션/보양 등록 및 전체 현장 일괄 전파 처리 (1회성 출고 적용 시에는 고객사 기본값 오염 방지)
     const custOptionUpdates: Partial<Customer> = {};
     if (rawData.freightBillingStandard === '2/4' || rawData.freightBillingStandard === '3/5') {
       if (!finalCustomer.defaultFreightBillingStandard) {
@@ -3585,7 +3585,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     if (Object.keys(custOptionUpdates).length > 0) {
       db.updateRow<Customer>('customers', finalCustomer.id, { ...custOptionUpdates, updatedAt: new Date().toISOString() });
-      await notify(`🏢 [고객사 기본설정 동기화] 고객사('${finalCustomer.name}') 기본 옵션/보양 마스터가 등록되었습니다.`, 48);
+      await notify(` [고객사 기본설정 동기화] 고객사('${finalCustomer.name}') 기본 옵션/보양 마스터가 등록되었습니다.`, 48);
     }
 
     if (data.applyToAllSites) {
@@ -3605,7 +3605,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: new Date().toISOString()
         });
       }
-      await notify(`🌐 [전체 현장 전파] '${finalCustomer.name}' 산하 ${allSites.length}개 모든 고객 현장에 옵션/보양이 일괄 적용되었습니다.`, 50);
+      await notify(` [전체 현장 전파] '${finalCustomer.name}' 산하 ${allSites.length}개 모든 고객 현장에 옵션/보양이 일괄 적용되었습니다.`, 50);
     }
 
     if (autoRegister && currentUser) {
@@ -3622,17 +3622,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const finalSite = site!;
 
-    // ⚠️ FK 제약 방지: 현장 레코드가 Supabase 원격 DB에 100% 저장·반영 완료된 후에만 contracts 생성이 가능하도록 동기 대기!
+    //  FK 제약 방지: 현장 레코드가 Supabase 원격 DB에 100% 저장·반영 완료된 후에만 contracts 생성이 가능하도록 동기 대기!
     try {
       await db.awaitPendingWrites();
     } catch (err: any) {
       console.error('Supabase site sync error before contract creation:', err);
-      showErrorModal(`⚠️ 신규 현장 DB 동기화 오류가 발생했습니다:\n${err.message || JSON.stringify(err)}`, '출고 오류');
+      showErrorModal(` 신규 현장 DB 동기화 오류가 발생했습니다:\n${err.message || JSON.stringify(err)}`, '출고 오류');
       return { success: false, errorMessage: err.message };
     }
 
     const existingUsers = db.users;
-    // 💡 계약 영업담당자 결정 원칙:
+    //  계약 영업담당자 결정 원칙:
     // 1) 최초 출고 요청자(ownerId / salespersonId / salespersonName)가 명시되어 있으면 해당 직원을 최우선 적용
     // 2) 없으면 현재 출고 요청을 입력한 로그인 사용자(currentUser)를 적용
     // 3) 기존 계약에 장비 추가 편입 시에는 기존 계약의 최초 영업담당자(existingActiveContract.salespersonId)를 절대 덮어쓰지 않고 유지함
@@ -3651,7 +3651,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     const targetStartDate = extractDate(data.unloadingTime) || extractDate(data.loadingTime) || new Date().toISOString().split('T')[0];
 
-    // ── 계약 단일성 원칙: 명시 지정 계약 ➔ 동일 (고객사 + 현장) 활성 계약 ➔ 동일 현장 종료 계약 탐색 ──
+    // ── 계약 단일성 원칙: 명시 지정 계약  동일 (고객사 + 현장) 활성 계약  동일 현장 종료 계약 탐색 ──
     const explicitTargetContract = (!rawData.forceNewContract && rawData.targetContractId)
       ? db.contracts.find(c => c.id === String(rawData.targetContractId) && c.customerId === finalCustomer.id)
       : undefined;
@@ -3687,9 +3687,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         contract = existingActiveContract;
       }
-      await notify(`📄 [3/5 기존 계약 편입] 기존 계약(${contract.contractNo})에 신규 장비 편입 중...`, 55);
+      await notify(` [3/5 기존 계약 편입] 기존 계약(${contract.contractNo})에 신규 장비 편입 중...`, 55);
 
-      // 📜 [헌장 1.2] 발생 사건 무누락 DB 저장: 기존 계약에 장비 추가 편입 이력 등록
+      //  [헌장 1.2] 발생 사건 무누락 DB 저장: 기존 계약에 장비 추가 편입 이력 등록
       db.insertRow<ContractHistory>('contractHistory', {
         contractId: contract.id,
         changeType: 'REGISTER',
@@ -3702,7 +3702,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // 2) 기존 계약이 없을 경우: 최초 발생월 기준 채번하여 신규 계약 생성
       const nextContractNo = generateNextContractNo(targetStartDate);
 
-      await notify(`📄 [3/5 계약 생성] 임대차 계약서 작성 중 (${nextContractNo})...`, 55);
+      await notify(` [3/5 계약 생성] 임대차 계약서 작성 중 (${nextContractNo})...`, 55);
 
       const contractLateInterestRate = (rawData.lateInterestRate !== undefined && rawData.lateInterestRate !== '') ? (Number(rawData.lateInterestRate) || 0) : ((finalCustomer as any).defaultLateInterestRate || 0);
 
@@ -3724,7 +3724,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatedAt: new Date().toISOString()
       });
 
-      // ⚠️ 외래키 제약조건 위반 방지: 부모 contract 레코드가 Supabase 원격 DB에 먼저 100% 생성되도록 1차 동기 대기!
+      //  외래키 제약조건 위반 방지: 부모 contract 레코드가 Supabase 원격 DB에 먼저 100% 생성되도록 1차 동기 대기!
       try {
         await db.awaitPendingWrites();
       } catch (err: any) {
@@ -3732,11 +3732,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (contract?.id) {
           db.deleteRow('contracts', contract.id);
         }
-        showErrorModal(`⚠️ 출고 계약 생성 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, '스마트 출고 DB 동기화 오류');
+        showErrorModal(` 출고 계약 생성 중 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, '스마트 출고 DB 동기화 오류');
         return { success: false, errorMessage: err.message || err.details };
       }
 
-      // 📜 [헌장 1.2] 발생 사건 무누락 DB 저장: 스마트 출고 신규 계약 체결 이력 등록
+      //  [헌장 1.2] 발생 사건 무누락 DB 저장: 스마트 출고 신규 계약 체결 이력 등록
       db.insertRow<ContractHistory>('contractHistory', {
         contractId: contract.id,
         changeType: 'REGISTER',
@@ -3747,7 +3747,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    await notify('🏗️ [4/5 장비 매핑] 계약 투입 장비 모델 및 단가 자동 상속 중...', 80);
+    await notify('[4/5 장비 매핑] 계약 투입 장비 모델 및 단가 자동 상속 중...', 80);
 
     const custContractIds = db.contracts.filter(c => c.customerId === finalCustomer.id).map(c => c.id);
     const dData = data as any;
@@ -3891,7 +3891,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     });
 
-    await notify('🚚 [5/5 배차 생성] 배차/운송 관리 출고대기 지시건 생성 중...', 90);
+    await notify('[5/5 배차 생성] 배차/운송 관리 출고대기 지시건 생성 중...', 90);
 
     // 신규 배차 - 출고 대기 건 자동 생성 (출고 장비 ContractAsset ID 및 유상옵션 1:1 매핑 보존)
     const cargoItems = JSON.stringify(cargoItemsPayload);
@@ -3963,14 +3963,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedAt: new Date().toISOString()
     });
 
-    await notify('🌐 Supabase 원격 DB 최종 2차 동기화 완료 중...', 96);
+    await notify('Supabase 원격 DB 최종 2차 동기화 완료 중...', 96);
 
     try {
       await db.awaitPendingWrites();
     } catch (err: any) {
       console.error('Supabase sync error during saveSmartDispatch:', err);
       
-      // 💥 DB 저장 실패 시 생성되었던 임시 계약/배차/슬롯/이력 레코드 롤백 삭제!
+      //  DB 저장 실패 시 생성되었던 임시 계약/배차/슬롯/이력 레코드 롤백 삭제!
       if (contract?.id) {
         db.deleteRow('contracts', contract.id);
         const addedCAssets = db.contractAssets.filter(ca => ca.contractId === contract.id);
@@ -3979,13 +3979,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addedDeliveries.forEach(d => db.deleteRow('deliveries', d.id));
         const addedHistories = db.contractHistory.filter(h => h.contractId === contract.id);
         addedHistories.forEach(h => db.deleteRow('contractHistory', h.id));
-        // ✅ 고아 레코드 방지: 롤백 시 생성된 outboundInspections도 함께 삭제
+        //  고아 레코드 방지: 롤백 시 생성된 outboundInspections도 함께 삭제
         const addedInspections = db.outboundInspections.filter(i => i.contractId === contract.id);
         addedInspections.forEach(i => db.deleteRow('outboundInspections', i.id));
       }
       refreshAllData();
 
-      const errorMsg = `⚠️ Supabase 데이터베이스 동기화 중 오류가 발생했습니다:\n\n■ [안내]: 저장 실패로 인해 생성 시도했던 데이터가 안전하게 자동 롤백 원복되었습니다.\n\n${err.message || err.details || JSON.stringify(err)}`;
+      const errorMsg = ` Supabase 데이터베이스 동기화 중 오류가 발생했습니다:\n\n■ [안내]: 저장 실패로 인해 생성 시도했던 데이터가 안전하게 자동 롤백 원복되었습니다.\n\n${err.message || err.details || JSON.stringify(err)}`;
       showErrorModal(errorMsg, '출고 DB 동기화 오류 (자동 원복 완료)');
       return { 
         success: false, 
@@ -3993,11 +3993,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    await notify('🎉 [완료] 출고의뢰 생성을 성공적으로 완료하였습니다!', 100, 300);
+    await notify('[완료] 출고의뢰 생성을 성공적으로 완료하였습니다!', 100, 300);
 
     refreshAllData();
 
-    // 🚀 [단일 업무 인계 파이프라인] 배차팀(배차 의뢰) 및 출고/주기장팀(장비 할당)에 물리 ToDo 영구 적재 + 실시간 브로드캐스트
+    //  [단일 업무 인계 파이프라인] 배차팀(배차 의뢰) 및 출고/주기장팀(장비 할당)에 물리 ToDo 영구 적재 + 실시간 브로드캐스트
     const totalEqCount = (data.equipments || []).reduce((acc: number, eq: any) => acc + (Number(eq.qty) || 1), 0);
     const modelSummaryStr = (data.equipments || [])
       .map((eq: any) => `${eq.modelName || '미지정'} × ${Number(eq.qty) || 1}대`)
@@ -4033,7 +4033,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, contractId: contract.id, contractNo: contract.contractNo };
   };
 
-  // 🚫 출고 검수 완료 전 출고 요청 취소 트랜잭션 (장비 할당 해제 + 슬롯 제거 + 배차 CANCELLED + 이력/ToDo 정리)
+  //  출고 검수 완료 전 출고 요청 취소 트랜잭션 (장비 할당 해제 + 슬롯 제거 + 배차 CANCELLED + 이력/ToDo 정리)
   const cancelOutboundRequest = async (deliveryId: string, cancelReason?: string): Promise<{ success: boolean; errorMessage?: string }> => {
     const targetDelivery = db.deliveries.find(d => d.id === deliveryId);
     if (!targetDelivery) {
@@ -4276,12 +4276,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshAllData();
 
       const errMsg = err?.message || err?.details || JSON.stringify(err);
-      showErrorModal(`⚠️ 출고 요청 취소 중 DB 동기화 오류가 발생하여 원복되었습니다:\n\n${errMsg}`, '출고 요청 취소 실패');
+      showErrorModal(` 출고 요청 취소 중 DB 동기화 오류가 발생하여 원복되었습니다:\n\n${errMsg}`, '출고 요청 취소 실패');
       return { success: false, errorMessage: errMsg };
     }
   };
 
-  // 🗑️ 취소된 출고 요청(status === 'CANCELLED') 영구 삭제 및 잔여 슬롯/유령 계약 정리 트랜잭션
+  //  취소된 출고 요청(status === 'CANCELLED') 영구 삭제 및 잔여 슬롯/유령 계약 정리 트랜잭션
   const deleteCancelledOutboundRequests = async (deliveryIds?: string[]): Promise<{ success: boolean; deletedCount: number; errorMessage?: string }> => {
     const idSet = deliveryIds && deliveryIds.length > 0 ? new Set(deliveryIds) : null;
     const targets = db.deliveries.filter(d => {
@@ -4408,7 +4408,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // 💰 출고 요청 내역 수정 (요청 모델/수량/삭제/추가, 옵션 변경, 유상옵션 청구조건·단가, 상하차일시 및 계약개시일 수정) 트랜잭션
+  //  출고 요청 내역 수정 (요청 모델/수량/삭제/추가, 옵션 변경, 유상옵션 청구조건·단가, 상하차일시 및 계약개시일 수정) 트랜잭션
   const updateOutboundRequestPricing = async (params: {
     deliveryId: string;
     allowCompletedModify?: boolean;
@@ -4498,12 +4498,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (params.loadingDate !== undefined || params.loadingTimeSlot !== undefined) {
         if (origLoadingDate !== nextLoadingDate || origLoadingSlot !== nextLoadingSlot) {
-          changeLogs.push(`상차일시: [${origLoadingDate || '-'} ${origLoadingSlot}]➔[${nextLoadingDate || '-'} ${nextLoadingSlot}]`);
+          changeLogs.push(`상차일시: [${origLoadingDate || '-'} ${origLoadingSlot}][${nextLoadingDate || '-'} ${nextLoadingSlot}]`);
         }
       }
       if (params.unloadingDate !== undefined || params.unloadingTimeSlot !== undefined) {
         if (origUnloadingDate !== nextUnloadingDate || origUnloadingSlot !== nextUnloadingSlot) {
-          changeLogs.push(`하차일시(계약개시일): [${origUnloadingDate || '-'} ${origUnloadingSlot}]➔[${nextUnloadingDate || '-'} ${nextUnloadingSlot}]`);
+          changeLogs.push(`하차일시(계약개시일): [${origUnloadingDate || '-'} ${origUnloadingSlot}][${nextUnloadingDate || '-'} ${nextUnloadingSlot}]`);
         }
       }
 
@@ -4540,19 +4540,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         : origQtys;
 
       if (params.paidOptions !== undefined && params.paidOptions !== origPaidOptions) {
-        changeLogs.push(`유상옵션: [${origPaidOptions || '없음'}]➔[${params.paidOptions || '없음'}]`);
+        changeLogs.push(`유상옵션: [${origPaidOptions || '없음'}][${params.paidOptions || '없음'}]`);
       }
       if (params.protection !== undefined && params.protection !== (baseMeta?.protection ?? '')) {
-        changeLogs.push(`무상옵션: [${baseMeta?.protection || '없음'}]➔[${params.protection || '없음'}]`);
+        changeLogs.push(`무상옵션: [${baseMeta?.protection || '없음'}][${params.protection || '없음'}]`);
       }
       if (params.attachments !== undefined && params.attachments !== (baseMeta?.attachments ?? '')) {
-        changeLogs.push(`부착물: [${baseMeta?.attachments || '없음'}]➔[${params.attachments || '없음'}]`);
+        changeLogs.push(`부착물: [${baseMeta?.attachments || '없음'}][${params.attachments || '없음'}]`);
       }
       if (params.paidOptionUnits) {
         Object.entries(params.paidOptionUnits).forEach(([optName, newUnit]) => {
           const oldUnit = origUnits[optName];
           if (oldUnit !== newUnit) {
-            changeLogs.push(`유상옵션(${optName}) 청구조건: ${oldUnit || '기본'}➔${newUnit}`);
+            changeLogs.push(`유상옵션(${optName}) 청구조건: ${oldUnit || '기본'}${newUnit}`);
           }
         });
       }
@@ -4561,7 +4561,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const oldQty = origQtys[optName] || 1;
           if (oldQty !== newQty) {
             const effU = nextUnits[optName] || '대';
-            changeLogs.push(`유상옵션(${optName}) ${effU === '수량' ? '수량' : '1대당 수량'}: ${oldQty}개➔${newQty}개`);
+            changeLogs.push(`유상옵션(${optName}) ${effU === '수량' ? '수량' : '1대당 수량'}: ${oldQty}개${newQty}개`);
           }
         });
       }
@@ -4569,7 +4569,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         Object.entries(params.paidOptionPrices).forEach(([optName, newVal]) => {
           const oldVal = origPrices[optName];
           if (oldVal !== newVal) {
-            changeLogs.push(`유상옵션(${optName}) 단가: ${(oldVal ?? 0).toLocaleString()}원➔${Number(newVal).toLocaleString()}원`);
+            changeLogs.push(`유상옵션(${optName}) 단가: ${(oldVal ?? 0).toLocaleString()}원${Number(newVal).toLocaleString()}원`);
           }
         });
       }
@@ -4627,7 +4627,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const oldSummary = parsedCargo.map(ci => `${ci.modelName} ${ci.count || ci.qty || 1}대(월 ${(ci.monthlyRentalFee || 0).toLocaleString()}원)`).join(', ');
         const newSummary = mergedEqs.map(eq => `${eq.modelName} ${eq.qty}대(월 ${eq.monthlyRate.toLocaleString()}원)`).join(', ');
         if (oldSummary !== newSummary) {
-          changeLogs.push(`요청 장비: [${oldSummary || '없음'}] ➔ [${newSummary}]`);
+          changeLogs.push(`요청 장비: [${oldSummary || '없음'}] [${newSummary}]`);
         }
 
         const keptCaIds = new Set<string>();
@@ -4796,7 +4796,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const newD = Number(matchedRate.dailyRate || (newM ? Math.round(newM / 30) : 0));
 
               if (oldM !== newM || oldD !== newD) {
-                changeLogs.push(`${ci.modelName} 렌탈료: 월 ${oldM.toLocaleString()}원➔${newM.toLocaleString()}원 / 일 ${oldD.toLocaleString()}원➔${newD.toLocaleString()}원`);
+                changeLogs.push(`${ci.modelName} 렌탈료: 월 ${oldM.toLocaleString()}원${newM.toLocaleString()}원 / 일 ${oldD.toLocaleString()}원${newD.toLocaleString()}원`);
               }
               nextCi.monthlyRentalFee = newM;
               nextCi.dailyRentalFee = newD;
@@ -4856,7 +4856,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       }
 
-      // 🔗 [하차일 = 계약(청구) 개시일 자동 연동]: 하차일이 지정/변경된 경우 이 출고 요청에 귀속된 모든 체결 자산(ContractAsset), 할당 장비(Asset), 계약(Contract)의 개시일을 하차일로 일괄 동기화
+      //  [하차일 = 계약(청구) 개시일 자동 연동]: 하차일이 지정/변경된 경우 이 출고 요청에 귀속된 모든 체결 자산(ContractAsset), 할당 장비(Asset), 계약(Contract)의 개시일을 하차일로 일괄 동기화
       if (nextUnloadingDate && /^\d{4}-\d{2}-\d{2}$/.test(nextUnloadingDate)) {
         const targetCaIdSet = new Set<string>();
         updatedCargo.forEach(ci => {
@@ -5011,7 +5011,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deletedInspections.forEach(ins => db.insertRow<OutboundInspection>('outboundInspections', ins));
       refreshAllData();
       const errMsg = err?.message || err?.details || JSON.stringify(err);
-      showErrorModal(`⚠️ 출고 요청 수정 저장 중 DB 동기화 오류가 발생하여 원복되었습니다:\n\n${errMsg}`, '출고 요청 수정 실패');
+      showErrorModal(` 출고 요청 수정 저장 중 DB 동기화 오류가 발생하여 원복되었습니다:\n\n${errMsg}`, '출고 요청 수정 실패');
       return { success: false, errorMessage: errMsg };
     }
   };
@@ -5038,7 +5038,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
 
-        // 💡 헌장 1.2 & 1.3 준수:
+        //  헌장 1.2 & 1.3 준수:
         // 회수 배차 의뢰 단계에서는 현장 장비의 실제 가동 상태를 조기 종료하거나 RENTED_RETURNED로 바꾸지 않음.
         // 자산 상태는 실제 운송 및 입고 검수가 완료되는 시점에 전환됨.
         // 다만 의뢰 이력 관리를 위해 contractHistory에 회수 의뢰 접수 이력만 기록.
@@ -5096,7 +5096,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         returnAssets.forEach(a => {
           modelCountsMap[a.modelName] = (modelCountsMap[a.modelName] || 0) + 1;
         });
-        // 🌟 [전사 표준 헌장 2.2 자동 상속 및 무누락/무잡음 원칙] 출고 시 장착 옵션 및 보양은 cargoItems 메타데이터로 보존하고, 배차 특이사항(closingMemo) 및 원문(memo)에는 옵션을 주입하지 않음
+        //  [전사 표준 헌장 2.2 자동 상속 및 무누락/무잡음 원칙] 출고 시 장착 옵션 및 보양은 cargoItems 메타데이터로 보존하고, 배차 특이사항(closingMemo) 및 원문(memo)에는 옵션을 주입하지 않음
         const outboundDelivery = db.deliveries.find(d => d.contractId === contract.id && d.type === 'OUTBOUND');
 
         let rawPaidOptions = (data as any).paidOptions;
@@ -5162,7 +5162,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: new Date().toISOString()
         });
 
-        // 🚀 [단일 업무 인계 파이프라인] 배차팀에 회수 배차 ToDo 영구 적재
+        //  [단일 업무 인계 파이프라인] 배차팀에 회수 배차 ToDo 영구 적재
         const retCount = data.assetIds?.length || 1;
         await issueHandoverTask({
           category: 'DISPATCH_REQUEST',
@@ -5314,7 +5314,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 💡 매입처 거래액 및 거래개시일 자동 트리거 갱신 헬퍼
+  //  매입처 거래액 및 거래개시일 자동 트리거 갱신 헬퍼
   const triggerVendorPurchaseMetric = (vendorIdOrName: string, purchaseAmount: number, tradeDate?: string) => {
     if (!vendorIdOrName || !purchaseAmount) return;
     const targetVendor = db.vendors.find(v => 
@@ -5411,16 +5411,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     });
 
-    // 💡 매입처 누적거래액 및 거래개시일 자동 트리거 갱신
+    //  매입처 누적거래액 및 거래개시일 자동 트리거 갱신
     triggerVendorPurchaseMetric(newAsset.vendorId || newAsset.supplier || '', price, newAsset.acquisitionDate);
 
-    await db.awaitPendingWrites(); // 💡 헌장 5.2 동기 쓰기 대기
+    await db.awaitPendingWrites(); //  헌장 5.2 동기 쓰기 대기
     refreshAllData();
     return newAsset;
   };
 
   const batchAcquireAssets = async (assetsData: Partial<Asset>[]): Promise<Asset[]> => {
-    // 🛡️ 일괄 취득 실행 전 전체 관리번호 사전 검증 (원자적 트랜잭션 보호: 1건이라도 중복 시 전체 롤백/차단)
+    //  일괄 취득 실행 전 전체 관리번호 사전 검증 (원자적 트랜잭션 보호: 1건이라도 중복 시 전체 롤백/차단)
     const batchSeenLower = new Map<string, number>();
     const batchSeenClean = new Map<string, { idx: number; rawNo: string }>();
 
@@ -5508,12 +5508,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date().toISOString()
       });
 
-      // 💡 매입처 누적거래액 및 거래개시일 자동 트리거 갱신
+      //  매입처 누적거래액 및 거래개시일 자동 트리거 갱신
       triggerVendorPurchaseMetric(newAsset.vendorId || newAsset.supplier || '', price, newAsset.acquisitionDate);
 
       createdList.push(newAsset);
     }
-    await db.awaitPendingWrites(); // 💡 헌장 5.2 동기 쓰기 대기
+    await db.awaitPendingWrites(); //  헌장 5.2 동기 쓰기 대기
     refreshAllData();
     return createdList;
   };
@@ -5532,7 +5532,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return `SALE-${todayYmd}-${String(maxSeq + 1).padStart(3, '0')}`;
   };
 
-  // 💡 자산 매각 계약 체결 & 청구서 발행 & 이메일 발송 5단계 논스톱 완결 파이프라인
+  //  자산 매각 계약 체결 & 청구서 발행 & 이메일 발송 5단계 논스톱 완결 파이프라인
   const executeAssetSale = async (payload: AssetSalePayload): Promise<{ success: boolean; contractId: string; billingId: string; contractNo: string }> => {
     try {
       if (!payload.items || payload.items.length === 0) {
@@ -5659,7 +5659,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         contractId: contract.id,
         billingYm,
         billingDate: payload.disposalDate,
-        totalAmount: grandTotal, // 💡 공급가 + 부가세 10% 총액 일치 (BankMatching 1원 오차 방지)
+        totalAmount: grandTotal, //  공급가 + 부가세 10% 총액 일치 (BankMatching 1원 오차 방지)
         paidAmount: 0,
         status: 'REQUESTED',
         createdAt: new Date().toISOString(),
@@ -5690,7 +5690,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date().toISOString()
       });
 
-      // 🚀 [단일 업무 인계 파이프라인] 주기장에 매각 장비 실물 인도 검수 ToDo 발행
+      //  [단일 업무 인계 파이프라인] 주기장에 매각 장비 실물 인도 검수 ToDo 발행
       await issueHandoverTask({
         category: 'ASSET_DISPOSAL_HANDOVER',
         title: `[매각 장비 인도 검수] ${customer.name} (${soldAssetSummaries.length}대)`,
@@ -5777,7 +5777,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       return { success: true, contractId: contract.id, billingId: billing.id, contractNo: contract.contractNo };
     } catch (err: any) {
       console.error('[executeAssetSale] Error:', err);
-      showErrorModal(`⚠️ 자산 매각 계약 처리 중 오류가 발생했습니다:\n\n${err?.message || err}`, '자산 매각 실패');
+      showErrorModal(` 자산 매각 계약 처리 중 오류가 발생했습니다:\n\n${err?.message || err}`, '자산 매각 실패');
       throw err;
     }
   };
@@ -5878,7 +5878,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
     } catch (err: any) {
       console.error('registerRentedAsset Supabase sync error:', err);
-      showErrorModal(`⚠️ 임차 자산 저장 중 원격 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
+      showErrorModal(` 임차 자산 저장 중 원격 DB 동기화 오류가 발생했습니다:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
       throw err;
     }
     refreshAllData();
@@ -5890,7 +5890,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     if (!target) return;
 
     if (target.rentStart && returnDate < target.rentStart) {
-      showErrorModal(`⚠️ 임차처 반납일(${returnDate})은 임차 시작일(${target.rentStart}) 이전일 수 없습니다.`);
+      showErrorModal(` 임차처 반납일(${returnDate})은 임차 시작일(${target.rentStart}) 이전일 수 없습니다.`);
       throw new Error(`임차처 반납일이 임차 시작일 이전입니다.`);
     }
 
@@ -5931,7 +5931,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
     } catch (err: any) {
       console.error('returnRentedAsset 동기화 실패:', err);
-      showErrorModal(`⚠️ 임차처 반납 마감 처리 중 DB 동기화 오류가 발생했습니다:\n${err.message || err}`, 'DB 동기화 오류');
+      showErrorModal(` 임차처 반납 마감 처리 중 DB 동기화 오류가 발생했습니다:\n${err.message || err}`, 'DB 동기화 오류');
       throw err;
     }
   };
@@ -5966,7 +5966,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
     } catch (err: any) {
       console.error('createVendorClaimReceivable error:', err);
-      showErrorModal(`⚠️ 구상 미수금 등록 오류:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
+      showErrorModal(` 구상 미수금 등록 오류:\n${err.message || err.details || JSON.stringify(err)}`, 'DB 동기화 오류');
       throw err;
     }
   };
@@ -5982,7 +5982,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 소모품 품목 등록 오류:\n${err.message || err}`, 'DB 동기화 오류');
+      showErrorModal(` 소모품 품목 등록 오류:\n${err.message || err}`, 'DB 동기화 오류');
       throw err;
     }
   };
@@ -5996,7 +5996,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 소모품 품목 수정 오류:\n${err.message || err}`, 'DB 동기화 오류');
+      showErrorModal(` 소모품 품목 수정 오류:\n${err.message || err}`, 'DB 동기화 오류');
       throw err;
     }
   };
@@ -6016,7 +6016,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
     } catch (err: any) {
       if (err.message !== '삭제 불가') {
-        showErrorModal(`⚠️ 소모품 삭제 오류:\n${err.message || err}`, 'DB 동기화 오류');
+        showErrorModal(` 소모품 삭제 오류:\n${err.message || err}`, 'DB 동기화 오류');
       }
       throw err;
     }
@@ -6083,7 +6083,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       const consumable = db.consumables.find(c => c.id === data.consumableId);
       if (!consumable || consumable.stockQty < cleanQty) {
         const msg = `소모품 재고가 부족합니다. (현재고: ${consumable?.stockQty || 0}개 / 요청: ${cleanQty}개)`;
-        showErrorModal(`⚠️ ${msg}`);
+        showErrorModal(` ${msg}`);
         throw new Error(msg);
       }
 
@@ -6138,7 +6138,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 소모품 사용 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 소모품 사용 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6152,7 +6152,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       const consumable = db.consumables.find(c => c.id === consumableId);
       if (!consumable || consumable.stockQty < quantity) {
         const msg = `본사 재고가 부족합니다. (본사 현재고: ${consumable?.stockQty || 0}개)`;
-        showErrorModal(`⚠️ ${msg}`);
+        showErrorModal(` ${msg}`);
         throw new Error(msg);
       }
 
@@ -6205,7 +6205,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           fromLocation: '주기장 재고',
           toLocation: `${mechanicName} 차량`,
           actionDate: new Date().toISOString().split('T')[0],
-          description: memo || `[차량 불출] 주기장 ➔ ${mechanicName} 차량 이동 (${deductQty}개)`,
+          description: memo || `[차량 불출] 주기장 ${mechanicName} 차량 이동 (${deductQty}개)`,
           createdAt: new Date().toISOString()
         });
 
@@ -6225,7 +6225,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 차량 불출 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 차량 불출 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6251,7 +6251,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       if (totalMechStock < quantity) {
         const msg = `차량 보유 재고가 부족합니다. (차량 현재고: ${totalMechStock}개)`;
-        showErrorModal(`⚠️ ${msg}`);
+        showErrorModal(` ${msg}`);
         throw new Error(msg);
       }
 
@@ -6319,8 +6319,8 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           toLocation: !isDefective ? '주기장 재고' : `고품 격리실 (${disposition})`,
           actionDate: new Date().toISOString().split('T')[0],
           description: memo || (!isDefective 
-            ? `[주기장 반납] ${mechanicName} 차량 ➔ 주기장 재고 회수 (${deductQty}개)`
-            : `[고품 반납] ${mechanicName} 차량 ➔ 고품 격리 (${disposition}, ${deductQty}개)`),
+            ? `[주기장 반납] ${mechanicName} 차량 주기장 재고 회수 (${deductQty}개)`
+            : `[고품 반납] ${mechanicName} 차량 고품 격리 (${disposition}, ${deductQty}개)`),
           createdAt: new Date().toISOString()
         });
 
@@ -6337,7 +6337,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 본사 반납 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 본사 반납 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6366,7 +6366,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       if (totalFromStock < quantity) {
         const msg = `양도 정비사 차량의 보유 재고가 부족합니다. (현재고: ${totalFromStock}개)`;
-        showErrorModal(`⚠️ ${msg}`);
+        showErrorModal(` ${msg}`);
         throw new Error(msg);
       }
 
@@ -6424,7 +6424,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           fromLocation: `${fromUser?.name || '정비사'} 차량`,
           toLocation: `${toUser?.name || '정비사'} 차량`,
           actionDate: new Date().toISOString().split('T')[0],
-          description: memo || `[차량 간 융통] ${fromUser?.name} 차량 ➔ ${toUser?.name} 차량 (${deductQty}개)`,
+          description: memo || `[차량 간 융통] ${fromUser?.name} 차량 ${toUser?.name} 차량 (${deductQty}개)`,
           createdAt: new Date().toISOString()
         });
 
@@ -6434,7 +6434,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 차량 간 부품 융통 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 차량 간 부품 융통 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6579,7 +6579,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       
       return newAudit;
     } catch (err: any) {
-      showErrorModal(`⚠️ 실사 전표 생성 실패:\n${err?.message || err}`);
+      showErrorModal(` 실사 전표 생성 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6630,7 +6630,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 실사 품목 수량 수정 실패:\n${err?.message || err}`);
+      showErrorModal(` 실사 품목 수량 수정 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6777,7 +6777,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 실사 확정 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 실사 확정 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6796,7 +6796,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 실사 전표 취소 실패:\n${err?.message || err}`);
+      showErrorModal(` 실사 전표 취소 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6819,7 +6819,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 고품 사후처리 갱신 실패:\n${err?.message || err}`);
+      showErrorModal(` 고품 사후처리 갱신 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6842,7 +6842,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       const ticketNo = `${todayPrefix}-${String(maxNum + 1).padStart(3, '0')}`;
       const newRepairId = data.id || db.generateNextId('repairs', db.repairs);
 
-      // 💡 계약 및 1대 단독계약 자산 자동 매핑 (사장님 확정 1번 원칙)
+      //  계약 및 1대 단독계약 자산 자동 매핑 (사장님 확정 1번 원칙)
       let resolvedContractId = data.contractId;
       let resolvedAssetId = data.assetId;
       let resolvedAssetNo = data.assetNo;
@@ -6877,7 +6877,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         }
       }
 
-      // 💡 도로명 상세 주소 자동 역추적 및 매핑 (T맵/내비 연동 단일 진실의 원천)
+      //  도로명 상세 주소 자동 역추적 및 매핑 (T맵/내비 연동 단일 진실의 원천)
       let resolvedSiteAddress = data.siteAddress?.trim();
       if (!resolvedSiteAddress) {
         resolvedSiteAddress = resolveSiteDetailedAddress({
@@ -6967,7 +6967,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
 
-      // 🚀 [단일 업무 인계 파이프라인] 정비팀에 물리 ToDo 영구 적재 + 실시간 브로드캐스트
+      //  [단일 업무 인계 파이프라인] 정비팀에 물리 ToDo 영구 적재 + 실시간 브로드캐스트
       await issueHandoverTask({
         category: 'AS_DISPATCH_REPAIR',
         title: `[긴급 AS 출동] ${newTicket.customerName || '현장'} (${newTicket.modelName || '장비'})`,
@@ -6983,7 +6983,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       return newTicket;
     } catch (err: any) {
-      showErrorModal(`⚠️ AS 접수 생성 실패:\n${err?.message || err}`);
+      showErrorModal(` AS 접수 생성 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -6998,7 +6998,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ AS 상태 변경 실패:\n${err?.message || err}`);
+      showErrorModal(` AS 상태 변경 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -7020,17 +7020,17 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       let newStatus = ticket.status;
 
       if (eventType === 'CALL_MADE') {
-        label = `📞 [${timeStr}] ${mechanicName} 현장 통화 발신 (${detail || ticket.reporterContact || ''})`;
+        label = ` [${timeStr}] ${mechanicName} 현장 통화 발신 (${detail || ticket.reporterContact || ''})`;
       } else if (eventType === 'TRANSIT_START') {
-        label = `🚗 [${timeStr}] ${mechanicName} ${detail || '내비 길안내'} (현장 이동 시작)`;
+        label = ` [${timeStr}] ${mechanicName} ${detail || '내비 길안내'} (현장 이동 시작)`;
         if (ticket.status === 'REQUESTED' || ticket.status === 'SCHEDULED') {
           newStatus = 'IN_PROGRESS';
         }
       } else if (eventType === 'ARRIVED') {
-        label = `📍 [${timeStr}] ${mechanicName} 현장 도착 및 점검 착수`;
+        label = ` [${timeStr}] ${mechanicName} 현장 도착 및 점검 착수`;
         newStatus = 'IN_PROGRESS';
       } else if (eventType === 'COMPLETED') {
-        label = `✅ [${timeStr}] ${mechanicName} 현장 조치 완료 (${detail || ''})`;
+        label = ` [${timeStr}] ${mechanicName} 현장 조치 완료 (${detail || ''})`;
       }
 
       const eventItem = {
@@ -7216,7 +7216,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           );
           const totalAvailableQty = mechStocks.reduce((acc, s) => acc + (s.stockQty || 0), 0);
           if (totalAvailableQty < reqInfo.qty) {
-            throw new Error(`⚠️ [차량 재고 부족] ${mechanicName} 기사의 차량 재고에 "${reqInfo.modelName}" 품목이 부족합니다.\n(현재 적재: ${totalAvailableQty}개 / 사용 필요: ${reqInfo.qty}개)\n\n[소모품 관리 ➔ 차량별 이동재고] 메뉴에서 주기장 재고를 차량으로 먼저 불출(이동) 등록해 주시기 바랍니다.`);
+            throw new Error(` [차량 재고 부족] ${mechanicName} 기사의 차량 재고에 "${reqInfo.modelName}" 품목이 부족합니다.\n(현재 적재: ${totalAvailableQty}개 / 사용 필요: ${reqInfo.qty}개)\n\n[소모품 관리 차량별 이동재고] 메뉴에서 주기장 재고를 차량으로 먼저 불출(이동) 등록해 주시기 바랍니다.`);
           }
         }
 
@@ -7431,7 +7431,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         });
       }
 
-      // 🚐 현장AS 완료 시 일자별 동선 대장에 '작업 완료(WORK_COMPLETE)' 자동 기록
+      //  현장AS 완료 시 일자별 동선 대장에 '작업 완료(WORK_COMPLETE)' 자동 기록
       try {
         await recordAsRouteStep({
           eventType: 'WORK_COMPLETE',
@@ -7444,7 +7444,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         console.warn('Auto WORK_COMPLETE route log skipped:', routeErr);
       }
 
-      // 🟢 선행 AS 출동 ToDo 원자적 자동 상계
+      //  선행 AS 출동 ToDo 원자적 자동 상계
       await clearHandoverTasks({
         entityType: 'REPAIR',
         entityId: ticketId,
@@ -7454,7 +7454,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         completionAction: `AS_${finalStatus}`
       });
 
-      // 🚀 고객 과실 유상 수리 시 청구팀에 바인딩 ToDo 발행 (매출 누락 방지)
+      //  고객 과실 유상 수리 시 청구팀에 바인딩 ToDo 발행 (매출 누락 방지)
       if (sanitizedBillableAmount > 0) {
         await issueHandoverTask({
           category: 'BILLABLE_REPAIR_BILLING',
@@ -7470,7 +7470,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         });
       }
 
-      // 🌟 [헌장 2.3 준수] 현장 수리 불능 대차 제안 시 단일 'EXCHANGE' 왕복 배차 의뢰 1건 자동 발행
+      //  [헌장 2.3 준수] 현장 수리 불능 대차 제안 시 단일 'EXCHANGE' 왕복 배차 의뢰 1건 자동 발행
       if (data.exchangeSuggested) {
         const defaultYard = currentTenant?.yards?.find((y: any) => y.isDefault) || currentTenant?.yards?.[0];
         const originYardAddress = defaultYard ? `${defaultYard.name} (${defaultYard.address || ''})` : (currentTenant?.mainYardAddress || '본사 주기장');
@@ -7493,7 +7493,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           updatedAt: nowIso
         });
 
-        // 🚀 대차 배차 지시 ToDo 발행
+        //  대차 배차 지시 ToDo 발행
         await issueHandoverTask({
           category: 'DISPATCH_REQUEST',
           title: `[대차 교환 배차] ${ticket.customerName || '고객사'} (${resolvedAssetNo || '장비'})`,
@@ -7516,7 +7516,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
             : '';
         const statusLabel =
           finalStatus === 'COMPLETED' ? '조치완료' : finalStatus === 'REVISIT' ? '1차조치/재방문' : '안내종결';
-        const logMemo = `[현장AS ${statusLabel}] ${ticket.ticketNo || ''} ${ticket.issueDescription || '현장점검'} ➔ ${data.actionTaken}${partsSummaryText} (정비사: ${mechanicName})`;
+        const logMemo = `[현장AS ${statusLabel}] ${ticket.ticketNo || ''} ${ticket.issueDescription || '현장점검'} ${data.actionTaken}${partsSummaryText} (정비사: ${mechanicName})`;
 
         const existingAssetLog = (db.assetInOutLogs || []).find(l => l.repairId === ticket.id);
         if (existingAssetLog) {
@@ -7570,7 +7570,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
 
-      // 📢 대차 제안 시 배차/출고팀에 대차교체 알림 브로드캐스트
+      //  대차 제안 시 배차/출고팀에 대차교체 알림 브로드캐스트
       if (data.exchangeSuggested) {
         broadcastWorkNotification({
           type: 'EXCHANGE',
@@ -7657,7 +7657,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
       return newTicket;
     } catch (err: any) {
-      showErrorModal(`⚠️ 재방문 티켓 생성 실패:\n${err?.message || err}`);
+      showErrorModal(` 재방문 티켓 생성 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -7711,13 +7711,13 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         else if (issue.includes('파이프')) category = '파이프걸림';
         else if (issue.includes('점검')) category = '점검요청';
 
-        // 💡 4-A 원칙: 밴드 작성자 ➔ 시스템 users 이름 1:1 자동 매칭
+        //  4-A 원칙: 밴드 작성자  시스템 users 이름 1:1 자동 매칭
         const authorName = (r.author || '').trim();
         const matchedUser = db.users.find(u => u.name && authorName && (u.name.trim() === authorName || authorName.includes(u.name.trim())));
         const mechanicId = matchedUser?.id || '';
         const mechanicName = matchedUser?.name || authorName || '정비기사';
 
-        // 💡 고객사 및 현장 매칭
+        //  고객사 및 현장 매칭
         const contractorName = (r.contractor || '').trim();
         let matchedCustomer = db.customers.find(c => 
           c.name && contractorName && (
@@ -7740,7 +7740,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           (matchedSite && c.siteId === matchedSite.id)
         );
 
-        // 💡 5대 매트릭스 & 사장님 확정 원칙 1: 관리번호 미기재 시 1대 단독 계약이면 해당 자산으로 자동 추정 매핑
+        //  5대 매트릭스 & 사장님 확정 원칙 1: 관리번호 미기재 시 1대 단독 계약이면 해당 자산으로 자동 추정 매핑
         let finalAssetNo = asset;
         let matchedAsset = db.assets.find(a => a.assetNo && asset && a.assetNo.trim().toUpperCase() === asset.trim().toUpperCase());
         if (!matchedAsset && asset && asset !== '현장확인') {
@@ -7768,7 +7768,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           }
         }
 
-        // 🌟 자산 마스터 기준 현장 및 고객사 역추적
+        //  자산 마스터 기준 현장 및 고객사 역추적
         if (matchedAsset) {
           if ((!matchedSite || !site || site === '미지정현장' || site === '일반 현장') && matchedAsset.currentSiteId) {
             const foundSite = db.customerSites.find(s => s.id === matchedAsset.currentSiteId);
@@ -7837,7 +7837,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
         newRepairs.push(repairRow);
 
-        // 💡 자산 생애주기 이력 로그 동시 기록 (관리번호가 식별되는 장비)
+        //  자산 생애주기 이력 로그 동시 기록 (관리번호가 식별되는 장비)
         if (finalAssetNo && finalAssetNo !== '현장확인' && finalAssetNo !== '전체장비') {
           newAssetLogs.push({
             id: `aiog-band-${idx + 1}`,
@@ -7849,7 +7849,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
             customerName: repairRow.customerName,
             siteName: repairRow.siteName,
             repairId: repairRow.id,
-            memo: `[현장AS] ${issue} ➔ ${actionText} (정비자: ${mechanicName})`,
+            memo: `[현장AS] ${issue} ${actionText} (정비자: ${mechanicName})`,
             createdAt: new Date().toISOString()
           });
         }
@@ -7866,7 +7866,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       return importedCount;
     } catch (err: any) {
-      showErrorModal(`⚠️ 밴드 데이터 가져오기 실패:\n${err?.message || err}`);
+      showErrorModal(` 밴드 데이터 가져오기 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -7920,7 +7920,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       updatedAt: new Date().toISOString()
     });
 
-    // 🚀 [단일 업무 인계 파이프라인] 관리자/부서장에게 구매 결재 ToDo 발행
+    //  [단일 업무 인계 파이프라인] 관리자/부서장에게 구매 결재 ToDo 발행
     await issueHandoverTask({
       category: 'CONSUMABLE_PURCHASE_APPROVAL',
       title: `[소모품 구매 승인] ${data.modelName} (${data.qty}EA)`,
@@ -7953,7 +7953,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       updatedAt: new Date().toISOString()
     });
 
-    // 🟢 구매 결재 ToDo 자동 상계
+    //  구매 결재 ToDo 자동 상계
     await clearHandoverTasks({
       entityType: 'CONSUMABLE',
       entityId: id,
@@ -8057,7 +8057,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
-      // ⚠️ FK(Foreign Key) 위반 방지: consumables 마스터 생성이 원격 DB에 먼저 반영되도록 1차 동기 대기
+      //  FK(Foreign Key) 위반 방지: consumables 마스터 생성이 원격 DB에 먼저 반영되도록 1차 동기 대기
       try {
         await db.awaitPendingWrites();
       } catch (e: any) {
@@ -8069,7 +8069,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       });
     }
 
-    // 🌟 Create a new Lot for this inbound batch
+    //  Create a new Lot for this inbound batch
     const newLotId = `lot-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
     const todayStr = new Date().toISOString().split('T')[0];
     db.insertRow<ConsumableLot>('consumableLots', {
@@ -8144,14 +8144,14 @@ ${currentTenant?.corporateName || tenantCorp} 배상
   const createContract = async (contractData: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'contractNo'>, assetsList: { assetId?: string; expectedModel?: string; monthlyRentalFee: number; dailyRentalFee: number }[]) => {
     const customer = db.customers.find(c => c.id === contractData.customerId);
     if (customer && customer.transactionStatus === 'BLOCKED') {
-      showErrorModal('⚠️ 해당 고객사는 [거래불가] 상태로 설정되어 있어 신규 계약 등록이 불가능합니다.', '계약 등록 제한');
+      showErrorModal('해당 고객사는 [거래불가] 상태로 설정되어 있어 신규 계약 등록이 불가능합니다.', '계약 등록 제한');
       throw new Error('거래 불가 고객사입니다.');
     }
 
     const contractNo = generateNextContractNo(contractData.startDate);
     ensureCustomerContactExists(contractData.customerId, contractData.contactId);
     
-    // ⚠️ 외래키 제약조건 위반 방지: 선행 sites/contacts/customer 레코드가 Supabase 원격 DB에 먼저 100% 저장되도록 동기 대기!
+    //  외래키 제약조건 위반 방지: 선행 sites/contacts/customer 레코드가 Supabase 원격 DB에 먼저 100% 저장되도록 동기 대기!
     try {
       await db.awaitPendingWrites();
     } catch (err: any) {
@@ -8169,7 +8169,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       updatedAt: new Date().toISOString()
     });
 
-    // ⚠️ 외래키 제약조건 위반 방지: contract가 Supabase 원격 DB에 먼저 100% 생성되도록 1차 동기 대기!
+    //  외래키 제약조건 위반 방지: contract가 Supabase 원격 DB에 먼저 100% 생성되도록 1차 동기 대기!
     try {
       await db.awaitPendingWrites();
     } catch (err: any) {
@@ -8210,7 +8210,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       if (item.assetId) {
         db.updateRow<Asset>('assets', item.assetId, {
-          // 💡 헌장 1.3 준수: 계약 체결 시점에는 대여중로 변경하지 않고 ASSIGNED(출고대기) 유지, 출고 검수 승인 마감 시점에 RENTED로 전이됨!
+          //  헌장 1.3 준수: 계약 체결 시점에는 대여중로 변경하지 않고 ASSIGNED(출고대기) 유지, 출고 검수 승인 마감 시점에 RENTED로 전이됨!
           status: 'ASSIGNED',
           currentCustomerId: contractData.customerId,
           currentSiteId: contractData.siteId,
@@ -8220,7 +8220,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           dailyRentalFee: item.dailyRentalFee,
           updatedAt: nowIso
         });
-        // ✅ 고아 레코드 방지: assetId가 있는 슬롯 생성 시 출고검수 의뢰 자동 연동 생성
+        //  고아 레코드 방지: assetId가 있는 슬롯 생성 시 출고검수 의뢰 자동 연동 생성
         const createdInsp = db.insertRow<OutboundInspection>('outboundInspections', {
           contractId: contract.id,
           contractAssetId: insertedCA.id,
@@ -8609,7 +8609,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     const nextDay = new Date(new Date(successionDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    // 💡 [단일 계약 원칙 준수] 양수 고객사 + 해당 현장의 기존 활성 계약 탐색
+    //  [단일 계약 원칙 준수] 양수 고객사 + 해당 현장의 기존 활성 계약 탐색
     const existingTargetContract = db.contracts.find(c =>
       c.customerId === successorCustomerId &&
       c.siteId === successorSiteId &&
@@ -8623,7 +8623,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       targetContract = existingTargetContract;
       isTargetExisting = true;
       // 만약 승계 대상 자산의 종료일이 기존 계약 만료일보다 길다면 부모 계약 만료일 동적 확장
-      // 💡 기존 양수 계약에 영업담당자가 비어있는 경우에만 원 계약의 최초 영업담당자를 승계하며, 이미 지정된 담당자는 절대 덮어쓰지 않음
+      //  기존 양수 계약에 영업담당자가 비어있는 경우에만 원 계약의 최초 영업담당자를 승계하며, 이미 지정된 담당자는 절대 덮어쓰지 않음
       const currentTargetEnd = targetContract.endDate;
       const needEndExtend = Boolean(currentTargetEnd && oldEndDate && (currentTargetEnd === '미정' || oldEndDate > currentTargetEnd));
       const needSalespersonFill = !targetContract.salespersonId && Boolean(oldContract.salespersonId);
@@ -8638,7 +8638,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     } else {
       const newContractNo = generateNextContractNo(nextDay);
       ensureCustomerContactExists(successorCustomerId, successorContactId);
-      // 💡 최초 영업담당자 보존 원칙: 원 계약의 salespersonId가 있으면 그대로 유지, 만약 비어있으면 선행 계약(predecessorContractId) 체인을 역추적하여 최초 영업담당자를 유지함
+      //  최초 영업담당자 보존 원칙: 원 계약의 salespersonId가 있으면 그대로 유지, 만약 비어있으면 선행 계약(predecessorContractId) 체인을 역추적하여 최초 영업담당자를 유지함
       let inheritedSalespersonId = oldContract.salespersonId;
       if (!inheritedSalespersonId && oldContract.predecessorContractId) {
         let curPredId: string | undefined = oldContract.predecessorContractId;
@@ -8676,7 +8676,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       });
     }
 
-    // ⚠️ 외래키 제약조건 방지
+    //  외래키 제약조건 방지
     await db.awaitPendingWrites();
 
 
@@ -8713,7 +8713,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           updatedAt: nowIsoSucceed
         });
 
-        // ✅ 고아 레코드 방지: ASSIGNED(출고대기) 상태 자산 승계 시 신규 계약 기준 출고검수 의뢰 생성
+        //  고아 레코드 방지: ASSIGNED(출고대기) 상태 자산 승계 시 신규 계약 기준 출고검수 의뢰 생성
         const asset = db.assets.find(a => a.id === ca.assetId);
         if (asset && asset.status === 'ASSIGNED') {
           db.insertRow<OutboundInspection>('outboundInspections', {
@@ -8980,7 +8980,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         billableToCustomer: isCustPaid,
         billableCustomerId: isCustPaid ? sourceContract.customerId : undefined,
         isCostSettled: false,
-        memo: appendDispatchStaffTag(`[현장간 장비 이동] ${sourceSiteName} ➔ ${targetSiteName} (${assetNo} / ${modelName})${reason ? ' | 사유: ' + reason : ''}`),
+        memo: appendDispatchStaffTag(`[현장간 장비 이동] ${sourceSiteName} ${targetSiteName} (${assetNo} / ${modelName})${reason ? ' | 사유: ' + reason : ''}`),
         cargoItems: JSON.stringify([{ modelName, count: 1 }]),
         createdAt: nowIso,
         updatedAt: nowIso
@@ -8992,7 +8992,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
   /**
    * [헌장 1.2 & 2.2] 수리 완료 장비 동일 계약 재투입 (회수 후 수리 재출고)
    * - 하나의 계약이 유지되는 상황에서 고장 회수된 동일 장비를 수리 완료 후 동일 계약에 재출고
-   * - 1차 슬롯(단축 마감) ➔ 수리 공백(무과금 보존) ➔ 2차 신규 슬롯(재투입일 개시)으로 분리 편입
+   * - 1차 슬롯(단축 마감)  수리 공백(무과금 보존)  2차 신규 슬롯(재투입일 개시)으로 분리 편입
    * - 계약은 분할 생성되지 않고 기존 계약 유지
    * - 자산 상태 RENTED 전환 및 OUTBOUND 배차 1건 자동 발행
    */
@@ -9119,7 +9119,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         billableToCustomer: isCustPaid,
         billableCustomerId: isCustPaid ? contract.customerId : undefined,
         isCostSettled: false,
-        memo: appendDispatchStaffTag(`[수리완료 재투입 배차] ${asset.assetNo} (${asset.modelName}) ➔ ${site?.name || '현장'}${reason ? ' | 사유: ' + reason : ''}`),
+        memo: appendDispatchStaffTag(`[수리완료 재투입 배차] ${asset.assetNo} (${asset.modelName}) ${site?.name || '현장'}${reason ? ' | 사유: ' + reason : ''}`),
         cargoItems: JSON.stringify([{ modelName: asset.modelName, count: 1 }]),
         createdAt: nowIso,
         updatedAt: nowIso
@@ -9205,7 +9205,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     await db.awaitPendingWrites(); refreshAllData(); };
 
   const assignAssetToContract = async (contractAssetId: string, assetId: string) => {
-    // 💡 1. 롤백용 원본 스냅샷 백업
+    //  1. 롤백용 원본 스냅샷 백업
     const origCa = db.contractAssets.find(c => c.id === contractAssetId);
     const caSnapshot = origCa ? { ...origCa } : null;
 
@@ -9315,7 +9315,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
             completionAction: 'ASSET_ASSIGNED'
           });
 
-          // 🌟 [장비할당 완료 ➔ 계약서 발송 가능 상태 진입]: 해당 출고요청 건의 계약서 미발송 시 할일(CONTRACT_PACKAGE_SEND) 발행
+          //  [장비할당 완료  계약서 발송 가능 상태 진입]: 해당 출고요청 건의 계약서 미발송 시 할일(CONTRACT_PACKAGE_SEND) 발행
           if (matchedDelivery && contract) {
             const alreadySentForDeliv = (db.contractHistory || []).some(
               h =>
@@ -9401,7 +9401,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     } catch (err: any) {
       console.error('assignAssetToContract error & Rollback:', err);
 
-      // 💥 DB 저장 실패 시 로컬 DB 및 UI State를 100% 이전 상태로 자동 롤백!
+      //  DB 저장 실패 시 로컬 DB 및 UI State를 100% 이전 상태로 자동 롤백!
       if (caSnapshot) {
         db.updateRow<ContractAsset>('contractAssets', contractAssetId, caSnapshot);
       }
@@ -9416,7 +9416,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       const errMsg = err?.message || err?.details || JSON.stringify(err);
       showErrorModal(
-        `⚠️ 장비 할당 저장 중 DB 동기화 오류가 발생했습니다:\n\n` +
+        ` 장비 할당 저장 중 DB 동기화 오류가 발생했습니다:\n\n` +
         `■ [안내]: 저장 실패로 인해 장비 할당 상태가 이전 미할당 상태로 안전하게 롤백(자동 원복)되었습니다. 할당 대상 목록에서 계속 작업하실 수 있습니다.\n\n` +
         `■ [실패 원인]: ${errMsg}`,
         '장비 할당 DB 동기화 오류 (자동 롤백 원복 완료)'
@@ -9425,7 +9425,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     }
   };
 
-  // 🚀 다중 장비 원자적 일괄 할당 트랜잭션 메소드 (중간 리렌더링 및 레이스 컨디션 원천 차단)
+  //  다중 장비 원자적 일괄 할당 트랜잭션 메소드 (중간 리렌더링 및 레이스 컨디션 원천 차단)
   const batchAssignAssetsToContract = async (pairs: { contractAssetId: string; assetId: string }[]) => {
     if (!pairs || pairs.length === 0) return;
 
@@ -9518,7 +9518,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           updatedAt: nowIso
         });
         createdInspectionIds.push(createdInsp.id);
-        // 2-4. 🌟 [패키지 서류 무결성]: 기존 슬롯에 다른 장비가 배정되어 있었는데 교체된 경우 ToDo 발행
+        // 2-4.  [패키지 서류 무결성]: 기존 슬롯에 다른 장비가 배정되어 있었는데 교체된 경우 ToDo 발행
         if (origCa.assetId && origCa.assetId !== origAsset.id) {
           try {
             await checkAndIssuePackageResendTask({
@@ -9584,7 +9584,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
               completionAction: 'ASSET_ASSIGNED'
             });
 
-            // 🌟 [장비할당 완료 ➔ 계약서 발송 가능 상태 진입]: 해당 출고요청 건의 계약서 미발송 시 할일(CONTRACT_PACKAGE_SEND) 발행
+            //  [장비할당 완료  계약서 발송 가능 상태 진입]: 해당 출고요청 건의 계약서 미발송 시 할일(CONTRACT_PACKAGE_SEND) 발행
             if (matchedDeliv && contract) {
               const alreadySentForDeliv = (db.contractHistory || []).some(
                 h =>
@@ -9672,7 +9672,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     } catch (err: any) {
       console.error('batchAssignAssetsToContract error & Rollback:', err);
 
-      // 💥 일괄 롤백
+      //  일괄 롤백
       caSnapshots.forEach(item => {
         db.updateRow<ContractAsset>('contractAssets', item.id, item.snapshot);
       });
@@ -9686,12 +9686,12 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
 
       const errMsg = err?.message || err?.details || JSON.stringify(err);
-      showErrorModal(`⚠️ 일괄 장비 할당 중 오류가 발생하여 모든 작업이 안전하게 원복되었습니다:\n\n${errMsg}`, '일괄 장비 할당 실패');
+      showErrorModal(` 일괄 장비 할당 중 오류가 발생하여 모든 작업이 안전하게 원복되었습니다:\n\n${errMsg}`, '일괄 장비 할당 실패');
       throw err;
     }
   };
 
-  // 🔄 장비 할당 취소 메소드 (출고 검수 전 슬롯 할당 해제 및 장비 AVAILABLE 복원)
+  //  장비 할당 취소 메소드 (출고 검수 전 슬롯 할당 해제 및 장비 AVAILABLE 복원)
   const unassignAssetFromContract = async (contractAssetId: string) => {
     const origCa = db.contractAssets.find(c => c.id === contractAssetId);
     if (!origCa || !origCa.assetId) return;
@@ -9699,7 +9699,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     const origAssetId = origCa.assetId;
     const origAsset = db.assets.find(a => a.id === origAssetId);
 
-    // 🔴 [절차적 무결성 가드]: 이미 출고검수가 완료(COMPLETED)되었거나 운송대기(AWAITING_TRANSPORT)/대여중(RENTED)인 장비는 할당 취소 차단
+    //  [절차적 무결성 가드]: 이미 출고검수가 완료(COMPLETED)되었거나 운송대기(AWAITING_TRANSPORT)/대여중(RENTED)인 장비는 할당 취소 차단
     const completedInsp = db.outboundInspections.find(
       i => (i.contractAssetId === contractAssetId || (i.contractId === origCa.contractId && i.assetId === origAssetId)) && i.status === 'COMPLETED'
     );
@@ -9739,7 +9739,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       );
       pendingInsps.forEach(i => db.deleteRow('outboundInspections', i.id));
 
-      // 4. 🌟 [패키지 서류 무결성]: 계약서패키지 발송 후 출고 전 장비 할당 해제 시 ToDo 자동 발행
+      // 4.  [패키지 서류 무결성]: 계약서패키지 발송 후 출고 전 장비 할당 해제 시 ToDo 자동 발행
       try {
         await checkAndIssuePackageResendTask({
           contractId: origCa.contractId,
@@ -9765,12 +9765,12 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       }
       refreshAllData();
 
-      showErrorModal(`⚠️ 장비 할당 취소 중 오류가 발생하여 원복되었습니다:\n${err?.message || err}`, '할당 취소 실패');
+      showErrorModal(` 장비 할당 취소 중 오류가 발생하여 원복되었습니다:\n${err?.message || err}`, '할당 취소 실패');
       throw err;
     }
   };
 
-  // 🔄 다중 장비 원자적 일괄 할당 취소 트랜잭션 메소드 (중간 리렌더링 및 레이스 컨디션 원천 차단)
+  //  다중 장비 원자적 일괄 할당 취소 트랜잭션 메소드 (중간 리렌더링 및 레이스 컨디션 원천 차단)
   const batchUnassignAssetsFromContract = async (contractAssetIds: string[]) => {
     if (!contractAssetIds || contractAssetIds.length === 0) return;
 
@@ -9847,7 +9847,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     } catch (err: any) {
       console.error('batchUnassignAssetsFromContract error & Rollback:', err);
-      // 💥 일괄 롤백
+      //  일괄 롤백
       caSnapshots.forEach(item => {
         db.updateRow<ContractAsset>('contractAssets', item.id, item.snapshot);
       });
@@ -9859,12 +9859,12 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       });
       refreshAllData();
 
-      showErrorModal(`⚠️ 일괄 장비 할당 취소 중 오류가 발생하여 모든 작업이 안전하게 원복되었습니다:\n\n${err?.message || err}`, '일괄 할당 취소 실패');
+      showErrorModal(` 일괄 장비 할당 취소 중 오류가 발생하여 모든 작업이 안전하게 원복되었습니다:\n\n${err?.message || err}`, '일괄 할당 취소 실패');
       throw err;
     }
   };
 
-  // 💡 출고 진행 중 장비 교체 및 수리전환 트랜잭션 메소드 (contractAssetId 또는 contractId 2중 자동추적 지원)
+  //  출고 진행 중 장비 교체 및 수리전환 트랜잭션 메소드 (contractAssetId 또는 contractId 2중 자동추적 지원)
   const exchangeOutboundAsset = async (
     contractAssetIdOrContractId: string,
     oldAssetId: string,
@@ -9904,7 +9904,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       const nowIso = new Date().toISOString();
 
       // 1. 기존 장비: 수리정비중 선택 시 REPAIRING 전환, 아니면 임대가능 유지!
-      // 💡 [전사 정책]: 출고검수 탈락 교체 시 사유 유무와 무관하게 정비점수 가산 (지정 점수 또는 기본 5점)
+      //  [전사 정책]: 출고검수 탈락 교체 시 사유 유무와 무관하게 정비점수 가산 (지정 점수 또는 기본 5점)
       const targetStatus = markOldAsRepairing ? 'REPAIRING' : 'AVAILABLE';
       const penaltyToAdd = typeof customPenaltyScore === 'number' && !isNaN(customPenaltyScore) ? customPenaltyScore : 5;
       const updatedScore = (Number(oldAssetOrig.maintenanceScore) || 0) + penaltyToAdd;
@@ -9922,14 +9922,14 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         currentSiteId: undefined,
         contractStart: undefined,
         contractEnd: undefined,
-        note: appendedNote, // 🌟 자산 정비필요항목에만 정확히 저장
-        // 🌟 memo(일반 자산 비고: 임차처/결제조건 등)는 절대 오염시키지 않고 원본 100% 보존!
+        note: appendedNote, //  자산 정비필요항목에만 정확히 저장
+        //  memo(일반 자산 비고: 임차처/결제조건 등)는 절대 오염시키지 않고 원본 100% 보존!
         updatedAt: nowIso
       };
 
       db.updateRow<Asset>('assets', oldAssetId, oldPayload);
 
-      // 1-1. 🌟 [주기장 정비 연계]: 수리정비중 전환 시 주기장 정비 대장 티켓 1:1 자동 발행 (헌장 1.2 무누락 저장)
+      // 1-1.  [주기장 정비 연계]: 수리정비중 전환 시 주기장 정비 대장 티켓 1:1 자동 발행 (헌장 1.2 무누락 저장)
       if (markOldAsRepairing) {
         createdRepairId = db.generateNextId('repairs', db.repairs);
         db.insertRow<Repair>('repairs', {
@@ -9960,7 +9960,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           updatedAt: nowIso
         });
 
-        // 🚀 주기장 정비팀에 긴급 정비 ToDo 자동 적재
+        //  주기장 정비팀에 긴급 정비 ToDo 자동 적재
         try {
           await issueHandoverTask({
             category: 'OUTBOUND_REPAIR_DEFECT',
@@ -10001,7 +10001,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       if (inspOrig) {
         db.updateRow<OutboundInspection>('outboundInspections', inspOrig.id, {
           assetId: newAssetId,
-          note: `[장비교체] 기존(${oldAssetOrig.assetNo}) ➔ 대체(${newAssetOrig.assetNo}) | 사유: ${reason}`,
+          note: `[장비교체] 기존(${oldAssetOrig.assetNo}) 대체(${newAssetOrig.assetNo}) | 사유: ${reason}`,
           updatedAt: nowIso
         });
       } else {
@@ -10017,13 +10017,13 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         });
       }
 
-      // 4-1. 🌟 [전사 표준 헌장 2.3 단일 EXCHANGE 1건 발행/전환 원칙]: 출고불량 교체 시 배차 건을 단일 'EXCHANGE'로 갱신
+      // 4-1.  [전사 표준 헌장 2.3 단일 EXCHANGE 1건 발행/전환 원칙]: 출고불량 교체 시 배차 건을 단일 'EXCHANGE'로 갱신
       const existingDel = db.deliveries.find(d => d.contractId === caOrig.contractId && (d.assetIds?.includes(oldAssetId) || !d.assetIds));
       if (existingDel) {
         db.updateRow<Delivery>('deliveries', existingDel.id, {
           assetIds: newAssetId,
           type: 'EXCHANGE',
-          memo: `[출고불량 교체배차 (헌장 2.3)] 구장비(${oldAssetOrig.assetNo}) ➔ 대체장비(${newAssetOrig.assetNo}) | 사유: ${cleanReason}`,
+          memo: `[출고불량 교체배차 (헌장 2.3)] 구장비(${oldAssetOrig.assetNo}) 대체장비(${newAssetOrig.assetNo}) | 사유: ${cleanReason}`,
           updatedAt: nowIso
         });
       }
@@ -10040,7 +10040,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         createdAt: nowIso
       });
 
-      // 6. 🌟 [패키지 서류 무결성 보존]: 계약서패키지 발송 후 출고 자산 교체 시 ToDo 자동 발행
+      // 6.  [패키지 서류 무결성 보존]: 계약서패키지 발송 후 출고 자산 교체 시 ToDo 자동 발행
       try {
         await checkAndIssuePackageResendTask({
           contractId: caOrig.contractId,
@@ -10059,7 +10059,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     } catch (err: any) {
       console.error('exchangeOutboundAsset error & Rollback:', err);
 
-      // 💥 DB 저장 실패 시 100% 스냅샷 롤백!
+      //  DB 저장 실패 시 100% 스냅샷 롤백!
       if (oldSnapshot) db.updateRow('assets', oldAssetId, oldSnapshot);
       if (newSnapshot) db.updateRow('assets', newAssetId, newSnapshot);
       if (caSnapshot) db.updateRow('contractAssets', contractAssetId, caSnapshot);
@@ -10068,7 +10068,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
       refreshAllData();
 
-      const errorMsg = `⚠️ 출고 장비 교체 처리 중 DB 동기화 오류가 발생했습니다:\n\n■ [안내]: 저장 실패로 인해 장비 교체 작업이 안전하게 자동 롤백 원복되었습니다.\n\n${err.message || err.details || JSON.stringify(err)}`;
+      const errorMsg = ` 출고 장비 교체 처리 중 DB 동기화 오류가 발생했습니다:\n\n■ [안내]: 저장 실패로 인해 장비 교체 작업이 안전하게 자동 롤백 원복되었습니다.\n\n${err.message || err.details || JSON.stringify(err)}`;
       showErrorModal(errorMsg, '출고 장비 교체 DB 동기화 오류');
       throw err;
     }
@@ -10166,7 +10166,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 대차 교체 처리 중 DB 동기화 오류:\n${err?.message || err}`);
+      showErrorModal(` 대차 교체 처리 중 DB 동기화 오류:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -10178,9 +10178,9 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       const endOfMonth = new Date(year, month, 0);
 
       // 해당 월에 활성 상태인 계약 전체 탐색 (계약 단위 독립 생성 - E-1 원칙, 매각 계약 원천 배제)
-      // 💡 종료(COMPLETED)된 계약이라도 기간 연장 등으로 인해 아직 최종 만료일(endDate)까지 청구가 완료되지 않은 경우 포함
+      //  종료(COMPLETED)된 계약이라도 기간 연장 등으로 인해 아직 최종 만료일(endDate)까지 청구가 완료되지 않은 경우 포함
       const activeContracts = db.contracts.filter(c => {
-        if ((c.contractType || 'RENTAL') !== 'RENTAL') return false; // 🚫 자산 매각 계약 원천 배제
+        if ((c.contractType || 'RENTAL') !== 'RENTAL') return false; //  자산 매각 계약 원천 배제
         if (c.status === 'COMPLETED' && c.lastBilledPeriodEnd && c.endDate && c.endDate !== '미정' && c.lastBilledPeriodEnd >= c.endDate) return false;
         const contractStart = new Date(c.startDate);
         const contractEnd = c.endDate && c.endDate !== '미정' ? new Date(c.endDate) : null;
@@ -10207,10 +10207,10 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
 
       if (errors.length > 0) {
-        showErrorModal(`⚠️ 일부 청구서 생성 실패 (${errors.length}건):\n\n${errors.slice(0, 5).join('\n')}`, '청구서 생성 일부 실패');
+        showErrorModal(` 일부 청구서 생성 실패 (${errors.length}건):\n\n${errors.slice(0, 5).join('\n')}`, '청구서 생성 일부 실패');
       }
     } catch (err: any) {
-      showErrorModal(`⚠️ 일괄 청구서 DB 저장 실패:\n\n${err?.message || err}`, '청구서 생성 실패');
+      showErrorModal(` 일괄 청구서 DB 저장 실패:\n\n${err?.message || err}`, '청구서 생성 실패');
     }
   };
 
@@ -10392,7 +10392,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         description: `청구 취소: ${billing.billingYm} / ${billing.totalAmount.toLocaleString()}원 (${refund ? '환불 처리' : '비환불 처리'}, 청구번호: ${billingId})`,
         createdAt: new Date().toISOString()
       });
-      // 💡 청구 취소 시 계약 메타데이터 이전 상태로 롤백 동기화
+      //  청구 취소 시 계약 메타데이터 이전 상태로 롤백 동기화
       syncContractBillingMilestones(billing.contractId);
     }
 
@@ -11078,7 +11078,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
   };
 
   /**
-   * 💡 계약별 직전 청구 마일스톤 메타데이터 동기화 (트리거 갱신 및 백필)
+   *  계약별 직전 청구 마일스톤 메타데이터 동기화 (트리거 갱신 및 백필)
    * - 최근 렌탈료 청구 발행일
    * - 최근 청구 시작일
    * - 최근 청구 종료일
@@ -11372,7 +11372,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       }
     }
 
-    // 💡 계약 메타데이터 트리거 자동 갱신 (최근 청구 발행일, 시작일, 종료일, 청구건수)
+    //  계약 메타데이터 트리거 자동 갱신 (최근 청구 발행일, 시작일, 종료일, 청구건수)
     syncContractBillingMilestones(c.id);
 
     return newBilling.id;
@@ -11413,7 +11413,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
       return { successCount: createdCount, skippedContracts };
     } catch (err: any) {
-      showErrorModal(`⚠️ 도래 계약 청구 일괄 생성 실패:\n\n${err?.message || err}`, '청구 생성 오류');
+      showErrorModal(` 도래 계약 청구 일괄 생성 실패:\n\n${err?.message || err}`, '청구 생성 오류');
       return { successCount: 0, skippedContracts: [] };
     }
   };
@@ -11632,7 +11632,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     return childBillingId;
   };
 
-  // 💡 [사장님 지시] 특수 거래명세서 커스텀 항목 및 사유 저장 (실제 계약/청구 DB 원형 보존)
+  //  [사장님 지시] 특수 거래명세서 커스텀 항목 및 사유 저장 (실제 계약/청구 DB 원형 보존)
   const saveCustomStatementForBilling = async (
     billingId: string,
     data: {
@@ -11677,7 +11677,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 💡 특수 거래명세서 해제 (원래 정상 청구 양식으로 원복)
+  //  특수 거래명세서 해제 (원래 정상 청구 양식으로 원복)
   const removeCustomStatementForBilling = async (billingId: string) => {
     const billing = db.billings.find(b => b.id === billingId);
     if (!billing) throw new Error('청구서를 찾을 수 없습니다.');
@@ -11695,14 +11695,14 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 💡 테넌트별 특수 거래명세서 기능 활성화/비활성화 제어
+  //  테넌트별 특수 거래명세서 기능 활성화/비활성화 제어
   const toggleTenantCustomBillingStatement = async (tenantId: string, enabled: boolean) => {
     const target = tenants.find(t => t.id === tenantId) || currentTenant;
     if (!target) return;
     await saveTenant({ id: target.id, allowCustomBillingStatement: enabled });
   };
 
-  // 💡 테넌트별 렌탈 계약 연동 유통 출고(당월 청구 합산) 기능 활성화/비활성화 제어
+  //  테넌트별 렌탈 계약 연동 유통 출고(당월 청구 합산) 기능 활성화/비활성화 제어
   const toggleTenantContractTradeOutbound = async (tenantId: string, enabled: boolean) => {
     const target = tenants.find(t => t.id === tenantId) || currentTenant;
     if (!target) return;
@@ -11924,7 +11924,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     if (linked.length > 0) {
       throw new Error(`이 입금건에 연결된 수납 내역 ${linked.length}건이 존재합니다.\n수납을 먼저 취소한 후 삭제하세요.`);
     }
-    // ✅ 고아 레코드 방지: 레거시 패턴 수납 레코드 존재 시 삭제 차단
+    //  고아 레코드 방지: 레거시 패턴 수납 레코드 존재 시 삭제 차단
     const legacyPayments = db.payments.filter(p => p.id.startsWith(`pay-matching-${txId}`) && isActivePayment(p));
     if (legacyPayments.length > 0) {
       throw new Error(`이 입금건에 연결된 레거시 수납 기록 ${legacyPayments.length}건이 존재합니다.\n수납을 먼저 취소한 후 삭제하세요.`);
@@ -11951,7 +11951,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     const customerId = firstBilling.customerId;
     const mode = options?.matchingMode || 'CASCADE';
     
-    // 🌟 이미 사용된 금액을 제외한 실제 가용 잔액 산출 (과대/중복 소진 완벽 차단)
+    //  이미 사용된 금액을 제외한 실제 가용 잔액 산출 (과대/중복 소진 완벽 차단)
     const usedSoFar = (db.paymentDepositLinks || [])
       .filter(link => link.bankTransactionId === txId && isActiveDepositLink(link))
       .reduce((sum, link) => sum + (link.usedAmount || 0), 0);
@@ -11963,7 +11963,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     const matchedBillingIds: string[] = [];
 
     if (mode === 'MULTI' && options?.allocations && options.allocations.length > 0) {
-      // 🌟 [MULTI 모드]: 사용자가 지정한 청구서별 금액 및 감액 직접 적용
+      //  [MULTI 모드]: 사용자가 지정한 청구서별 금액 및 감액 직접 적용
       for (const alloc of options.allocations) {
         if (remainingDeposit <= 0 && (!alloc.amount || alloc.amount <= 0)) continue;
         const billing = db.billings.find(b => b.id === alloc.billingId);
@@ -12015,7 +12015,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         matchedBillingIds.push(billing.id);
       }
     } else if (mode === 'PINPOINT') {
-      // 🌟 [PINPOINT 모드]: 선택한 단일 청구서에만 전액 충당
+      //  [PINPOINT 모드]: 선택한 단일 청구서에만 전액 충당
       const billing = firstBilling;
       const bSup = billing.totalAmount || 0;
       const bGrand = bSup + Math.round(bSup * 0.1);
@@ -12064,7 +12064,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       }
       matchedBillingIds.push(billing.id);
     } else {
-      // 🌟 [CASCADE 모드]: 과거 미수부터 순차 충당 (수수료 감액 옵션 포함)
+      //  [CASCADE 모드]: 과거 미수부터 순차 충당 (수수료 감액 옵션 포함)
       const activeBillings = db.billings
         .filter(b => b.customerId === customerId && (b.status === 'UNPAID' || b.status === 'PARTIAL' || b.status === 'REQUESTED'))
         .sort((a, b) => a.billingYm.localeCompare(b.billingYm));
@@ -12159,7 +12159,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           createdAt: new Date().toISOString()
         });
 
-        // 🌟 선수금 전표에 대해서도 PaymentDepositLink를 등록하여 통장 입금 사용 추적 완벽 일치화!
+        //  선수금 전표에 대해서도 PaymentDepositLink를 등록하여 통장 입금 사용 추적 완벽 일치화!
         db.insertRow<PaymentDepositLink>('paymentDepositLinks', {
           paymentId: prepaidPayId,
           bankTransactionId: txId,
@@ -12512,7 +12512,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       createdAt: new Date().toISOString()
     } as any);
 
-    // 🚀 [단일 업무 인계 파이프라인] 부서장에게 휴가 승인 ToDo 발행
+    //  [단일 업무 인계 파이프라인] 부서장에게 휴가 승인 ToDo 발행
     const applicant = db.users.find(u => u.id === usage.userId);
     await issueHandoverTask({
       category: 'LEAVE_OT_APPROVAL',
@@ -12625,7 +12625,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     });
     refreshAllData();
 
-    // 📢 배차 완료 시 관련 부서(영업/출고/관리/경영)에 실시간 알림 브로드캐스트
+    //  배차 완료 시 관련 부서(영업/출고/관리/경영)에 실시간 알림 브로드캐스트
     const dObj = db.deliveries.find(d => d.id === deliveryId);
     const dContract = dObj?.contractId ? db.contracts.find(c => c.id === dObj.contractId) : null;
     const dCust = dContract ? db.customers.find(c => c.id === dContract.customerId)?.name : '';
@@ -12667,7 +12667,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       delivery.dispatchCategory === '출고' ||
       delivery.dispatchCategory === '교환';
 
-    // 🛡️ [절차적 무결성 가드레일]: 출고/교환 배차는 반드시 (1) 기사 배정 ➔ (2) 장비 할당 완료 ➔ (3) 출고 검수 승인을 거쳐야만 운송 완료 처리 가능
+    //  [절차적 무결성 가드레일]: 출고/교환 배차는 반드시 (1) 기사 배정  (2) 장비 할당 완료  (3) 출고 검수 승인을 거쳐야만 운송 완료 처리 가능
     if (isOutboundLike && delivery.contractId) {
       if (delivery.status === 'REQUESTED' || !delivery.driverName?.trim()) {
         throw new Error('배차 기사 배정(배차 완료)이 선행되지 않은 출고 건은 운송 완료 처리할 수 없습니다.');
@@ -12719,7 +12719,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         throw new Error(
           `[절차 차단: 장비 미할당]\n` +
           `이 출고 건에 아직 장비가 할당되지 않은 슬롯이 ${unassignedSlots.length}대(${missingModels}) 남아 있습니다.\n\n` +
-          `반드시 [장비 할당] ➔ [출고 검수 승인]을 먼저 완료한 후 운송 완료 처리해 주십시오.`
+          `반드시 [장비 할당] [출고 검수 승인]을 먼저 완료한 후 운송 완료 처리해 주십시오.`
         );
       }
 
@@ -12759,7 +12759,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     const todayLocalStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
     const effectiveUnloadingDate = (delivery.unloadingDate || delivery.loadingDate || delivery.scheduledDate || todayLocalStr).slice(0, 10);
 
-    // [헌장 1.3 준수 & 상차완료 ➔ 하차 예정일 자동 운송완료]:
+    // [헌장 1.3 준수 & 상차완료  하차 예정일 자동 운송완료]:
     // 상차완료 시 하차 예정일(effectiveUnloadingDate)이 오늘 이하이면 즉시 DELIVERED로 마감하고,
     // 미래 하차 예정일이면 loadingCompletedAt 및 unloadingCompletedAt(하차예정일)을 기록하여 하차 예정일에 자동 DELIVERED 전환되도록 한다.
     // 동시에 하차 예정일 = 운송 완료일 = 계약 개시일 = 청구 개시일로 체결자산/장비/입출고로그/계약 개시일을 100% 일치시킨다.
@@ -12925,7 +12925,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         // 회수 검수된 장비 슬롯만 RETURNED 처리 (대차로 투입된 장비는 계속 RENTED 유지)
         cAssets.forEach(ca => {
           if (ca.assetId && reviewedAssetIds.includes(ca.assetId)) {
-            // 💡 [단일 진실의 원천]: 해당 자산의 '모든' 미반납 ContractAsset 슬롯 청소 (찌꺼기 원천 봉쇄)
+            //  [단일 진실의 원천]: 해당 자산의 '모든' 미반납 ContractAsset 슬롯 청소 (찌꺼기 원천 봉쇄)
             const allActiveSlots = db.contractAssets.filter(c => c.assetId === ca.assetId && c.status !== 'RETURNED');
             allActiveSlots.forEach(targetCa => {
               db.updateRow<ContractAsset>('contractAssets', targetCa.id, {
@@ -12968,13 +12968,13 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           !(ca.assetId && reviewedAssetIds.includes(ca.assetId)) && ca.status !== 'RETURNED'
         );
 
-        // 💡 [단일 진실의 원천]: 모든 장비가 회수 완료되었을 때 마스터 계약을 COMPLETED로 종료하고 종료일을 입고일로 덮어쓰기
+        //  [단일 진실의 원천]: 모든 장비가 회수 완료되었을 때 마스터 계약을 COMPLETED로 종료하고 종료일을 입고일로 덮어쓰기
         if (remainingActiveAssets.length === 0) {
           const contract = db.contracts.find(c => c.id === delivery.contractId);
           if (contract) {
             db.updateRow<Contract>('contracts', delivery.contractId, {
               status: 'COMPLETED',
-              endDate: actualReturnDate, // 💡 마지막 자산의 입고일로 동기화
+              endDate: actualReturnDate, //  마지막 자산의 입고일로 동기화
               updatedAt: registeredAt
             });
             db.insertRow<ContractHistory>('contractHistory', {
@@ -13011,7 +13011,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 💡 [사장님 지시] 입고 등록 (입고번호, 하위번호 INB-XXXX-01, 증상별 사진 및 자산정비수리 자동연동, 불량 시 REPAIRING 전환)
+  //  [사장님 지시] 입고 등록 (입고번호, 하위번호 INB-XXXX-01, 증상별 사진 및 자산정비수리 자동연동, 불량 시 REPAIRING 전환)
   const registerInboundAsset = async (data: {
     assetId: string;
     returnDate: string;
@@ -13026,7 +13026,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     const asset = db.assets.find(a => a.id === data.assetId);
     if (!asset) throw new Error('해당 자산을 찾을 수 없습니다.');
 
-    // 💡 [단일 진실의 원천 완결]: 자산이 입고(물리적 회수)되었으므로, 해당 자산을 점유하고 있는 *모든* 활성 ContractAsset 슬롯을 탐색하여 청소합니다.
+    //  [단일 진실의 원천 완결]: 자산이 입고(물리적 회수)되었으므로, 해당 자산을 점유하고 있는 *모든* 활성 ContractAsset 슬롯을 탐색하여 청소합니다.
     const activeCAs = db.contractAssets.filter(c => c.assetId === data.assetId && c.status !== 'RETURNED');
     const ca = activeCAs.length > 0 ? activeCAs[0] : db.contractAssets.find(c => c.assetId === data.assetId);
     
@@ -13039,10 +13039,10 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     // 자산 상태: 점수 0점이고 결함 없으면 임대가능, 이상 시 정비중 또는 전달된 targetAssetStatus
     const nextAssetStatus: Asset['status'] = data.targetAssetStatus || (!hasDefect ? 'AVAILABLE' : 'REPAIRING');
 
-    // 💡 [입고 번호 채번]
+    //  [입고 번호 채번]
     const assignedInboundNo = data.inboundNo || db.generateNextId('inboundNo', db.assetInOutLogs as any);
 
-    // 💡 [불량 증상 하위 번호 결합 (예: INB-20260809-001-01)]
+    //  [불량 증상 하위 번호 결합 (예: INB-20260809-001-01)]
     const processedDefects: InboundDefectDetail[] = (data.defects || []).map((d, idx) => ({
       ...d,
       subNo: d.subNo || `${assignedInboundNo}-${String(idx + 1).padStart(2, '0')}`
@@ -13090,7 +13090,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         });
       }
 
-      // 💡 [단일 진실의 원천]: 해당 계약의 잔여 장비가 0대가 되었는지 확인하고 마감 처리 (동기화)
+      //  [단일 진실의 원천]: 해당 계약의 잔여 장비가 0대가 되었는지 확인하고 마감 처리 (동기화)
       if (contract) {
         const updatedCaIds = activeCAs.map(c => c.id);
         if (ca && !updatedCaIds.includes(ca.id)) updatedCaIds.push(ca.id);
@@ -13181,7 +13181,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         updatedAt: registeredAt
       });
 
-      // 🚀 [단일 업무 인계 파이프라인] 주기장 정비팀에 입고 정비 ToDo 영구 적재
+      //  [단일 업무 인계 파이프라인] 주기장 정비팀에 입고 정비 ToDo 영구 적재
       await issueHandoverTask({
         category: 'INBOUND_REPAIR_DEFECT',
         title: `[입고 장비 정비] ${asset.assetNo} (${asset.modelName})`,
@@ -13196,7 +13196,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       });
     }
 
-    // 🟢 회수 배차 및 관련 선행 ToDo 자동 상계 & 회수 배차 상태 DELIVERED 완결
+    //  회수 배차 및 관련 선행 ToDo 자동 상계 & 회수 배차 상태 DELIVERED 완결
     const matchedReturnDelivery = db.deliveries.find(d => 
       (d.type === 'INBOUND' || d.type === 'RETURN') &&
       d.status !== 'CANCELLED' &&
@@ -13247,8 +13247,8 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       inboundNo: assignedInboundNo,
       deliveryId: matchedReturnDelivery?.id || (data as any).deliveryId || undefined,
       eventDate: data.returnDate,        // 기준 일자 (실제 입고일)
-      inDate: data.returnDate,           // 💡 실제 현장 입고일 (YYYY-MM-DD, 청구 및 가동일수 정산 기준)
-      inRegisteredAt: registeredAt,     // 💡 실제 전산 입고 등록 일시 (ISO String, 행위 발생 감사 기준)
+      inDate: data.returnDate,           //  실제 현장 입고일 (YYYY-MM-DD, 청구 및 가동일수 정산 기준)
+      inRegisteredAt: registeredAt,     //  실제 전산 입고 등록 일시 (ISO String, 행위 발생 감사 기준)
       customerId: customer?.id || '',
       customerName: customer?.name || '',
       siteId: site?.id || '',
@@ -13262,9 +13262,9 @@ ${currentTenant?.corporateName || tenantCorp} 배상
 
     await db.awaitPendingWrites(); refreshAllData(); };
 
-  // 💡 [사장님 지시] 입고 취소 롤백 (휴먼에러 원상복구 6단계 트랜잭션: 계약종료일·계약상태·체결자산·정비·배차·감사로그 100% 복원)
+  //  [사장님 지시] 입고 취소 롤백 (휴먼에러 원상복구 6단계 트랜잭션: 계약종료일·계약상태·체결자산·정비·배차·감사로그 100% 복원)
   const cancelInboundAsset = async (logId: string, cancelReason?: string) => {
-    // 🔒 테넌트 정식 오픈 전까지 개발자 계정 또는 데모 모드에서만 실행 허용
+    //  테넌트 정식 오픈 전까지 개발자 계정 또는 데모 모드에서만 실행 허용
     if (!isSystemDeveloperUser(currentUser) && !isDemoMode()) {
       throw new Error('입고 취소 기능은 현재 개발자 전용으로 제한되어 있습니다.');
     }
@@ -13441,7 +13441,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       customerName: log.customerName || '',
       siteId: contract?.siteId || log.siteId || '',
       siteName: log.siteName || '',
-      memo: `[입고 취소 롤백] 오등록 입고일(${inboundDateStr}) 취소 ➔ 대여중 복원 및 계약종료일(${restoredContractEndDate || '-'}) 원복 (사유: ${cancelReason || '사용자 휴먼에러 입고 취소'})`,
+      memo: `[입고 취소 롤백] 오등록 입고일(${inboundDateStr}) 취소 대여중 복원 및 계약종료일(${restoredContractEndDate || '-'}) 원복 (사유: ${cancelReason || '사용자 휴먼에러 입고 취소'})`,
       createdAt: nowIso
     });
 
@@ -13452,7 +13452,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         changeDate: nowIso.split('T')[0],
         prevEndDate: inboundDateStr,
         newEndDate: restoredContractEndDate || contract.endDate,
-        description: `[입고 취소 원상복구] 자산(${asset.assetNo}) 휴먼에러 입고 취소 ➔ 계약상태(진행중) 및 계약종료일(${inboundDateStr} ➔ ${restoredContractEndDate || contract.endDate}) 원복 (사유: ${cancelReason || '사용자 휴먼에러 입고 취소'})`,
+        description: `[입고 취소 원상복구] 자산(${asset.assetNo}) 휴먼에러 입고 취소 계약상태(진행중) 및 계약종료일(${inboundDateStr} ${restoredContractEndDate || contract.endDate}) 원복 (사유: ${cancelReason || '사용자 휴먼에러 입고 취소'})`,
         createdAt: nowIso
       });
     }
@@ -13663,7 +13663,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       updatedAt: new Date().toISOString()
     });
 
-    // 🌟 자산 상태 전이 명시적 지원
+    //  자산 상태 전이 명시적 지원
     if (existing.assetId && targetAssetStatus) {
       const targetAsset = db.assets.find(a => a.id === existing.assetId);
       if (targetAsset) {
@@ -13680,7 +13680,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           eventDate: today,
           repairId: repairId,
           maintenanceScore: targetAssetStatus === 'AVAILABLE' ? 0 : targetAsset.maintenanceScore,
-          memo: `[주기장 정비 상태 갱신] ${status} ➔ 자산상태 [${targetAssetStatus}] 전이`,
+          memo: `[주기장 정비 상태 갱신] ${status} 자산상태 [${targetAssetStatus}] 전이`,
           createdAt: new Date().toISOString()
         });
       }
@@ -13764,12 +13764,12 @@ ${currentTenant?.corporateName || tenantCorp} 배상
   };
 
   const deleteVendor = (id: string) => {
-    // ✅ 고아 레코드 방지: 연관 자산 또는 매입 정산건이 있으면 삭제 차단
+    //  고아 레코드 방지: 연관 자산 또는 매입 정산건이 있으면 삭제 차단
     const linkedAssets = db.assets.filter(a => a.vendorId === id);
     const linkedSettlements = db.purchaseSettlements.filter(s => s.vendorId === id);
     if (linkedAssets.length > 0 || linkedSettlements.length > 0) {
       showErrorModal(
-        `⚠️ 해당 매입처를 삭제할 수 없습니다.\n\n` +
+        ` 해당 매입처를 삭제할 수 없습니다.\n\n` +
         (linkedAssets.length > 0 ? `■ 연결된 자산: ${linkedAssets.length}대\n` : '') +
         (linkedSettlements.length > 0 ? `■ 연결된 매입 정산건: ${linkedSettlements.length}건\n` : '') +
         `\n연결된 자산/정산을 먼저 해제한 후 삭제하십시오.`,
@@ -13781,7 +13781,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     refreshAllData();
   };
 
-  // 💡 전사 매입처 거래개시일 및 매입누적거래액 일괄 재집계/동기화 헬퍼 (헌장 4.1, 5.2)
+  //  전사 매입처 거래개시일 및 매입누적거래액 일괄 재집계/동기화 헬퍼 (헌장 4.1, 5.2)
   const recalculateAllVendorMetrics = async (): Promise<{ updatedCount: number; totalAmount: number }> => {
     let updatedCount = 0;
     let grandTotal = 0;
@@ -14048,7 +14048,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         });
       }
 
-      // ⚠️ 외래키 제약조건 방지
+      //  외래키 제약조건 방지
       await db.awaitPendingWrites();
 
       items.forEach(p => {
@@ -14109,7 +14109,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         updatedAt: nowIso
       });
 
-      // ⚠️ 외래키 제약조건 방지 (PurchaseSettlement 먼저 생성 대기)
+      //  외래키 제약조건 방지 (PurchaseSettlement 먼저 생성 대기)
       await db.awaitPendingWrites();
 
       aList.forEach(a => {
@@ -14168,7 +14168,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         createdAt: nowIso
       });
 
-      // ⚠️ 외래키 제약조건 방지
+      //  외래키 제약조건 방지
       await db.awaitPendingWrites();
 
       rList.forEach(r => {
@@ -14360,7 +14360,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 감가상각 결산 취소 실패:\n${err?.message || err}`);
+      showErrorModal(` 감가상각 결산 취소 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14374,7 +14374,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         const matchYm = dDate.startsWith(settlementYm);
         const matchStatus = d.reconciliationStatus === 'RECONCILED' || d.reconciliationStatus === 'MATCHED';
         const tcObj = transportCompanyId ? db.transportCompanies.find(c => c.id === transportCompanyId) : null;
-        const matchComp = !transportCompanyId || d.transportCompany === tcObj?.name || d.transportCompany === transportCompanyId; // 💡 FIX: d.transportCompany가 name이거나 id일 수 있으므로 모두 허용 (논리 충돌 버그 수정)
+        const matchComp = !transportCompanyId || d.transportCompany === tcObj?.name || d.transportCompany === transportCompanyId; //  FIX: d.transportCompany가 name이거나 id일 수 있으므로 모두 허용 (논리 충돌 버그 수정)
         return matchYm && matchStatus && matchComp;
       });
 
@@ -14426,7 +14426,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
             settlementId,
             sourceType: 'DELIVERY',
             sourceId: d.id,
-            itemDescription: `[배차 운반비] ${d.originAddress || '상차지'} ➔ ${d.destinationAddress || '하차지'} (${d.vehicleType || '차량'})`,
+            itemDescription: `[배차 운반비] ${d.originAddress || '상차지'} ${d.destinationAddress || '하차지'} (${d.vehicleType || '차량'})`,
             quantity: 1,
             unitPrice: cost,
             amount: cost,
@@ -14446,7 +14446,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       refreshAllData();
       return totalConverted;
     } catch (err: any) {
-      showErrorModal(`⚠️ 매입 정산 이관 오류:\n${err?.message || err}`);
+      showErrorModal(` 매입 정산 이관 오류:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14459,7 +14459,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         updatedAt: new Date().toISOString()
       });
 
-      // 🟢 유상 수리비 청구 ToDo 자동 상계
+      //  유상 수리비 청구 ToDo 자동 상계
       await clearHandoverTasks({
         entityType: 'REPAIR',
         entityId: repairId,
@@ -14472,7 +14472,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 수리비 청구 연동 실패:\n${err?.message || err}`);
+      showErrorModal(` 수리비 청구 연동 실패:\n${err?.message || err}`);
     }
   };
 
@@ -14485,7 +14485,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 수리비 청구 연동 해제 실패:\n${err?.message || err}`);
+      showErrorModal(` 수리비 청구 연동 해제 실패:\n${err?.message || err}`);
     }
   };
 
@@ -14502,7 +14502,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         updatedAt: now
       });
 
-      // 🟢 유상 수리비 청구 ToDo 자동 상계 (영업 면제 완료)
+      //  유상 수리비 청구 ToDo 자동 상계 (영업 면제 완료)
       await clearHandoverTasks({
         entityType: 'REPAIR',
         entityId: repairId,
@@ -14515,7 +14515,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 수리비 영업 면제 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 수리비 영업 면제 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14534,7 +14534,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 수리비 영업 면제 취소 실패:\n${err?.message || err}`);
+      showErrorModal(` 수리비 영업 면제 취소 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14549,7 +14549,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 운송료 청구 연동 실패:\n${err?.message || err}`);
+      showErrorModal(` 운송료 청구 연동 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14563,7 +14563,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 운송료 청구 연동 해제 실패:\n${err?.message || err}`);
+      showErrorModal(` 운송료 청구 연동 해제 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14582,7 +14582,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 운송료 영업 면제 처리 실패:\n${err?.message || err}`);
+      showErrorModal(` 운송료 영업 면제 처리 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14601,7 +14601,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 운송료 영업 면제 취소 실패:\n${err?.message || err}`);
+      showErrorModal(` 운송료 영업 면제 취소 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14630,7 +14630,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 선수금 충전 실패:\n${err?.message || err}`);
+      showErrorModal(` 선수금 충전 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14699,7 +14699,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 선수금 상계 수납 실패:\n${err?.message || err}`);
+      showErrorModal(` 선수금 상계 수납 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14733,7 +14733,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 선수금 환불 실패:\n${err?.message || err}`);
+      showErrorModal(` 선수금 환불 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14748,7 +14748,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 연체 조치사항 저장 실패:\n${err?.message || err}`);
+      showErrorModal(` 연체 조치사항 저장 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14761,7 +14761,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       await db.awaitPendingWrites();
       refreshAllData();
     } catch (err: any) {
-      showErrorModal(`⚠️ 입금 약속 상태 변경 실패:\n${err?.message || err}`);
+      showErrorModal(` 입금 약속 상태 변경 실패:\n${err?.message || err}`);
       throw err;
     }
   };
@@ -14825,7 +14825,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     await db.awaitPendingWrites(); refreshAllData(); };
 
   const deleteCorporateVehicle = async (id: string): Promise<void> => {
-    // ✅ 고아 레코드 방지: 차량 삭제 시 연관 운행일지, 주유 기록 cascade 삭제
+    //  고아 레코드 방지: 차량 삭제 시 연관 운행일지, 주유 기록 cascade 삭제
     const linkedOpLogs = db.vehicleOperationLogs.filter(l => l.vehicleId === id);
     linkedOpLogs.forEach(l => db.deleteRow('vehicleOperationLogs', l.id));
     const linkedFuelLogs = db.vehicleFuelLogs.filter(l => l.vehicleId === id);
@@ -15059,7 +15059,7 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     setErrorReports([...db.errorReports]);
   };
 
-  // 🛡️ [권한 기반 로컬 DB 매일 09:00 자동 백업 정책 동기화]
+  //  [권한 기반 로컬 DB 매일 09:00 자동 백업 정책 동기화]
   // 로그인한 직원의 백업 권한(autoBackupEnabled, autoBackupTime)을 로컬 에이전트(C:\eBroAgent)에 실시간 핫 동기화
   useEffect(() => {
     if (!currentUser && !currentTenant) return;

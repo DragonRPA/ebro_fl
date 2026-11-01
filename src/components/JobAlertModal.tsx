@@ -109,7 +109,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <Bell size={18} color="var(--primary)" />
             <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
               업무 알림 설정
-            </h3>
+ </h3>
           </div>
           <button
             onClick={onClose}
@@ -132,7 +132,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
               직무별 기본 설정
-            </label>
+ </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
               {[
                 { key: 'YARD_PLANT', label: '주기장·공장', desc: '소리 ON / 팝업 ON' },
@@ -263,7 +263,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   >
                     <Play size={12} color="var(--success)" />
                     소리 테스트
-                  </button>
+ </button>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -315,7 +315,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
               알림 수신 업무 선택
-            </label>
+ </label>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {[
@@ -432,7 +432,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
           >
             <Bell size={13} color="var(--primary)" />
             현장 알림 테스트 발생
-          </button>
+ </button>
 
           <button
             type="button"
@@ -449,7 +449,7 @@ export const JobAlertModal: React.FC<Props> = ({ isOpen, onClose }) => {
             }}
           >
             설정 완료
-          </button>
+ </button>
         </div>
       </div>
     </div>

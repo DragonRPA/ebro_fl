@@ -489,7 +489,7 @@ export function calculateLeaveDaysInfo(
     const parts: string[] = [];
     if (weekendDays > 0) parts.push(`주말 ${weekendDays}일`);
     if (holidayDays > 0) parts.push(`공휴일 ${holidayDays}일`);
-    summaryText = `신청 기간: 총 ${totalCalendarDays}일 (${parts.join(', ')} 제외 ➔ 실 차감: ${deductedDays}.0일)`;
+    summaryText = `신청 기간: 총 ${totalCalendarDays}일 (${parts.join(', ')} 제외 실 차감: ${deductedDays}.0일)`;
   }
 
   const excludedBreakdownText = excludedDescriptions.length > 0 

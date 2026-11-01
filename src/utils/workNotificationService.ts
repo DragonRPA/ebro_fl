@@ -14,7 +14,7 @@ export interface WorkNotificationPayload {
 }
 
 /**
- * 🔔 2음계 차임벨 (딩동 사운드) 합성 재생
+ *  2음계 차임벨 (딩동 사운드) 합성 재생
  */
 export function playWorkNotificationChime() {
   try {
@@ -52,7 +52,7 @@ export function playWorkNotificationChime() {
 }
 
 /**
- * 📲 브라우저/PWA 시스템 알림 표출 (소리, 진동, 잠금화면 렌더링)
+ *  브라우저/PWA 시스템 알림 표출 (소리, 진동, 잠금화면 렌더링)
  */
 export async function showSystemNotification(params: {
   title: string;
@@ -101,7 +101,7 @@ export async function showSystemNotification(params: {
 }
 
 /**
- * 📢 4대 핵심 업무 발생 시 전사 브로드캐스트 전송 (발생 즉시 1회)
+ *  4대 핵심 업무 발생 시 전사 브로드캐스트 전송 (발생 즉시 1회)
  */
 export async function broadcastWorkNotification(payload: WorkNotificationPayload) {
   // 1. 발신자 로컬 알림 및 차임벨 (확인용)

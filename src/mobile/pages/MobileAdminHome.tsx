@@ -185,14 +185,14 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
               </div>
               <span className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
                 계약서 미발송 출고 요청
-              </span>
+ </span>
             </div>
             <span
               className="text-xs font-black px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
               style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
             >
               미발송 {unsentContractOutboundItems.length}건
-            </span>
+ </span>
           </summary>
 
           <div className="flex flex-col gap-2.5 mt-2">
@@ -205,10 +205,10 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-600 text-white" style={{ whiteSpace: 'nowrap' }}>
                       계약서 미발송
-                    </span>
+ </span>
                     <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" style={{ whiteSpace: 'nowrap' }}>
                       장비할당 완료 {row.totalAssignedCount}대
-                    </span>
+ </span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700" style={{ whiteSpace: 'nowrap' }}>
                       {row.reqTypeLabel}
                     </span>
@@ -229,7 +229,7 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
                   </h4>
                   <p className="text-[11px] text-indigo-300 font-bold mt-1 leading-relaxed">
                     {equipSummary} ({assignedAssetSummary})
-                  </p>
+ </p>
                   <div className="text-[10px] text-slate-300 mt-1 flex items-center gap-2 flex-wrap">
                     <span>계약번호: {row.contractNo}</span>
                     <span>요청자: {row.requesterName}</span>
@@ -294,12 +294,12 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
               </div>
               <span className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
                 관리부 미결 업무 목록
-              </span>
+ </span>
             </div>
             <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
               <span className="text-xs font-black px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/40" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {adminTodos.length}건 대기
-              </span>
+ </span>
             </div>
           </div>
 
@@ -327,7 +327,7 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
                       {isDirective ? (
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-red-600 text-white" style={{ whiteSpace: 'nowrap' }}>
                           특별지시
-                        </span>
+ </span>
                       ) : (
                         <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded border ${priorityBg}`} style={{ whiteSpace: 'nowrap' }}>
                           {task.priority === 'URGENT' ? '긴급' : task.priority === 'HIGH' ? '높음' : '일반'}
@@ -430,7 +430,7 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
               <span style={{ whiteSpace: 'nowrap' }}>배차관리</span>
               <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40" style={{ whiteSpace: 'nowrap' }}>
                 {pendingDispatchCount}건 대기
-              </span>
+ </span>
             </div>
             <div className="text-xs text-slate-300">배차 확정 및 상차 완료</div>
           </div>
@@ -460,11 +460,11 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
               <span style={{ whiteSpace: 'nowrap' }}>전대 장비 운용 및 반납 관리</span>
               <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40" style={{ whiteSpace: 'nowrap' }}>
                 {subleaseAssets.length}대
-              </span>
+ </span>
               {subleaseLeakCount > 0 && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white" style={{ whiteSpace: 'nowrap' }}>
                   미반납 {subleaseLeakCount}대
-                </span>
+ </span>
               )}
             </div>
             <div className="text-xs text-slate-300">
@@ -511,7 +511,7 @@ export const MobileAdminHome: React.FC<MobileAdminHomeProps> = ({ onNavigate }) 
                 <span style={{ whiteSpace: 'nowrap' }}>법인차량 주유영수증 등록</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   전사 공용
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300 mt-0.5">주유 영수증 촬영 및 주유 대장 연동</div>
             </div>

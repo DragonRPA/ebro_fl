@@ -475,7 +475,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             warrantyMonths: 6,
             status: 'ACTIVE',
             cogsMethod: 'FIFO',
-            memo: `호환부품 카탈로그 자동연동 (${line.item.tonnageRange})`
+            memo: `호환부품 카탈로그 자동연동 · ${line.item.tonnageRange}`
           });
           targetProductId = created.id;
         }
@@ -497,7 +497,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         receiverName: (selectedCustomer as any).contactPerson || selectedCustomer.name,
         receiverPhone: (selectedCustomer as any).phone || (selectedCustomer as any).contactPhone || '',
         paymentTerms: priceTier === 'DEALER' ? '월말 마감 익월 10일 현금결제' : '출고 전 완납',
-        specialTerms: `호환부품 카탈로그 겸 주문서 직결 발주 (${selectedModelFilter === 'ALL' ? '전 기종 통합' : selectedModelFilter})`,
+        specialTerms: `호환부품 카탈로그 주문 · ${selectedModelFilter === 'ALL' ? '전 기종 통합' : selectedModelFilter}`,
         status: 'CONFIRMED',
         deliveryMethod: 'COURIER',
         memo: `호환부품 카탈로그 주문 확정 (${orderSummary.selectedLineCount}종 / 총 ${orderSummary.totalUnitQty}점)`
@@ -554,32 +554,13 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             <FileSpreadsheet size={19} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0, whiteSpace: 'nowrap' }}>
-                호환부품 카탈로그 · 주문서
-              </h1>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  backgroundColor: '#EFF6FF',
-                  color: '#1D4ED8',
-                  border: '1px solid #BFDBFE',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                8대 주력 지게차 × 7대 계통 24종 표준 호환품번 수록
-              </span>
-            </div>
-            <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', whiteSpace: 'nowrap' }}>
-              포크엘 · 파츠케이 · 티브이에이치 · 한지파츠 카탈로그 수집 및 HTML/CSS 구조 분석 기반 일체형 발주 워크벤치
-            </div>
+            <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0, whiteSpace: 'nowrap' }}>
+              호환부품 카탈로그 · 주문서
+ </h1>
           </div>
         </div>
 
-        {/* ② 우상단 파이프라인 액션 버튼군 (Gutenberg Z-Pattern Step 2) */}
+        {/* ② 우상단 파이프라인 액션 버튼군 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', flexShrink: 0 }}>
           <button
             type="button"
@@ -601,7 +582,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             <Code2 size={15} />
-            <span>벤치마킹 기업 · HTML분석 · 전환전략</span>
+            <span>전환 전략</span>
           </button>
 
           <button
@@ -624,7 +605,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             <Sparkles size={14} color="#D97706" />
-            <span>기종별 필수소모품 일괄담기</span>
+            <span>기종별 소모품 담기</span>
           </button>
 
           <button
@@ -647,7 +628,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             <FileSpreadsheet size={14} />
-            <span>엑셀 카탈로그 주문서 내보내기</span>
+            <span>엑셀 내보내기</span>
           </button>
 
           <button
@@ -694,8 +675,8 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         {/* 주문 거래처 선택 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            주문 거래처 (대리점·고객사)
-          </label>
+            주문 거래처
+ </label>
           <select
             value={selectedCustomerId}
             onChange={e => setSelectedCustomerId(e.target.value)}
@@ -714,7 +695,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             {customers.map((c: any) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.customerType === 'DEALER' || c.name.includes('대리점') ? '대리점' : '최종고객'})
-              </option>
+ </option>
             ))}
           </select>
         </div>
@@ -723,7 +704,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
             카탈로그 단가 기준
-          </label>
+ </label>
           <div
             style={{
               display: 'flex',
@@ -751,7 +732,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               }}
             >
               대리점 공급가
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setPriceTier('RETAIL')}
@@ -768,15 +749,15 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               }}
             >
               권장 소비자가
-            </button>
+ </button>
           </div>
         </div>
 
         {/* 적용가능 지게차 모델 필터 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            적용가능 지게차 모델 (기종별 호환 매트릭스)
-          </label>
+            적용가능 지게차 모델
+ </label>
           <select
             value={selectedModelFilter}
             onChange={e => setSelectedModelFilter(e.target.value)}
@@ -805,7 +786,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
             부품 계통 분류
-          </label>
+ </label>
           <select
             value={selectedCategoryFilter}
             onChange={e => setSelectedCategoryFilter(e.target.value)}
@@ -821,7 +802,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               minWidth: '165px'
             }}
           >
-            <option value="ALL">전체 계통 (7대 어셈블리)</option>
+            <option value="ALL">전체 계통</option>
             {PART_CATEGORIES.map(cat => (
               <option key={cat} value={cat}>
                 {cat}
@@ -834,7 +815,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '200px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
             호환품번 · 순정품번 · 치수규격 검색
-          </label>
+ </label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Search size={14} color="#64748B" style={{ position: 'absolute', left: '10px' }} />
             <input
@@ -860,7 +841,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
             주문서 필터
-          </label>
+ </label>
           <button
             type="button"
             onClick={() => setOnlySelectedOrderItems(prev => !prev)}
@@ -878,7 +859,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             주문수량 입력품목만 ({orderSummary.selectedLineCount}종)
-          </button>
+ </button>
         </div>
       </div>
 
@@ -904,34 +885,34 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             <tr>
               <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 상세 · 선택
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 규격도면
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 자사 호환품번 / 순정 교차품번
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 계통분류 / 부품명 / 등급
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 핵심 실측 규격 (치수 · 사양)
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 적용가능 지게차 모델 (호환 기종)
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 현재고 · 창고위치
-              </th>
+ </th>
               <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                 {priceTier === 'DEALER' ? '대리점 공급단가' : '권장 소비자단가'}
               </th>
               <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155', backgroundColor: '#1E3A8A' }}>
                 주문수량 입력
-              </th>
+ </th>
               <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#1E3A8A' }}>
                 주문 공급가액
-              </th>
+ </th>
             </tr>
           </thead>
           <tbody>
@@ -975,8 +956,8 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                           flexShrink: 0
                         }}
                       >
-                        도면·상세 ➔
-                      </button>
+                        도면·상세
+ </button>
                     </div>
                   </td>
 
@@ -1112,7 +1093,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                         ? `소비자가 ₩${item.retailPriceKrw.toLocaleString()}`
                         : `대리점가 ₩${item.dealerPriceKrw.toLocaleString()}`}{' '}
                       · 이익률 {unitMarginRate}%
-                    </div>
+ </div>
                   </td>
 
                   {/* 9. 인라인 주문수량 스테퍼 */}
@@ -1212,9 +1193,9 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             선택 품목: <strong style={{ color: '#FFFFFF' }}>{orderSummary.selectedLineCount}종 ({orderSummary.totalUnitQty}점)</strong>
           </div>
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#E2E8F0' }}>
-            📄 총 주문합계 <strong style={{ color: '#38BDF8', fontSize: '15px' }}>₩{orderSummary.totalOrderAmount.toLocaleString()}</strong>
+            총 주문합계 <strong style={{ color: '#38BDF8', fontSize: '15px' }}>₩{orderSummary.totalOrderAmount.toLocaleString()}</strong>
             {' = '}
-            🟢 공급가액 <strong>₩{orderSummary.supplyAmount.toLocaleString()}</strong>
+            공급가액 <strong>₩{orderSummary.supplyAmount.toLocaleString()}</strong>
             {' + '}
             부가세 <strong>₩{orderSummary.vatAmount.toLocaleString()}</strong>
           </div>
@@ -1229,8 +1210,8 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               fontWeight: 700
             }}
           >
-            ⚖️ 예상 매출이익 ₩{orderSummary.expectedGrossProfit.toLocaleString()} (마진율 {orderSummary.marginRate.toFixed(1)}% · 원가차액 ₩0)
-          </div>
+            예상 매출이익 ₩{orderSummary.expectedGrossProfit.toLocaleString()} · 이익률 {orderSummary.marginRate.toFixed(1)}% · 원가차액 ₩0
+ </div>
         </div>
 
         {/* 우하단 최종 완결 버튼군 */}
@@ -1279,7 +1260,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             <Printer size={15} />
-            <span>선택품목 견적 · 주문서 발행</span>
+            <span>주문서 발행</span>
           </button>
 
           <button
@@ -1302,7 +1283,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             }}
           >
             <CheckCircle2 size={16} />
-            <span>{isSubmittingOrder ? '수주 생성 중...' : '유통 수주 · 출고 주문 확정'}</span>
+            <span>{isSubmittingOrder ? '수주 생성 중...' : '수주 확정'}</span>
           </button>
         </div>
       </div>
@@ -1346,11 +1327,8 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             >
               <div>
                 <h2 style={{ fontSize: '17px', fontWeight: 800, margin: 0 }}>
-                  지게차 호환부품 전문 기업 조사 · 판매사이트 HTML/CSS 분석 · 자체 카탈로그 겸 주문서 전환 전략
-                </h2>
-                <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '3px' }}>
-                  국내외 4대 호환부품 전문 플랫폼의 웹 DOM/CSS 구조 해부 및 당사 일체형 발주 카탈로그 전환 마스터플랜
-                </div>
+                  호환부품 카탈로그 전환 전략
+ </h2>
               </div>
               <button
                 type="button"
@@ -1372,7 +1350,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               <div>
                 <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
                   Ⅰ. 자체 카탈로그 겸 주문서 전환 4단계 핵심 전략
-                </h3>
+ </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                   {CATALOG_TO_ORDER_STRATEGY.map(phase => (
                     <div
@@ -1416,7 +1394,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               <div>
                 <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
                   Ⅱ. 호환부품 전문 판매 기업 벤치마킹 및 판매사이트 HTML/CSS 구조 분석
-                </h3>
+ </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {BENCHMARK_PARTS_COMPANIES.map(comp => (
                     <div
@@ -1466,7 +1444,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                         <div>
                           <div style={{ fontWeight: 800, color: '#38BDF8', marginBottom: '4px' }}>
                             판매사이트 DOM · CSS 셀렉터 구조 분석
-                          </div>
+ </div>
                           <div>• 목록 컨테이너: <code>{comp.htmlCssDomArchitecture.listContainerDom}</code></div>
                           <div>• 상품 카드 DOM: <code>{comp.htmlCssDomArchitecture.itemCardDom}</code></div>
                           <div>• 상세 규격 DOM: <code>{comp.htmlCssDomArchitecture.detailSpecDom}</code></div>
@@ -1475,7 +1453,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                         <div>
                           <div style={{ fontWeight: 800, color: '#FBBF24', marginBottom: '4px' }}>
                             실제 수집된 HTML 스니펫
-                          </div>
+ </div>
                           <pre
                             style={{
                               margin: 0,
@@ -1576,16 +1554,16 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                     <strong>호환 순정품번:</strong> {activePartDetail.oemCrossRefCodes.join(' / ')}
                   </div>
                   <div>
-                    <strong>제조·공급원 및 등급:</strong> {activePartDetail.manufacturer} ({activePartDetail.originCountry} · {activePartDetail.partGrade})
+                    <strong>제조·공급원 및 등급:</strong> {activePartDetail.manufacturer} · {activePartDetail.originCountry} · {activePartDetail.partGrade}
                   </div>
                   <div>
-                    <strong>적용 지게차 모델:</strong> {activePartDetail.compatibleModels.join(', ')} ({activePartDetail.tonnageRange})
+                    <strong>적용 지게차 모델:</strong> {activePartDetail.compatibleModels.join(', ')} · {activePartDetail.tonnageRange}
                   </div>
                   <div>
                     <strong>대리점 공급가 / 권장 소비자가:</strong>{' '}
                     <strong style={{ color: '#1D4ED8' }}>₩{activePartDetail.dealerPriceKrw.toLocaleString()}</strong> /{' '}
                     <strong>₩{activePartDetail.retailPriceKrw.toLocaleString()}</strong> (입고원가 ₩{activePartDetail.landedCostKrw.toLocaleString()})
-                  </div>
+ </div>
                   <div>
                     <strong>창고 위치 및 발송기준:</strong> {activePartDetail.warehouseLocation} (현재고 {activePartDetail.stockQty}{activePartDetail.unitName}) · {activePartDetail.deliveryPolicy}
                   </div>
@@ -1596,7 +1574,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A', marginBottom: '6px' }}>
                   정밀 실측 규격 및 사양
-                </div>
+ </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
                   <tbody>
                     {activePartDetail.detailedSpecs.map((sp, i) => (
@@ -1680,7 +1658,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '15px', fontWeight: 800 }}>
                   지게차 호환부품 자체 카탈로그 겸 주문서 양식
-                </span>
+ </span>
                 <div style={{ display: 'flex', gap: '4px', backgroundColor: '#1E293B', padding: '3px', borderRadius: '6px' }}>
                   <button
                     type="button"
@@ -1697,7 +1675,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                     }}
                   >
                     전체 카탈로그 겸 발주서 양식 ({filteredCatalog.length}종)
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setPrintSheetMode('SELECTED_ORDER_ONLY')}
@@ -1713,7 +1691,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                     }}
                   >
                     선택 주문품목 전용 발주서 ({orderSummary.selectedLineCount}종)
-                  </button>
+ </button>
                 </div>
               </div>
 
@@ -1771,10 +1749,10 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                   <div>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#1E3A8A' }}>
                       전 브랜드 지게차 호환부품 · 어태치먼트 · 마스트 · 전장 통합 공급망
-                    </div>
+ </div>
                     <h1 style={{ fontSize: '22px', fontWeight: 900, margin: '4px 0', color: '#0F172A' }}>
                       지게차 호환부품 카탈로그 겸 주문서
-                    </h1>
+ </h1>
                     <div style={{ fontSize: '12px', color: '#475569' }}>
                       적용 기종 범위: {selectedModelFilter === 'ALL' ? '안후이 헬리 · 비와이디 · 항차 · 이피 · 두산 · 현대 · 클라크 · 도요타 8대 기종 통합' : selectedModelFilter}
                     </div>
@@ -1786,13 +1764,13 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                       <tr>
                         <th style={{ border: '1px solid #0F172A', padding: '4px 8px', backgroundColor: '#F1F5F9', textAlign: 'left' }}>
                           발주 거래처
-                        </th>
+ </th>
                         <td style={{ border: '1px solid #0F172A', padding: '4px 8px', fontWeight: 700 }}>
                           {selectedCustomer?.name || '귀중'}
                         </td>
                         <th style={{ border: '1px solid #0F172A', padding: '4px 8px', backgroundColor: '#F1F5F9', textAlign: 'left' }}>
                           단가 구분
-                        </th>
+ </th>
                         <td style={{ border: '1px solid #0F172A', padding: '4px 8px', fontWeight: 700, color: '#1D4ED8' }}>
                           {priceTier === 'DEALER' ? '대리점 공급가' : '권장 소비자가'}
                         </td>
@@ -1800,16 +1778,16 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                       <tr>
                         <th style={{ border: '1px solid #0F172A', padding: '4px 8px', backgroundColor: '#F1F5F9', textAlign: 'left' }}>
                           발행 일자
-                        </th>
+ </th>
                         <td style={{ border: '1px solid #0F172A', padding: '4px 8px' }}>
                           {new Date().toISOString().slice(0, 10)}
                         </td>
                         <th style={{ border: '1px solid #0F172A', padding: '4px 8px', backgroundColor: '#F1F5F9', textAlign: 'left' }}>
                           출고 기준
-                        </th>
+ </th>
                         <td style={{ border: '1px solid #0F172A', padding: '4px 8px' }}>
                           평택 물류센터 16시 당일발송
-                        </td>
+ </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1839,7 +1817,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                       return (
                         <tr key={item.id}>
                           <td style={{ border: '1px solid #CBD5E1', padding: '5px', textAlign: 'center', fontWeight: 800 }}>
-                            {qty > 0 ? '☑' : '☐'}
+                            {qty > 0 ? '[선택]' : '[ ]'}
                           </td>
                           <td style={{ border: '1px solid #CBD5E1', padding: '4px', textAlign: 'center' }}>
                             <PartTechnicalDiagramSvg type={item.diagramType} size="sm" />
@@ -1855,7 +1833,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                           <td style={{ border: '1px solid #CBD5E1', padding: '5px' }}>
                             <div>{item.specSummary}</div>
                             <div style={{ fontSize: '10.5px', color: '#1D4ED8', fontWeight: 700, marginTop: '2px' }}>
-                              적용기종: {item.compatibleModels.join(', ')} ({item.tonnageRange})
+                              적용기종: {item.compatibleModels.join(', ')} · {item.tonnageRange}
                             </div>
                           </td>
                           <td style={{ border: '1px solid #CBD5E1', padding: '5px', textAlign: 'right', fontWeight: 700 }}>
@@ -1886,7 +1864,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                 >
                   <div style={{ fontSize: '12px', color: '#334155' }}>
                     ※ 본 양식은 호환부품 규격 카탈로그와 발주서를 겸하며, 수량 기입 후 회신 또는 시스템에서 즉시 수주 확정하실 수 있습니다.
-                  </div>
+ </div>
                   <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>
                     공급가액 ₩{orderSummary.supplyAmount.toLocaleString()} + 부가세 ₩{orderSummary.vatAmount.toLocaleString()} = 총 주문합계{' '}
                     <span style={{ color: '#1D4ED8', fontSize: '16px' }}>₩{orderSummary.totalOrderAmount.toLocaleString()}</span>

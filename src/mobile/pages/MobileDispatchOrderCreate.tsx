@@ -1419,7 +1419,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
               }`}
             >
               출고 요청 등록
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setMainTab('HISTORY')}
@@ -1460,7 +1460,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold whitespace-nowrap"
               >
                 초안 보관함 ({queue.filter(d => d.status === 'DRAFT').length})
-              </button>
+ </button>
 
               <button
                 type="button"
@@ -1468,7 +1468,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-amber-300 border border-slate-700 text-xs font-bold whitespace-nowrap"
               >
                 임시저장
-              </button>
+ </button>
             </div>
 
             <button
@@ -1477,7 +1477,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
               className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold whitespace-nowrap"
             >
               초기화
-            </button>
+ </button>
           </div>
         )}
       </header>
@@ -1566,14 +1566,14 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                     className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold"
                   >
                     닫기
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={handleRunParse}
                     className="px-3.5 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-black"
                   >
                     폼 데이터 자동 변환
-                  </button>
+ </button>
                 </div>
               </div>
             )}
@@ -1713,14 +1713,14 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                               className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-600 text-[11px] font-bold whitespace-nowrap"
                             >
                               정보 수정
-                            </button>
+ </button>
                             <button
                               type="button"
                               onClick={() => setSelectedCustomer(null)}
                               className="px-2 py-1 rounded-lg bg-slate-800 text-rose-300 border border-slate-700 text-[11px] font-bold whitespace-nowrap"
                             >
                               변경
-                            </button>
+ </button>
                           </div>
                         </div>
                       )}
@@ -1783,7 +1783,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-slate-300">
                         등록 현장 ({customerSites.length}개)
-                      </span>
+ </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -1887,11 +1887,11 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                               {meta?.activeContract ? (
                                 <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 text-[10.5px] font-bold whitespace-nowrap">
                                   가동 {meta.activeAssetCount}대
-                                </span>
+ </span>
                               ) : (
                                 <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10.5px] font-bold whitespace-nowrap">
                                   선택
-                                </span>
+ </span>
                               )}
                             </button>
                           );
@@ -1914,7 +1914,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                   ) : (
                     <div className="p-4 text-center text-xs text-slate-400 bg-slate-950 rounded-xl border border-slate-800">
                       1번 블록에서 거래처(고객사)를 먼저 선택하십시오.
-                    </div>
+ </div>
                   )}
 
                   {/* 현장 인수 담당자 */}
@@ -1938,7 +1938,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                             className="px-2.5 py-1 rounded bg-blue-600 text-white text-[11px] font-bold whitespace-nowrap"
                           >
                             현장담당자 저장
-                          </button>
+ </button>
                         )}
                       </div>
                     </div>
@@ -2046,7 +2046,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                     <div className="text-[11px] text-slate-300 bg-slate-950 p-2 rounded-lg border border-slate-800">
                       명세서 {statementClosingDay}일 · 계산서 {closingDay === 0 ? '역발행' : `${closingDay}일`} · 결제{' '}
                       {formatPaymentDueCondition(paymentDueMonthOffset, paymentDueDay)} · 운송료 {freightBillingStandard} 기준
-                    </div>
+ </div>
 
                     {(showEditScheduleForExistingSite || isNewCustomerMode || isRegisteringNewSite) && (
                       <div className="grid grid-cols-2 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
@@ -2060,7 +2060,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                             {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                               <option key={d} value={d}>
                                 매월 {d}일
-                              </option>
+ </option>
                             ))}
                           </select>
                         </div>
@@ -2075,7 +2075,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                             {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                               <option key={d} value={d}>
                                 매월 {d}일
-                              </option>
+ </option>
                             ))}
                           </select>
                         </div>
@@ -2124,7 +2124,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                   {totalQty > 0 && (
                     <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700 text-[11px] font-bold whitespace-nowrap">
                       총 {totalQty}대 선택
-                    </span>
+ </span>
                   )}
                 </div>
                 {openBlocks.has('EQUIPMENT') ? (
@@ -2153,7 +2153,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                           }`}
                         >
                           {ft} ({availUnits}대)
-                        </button>
+ </button>
                       );
                     })}
                   </div>
@@ -2192,7 +2192,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                             }`}
                           >
                             가용 {m.availableCount}대
-                          </span>
+ </span>
                         </button>
                       );
                     })}
@@ -2204,15 +2204,15 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-emerald-300">
                           선택된 출고 장비 ({totalQty}대)
-                        </span>
+ </span>
                         {totalAvailShortage > 0 ? (
                           <span className="text-[11px] font-bold text-amber-300">
                             외부 임차 {totalAvailShortage}대 필요
-                          </span>
+ </span>
                         ) : (
                           <span className="text-[11px] font-bold text-emerald-400">
                             전량 자사 가용재고 출고 가능
-                          </span>
+ </span>
                         )}
                       </div>
 
@@ -2227,7 +2227,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                                 className="w-7 h-7 rounded bg-slate-800 text-white font-bold border border-slate-600"
                               >
                                 -
-                              </button>
+ </button>
                               <span className="px-2 font-mono text-xs font-black text-emerald-300">{eq.qty}대</span>
                               <button
                                 type="button"
@@ -2235,7 +2235,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                                 className="w-7 h-7 rounded bg-slate-800 text-white font-bold border border-slate-600"
                               >
                                 +
-                              </button>
+ </button>
                               <button
                                 type="button"
                                 onClick={() => setEquipments(prev => prev.filter((_, i) => i !== idx))}
@@ -2458,7 +2458,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                         }`}
                       >
                         모름 (현장 도착 확인 후 회수)
-                      </button>
+ </button>
                       <div className="flex flex-wrap gap-1.5">
                         {activeCustomerAssets.map(a => {
                           const isSel = retrievalAssetIds.includes(a.assetNo);
@@ -2481,7 +2481,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                               }`}
                             >
                               {a.assetNo} ({a.modelName})
-                            </button>
+ </button>
                           );
                         })}
                       </div>
@@ -2539,7 +2539,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                     <div className="p-3 rounded-xl bg-slate-950 border border-rose-800/70 flex flex-col gap-2.5">
                       <span className="text-xs font-black text-rose-300">
                         유상옵션 청구단위 및 단가 설정 (장비 {Math.max(1, totalQty)}대 기준)
-                      </span>
+ </span>
                       {selectedPaidMasterOptions.map(opt => {
                         const curUnit = paidOptionUnits[opt.name] || '월';
                         const curQty = paidOptionQtys[opt.name] || 1;
@@ -2707,7 +2707,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 <span className="text-xs font-black text-slate-200">출고 요청 필수 항목 검증</span>
                 <span className="text-xs font-mono font-bold text-cyan-300">
                   {validationErrors.filter(e => e.valid).length} / {validationErrors.length} 완료
-                </span>
+ </span>
               </div>
               <div className="grid grid-cols-1 gap-1">
                 {validationErrors.map(item => (
@@ -2722,7 +2722,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                     }`}
                   >
                     <span>{item.label}</span>
-                    <span>{item.valid ? '완료' : '미입력 ➔'}</span>
+                    <span>{item.valid ? '완료' : '미입력'}</span>
                   </button>
                 ))}
               </div>
@@ -2789,7 +2789,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
             <div className="text-sm font-black text-white">현장 안전옵션 변경 반영 방식 선택</div>
             <div className="text-slate-300 leading-relaxed">
               변경한 안전옵션을 선택한 현장의 기본 옵션으로도 업데이트하시겠습니까, 아니면 이번 출고 요청에만 1회성으로 적용하시겠습니까?
-            </div>
+ </div>
             <div className="flex flex-col gap-2 pt-1">
               <button
                 type="button"
@@ -2800,7 +2800,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 className="py-2.5 rounded-xl bg-blue-600 text-white font-black"
               >
                 현장 기본값 갱신 + 출고 발행
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => {
@@ -2810,14 +2810,14 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-100 border border-slate-600 font-bold"
               >
                 이번 출고에만 1회성 적용
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setShowOptionSaveConfirmModal(false)}
                 className="py-2 rounded-xl text-slate-400 font-bold"
               >
                 취소
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -2843,7 +2843,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
               className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 text-xs font-bold"
             >
               닫기
-            </button>
+ </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
             {queue.filter(d => d.status === 'DRAFT').length === 0 ? (
@@ -2870,7 +2870,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                         className="px-2.5 py-1 rounded bg-rose-950 text-rose-300 border border-rose-800 font-bold"
                       >
                         삭제
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -2886,7 +2886,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                         className="px-3 py-1 rounded bg-blue-600 text-white font-black"
                       >
                         폼으로 불러오기
-                      </button>
+ </button>
                     </div>
                   </div>
                 ))
@@ -2946,7 +2946,7 @@ export const MobileDispatchOrderCreate: React.FC<MobileDispatchOrderCreateProps>
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-100 border border-slate-700 font-bold"
               >
                 출고 요청 내역 확인
-              </button>
+ </button>
             </div>
           </div>
         </div>

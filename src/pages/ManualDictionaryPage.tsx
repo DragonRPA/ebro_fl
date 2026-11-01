@@ -14,7 +14,7 @@ export const ManualDictionaryPage: React.FC = () => {
   const allProcesses = useMemo(() => {
     const list: any[] = [];
     ALL_MENU_MANUALS.forEach(menu => {
-      // 💡 [권한 격리] 현재 사용자가 'view' 권한을 보유한 메뉴의 프로세스만 노출 (권한 없는 메뉴 완전 배제)
+      //  [권한 격리] 현재 사용자가 'view' 권한을 보유한 메뉴의 프로세스만 노출 (권한 없는 메뉴 완전 배제)
       if (!hasPermission(menu.menuId, 'view')) {
         return;
       }
@@ -85,10 +85,10 @@ export const ManualDictionaryPage: React.FC = () => {
         <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={20} color="var(--primary)" />
           전사 업무 매뉴얼 사전
-        </h2>
+ </h2>
         <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
           조회된 업무 프로세스: <strong>{filteredProcesses.length}</strong>건 (전체 {allProcesses.length}건)
-        </div>
+ </div>
       </div>
 
       <div className="card" style={{ padding: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', flexShrink: 0, marginBottom: 0 }}>
@@ -124,7 +124,7 @@ export const ManualDictionaryPage: React.FC = () => {
         {filteredProcesses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
             검색 결과가 없습니다.
-          </div>
+ </div>
         ) : (
           filteredProcesses.map((proc, idx) => (
             <div 
@@ -173,7 +173,7 @@ export const ManualDictionaryPage: React.FC = () => {
                   }}
                 >
                   가이드 시작
-                </button>
+ </button>
               </div>
               <div style={{ padding: '18px 20px' }}>
                 <h4 style={{ margin: '0 0 14px 0', fontSize: '13px', fontWeight: '800', color: 'var(--text-main)' }}>작업 절차 (총 {proc.steps.length}단계)</h4>

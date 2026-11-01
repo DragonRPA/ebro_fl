@@ -312,7 +312,7 @@ export const LeaveManagementPage: React.FC = () => {
           <h2 data-mid="leave_management-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <UserCheck size={18} style={{ color: 'var(--primary)' }} />
             연차관리
-            <span style={{
+ <span style={{
               fontSize: '11px',
               padding: '2px 8px',
               borderRadius: '4px',
@@ -324,7 +324,7 @@ export const LeaveManagementPage: React.FC = () => {
               gap: '4px'
             }}>
               <ShieldCheck size={12} /> 급여 권한 연동
-            </span>
+ </span>
           </h2>
         </div>
 
@@ -337,7 +337,7 @@ export const LeaveManagementPage: React.FC = () => {
           >
             <Download size={14} style={{ marginRight: '6px' }} />
             엑셀 다운로드
-          </button>
+ </button>
 
           <button
             onClick={() => setActiveTab('QUOTA')}
@@ -346,7 +346,7 @@ export const LeaveManagementPage: React.FC = () => {
           >
             <UserCheck size={14} style={{ marginRight: '6px' }} />
             임직원 연차 갱신/현황 대장
-          </button>
+ </button>
           <button
             onClick={() => setActiveTab('USAGE')}
             className={`btn ${activeTab === 'USAGE' ? 'btn-primary' : 'btn-secondary'}`}
@@ -354,11 +354,11 @@ export const LeaveManagementPage: React.FC = () => {
           >
             <Calendar size={14} style={{ marginRight: '6px' }} />
             연차 소진 관리 대장
-          </button>
+ </button>
         </div>
       </div>
 
-      {/* 📊 전사 연차 통계 요약 바 */}
+      {/*  전사 연차 통계 요약 바 */}
       <div data-mid="leave-inspection-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
         <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 등록 임직원</span>
@@ -416,7 +416,7 @@ export const LeaveManagementPage: React.FC = () => {
                   <tr>
                     <td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회된 임직원 데이터가 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedUsers.map((u) => {
@@ -436,7 +436,7 @@ export const LeaveManagementPage: React.FC = () => {
                           >
                             <Edit3 size={12} style={{ marginRight: '4px' }} />
                             부여 갯수 갱신
-                          </button>
+ </button>
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 'bold', color: 'var(--text-main)' }}>
                           {u.name}
@@ -452,16 +452,16 @@ export const LeaveManagementPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>
                           {summary.grantedDays} 일
-                        </td>
+ </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', color: 'var(--warning)', fontWeight: 'bold' }}>
                           {summary.usedDays} 일
-                        </td>
+ </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: summary.remainingDays > 0 ? 'var(--success)' : 'var(--danger)' }}>
                           {summary.remainingDays} 일
-                        </td>
+ </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--text-main)' }}>
                           {totalOtHours} 시간
-                        </td>
+ </td>
                       </tr>
                     );
                   })
@@ -479,7 +479,7 @@ export const LeaveManagementPage: React.FC = () => {
           <div style={{ backgroundColor: 'var(--bg-surface)', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px', height: 'fit-content' }}>
             <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               연차 / 반차 소진 등록
-            </h3>
+ </h3>
 
             {/* 주말·법정공휴일 자동 제외 및 임시공휴일 미제외 상신자 사전 안내 */}
             <div style={{
@@ -498,8 +498,8 @@ export const LeaveManagementPage: React.FC = () => {
               <div>
                 <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>안내: </span>
                 주말(토/일) 및 법정공휴일은 연차 소진 일수에서 <strong>자동 제외</strong>됩니다. 
-                정부 수시 지정 <strong>임시공휴일은 자동 제외되지 않으므로</strong>, 해당 일자 등록 시 확인 바랍니다.
-              </div>
+ 정부 수시 지정 <strong>임시공휴일은 자동 제외되지 않으므로</strong>, 해당 일자 등록 시 확인 바랍니다.
+ </div>
             </div>
 
             <form onSubmit={handleAdminLeaveUsageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -507,7 +507,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   대상 임직원:
-                </label>
+ </label>
                 <select
                   required
                   value={adminLeaveUserId}
@@ -525,7 +525,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   휴가 구분:
-                </label>
+ </label>
                 <select
                   value={adminLeaveType}
                   onChange={(e: any) => setAdminLeaveType(e.target.value)}
@@ -541,7 +541,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   시작 일자:
-                </label>
+ </label>
                 <input
                   type="date"
                   required
@@ -559,7 +559,7 @@ export const LeaveManagementPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     종료 일자:
-                  </label>
+ </label>
                   <input
                     type="date"
                     required
@@ -657,7 +657,7 @@ export const LeaveManagementPage: React.FC = () => {
                       <div>
                         총 {adminCalcResult.totalCalendarDays}일 중 <strong>주말 {adminCalcResult.weekendDays}일</strong>
                         {adminCalcResult.holidayDays > 0 && <>, <strong>법정공휴일 {adminCalcResult.holidayDays}일</strong></>}
-                        {' '}제외 ➔ <strong>실제 소정근로 {adminCalcResult.workingDays}일만 차감</strong>
+                        {' '}제외 <strong>실제 소정근로 {adminCalcResult.workingDays}일만 차감</strong>
                       </div>
                       {adminCalcResult.excludedBreakdownText && (
                         <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
@@ -673,7 +673,7 @@ export const LeaveManagementPage: React.FC = () => {
                       paddingTop: '4px' 
                     }}>
                       주말 및 법정공휴일이 포함되지 않아 신청 기간 전일({adminCalcResult.deductedDays}일)이 소진됩니다.
-                    </div>
+ </div>
                   )
                 )}
               </div>
@@ -681,7 +681,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   휴가 사유:
-                </label>
+ </label>
                 <textarea
                   required
                   rows={3}
@@ -700,7 +700,7 @@ export const LeaveManagementPage: React.FC = () => {
                 disabled={!canSave || !adminCalcResult.isValid || adminCalcResult.deductedDays <= 0 || (!!selectedAdminSummary && adminCalcResult.deductedDays > selectedAdminSummary.remainingDays)}
               >
                 소진 내역 등록
-              </button>
+ </button>
             </form>
           </div>
 
@@ -723,7 +723,7 @@ export const LeaveManagementPage: React.FC = () => {
                   <tr>
                     <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회된 연차/반차 사용 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedUsages.map((l) => {
@@ -758,7 +758,7 @@ export const LeaveManagementPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--danger)' }}>
                           -{l.usedDays} 일
-                        </td>
+ </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontSize: '12px' }}>
                           {l.startDate} {l.startDate !== l.endDate ? `~ ${l.endDate}` : ''}
                         </td>
@@ -778,7 +778,7 @@ export const LeaveManagementPage: React.FC = () => {
         </div>
       )}
 
-      {/* ⚖️ 헌장 3.5 Gutenberg Z-패턴 4단계 대차대조 검증 바 */}
+      {/*  헌장 3.5 Gutenberg Z-패턴 4단계 대차대조 검증 바 */}
       <div style={{
         marginTop: '16px',
         backgroundColor: 'var(--bg-surface)',
@@ -796,7 +796,7 @@ export const LeaveManagementPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-main)' }}>
             연차 대차대조 검증:
-          </span>
+ </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총부여 <strong style={{ color: 'var(--text-main)' }}>{totalCompanyGranted.toFixed(1)}일</strong>
           </span>
@@ -820,7 +820,7 @@ export const LeaveManagementPage: React.FC = () => {
               color: '#ef4444'
             }}>
               대차 차액 {leaveBalanceDiff.toFixed(1)}일 (불일치)
-            </span>
+ </span>
           </div>
         )}
       </div>
@@ -840,10 +840,10 @@ export const LeaveManagementPage: React.FC = () => {
             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>
                 이번 1년 부여 연차 일수 갱신
-              </h3>
+ </h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                 임직원 <strong>{selectedUserForQuota.name}</strong> 님의 입사일 주기 내 부여될 연차 갯수를 입력하십시오.
-              </p>
+ </p>
             </div>
 
             <form onSubmit={handleSaveQuotaSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -851,7 +851,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   입사일 주기 범위:
-                </label>
+ </label>
                 <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'monospace' }}>
                   {quotaPeriodStart} ~ {quotaPeriodEnd}
                 </div>
@@ -860,7 +860,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   이번 1년 동안 부여될 연차 갯수 (일):
-                </label>
+ </label>
                 <input
                   type="number"
                   step="0.5"
@@ -876,7 +876,7 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   갱신 비고 / 사유:
-                </label>
+ </label>
                 <input
                   type="text"
                   placeholder="예: 근속 연수 3년차 정기 16일 부여"
@@ -890,10 +890,10 @@ export const LeaveManagementPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setSelectedUserForQuota(null)}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn btn-primary" disabled={!canSave}>
                   연차 일수 갱신 완료
-                </button>
+ </button>
               </div>
             </form>
           </div>

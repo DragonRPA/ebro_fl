@@ -217,7 +217,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
     }, 2000);
   };
 
-  // 🚀 무음 스마트 백그라운드 자동 업데이트 실행
+  //  무음 스마트 백그라운드 자동 업데이트 실행
   const handleSelfUpdate = async () => {
     setIsUpdatingSelf(true);
     setUpdateMsg('최신 버전 백그라운드 다운로드 중...');
@@ -254,7 +254,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
     // 에이전트 배지 권한 없는 직무(영업·관리·경영 등)는 전체 비노출
     canShowAgentBadge ? (
     <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
-      {/* 🟢 최신 정상 상태 배지 (콜사인 생략 & 약식 버전 & 미러링 진행 중 동적 표시) */}
+      {/*  최신 정상 상태 배지 (콜사인 생략 & 약식 버전 & 미러링 진행 중 동적 표시) */}
       {isLatest && (
         <button
           type="button"
@@ -291,7 +291,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
         </button>
       )}
 
-      {/* 🏢 에이전트 가동 & AI 활성 테넌트일 때만 데스크톱 스튜디오 원클릭 호출 버튼 노출 */}
+      {/*  에이전트 가동 & AI 활성 테넌트일 때만 데스크톱 스튜디오 원클릭 호출 버튼 노출 */}
       {agentStatus === 'ONLINE' && !isOutdated && Boolean(currentTenant?.features?.agentAiEnabled) && (
         <button
           type="button"
@@ -318,7 +318,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
         </button>
       )}
 
-      {/* 🟡 구버전 가동 중 배지 & 1클릭 무음 자동 업데이트 버튼 */}
+      {/*  구버전 가동 중 배지 & 1클릭 무음 자동 업데이트 버튼 */}
       {isOutdated && (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
           <button
@@ -339,10 +339,10 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
               whiteSpace: 'nowrap',
               transition: 'all 0.15s ease'
             }}
-            title={`에이전트 업데이트 필요 (현재: ${agentVersion} ➔ 최신: ${EXPECTED_AGENT_VERSION})`}
+            title={`에이전트 업데이트 필요 (현재: ${agentVersion} 최신: ${EXPECTED_AGENT_VERSION})`}
           >
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--warning)' }}></span>
-            <span>{shortCurrent || '구버전'} ➔ {shortExpected}</span>
+            <span>{shortCurrent || '구버전'} {shortExpected}</span>
             <ChevronDown size={11} />
           </button>
 
@@ -373,7 +373,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* 🔴 미실행 (오프라인) 상태 배지 */}
+      {/*  미실행 (오프라인) 상태 배지 */}
       {agentStatus === 'OFFLINE' && (
         <button
           type="button"
@@ -420,7 +420,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '800' }}>
               <Bot size={16} color="var(--primary)" />
               로컬 사이드카 에이전트 상태
-            </div>
+ </div>
             <button type="button" onClick={() => setIsOpenMenu(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <X size={14} />
             </button>
@@ -431,7 +431,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)' }}>연결 상태:</span>
               <span style={{ fontWeight: '800', color: agentStatus === 'ONLINE' ? '#16a34a' : '#dc2626' }}>
-                {agentStatus === 'ONLINE' ? '🟢 가동중' : '🔴 미실행'}
+                {agentStatus === 'ONLINE' ? '가동중' : '미실행'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -450,7 +450,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
             )}
           </div>
 
-          {/* 🏢 AI 활성 시 스튜디오 열기 / 비활성 시 로컬 문서고 폴더 열기 */}
+          {/*  AI 활성 시 스튜디오 열기 / 비활성 시 로컬 문서고 폴더 열기 */}
           {agentStatus === 'ONLINE' && (
             Boolean(currentTenant?.features?.agentAiEnabled) ? (
               <button
@@ -478,7 +478,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
               >
                 <Bot size={14} color="#60a5fa" />
                 eBro AI Agent 데스크톱 스튜디오 열기
-              </button>
+ </button>
             ) : (
               <button
                 type="button"
@@ -504,12 +504,12 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
                 }}
               >
                 <FolderCheck size={14} color="#60a5fa" />
-                로컬 문서고 폴더 열기 (C:\eBroAgent\문서고)
-              </button>
+                로컬 문서고 폴더 열기
+ </button>
             )
           )}
 
-          {/* ⚠️ 에이전트 콘솔 창이 켜져 있는데 미연결로 뜰 때 브라우저 보안 안내 */}
+          {/*  에이전트 콘솔 창이 켜져 있는데 미연결로 뜰 때 브라우저 보안 안내 */}
           {agentStatus === 'OFFLINE' && (
             <div style={{
               background: 'rgba(239, 68, 68, 0.08)',
@@ -523,32 +523,32 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
               <div style={{ fontWeight: '800', color: 'var(--danger)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <AlertTriangle size={13} />
                 콘솔 창이 켜져 있는데 미연결로 표시될 때 조치법
-              </div>
+ </div>
               <div style={{ color: 'var(--text-secondary)' }}>
                 Chrome/Edge 로컬 루프백 보안 차단 또는 콘솔 일시정지 상태입니다:
-                <div style={{ marginTop: '5px', color: 'var(--text-main)', fontSize: '11px', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '5px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+ <div style={{ marginTop: '5px', color: 'var(--text-main)', fontSize: '11px', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '5px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div>
-                    <b>1.</b> 주소창 좌측 <b>[설정/조정 아이콘]</b> 클릭 ➔ <b>[기기의 앱]</b>을 <b>[허용]</b>으로 변경 (안 보이면 [사이트 설정] 클릭 후 허용)
-                  </div>
+                    <b>1.</b> 주소창 좌측 <b>[설정/조정 아이콘]</b> 클릭 <b>[기기의 앱]</b>을 <b>[허용]</b>으로 변경 (안 보이면 [사이트 설정] 클릭 후 허용)
+ </div>
                   <div>
                     <b>2.</b> 검은색 콘솔 창 제목에 <b>'선택'</b> 글자가 있으면 마우스 클릭으로 일시정지된 상태입니다. 콘솔 창을 클릭 후 <b>[Enter]</b> 또는 <b>[Esc]</b>를 1회 누르세요.
-                  </div>
+ </div>
                   <div style={{ color: 'var(--success)', fontWeight: '800' }}>
-                    <b>3.</b> <b>[F5]</b> 새로고침 시 즉시 🟢 정상 연결 완료!
-                  </div>
+                    <b>3.</b> <b>[F5]</b> 새로고침 시 즉시 정상 연결 완료!
+ </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 📁 로컬 미러링(동기화) 현황 섹션 (ONLINE일 때) */}
+          {/*  로컬 미러링(동기화) 현황 섹션 (ONLINE일 때) */}
           {agentStatus === 'ONLINE' && (
             <div style={{ background: 'var(--bg-app)', padding: '10px 12px', borderRadius: '8px', marginBottom: '12px', fontSize: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--success)' }}>
                   <HardDrive size={13} />
                   CF 로컬 미러링 ({mirrorFiles.length}개)
-                </span>
+ </span>
                 <button
                   type="button"
                   disabled={isSyncingDrive}
@@ -595,12 +595,12 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
                     cursor: isSyncingDrive ? 'wait' : 'pointer'
                   }}
                 >
-                  {isSyncingDrive ? '동기화 중...' : '⚡ 지금 동기화'}
+                  {isSyncingDrive ? '동기화 중...' : '지금 동기화'}
                 </button>
               </div>
 
               {syncMessage && (
-                <div style={{ fontSize: '11px', color: syncMessage.startsWith('⚠️') ? '#ef4444' : '#16a34a', fontWeight: '700', margin: '4px 0' }}>
+                <div style={{ fontSize: '11px', color: (syncMessage.includes('실패') || syncMessage.includes('오류') || syncMessage.includes('경고')) ? '#ef4444' : '#16a34a', fontWeight: '700', margin: '4px 0' }}>
                   {syncMessage}
                 </div>
               )}
@@ -609,15 +609,15 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '100px', overflowY: 'auto', marginTop: '4px' }}>
                   {mirrorFiles.map((f, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>📄 {f.name}</span>
+                      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}> {f.name}</span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{(f.size / 1024).toFixed(1)} KB</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  아직 미러링된 파일이 없습니다. [⚡ 지금 동기화]를 눌러주세요.
-                </div>
+                  아직 미러링된 파일이 없습니다. [ 지금 동기화]를 눌러주세요.
+ </div>
               )}
             </div>
           )}
@@ -626,7 +626,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {agentStatus === 'OFFLINE' && (
               <>
-                {/* 🚀 브라우저(사이트)에서 로컬 에이전트 실행 */}
+                {/*  브라우저(사이트)에서 로컬 에이전트 실행 */}
                 <button
                   type="button"
                   disabled={isLaunching}
@@ -709,7 +709,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
                   }}
                 >
                   <RefreshCw size={14} className={isUpdatingSelf ? 'animate-spin' : ''} />
-                  {isUpdatingSelf ? '무음 자동 업데이트 진행 중...' : `🚀 최신 버전(${EXPECTED_AGENT_VERSION}) 자동 업데이트`}
+                  {isUpdatingSelf ? '무음 자동 업데이트 진행 중...' : ` 최신 버전(${EXPECTED_AGENT_VERSION}) 자동 업데이트`}
                 </button>
                 {updateMsg && (
                   <div style={{ fontSize: '11px', textAlign: 'center', color: updateMsg.includes('실패') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
@@ -752,7 +752,7 @@ export const AgentHeaderBadge: React.FC<Props> = ({ currentUser }) => {
                 style={{ width: '100%', padding: '8px 10px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
                 <RefreshCw size={13} className={isRestarting ? 'animate-spin' : ''} />
-                {isRestarting ? '에이전트 재기동 중...' : '🔄 에이전트 1초 핫 재시작'}
+                {isRestarting ? '에이전트 재기동 중...' : '에이전트 1초 핫 재시작'}
               </button>
             )}
           </div>

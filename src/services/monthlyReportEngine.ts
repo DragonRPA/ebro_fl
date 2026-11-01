@@ -100,11 +100,11 @@ export interface TeamComment {
 }
 
 export const TEAM_META: Record<TeamKey, { name: string; icon: string }> = {
-  SALES:       { name: '영업팀',   icon: '📊' },
-  LOGISTICS:   { name: '물류팀',   icon: '🚛' },
-  YARD:        { name: '자산팀',   icon: '🏗️' },
-  MAINTENANCE: { name: '정비팀',   icon: '🔧' },
-  FINANCE:     { name: '재무팀',   icon: '💰' },
+  SALES:       { name: '영업팀',   icon: '' },
+  LOGISTICS:   { name: '물류팀',   icon: '' },
+  YARD:        { name: '자산팀',   icon: '' },
+  MAINTENANCE: { name: '정비팀',   icon: '' },
+  FINANCE:     { name: '재무팀',   icon: '' },
 };
 
 export interface ExecutiveDirective {
@@ -360,18 +360,18 @@ export function aggregateExecutiveMonthlyReport(targetYm: string, context: any):
 
   // 규격별 가동 현황 분류 (19ft, 26ft, 32ft, 특수/기타)
   const specMap: Record<string, { total: number; rented: number; available: number; repairing: number }> = {
-    '19ft (6m급)': { total: 0, rented: 0, available: 0, repairing: 0 },
-    '26ft (8m급)': { total: 0, rented: 0, available: 0, repairing: 0 },
-    '32ft (10m급)': { total: 0, rented: 0, available: 0, repairing: 0 },
+    '19ft': { total: 0, rented: 0, available: 0, repairing: 0 },
+    '26ft': { total: 0, rented: 0, available: 0, repairing: 0 },
+    '32ft': { total: 0, rented: 0, available: 0, repairing: 0 },
     '특수/굴절/기타': { total: 0, rented: 0, available: 0, repairing: 0 }
   };
 
   validAssets.forEach((a: any) => {
     const raw = `${a.modelName || ''} ${a.spec || ''}`.toLowerCase();
     let cat = '특수/굴절/기타';
-    if (raw.includes('19') || raw.includes('3219') || raw.includes('1930')) cat = '19ft (6m급)';
-    else if (raw.includes('26') || raw.includes('4626') || raw.includes('2632') || raw.includes('2646')) cat = '26ft (8m급)';
-    else if (raw.includes('32') || raw.includes('4632') || raw.includes('3246')) cat = '32ft (10m급)';
+    if (raw.includes('19') || raw.includes('3219') || raw.includes('1930')) cat = '19ft';
+    else if (raw.includes('26') || raw.includes('4626') || raw.includes('2632') || raw.includes('2646')) cat = '26ft';
+    else if (raw.includes('32') || raw.includes('4632') || raw.includes('3246')) cat = '32ft';
 
     specMap[cat].total += 1;
     if (a.status === 'RENTED') specMap[cat].rented += 1;

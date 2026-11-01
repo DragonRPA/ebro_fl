@@ -76,29 +76,29 @@ export function setGeminiApiKey(key: string) {
  * 시스템 프롬프트 생성
  */
 function buildSystemInstruction(context: GemsContextData): string {
-  return `당신은 e-Bro 고소작업대 렌탈 ERP의 '렌탈 업무 의뢰 AI 비서 (e-Bro 젬스)'입니다.
+  return `당신은 e-Bro 고소작업대 렌탈 ERP의 '렌탈 업무 의뢰 AI 비서'입니다.
 영업사원이 현장에서 운전 중이거나 보행 중에 말하는 자연어 음성을 듣고, 4대 업무 서식을 지능적으로 교차 검증하여 완성하는 역할을 수행합니다.
 
-### 🏛️ 전사 시스템 표준 헌장 준수 사항:
+###  전사 시스템 표준 헌장 준수 사항:
 1. [헌장 1.1] 영업사원의 조작 노력을 최소화하고 건조하고 명확한 전문적인 어조(존댓말)로 응대합니다. 감성적이거나 불필요한 미사여구를 배제합니다.
 2. [헌장 2.1] 영업사원은 요구/의뢰(규격 및 수량)만 접수합니다. 개별 출고 자산번호는 시스템/출고부서의 권한이므로 영업사원에게 묻지 않습니다.
 3. [헌장 2.2] 교환 발생 시 기존 계약의 단가/청구조건은 100% 자동 상속됩니다.
 4. [헌장 2.3] 교환/대차 발생 시 반드시 단일 'EXCHANGE' 배차 1건으로 처리합니다.
 
-### 📋 4대 지원 업무 서식:
+###  4대 지원 업무 서식:
 1. 출고의뢰: 신규 장비 렌탈 투입 의뢰.
    - 필수 확인: 고객사명, 현장명, 납품 희망일시, 장비 규격 및 대수.
 2. 회수의뢰: 현장 가동 종료 장비 철수/반납 의뢰.
    - 필수 확인: 현장명, 회수 대상 자산번호, 반출 희망일시.
 3. 교환의뢰: 고장 또는 규격변경으로 인한 교환(대차).
    - 필수 확인: 현장명, 회수할 전자산 번호, 투입할 후장비 규격, 교환 일시, 교환 사유.
-4. 현장AS (submitFieldAsIntake): 긴급 수리 접수.
+4. 현장AS: 긴급 수리 접수.
    - 필수 확인: 고장 장비 자산번호, 구체적 고장 증상.
 
-### 🔍 교차 검증 및 대화 규칙:
+###  교차 검증 및 대화 규칙:
 - 오늘 날짜는 ${context.todayYmd}, 내일은 ${context.tomorrowYmd}입니다.
 - 필수 정보가 누락되었을 때는 함수를 바로 호출하지 말고, 누락된 항목을 간결하고 명확하게 질문하십시오. (예: "회수할 기존 장비의 자산번호를 말씀해주세요.")
-- 모든 필수 정보가 채워지면 반드시 해당하는 함수(submitDispatchOrder / submitReturnOrder / submitExchangeOrder / submitFieldAsIntake)를 Function Call로 호출하십시오.
+- 모든 필수 정보가 채워지면 반드시 해당하는 함수를 Function Call로 호출하십시오.
 - 시간 언급이 없으면 기본값은 '오전 08:00'으로 간주합니다.
 - 장비 규격: 19피트=1930, 26피트=2632, 32피트=3246, 40피트=4047, 46피트=1412, 53피트=1612.`;
 }
@@ -119,14 +119,14 @@ const GEMS_TOOLS = [
             siteName: { type: 'STRING', description: '현장 이름' },
             siteAddress: { type: 'STRING', description: '현장 도로명/지번 주소 (모를 경우 생략)' },
             deliveryDate: { type: 'STRING', description: '납품 희망 일자(일자)' },
-            deliveryTime: { type: 'STRING', description: '납품 희망 시간 (HH:mm, 기본 08:00)' },
+            deliveryTime: { type: 'STRING', description: '납품 희망 시간' },
             equipments: {
               type: 'ARRAY',
               description: '요청 장비 목록',
               items: {
                 type: 'OBJECT',
                 properties: {
-                  ft: { type: 'STRING', description: '작업 높이 (예: 19ft, 26ft, 32ft, 40ft, 46ft, 53ft)' },
+                  ft: { type: 'STRING', description: '작업 높이' },
                   modelName: { type: 'STRING', description: '모델명 (예: 1930, 2632, 3246, 4047)' },
                   count: { type: 'INTEGER', description: '요청 대수' }
                 },
@@ -172,7 +172,7 @@ const GEMS_TOOLS = [
             siteName: { type: 'STRING', description: '현장명' },
             oldAssetNo: { type: 'STRING', description: '회수할 전자산 번호 (예: 2632-05)' },
             newEquipmentModel: { type: 'STRING', description: '신규 투입할 장비 모델명 (예: 2632, 3246)' },
-            newEquipmentFt: { type: 'STRING', description: '신규 투입 장비 높이 (예: 26ft)' },
+            newEquipmentFt: { type: 'STRING', description: '신규 투입 장비 높이' },
             exchangeDate: { type: 'STRING', description: '교환 희망 일자(일자)' },
             exchangeTime: { type: 'STRING', description: '교환 희망 시간(시분)' },
             reason: { type: 'STRING', description: '교환 사유 (예: 고장 대차, 규격 상향 등)' },
@@ -203,7 +203,7 @@ const GEMS_TOOLS = [
 ];
 
 /**
- * 🌟 로컬 규칙 기반 파서 (API 키 미설정 또는 오프라인 시 자동 폴백)
+ *  로컬 규칙 기반 파서 (API 키 미설정 또는 오프라인 시 자동 폴백)
  */
 export function parseGemsLocally(userText: string, context: GemsContextData): {
   textResponse: string;
@@ -238,7 +238,7 @@ export function parseGemsLocally(userText: string, context: GemsContextData): {
     const custMatch = context.customerNames.find(c => text.includes(c)) || '고객사';
 
     return {
-      textResponse: `[교환의뢰 완결] 회수 장비: ${oldAssetNo} ➔ 투입 장비: ${targetModel || '동급'}으로 교환의뢰를 생성했습니다.`,
+      textResponse: `[교환의뢰 완결] 회수 장비: ${oldAssetNo} 투입 장비: ${targetModel || '동급'}으로 교환의뢰를 생성했습니다.`,
       toolCall: {
         name: 'submitExchangeOrder',
         args: {
@@ -347,7 +347,7 @@ export async function sendGemsMessage(
 
   // API 키가 없으면 로컬 룰 파서로 자동 폴백 (무중단 작동)
   if (!apiKey) {
-    console.log('ℹ️ Gemini API 키 미설정 ➔ 로컬 렌탈 파서 모드로 자동 실행합니다.');
+    console.log('ℹ Gemini API 키 미설정 로컬 렌탈 파서 모드로 자동 실행합니다.');
     return parseGemsLocally(userPrompt, context);
   }
 

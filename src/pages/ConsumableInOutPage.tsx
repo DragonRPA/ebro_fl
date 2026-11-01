@@ -478,13 +478,13 @@ export const ConsumableInOutPage: React.FC = () => {
             <PackagePlus size={18} color="var(--primary)" />
             <h2 data-mid="consumable_inout-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               소모품 입출고
-            </h2>
+ </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
             <ShieldCheck size={14} style={{ color: 'var(--success)' }} />
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               구매 승인건 입고 검수, 자산/기사 1:1 귀속 출고 및 수불 감사 대장
-            </span>
+ </span>
           </div>
         </div>
 
@@ -497,7 +497,7 @@ export const ConsumableInOutPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <PackagePlus size={14} /> 소모품 입고
-            {pendingInbounds.length > 0 && (
+ {pendingInbounds.length > 0 && (
               <span style={{
                 backgroundColor: 'var(--danger)', color: '#fff', fontSize: '11px',
                 padding: '1px 6px', borderRadius: '10px', fontWeight: 700
@@ -513,7 +513,7 @@ export const ConsumableInOutPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <ArrowUpRight size={14} /> 소모품 출고
-          </button>
+ </button>
           <button
             type="button"
             className={activeTab === 'LOGS' ? 'btn-primary' : 'btn-secondary'}
@@ -521,7 +521,7 @@ export const ConsumableInOutPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <ListCollapse size={14} /> 입출고 이력
-          </button>
+ </button>
         </div>
       </div>
 
@@ -539,7 +539,7 @@ export const ConsumableInOutPage: React.FC = () => {
               </div>
               <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>
                 총 {pendingInbounds.length}건 대기
-              </span>
+ </span>
             </div>
 
             <div className="table-container" style={{ border: 'none', boxShadow: 'none', overflowX: 'auto', overflowY: 'auto', maxHeight: '350px' }}>
@@ -560,7 +560,7 @@ export const ConsumableInOutPage: React.FC = () => {
                     <tr>
                       <td colSpan={7} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                         현재 입고 대기 중인 구매 신청 건이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedPendingInbounds.map(p => {
@@ -615,7 +615,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   입고 대상 구매 신청건 *
-                </label>
+ </label>
                 <select
                   value={selectedReqId}
                   onChange={e => {
@@ -638,7 +638,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   실제 입고 수량 *
-                </label>
+ </label>
                 <input
                   type="number"
                   value={inboundQty}
@@ -653,7 +653,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '8px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   공급자 거래명세서 증빙 첨부 *
-                </label>
+ </label>
                 
                 <input
                   type="file"
@@ -670,7 +670,7 @@ export const ConsumableInOutPage: React.FC = () => {
                 {selectedFile && (
                   <div style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600 }}>
                     첨부 파일: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                  </div>
+ </div>
                 )}
 
                 {/* 무증빙 예외 체크 */}
@@ -686,7 +686,7 @@ export const ConsumableInOutPage: React.FC = () => {
                   />
                   <label htmlFor="chk_no_invoice" style={{ fontSize: '12px', color: 'var(--danger)', fontWeight: 600, cursor: 'pointer' }}>
                     거래명세서 증빙 누락 (감사 사유 입력 필수)
-                  </label>
+ </label>
                 </div>
 
                 {noInvoice && (
@@ -732,7 +732,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <h3 className="card-title" style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>소모품 정비 투입 및 현장 출고</h3>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 투입 자산 또는 담당 정비사 1:1 귀속
-              </span>
+ </span>
             </div>
 
             <form onSubmit={handleUseSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px' }}>
@@ -741,11 +741,11 @@ export const ConsumableInOutPage: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                     출고 품목 *
-                  </label>
+ </label>
                   {consumableSearchQuery.trim() && (
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                       검색 결과 {filteredConsumables.length}개
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -813,12 +813,12 @@ export const ConsumableInOutPage: React.FC = () => {
                   {targetConsumable && !filteredConsumables.some(c => c.id === targetConsumable.id) && (
                     <option key={targetConsumable.id} value={targetConsumable.id}>
                       [현재선택] {targetConsumable.modelName} (주기장 가용재고: {targetConsumable.stockQty}개)
-                    </option>
+ </option>
                   )}
                   {filteredConsumables.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.modelName} (주기장 가용재고: {c.stockQty}개 | 단가: {c.unitPrice.toLocaleString()}원)
-                    </option>
+ </option>
                   ))}
                 </select>
                 {targetConsumable && (
@@ -833,7 +833,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   출고 수량 *
-                </label>
+ </label>
                 <input
                   type="number"
                   value={useQty}
@@ -851,11 +851,11 @@ export const ConsumableInOutPage: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                       투입 대상 자산 (장비)
-                    </label>
+ </label>
                     {assetSearchQuery.trim() && (
                       <span style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 600 }}>
                         {filteredAssets.length}대
-                      </span>
+ </span>
                     )}
                   </div>
                   {/* 자산 초성/번호 검색창 */}
@@ -925,7 +925,7 @@ export const ConsumableInOutPage: React.FC = () => {
                     {filteredAssets.map(a => (
                       <option key={a.id} value={a.id}>
                         {a.assetNo} ({a.modelName})
-                      </option>
+ </option>
                     ))}
                   </select>
                 </div>
@@ -933,7 +933,7 @@ export const ConsumableInOutPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                     담당 정비사 (수령자)
-                  </label>
+ </label>
                   <select
                     value={useMechanicId}
                     onChange={e => setUseMechanicId(e.target.value)}
@@ -951,7 +951,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   사용 목적 및 정비 상세 내역
-                </label>
+ </label>
                 <input
                   type="text"
                   value={useDesc}
@@ -972,7 +972,7 @@ export const ConsumableInOutPage: React.FC = () => {
                 }}
               >
                 <ArrowUpRight size={16} /> 소모품 출고 확정 및 정비비용 반영
-              </button>
+ </button>
             </form>
           </div>
 
@@ -1001,7 +1001,7 @@ export const ConsumableInOutPage: React.FC = () => {
                         <tr>
                           <td colSpan={5} style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)' }}>
                             최근 출고 내역이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       );
                     }
@@ -1127,7 +1127,7 @@ export const ConsumableInOutPage: React.FC = () => {
                 onClick={handleExportLogs}
               >
                 <Download size={13} /> 엑셀 내보내기
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1155,7 +1155,7 @@ export const ConsumableInOutPage: React.FC = () => {
                     <tr>
                       <td colSpan={11} style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                         조회 조건에 해당하는 입출고 수불 내역이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedLogs.map((l, idx) => {
@@ -1206,7 +1206,7 @@ export const ConsumableInOutPage: React.FC = () => {
               <ShieldCheck size={18} style={{ color: 'var(--success)' }} />
               <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 수불 대차 검증 요약
-              </span>
+ </span>
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1216,19 +1216,19 @@ export const ConsumableInOutPage: React.FC = () => {
                 </div>
               )}
               <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>📥 입고 합계: </span>
+                <span style={{ color: 'var(--text-muted)' }}> 입고 합계: </span>
                 <strong style={{ color: 'var(--success)' }}>₩{auditBalance.inboundSum.toLocaleString()}</strong>
               </div>
               <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>📤 출고 합계: </span>
+                <span style={{ color: 'var(--text-muted)' }}> 출고 합계: </span>
                 <strong style={{ color: 'var(--danger)' }}>₩{auditBalance.outboundSum.toLocaleString()}</strong>
               </div>
               <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>🚚 차량불출: </span>
+                <span style={{ color: 'var(--text-muted)' }}> 차량불출: </span>
                 <strong style={{ color: 'var(--primary)' }}>₩{auditBalance.transferSum.toLocaleString()}</strong>
               </div>
               <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>🔄 주기장반납: </span>
+                <span style={{ color: 'var(--text-muted)' }}> 주기장반납: </span>
                 <strong style={{ color: 'var(--warning)' }}>₩{auditBalance.returnSum.toLocaleString()}</strong>
               </div>
             </div>

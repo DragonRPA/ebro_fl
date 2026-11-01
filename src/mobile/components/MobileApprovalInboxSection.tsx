@@ -178,7 +178,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
           *,
           approval_requests (
             id, event_code, target_table, target_record_id, status, current_step, originator_id, payload,
-            approval_rules ( event_code, event_name, required_tier, is_enabled )
+            approval_rules
           )
         `)
         .eq('approver_id', currentUser.id)
@@ -195,7 +195,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
             *,
             approval_requests (
               id, event_code, target_table, target_record_id, status, current_step, originator_id,
-              approval_rules ( event_code, event_name, required_tier, is_enabled )
+              approval_rules
             )
           `)
           .eq('approver_id', currentUser.id)
@@ -208,7 +208,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
     }
 
     if (rawData) {
-      // 🛡️ 결재선 설정에서 사용 안함(is_enabled === false)으로 설정된 항목은 수신 결재함 노출 원천 차단
+      //  결재선 설정에서 사용 안함(is_enabled === false)으로 설정된 항목은 수신 결재함 노출 원천 차단
       const activeSteps: InboxStep[] = rawData
         .filter(st => {
           const req = st.approval_requests;
@@ -273,7 +273,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
     }
     if (targetTable === 'deliveries') {
       const d = (db.deliveries || []).find(x => x.id === targetId);
-      return d ? `배차 [${d.id}] ${d.originAddress || '상차지'} ➔ ${d.destinationAddress || '하차지'}` : targetId;
+      return d ? `배차 [${d.id}] ${d.originAddress || '상차지'} ${d.destinationAddress || '하차지'}` : targetId;
     }
     if (targetTable === 'leave_requests' || targetTable === 'leave_usages') {
       const l = (db.leaveUsages || []).find(x => x.id === targetId);
@@ -521,7 +521,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                   });
                 }
                 diffLines.push(
-                  `${it.assetNo || '장비'}(${it.modelName || ''}): 월 ${oldMonthly.toLocaleString()}원(일 ${oldDaily.toLocaleString()}원) ➔ 월 ${newMonthly.toLocaleString()}원(일 ${newDaily.toLocaleString()}원)`
+                  `${it.assetNo || '장비'}(${it.modelName || ''}): 월 ${oldMonthly.toLocaleString()}원(일 ${oldDaily.toLocaleString()}원) 월 ${newMonthly.toLocaleString()}원(일 ${newDaily.toLocaleString()}원)`
                 );
               });
 
@@ -643,7 +643,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                 changeDate: new Date().toISOString().split('T')[0],
                 prevEndDate: payload?.asIs?.endDate,
                 newEndDate: parentMaxEnd,
-                description: `[결재 승인 완료] 계약 기간 ${isShortened ? '단축' : '연장'}: ${payload?.asIs?.endDate || '미정'} ➔ ${parentMaxEnd} (사유: ${payload?.reason || '승인 처리'})`,
+                description: `[결재 승인 완료] 계약 기간 ${isShortened ? '단축' : '연장'}: ${payload?.asIs?.endDate || '미정'} ${parentMaxEnd} (사유: ${payload?.reason || '승인 처리'})`,
                 createdAt: new Date().toISOString(),
               });
 
@@ -855,7 +855,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
   }, [steps, deptMode, currentUser?.id, enabledRuleMap]);
 
   // 경영진/최고결재자용 직접 결재 대기 항목
-  // 🛡️ 결재선 규칙(approval_rules)에서 해당 이벤트가 '사용(is_enabled === true)'이고 경영진 티어(6 이상)로 설정된 경우에만 노출
+  //  결재선 규칙(approval_rules)에서 해당 이벤트가 '사용(is_enabled === true)'이고 경영진 티어(6 이상)로 설정된 경우에만 노출
   const directPendingApprovals = useMemo(() => {
     if (!isExecutiveOrAdmin || deptMode !== 'EXECUTIVE') return [];
     const stepTargetIds = new Set(steps.map(s => s.approval_requests?.target_record_id).filter(Boolean));
@@ -1002,7 +1002,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
           <div>
             <span className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
               수신 결재 대기함
-            </span>
+ </span>
           </div>
         </div>
         <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
@@ -1011,7 +1011,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
             style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             {totalPendingCount}건 대기
-          </span>
+ </span>
           <button
             type="button"
             onClick={fetchInbox}
@@ -1027,7 +1027,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
       {totalPendingCount === 0 ? (
         <div className="p-5 rounded-xl bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-400">
           현재 결재 대기 중인 품의 건이 없습니다.
-        </div>
+ </div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {/* 1. 전자결재 스텝 (approval_steps) */}
@@ -1088,7 +1088,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
 
                     {(payload.actionType === 'CONTRACT_EXTEND' || payload.actionType === 'CONTRACT_SHORTEN') && (
                       <div>
-                        • 종료일 변경: <span className="text-slate-300">{payload.asIs?.endDate || '미정'}</span> ➔{' '}
+                        • 종료일 변경: <span className="text-slate-300">{payload.asIs?.endDate || '미정'}</span> {' '}
                         <span className="text-sky-300 font-black">{payload.toBe?.endDate || '미정'}</span>
                       </div>
                     )}
@@ -1096,16 +1096,16 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                     {payload.actionType === 'CONTRACT_DISCOUNT' && Array.isArray(payload.toBe?.items) && (
                       <div className="flex flex-col gap-1">
                         <div>
-                          • 월 렌탈료 합계: {(Number(payload.asIs?.totalOldMonthlyFee) || 0).toLocaleString()}원 ➔{' '}
+                          • 월 렌탈료 합계: {(Number(payload.asIs?.totalOldMonthlyFee) || 0).toLocaleString()}원 {' '}
                           <span className="text-sky-300 font-black">
                             {(Number(payload.toBe?.totalNewMonthlyFee) || 0).toLocaleString()}원
-                          </span>
+ </span>
                         </div>
                         {payload.toBe.items.slice(0, 4).map((it: any, idx: number) => (
                           <div key={idx} className="text-[10px] text-slate-300 font-mono">
-                            - {it.assetNo}({it.modelName}): 월 {(Number(it.oldMonthlyRentalFee) || 0).toLocaleString()} ➔{' '}
+                            - {it.assetNo}({it.modelName}): 월 {(Number(it.oldMonthlyRentalFee) || 0).toLocaleString()} {' '}
                             {(Number(it.newMonthlyRentalFee) || 0).toLocaleString()}원
-                          </div>
+ </div>
                         ))}
                       </div>
                     )}
@@ -1113,13 +1113,13 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                     {payload.actionType === 'CONTRACT_MODIFY' && (
                       <div className="flex flex-col gap-1">
                         <div>
-                          • 개시일: {payload.asIs?.unloadingDate || '-'} ➔{' '}
+                          • 개시일: {payload.asIs?.unloadingDate || '-'} {' '}
                           <span className="text-sky-300 font-bold">{payload.toBe?.unloadingDate || '-'}</span>
                         </div>
                         {(payload.toBe?.equipments || []).map((eq: any, i: number) => (
                           <div key={i} className="text-[10px] text-slate-300 font-mono">
                             - {eq.modelName} × {eq.qty}대 (월 {(Number(eq.monthlyRate) || 0).toLocaleString()}원)
-                          </div>
+ </div>
                         ))}
                       </div>
                     )}
@@ -1131,7 +1131,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                     {payload.actionType === 'LEAVE_APPLICATION' && (
                       <div>
                         • 신청자: {payload.toBe?.userName || '-'} / {payload.toBe?.leaveType || '-'} ({payload.toBe?.startDate || '-'} ~ {payload.toBe?.endDate || '-'}, {payload.toBe?.usedDays || 0}일)
-                      </div>
+ </div>
                     )}
 
                     {(payload.actionType === 'DISPATCH_PAYMENT' ||
@@ -1177,9 +1177,9 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                             style={{ whiteSpace: 'nowrap' }}
                           >
                             {idx + 1}차 {approverName}{' '}
-                            {st.status === 'APPROVED' ? '✓' : st.status === 'REJECTED' ? '✗' : isCurrentActive ? '심사중' : '대기'}
+                            {st.status === 'APPROVED' ? '' : st.status === 'REJECTED' ? '' : isCurrentActive ? '심사중' : '대기'}
                           </span>
-                          {idx < allSteps.length - 1 && <span className="text-slate-500">➔</span>}
+                          {idx < allSteps.length - 1 && <span className="text-slate-500"></span>}
                         </React.Fragment>
                       );
                     })}
@@ -1210,7 +1210,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         취소
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => handleStepAction(s.id, req.id, 'REJECTED')}
@@ -1232,7 +1232,7 @@ export const MobileApprovalInboxSection: React.FC<MobileApprovalInboxSectionProp
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         반려
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => handleStepAction(s.id, req.id, 'APPROVED')}

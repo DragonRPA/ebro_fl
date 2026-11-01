@@ -130,14 +130,14 @@ export const ConsumableStockPage: React.FC = () => {
   const [vehicleStockSearch, setVehicleStockSearch] = useState('');
   const [selectedMechanicFilter, setSelectedMechanicFilter] = useState('ALL');
 
-  // 주기장 ➔ 차량 불출 모달
+  // 주기장  차량 불출 모달
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferMechanicId, setTransferMechanicId] = useState('');
   const [transferConsumableId, setTransferConsumableId] = useState('');
   const [transferQty, setTransferQty] = useState(1);
   const [transferMemo, setTransferMemo] = useState('');
 
-  // 차량 ➔ 주기장 반납 모달
+  // 차량  주기장 반납 모달
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnMechanicId, setReturnMechanicId] = useState('');
   const [returnConsumableId, setReturnConsumableId] = useState('');
@@ -465,7 +465,7 @@ export const ConsumableStockPage: React.FC = () => {
     }
   };
 
-  // --- 주기장 ➔ 차량 불출 핸들러 ---
+  // --- 주기장  차량 불출 핸들러 ---
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transferMechanicId || !transferConsumableId || transferQty <= 0) {
@@ -491,7 +491,7 @@ export const ConsumableStockPage: React.FC = () => {
     }
   };
 
-  // --- 차량 ➔ 주기장 반납 핸들러 ---
+  // --- 차량  주기장 반납 핸들러 ---
   const handleReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!returnMechanicId || !returnConsumableId || returnQty <= 0) {
@@ -649,7 +649,7 @@ export const ConsumableStockPage: React.FC = () => {
           <Boxes size={18} color="var(--primary)" />
           <h2 data-mid="consumable_stock-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
             소모품 재고 관리
-          </h2>
+ </h2>
         </div>
 
         {/* 탭 버튼군 (무수식어 건조 표준) */}
@@ -661,7 +661,7 @@ export const ConsumableStockPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <Boxes size={14} /> 주기장 재고
-          </button>
+ </button>
           <button
             type="button"
             className={activeTab === 'VEHICLE_STOCK' ? 'btn-primary' : 'btn-secondary'}
@@ -669,7 +669,7 @@ export const ConsumableStockPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <Truck size={14} /> 차량 재고
-          </button>
+ </button>
           <button
             type="button"
             className={activeTab === 'COLLECTED_PARTS' ? 'btn-primary' : 'btn-secondary'}
@@ -677,7 +677,7 @@ export const ConsumableStockPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <Archive size={14} /> 고품 관리
-            {collectedPartsSummary.uncompletedCount > 0 && (
+ {collectedPartsSummary.uncompletedCount > 0 && (
               <span style={{
                 backgroundColor: '#7c3aed', color: '#fff', fontSize: '11px',
                 padding: '1px 6px', borderRadius: '10px', fontWeight: 700
@@ -693,7 +693,7 @@ export const ConsumableStockPage: React.FC = () => {
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <CheckSquare size={14} /> 재고 실사
-            {draftAuditsCount > 0 && (
+ {draftAuditsCount > 0 && (
               <span style={{
                 backgroundColor: 'var(--warning)', color: '#fff', fontSize: '11px',
                 padding: '1px 6px', borderRadius: '10px', fontWeight: 700
@@ -716,13 +716,13 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>총 관리 품목 수</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)' }}>
                 {stockSummary.hqTotalKinds}종
-              </div>
+ </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 보유 수량</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
                 {stockSummary.hqTotalQty.toLocaleString()}개
-              </div>
+ </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 재고 평가액</div>
@@ -759,7 +759,7 @@ export const ConsumableStockPage: React.FC = () => {
                     onClick={openCreateMaster}
                   >
                     <Plus size={13} /> 품목 마스터 등록
-                  </button>
+ </button>
                 )}
                 <button
                   type="button"
@@ -767,7 +767,7 @@ export const ConsumableStockPage: React.FC = () => {
                   onClick={handleExportStock}
                 >
                   <Download size={13} /> 주기장 재고 엑셀
-                </button>
+ </button>
               </div>
             </div>
           </div>
@@ -799,7 +799,7 @@ export const ConsumableStockPage: React.FC = () => {
                         <tr>
                           <td colSpan={10} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                             등록된 소모품 품목이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       );
                     }
@@ -898,8 +898,8 @@ export const ConsumableStockPage: React.FC = () => {
                       }}
                       style={{ padding: '7px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <ArrowUpRight size={14} /> 주기장 ➔ 차량 불출
-                    </button>
+                      <ArrowUpRight size={14} /> 주기장 차량 불출
+ </button>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -911,8 +911,8 @@ export const ConsumableStockPage: React.FC = () => {
                       }}
                       style={{ padding: '7px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <ArrowDownLeft size={14} /> 차량 ➔ 주기장 반납
-                    </button>
+                      <ArrowDownLeft size={14} /> 차량 주기장 반납
+ </button>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -926,7 +926,7 @@ export const ConsumableStockPage: React.FC = () => {
                       style={{ padding: '7px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
                       <ArrowRightLeft size={14} /> 차량 간 이동
-                    </button>
+ </button>
                   </>
                 )}
                 <button
@@ -935,7 +935,7 @@ export const ConsumableStockPage: React.FC = () => {
                   onClick={handleExportVehicleStock}
                 >
                   <Download size={13} /> 차량 재고 엑셀
-                </button>
+ </button>
               </div>
             </div>
           </div>
@@ -965,7 +965,7 @@ export const ConsumableStockPage: React.FC = () => {
                         <tr>
                           <td colSpan={8} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                             차량에 적재된 이동 재고 내역이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       );
                     }
@@ -1004,7 +1004,7 @@ export const ConsumableStockPage: React.FC = () => {
                                   style={{ padding: '2px 6px', fontSize: '11px' }}
                                 >
                                   추가불출
-                                </button>
+ </button>
                                 <button
                                   type="button"
                                   className="btn-secondary"
@@ -1017,7 +1017,7 @@ export const ConsumableStockPage: React.FC = () => {
                                   style={{ padding: '2px 6px', fontSize: '11px' }}
                                 >
                                   주기장반납
-                                </button>
+ </button>
                               </div>
                             )}
                           </td>
@@ -1127,7 +1127,7 @@ export const ConsumableStockPage: React.FC = () => {
                         <tr>
                           <td colSpan={10} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
                             수거된 고품 내역이 없습니다. (차량 반납 시 '고품' 체크 시 자동 등록됩니다)
-                          </td>
+ </td>
                         </tr>
                       );
                     }
@@ -1170,7 +1170,7 @@ export const ConsumableStockPage: React.FC = () => {
                                     style={{ padding: '2px 6px', fontSize: '11px' }}
                                   >
                                     착수
-                                  </button>
+ </button>
                                 )}
                                 <button
                                   type="button"
@@ -1179,7 +1179,7 @@ export const ConsumableStockPage: React.FC = () => {
                                   style={{ padding: '2px 8px', fontSize: '11px' }}
                                 >
                                   조치완료
-                                </button>
+ </button>
                               </div>
                             )}
                           </td>
@@ -1244,7 +1244,7 @@ export const ConsumableStockPage: React.FC = () => {
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 14px', fontSize: '13px' }}
                 >
                   <Plus size={14} /> 새 실사 전표 생성
-                </button>
+ </button>
               )}
             </div>
 
@@ -1252,14 +1252,14 @@ export const ConsumableStockPage: React.FC = () => {
             <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
               <div style={{ fontSize: '11.5px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-secondary)' }}>
                 실사 전표 목록 ({stocktakingAudits.length}건)
-              </div>
+ </div>
               <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '6px' }}>
                 {(() => {
                   if (filteredAudits.length === 0) {
                     return (
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '10px 0' }}>
                         조건에 맞는 실사 전표가 없습니다. [새 실사 전표 생성] 버튼을 눌러 실사를 시작하세요.
-                      </div>
+ </div>
                     );
                   }
 
@@ -1289,7 +1289,7 @@ export const ConsumableStockPage: React.FC = () => {
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                           {a.auditDate} | {(auditItemsByAuditIdMap.get(a.id) || []).length}개 품목
-                        </div>
+ </div>
                       </div>
                     );
                   });
@@ -1304,7 +1304,7 @@ export const ConsumableStockPage: React.FC = () => {
               return (
                 <div className="card" style={{ margin: 0, padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   상단에서 실사 전표를 선택하면 전산 재고 vs 실사 수량 대사 작업대가 표시됩니다.
-                </div>
+ </div>
               );
             }
 
@@ -1318,10 +1318,10 @@ export const ConsumableStockPage: React.FC = () => {
                     <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <FileCheck size={16} style={{ color: 'var(--primary)' }} />
                       전표 {currentAudit.auditNo} 실사 검증 대장
-                    </h3>
+ </h3>
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       전산재고 ↔ 실사수량 1:1 인라인 검증 및 차이 사유 확정
-                    </span>
+ </span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1340,7 +1340,7 @@ export const ConsumableStockPage: React.FC = () => {
                         style={{ padding: '5px 10px', fontSize: '12px', color: 'var(--danger)' }}
                       >
                         전표 취소
-                      </button>
+ </button>
                     )}
                   </div>
                 </div>
@@ -1366,7 +1366,7 @@ export const ConsumableStockPage: React.FC = () => {
                         <tr>
                           <td colSpan={10} style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)' }}>
                             실사 대상 품목이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       ) : (
                         currentItems.map((item, idx) => {
@@ -1467,7 +1467,7 @@ export const ConsumableStockPage: React.FC = () => {
                   <div style={{ fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span><strong>실물 총액:</strong> ₩{currentAudit.totalActualAmount.toLocaleString()}원</span>
                     <span>=</span>
-                    <span>💻 <strong>전산 총액:</strong> ₩{currentAudit.totalSystemAmount.toLocaleString()}원</span>
+                    <span> <strong>전산 총액:</strong> ₩{currentAudit.totalSystemAmount.toLocaleString()}원</span>
                     <span>+</span>
                     <span><strong>실사 차액:</strong> ₩{currentAudit.totalDiffAmount.toLocaleString()}원</span>
                   </div>
@@ -1480,7 +1480,7 @@ export const ConsumableStockPage: React.FC = () => {
                       style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <CheckCircle2 size={16} /> 실사 확정 및 재고 강제 반영
-                    </button>
+ </button>
                   )}
                 </div>
               </div>
@@ -1490,7 +1490,7 @@ export const ConsumableStockPage: React.FC = () => {
       )}
 
       {/* ──────────────────────────────────────────────────────────────────────── */}
-      {/* 주기장 ➔ 차량 불출 모달 */}
+      {/* 주기장  차량 불출 모달 */}
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {showTransferModal && (
         <div style={{
@@ -1500,8 +1500,8 @@ export const ConsumableStockPage: React.FC = () => {
           <form onSubmit={handleTransferSubmit} className="card" style={{ width: '90%', maxWidth: '450px', backgroundColor: 'var(--bg-card)', margin: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ArrowUpRight size={16} style={{ color: 'var(--primary)' }} /> 주기장 ➔ 차량 소모품 불출
-              </h3>
+                <ArrowUpRight size={16} style={{ color: 'var(--primary)' }} /> 주기장 차량 소모품 불출
+ </h3>
               <button type="button" onClick={() => setShowTransferModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -1525,7 +1525,7 @@ export const ConsumableStockPage: React.FC = () => {
                   {consumables.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.modelName} (주기장재고: {c.stockQty}개 | ₩{c.unitPrice.toLocaleString()})
-                    </option>
+ </option>
                   ))}
                 </select>
               </div>
@@ -1556,10 +1556,10 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowTransferModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
                   불출 완료
-                </button>
+ </button>
               </div>
             </div>
           </form>
@@ -1567,7 +1567,7 @@ export const ConsumableStockPage: React.FC = () => {
       )}
 
       {/* ──────────────────────────────────────────────────────────────────────── */}
-      {/* 차량 ➔ 주기장 반납 모달 (고품 격리 토글 포함) */}
+      {/* 차량  주기장 반납 모달 (고품 격리 토글 포함) */}
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {showReturnModal && (
         <div style={{
@@ -1577,8 +1577,8 @@ export const ConsumableStockPage: React.FC = () => {
           <form onSubmit={handleReturnSubmit} className="card" style={{ width: '90%', maxWidth: '450px', backgroundColor: 'var(--bg-card)', margin: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ArrowDownLeft size={16} style={{ color: 'var(--warning)' }} /> 차량 소모품 ➔ 주기장 반납
-              </h3>
+                <ArrowDownLeft size={16} style={{ color: 'var(--warning)' }} /> 차량 소모품 주기장 반납
+ </h3>
               <button type="button" onClick={() => setShowReturnModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -1658,10 +1658,10 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowReturnModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
                   반납 완료
-                </button>
+ </button>
               </div>
             </div>
           </form>
@@ -1680,7 +1680,7 @@ export const ConsumableStockPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <ArrowRightLeft size={16} style={{ color: 'var(--primary)' }} /> 정비 차량 간 소모품 이동
-              </h3>
+ </h3>
               <button type="button" onClick={() => setShowP2PModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -1744,10 +1744,10 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowP2PModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
                   이동 완료
-                </button>
+ </button>
               </div>
             </div>
           </form>
@@ -1835,7 +1835,7 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowMasterModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Register" type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
                   {masterEditingId ? '수정 완료' : '등록 완료'}
                 </button>
@@ -1905,10 +1905,10 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowCreateAuditModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
                   실사 전표 생성
-                </button>
+ </button>
               </div>
             </div>
           </form>

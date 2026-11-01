@@ -56,7 +56,7 @@ async function generateKoreanSpecSheetPdf(spec: FlModelTechnicalSpec): Promise<v
 
   ctx.fillStyle = '#60A5FA';
   ctx.font = 'bold 22px "Pretendard", "Malgun Gothic", sans-serif';
-  ctx.fillText(`${spec.manufacturerName}  |  ${spec.originCountry} 공식 기술문서 아카이브`, 60, 52);
+  ctx.fillText(`${spec.manufacturerName} | ${spec.originCountry} 공식 기술문서 아카이브`, 60, 52);
 
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 38px "Pretendard", "Malgun Gothic", sans-serif';
@@ -64,7 +64,7 @@ async function generateKoreanSpecSheetPdf(spec: FlModelTechnicalSpec): Promise<v
 
   ctx.fillStyle = '#CBD5E1';
   ctx.font = '500 18px "Pretendard", "Malgun Gothic", sans-serif';
-  ctx.fillText(`차종구분: ${spec.equipmentClass}   |   동력방식: ${spec.powerType}   |   문서코드: ${spec.id}`, 60, 140);
+  ctx.fillText(`차종구분: ${spec.equipmentClass} | 동력방식: ${spec.powerType} | 문서코드: ${spec.id}`, 60, 140);
 
   let y = 215;
 
@@ -213,7 +213,7 @@ async function generateKoreanSpecSheetPdf(spec: FlModelTechnicalSpec): Promise<v
   ctx.fillStyle = '#64748B';
   ctx.font = '500 15px "Pretendard", "Malgun Gothic", sans-serif';
   ctx.fillText(
-    `발급일시: ${new Date().toISOString().split('T')[0]}   |   지게차 유통·기술문서 통합 아카이브 공식 출력물`,
+    `발급일시: ${new Date().toISOString().split('T')[0]} | 지게차 유통·기술문서 통합 아카이브 공식 출력물`,
     60,
     height - 40
   );
@@ -480,8 +480,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
           <h2 style={{ margin: 0, fontSize: '19px', fontWeight: 900, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <BookOpen size={20} color="#2563EB" />
-            제조사 공식 제원 · 매뉴얼 아카이브
-          </h2>
+            제원 · 매뉴얼 보관함
+ </h2>
 
           <div style={{ display: 'inline-flex', backgroundColor: '#E2E8F0', padding: '3px', borderRadius: '8px', gap: '3px' }}>
             <button
@@ -499,8 +499,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 color: activeTab === 'MODELS' ? '#1E40AF' : '#475569'
               }}
             >
-              1. 제조사·모델별 제원 및 설명서 ({FL_TECHNICAL_ARCHIVE.length}종)
-            </button>
+              모델별 제원 ({FL_TECHNICAL_ARCHIVE.length}종)
+ </button>
             <button
               type="button"
               onClick={() => setActiveTab('COMPARE')}
@@ -516,8 +516,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 color: activeTab === 'COMPARE' ? '#1E40AF' : '#475569'
               }}
             >
-              2. 모델 간 상세 스펙 비교표 ({compareIds.length}종 선택)
-            </button>
+              제원 비교 ({compareIds.length}종)
+ </button>
             <button
               type="button"
               onClick={() => setActiveTab('DOCUMENTS')}
@@ -533,8 +533,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 color: activeTab === 'DOCUMENTS' ? '#1E40AF' : '#475569'
               }}
             >
-              3. 클라우드 공식문서 보관함 ({r2Files.length || allDocuments.length}건)
-            </button>
+              문서 목록 ({r2Files.length || allDocuments.length}건)
+ </button>
           </div>
         </div>
 
@@ -559,8 +559,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
             }}
           >
             <Download size={14} />
-            제원 아카이브 엑셀 내보내기
-          </button>
+            엑셀 내보내기
+ </button>
           <button
             type="button"
             onClick={() => generateKoreanSpecSheetPdf(selectedModel)}
@@ -581,7 +581,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
           >
             <Printer size={14} />
             선택모델 한국어 제원·점검표 PDF 발급
-          </button>
+ </button>
         </div>
       </div>
 
@@ -742,7 +742,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       >
                         {isCompared ? <CheckSquare size={12} /> : <Square size={12} />}
                         비교
-                      </button>
+ </button>
                     </div>
 
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -759,7 +759,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 우측: 선택 모델 360도 기술제원 & 공식문서 도시에 (헌장 3.6 유형 A) */}
+          {/* 우측: 선택 모델 기술제원 및 공식문서 */}
           <div
             style={{
               backgroundColor: 'var(--bg-card)',
@@ -820,7 +820,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                   >
                     <Eye size={14} />
                     원본 카탈로그·매뉴얼 열람
-                  </button>
+ </button>
                 )}
                 <button
                   type="button"
@@ -842,7 +842,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 >
                   <Download size={14} />
                   한국어 공식 제원표 PDF 다운로드
-                </button>
+ </button>
               </div>
             </div>
 
@@ -851,7 +851,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
               <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <FileText size={15} color="#2563EB" />
                 1. 아카이브 수록 공식 문서 (원본 브로슈어 · 오퍼레이터 매뉴얼 · 제원표)
-              </div>
+ </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {selectedModel.documents.map(doc => (
                   <div
@@ -877,7 +877,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '12px', color: '#475569', marginBottom: '4px' }}>{doc.summary}</div>
                       <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>
-                        문서번호: {doc.docNo}  |  언어: {doc.language}  |  분량: {doc.pageCount}쪽 ({doc.fileSizeLabel})  |  발행일: {doc.issuedDate}
+                        문서번호: {doc.docNo} | 언어: {doc.language} | 분량: {doc.pageCount}쪽 ({doc.fileSizeLabel}) | 발행일: {doc.issuedDate}
                       </div>
                     </div>
 
@@ -908,7 +908,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       >
                         <Eye size={13} />
                         미리보기
-                      </button>
+ </button>
                       <a
                         href={doc.r2Url}
                         target="_blank"
@@ -929,7 +929,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       >
                         <Download size={13} />
                         원본 PDF 다운로드
-                      </a>
+ </a>
                     </div>
                   </div>
                 ))}
@@ -941,7 +941,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
               <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Layers size={15} color="#2563EB" />
                 2. 상세 기술제원 (하중 · 마스트 · 치수 · 주행성능 · 동력계)
-              </div>
+ </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                 {[
                   { label: '정격 적재하중', value: `${selectedModel.ratedCapacityKg.toLocaleString()} kg` },
@@ -996,7 +996,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 <div style={{ fontSize: '13px', fontWeight: 900, color: '#166534', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ShieldCheck size={15} />
                   3. 안전 사양 및 운전자 일일점검 수칙
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '12px', color: '#14532D', fontWeight: 600 }}>
                   {selectedModel.safetyFeatures.map((sf, idx) => (
                     <div key={`sf-${idx}`}>• [안전] {sf}</div>
@@ -1011,7 +1011,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 <div style={{ fontSize: '13px', fontWeight: 900, color: '#92400E', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Wrench size={15} />
                   4. 가동시간별 예방정비 주기 및 호환부품
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '12px', color: '#78350F', fontWeight: 600 }}>
                   {selectedModel.periodicMaintenance.map((pm, idx) => (
                     <div key={`pm-${idx}`}>• {pm}</div>
@@ -1021,7 +1021,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       <div style={{ fontWeight: 800, marginBottom: '4px' }}>[재고 연동 호환 부품·어태치먼트]</div>
                       {selectedModel.compatibleParts.map(cp => (
                         <div key={cp.partCode} style={{ fontSize: '11.5px', color: '#92400E' }}>
-                          - [{cp.partCode}] {cp.partName} ({cp.replacementCycle})
+                          - [{cp.partCode}] {cp.partName} · {cp.replacementCycle}
                         </div>
                       ))}
                     </div>
@@ -1058,7 +1058,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {active ? '✓ ' : '+ '}
+                    {active ? '[선택] ' : '+ '}
                     {m.manufacturerName} {m.modelName}
                   </button>
                 );
@@ -1072,7 +1072,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'left', width: '180px', whiteSpace: 'nowrap' }}>비교 제원 항목</th>
                 {comparedModels.map(m => (
                   <th key={m.id} style={{ padding: '10px 12px', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap' }}>
-                    <div style={{ fontSize: '11px', color: '#93C5FD' }}>{m.manufacturerName} ({m.originCountry})</div>
+                    <div style={{ fontSize: '11px', color: '#93C5FD' }}>{m.manufacturerName} · {m.originCountry}</div>
                     <div style={{ fontSize: '14px', fontWeight: 900 }}>{m.modelName}</div>
                   </th>
                 ))}
@@ -1082,13 +1082,13 @@ export const ForkliftDocArchivePage: React.FC = () => {
               {[
                 { label: '시리즈명', render: (m: FlModelTechnicalSpec) => m.seriesName },
                 { label: '차종 / 동력방식', render: (m: FlModelTechnicalSpec) => `${m.equipmentClass} / ${m.powerType}` },
-                { label: '정격 적재하중', render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString()} kg (하중중심 ${m.loadCenterMm}mm)` },
+                { label: '정격 적재하중', render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString()} kg · 하중중심 ${m.loadCenterMm} mm` },
                 { label: '표준 / 최대 인상높이', render: (m: FlModelTechnicalSpec) => `${m.standardLiftHeightMm.toLocaleString()} mm / ${m.maxOptionLiftHeightMm.toLocaleString()} mm` },
                 { label: '포크 규격', render: (m: FlModelTechnicalSpec) => `${m.forkDimensionsMm} mm` },
                 { label: '차체 치수 (전장×전폭×전고)', render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
                 { label: '최소 회전반경', render: (m: FlModelTechnicalSpec) => `${m.turningRadiusMm.toLocaleString()} mm` },
                 { label: '직각 적재 통로폭', render: (m: FlModelTechnicalSpec) => `${m.aisleWidth1000x1200Mm.toLocaleString()} mm` },
-                { label: '주행속도 / 인상속도', render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h  |  ${m.liftingSpeedMms} mm/s` },
+                { label: '주행속도 / 인상속도', render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h | ${m.liftingSpeedMms} mm/s` },
                 { label: '최대 등판능력', render: (m: FlModelTechnicalSpec) => `${m.gradeabilityPercent} %` },
                 { label: '장비 자중', render: (m: FlModelTechnicalSpec) => `${m.serviceWeightKg.toLocaleString()} kg` },
                 { label: '배터리 / 엔진 사양', render: (m: FlModelTechnicalSpec) => m.powerSpecDetail },
@@ -1131,11 +1131,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <FolderOpen size={18} color="#1D4ED8" />
               <span style={{ fontSize: '13px', fontWeight: 900, color: '#1E3A8A' }}>
-                클라우드 공식문서 아카이브 보관소 (R2 버킷: FL_doc/)
-              </span>
-              <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>
-                제조사 카탈로그, 오퍼레이터 매뉴얼, 형식승인서, 통관/인증 문서를 모델별로 영구 보관합니다.
-              </span>
+                문서 보관함
+ </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1190,7 +1187,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
               >
                 <RefreshCw size={13} />
                 새로고침
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1235,7 +1232,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                           }}
                         >
                           열람
-                        </button>
+ </button>
                         <a
                           href={doc.r2Url}
                           target="_blank"
@@ -1252,7 +1249,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                           }}
                         >
                           다운로드
-                        </a>
+ </a>
                       </div>
                     </td>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
@@ -1269,18 +1266,18 @@ export const ForkliftDocArchivePage: React.FC = () => {
                     </td>
                     <td style={{ padding: '9px 12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>{doc.docNo}</td>
                     <td style={{ padding: '9px 12px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-                      {doc.pageCount}쪽 ({doc.fileSizeLabel})
+                      {doc.pageCount}쪽 · {doc.fileSizeLabel}
                     </td>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#059669', fontWeight: 800, fontSize: '11.5px' }}>
                         <CheckCircle2 size={13} />
-                        클라우드 아카이빙 완료
-                      </span>
+                        보관 완료
+ </span>
                     </td>
                   </tr>
                 ))}
 
-                {/* R2에 추가 업로드된 파일 노출 */}
+                {/* 추가 업로드된 파일 노출 */}
                 {r2Files.map(rf => (
                   <tr key={rf.key} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
@@ -1300,7 +1297,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                           }}
                         >
                           열람
-                        </button>
+ </button>
                         <a
                           href={rf.url}
                           target="_blank"
@@ -1315,23 +1312,23 @@ export const ForkliftDocArchivePage: React.FC = () => {
                             textDecoration: 'none'
                           }}
                         >
-                          클라우드 원본
-                        </a>
+                          원본 다운로드
+ </a>
                       </div>
                     </td>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
                       <span style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: '#ECFDF5', color: '#047857', fontSize: '11px', fontWeight: 800 }}>
-                        클라우드 R2 보관본
-                      </span>
+                        보관본
+ </span>
                     </td>
-                    <td style={{ padding: '9px 12px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>FL_doc 아카이브</td>
+                    <td style={{ padding: '9px 12px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>문서 보관함</td>
                     <td style={{ padding: '9px 12px', fontWeight: 800, color: '#0F172A' }}>{rf.name}</td>
                     <td style={{ padding: '9px 12px', color: '#64748B', whiteSpace: 'nowrap' }}>{rf.key}</td>
                     <td style={{ padding: '9px 12px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
                       {(rf.size / 1024).toFixed(0)} KB
-                    </td>
+ </td>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                      <span style={{ color: '#059669', fontWeight: 800, fontSize: '11.5px' }}>R2 영구보존됨</span>
+                      <span style={{ color: '#059669', fontWeight: 800, fontSize: '11.5px' }}>보관됨</span>
                     </td>
                   </tr>
                 ))}
@@ -1393,7 +1390,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 >
                   <ExternalLink size={13} />
                   새 창에서 원본 열기 / 다운로드
-                </a>
+ </a>
                 <button
                   type="button"
                   onClick={() => setPreviewDoc(null)}

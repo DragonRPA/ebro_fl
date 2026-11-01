@@ -186,11 +186,11 @@ class JobNotificationService {
     const now = ctx.currentTime;
 
     if (chimeType === 'DING_DONG') {
-      // 2톤 딩~동 (주기장/공장 고가청도 주파수: 784Hz(G5) ➔ 523Hz(C5))
+      // 2톤 딩~동 (주기장/공장 고가청도 주파수: 784Hz(G5)  523Hz(C5))
       this.playSineTone(ctx, 784.0, now, 0.45, volLevel);
       this.playSineTone(ctx, 523.25, now + 0.35, 0.85, volLevel);
     } else if (chimeType === 'HARMONIC') {
-      // 3톤 하모닉 (C5 ➔ E5 ➔ G5)
+      // 3톤 하모닉 (C5  E5  G5)
       this.playSineTone(ctx, 523.25, now, 0.3, volLevel * 0.9);
       this.playSineTone(ctx, 659.25, now + 0.15, 0.3, volLevel * 0.9);
       this.playSineTone(ctx, 783.99, now + 0.30, 0.6, volLevel);

@@ -208,7 +208,7 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
             <div>
               <h2 className="text-base font-semibold text-white tracking-tight flex items-center gap-2">
                 명함 / 이메일 담당자 자동 등록
-                {step === 'RESULT' && (
+ {step === 'RESULT' && (
                   <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${
                     matchedCustomer 
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
@@ -256,15 +256,15 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
                 </div>
                 <p className="text-base font-medium text-white mb-1">
                   명함 이미지 또는 이메일 캡처 선택
-                </p>
+ </p>
                 <p className="text-xs text-slate-400 max-w-sm mb-4">
                   드래그 앤 드롭으로 간편하게 업로드하세요.
-                </p>
+ </p>
 
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors">
                     파일 선택
-                  </span>
+ </span>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -273,8 +273,8 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
                     }}
                     className="sm:hidden px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
                   >
-                    📷 촬영
-                  </button>
+                     촬영
+ </button>
                 </div>
 
                 <input
@@ -327,7 +327,7 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
                   className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-700 transition-colors shrink-0 cursor-pointer"
                 >
                   재업로드
-                </button>
+ </button>
               </div>
 
               <div className="space-y-3.5">
@@ -337,7 +337,7 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
                     {matchedCustomer ? (
                       <div className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-xs text-white opacity-80 cursor-not-allowed">
                         {matchedCustomer.name} (기존 등록됨)
-                      </div>
+ </div>
                     ) : (
                       <input
                         type="text"
@@ -403,7 +403,7 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
               className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors"
             >
               취소
-            </button>
+ </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
@@ -412,11 +412,11 @@ export const ContactCardOcrModal: React.FC<ContactCardOcrModalProps> = ({
               {isSaving ? (
                 <>
                   <RefreshCw size={14} className="animate-spin" /> 저장 중...
-                </>
+ </>
               ) : (
                 <>
                   <CheckCircle2 size={14} /> 최종 등록
-                </>
+ </>
               )}
             </button>
           </div>

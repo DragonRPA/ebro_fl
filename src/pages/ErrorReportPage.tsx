@@ -434,8 +434,8 @@ export const ErrorReportPage: React.FC = () => {
           <div>
             <h2 data-mid="error_report-header" style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>오류 신고</h2>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              등록 ➔ 접수 ➔ 완료 3단계 처리 파이프라인 및 증빙 파일 첨부
-            </div>
+              등록 접수 완료 3단계 처리 파이프라인 및 증빙 파일 첨부
+ </div>
           </div>
         </div>
 
@@ -635,7 +635,7 @@ export const ErrorReportPage: React.FC = () => {
           >
             <Download size={14} />
             엑셀 내보내기
-          </button>
+ </button>
 
           <button
             data-uia="btn-open-report-modal"
@@ -659,7 +659,7 @@ export const ErrorReportPage: React.FC = () => {
           >
             <Plus size={15} />
             신고 등록
-          </button>
+ </button>
         </div>
       </div>
 
@@ -694,7 +694,7 @@ export const ErrorReportPage: React.FC = () => {
               <tr>
                 <td colSpan={12} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
                   등록된 오류 신고 내역이 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               sortedReports.map(r => (
@@ -723,8 +723,8 @@ export const ErrorReportPage: React.FC = () => {
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      상세 ➔
-                    </button>
+                      상세 
+ </button>
                   </td>
                   <td style={{ padding: '0 12px', whiteSpace: 'nowrap' }}>{getStatusBadge(r.status)}</td>
                   <td style={{ padding: '0 12px', whiteSpace: 'nowrap', fontFamily: 'monospace', fontWeight: 600 }}>{r.reportNo}</td>
@@ -961,10 +961,10 @@ export const ErrorReportPage: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       첨부 파일 (스크린샷 캡처 이미지, 엑셀, 문서 등)
-                    </label>
+ </label>
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
-                      💡 화면 캡처 후 이 창에서 바로 Ctrl+V 로 붙여넣기 가능
-                    </span>
+                       화면 캡처 후 이 창에서 바로 Ctrl+V 로 붙여넣기 가능
+ </span>
                   </div>
 
                   {/* 드래그앤드롭 영역 */}
@@ -1000,10 +1000,10 @@ export const ErrorReportPage: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         파일을 드래그하여 놓거나 클릭하여 선택
-                      </div>
+ </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                        지원 형식: PNG, JPG, WebP 캡처 이미지 / XLSX, XLS, CSV 엑셀 / PDF, TXT (최대 15MB)
-                      </div>
+                        지원 형식: PNG, JPG, WebP 캡처 이미지 / XLSX, XLS, CSV 엑셀 / PDF, TXT
+ </div>
                     </div>
                   </div>
 
@@ -1095,7 +1095,7 @@ export const ErrorReportPage: React.FC = () => {
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   data-uia="btn-submit-report"
                   data-hs-trigger="Register"
@@ -1113,7 +1113,7 @@ export const ErrorReportPage: React.FC = () => {
                   }}
                 >
                   신고 등록 완료
-                </button>
+ </button>
               </div>
             </form>
           </div>
@@ -1165,7 +1165,7 @@ export const ErrorReportPage: React.FC = () => {
                 {getSeverityBadge(selectedReport.severity)}
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   [{getCategoryLabel(selectedReport.category)}]
-                </span>
+ </span>
               </div>
               <button
                 onClick={() => setIsDetailModalOpen(false)}
@@ -1212,7 +1212,7 @@ export const ErrorReportPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                     첨부 파일 목록 ({selectedReport.attachments.length}건)
-                  </label>
+ </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
                     {selectedReport.attachments.map(att => (
                       <div
@@ -1245,7 +1245,7 @@ export const ErrorReportPage: React.FC = () => {
                           </div>
                           <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                             {(att.size / 1024).toFixed(1)} KB
-                          </div>
+ </div>
                         </div>
                         <a
                           href={att.url}
@@ -1296,11 +1296,11 @@ export const ErrorReportPage: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', color: 'var(--primary)' }}>
                     <UserCheck size={16} />
                     2단계: 접수 처리 (담당자 배정 및 1차 진단)
-                  </div>
+ </div>
                   {selectedReport.receivedAt && (
                     <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
-                      ✓ {selectedReport.receivedAt} 접수완료 (접수자: {selectedReport.receiverName})
-                    </span>
+                       {selectedReport.receivedAt} 접수완료 (접수자: {selectedReport.receiverName})
+ </span>
                   )}
                 </div>
 
@@ -1350,7 +1350,7 @@ export const ErrorReportPage: React.FC = () => {
                   <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>접수 메모 및 1차 진단 코멘트</label>
                   <input
                     type="text"
-                    placeholder="오류 원인 가설 또는 1차 분석 의견 (예: Supabase RLS 정책 검토 필요)"
+                    placeholder="오류 원인 가설 또는 1차 분석 의견"
                     value={receptionNote}
                     onChange={e => setReceptionNote(e.target.value)}
                     disabled={selectedReport.status === 'COMPLETED'}
@@ -1384,7 +1384,7 @@ export const ErrorReportPage: React.FC = () => {
                       }}
                     >
                       [접수 처리 확정]
-                    </button>
+ </button>
                   </div>
                 )}
               </div>
@@ -1400,11 +1400,11 @@ export const ErrorReportPage: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', color: 'var(--success)' }}>
                     <CheckCircle2 size={16} />
                     3단계: 완료 처리 (수정 조치 및 배포 버전 확정)
-                  </div>
+ </div>
                   {selectedReport.completedAt && (
                     <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
-                      ✓ {selectedReport.completedAt} 완료 확정 (처리자: {selectedReport.resolverName})
-                    </span>
+                       {selectedReport.completedAt} 완료 확정 (처리자: {selectedReport.resolverName})
+ </span>
                   )}
                 </div>
 
@@ -1454,7 +1454,7 @@ export const ErrorReportPage: React.FC = () => {
                   <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>근본 원인 (재발 방지)</label>
                   <input
                     type="text"
-                    placeholder="오류가 발생한 근본 원인 요약 (예: 원격 DB 컬럼 미반영)"
+                    placeholder="오류가 발생한 근본 원인 요약"
                     value={rootCause}
                     onChange={e => setRootCause(e.target.value)}
                     disabled={selectedReport.status === 'COMPLETED' && !isSystemAdmin}
@@ -1488,7 +1488,7 @@ export const ErrorReportPage: React.FC = () => {
                       }}
                     >
                       [완료 처리 확정]
-                    </button>
+ </button>
                   </div>
                 )}
               </div>
@@ -1525,14 +1525,14 @@ export const ErrorReportPage: React.FC = () => {
                       style={{ padding: '4px 10px', borderRadius: '4px', border: '1px solid #D1D5DB', fontSize: '11px', cursor: 'pointer' }}
                     >
                       닫기
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={handleCancelSubmit}
                       style={{ padding: '4px 12px', borderRadius: '4px', border: 'none', backgroundColor: 'var(--danger)', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
                     >
                       취소 확정
-                    </button>
+ </button>
                   </div>
                 </div>
               )}
@@ -1564,7 +1564,7 @@ export const ErrorReportPage: React.FC = () => {
                     }}
                   >
                     신고 취소
-                  </button>
+ </button>
                 )}
                 {(selectedReport.status === 'COMPLETED' || selectedReport.status === 'CANCELLED') && (
                   <button
@@ -1586,7 +1586,7 @@ export const ErrorReportPage: React.FC = () => {
                   >
                     <RotateCcw size={12} />
                     재오픈
-                  </button>
+ </button>
                 )}
               </div>
 
@@ -1606,7 +1606,7 @@ export const ErrorReportPage: React.FC = () => {
                 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

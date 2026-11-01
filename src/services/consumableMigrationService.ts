@@ -1,6 +1,6 @@
 // src/services/consumableMigrationService.ts
 /**
- * 📦 기연리프트 소모품 및 부품 재고 파싱 & DB 마이그레이션 서비스
+ *  기연리프트 소모품 및 부품 재고 파싱 & DB 마이그레이션 서비스
  * 
  * 원천 데이터: D:\OneDrive\Desktop\기연리프트자료_\자동업로드\밴드\소모품재고.txt
  * 표준 헌장:
@@ -223,7 +223,7 @@ export async function ingestConsumablesToDatabase(
           fromLocation: '초기 소모품 재고 실사 업로드',
           toLocation: '주기장 재고',
           actionDate: todayYmd,
-          description: `초기 재고 업로드 조정 (기존: ${existing.stockQty}개 ➔ 반영: ${newStockQty}개${item.note ? `, 비고: ${item.note}` : ''})`,
+          description: `초기 재고 업로드 조정 (기존: ${existing.stockQty}개 반영: ${newStockQty}개${item.note ? `, 비고: ${item.note}` : ''})`,
           createdAt: nowIso
         });
       }

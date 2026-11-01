@@ -195,7 +195,7 @@ export function inheritOptionsFromMaster(
 /**
  * checkedSpecs.__optionMeta (현장 또는 옵션그룹에 저장된 특약단가 메타데이터)에서
  * 유상옵션별 적용단가(appliedPrice) 맵(옵션명 -> 단가)을 추출하는 SSOT 헬퍼.
- * 앞에 전달된 specs 객체가 우선순위를 가집니다 (예: site.checkedSpecs ➔ siteMaster.checkedSpecs ➔ customer.defaultCheckedSpecs).
+ * 앞에 전달된 specs 객체가 우선순위를 가집니다 (예: site.checkedSpecs  siteMaster.checkedSpecs  customer.defaultCheckedSpecs).
  */
 export function extractAppliedPricesFromSpecs(
   standardOptions: StandardOption[],

@@ -35,7 +35,7 @@ const MRO_DOMAIN_KNOWLEDGE: Record<string, {
 }> = {
   'skyjack': {
     errorCodes: ['02', '03', '04', '18', 'LL', 'OL', 'FL-02', 'FL-18'],
-    majorParts: ['조이스틱 컨트롤러 (Part# 156879)', '유압 상승 실린더 (Part# 119561)', '전륜 유압 모터 (Part# 107321)', '솔레노이드 밸브 24V 코일', '경사각 틸트 센서'],
+    majorParts: ['조이스틱 컨트롤러', '유압 상승 실린더', '전륜 유압 모터', '솔레노이드 밸브 24V 코일', '경사각 틸트 센서'],
     symptoms: ['02번 에러 깜빡임 (시스템 이상)', '18번 틸트 경보음 지속', '발판 상승 불가', '조향 불가 (스티어링 고장)', '비상 하강 레버 작동 불량'],
     keywords: ['Skyjack', '스카이잭', '플래시코드', '조이스틱', '솔레노이드', '비상하강', '유압실린더', '틸트경보', '가위암']
   },
@@ -60,7 +60,7 @@ const MRO_DOMAIN_KNOWLEDGE: Record<string, {
   'delta-q': {
     errorCodes: ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'RED-FLASH-1', 'RED-FLASH-2'],
     majorParts: ['Delta-Q IC650 충전기', '온도 센서 프로브', '24V DC 출력 케이블', 'AC 인렛 소켓'],
-    symptoms: ['충전기 적색 LED 점멸', '배터리 완충 불가', '충전 중 과열 셧다운', '배터리 극저전압(16V 미만) 충전 거부'],
+    symptoms: ['충전기 적색 LED 점멸', '배터리 완충 불가', '충전 중 과열 셧다운', '배터리 극저전압 충전 거부'],
     keywords: ['충전기', 'DeltaQ', 'IC650', '배터리방전', '저전압', '적색LED', '점멸코드', '과열차단']
   }
 };
@@ -185,7 +185,7 @@ export function extractMetadataByHeuristics(manual: Partial<EquipmentManual>, ex
 }
 
 /**
- * 단건 매뉴얼 AI 메타데이터 추출 메인 함수 (API 시도 ➔ 로컬 도메인 AI 페일오버)
+ * 단건 매뉴얼 AI 메타데이터 추출 메인 함수 (API 시도  로컬 도메인 AI 페일오버)
  */
 export async function extractManualMetadataWithAI(
   manual: Partial<EquipmentManual>,

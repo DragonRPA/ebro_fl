@@ -514,7 +514,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
         영업일지는 영업부 및 경영진만 열람할 수 있습니다.
-      </div>
+ </div>
     );
   }
 
@@ -529,7 +529,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <h2 className="text-sm font-bold text-slate-100 whitespace-nowrap">영업일지</h2>
               <span className="text-[11px] font-bold text-cyan-300 whitespace-nowrap">
                 총 {stageStats.total}건
-              </span>
+ </span>
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
@@ -554,7 +554,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 }`}
               >
                 일지 목록 ({filteredJournals.length})
-              </button>
+ </button>
             </div>
           </div>
 
@@ -582,7 +582,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   </span>
                   <span className="font-mono font-black text-cyan-300 whitespace-nowrap">
                     {count}건
-                  </span>
+ </span>
                 </button>
               );
             })}
@@ -603,7 +603,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   className="text-[11px] font-bold text-slate-400 underline whitespace-nowrap"
                 >
                   신규 작성으로 전환
-                </button>
+ </button>
               )}
             </div>
 
@@ -611,7 +611,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 상담내용 (자연어 입력)
-              </label>
+ </label>
               <textarea
                 rows={3}
                 value={rawContent}
@@ -648,7 +648,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   작성일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={journalDate}
@@ -660,7 +660,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   담당 영업사원
-                </label>
+ </label>
                 <select
                   value={salespersonId}
                   onChange={e => setSalespersonId(e.target.value)}
@@ -680,7 +680,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   고객명
-                </label>
+ </label>
                 {customerName.trim() && (
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${
@@ -713,7 +713,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   상대방 이름
-                </label>
+ </label>
                 <input
                   type="text"
                   value={contactName}
@@ -726,7 +726,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   상대방 직책
-                </label>
+ </label>
                 <input
                   type="text"
                   value={contactTitle}
@@ -741,7 +741,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 상담 구분
-              </label>
+ </label>
               <div className="grid grid-cols-4 gap-1.5">
                 {SALES_JOURNAL_STAGES.map(stg => {
                   const active = stage === stg;
@@ -767,7 +767,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 상담내용 요약
-              </label>
+ </label>
               <textarea
                 rows={2}
                 value={summary}
@@ -782,7 +782,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   다음 일정
-                </label>
+ </label>
                 <input
                   type="text"
                   value={nextSchedule}
@@ -794,7 +794,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div className="flex flex-col gap-1 min-w-0">
                 <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                   다음 일정일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={nextScheduleDate}
@@ -836,7 +836,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 <div className="flex flex-col gap-1 min-w-0">
                   <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                     조회 시작일
-                  </label>
+ </label>
                   <input
                     type="date"
                     value={startDateFilter}
@@ -847,7 +847,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 <div className="flex flex-col gap-1 min-w-0">
                   <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                     조회 종료일
-                  </label>
+ </label>
                   <input
                     type="date"
                     value={endDateFilter}
@@ -861,7 +861,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 <div className="flex flex-col gap-1 min-w-0">
                   <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                     영업사원
-                  </label>
+ </label>
                   <select
                     value={selectedSalespersonFilter}
                     onChange={e => setSelectedSalespersonFilter(e.target.value)}
@@ -878,7 +878,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 <div className="flex flex-col gap-1 min-w-0">
                   <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                     상담 구분
-                  </label>
+ </label>
                   <select
                     value={selectedStageFilter}
                     onChange={e => setSelectedStageFilter(e.target.value)}
@@ -919,7 +919,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             {filteredJournals.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-xl">
                 등록된 영업일지가 없습니다.
-              </div>
+ </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {filteredJournals.map(item => {
@@ -992,14 +992,14 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                             className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-bold whitespace-nowrap"
                           >
                             수정
-                          </button>
+ </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(item)}
                             className="px-2.5 py-1 rounded bg-rose-950/70 text-rose-300 border border-rose-800 text-[11px] font-bold whitespace-nowrap"
                           >
                             삭제
-                          </button>
+ </button>
                         </div>
                       </div>
                     </div>
@@ -1033,7 +1033,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <BookOpen size={17} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               영업일지
-            </h2>
+ </h2>
             <span
               style={{
                 fontSize: '11px',
@@ -1047,7 +1047,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               }}
             >
               영업부·경영진 공유
-            </span>
+ </span>
           </div>
 
           {/* 영업사원별 빠른 필터 탭 */}
@@ -1069,7 +1069,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               }}
             >
               전체 영업사원 ({stageStats.total})
-            </button>
+ </button>
             {salespersonOptions.map(sp => {
               const cnt = salespersonCounts[sp.id] || 0;
               const isSelected = selectedSalespersonFilter === sp.id;
@@ -1092,7 +1092,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   }}
                 >
                   {sp.name} {sp.position ? `${sp.position}` : ''} ({cnt})
-                </button>
+ </button>
               );
             })}
           </div>
@@ -1142,7 +1142,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 </span>
                 <span style={{ fontSize: '14px', fontWeight: 800, color: stStyle.text, whiteSpace: 'nowrap' }}>
                   {count}건
-                </span>
+ </span>
               </div>
             );
           })}
@@ -1188,7 +1188,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minHeight: '60px' }}>
             <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
               상담내용
-            </label>
+ </label>
             <textarea
               value={rawContent}
               onChange={e => setRawContent(e.target.value)}
@@ -1276,7 +1276,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 추출 항목 확인 및 편집
-              </span>
+ </span>
               {extractedJsonPreview && (
                 <button
                   type="button"
@@ -1319,7 +1319,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   작성일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={journalDate}
@@ -1340,7 +1340,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   담당 영업사원
-                </label>
+ </label>
                 <select
                   value={salespersonId}
                   onChange={e => setSalespersonId(e.target.value)}
@@ -1369,7 +1369,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   고객명
-                </label>
+ </label>
                 {customerName.trim() && (
                   <span
                     style={{
@@ -1415,7 +1415,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   상대방 이름
-                </label>
+ </label>
                 <input
                   type="text"
                   value={contactName}
@@ -1437,7 +1437,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   상대방 직책
-                </label>
+ </label>
                 <input
                   type="text"
                   value={contactTitle}
@@ -1461,7 +1461,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 상담내용 구분
-              </label>
+ </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px' }}>
                 {SALES_JOURNAL_STAGES.map(stg => {
                   const stStyle = STAGE_STYLE_MAP[stg];
@@ -1494,7 +1494,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                 상담내용 요약
-              </label>
+ </label>
               <textarea
                 value={summary}
                 onChange={e => setSummary(e.target.value)}
@@ -1521,7 +1521,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   다음 일정
-                </label>
+ </label>
                 <input
                   type="text"
                   value={nextSchedule}
@@ -1543,7 +1543,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   다음 일정일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={nextScheduleDate}
@@ -1584,7 +1584,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               >
                 <RotateCcw size={13} />
                 초기화
-              </button>
+ </button>
 
               <button
                 type="button"
@@ -1634,7 +1634,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   조회 시작일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={startDateFilter}
@@ -1655,7 +1655,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   조회 종료일
-                </label>
+ </label>
                 <input
                   type="date"
                   value={endDateFilter}
@@ -1676,7 +1676,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   영업사원
-                </label>
+ </label>
                 <select
                   value={selectedSalespersonFilter}
                   onChange={e => setSelectedSalespersonFilter(e.target.value)}
@@ -1703,7 +1703,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   상담 구분
-                </label>
+ </label>
                 <select
                   value={selectedStageFilter}
                   onChange={e => setSelectedStageFilter(e.target.value)}
@@ -1730,7 +1730,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: '140px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   검색어
-                </label>
+ </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <Search size={13} style={{ position: 'absolute', left: '8px', color: 'var(--text-muted)' }} />
                   <input
@@ -1778,7 +1778,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
               >
                 <Download size={13} />
                 엑셀 내보내기
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1848,7 +1848,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   >
                     <Edit3 size={12} />
                     수정
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(detailJournal)}
@@ -1869,7 +1869,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   >
                     <Trash2 size={12} />
                     삭제
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setDetailJournal(null)}
@@ -1902,7 +1902,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#1d4ed8', whiteSpace: 'nowrap' }}>
                     추출 정형 데이터
-                  </div>
+ </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.45 }}>
                     <strong>상담 요약:</strong> {detailJournal.summary}
                   </div>
@@ -1928,7 +1928,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     자연어 작성 원문
-                  </div>
+ </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>
                     {detailJournal.rawContent}
                   </div>
@@ -1963,7 +1963,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             >
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 영업일지 목록 ({filteredJournals.length}건)
-              </span>
+ </span>
             </div>
 
             <div style={{ overflowY: 'scroll', overflowX: 'auto', flex: '1 1 0', minHeight: 0 }}>
@@ -1972,31 +1972,31 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                   <tr style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 1 }}>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', width: '68px' }}>
                       상세
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       작성일
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       영업사원
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       상담 구분
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       고객명
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       상대방
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       상담내용 요약
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       다음 일정
-                    </th>
+ </th>
                     <th style={{ padding: '7px 10px', textAlign: 'center', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       관리
-                    </th>
+ </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2013,7 +2013,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                         }}
                       >
                         등록된 영업일지가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     filteredJournals.map(item => {
@@ -2049,8 +2049,8 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              상세 ➔
-                            </button>
+                              상세 
+ </button>
                           </td>
                           <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {item.journalDate}
@@ -2130,7 +2130,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                                 }}
                               >
                                 수정
-                              </button>
+ </button>
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item)}
@@ -2147,7 +2147,7 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
                                 }}
                               >
                                 삭제
-                              </button>
+ </button>
                             </div>
                           </td>
                         </tr>

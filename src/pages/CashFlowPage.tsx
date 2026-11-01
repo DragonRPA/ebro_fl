@@ -130,7 +130,7 @@ export const CashFlowPage: React.FC = () => {
 
   return (
     <div data-hs-observe="cashflowpage" style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 */}
+      {/*  인앱 토스트 */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -165,10 +165,10 @@ export const CashFlowPage: React.FC = () => {
           <div>
             <h2 data-mid="cash_flow-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
               자금 흐름 분석
-            </h2>
+ </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
               통장 실시간 잔고 기반 현금 유출입 추정 및 유동성 가용 기간 모니터링
-            </p>
+ </p>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export const CashFlowPage: React.FC = () => {
             className="btn-secondary"
             onClick={handleSaveSnapshot}
             style={{ padding: '6px 12px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px' }}
-            title="현재 시점의 자금 현황을 경영진 보고용 스냅샷으로 영구 보존합니다."
+            title="현재 시점의 자금 현황을 경영진 보고용 스냅샷으로 보관합니다."
           >
             <Save size={13} />
             <span>스냅샷 보존</span>
@@ -225,10 +225,10 @@ export const CashFlowPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>통장 실물 총잔액</span>
           <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)' }}>
             ₩{report.totalBankBalance.toLocaleString()}원
-          </span>
+ </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             총 {report.bankAccountBalances.length}개 보유 계좌 실시간 합산
-          </span>
+ </span>
         </div>
 
         {/* D+7 단기 지출 예정액 */}
@@ -236,10 +236,10 @@ export const CashFlowPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>D+7 지출 예정액</span>
           <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--danger)' }}>
             ₩{report.upcomingPayablesD7.toLocaleString()}원
-          </span>
+ </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             단기 만기 매입정산 및 정기 급여
-          </span>
+ </span>
         </div>
 
         {/* 순 가용 자금 */}
@@ -247,10 +247,10 @@ export const CashFlowPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>순 가용 자금 (안전자금)</span>
           <span style={{ fontSize: '20px', fontWeight: 800, color: report.netAvailableCash < 0 ? 'var(--danger)' : 'var(--success)' }}>
             ₩{report.netAvailableCash.toLocaleString()}원
-          </span>
+ </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             단기 지출액 공제 후 순유동성
-          </span>
+ </span>
         </div>
 
         {/* 월간 순현금흐름 예상 */}
@@ -258,7 +258,7 @@ export const CashFlowPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>당월 순현금흐름</span>
           <span style={{ fontSize: '20px', fontWeight: 800, color: report.expectedMonthlyNet < 0 ? 'var(--danger)' : 'var(--success)' }}>
             {report.expectedMonthlyNet > 0 ? '+' : ''}₩{report.expectedMonthlyNet.toLocaleString()}원
-          </span>
+ </span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             유입 ₩{report.inflowBreakdown.totalExpectedInflow.toLocaleString()} / 지출 ₩{report.outflowBreakdown.totalExpectedOutflow.toLocaleString()}
           </span>
@@ -270,7 +270,7 @@ export const CashFlowPage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '20px', fontWeight: 800, color: report.cashRunway < 3 ? 'var(--danger)' : 'var(--text-primary)' }}>
               {report.cashRunway}개월
-            </span>
+ </span>
             <span style={{
               fontSize: '11px',
               fontWeight: 800,
@@ -284,7 +284,7 @@ export const CashFlowPage: React.FC = () => {
           </div>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
             월평균 소진액 ₩{Math.round(report.monthlyBurnRate / 10000).toLocaleString()}만원 기준
-          </span>
+ </span>
         </div>
       </header>
 
@@ -410,17 +410,17 @@ export const CashFlowPage: React.FC = () => {
                     {acc.isDefault && (
                       <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(79,70,229,0.15)', color: 'var(--primary)' }}>
                         대표계좌
-                      </span>
+ </span>
                     )}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                     {acc.accountNumber} ({acc.accountHolder})
-                  </div>
+ </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '4px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>현재 잔액</span>
                     <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
                       ₩{acc.currentBalance.toLocaleString()}원
-                    </span>
+ </span>
                   </div>
                 </div>
               ))}
@@ -433,10 +433,10 @@ export const CashFlowPage: React.FC = () => {
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <FileSpreadsheet size={16} color="var(--primary)" /> 현금흐름 3대 활동 요약표
-                  </h3>
+ </h3>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     행 클릭 시 우측에 원천 거래 상세 목록 표출
-                  </span>
+ </span>
                 </div>
 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
@@ -470,7 +470,7 @@ export const CashFlowPage: React.FC = () => {
                             <span>{row.subCategory}</span>
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px' }}>
                               ({row.items?.length || 0}건)
-                            </span>
+ </span>
                           </td>
                           <td style={{ padding: '10px 12px', textAlign: 'right', color: row.inflow > 0 ? 'var(--success)' : 'var(--text-muted)' }}>
                             {row.inflow > 0 ? `+${row.inflow.toLocaleString()}` : '-'}
@@ -480,7 +480,7 @@ export const CashFlowPage: React.FC = () => {
                           </td>
                           <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: row.net > 0 ? 'var(--success)' : row.net < 0 ? 'var(--danger)' : 'var(--text-main)' }}>
                             {row.net > 0 ? `+${row.net.toLocaleString()}` : row.net < 0 ? `-${Math.abs(row.net).toLocaleString()}` : '0'}원
-                          </td>
+ </td>
                         </tr>
                       );
                     })}
@@ -492,11 +492,11 @@ export const CashFlowPage: React.FC = () => {
               <div className="card table-container" style={{ margin: 0, maxHeight: 'calc(100vh - 380px)', overflowY: 'auto' }}>
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                    🔍 {selectedActivityRow?.subCategory || '상세 내역'} 원천 데이터 ({selectedActivityRow?.items?.length || 0}건)
-                  </h3>
+                     {selectedActivityRow?.subCategory || '상세 내역'} 원천 데이터 ({selectedActivityRow?.items?.length || 0}건)
+ </h3>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: (selectedActivityRow?.net || 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                     소계: {(selectedActivityRow?.net || 0) > 0 ? '+' : ''}{(selectedActivityRow?.net || 0).toLocaleString()}원
-                  </span>
+ </span>
                 </div>
 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
@@ -513,7 +513,7 @@ export const CashFlowPage: React.FC = () => {
                       <tr>
                         <td colSpan={4} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                           해당 카테고리의 발생 거래 내역이 없습니다.
-                        </td>
+ </td>
                       </tr>
                     ) : (
                       selectedActivityRow.items.map((item, itIdx) => (
@@ -542,11 +542,11 @@ export const CashFlowPage: React.FC = () => {
                 <Calendar size={16} color="var(--primary)" />
                 <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>
                   {targetMonth}월 일별 자금 유출입 타임라인 스케줄
-                </h3>
+ </h3>
               </div>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 10일(렌탈 수납) / 25일(급여·매입 결제) 피크일 잔고 변화 예측
-              </span>
+ </span>
             </div>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
@@ -586,7 +586,7 @@ export const CashFlowPage: React.FC = () => {
                       </td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 800, color: isNegativeBalance ? 'var(--danger)' : 'var(--primary)' }}>
                         ₩{item.runningBalance.toLocaleString()}원
-                      </td>
+ </td>
                       <td style={{ padding: '9px 12px' }}>
                         {item.events.length > 0 ? (
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -599,7 +599,7 @@ export const CashFlowPage: React.FC = () => {
                                 backgroundColor: isPeak ? 'rgba(79, 70, 229, 0.15)' : 'var(--border-color)',
                                 color: isPeak ? 'var(--primary)' : 'var(--text-secondary)'
                               }}>
-                                📌 {ev}
+                                 {ev}
                               </span>
                             ))}
                           </div>
@@ -622,8 +622,8 @@ export const CashFlowPage: React.FC = () => {
             <div className="card table-container" style={{ margin: 0, maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <AlertTriangle size={16} /> 악성 채권 (90일 초과 출혈 지수 Top 5)
-                </h3>
+                  <AlertTriangle size={16} /> 악성 채권
+ </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>실물 receivables 연체 집계</span>
               </div>
 
@@ -653,7 +653,7 @@ export const CashFlowPage: React.FC = () => {
                     <tr>
                       <td colSpan={4} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                         90일 초과 악성 미수 채권이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   )}
                 </tbody>
@@ -664,8 +664,8 @@ export const CashFlowPage: React.FC = () => {
             <div className="card table-container" style={{ margin: 0, maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <TrendingDown size={16} /> 비용 누수 장비 (누적 수리비 초과 실물 장비 Top 5)
-                </h3>
+                  <TrendingDown size={16} /> 비용 누수 장비
+ </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>실물 repairs 1:1 결합 집계</span>
               </div>
 
@@ -695,7 +695,7 @@ export const CashFlowPage: React.FC = () => {
                     <tr>
                       <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                         비용 누수 적자 장비가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   )}
                 </tbody>
@@ -712,11 +712,11 @@ export const CashFlowPage: React.FC = () => {
                 <Clock size={16} color="var(--primary)" />
                 <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>
                   경영진 보고용 자금 스냅샷 보존 이력
-                </h3>
+ </h3>
               </div>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 총 {app.cashFlowSnapshots?.length || 0}건 보존 기록됨
-              </span>
+ </span>
             </div>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
@@ -737,16 +737,16 @@ export const CashFlowPage: React.FC = () => {
                     <td style={{ padding: '9px 12px', fontWeight: 700 }}>{snap.snapshotDate}</td>
                     <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
                       ₩{snap.startingBalance?.toLocaleString() || 0}원
-                    </td>
+ </td>
                     <td style={{ padding: '9px 12px', textAlign: 'right', color: 'var(--success)' }}>
                       +₩{snap.projectedInflow?.toLocaleString() || 0}원
-                    </td>
+ </td>
                     <td style={{ padding: '9px 12px', textAlign: 'right', color: 'var(--danger)' }}>
                       -₩{snap.projectedOpex?.toLocaleString() || 0}원
-                    </td>
+ </td>
                     <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 800, color: (snap.projectedFinalBalance || 0) < 0 ? 'var(--danger)' : 'var(--text-main)' }}>
                       ₩{snap.projectedFinalBalance?.toLocaleString() || 0}원
-                    </td>
+ </td>
                     <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>{snap.notes || '-'}</td>
                     <td style={{ padding: '9px 12px', textAlign: 'center' }}>
                       <button
@@ -760,7 +760,7 @@ export const CashFlowPage: React.FC = () => {
                         style={{ padding: '3px 8px', fontSize: '11px', color: 'var(--danger)', background: 'none', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         삭제
-                      </button>
+ </button>
                     </td>
                   </tr>
                 ))}
@@ -768,7 +768,7 @@ export const CashFlowPage: React.FC = () => {
                   <tr>
                     <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                       보존된 자금 스냅샷이 없습니다. 상단 [스냅샷 보존] 버튼을 클릭하여 현재 자금 진단을 저장할 수 있습니다.
-                    </td>
+ </td>
                   </tr>
                 )}
               </tbody>
@@ -795,10 +795,10 @@ export const CashFlowPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
           <span style={{ color: 'var(--text-main)', fontWeight: 700 }}>
             통장 잔고:
-          </span>
+ </span>
           <span style={{ color: 'var(--text-secondary)' }}>
             통장 총잔액 (₩{report.totalBankBalance.toLocaleString()}) = 기초잔액 + 총입금 - 총출금
-          </span>
+ </span>
         </div>
       </footer>
     </div>

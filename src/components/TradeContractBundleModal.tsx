@@ -53,7 +53,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
   const [emailSubject, setEmailSubject] = useState<string>('');
   const [emailBody, setEmailBody] = useState<string>('');
   
-  // 💡 전사 표준 헌장 5.9조: 테스트 격리 발송 모드 (기본 true로 안전 유지)
+  //  전사 표준 헌장 5.9조: 테스트 격리 발송 모드 (기본 true로 안전 유지)
   const [isTestMode, setIsTestMode] = useState<boolean>(true);
   
   // 처리 상태
@@ -163,7 +163,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
         specialTerms,
         contractDocStatus: order.contractDocStatus || 'DRAFT'
       });
-      alert('✅ 계약 조건이 성공적으로 저장되었습니다.');
+      alert('계약 조건이 성공적으로 저장되었습니다.');
     } catch (e: any) {
       showErrorModal?.(`계약 조건 저장 실패: ${e.message || e}`);
     } finally {
@@ -223,7 +223,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
         // 폴백으로 일반 다운로드
         await handleDownloadExcel();
       } else {
-        alert('✅ 로컬 에이전트를 통해 엑셀 프로그램에서 계약서를 열었습니다.');
+        alert('로컬 에이전트를 통해 엑셀 프로그램에서 계약서를 열었습니다.');
       }
     } catch (e) {
       await handleDownloadExcel();
@@ -259,10 +259,10 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
         }
       });
 
-      const targetDesc = isTestMode ? `개발자 격리 계정 (admin@ebro.co.kr)` : recipientEmail;
+      const targetDesc = isTestMode ? `개발자 격리 계정` : recipientEmail;
       setSendSuccessMsg(`계약서 메일 발송 완료! (수신: ${targetDesc})`);
 
-      alert(`✅ 유통 물품매매계약서 이메일이 발송되었습니다!\n\n• 수신: ${targetDesc}\n• 파일: ${fileName}\n• 격리 모드: ${isTestMode ? '활성 (개발자 격리)' : '실제 거래처 발송'}`);
+      alert(` 유통 물품매매계약서 이메일이 발송되었습니다!\n\n• 수신: ${targetDesc}\n• 파일: ${fileName}\n• 격리 모드: ${isTestMode ? '활성 (개발자 격리)' : '실제 거래처 발송'}`);
     } catch (e: any) {
       console.error('[handleSendEmail Error]', e);
       showErrorModal?.(`이메일 발송 실패: ${e.message || e}`);
@@ -319,7 +319,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             <FileSpreadsheet size={20} color="var(--primary)" />
             <h3 data-mid="trade_contract_modal-title" style={{ margin: 0, fontSize: '17px', fontWeight: 'bold' }}>
               유통 물품매매계약서 양식 편집 및 이메일 발송
-            </h3>
+ </h3>
             <span
               style={{
                 fontSize: '11px',
@@ -351,7 +351,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Building size={16} /> 기본 계약 정보
-              </div>
+ </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>주문번호</label>
@@ -373,7 +373,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <MapPin size={16} /> 인도 장소 및 결제 조항
-              </div>
+ </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>납품 기한</label>
@@ -473,10 +473,10 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             <div style={{ padding: '16px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <FileSpreadsheet size={16} color="#16a34a" /> 표준 물품매매계약서
-              </div>
+ </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.5 }}>
                 ExcelJS 기반 표준 서식으로 품목 명세, 공급자/매수인 정보, 특약 조항이 포함된 정식 엑셀 계약서를 생성합니다.
-              </div>
+ </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
@@ -496,7 +496,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px' }}
                 >
                   <RefreshCw size={14} /> 에이전트로 열기
-                </button>
+ </button>
               </div>
             </div>
 
@@ -504,9 +504,9 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             <div style={{ padding: '16px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Mail size={16} color="var(--primary)" /> 거래처 이메일 발송
-              </div>
+ </div>
 
-              {/* ⚠️ 테스트 격리 모드 토글 (전사 표준 헌장 5.9조) */}
+              {/*  테스트 격리 모드 토글 (전사 표준 헌장 5.9조) */}
               <div 
                 style={{ 
                   padding: '10px 12px', 
@@ -530,9 +530,9 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
                 </label>
                 <div style={{ fontSize: '11px', color: isTestMode ? '#2563eb' : '#b45309', lineHeight: 1.4 }}>
                   {isTestMode ? (
-                    <span>🛡️ <strong>헌장 5.9조 안전 격리 준수</strong>: 실제 거래처 대신 개발자(admin@ebro.co.kr)에게 안전하게 발송됩니다.</span>
+                    <span> <strong>헌장 5.9조 안전 격리 준수</strong>: 실제 거래처 대신 개발자에게 안전하게 발송됩니다.</span>
                   ) : (
-                    <span>⚠️ <strong>실제 거래처 발송 모드</strong>: 거래처 담당자 이메일({recipientEmail})로 실제 전송됩니다.</span>
+                    <span> <strong>실제 거래처 발송 모드</strong>: 거래처 담당자 이메일({recipientEmail})로 실제 전송됩니다.</span>
                   )}
                 </div>
               </div>
@@ -617,7 +617,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
               {order.contractSentAt && (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
                   마지막 발송 일시: {new Date(order.contractSentAt).toLocaleString()} ({order.contractSentTo || '-'})
-                </div>
+ </div>
               )}
             </div>
 
@@ -643,7 +643,7 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
             style={{ fontSize: '12px', padding: '6px 16px' }}
           >
             닫기
-          </button>
+ </button>
         </div>
 
       </div>

@@ -176,7 +176,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
         </div>
         <span className="text-xs font-mono font-bold px-2 py-1 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
           {filteredManuals.length}건
-        </span>
+ </span>
       </div>
 
       {/* 검색창 */}
@@ -200,7 +200,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
         )}
       </div>
 
-      {/* ⚡ 현장 다발 증상/에러 원터치 핫 키워드 칩 */}
+      {/*  현장 다발 증상/에러 원터치 핫 키워드 칩 */}
       <div className="flex flex-wrap items-center gap-1.5 pb-1">
         <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap pl-0.5">
           <Sparkles className="w-3 h-3 text-amber-400" />
@@ -237,7 +237,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
           }`}
         >
           전체 모델
-        </button>
+ </button>
         {modelOptions.map(model => (
           <button
             key={model}
@@ -260,9 +260,9 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
         <div className="grid grid-cols-4 gap-1">
           {[
             { key: '전체', label: '전체' },
-            { key: 'PDF', label: '📄 PDF' },
-            { key: 'YOUTUBE', label: '🎬 정비영상' },
-            { key: 'WEB_LINK', label: '🌐 웹문서' }
+            { key: 'PDF', label: 'PDF' },
+            { key: 'YOUTUBE', label: '정비영상' },
+            { key: 'WEB_LINK', label: '웹문서' }
           ].map(item => (
             <button
               key={item.key}
@@ -395,7 +395,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                 </div>
               </div>
 
-              {/* ⚡ AI 2줄 트러블슈팅 요약 콜아웃 */}
+              {/*  AI 2줄 트러블슈팅 요약 콜아웃 */}
               {manual.aiSummary && (
                 <div className="text-[11px] text-sky-200/90 bg-sky-950/40 p-2.5 rounded-xl border border-sky-800/40 leading-relaxed flex gap-1.5 items-start">
                   <Sparkles className="w-3.5 h-3.5 text-sky-400 flex-shrink-0 mt-0.5" />
@@ -406,7 +406,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                 </div>
               )}
 
-              {/* 🏷️ AI 다차원 색인 태그 (에러코드, 고장증상, 주요부품, 키워드) */}
+              {/*  AI 다차원 색인 태그 (에러코드, 고장증상, 주요부품, 키워드) */}
               {(manual.errorCodes?.length || manual.symptoms?.length || manual.majorParts?.length || manual.keywords?.length) ? (
                 <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-800/40">
                   {/* 에러코드 칩 */}
@@ -419,7 +419,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                           : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                       }`}
                     >
-                      🔴 코드: {ec}
+                       코드: {ec}
                     </span>
                   ))}
 
@@ -433,7 +433,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                           : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                       }`}
                     >
-                      ⚠️ {sym}
+                       {sym}
                     </span>
                   ))}
 
@@ -447,7 +447,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                           : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
                       }`}
                     >
-                      🔧 {part}
+                       {part}
                     </span>
                   ))}
 
@@ -466,7 +466,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
               {/* 기본 비고 및 요약 가이드 (aiSummary 없을 시 표시) */}
               {!manual.aiSummary && manual.memo && (
                 <div className="text-[11px] text-slate-400 bg-slate-950/70 p-2 rounded-xl border border-slate-800/80 leading-relaxed">
-                  💡 {manual.memo}
+                   {manual.memo}
                 </div>
               )}
 
@@ -624,7 +624,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                   className="mt-4 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-indigo-600/30"
                 >
                   <ExternalLink className="w-4 h-4" /> 새 창에서 공식 웹사이트 열기
-                </a>
+ </a>
               </div>
             ) : previewManual.fileUrl.startsWith('data:application/pdf') || previewManual.fileName.endsWith('.pdf') ? (
               <iframe
@@ -638,7 +638,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                 <div className="text-sm font-bold">{previewManual.title}</div>
                 <div className="text-xs text-slate-400 mt-1">
                   {previewManual.fileName} ({previewManual.fileSizeLabel || '0 KB'})
-                </div>
+ </div>
                 <p className="text-xs text-slate-500 mt-3 max-w-xs">
                   {previewManual.memo || '모바일 브라우저 내장 뷰어가 지원되지 않는 형식입니다. 다운로드하여 확인하세요.'}
                 </p>
@@ -648,7 +648,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                   className="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-blue-600/30"
                 >
                   <Download className="w-4 h-4" /> 파일 다운로드
-                </a>
+ </a>
               </div>
             )}
           </div>

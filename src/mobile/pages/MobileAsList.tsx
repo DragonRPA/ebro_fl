@@ -380,7 +380,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
             <h2 className="text-base font-black text-white flex items-center gap-2">
               <Wrench className="w-4 h-4 text-blue-400" />
               현장 AS 티켓 ({filteredFieldTickets.length})
-            </h2>
+ </h2>
             <div className="flex items-center gap-2">
               {onOpenManual && (
                 <button
@@ -398,11 +398,11 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 신규 접수
-              </button>
+ </button>
             </div>
           </div>
 
-          {/* 🚐 금일 내 일과/동선 원클릭 기록 바 (출근 · 주기장복귀 · 퇴근 · 동선조회) */}
+          {/*  금일 내 일과/동선 원클릭 기록 바 (출근 · 주기장복귀 · 퇴근 · 동선조회) */}
           <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col gap-2 shadow-md">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-200 whitespace-nowrap">
@@ -421,8 +421,8 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                   onClick={onOpenRouteTracking}
                   className="px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-300 border border-blue-500/40 text-[11px] font-extrabold whitespace-nowrap shrink-0"
                 >
-                  동선 조회 ➔
-                </button>
+                  동선 조회 
+ </button>
               )}
             </div>
             <div className="grid grid-cols-3 gap-1.5">
@@ -485,7 +485,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               미완료 (출동/대기)
-            </button>
+ </button>
             <button
               onClick={() => setFieldStatusFilter('ALL')}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
@@ -495,7 +495,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               전체 보기
-            </button>
+ </button>
             <button
               onClick={() => setFieldStatusFilter('COMPLETED')}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
@@ -505,7 +505,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               조치 완료
-            </button>
+ </button>
           </div>
 
           {/* 티켓 카드 피드 */}
@@ -513,7 +513,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
             {filteredFieldTickets.length === 0 ? (
               <div className="p-12 text-center text-slate-500 text-sm bg-slate-900/50 rounded-2xl border border-slate-800">
                 해당 조건의 AS 티켓이 없습니다.
-              </div>
+ </div>
             ) : (
               filteredFieldTickets.map((ticket) => {
                 const resolvedAddress = resolveSiteDetailedAddress({
@@ -618,7 +618,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                         {contactPhone && (
                           <span className="text-slate-400 font-mono text-[11px] truncate">
                             ({contactPhone})
-                          </span>
+ </span>
                         )}
                       </div>
                       {contactPhone && (
@@ -641,7 +641,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                       {ticket.issueDescription || ticket.issueCategory || '고장 점검 요청'}
                     </div>
 
-                    {/* 🚐 원클릭 동선 단계 버튼 바: 출발 ➔ 도착 ➔ 작업시작 ➔ 다음현장 이동 + 부품수급 / 재방문예약 */}
+                    {/*  원클릭 동선 단계 버튼 바: 출발  도착  작업시작  다음현장 이동 + 부품수급 / 재방문예약 */}
                     {(() => {
                       const routeSum = getTicketRouteSummary(ticket, allRouteLogs, todayStr);
                       const assetSourcing = getTicketAssetSourcingInfo(ticket, assets || [], vendors || []);
@@ -654,7 +654,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                           <div className="flex items-center justify-between text-[11px] gap-1 flex-wrap">
                             <span className="font-extrabold text-slate-300 whitespace-nowrap">
                               현장 동선 기록
-                            </span>
+ </span>
                             <div className="flex items-center gap-1 flex-wrap">
                               {revisitDateLabel && (
                                 <span className="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/35 font-extrabold whitespace-nowrap">
@@ -743,10 +743,10 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                               }`}
                             >
                               {routeSum.partsSourcingAt
-                                ? `📦 부품수급 ${formatTimeHm(routeSum.partsSourcingAt)}`
+                                ? ` 부품수급 ${formatTimeHm(routeSum.partsSourcingAt)}`
                                 : assetSourcing.ownerType === 'RENTED'
-                                  ? `📦 부품수급 (임차처: ${assetSourcing.vendorName})`
-                                  : '📦 부품수급 (주기장/차량)'}
+                                  ? ` 부품수급 (임차처: ${assetSourcing.vendorName})`
+                                  : '부품수급 (주기장/차량)'}
                             </button>
                             <button
                               type="button"
@@ -759,8 +759,8 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                               }`}
                             >
                               {revisitDateLabel
-                                ? `📅 재방문예약 (${revisitDateLabel.slice(5)})`
-                                : '📅 재방문 예약 (타일자)'}
+                                ? ` 재방문예약 (${revisitDateLabel.slice(5)})`
+                                : '재방문 예약 (타일자)'}
                             </button>
                           </div>
                         </div>
@@ -786,7 +786,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
             <h2 className="text-base font-black text-white flex items-center gap-2">
               <Package className="w-4 h-4 text-red-400" />
               주기장 정비 대상 ({filteredYardAssets.length}대)
-            </h2>
+ </h2>
             <span className="text-xs text-slate-400 font-bold">
               입고결함 <span className="text-red-400">{inboundDefectCount}대</span>
             </span>
@@ -821,7 +821,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               전체 ({yardAssets.length})
-            </button>
+ </button>
             <button
               onClick={() => setYardFilter('INBOUND_DEFECT')}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
@@ -831,7 +831,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               입고불량 ({inboundDefectCount})
-            </button>
+ </button>
             <button
               onClick={() => setYardFilter('REPAIRING')}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
@@ -841,7 +841,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               정비중
-            </button>
+ </button>
             <button
               onClick={() => setYardFilter('UNRESOLVED')}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
@@ -851,7 +851,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               }`}
             >
               소모품대기
-            </button>
+ </button>
           </div>
 
           {/* 주기장 정비 대상 자산 카드 피드 */}
@@ -859,7 +859,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
             {filteredYardAssets.length === 0 ? (
               <div className="p-12 text-center text-slate-500 text-sm bg-slate-900/50 rounded-2xl border border-slate-800">
                 정비가 필요한 주기장 자산이 없습니다.
-              </div>
+ </div>
             ) : (
               filteredYardAssets.map((asset) => {
                 const pendingOutbound = (repairs || []).find(r => r.assetId === asset.id && r.status === 'PENDING' && r.source === 'OUTBOUND_DEFECT');
@@ -895,16 +895,16 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                       <div className="flex items-center gap-1.5">
                         {pendingOutbound ? (
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                            ⚡ 출고불량
-                          </span>
+                             출고불량
+ </span>
                         ) : pendingInbound ? (
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                            🚨 입고결함
-                          </span>
+                             입고결함
+ </span>
                         ) : unresolvedRepair ? (
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            ⏸️ 소모품대기
-                          </span>
+                             소모품대기
+ </span>
                         ) : (
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700">
                             {asset.status === 'REPAIRING' ? '정비중' : '입고검수'}
@@ -914,7 +914,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                         {(asset.maintenanceScore || 0) > 0 && (
                           <span className="text-[11px] px-2 py-0.5 rounded-full font-mono font-black bg-red-900/60 text-red-200 border border-red-700">
                             +{asset.maintenanceScore}점
-                          </span>
+ </span>
                         )}
                       </div>
                     </div>
@@ -925,7 +925,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                         <span className="flex items-center gap-1 text-[11px] text-red-300 font-bold">
                           <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                           출고 불량 교체 건
-                        </span>
+ </span>
                         <span className="text-[11px] text-red-200">
                           {pendingOutbound.issueDescription || pendingOutbound.details}
                         </span>
@@ -939,7 +939,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                           <span className="flex items-center gap-1">
                             <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                             적발 결함 ({defectList.length}건)
-                          </span>
+ </span>
                           {pendingInbound?.inboundNo && (
                             <span className="font-mono text-[10px] text-slate-400">{pendingInbound.inboundNo}</span>
                           )}
@@ -979,7 +979,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
         </>
       )}
 
-      {/* 🛠️ 모바일 주기장 정비 전용 모달 */}
+      {/*  모바일 주기장 정비 전용 모달 */}
       <MobileYardRepairModal
         isOpen={isYardModalOpen}
         asset={selectedYardAsset}
@@ -988,7 +988,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
         onCompleted={handleYardRepairCompleted}
       />
 
-      {/* 🚐 다음 현장 이동 원클릭 선택 모달 */}
+      {/*  다음 현장 이동 원클릭 선택 모달 */}
       {moveNextTargetTicket && (
         <div
           onClick={() => setMoveNextTargetTicket(null)}
@@ -1005,12 +1005,12 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                 {moveNextTargetTicket.siteName || moveNextTargetTicket.customerName}
               </strong>{' '}
               ({moveNextTargetTicket.assetNo || '-'})
-            </div>
+ </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-slate-300">
                 다음 이동할 현장AS 선택 (선택 시 다음 현장 출발 동시 기록)
-              </label>
+ </label>
               <select
                 value={selectedNextTicketId}
                 onChange={(e) => setSelectedNextTicketId(e.target.value)}
@@ -1027,7 +1027,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                   .map((t) => (
                     <option key={t.id} value={t.id}>
                       [{t.assetNo || '장비'}] {t.customerName || '-'} · {t.siteName || '-'} ({t.modelName || '-'})
-                    </option>
+ </option>
                   ))}
               </select>
             </div>
@@ -1052,20 +1052,20 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handleConfirmMoveNext}
                 className="py-2.5 rounded-xl bg-purple-600 text-white text-xs font-extrabold"
               >
                 다음 현장 이동 기록
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📦 부품 수급 이동 (당사 주기장 / 타 차량 접선 / 임차처 방문) 원클릭 바텀시트 */}
+      {/*  부품 수급 이동 (당사 주기장 / 타 차량 접선 / 임차처 방문) 원클릭 바텀시트 */}
       {partsSourcingTargetTicket && (() => {
         const sInfo = getTicketAssetSourcingInfo(
           partsSourcingTargetTicket,
@@ -1101,13 +1101,13 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                 </div>
                 <div className="text-slate-400 text-[11px]">
                   장비: {partsSourcingTargetTicket.assetNo || '현장확인'} ({partsSourcingTargetTicket.modelName || '-'})
-                </div>
+ </div>
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-300">
                   1. 수급 이동지 선택 ({sInfo.ownerType === 'RENTED' ? '임차자산 → 임차처 자동 매칭' : '당사자산 → 주기장/타차량'})
-                </label>
+ </label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
                     {
@@ -1166,7 +1166,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                                 : 'bg-slate-950 text-slate-300 border-slate-700'
                             }`}
                           >
-                            🚐 {m.name}
+                             {m.name}
                           </button>
                         );
                       })}
@@ -1185,7 +1185,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                     {sInfo.vendorName && (
                       <option value={sInfo.vendorName}>
                         {sInfo.vendorName} (해당 장비 임차처)
-                      </option>
+ </option>
                     )}
                     {(vendors || []).map((v) => (
                       <option key={v.id} value={v.name}>
@@ -1210,7 +1210,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-300">
                   2. 수급 필요 부품 (터치 선택 또는 입력)
-                </label>
+ </label>
                 <div className="flex flex-wrap gap-1">
                   {AS_COMMON_PART_PRESETS.map((part) => {
                     const active = sourcingPartName.includes(part);
@@ -1316,7 +1316,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                   className="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmPartsSourcing}
@@ -1330,7 +1330,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
         );
       })()}
 
-      {/* 📅 당일 미완결 시 다음날/타일자 재방문 스케줄 원클릭 등록 바텀시트 */}
+      {/*  당일 미완결 시 다음날/타일자 재방문 스케줄 원클릭 등록 바텀시트 */}
       {revisitTargetTicket && (() => {
         const quickDates = getQuickRevisitDateOptions(todayStr);
         const reasonPresets = [
@@ -1355,7 +1355,7 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                   {revisitTargetTicket.customerName || '-'} · {revisitTargetTicket.siteName || '현장'}
                 </strong>{' '}
                 ({revisitTargetTicket.assetNo || '-'})
-              </div>
+ </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-300">재방문 예정일 빠른 선택</label>
@@ -1428,14 +1428,14 @@ export const MobileAsList: React.FC<MobileAsListProps> = ({
                   className="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmRevisitSchedule}
                   className="py-2.5 rounded-xl bg-pink-600 text-white text-xs font-extrabold"
                 >
                   재방문 일정 확정
-                </button>
+ </button>
               </div>
             </div>
           </div>

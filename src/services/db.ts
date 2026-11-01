@@ -20,7 +20,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-// 🌐 중앙 플랫폼 DB(ebro-platform-core) 직통 라우팅 대상 테이블 목록
+//  중앙 플랫폼 DB(ebro-platform-core) 직통 라우팅 대상 테이블 목록
 export const CENTRAL_TABLE_NAMES = new Set([
   'tenants',
   'equipment_manuals',
@@ -30,7 +30,7 @@ export const CENTRAL_TABLE_NAMES = new Set([
   'apk_releases'
 ]);
 
-// 🚫 eBro_FL(지게차 유통 전용 ERP)에서 제거된 레거시 렌탈/AWP 전용 테이블 (원격 DB 호출 원천 차단 및 로컬 인메모리만 허용)
+//  eBro_FL(지게차 유통 전용 ERP)에서 제거된 레거시 렌탈/AWP 전용 테이블 (원격 DB 호출 원천 차단 및 로컬 인메모리만 허용)
 export const LOCAL_ONLY_REMOVED_TABLES = new Set([
   'contracts',
   'contract_assets',
@@ -98,7 +98,7 @@ export interface TenantBankAccount {
   isDefault?: boolean;    // 대표 입금계좌 여부
 }
 
-/** 🏢 본사 및 지점/사업장 엔티티 */
+/**  본사 및 지점/사업장 엔티티 */
 export interface TenantWorkplace {
   id: string;                          // 사업장 고유 ID (예: 'wp-01')
   workplaceCode?: string;              // 사업장 식별 코드 (예: 'HQ', 'BR-01')
@@ -119,7 +119,7 @@ export interface TenantWorkplace {
   updatedAt?: string;
 }
 
-/** 🚜 다수 장비 주기장(야드) 엔티티 */
+/**  다수 장비 주기장(야드) 엔티티 */
 export interface TenantYard {
   id: string;                          // 주기장 고유 ID (예: 'yard-01')
   yardCode?: string;                   // 주기장 식별 코드 (예: 'YARD-HWASUNG', 'YARD-YONGIN')
@@ -138,12 +138,12 @@ export interface TenantYard {
   updatedAt?: string;
 }
 
-/** 🌟 전사 공식 법인 직인 Base64 데이터 */
+/**  전사 공식 법인 직인 Base64 데이터 */
 export const OFFICIAL_STAMP_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAadJREFUaEPtmWFOwzAMhW/uA+4/90HACUgIEoc0ad26/lhq1STN19hOqN9SJfFjO/4e3pI3S5F3fFw8bFp97dZz8/G2abfB2wZ7D6/J+69bWJ6L52P7mHy+Xz8+Lx+fr6v6Xv5m9fP69Vrfy//2Wl/L217ra/s5t4/J91+vybE9bHl9TNu3vVbeXsszW/k59pq2r3up1+TYHk2Ove61/e01ObaHLa+PyWvbq63PseW5eE2OpvXl1XNl9dxyZe7/7M9V33t7eW/sPbfvjXXeW8u5+PzcXq7P5er293v7b8u5+O/rZ/bZ+97bf1vXz+yzz/f+3FauXN6eKz/n8q51/cw+++zzvT+3lSuXt+fKz7m8a10/s88++3zvz23lyuXtufJzLu9a18/ss88++3zvz23lyuXtufJzLu9a18/ss88++3zvz23lyuXtufJzLu9a18/ss88++3zvz23lyuXtufJzLu9a18/ss88++3zvz23lyuXtufJzLu9a18/ss88++3zvz23lyuXtufJzLu9a/wdzK+i+0EagAAAAABJRU5ErkJggg==';
 
 
 
-/** ⚡ 테넌트별 라이선스 및 기능 플러그인 설정 */
+/**  테넌트별 라이선스 및 기능 플러그인 설정 */
 export interface TenantFeatures {
   telegramBot?: boolean;          // 텔레그램 모바일 관제 봇
   callRecordingStt?: boolean;     // 음성 통화 녹취 STT
@@ -154,18 +154,18 @@ export interface TenantFeatures {
   publicDataApiKey?: string;      // 국토교통부 세움터 공공데이터포털 인증키 (서버/DB 보관)
   vworldApiKey?: string;          // V-World 공간정보 오픈플랫폼 인증키 (서버/DB 보관)
   agentAiEnabled?: boolean;       // eBro AI Agent 고유 기능 (텔레그램 명령 / 브라우저 확장 제어 / 데스크톱 AI Studio) 활성화 여부 (false 시 Silent Core 인쇄·문서 처리 모드)
-  allowContractTradeOutbound?: boolean; // 💡 렌탈 계약 상세에서 유통 출고 및 당월 청구 합산 기능 활성화 여부
-  walkieTalkie?: boolean;         // 📻 모바일 웹앱 현장 무전기 사용 여부
-  specialFeatures?: string[];     // 🛡️ 사장님 지목 선별적 특수 탭 / 특수 버튼 인가 목록
+  allowContractTradeOutbound?: boolean; //  렌탈 계약 상세에서 유통 출고 및 당월 청구 합산 기능 활성화 여부
+  walkieTalkie?: boolean;         //  모바일 웹앱 현장 무전기 사용 여부
+  specialFeatures?: string[];     //  사장님 지목 선별적 특수 탭 / 특수 버튼 인가 목록
 }
 
-/** 💳 테넌트 구독 요금제 등급 */
+/**  테넌트 구독 요금제 등급 */
 export type SubscriptionPlan = 'TRIAL' | 'STARTER' | 'STANDARD' | 'PRO' | 'ENTERPRISE';
 
-/** ⏳ 테넌트 구독 라이선스 상태 */
+/**  테넌트 구독 라이선스 상태 */
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRING_SOON' | 'GRACE_PERIOD' | 'EXPIRED' | 'SUSPENDED';
 
-/** 📑 테넌트 구독 계약 및 만료 라이선스 정보 */
+/**  테넌트 구독 계약 및 만료 라이선스 정보 */
 export interface TenantSubscription {
   plan: SubscriptionPlan;              // 구독 요금제 등급
   status: SubscriptionStatus;          // 구독 상태
@@ -181,7 +181,7 @@ export interface TenantSubscription {
   memo?: string;                       // 계약 및 라이선스 메모
 }
 
-/** 📊 테넌트 구독 만료 및 D-Day 실시간 판정 헬퍼 */
+/**  테넌트 구독 만료 및 D-Day 실시간 판정 헬퍼 */
 export function getTenantSubscriptionInfo(tenant: Tenant): {
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
@@ -294,7 +294,7 @@ export interface Tenant {
   solutionType?: SolutionType;         // 솔루션 업종 분류 (AWP: 고소작업대, IT: IT 인프라/장비, MULTI: 복합 사업군)
   targetRepo?: string;                 // 연동 깃허브 레포지토리 (예: 'DragonRPA/ebro_awp', 'DragonRPA/ebro_it')
   features?: TenantFeatures;           // 활성화된 모듈 및 라이선스 플러그인
-  subscription?: TenantSubscription;   // 💳 구독 요금제 및 만료 라이선스 정보
+  subscription?: TenantSubscription;   //  구독 요금제 및 만료 라이선스 정보
   systemName: string;                  // 시스템 기본 명칭 ('e-Bro System')
   displayName: string;                 // 시스템 표출 회사명 (예: '기연리프트')
   corporateName: string;               // 법인명(단체명): '주식회사 기연리프트'
@@ -318,10 +318,10 @@ export interface Tenant {
   email?: string;                      // 대표 이메일
   websiteUrl?: string;                 // 대표 웹사이트
   
-  // 🏢 사업장 목록 (본사 및 다수의 사업장)
+  //  사업장 목록 (본사 및 다수의 사업장)
   workplaces: TenantWorkplace[];
 
-  // 🚜 주기장 목록 (다수의 주기장)
+  //  주기장 목록 (다수의 주기장)
   yards: TenantYard[];
 
   mainYardAddress?: string;            // 대표 주기장(야드) 주소 (하위 호환)
@@ -334,13 +334,13 @@ export interface Tenant {
   createdAt: string;
   updatedAt?: string;
   excelMappingRules?: TenantExcelMappingRules;
-  allowCustomBillingStatement?: boolean; // 💡 특수 거래명세서(항목 임의수정 및 사유 기록) 기능 활성화 여부
-  allowContractTradeOutbound?: boolean;  // 💡 렌탈 계약 연동 유통 출고(당월 청구 합산) 기능 활성화 여부
-  allowedPages?: string[];               // 📄 테넌트별 노출 허용 페이지 ID 목록 (빈 배열/미지정 시 전체 노출)
+  allowCustomBillingStatement?: boolean; //  특수 거래명세서(항목 임의수정 및 사유 기록) 기능 활성화 여부
+  allowContractTradeOutbound?: boolean;  //  렌탈 계약 연동 유통 출고(당월 청구 합산) 기능 활성화 여부
+  allowedPages?: string[];               //  테넌트별 노출 허용 페이지 ID 목록 (빈 배열/미지정 시 전체 노출)
   hiddenPages?: string[];
-  specialFeatures?: string[]; // 🛡️ 사장님 지목 선별적 특수 탭 / 특수 버튼 인가 목록 (예: ['tab:truck_dispatch:audit_settle'])                // 🚫 테넌트별 숨김/비노출 페이지 ID 목록
+  specialFeatures?: string[]; //  사장님 지목 선별적 특수 탭 / 특수 버튼 인가 목록 (예: ['tab:truck_dispatch:audit_settle'])                //  테넌트별 숨김/비노출 페이지 ID 목록
 
-  // 🛡️ 법정 개인정보 보호책임자
+  //  법정 개인정보 보호책임자
   privacyOfficer?: TenantPrivacyOfficer;
   privacyOfficerName?: string;
   privacyOfficerPosition?: string;
@@ -348,12 +348,12 @@ export interface Tenant {
   privacyOfficerPhone?: string;
   privacyOfficerEmail?: string;
 
-  // 📧 공식메일설정 및 R2 스토리지 설정 (중앙 플랫폼 DB tenants.features 내부 통합 관리)
+  //  공식메일설정 및 R2 스토리지 설정 (중앙 플랫폼 DB tenants.features 내부 통합 관리)
   officialMailConfig?: Partial<OfficialMailConfig>;
   r2Config?: Partial<OfficialMailConfig>;
 }
 
-/** 🛡️ 법정 개인정보 보호책임자 엔티티 */
+/**  법정 개인정보 보호책임자 엔티티 */
 export interface TenantPrivacyOfficer {
   name: string;        // 성명 (예: '이수용')
   position: string;    // 직책/직급 (예: '대표이사 / 관리부 총괄')
@@ -363,7 +363,7 @@ export interface TenantPrivacyOfficer {
   updatedAt?: string;  // 지정/수정 일시
 }
 
-/** 🏢 tenants 테이블 전사용 최신 DDL 패치 구문 (targetRepo, solutionType, stampImageUrl, stampBase64 보장) */
+/**  tenants 테이블 전사용 최신 DDL 패치 구문 (targetRepo, solutionType, stampImageUrl, stampBase64 보장) */
 export const TENANTS_DDL_STATEMENTS: string[] = [
   'ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "targetRepo" TEXT;',
   'ALTER TABLE "tenants" ADD COLUMN IF NOT EXISTS "solutionType" TEXT;',
@@ -375,7 +375,7 @@ export const TENANTS_DDL_STATEMENTS: string[] = [
   `NOTIFY pgrst, 'reload schema';`
 ];
 
-/** 🏢 tenants 테이블 신규 컬럼 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
+/**  tenants 테이블 신규 컬럼 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
 export async function autoApplyTenantsDdl(): Promise<boolean> {
   if (!supabase) return false;
   try {
@@ -384,21 +384,21 @@ export async function autoApplyTenantsDdl(): Promise<boolean> {
       console.log('[autoApplyTenantsDdl] tenants DDL 실행 및 PostgREST 스키마 캐시 갱신 성공:', data);
       return true;
     }
-    console.warn('[autoApplyTenantsDdl] dev_exec_ddl RPC 실행 실패 (Fallback 전환):', error?.message || error);
+    console.warn('[autoApplyTenantsDdl] dev_exec_ddl RPC 실행 실패:', error?.message || error);
     return false;
   } catch (e: any) {
-    console.warn('[autoApplyTenantsDdl] dev_exec_ddl RPC 호출 예외 (Fallback 전환):', e?.message || e);
+    console.warn('[autoApplyTenantsDdl] dev_exec_ddl RPC 호출 예외:', e?.message || e);
     return false;
   }
 }
 
-/** 🚜 assets 테이블 신규 컬럼(yard, assetNature), 상태 CHECK 제약조건 확장 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
+/**  assets 테이블 신규 컬럼(yard, assetNature), 상태 CHECK 제약조건 확장 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
 export const ASSETS_DDL_STATEMENTS: string[] = [
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "yard" TEXT DEFAULT '용인';`,
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "assetNature" TEXT DEFAULT 'PHYSICAL';`,
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "antiEntrapmentOwnership" TEXT;`,
   `ALTER TABLE "assets" DROP CONSTRAINT IF EXISTS "assets_status_check";`,
-  `ALTER TABLE "assets" ADD CONSTRAINT "assets_status_check" CHECK (status IN ('AVAILABLE', 'ASSIGNED', 'OUTBOUND_INSPECTION', 'AWAITING_TRANSPORT', 'RENTED', 'REPAIRING', 'RENTED_RETURNED', 'SOLD', 'LOST', 'DISPOSED'));`,
+  `ALTER TABLE "assets" ADD CONSTRAINT "assets_status_check" CHECK (status IN);`,
   `UPDATE "assets" SET "yard" = '용인' WHERE "yard" IS NULL OR "yard" = '';`,
   `NOTIFY pgrst, 'reload schema';`
 ];
@@ -411,15 +411,15 @@ export async function autoApplyAssetsDdl(): Promise<boolean> {
       console.log('[autoApplyAssetsDdl] assets DDL 실행 및 PostgREST 스키마 캐시 갱신 성공:', data);
       return true;
     }
-    console.warn('[autoApplyAssetsDdl] dev_exec_ddl RPC 실행 실패 (Fallback 전환):', error?.message || error);
+    console.warn('[autoApplyAssetsDdl] dev_exec_ddl RPC 실행 실패:', error?.message || error);
     return false;
   } catch (e: any) {
-    console.warn('[autoApplyAssetsDdl] dev_exec_ddl RPC 호출 예외 (Fallback 전환):', e?.message || e);
+    console.warn('[autoApplyAssetsDdl] dev_exec_ddl RPC 호출 예외:', e?.message || e);
     return false;
   }
 }
 
-/** 🚐 as_route_logs 테이블 자동 생성 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
+/**  as_route_logs 테이블 자동 생성 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
 export const AS_ROUTE_LOGS_DDL_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS "as_route_logs" (
     "id" TEXT PRIMARY KEY,
@@ -456,9 +456,9 @@ export const AS_ROUTE_LOGS_DDL_STATEMENTS: string[] = [
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "sourcingTargetName" TEXT;`,
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "partName" TEXT;`,
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "revisitDate" TEXT;`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_work_date ON "as_route_logs"("workDate");`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_mechanic ON "as_route_logs"("mechanicId", "workDate");`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_repair ON "as_route_logs"("repairId");`,
+  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_work_date ON "as_route_logs";`,
+  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_mechanic ON "as_route_logs";`,
+  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_repair ON "as_route_logs";`,
   `ALTER TABLE "as_route_logs" ENABLE ROW LEVEL SECURITY;`,
   `DROP POLICY IF EXISTS "allow_all_as_route_logs" ON "as_route_logs";`,
   `CREATE POLICY "allow_all_as_route_logs" ON "as_route_logs" FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);`,
@@ -473,10 +473,10 @@ export async function autoApplyAsRouteLogsDdl(): Promise<boolean> {
       console.log('[autoApplyAsRouteLogsDdl] as_route_logs DDL 실행 및 PostgREST 스키마 캐시 갱신 성공:', data);
       return true;
     }
-    console.warn('[autoApplyAsRouteLogsDdl] dev_exec_ddl RPC 실행 실패 (Fallback 전환):', error?.message || error);
+    console.warn('[autoApplyAsRouteLogsDdl] dev_exec_ddl RPC 실행 실패:', error?.message || error);
     return false;
   } catch (e: any) {
-    console.warn('[autoApplyAsRouteLogsDdl] dev_exec_ddl RPC 호출 예외 (Fallback 전환):', e?.message || e);
+    console.warn('[autoApplyAsRouteLogsDdl] dev_exec_ddl RPC 호출 예외:', e?.message || e);
     return false;
   }
 }
@@ -530,7 +530,7 @@ export interface ApprovalRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   current_step: number;
   escalated_tier?: number;
-  payload?: ApprovalPayload; // 💡 Staging Data for Auto-Commit upon Final Approval
+  payload?: ApprovalPayload; //  Staging Data for Auto-Commit upon Final Approval
   created_at?: string;
   updated_at?: string;
 }
@@ -606,7 +606,7 @@ export const TIER_LABELS: Record<number, string> = {
   7: '대표',
 };
 
-/** 전사 직급·직책 결재 티어 설정 로더 (Supabase DB ➔ LocalStorage ➔ DEFAULT_TIERS SSOT 캐싱) */
+/** 전사 직급·직책 결재 티어 설정 로더 (Supabase DB  LocalStorage  DEFAULT_TIERS SSOT 캐싱) */
 export async function loadApprovalTierConfigs(): Promise<{
   duties: ApprovalTierConfig[];
   positions: ApprovalTierConfig[];
@@ -946,7 +946,7 @@ export function userHasFunctionalAttribute(
   
   const normTarget = attributeIdOrCode.toUpperCase().replace(/^ATTR_/, '');
   
-  // 1. 해당 속성이 전사 어느 부서에도 할당되지 않은 경우 (소규모 부득이한 조건) ➔ 공유 ToDo 풀로 전 직원 접근 허용
+  // 1. 해당 속성이 전사 어느 부서에도 할당되지 않은 경우 (소규모 부득이한 조건)  공유 ToDo 풀로 전 직원 접근 허용
   const anyDeptHasAttr = departments.some(d => {
     const tags = getDepartmentFunctionalTags(d).map(t => t.toUpperCase().replace(/^ATTR_/, ''));
     return tags.includes(normTarget);
@@ -1029,10 +1029,10 @@ export interface SpecItem {
   keywords: string[];
 }
 
-// 🛡️ 고소작업대 필수 기술 요구사항 표준 체크리스트 정의 (하드코딩 제거 — DB 등록 standard_options 마스터만 사용)
+//  고소작업대 필수 기술 요구사항 표준 체크리스트 정의 (하드코딩 제거 — DB 등록 standard_options 마스터만 사용)
 export const STANDARD_SPECS: SpecItem[] = [];
 
-// 🏷️ 전사 표준 옵션 마스터 인터페이스 (유상옵션 / 무상옵션 / 부착물 / 요구사양)
+//  전사 표준 옵션 마스터 인터페이스 (유상옵션 / 무상옵션 / 부착물 / 요구사양)
 export interface StandardOption {
   id: string;
   category: 'PAID' | 'PROTECTION' | 'ATTACHMENT' | 'SPEC';
@@ -1046,7 +1046,7 @@ export interface StandardOption {
   updatedAt?: string;
 }
 
-// 🛡️ 전사 표준 옵션 마스터 기본 시드 데이터 (목업/하드코딩 옵션 전면 제거 — DB 등록 마스터만 사용)
+//  전사 표준 옵션 마스터 기본 시드 데이터 (목업/하드코딩 옵션 전면 제거 — DB 등록 마스터만 사용)
 export const SEED_STANDARD_OPTIONS: StandardOption[] = [];
 
 
@@ -1057,7 +1057,7 @@ export const SITE_CONTACT_TYPE_CONFIG: Record<SiteContactType, { label: string; 
   EQUIPMENT: {
     label: '장비담당자',
     subLabel: '현장 장비 인수/운용/반납 (기존)',
-    icon: '🏗️',
+    icon: '',
     defaultPosition: '현장소장',
     color: '#2563eb',
     bg: 'rgba(37, 99, 235, 0.1)'
@@ -1065,7 +1065,7 @@ export const SITE_CONTACT_TYPE_CONFIG: Record<SiteContactType, { label: string; 
   CLOSING: {
     label: '마감담당자',
     subLabel: '명세서 / 계산서 수신인',
-    icon: '🧾',
+    icon: '',
     defaultPosition: '공무과장',
     color: '#059669',
     bg: 'rgba(5, 150, 105, 0.1)'
@@ -1073,7 +1073,7 @@ export const SITE_CONTACT_TYPE_CONFIG: Record<SiteContactType, { label: string; 
   SAFETY: {
     label: '안전담당자',
     subLabel: '안전점검결과서 / 안전서류 (신설)',
-    icon: '🦺',
+    icon: '',
     defaultPosition: '안전관리자',
     color: '#d97706',
     bg: 'rgba(217, 119, 6, 0.1)'
@@ -1171,7 +1171,7 @@ export function calculatePaymentDueDate(
   return `${year}-${String(month).padStart(2, '0')}-${String(actualDay).padStart(2, '0')}`;
 }
 
-// 🚦 거래처 거래 제한 상태 (2대 차단 유형 체계 + 폐업 조회 차단)
+//  거래처 거래 제한 상태 (2대 차단 유형 체계 + 폐업 조회 차단)
 // 1. ALLOWED: 정상 거래
 // 2. RESTRICT_NEW: 기존 거래 유지 + 추가 출고 차단
 // 3. BLOCKED_ALL (or BLOCKED): 추가 출고 차단 + 기존 거래 종료 지시 (전면 차단)
@@ -1287,14 +1287,14 @@ export interface Customer {
   paymentTermDays?: number; // Net Terms 결제기한 (발행 후 N일)
   bankAccounts?: CustomerBankAccount[]; // 고객사 다중 계좌 목록
   
-  // 🌟 [신규] 고객사 기본 옵션/보양/부착물/요구사양 자동 재사용 마스터 (수량 제외 순수 품목명)
+  //  [신규] 고객사 기본 옵션/보양/부착물/요구사양 자동 재사용 마스터 (수량 제외 순수 품목명)
   defaultPaidOptions?: string;       // 기본 유상옵션 품목 (예: '협착난간대, 상부덮개, 소화기함' - 장비 대수 비례 수량 표기 제외)
   defaultProtection?: string;        // 기본 무상옵션 (예: '4면 철망 보양, 탑승구 사다리')
   defaultAttachments?: string;       // 기본 부착물 (예: '인증서, 제원표, 보험증권')
   defaultCheckedSpecs?: Record<string, any>; // 기본 요구 사양 체크 상태
   specialNotes?: string;             // 고객사 특이사항 메모 (예: '재임대 출고건으로 운반비 및 배차 한솔렌탈 부담')
 
-  // 📄 사업자등록증 및 💳 통장사본 증빙 스토리지
+  //  사업자등록증 및  통장사본 증빙 스토리지
   businessCertFileUrl?: string;      // 사업자등록증 첨부/스토리지 URL
   taxOffice?: string;                // 관할 세무서 (예: '평택세무서')
   openingDate?: string;              // 개업연월일(일자)
@@ -1302,7 +1302,7 @@ export interface Customer {
   passbookFileUrl?: string;          // 고객사 대표 통장사본 URL (이미지/PDF)
   passbookFileName?: string;         // 고객사 대표 통장사본 파일명
 
-  // 🏛️ [신규] 국세청 홈택스 휴폐업 및 과세유형 진위확인
+  //  [신규] 국세청 홈택스 휴폐업 및 과세유형 진위확인
   taxType?: string;                  // 과세유형 (예: '부가가치세 일반과세자', '간이과세자', '면세사업자')
   taxTypeCd?: string;                // 과세유형 코드 ('01', '02', '03' 등)
   businessStatus?: 'ACTIVE' | 'SUSPENDED' | 'CLOSED' | 'UNREGISTERED'; // 사업자 상태
@@ -1367,7 +1367,7 @@ export interface CustomerSite {
   contactName: string;
   contact: string;
   email: string;
-  contacts?: SiteContactPerson[]; // 👥 실제 동시 2명 이상 현장 담당자 목록 (장비, 마감, 안전)
+  contacts?: SiteContactPerson[]; //  실제 동시 2명 이상 현장 담당자 목록 (장비, 마감, 안전)
   billingContactName?: string;    // 마감담당자 성명
   billingContactPhone?: string;   // 마감담당자 전화번호
   billingContactEmail?: string;   // 마감담당자 이메일
@@ -1376,7 +1376,7 @@ export interface CustomerSite {
   safetyContactEmail?: string;    // 안전담당자 이메일
   paymentDueMonthOffset?: number; // 0: 당월, 1: 익월, 2: 익익월, 3: 익익익월
   
-  // 🌟 고객현장 전용 옵션/보양/부착물/요구사양 (고객 현장관리에서 직접 설정 및 옵션그룹 상속 저장)
+  //  고객현장 전용 옵션/보양/부착물/요구사양 (고객 현장관리에서 직접 설정 및 옵션그룹 상속 저장)
   paidOptions?: string;              // 현장 전용 유상옵션 품목
   protection?: string;               // 현장 전용 무상옵션
   attachments?: string;              // 현장 전용 부착물
@@ -1404,7 +1404,7 @@ export interface Product {
   originCountry?: string;        // 조달 국가/구분 ('중국 수입', '국내 매입', '해외 수입')
   isActive?: boolean;            // 사용/미사용 (단종/매각 등)
 
-  // 🌟 [지게차 VDI 2198 / ISO 5053 국제표준 제원 규격]
+  //  [지게차 VDI 2198 / ISO 5053 국제표준 제원 규격]
   equipmentClass?: string;       // 차종 구분
   powerSource?: string;          // 동력 방식
   powerType?: string;            // 동력 방식 표준
@@ -1457,7 +1457,7 @@ export interface Product {
 }
 
 /**
- * 🔒 협착방지봉 옵션 소유권 구분
+ *  협착방지봉 옵션 소유권 구분
  * - 'VENDOR': 임차거래처 소유 (※ 주기장 입고 시 절대 탈거 금지, 원형 보존 필수. 탈거 시 분실/원상복구 비용 피청구 방지)
  * - 'OURS': 당사(기연) 소유 (※ 임차처 최종 반납 전 반드시 탈거하여 당사 부품고로 회수)
  * - 'NONE': 미장착 (협착방지봉 없음)
@@ -1477,7 +1477,7 @@ export const ANTI_ENTRAPMENT_OWNERSHIP_MAP: Record<AntiEntrapmentOwnership, {
     badgeLabel: '원사소유 (탈거금지)',
     color: '#dc2626',
     bgColor: 'rgba(220, 38, 38, 0.12)',
-    inboundGuide: '⚠️ 임차거래처 소유 협착방지봉이 장착되어 있습니다. 주기장 입고 시 절대 탈거(제거)하지 마십시오! (탈거 시 분실/원상복구 비용 피청구 대상)',
+    inboundGuide: '임차거래처 소유 협착방지봉이 장착되어 있습니다. 주기장 입고 시 절대 탈거(제거)하지 마십시오! (탈거 시 분실/원상복구 비용 피청구 대상)',
     returnGuide: '임차처 소유 협착방지봉이 장착된 상태 그대로 원형 반납되어야 합니다.'
   },
   OURS: {
@@ -1485,7 +1485,7 @@ export const ANTI_ENTRAPMENT_OWNERSHIP_MAP: Record<AntiEntrapmentOwnership, {
     badgeLabel: '당사소유 (탈거회수)',
     color: '#2563eb',
     bgColor: 'rgba(37, 99, 235, 0.12)',
-    inboundGuide: '🔧 당사 소유 협착방지봉이 장착되어 있습니다. 임차처 최종 반납 전 당사 부품고로 탈거 회수하십시오.',
+    inboundGuide: '당사 소유 협착방지봉이 장착되어 있습니다. 임차처 최종 반납 전 당사 부품고로 탈거 회수하십시오.',
     returnGuide: '임차처 반납 전 당사 소유 협착방지봉을 반드시 탈거하여 당사 재고로 회수하십시오.'
   },
   NONE: {
@@ -1793,13 +1793,13 @@ export interface ContractAsset {
   expectedModel?: string;
   status?: 'RENTED' | 'RETURNED' | 'ASSIGNED' | 'OUTBOUND_INSPECTION' | 'AWAITING_TRANSPORT' | 'SOLD' | string;
   actualReturnDate?: string;
-  inRegisteredAt?: string;   // 💡 전산 입고 처리 일시
+  inRegisteredAt?: string;   //  전산 입고 처리 일시
   monthlyRentalFee: number;
   dailyRentalFee: number;
-  salePrice?: number; // 💡 자산 매각 계약 시 매각 공급가액
+  salePrice?: number; //  자산 매각 계약 시 매각 공급가액
   startDate: string;
   endDate: string;
-  firstStartDate?: string; // 💡 최초개시일 (현장 최초 투입일)
+  firstStartDate?: string; //  최초개시일 (현장 최초 투입일)
   predecessorContractId?: string;
   predecessorContractAssetId?: string;
   createdAt: string;
@@ -1831,8 +1831,8 @@ export interface SaleContractTerms {
 export interface Contract {
   id: string;
   contractNo: string;
-  contractType?: ContractType; // 💡 신규 추가: 'RENTAL' (기본값) | 'SALE' (자산 매각 계약)
-  saleTerms?: SaleContractTerms; // 💡 자산 매각 계약 전용 상세 조건
+  contractType?: ContractType; //  신규 추가: 'RENTAL' (기본값) | 'SALE' (자산 매각 계약)
+  saleTerms?: SaleContractTerms; //  자산 매각 계약 전용 상세 조건
   customerId: string;
   customerName?: string;
   contactId?: string;
@@ -1853,14 +1853,14 @@ export interface Contract {
   predecessorCustomerName?: string; // 승계 전 양도 고객사명
   driveFolderId?: string;
   salespersonId?: string; // 계약담당자 (영업사원 ID)
-  // 💡 직전 청구 마일스톤 메타데이터 (청구 발행 시 자동 트리거 갱신)
+  //  직전 청구 마일스톤 메타데이터 (청구 발행 시 자동 트리거 갱신)
   lastBillingDate?: string; // 최근 렌탈료 청구 발행일(일자)
   lastBilledPeriodStart?: string; // 최근 청구 시작일(일자)
   lastBilledPeriodEnd?: string; // 최근 청구 종료일(일자)
   lastBilledYm?: string; // 최근 청구 귀속월(연월)
   billingCount?: number; // 누적 발행 청구 건수
-  packageSentAt?: string; // 💡 계약서패키지(PDF+인증서 등) 발송 일시
-  // 💡 결재선 연동 및 사전 입력 승인 필드
+  packageSentAt?: string; //  계약서패키지(PDF+인증서 등) 발송 일시
+  //  결재선 연동 및 사전 입력 승인 필드
   approvalStatus?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
   approvalRequestId?: string;
   stagedExtend?: {
@@ -1927,7 +1927,7 @@ export interface BillingInvoice {
 
 export type BillingType = 'RENTAL' | 'REPAIR' | 'TRANSPORT' | 'ASSET_SALE';
 
-/** 💡 특수 거래명세서 오버라이드 항목 (실제 계약/청구 DB는 보존하되 명세서만 임의 수정) */
+/**  특수 거래명세서 오버라이드 항목 (실제 계약/청구 DB는 보존하되 명세서만 임의 수정) */
 export interface CustomStatementItem {
   id: string;
   itemDescription: string;     // 품목 및 규격 (자유 수정, 예: '안전 가설재 임대', '소모자재비' 등)
@@ -1942,7 +1942,7 @@ export interface CustomStatementItem {
 
 export interface Billing {
   id: string;
-  billingType?: BillingType; // 💡 신규 추가: 'RENTAL' (기본값) | 'REPAIR' | 'TRANSPORT' | 'ASSET_SALE' (자산매각)
+  billingType?: BillingType; //  신규 추가: 'RENTAL' (기본값) | 'REPAIR' | 'TRANSPORT' | 'ASSET_SALE' (자산매각)
   customerId: string;
   contractId?: string; // 연결된 계약 ID (개별 계약 정산용)
   invoiceId?: string;  // FK → billing_invoices (통합 인보이스 묶음, null=단독 청구)
@@ -1955,7 +1955,7 @@ export interface Billing {
   isPartial?: boolean;   // 부분 청구 여부 (계약 내 일부 자산만 선택하여 생성한 청구)
   parentBillingId?: string; // 청구 분할 시 원본 청구서 ID (Audit Trail)
   
-  // 💡 [사장님 지시] 특수 거래명세서(임의수정 명세서 및 사유 기록) 필드
+  //  [사장님 지시] 특수 거래명세서(임의수정 명세서 및 사유 기록) 필드
   hasCustomStatement?: boolean;              // 특수 거래명세서 커스텀 적용 여부
   customStatementReason?: string;            // 어떻게 다르게 거래명세서를 만들었는지 사유/내역
   customStatementItems?: CustomStatementItem[]; // 거래명세서 전용 오버라이드 품목 목록
@@ -1964,7 +1964,7 @@ export interface Billing {
   customStatementCreatedBy?: string;         // 작성자
   approvalStatus?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'; // 결재선 승인 상태
   approvalRequestId?: string;                // 결재 요청 FK
-  stagedCustomStatement?: {                  // 💡 전결권자 승인 대기 중인 변경 예정 데이터
+  stagedCustomStatement?: {                  //  전결권자 승인 대기 중인 변경 예정 데이터
     reason: string;
     items: CustomStatementItem[];
     originalSummary?: string;
@@ -2122,12 +2122,12 @@ export const VEHICLE_TYPE_OPTIONS: string[] = [
 export interface Delivery {
   id: string;
   contractId?: string;
-  siteMasterId?: string; // 🏛️ 헌장 1.5 Strict N:M 물리 현장 단일 진실 원천 ID
+  siteMasterId?: string; //  헌장 1.5 Strict N:M 물리 현장 단일 진실 원천 ID
   assetIds?: string; // 대상 장비 ID 목록 (콤마 구분)
   type: 'OUTBOUND' | 'INBOUND' | 'EXCHANGE' | 'MOVEMENT' | 'RETURN'; // OUTBOUND: 출고, INBOUND: 회수, EXCHANGE: 단일 교환(왕복) 배차
   dispatchCategory?: '출고' | '입고' | '반납' | '정비' | '이동' | '교환' | '경유/합짐'; // 배차 세부 유형
-  bundleGroupId?: string | null; // 🔗 경유/합짐 묶음 배차 그룹 ID
-  bundleOrder?: number | null; // 🔢 묶음 내 처리(방문) 순서 (1, 2, 3...)
+  bundleGroupId?: string | null; //  경유/합짐 묶음 배차 그룹 ID
+  bundleOrder?: number | null; //  묶음 내 처리(방문) 순서 (1, 2, 3...)
   originalDispatchCategory?: '출고' | '입고' | '반납' | '정비' | '이동' | '교환' | null; // 묶기 전 원래 배차구분 백업
   status: DeliveryStatus; // 배차 4단계 진행상태 (PENDING: 배차전, DISPATCHED: 배차완료, DELIVERED: 운송완료, CANCELLED: 배차취소)
   requestDate: string;
@@ -2264,7 +2264,7 @@ export interface Vendor {
   lastTradeDate?: string;        // 최근 거래일(일자)
   totalPurchaseAmount?: number;  // 누적 거래액 (원, 매입거래 누계액)
 
-  // 🏛️ [신규] 국세청 홈택스 휴폐업 및 과세유형
+  //  [신규] 국세청 홈택스 휴폐업 및 과세유형
   taxType?: string;
   taxTypeCd?: string;
   businessStatus?: 'ACTIVE' | 'SUSPENDED' | 'CLOSED' | 'UNREGISTERED';
@@ -2290,7 +2290,7 @@ export interface TransportDriver {
   updatedAt?: string;
 }
 
-/** 🛡️ 법정 개인정보 접속기록 모델 (개인정보 보호법 제29조 및 안전성 확보조치 기준 제8조 준수) */
+/**  법정 개인정보 접속기록 모델 (개인정보 보호법 제29조 및 안전성 확보조치 기준 제8조 준수) */
 export interface PrivacyAccessLog {
   id: string;
   userId: string;
@@ -2331,7 +2331,7 @@ export interface RepairCollectedPart {
   memo?: string;
 }
 
-// 💡 [전사 정비 & AS 단일 물리 통합 인터페이스 (1-A 원칙)]
+//  [전사 정비 & AS 단일 물리 통합 인터페이스 (1-A 원칙)]
 export interface Repair {
   id: string;
   ticketNo?: string; // 예: AS-260902-001 또는 REP-260902-001
@@ -2348,16 +2348,16 @@ export interface Repair {
   assetId?: string;
   assetNo?: string;
   modelName?: string;
-  contractId?: string; // 🌟 소속 계약 ID (계약별 AS 이력 1:1 매핑)
+  contractId?: string; //  소속 계약 ID (계약별 AS 이력 1:1 매핑)
   targetContractStatus?: string;
-  targetAssetStatus?: Asset['status']; // 🌟 정비 완료 시 자산 상태 전이 (AVAILABLE, REPAIRING 등)
+  targetAssetStatus?: Asset['status']; //  정비 완료 시 자산 상태 전이 (AVAILABLE, REPAIRING 등)
   
   // 3. 고객사 및 현장 정보
   customerId?: string;
   customerName?: string;
   siteId?: string;
   siteName?: string;
-  siteAddress?: string; // 🌟 도로명 상세주소 (T맵/내비/지도 자동 길안내 SSOT)
+  siteAddress?: string; //  도로명 상세주소 (T맵/내비/지도 자동 길안내 SSOT)
   locationDetail?: string; // 예: 팹동 8층 X27 Y17
   reporterName?: string;
   reporterContact?: string;
@@ -2495,7 +2495,7 @@ export interface RepairTimelineEvent {
   durationMinutes?: number;
 }
 
-/** 🚐 AS팀 일자별 현장 동선 및 업무단계 실시간 기록 모델 (as_route_logs) */
+/**  AS팀 일자별 현장 동선 및 업무단계 실시간 기록 모델 (as_route_logs) */
 export interface AsRouteLog {
   id: string;
   workDate: string;          // YYYY-MM-DD
@@ -2528,7 +2528,7 @@ export interface AsRouteLog {
 
 
 
-// 💡 호환용 타입 알리아스 (단일 물리 테이블: repairs)
+//  호환용 타입 알리아스 (단일 물리 테이블: repairs)
 export type FieldAsTicket = Repair;
 export type FieldAsPartUsed = RepairPartUsed;
 export type FieldAsCollectedPart = RepairCollectedPart;
@@ -2651,8 +2651,8 @@ export type TaskCategory =
   | 'OUTBOUND_PDI_INSPECTION'     // 출고 전 PDI 기능 및 안전옵션 검수
   | 'OUTBOUND_SHIPMENT_START'     // PDI 합격 장비 상차 및 화물 출발
   | 'SITE_ARRIVAL_CONFIRM'        // 현장 도착 하차 및 가동 개시 확인
-  | 'CONTRACT_PACKAGE_SEND'       // 🌟 출고 요청 장비 할당 완료 후 계약서 미발송 건 발송
-  | 'CONTRACT_PACKAGE_RESEND'     // 🌟 출고 중 자산 변경에 따른 계약서패키지(구성서류) 재발송
+  | 'CONTRACT_PACKAGE_SEND'       //  출고 요청 장비 할당 완료 후 계약서 미발송 건 발송
+  | 'CONTRACT_PACKAGE_RESEND'     //  출고 중 자산 변경에 따른 계약서패키지(구성서류) 재발송
   | 'AS_DISPATCH_REPAIR'          // 현장 AS 긴급 출동 및 조치
   | 'BILLABLE_REPAIR_BILLING'     // 유상 수리비 매출 청구서 바인딩
   | 'INBOUND_INSPECTION'          // 회수 장비 입고 검수
@@ -2893,8 +2893,8 @@ export interface AssetInOutLog {
   type: 'ACQUISITION' | 'OUTBOUND' | 'INBOUND' | 'INBOUND_CANCEL' | 'REPAIR' | 'DISPOSAL'; // 취득등록, 출고, 입고, 입고취소롤백, 정비, 매각
   inboundNo?: string; // 입고 고유 번호 (예: INB-20260809-001)
   eventDate: string; // YYYY-MM-DD (기준 일자)
-  inDate?: string; // 💡 실제 현장 입고일 (YYYY-MM-DD, 청구 및 가동일수 정산 기준)
-  inRegisteredAt?: string; // 💡 실제 전산 입고 등록 일시 (ISO String, 행위 발생 감사 기준)
+  inDate?: string; //  실제 현장 입고일 (YYYY-MM-DD, 청구 및 가동일수 정산 기준)
+  inRegisteredAt?: string; //  실제 전산 입고 등록 일시 (ISO String, 행위 발생 감사 기준)
   customerId?: string;
   customerName?: string;
   siteId?: string;
@@ -3023,10 +3023,10 @@ export interface ExternalLease {
   updatedAt: string;
 }
 
-/** 📝 영업전개 흐름 4단계 구분 */
+/**  영업전개 흐름 4단계 구분 */
 export type SalesJournalStage = '영업개시' | '제안' | '견적' | '거래개시';
 
-/** 📝 Groq LLM 영업일지 자연어 추출 포맷 */
+/**  Groq LLM 영업일지 자연어 추출 포맷 */
 export interface SalesJournalExtractedData {
   journalDate: string;          // 작성일
   customerName: string;         // 고객명
@@ -3038,7 +3038,7 @@ export interface SalesJournalExtractedData {
   nextScheduleDate?: string;    // 다음일정 일자
 }
 
-/** 📝 영업일지 엔티티 (원문 + Groq LLM 추출 데이터 통합 저장) */
+/**  영업일지 엔티티 (원문 + Groq LLM 추출 데이터 통합 저장) */
 export interface SalesJournal {
   id: string;
   journalDate: string;          // 작성일
@@ -3061,7 +3061,7 @@ export interface SalesJournal {
   tenant_id?: string;
 }
 
-/** 📊 월간 결산 손익계산서 엔티티 */
+/**  월간 결산 손익계산서 엔티티 */
 export interface MonthlyIncomeStatement {
   id: string; // e.g. 'IS-2026-08'
   targetYm: string; // 'YYYY-MM'
@@ -3619,7 +3619,7 @@ export const SEED_TENANTS: Tenant[] = [
     email: 'giyeonlift@naver.com',
     websiteUrl: '',
     
-    // 🛡️ 법정 개인정보 보호책임자
+    //  법정 개인정보 보호책임자
     privacyOfficer: {
       name: '이수용',
       position: '대표이사 / 관리부 총괄',
@@ -3634,7 +3634,7 @@ export const SEED_TENANTS: Tenant[] = [
     privacyOfficerPhone: '031-334-5295',
     privacyOfficerEmail: 'giyeonlift@naver.com (사내 관리부)',
     
-    // 🏢 본사 및 사업장 목록 (다수 사업장 체계)
+    //  본사 및 사업장 목록 (다수 사업장 체계)
     workplaces: [
       {
         id: 'wp-01',
@@ -3655,7 +3655,7 @@ export const SEED_TENANTS: Tenant[] = [
       }
     ],
 
-    // 🚜 장비 주기장 목록 (다수 주기장 체계)
+    //  장비 주기장 목록 (다수 주기장 체계)
     yards: [
       {
         id: 'yard-01',
@@ -3736,7 +3736,7 @@ export const SEED_TENANTS: Tenant[] = [
     updatedAt: '2026-01-01T00:00:00.000Z',
     allowCustomBillingStatement: true,
     allowContractTradeOutbound: true,
-    specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound'], // 💡 특수 거래명세서 기능 활성화
+    specialFeatures: ['tab:truck_dispatch:audit_settle', 'btn:truck_dispatch:bulk_approve', 'btn:courier_dispatch:direct_dispatch', 'btn:contracts:trade_outbound'], //  특수 거래명세서 기능 활성화
     excelMappingRules: {
       contractAssetsStartRow: 44,
       contractModelCol: 1,
@@ -3769,7 +3769,7 @@ export const SEED_TENANTS: Tenant[] = [
     corporateRegistrationNumber: '110111-9999999',
     representativeName: '이정용',
     openingDate: '2026-01-01',
-    businessAddress: '경기도 화성시 남양읍 시청로 160번길 20 (eBro 데모 주기장)',
+    businessAddress: '경기도 화성시 남양읍 시청로 160번길 20',
     headOfficeAddress: '경기도 화성시 남양읍 시청로 160번길 20',
     businessCategory: '사업지원 및 임대서비스업',
     businessItem: '고소작업대임대·건설기계임대',
@@ -3837,7 +3837,7 @@ export const SEED_TENANTS: Tenant[] = [
         createdAt: '2026-01-01T00:00:00.000Z'
       }
     ],
-    mainYardAddress: '경기도 화성시 남양읍 시청로 160번길 20 (eBro 데모 주기장)',
+    mainYardAddress: '경기도 화성시 남양읍 시청로 160번길 20',
     bankAccounts: [
       {
         bankName: '우리은행',
@@ -3947,7 +3947,7 @@ export const SEED_CUSTOM_ROLES: CustomRole[] = [
   },
   {
     id: 'role_mechanic',
-    name: 'AS팀 (정비/현장AS/부품)',
+    name: 'AS팀',
     description: '장비 입고 정비, 현장 AS 처리, 소모품 수불 및 점검표 관리',
     isSystem: true,
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -4241,7 +4241,7 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
     aiProcessedAt: '2026-08-15 09:30:00',
     keywords: ['유압실린더', '휠모터', '카울', '가위암', '부품품번', '소모품', '솔레노이드밸브'],
     errorCodes: [],
-    majorParts: ['유압 상승 실린더 (Part# 119561)', '전륜 유압 모터 (Part# 107321)', '조이스틱 컨트롤러 (Part# 156879)', '솔레노이드 밸브 코일 24V'],
+    majorParts: ['유압 상승 실린더', '전륜 유압 모터', '조이스틱 컨트롤러', '솔레노이드 밸브 코일 24V'],
     symptoms: ['유압 실린더 누유', '조향 불가', '바퀴 구동력 저하', '카울 파손'],
     aiSummary: 'Skyjack SJ-3219/3226 모델의 샤시, 시저 암, 플랫폼, 유압/전기 부품 전체 전개도 및 정품 파츠 품번 수록.',
     createdAt: '2026-08-15T09:00:00.000Z'
@@ -4338,7 +4338,7 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
     errorCodes: ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'RED-FLASH-1', 'RED-FLASH-2'],
     majorParts: ['Delta-Q IC650 충전기', '온도 센서 프로브', '24V 배터리 뱅크', 'AC 전원 플러그'],
     symptoms: ['충전기 빨간불 깜빡임', '충전 시작 안 됨', '배터리 완충 불가', '충전기 과열 경보'],
-    aiSummary: '고소작업대 탑재형 Delta-Q IC650 충전기의 적색 LED 1~6회 점멸 고장 진단. F1(배터리 저전압 16V 미만), F2(과열) 복구 절차 수록.',
+    aiSummary: '고소작업대 탑재형 Delta-Q IC650 충전기의 적색 LED 1~6회 점멸 고장 진단. F1, F2(과열) 복구 절차 수록.',
     createdAt: '2026-08-28T16:00:00.000Z'
   },
   {
@@ -4363,7 +4363,7 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
     aiProcessedAt: '2026-09-01 10:00:00',
     keywords: ['정비영상', '유튜브', '상승불가', '솔레노이드', '스풀세척', '에어빼기', '스카이잭', '02번에러'],
     errorCodes: ['02'],
-    majorParts: ['상승 솔레노이드 밸브 24V (Part# 103138)', '유압 밸브 블록', '오링 키트', '릴리프 밸브'],
+    majorParts: ['상승 솔레노이드 밸브 24V', '유압 밸브 블록', '오링 키트', '릴리프 밸브'],
     symptoms: ['상승 불가', '모터 공회전 소음', '유압 압력 미형성', '상승 도중 멈춤'],
     aiSummary: 'Skyjack SJ-3219의 상승 불량 시 밸브 블록 내 24V 솔레노이드 코일 통전 검사, 스풀 이물질 세척, 오링 교체 및 유압 라인 에어빼기 전과정 실무 영상.',
     createdAt: '2026-09-01T10:00:00.000Z'
@@ -4390,7 +4390,7 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
     aiProcessedAt: '2026-09-02 11:30:00',
     keywords: ['정비영상', '유튜브', '틸트센서', '에러18', '지니', '영점보정', '캘리브레이션', '수평센서'],
     errorCodes: ['18'],
-    majorParts: ['지니 듀얼 액시스 틸트 센서 (Genie Part# 105334)', '조이스틱 컨트롤러'],
+    majorParts: ['지니 듀얼 액시스 틸트 센서', '조이스틱 컨트롤러'],
     symptoms: ['18번 에러코드 점멸', '경사지 경보 지속', '상승 컷오프', '부저 울림'],
     aiSummary: 'Genie GS-1930 조이스틱 키 조작을 통한 캘리브레이션 모드 진입 및 틸트 센서(수평각도) 0점 세팅 실무 가이드 영상.',
     createdAt: '2026-09-02T11:30:00.000Z'
@@ -4417,7 +4417,7 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
     errorCodes: [],
     majorParts: ['Delta-Q 충전기', '트로잔 T-105', '로케트 L-105'],
     symptoms: ['배터리 수명 조기단축', '충전 전압 부족', '충전 완료 불 안 들어옴'],
-    aiSummary: 'Delta-Q 충전기 후면 탭 스위치 조작을 통한 배터리 브랜드별(트로잔, 로케트, US 등) 최적 충전 프로파일(알고리즘 #1, #11, #73 등) 매뉴얼.',
+    aiSummary: 'Delta-Q 충전기 후면 탭 스위치 조작을 통한 배터리 브랜드별 최적 충전 프로파일(알고리즘 #1, #11, #73 등) 매뉴얼.',
     createdAt: '2026-09-03T14:00:00.000Z'
   }
 ];
@@ -4650,7 +4650,7 @@ export const SEED_ERROR_REPORTS: ErrorReport[] = [
       }
     ],
     environmentInfo: {
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0',
+      userAgent: 'Mozilla/5.0 Chrome/128.0.0.0',
       screenResolution: '1920x1080',
       activeUrl: '/consumable_inout',
       appVersion: 'v1.14.0.Build.84'
@@ -4675,7 +4675,7 @@ export const SEED_ERROR_REPORTS: ErrorReport[] = [
     reportedAt: '2026-09-11 14:15',
     attachments: [],
     environmentInfo: {
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0',
+      userAgent: 'Mozilla/5.0 Chrome/128.0.0.0',
       screenResolution: '1920x1080',
       activeUrl: '/delivery',
       appVersion: 'v1.14.0.Build.84'
@@ -4707,7 +4707,7 @@ export const SEED_ERROR_REPORTS: ErrorReport[] = [
     reportedAt: '2026-09-10 09:00',
     attachments: [],
     environmentInfo: {
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0',
+      userAgent: 'Mozilla/5.0 Chrome/128.0.0.0',
       screenResolution: '1920x1080',
       activeUrl: '/billing',
       appVersion: 'v1.14.0.Build.83'
@@ -4723,7 +4723,7 @@ export const SEED_ERROR_REPORTS: ErrorReport[] = [
     completedAt: '2026-09-10 11:20',
     resolutionNote: 'SheetJS XLSX 엑셀 빌더 내 공급가액 및 세액 컬럼 서식을 #,##0 표준 화폐 포맷으로 강제 적용 완료',
     resolvedVersion: 'v1.14.0.Build.84',
-    rootCause: 'XLSX 셀 타입이 s(string)으로 내보내기되던 결함',
+    rootCause: 'XLSX 셀 타입이 s으로 내보내기되던 결함',
     createdAt: '2026-09-10T09:00:00.000Z',
     updatedAt: '2026-09-10T11:20:00.000Z'
   }
@@ -4769,7 +4769,7 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     deviceId: 'DEV-PC-PRIMARY-02',
     developerId: 'sys-admin',
     developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (Wi-Fi 2 메인 어댑터)',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: 'D4-AB-61-46-47-81',
     hardwareFingerprint: 'HW-D4AB-6146-4781-MASTER',
     platform: 'Win32/x86_64',
@@ -4786,14 +4786,14 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     deviceId: 'DEV-PC-PRIMARY-03',
     developerId: 'sys-admin',
     developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (이더넷 I226-V)',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: '18-3D-2D-58-F1-8C',
     hardwareFingerprint: 'HW-5AA3-E370-24C',
     platform: 'Win32/x86_64',
     status: 'ACTIVE',
     isPrimary: false,
     emergencyBreakGlassUsed: false,
-    note: '공인 개발 단말기 원클릭 등록 (이더넷)',
+    note: '공인 개발 단말기 등록 (이더넷)',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
     tenant_id: 'tenant-giyeonlift'
@@ -4818,7 +4818,7 @@ export const ALL_DB_KEYS = [
   'monthlyIncomeStatements', 'developerAuthorizedDevices', 'salesJournals'
 ];
 
-// 🛡️ [전사 외래키 참조 무결성 룰 SSOT]: schema.sql 전수 파싱 기반
+//  [전사 외래키 참조 무결성 룰 SSOT]: schema.sql 전수 파싱 기반
 const FK_RULES_MAP: Record<string, { targetTable: string; targetProp: string | null; notNull: boolean }> = {
   'departments.parentDepartmentId': { targetTable: 'departments', targetProp: 'departments', notNull: false },
   'users.departmentId': { targetTable: 'departments', targetProp: 'departments', notNull: false },
@@ -4956,7 +4956,7 @@ class LocalDB {
   }
 
   /**
-   * 🧹 localStorage 5MB 한도 잠식 방지 및 불필요한 대용량 레거시 캐시 자동 소탕
+   *  localStorage 5MB 한도 잠식 방지 및 불필요한 대용량 레거시 캐시 자동 소탕
    */
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
@@ -4976,7 +4976,7 @@ class LocalDB {
   }
 
   /**
-   * 🛡️ 법정 개인정보 보호 스토리지 자동 마이그레이션 엔진
+   *  법정 개인정보 보호 스토리지 자동 마이그레이션 엔진
    * - 기존 브라우저 localStorage에 남아있는 평문 고유식별정보, 계좌번호, 연락처 등을 최초 구동 시 100% 탐지하여 암호화 변환
    */
   private migrateLegacyPrivacyStorage(): void {
@@ -5079,7 +5079,7 @@ class LocalDB {
   }
 
   private set<T>(key: string, data: T[]): void {
-    // 🛡️ [개인정보보호지침 준수]
+    //  [개인정보보호지침 준수]
     // 1. 인메모리 캐시: 복호화된 원본 데이터를 보관하여 73개 전 메뉴 UI 렌더링, 검색, 계약서 출력, 정산 등이 100% 정상 작동 보장
     const decryptedData = Array.isArray(data) 
       ? data.map(item => decryptEntityPrivacyFields(key, item))
@@ -5087,7 +5087,7 @@ class LocalDB {
     this.inMemoryCache.set(key, decryptedData);
 
     // 2. 브라우저 localStorage: 고유식별정보, 금융계좌, 연락처 등 법정 보호 개인정보를 100% 암호화하여 저장
-    // 💡 로그/대용량 트랜잭션은 localStorage 용량 잠식을 방지하기 위해 로컬 캐시를 건너뜁니다 (인메모리 및 Supabase 영구 보존)
+    //  로그/대용량 트랜잭션은 localStorage 용량 잠식을 방지하기 위해 로컬 캐시를 건너뜁니다 (인메모리 및 Supabase 영구 보존)
     const SKIP_LOCAL_STORAGE_TABLES = new Set([
       'privacyAccessLogs', 'privacy_access_logs', 'printQueue', 'walkieTalkieHistory'
     ]);
@@ -5114,7 +5114,7 @@ class LocalDB {
     let list = this.get<Tenant>('tenants', SEED_TENANTS);
     let modified = false;
 
-    // 🧹 [가짜 시드 테넌트 자동 소탕] 과거 데모용 mock 테넌트(tenant-2 ~ tenant-5, HANSOL, SAMWOO, TECHONE, ACE_GROUP) 제거
+    //  [가짜 시드 테넌트 자동 소탕] 과거 데모용 mock 테넌트(tenant-2 ~ tenant-5, HANSOL, SAMWOO, TECHONE, ACE_GROUP) 제거
     const MOCK_CODES = new Set(['HANSOL', 'SAMWOO', 'TECHONE', 'ACE_GROUP']);
     const MOCK_IDS = new Set(['tenant-2', 'tenant-3', 'tenant-4', 'tenant-5']);
     const filtered = list.filter(t => !MOCK_CODES.has(t.tenantCode) && !MOCK_IDS.has(t.id));
@@ -5218,7 +5218,7 @@ class LocalDB {
   get currentTenant(): Tenant {
     const list = this.tenants;
 
-    // 🌐 [0순위] URL 쿼리 파라미터 기반 테넌트 매핑 (?tenant=GIYEUN 또는 ?t=GIYEUN)
+    //  [0순위] URL 쿼리 파라미터 기반 테넌트 매핑 (?tenant=GIYEUN 또는 ?t=GIYEUN)
     if (typeof window !== 'undefined' && window.location?.search) {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -5237,7 +5237,7 @@ class LocalDB {
       } catch (e) {}
     }
 
-    // 🌐 [0.5순위] 데모 모드(awp-demo.ebro.run 등)에서는 (주)e-Bro렌탈 데모 테넌트 최우선 반환
+    //  [0.5순위] 데모 모드(awp-demo.ebro.run 등)에서는 (주)e-Bro렌탈 데모 테넌트 최우선 반환
     if (isDemoMode()) {
       const demoTenant = list.find(t => {
         const code = (t.tenantCode || '').toLowerCase();
@@ -5248,7 +5248,7 @@ class LocalDB {
       if (demoTenant) return demoTenant;
     }
 
-    // 🌐 [1순위] 브라우저 접속 도메인의 서브도메인 기반 자동 테넌트 매핑 (*.ebro.run)
+    //  [1순위] 브라우저 접속 도메인의 서브도메인 기반 자동 테넌트 매핑 (*.ebro.run)
     if (typeof window !== 'undefined' && window.location?.hostname) {
       const hostname = window.location.hostname.toLowerCase();
       // 예: giyeonlift.ebro.run, giyeon.ebro.run, giyeun.ebro.run, hansol.ebro.run
@@ -5274,14 +5274,14 @@ class LocalDB {
       }
     }
 
-    // 💾 [2순위] 로컬스토리지 수동 지정 테넌트 ID
+    //  [2순위] 로컬스토리지 수동 지정 테넌트 ID
     const activeTenantId = typeof window !== 'undefined' ? localStorage.getItem('erp_current_tenant_id') : null;
     if (activeTenantId) {
       const found = list.find(t => t.id === activeTenantId || t.tenantCode === activeTenantId);
       if (found) return found;
     }
 
-    // 🏢 [3순위] 디폴트 테넌트 (기연리프트)
+    //  [3순위] 디폴트 테넌트 (기연리프트)
     const defaultTenant = list.find(t => t.isDefault) || list[0];
     return defaultTenant || SEED_TENANTS[0];
   }
@@ -5798,7 +5798,7 @@ class LocalDB {
 
   get repairs() {
     const list = this.get<Repair>('repairs', SEED_REPAIRS);
-    // 🌟 현장 도로명 주소 보강 (원격 DB 미반영 환경에서도 무누락 상속)
+    //  현장 도로명 주소 보강 (원격 DB 미반영 환경에서도 무누락 상속)
     return list.map(r => {
       if (r.siteAddress && r.siteAddress.trim()) return r;
       let addr = '';
@@ -5886,7 +5886,7 @@ class LocalDB {
   get outboundInspections() { return this.get<OutboundInspection>('outboundInspections', []); }
   set outboundInspections(val: OutboundInspection[]) { this.set('outboundInspections', val); }
 
-  // 💡 [Zero Silent Failures / 1000-Row Pagination Bug Fix]
+  //  [Zero Silent Failures / 1000-Row Pagination Bug Fix]
   // Supabase의 기본 select('*')는 최대 1000건까지만 반환합니다.
   // 데이터가 1000건을 초과하면 이후 생성된 데이터가 프론트엔드에 동기화되지 않고 무음 누락되는 심각한 결함이 있었습니다.
   // 이를 해결하기 위해 while 문과 range()를 사용하여 테이블의 모든 레코드를 페이지네이션으로 100% 무누락 조회합니다.
@@ -6088,103 +6088,103 @@ class LocalDB {
     }
     const normalized = { ...item };
     
-    // userId (user_id ➔ userId 변환 후 snake_case 전면 파기)
+    // userId (user_id  userId 변환 후 snake_case 전면 파기)
     if (normalized.user_id) {
       if (!normalized.userId) normalized.userId = normalized.user_id;
       delete normalized.user_id;
     }
 
-    // functional_tags (functional_tags ➔ functionalTags 변환 및 동시 양방향 유지)
+    // functional_tags (functional_tags  functionalTags 변환 및 동시 양방향 유지)
     if (normalized.functional_tags !== undefined) {
       if (!normalized.functionalTags) normalized.functionalTags = normalized.functional_tags;
     } else if (normalized.functionalTags !== undefined) {
       normalized.functional_tags = normalized.functionalTags;
     }
 
-    // tenant_id (tenant_id ➔ tenantId 변환)
+    // tenant_id (tenant_id  tenantId 변환)
     if (normalized.tenant_id !== undefined) {
       if (!normalized.tenantId) normalized.tenantId = normalized.tenant_id;
     }
 
-    // shortName (short_name ➔ shortName 변환 후 snake_case 전면 파기)
+    // shortName (short_name  shortName 변환 후 snake_case 전면 파기)
     if (normalized.short_name !== undefined) {
       if (normalized.shortName === undefined) normalized.shortName = normalized.short_name;
       delete normalized.short_name;
     }
     
-    // salespersonId (salesperson_id ➔ salespersonId 변환 후 snake_case 전면 파기)
+    // salespersonId (salesperson_id  salespersonId 변환 후 snake_case 전면 파기)
     if (normalized.salesperson_id) {
       if (!normalized.salespersonId) normalized.salespersonId = normalized.salesperson_id;
       delete normalized.salesperson_id;
     }
 
-    // requesterId (requester_id ➔ requesterId 변환 후 snake_case 전면 파기)
+    // requesterId (requester_id  requesterId 변환 후 snake_case 전면 파기)
     if (normalized.requester_id) {
       if (!normalized.requesterId) normalized.requesterId = normalized.requester_id;
       delete normalized.requester_id;
     }
 
-    // mechanicId (mechanic_id ➔ mechanicId 변환 후 snake_case 전면 파기)
+    // mechanicId (mechanic_id  mechanicId 변환 후 snake_case 전면 파기)
     if (normalized.mechanic_id) {
       if (!normalized.mechanicId) normalized.mechanicId = normalized.mechanic_id;
       delete normalized.mechanic_id;
     }
 
-    // customerId (customer_id ➔ customerId 변환 후 snake_case 전면 파기)
+    // customerId (customer_id  customerId 변환 후 snake_case 전면 파기)
     if (normalized.customer_id) {
       if (!normalized.customerId) normalized.customerId = normalized.customer_id;
       delete normalized.customer_id;
     }
 
-    // siteId (site_id ➔ siteId 변환 후 snake_case 전면 파기)
+    // siteId (site_id  siteId 변환 후 snake_case 전면 파기)
     if (normalized.site_id) {
       if (!normalized.siteId) normalized.siteId = normalized.site_id;
       delete normalized.site_id;
     }
 
-    // contractId (contract_id ➔ contractId 변환 후 snake_case 전면 파기)
+    // contractId (contract_id  contractId 변환 후 snake_case 전면 파기)
     if (normalized.contract_id) {
       if (!normalized.contractId) normalized.contractId = normalized.contract_id;
       delete normalized.contract_id;
     }
 
-    // contractStart (contract_start ➔ contractStart 변환 후 snake_case 전면 파기)
+    // contractStart (contract_start  contractStart 변환 후 snake_case 전면 파기)
     if (normalized.contract_start) {
       if (!normalized.contractStart) normalized.contractStart = normalized.contract_start;
       delete normalized.contract_start;
     }
 
-    // contractEnd (contract_end ➔ contractEnd 변환 후 snake_case 전면 파기)
+    // contractEnd (contract_end  contractEnd 변환 후 snake_case 전면 파기)
     if (normalized.contract_end) {
       if (!normalized.contractEnd) normalized.contractEnd = normalized.contract_end;
       delete normalized.contract_end;
     }
 
-    // currentCustomerId (current_customer_id ➔ currentCustomerId 변환 후 snake_case 전면 파기)
+    // currentCustomerId (current_customer_id  currentCustomerId 변환 후 snake_case 전면 파기)
     if (normalized.current_customer_id) {
       if (!normalized.currentCustomerId) normalized.currentCustomerId = normalized.current_customer_id;
       delete normalized.current_customer_id;
     }
 
-    // currentSiteId (current_site_id ➔ currentSiteId 변환 후 snake_case 전면 파기)
+    // currentSiteId (current_site_id  currentSiteId 변환 후 snake_case 전면 파기)
     if (normalized.current_site_id) {
       if (!normalized.currentSiteId) normalized.currentSiteId = normalized.current_site_id;
       delete normalized.current_site_id;
     }
 
-    // assetId (asset_id ➔ assetId 변환 후 snake_case 전면 파기)
+    // assetId (asset_id  assetId 변환 후 snake_case 전면 파기)
     if (normalized.asset_id) {
       if (!normalized.assetId) normalized.assetId = normalized.asset_id;
       delete normalized.asset_id;
     }
 
-    // mediaType (media_type ➔ mediaType 변환 후 snake_case 전면 파기)
+    // mediaType (media_type  mediaType 변환 후 snake_case 전면 파기)
     if (normalized.media_type) {
       if (!normalized.mediaType) normalized.mediaType = normalized.media_type;
       delete normalized.media_type;
     }
 
-    // consumables 호환 (name ➔ modelName, supplier 추론) - 반드시 consumables 테이블에만 한정 적용
+    // consumables 호환 (name  modelName, supplier 추론) - 반드시 consumables 테이블에만 한정 적용
     if (tableName === 'assets') {
       if (!normalized.assetNature) {
         normalized.assetNature = isVirtualAsset(normalized) ? 'VIRTUAL' : 'PHYSICAL';
@@ -6302,7 +6302,7 @@ class LocalDB {
       }
     }
 
-    // 🏢 [tenants 직인 및 features JSONB 확장 속성 상호 복원]
+    //  [tenants 직인 및 features JSONB 확장 속성 상호 복원]
     if (tableName === 'tenants' || normalized.stampBase64 !== undefined || normalized.stampImageUrl !== undefined) {
       const stampVal = normalized.stampBase64 || normalized.stampImageUrl;
       if (stampVal) {
@@ -6666,8 +6666,8 @@ class LocalDB {
       }
     } catch {}
 
-    const regex = new RegExp(`^${prefix}(\\d+)`, 'i');
-    const fallbackRegex = new RegExp(`^${key.slice(0, 4)}-(\\d+)`, 'i');
+    const regex = new RegExp(`^${prefix}`, 'i');
+    const fallbackRegex = new RegExp(`^${key.slice(0, 4)}-`, 'i');
 
     list.forEach(item => {
       if (!item || !item.id) return;
@@ -6887,7 +6887,7 @@ class LocalDB {
         continue;
       }
 
-      // ─── 🛡️ [전사 외래키 가디언 방어벽 시작] ───
+      // ───  [전사 외래키 가디언 방어벽 시작] ───
 
       // 1. 의사 널 문자열 전면 정제 (공백, 'null', 'undefined', 'none', 'n/a' 등)
       if (typeof val === 'string') {
@@ -7226,7 +7226,7 @@ class LocalDB {
       delete sanitized.blockType;
     }
 
-    // 🏢 tenants 테이블 전용 데이터 정제 및 컬럼 매핑 (centralSupabase.tenants 실제 컬럼 화이트리스트 및 JSONB 패킹)
+    //  tenants 테이블 전용 데이터 정제 및 컬럼 매핑 (centralSupabase.tenants 실제 컬럼 화이트리스트 및 JSONB 패킹)
     if (resolvedTable === 'tenants') {
       // 1. 프론트엔드 stampImageUrl ↔ DB stampBase64 완벽 호환 (직인 컬럼 불일치 해결)
       if (obj.stampImageUrl !== undefined && obj.stampImageUrl !== null) {
@@ -7335,7 +7335,7 @@ class LocalDB {
       }
     }
 
-    // 🕒 [타임스탬프 NOT NULL 보장 및 미보유 테이블 createdAt/updatedAt 원천 제거]
+    //  [타임스탬프 NOT NULL 보장 및 미보유 테이블 createdAt/updatedAt 원천 제거]
     const NO_CREATED_AT = new Set([
       'system_settings',
       'approval_rules', 'rule_consensus', 'approval_requests', 'approval_steps', 'delegation_records',
@@ -7722,7 +7722,7 @@ class LocalDB {
     }
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (targetClient) {
-      // 💡 [NULL 컬럼 갱신 보장]: updates에 명시적으로 전달된 null 필드를 sanitize 이전에 반영하여 화이트리스트 우회 오염 원천 차단
+      //  [NULL 컬럼 갱신 보장]: updates에 명시적으로 전달된 null 필드를 sanitize 이전에 반영하여 화이트리스트 우회 오염 원천 차단
       const rawForSanitize: any = (tableName === 'tenants')
         ? { ...updated, id }
         : { id, ...updatedPayload };
@@ -8002,7 +8002,7 @@ class LocalDB {
 
   // 조직도 및 구성원 일괄 저장 - 기존 데이터를 전부 덮어씌움
   async saveOrganizationBatch(departments: Department[], users: User[]): Promise<void> {
-    // 🛡️ [테스터 배제] 테스터 계정 원천 차단
+    //  [테스터 배제] 테스터 계정 원천 차단
     const isTester = (u: any) =>
       u.id?.startsWith('usr-tester') ||
       u.name?.includes('테스터') ||
@@ -8117,7 +8117,7 @@ export const db = new LocalDB();
 if (typeof window !== 'undefined') { (window as any).db = db; }
 
 /**
- * 🛡️ 법정 개인정보 접속기록 로깅 엔진 (개인정보 보호법 제29조 및 안전성 확보조치 기준 제8조 준수)
+ *  법정 개인정보 접속기록 로깅 엔진 (개인정보 보호법 제29조 및 안전성 확보조치 기준 제8조 준수)
  * - 접속자, 접속일시, 접속지, 수행업무(조회, 수정, 삭제, 다운로드), 대상정보, 마스킹 여부를 기록
  */
 export async function logPrivacyAccess(

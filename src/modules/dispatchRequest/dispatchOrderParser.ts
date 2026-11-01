@@ -371,7 +371,7 @@ export function parseDispatchOrderText(
   const eqList: EquipmentItem[] = [];
   for (const m of catalogModels) {
     const escaped = m.modelName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`${escaped}\\s*(?:[*xX×-]\\s*)?(\\d+)?\\s*(?:대)?`, 'i');
+    const regex = new RegExp(`${escaped}\\s*??\\s*(?:대)?`, 'i');
     const match = text.match(regex);
     if (match) {
       const qty = match[1] ? parseInt(match[1], 10) : 1;

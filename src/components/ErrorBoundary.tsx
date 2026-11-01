@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an unhandled error:', error, errorInfo);
     this.setState({ errorInfo });
 
-    // 🛡️ [무한 새로고침 루프 방지 & 배포 청크 불일치 안전 복구]
+    //  [무한 새로고침 루프 방지 & 배포 청크 불일치 안전 복구]
     const msg = error?.message || String(error);
     const isChunkLoadError =
       msg.includes('Failed to fetch dynamically imported module') ||
@@ -169,7 +169,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   작업 상태 보호를 위해 화면을 안전하게 복원합니다.
-                </div>
+ </div>
               </div>
             </div>
 
@@ -300,7 +300,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   }}
                 >
                   모달 닫기
-                </button>
+ </button>
               )}
             </div>
           </div>

@@ -140,7 +140,7 @@ export function generateReceiptHtml(
     }
   }
 
-  const signDateFormatted = signDate.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1년  $2월  $3일');
+  const signDateFormatted = signDate.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1년 $2월 $3일');
 
   // 각 페이지 HTML 렌더링
   let accumulatedRowIndex = 0;
@@ -164,7 +164,7 @@ export function generateReceiptHtml(
           
           <!-- 1. Header Title -->
           <h1 style="text-align: center; font-size: 24px; font-weight: 800; color: #000000; margin: 6px 0 6px; letter-spacing: 4px;">
-            납 &nbsp; 품 &nbsp; (인 &nbsp; 수) &nbsp; 확 &nbsp; 인 &nbsp; 서${!isFirstPage ? ' &nbsp;<span style="font-size: 16px; font-weight: 700;">(계 속)</span>' : ''}
+            납 &nbsp; 품 &nbsp; &nbsp; 확 &nbsp; 인 &nbsp; 서${!isFirstPage ? ' &nbsp;<span style="font-size: 16px; font-weight: 700;">(계 속)</span>' : ''}
           </h1>
           <div style="width: 360px; margin: 0 auto 10px auto;">
             <div style="height: 2px; background: #000000; margin-bottom: 2px;"></div>
@@ -214,7 +214,7 @@ export function generateReceiptHtml(
               <!-- Right: 공급받는자 -->
               <div style="flex: 1; border: 1px solid #000000; box-sizing: border-box;">
                 <div style="background: #f0f0f0; border-bottom: 1px solid #000000; padding: 4px; text-align: center; font-size: 12px; font-weight: 700; color: #000000;">
-                  공 &nbsp; 급 &nbsp; 받 &nbsp; 는 &nbsp; 자 &nbsp; (인 &nbsp; 수 &nbsp; 처)
+                  공 &nbsp; 급 &nbsp; 받 &nbsp; 는 &nbsp; 자 &nbsp;
                 </div>
                 <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
                   <tr style="border-bottom: 1px solid #000000; height: 23px;">
@@ -326,7 +326,7 @@ export function generateReceiptHtml(
               ` : `
                 <tr style="height: 24px; background: #f0f0f0;">
                   <td colspan="6" style="border: 1px solid #000000; padding: 3px 12px; text-align: center; font-size: 10.5px; font-weight: 700; color: #000000;">
-                    [ 다음 페이지 (${pageIdx + 2} / ${totalPages}) 에 계속 연결됩니다 ➔ ]
+                    [ 다음 페이지 (${pageIdx + 2} / ${totalPages}) 에 계속 연결됩니다  ]
                   </td>
                 </tr>
               `}
@@ -344,7 +344,7 @@ export function generateReceiptHtml(
             <div class="sign-section" style="margin-top: 6px; margin-bottom: 6px;">
               <div style="display: flex; justify-content: space-between; align-items: stretch; border: 1px solid #000000; padding: 8px 12px; background: #f5f2eb;">
                 
-                <!-- Left: Confirmation Statement & Company (No redundant supplier table) -->
+                <!-- Left: Confirmation Statement & Company  -->
                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-right: 14px;">
                   <div>
                     <div style="font-size: 13.5px; font-weight: 800; color: #000000; letter-spacing: -0.2px; line-height: 1.4;">
@@ -661,7 +661,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
   const sWebsite = effectiveSupplier?.websiteUrl || 
                    defaultSupplier.websiteUrl || '';
 
-  drawTableGrid(65, boxY, boxW, boxH, '공    급    자', [
+  drawTableGrid(65, boxY, boxW, boxH, '공 급 자', [
     { label: '상호(법인명)', value: sCorpName },
     { label: '대표자 성명', value: sRep || '-' },
     { label: '사업자등록번호', value: sBizNo },
@@ -669,9 +669,9 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
     { label: '대표전화/FAX', value: sFax && sFax !== '-' ? `${sTel} / ${sFax}` : sTel }
   ]);
 
-  drawTableGrid(610, boxY, boxW, boxH, '공 급 받 는 자  (인 수 처)', [
+  drawTableGrid(610, boxY, boxW, boxH, '공 급 받 는 자 (인 수 처)', [
     { label: '고객사 (상호)', value: customerName },
-    { label: '현   장   명', value: siteName },
+    { label: '현 장 명', value: siteName },
     { label: '하차지 주소', value: siteAddress },
     { label: '인수 담당자', value: receiverName },
     { label: '인수자 연락처', value: receiverPhone }
@@ -973,7 +973,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
   ctx.fillStyle = '#000000';
   ctx.font = 'bold 14.5px "Malgun Gothic", Pretendard, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`합 계 :  총 ${Math.max(rawCargos.length, 1)}개 품목  /  ${totalCount}대`, 65 + (tblW / 2), sumY + 24);
+  ctx.fillText(`합 계 : 총 ${Math.max(rawCargos.length, 1)}개 품목 / ${totalCount}대`, 65 + (tblW / 2), sumY + 24);
 
   // Optional: Notes box
   let currentY = sumY + sumH;
@@ -1003,7 +1003,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
   const dateY = stmtY + 30;
   ctx.font = 'bold 15px "Malgun Gothic", Pretendard, sans-serif';
   ctx.fillStyle = '#000000';
-  ctx.fillText(signDate.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1년  $2월  $3일'), 600, dateY);
+  ctx.fillText(signDate.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1년 $2월 $3일'), 600, dateY);
 
   // 9. Signatures Area (Left: Confirmation/Company / Right: Compact Receiver Table)
   const signCardY = dateY + 24;
@@ -1015,7 +1015,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
   ctx.font = 'bold 17px "Malgun Gothic", Pretendard, sans-serif';
   ctx.textAlign = 'left';
   const repTitle = sRep ? `대표이사 ${sRep} ` : '';
-  ctx.fillText(`${sCorpName}  ${repTitle}(직인생략)`, leftX, signCardY + 68);
+  ctx.fillText(`${sCorpName} ${repTitle}(직인생략)`, leftX, signCardY + 68);
 
   ctx.fillStyle = '#555555';
   ctx.font = '13px "Malgun Gothic", Pretendard, sans-serif';
@@ -1042,7 +1042,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
   ctx.fillStyle = '#000000';
   ctx.font = 'bold 15px "Malgun Gothic", Pretendard, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('인  수  자  확  인', rTableX + rTableW / 2, signCardY + 23);
+  ctx.fillText('인 수 자 확 인', rTableX + rTableW / 2, signCardY + 23);
 
   // Row 1: 인수 담당자
   const r1Y = signCardY + rHdrH;
@@ -1182,7 +1182,7 @@ export async function generateSignedReceiptCanvas(options: SignedReceiptOptions)
     sCorpName,
     footerContact,
     footerWeb
-  ].filter(Boolean).join('  |  ');
+  ].filter(Boolean).join(' | ');
   ctx.fillText(footerText, 600, footLineY + 48);
 
   return canvas;

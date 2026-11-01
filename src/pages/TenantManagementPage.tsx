@@ -53,7 +53,7 @@ export const TenantManagementPage: React.FC = () => {
   } = useApp();
 
   useEffect(() => {
-    // 🌐 중앙 플랫폼 DB(ebro-platform-core)의 최신 테넌트 원장 실시간 동기화
+    //  중앙 플랫폼 DB(ebro-platform-core)의 최신 테넌트 원장 실시간 동기화
     if (loadTablesForMenu) {
       loadTablesForMenu('tenant_management');
     }
@@ -853,7 +853,7 @@ export const TenantManagementPage: React.FC = () => {
   // ── 저장 실행 ──
   const handleSave = async () => {
     if (!formData.tenantCode?.trim()) {
-      showErrorModal('테넌트 영문 코드를 입력하십시오. (예: HANSOL, SAMWOO)');
+      showErrorModal('테넌트 영문 코드를 입력하십시오.');
       return;
     }
     if (!formData.displayName?.trim()) {
@@ -1100,7 +1100,7 @@ export const TenantManagementPage: React.FC = () => {
             <Building2 size={20} color="var(--primary)" />
             <h2 data-mid="tenant_management-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
               테넌트 관리
-            </h2>
+ </h2>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1141,7 +1141,7 @@ export const TenantManagementPage: React.FC = () => {
                 }}
               >
                 전체 ({counts.total})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('ACTIVE')}
@@ -1158,7 +1158,7 @@ export const TenantManagementPage: React.FC = () => {
                 }}
               >
                 가동 ({counts.active})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('EXPIRING_SOON')}
@@ -1175,7 +1175,7 @@ export const TenantManagementPage: React.FC = () => {
                 }}
               >
                 만료임박 ({counts.expiring})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('EXPIRED')}
@@ -1192,7 +1192,7 @@ export const TenantManagementPage: React.FC = () => {
                 }}
               >
                 만료 ({counts.expired})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('SUSPENDED')}
@@ -1209,7 +1209,7 @@ export const TenantManagementPage: React.FC = () => {
                 }}
               >
                 정지 ({counts.suspended})
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1320,7 +1320,7 @@ export const TenantManagementPage: React.FC = () => {
                 <tr>
                   <td colSpan={14} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     일치하는 테넌트 데이터가 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 sortedTenants.map((tenant: Tenant) => {
@@ -1436,7 +1436,7 @@ export const TenantManagementPage: React.FC = () => {
                             >
                               <Star size={9} fill="#b45309" />
                               기본
-                            </span>
+ </span>
                           )}
                         </div>
                       </td>
@@ -1533,7 +1533,7 @@ export const TenantManagementPage: React.FC = () => {
                                   }}
                                 >
                                   연장
-                                </button>
+ </button>
                               </div>
                             </div>
                           );
@@ -1622,7 +1622,7 @@ export const TenantManagementPage: React.FC = () => {
                             }}
                           >
                             텔레그램
-                          </span>
+ </span>
                           <span 
                             title={`음성 STT: ${tenant.features?.callRecordingStt ? '활성' : '미사용'}`}
                             style={{ 
@@ -1633,7 +1633,7 @@ export const TenantManagementPage: React.FC = () => {
                             }}
                           >
                             음성STT
-                          </span>
+ </span>
                           <span 
                             title={`카카오 계약: ${tenant.features?.kakaoContract ? '활성' : '미사용'}`}
                             style={{ 
@@ -1644,7 +1644,7 @@ export const TenantManagementPage: React.FC = () => {
                             }}
                           >
                             카카오
-                          </span>
+ </span>
                           <span 
                             title={`세무 자동연동: ${tenant.features?.autoTaxInvoice ? '활성' : '미사용'}`}
                             style={{ 
@@ -1655,7 +1655,7 @@ export const TenantManagementPage: React.FC = () => {
                             }}
                           >
                             세무
-                          </span>
+ </span>
                           <span 
                             title={`웹앱 무전기: ${tenant.features?.walkieTalkie !== false ? '활성' : '미사용'}`}
                             style={{ 
@@ -1666,7 +1666,7 @@ export const TenantManagementPage: React.FC = () => {
                             }}
                           >
                             무전기
-                          </span>
+ </span>
                         </div>
                       </td>
 
@@ -1804,7 +1804,7 @@ export const TenantManagementPage: React.FC = () => {
               fontSize: '12px'
             }}>
               {currentTenant?.displayName} ({currentTenant?.tenantCode})
-            </span>
+ </span>
           </div>
         </div>
       </div>
@@ -1914,7 +1914,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       테넌트 영문 코드 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.tenantCode || ''}
@@ -1928,8 +1928,8 @@ export const TenantManagementPage: React.FC = () => {
                   {/* 전용 서브도메인 */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                      전용 서브도메인 (*.ebro.run) *
-                    </label>
+                      전용 서브도메인 *
+ </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <input
                         type="text"
@@ -1955,7 +1955,7 @@ export const TenantManagementPage: React.FC = () => {
                           fontFamily: 'monospace'
                         }}>
                           {formData.subdomain || formData.tenantCode?.toLowerCase() || 'subdomain'}.awp.ebro.run
-                        </span>
+ </span>
                         <span style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1968,7 +1968,7 @@ export const TenantManagementPage: React.FC = () => {
                           fontFamily: 'monospace'
                         }}>
                           {formData.subdomain || formData.tenantCode?.toLowerCase() || 'subdomain'}.it.ebro.run
-                        </span>
+ </span>
                       </div>
                     )}
                   </div>
@@ -1977,7 +1977,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       솔루션 업종
-                    </label>
+ </label>
                     <select
                       value={formData.solutionType || 'AWP'}
                       onChange={e => {
@@ -2009,7 +2009,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       연동 깃허브 레포지토리
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.targetRepo || ''}
@@ -2031,7 +2031,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       표시 상호 (브랜드명) *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.displayName || ''}
@@ -2045,7 +2045,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       정식 법인명 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.corporateName || ''}
@@ -2059,7 +2059,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       사업자등록번호 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.businessNumber || ''}
@@ -2073,7 +2073,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       법인등록번호
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.corporateRegistrationNumber || ''}
@@ -2087,7 +2087,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       대표자 성명 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.representativeName || ''}
@@ -2101,7 +2101,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       개업연월일
-                    </label>
+ </label>
                     <input
                       type="date"
                       value={formData.openingDate || ''}
@@ -2114,7 +2114,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       대표 전화번호
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.tel || ''}
@@ -2128,7 +2128,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       팩스 번호
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.fax || ''}
@@ -2142,7 +2142,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       전자세금계산서 이메일
-                    </label>
+ </label>
                     <input
                       type="email"
                       value={formData.taxEmail || ''}
@@ -2156,7 +2156,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       관할 세무서
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.taxOffice || ''}
@@ -2170,7 +2170,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       사업장 소재지 (본점 주소) *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.businessAddress || ''}
@@ -2184,7 +2184,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       운영 상태
-                    </label>
+ </label>
                     <select
                       value={formData.status || 'ACTIVE'}
                       onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
@@ -2199,7 +2199,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', justifyContent: 'center' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       기본 테넌트 여부
-                    </label>
+ </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
                       <input
                         type="checkbox"
@@ -2249,7 +2249,7 @@ export const TenantManagementPage: React.FC = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
                                 {subInfo.planLabel} 라이선스
-                              </span>
+ </span>
                               <span style={{
                                 padding: '2px 8px',
                                 borderRadius: '12px',
@@ -2263,7 +2263,7 @@ export const TenantManagementPage: React.FC = () => {
                             </div>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                               구독 만료일자: <strong style={{ color: 'var(--text-primary)' }}>{formData.subscription?.endDate || '-'}</strong> (유예기간 {formData.subscription?.gracePeriodDays ?? 7}일)
-                            </span>
+ </span>
                           </div>
                         </div>
 
@@ -2271,7 +2271,7 @@ export const TenantManagementPage: React.FC = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
                           <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
                             인증 라이선스 키
-                          </span>
+ </span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <code style={{
                               padding: '4px 10px',
@@ -2315,7 +2315,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-secondary)' }}>
                       구독 요금제 등급
-                    </label>
+ </label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
                       {[
                         { key: 'TRIAL', name: '체험판', desc: '14일 무료', limit: '30대 / 3계정' },
@@ -2376,7 +2376,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         구독 유효 기간 및 기간 연장
-                      </span>
+ </span>
                       {/* 원클릭 연장 버튼군 */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '2px' }}>빠른 연장:</span>
@@ -2413,7 +2413,7 @@ export const TenantManagementPage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                           구독 개시일자
-                        </label>
+ </label>
                         <input
                           type="date"
                           value={formData.subscription?.startDate || ''}
@@ -2432,7 +2432,7 @@ export const TenantManagementPage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                           구독 만료일자 *
-                        </label>
+ </label>
                         <input
                           type="date"
                           value={formData.subscription?.endDate || ''}
@@ -2451,7 +2451,7 @@ export const TenantManagementPage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                           만료 후 서비스 유예 기간 (일수)
-                        </label>
+ </label>
                         <input
                           type="number"
                           value={formData.subscription?.gracePeriodDays ?? 7}
@@ -2475,7 +2475,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         청구 및 결제 주기
-                      </label>
+ </label>
                       <select
                         value={formData.subscription?.billingCycle || 'MONTHLY'}
                         onChange={e => setFormData(prev => ({
@@ -2497,7 +2497,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         구독료 (원 단위)
-                      </label>
+ </label>
                       <input
                         type="number"
                         value={formData.subscription?.monthlyFee ?? 500000}
@@ -2517,7 +2517,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         최대 관리 장비 한도 (0=무제한)
-                      </label>
+ </label>
                       <input
                         type="number"
                         value={formData.subscription?.maxAssets ?? 0}
@@ -2537,7 +2537,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         최대 사용자 계정 한도 (0=무제한)
-                      </label>
+ </label>
                       <input
                         type="number"
                         value={formData.subscription?.maxUsers ?? 0}
@@ -2568,10 +2568,10 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         테넌트 라이선스 즉시 상태 조치
-                      </span>
+ </span>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                         미납 또는 계약 해지 시 즉시 만료 처리하거나 정상 가동으로 복구할 수 있습니다.
-                      </span>
+ </span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2601,7 +2601,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         즉시 만료 처리
-                      </button>
+ </button>
 
                       <button
                         type="button"
@@ -2629,7 +2629,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         정상 활성화 복구 (+1년)
-                      </button>
+ </button>
                     </div>
                   </div>
 
@@ -2637,7 +2637,7 @@ export const TenantManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                       구독 및 라이선스 특약 메모
-                    </label>
+ </label>
                     <textarea
                       rows={2}
                       value={formData.subscription?.memo || ''}
@@ -2671,7 +2671,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}>
                     <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                       CI / 로고 이미지
-                    </span>
+ </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                       <div style={{
                         width: '160px',
@@ -2739,14 +2739,14 @@ export const TenantManagementPage: React.FC = () => {
                               }}
                             >
                               초기화
-                            </button>
+ </button>
                           )}
                         </div>
                         <input
                           type="text"
                           value={formData.ciUrl || formData.logoUrl || ''}
                           onChange={e => setFormData(prev => ({ ...prev, ciUrl: e.target.value, logoUrl: e.target.value }))}
-                          placeholder="이미지 절대경로 또는 URL (예: /images/ci/hansol_ci.svg)"
+                          placeholder="이미지 절대경로 또는 URL"
                           style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '12px', width: '360px' }}
                         />
                       </div>
@@ -2765,7 +2765,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}>
                     <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                       공식 법인 직인 / 인감 도장
-                    </span>
+ </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                       <div style={{
                         width: '80px',
@@ -2833,12 +2833,12 @@ export const TenantManagementPage: React.FC = () => {
                               }}
                             >
                               표준 직인으로 복원
-                            </button>
+ </button>
                           )}
                         </div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                           투명 배경 PNG 권장 (견적서, 계약서, 거래명세서 출력물에 자동 날인)
-                        </span>
+ </span>
                       </div>
                     </div>
                   </div>
@@ -2855,7 +2855,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}>
                     <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                       상단 네비게이션 헤더 미리보기
-                    </span>
+ </span>
                     <div style={{
                       height: '56px',
                       backgroundColor: 'var(--bg-header)',
@@ -2881,7 +2881,7 @@ export const TenantManagementPage: React.FC = () => {
                         </span>
                         <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--primary)', marginTop: '1px' }}>
                           e-Bro ERP System
-                        </span>
+ </span>
                       </div>
                     </div>
                   </div>
@@ -2896,7 +2896,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         주거래 입금 계좌
-                      </span>
+ </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -2921,7 +2921,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         + 계좌 추가
-                      </button>
+ </button>
                     </div>
 
                     {(formData.bankAccounts || []).map((acc, idx) => (
@@ -2978,7 +2978,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         장비 주기장 (야드)
-                      </span>
+ </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -3005,7 +3005,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         + 주기장 추가
-                      </button>
+ </button>
                     </div>
 
                     {(formData.yards || []).map((yard, idx) => (
@@ -3187,7 +3187,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                       고객사 독립 도메인 매핑
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={formData.features?.customDomain || ''}
@@ -3216,10 +3216,10 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         특수 거래명세서 항목 편집 허용
-                      </span>
+ </span>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                         명세서 단가 및 수량 임의 수정 및 사유 기록 기능 활성화
-                      </span>
+ </span>
                     </div>
 
                     <button
@@ -3255,10 +3255,10 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         렌탈 계약 연동 유통 출고 허용
-                      </span>
+ </span>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                         계약 상세 화면에서 유통 상품 출고 등록 및 당월 렌탈 청구 자동 합산 기능 활성화
-                      </span>
+ </span>
                     </div>
 
                     <button
@@ -3318,7 +3318,7 @@ export const TenantManagementPage: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                           메뉴 노출 현황
-                        </span>
+ </span>
                         <span style={{
                           padding: '3px 8px',
                           borderRadius: '6px',
@@ -3330,7 +3330,7 @@ export const TenantManagementPage: React.FC = () => {
                           whiteSpace: 'nowrap'
                         }}>
                           노출 {formPageStats.visible}개
-                        </span>
+ </span>
                         <span style={{
                           padding: '3px 8px',
                           borderRadius: '6px',
@@ -3342,10 +3342,10 @@ export const TenantManagementPage: React.FC = () => {
                           whiteSpace: 'nowrap'
                         }}>
                           숨김 {formPageStats.hidden}개
-                        </span>
+ </span>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           / 전체 {formPageStats.total}개
-                        </span>
+ </span>
                       </div>
 
                       {/* 검색 입력창 */}
@@ -3387,7 +3387,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         전체 노출
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={handleSetCorePagesOnly}
@@ -3404,7 +3404,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         기본 업무 설정
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={handleHideAllPages}
@@ -3421,7 +3421,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         전체 숨김
-                      </button>
+ </button>
                     </div>
                   </div>
 
@@ -3477,7 +3477,7 @@ export const TenantManagementPage: React.FC = () => {
                                 whiteSpace: 'nowrap'
                               }}>
                                 {grpVisibleCount}/{grp.items.length} 노출
-                              </span>
+ </span>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3497,7 +3497,7 @@ export const TenantManagementPage: React.FC = () => {
                                 }}
                               >
                                 그룹 노출
-                              </button>
+ </button>
                               <button
                                 type="button"
                                 onClick={() => handleToggleGroupVisibility(grp.id, false)}
@@ -3514,7 +3514,7 @@ export const TenantManagementPage: React.FC = () => {
                                 }}
                               >
                                 그룹 숨김
-                              </button>
+ </button>
                             </div>
                           </div>
 
@@ -3571,7 +3571,7 @@ export const TenantManagementPage: React.FC = () => {
                                           whiteSpace: 'nowrap'
                                         }}>
                                           고정
-                                        </span>
+ </span>
                                       )}
                                     </div>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
@@ -3583,7 +3583,7 @@ export const TenantManagementPage: React.FC = () => {
                                     {isLocked ? (
                                       <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                         필수
-                                      </span>
+ </span>
                                     ) : (
                                       <span style={{
                                         display: 'inline-flex',
@@ -3631,7 +3631,7 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                         특수 기능 인가 현황
-                      </span>
+ </span>
                       <span style={{
                         padding: '3px 8px',
                         borderRadius: '6px',
@@ -3643,7 +3643,7 @@ export const TenantManagementPage: React.FC = () => {
                         whiteSpace: 'nowrap'
                       }}>
                         인가 {formSpecialFeatureStats.granted}개
-                      </span>
+ </span>
                       <span style={{
                         padding: '3px 8px',
                         borderRadius: '6px',
@@ -3655,10 +3655,10 @@ export const TenantManagementPage: React.FC = () => {
                         whiteSpace: 'nowrap'
                       }}>
                         차단 {formSpecialFeatureStats.revoked}개
-                      </span>
+ </span>
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         / 등록 {formSpecialFeatureStats.total}개
-                      </span>
+ </span>
                     </div>
 
                     {/* 우상단: 일괄 액션 버튼군 */}
@@ -3679,7 +3679,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         전체 인가
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={handleRevokeAllSpecialFeatures}
@@ -3696,7 +3696,7 @@ export const TenantManagementPage: React.FC = () => {
                         }}
                       >
                         전체 차단
-                      </button>
+ </button>
                     </div>
                   </div>
 
@@ -3711,8 +3711,8 @@ export const TenantManagementPage: React.FC = () => {
                     lineHeight: '1.6'
                   }}>
                     시스템 내 일반 탭과 버튼은 기본적으로 모두 노출됩니다.
-                    상기 등록된 특수 탭과 특수 버튼에 한하여 테넌트별 인가 목록을 대조하여 선택적으로 노출 또는 차단합니다.
-                  </div>
+ 상기 등록된 특수 탭과 특수 버튼에 한하여 테넌트별 인가 목록을 대조하여 선택적으로 노출 또는 차단합니다.
+ </div>
 
                   {/* 1. 특수 탭 그룹 */}
                   <div style={{
@@ -3733,7 +3733,7 @@ export const TenantManagementPage: React.FC = () => {
                         <Layers size={15} style={{ color: 'var(--primary)' }} />
                         <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                           특수 탭 통제
-                        </span>
+ </span>
                         <span style={{
                           padding: '2px 6px',
                           borderRadius: '4px',
@@ -3744,7 +3744,7 @@ export const TenantManagementPage: React.FC = () => {
                           color: 'var(--text-secondary)'
                         }}>
                           {formSpecialFeatureStats.tabsGranted} / {formSpecialFeatureStats.tabsTotal} 인가
-                        </span>
+ </span>
                       </div>
                     </div>
 
@@ -3848,7 +3848,7 @@ export const TenantManagementPage: React.FC = () => {
                         <Zap size={15} style={{ color: 'var(--primary)' }} />
                         <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                           특수 버튼 통제
-                        </span>
+ </span>
                         <span style={{
                           padding: '2px 6px',
                           borderRadius: '4px',
@@ -3859,7 +3859,7 @@ export const TenantManagementPage: React.FC = () => {
                           color: 'var(--text-secondary)'
                         }}>
                           {formSpecialFeatureStats.buttonsGranted} / {formSpecialFeatureStats.buttonsTotal} 인가
-                        </span>
+ </span>
                       </div>
                     </div>
 
@@ -3948,7 +3948,7 @@ export const TenantManagementPage: React.FC = () => {
               {/* ─── 7번째 탭: 에이전트 관제 ─── */}
               {modalTab === 'AGENTS' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {/* 🌐 테넌트 AI 에이전트 런타임 동작 모드 제어 배너 */}
+                  {/*  테넌트 AI 에이전트 런타임 동작 모드 제어 배너 */}
                   <div style={{
                     padding: '14px 18px',
                     backgroundColor: formData.features?.agentAiEnabled ? 'rgba(59, 130, 246, 0.08)' : 'rgba(100, 116, 139, 0.08)',
@@ -3978,7 +3978,7 @@ export const TenantManagementPage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                            eBro AI Agent 고유 기능: {formData.features?.agentAiEnabled ? 'Full AI Studio 모드 (개방)' : '🔵 Silent Core 모드 (인쇄·문서 처리 전용)'}
+                            eBro AI Agent 고유 기능: {formData.features?.agentAiEnabled ? 'Full AI Studio 모드 (개방)' : 'Silent Core 모드 (인쇄·문서 처리 전용)'}
                           </span>
                         </div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -4020,7 +4020,7 @@ export const TenantManagementPage: React.FC = () => {
                         flexShrink: 0
                       }}
                     >
-                      {formData.features?.agentAiEnabled ? 'Silent Core로 전환 (AI 잠금)' : 'Full AI 에이전트 개방 (활성화)'}
+                      {formData.features?.agentAiEnabled ? 'Silent Core로 전환' : 'Full AI 에이전트 개방 (활성화)'}
                     </button>
                   </div>
 
@@ -4063,7 +4063,7 @@ export const TenantManagementPage: React.FC = () => {
                     <span style={{ fontSize: '18px' }}></span>
                     <div>
                       <strong>24시간 텔레그램 지시 무누락 보존:</strong> 출고 PC가 퇴근/절전으로 오프라인이어도, 텔레그램 모바일 지시는 클라우드 서버의 태스크 큐에 즉시 안전 저장되며 익일 PC 부팅 시 0초 만에 일괄 자동 실행됩니다.
-                    </div>
+ </div>
                   </div>
 
                   {/* 에이전트 플릿 목록 테이블 */}
@@ -4095,14 +4095,14 @@ export const TenantManagementPage: React.FC = () => {
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: '#e0e7ff', color: '#4338ca', fontWeight: 700, fontSize: '11px' }}>
                               v2.0.0.Build.6
-                            </span>
+ </span>
                           </td>
                           <td style={{ padding: '10px 14px', textAlign: 'center', color: '#059669', fontWeight: 600 }}>방금 전</td>
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, backgroundColor: '#ecfdf5', color: '#047857' }}>
                               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
                               정상 가동
-                            </span>
+ </span>
                           </td>
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <button
@@ -4111,7 +4111,7 @@ export const TenantManagementPage: React.FC = () => {
                               style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', cursor: 'pointer' }}
                             >
                               핫패치 검사
-                            </button>
+ </button>
                           </td>
                         </tr>
                         <tr style={{ whiteSpace: 'nowrap' }}>
@@ -4122,14 +4122,14 @@ export const TenantManagementPage: React.FC = () => {
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <span style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: '#e0e7ff', color: '#4338ca', fontWeight: 700, fontSize: '11px' }}>
                               v2.0.0.Build.6
-                            </span>
+ </span>
                           </td>
                           <td style={{ padding: '10px 14px', textAlign: 'center', color: '#059669', fontWeight: 600 }}>12초 전</td>
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, backgroundColor: '#ecfdf5', color: '#047857' }}>
                               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
                               정상 가동
-                            </span>
+ </span>
                           </td>
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             <button
@@ -4138,7 +4138,7 @@ export const TenantManagementPage: React.FC = () => {
                               style={{ padding: '3px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', cursor: 'pointer' }}
                             >
                               핫패치 검사
-                            </button>
+ </button>
                           </td>
                         </tr>
                       </tbody>
@@ -4162,7 +4162,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px' }}>
                       표준 업무 서식
-                    </div>
+ </div>
                     {STANDARD_DOCUMENTS.map(doc => {
                       const isSelected = selectedDocType === doc.type;
                       const currentCode = formData.tenantCode || 'GIYEUN';
@@ -4380,10 +4380,10 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Mail size={15} color="var(--primary)" />
                       공식메일설정
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       테넌트 공식 메일 발송 및 청구서·계약서 메일 전송에 사용되는 SMTP 계정과 발송 모드(개발모드 / 서비스모드)를 관리합니다.
-                    </div>
+ </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: 'var(--bg-app)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -4414,7 +4414,7 @@ export const TenantManagementPage: React.FC = () => {
                           }}
                         >
                           개발모드
-                        </button>
+ </button>
                         <button
                           type="button"
                           onClick={() => setEmailConfig(prev => ({ ...prev, isDevMode: false }))}
@@ -4431,7 +4431,7 @@ export const TenantManagementPage: React.FC = () => {
                           }}
                         >
                           서비스모드
-                        </button>
+ </button>
                       </div>
                     </div>
 
@@ -4526,13 +4526,13 @@ export const TenantManagementPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>앱 비밀번호 (SMTP 발송용)</label>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>앱 비밀번호</label>
                       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <input
                           type={showSmtpAppPassword ? 'text' : 'password'}
                           value={emailConfig.gmailAppPassword}
                           onChange={e => setEmailConfig({ ...emailConfig, gmailAppPassword: e.target.value })}
-                          placeholder="2단계 인증 앱 비밀번호 (예: TUR31NMZ6JD3)"
+                          placeholder="2단계 인증 앱 비밀번호"
                           className="input-field"
                           style={{ width: '100%', padding: '8px 36px 8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '13px' }}
                         />
@@ -4555,10 +4555,10 @@ export const TenantManagementPage: React.FC = () => {
                     <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Database size={15} color="var(--primary)" />
                       Cloudflare R2 스토리지 설정
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       테넌트의 사진 및 파일 저장을 위한 Cloudflare R2 스토리지 연결 정보를 입력합니다.
-                    </div>
+ </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--bg-app)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -4640,7 +4640,7 @@ export const TenantManagementPage: React.FC = () => {
                 style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700 }}
               >
                 취소
-              </button>
+ </button>
 
               <button data-hs-trigger="Save"
                 data-testid="tenant-modal-save-btn"
@@ -4696,7 +4696,7 @@ export const TenantManagementPage: React.FC = () => {
                 <FileText size={18} color="var(--primary)" />
                 <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
                   사업자등록증 온보딩
-                </span>
+ </span>
               </div>
               <button
                 type="button"
@@ -4714,7 +4714,7 @@ export const TenantManagementPage: React.FC = () => {
             <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
                 사업자등록증 파일을 업로드하면 Vision AI가 상호, 사업자번호, 대표자, 주소 등을 자동 추출하여 신규 테넌트 폼을 완성합니다.
-              </div>
+ </div>
 
               {/* 숨겨진 파일 인풋 */}
               <input
@@ -4747,17 +4747,17 @@ export const TenantManagementPage: React.FC = () => {
                     <RefreshCw size={28} color="var(--primary)" style={{ animation: 'spin 1s linear infinite' }} />
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>
                       사업자등록증 Vision AI 정밀 분석 중...
-                    </span>
+ </span>
                   </>
                 ) : (
                   <>
                     <Upload size={28} color="var(--text-muted)" />
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      사업자등록증 파일 선택 (PDF 또는 이미지)
-                    </span>
+                      사업자등록증 파일 선택
+ </span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       PDF, JPG, JPEG, PNG 지원
-                    </span>
+ </span>
                   </>
                 )}
               </div>
@@ -4789,10 +4789,10 @@ export const TenantManagementPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     샘플 사업자등록증 즉시 적용
-                  </span>
+ </span>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                     파일 없이 가상의 고소작업대 렌탈사 데이터로 테스트
-                  </span>
+ </span>
                 </div>
                 <button data-hs-trigger="Apply"
                   type="button"
@@ -4810,7 +4810,7 @@ export const TenantManagementPage: React.FC = () => {
                   }}
                 >
                   데모 데이터 적용
-                </button>
+ </button>
               </div>
             </div>
 
@@ -4832,7 +4832,7 @@ export const TenantManagementPage: React.FC = () => {
                 style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 700 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

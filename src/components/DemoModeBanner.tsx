@@ -104,11 +104,11 @@ export const DemoModeBanner: React.FC = () => {
           }}
         >
           시연
-        </span>
+ </span>
         <span style={{ color: '#93c5fd', fontWeight: 800 }}>ebro_awp 시연 모드</span>
         <span style={{ color: '#cbd5e1', fontSize: '11.5px', fontWeight: 500 }}>
           | 가상 시연 데이터베이스 연결됨
-        </span>
+ </span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
@@ -157,7 +157,7 @@ export const DemoModeBanner: React.FC = () => {
         >
           <Database size={13} />
           기연리프트 DB 복제
-        </button>
+ </button>
 
         <button
           type="button"
@@ -184,7 +184,7 @@ export const DemoModeBanner: React.FC = () => {
         >
           <RotateCcw size={13} />
           데이터 초기화
-        </button>
+ </button>
 
         <button
           type="button"
@@ -211,7 +211,7 @@ export const DemoModeBanner: React.FC = () => {
         >
           <LogOut size={13} />
           실운영 전환
-        </button>
+ </button>
       </div>
     </div>
   );

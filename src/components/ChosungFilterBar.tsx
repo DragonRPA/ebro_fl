@@ -78,7 +78,7 @@ export const ChosungFilterBar: React.FC<ChosungFilterBarProps> = ({
                 }}
               >
                 ({count})
-              </span>
+ </span>
             )}
           </button>
         );

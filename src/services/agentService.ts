@@ -2,9 +2,9 @@ import type { TenantFeatures } from './db';
 
 export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.29';
 export const EXPECTED_CORE_HASH: string = 'dc6adc8a89c5';
-// 🚀 GitHub Releases 글로벌 초고속 CDN (Azure/Fastly 한국 PoP 8~10MB/s 3초 다운로드)
+//  GitHub Releases 글로벌 초고속 CDN (Azure/Fastly 한국 PoP 8~10MB/s 3초 다운로드)
 export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
-// 🌐 Cloudflare R2 보조 엔드포인트
+//  Cloudflare R2 보조 엔드포인트
 export const DEFAULT_CF_R2_BASE_URL = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev';
 
 export const AGENT_INSTALLER_BASE_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`; // Inno Setup 16MB 초고속 정식 인스톨러
@@ -33,7 +33,7 @@ export interface TenantAgentInstallerInfo {
 }
 
 /**
- * 📦 깃허브 레포지토리 기반 에이전트 다운로드 URL 생성 헬퍼
+ *  깃허브 레포지토리 기반 에이전트 다운로드 URL 생성 헬퍼
  */
 export function getAgentDownloadUrl(targetRepo?: string, fileName: string = 'eBroAgent_Setup.exe'): string {
   const repo = (targetRepo?.split(',')[0].trim()) || 'DragonRPA/ebro_awp';
@@ -41,7 +41,7 @@ export function getAgentDownloadUrl(targetRepo?: string, fileName: string = 'eBr
 }
 
 /**
- * 📦 접속 URL 및 테넌트 기준 맞춤형 eBroAgent 설치 프로그램 메타데이터 생성
+ *  접속 URL 및 테넌트 기준 맞춤형 eBroAgent 설치 프로그램 메타데이터 생성
  * 각 고객사(테넌트)별 서브도메인 및 상호가 바인딩된 전용 설치 파일명 및 초고속 CDN 다운로드 링크를 제공합니다.
  */
 export function getTenantAgentInstallerInfo(tenant?: {
@@ -63,7 +63,7 @@ export function getTenantAgentInstallerInfo(tenant?: {
   // 테넌트 전용 설치 파일명 (예: eBroAgent_Setup_GIYEUN.exe, eBroAgent_Setup_HANSOL.exe)
   const fileName = `eBroAgent_Setup_${code}.exe`;
   
-  // 🚀 GitHub Releases 글로벌 초고속 CDN 기반 (8~10MB/s, 16MB를 3초 만에 다운로드 완료)
+  //  GitHub Releases 글로벌 초고속 CDN 기반 (8~10MB/s, 16MB를 3초 만에 다운로드 완료)
   // currentTenant?.targetRepo가 존재하면 해당 레포지토리 동적 사용 (미지정 시 DragonRPA/ebro_awp 기본값)
   const targetRepo = (tenant?.targetRepo?.split(',')[0].trim()) || 'DragonRPA/ebro_awp';
   const downloadUrl = `https://github.com/${targetRepo}/releases/download/agent-v2.0.0/${fileName}`;
@@ -81,7 +81,7 @@ export function getTenantAgentInstallerInfo(tenant?: {
 }
 
 /**
- * 🚀 브라우저에서 테넌트 맞춤형 eBroAgent 설치 파일 다운로드 즉시 실행
+ *  브라우저에서 테넌트 맞춤형 eBroAgent 설치 파일 다운로드 즉시 실행
  */
 export function triggerTenantAgentDownload(tenant?: {
   tenantCode?: string;
@@ -104,7 +104,7 @@ export function triggerTenantAgentDownload(tenant?: {
 }
 
 /**
- * 🚀 브라우저(사이트)에서 로컬 에이전트 기동 트리거
+ *  브라우저(사이트)에서 로컬 에이전트 기동 트리거
  */
 export function launchLocalAgentFromBrowser(): void {
   try {
@@ -121,7 +121,7 @@ export function launchLocalAgentFromBrowser(): void {
 }
 
 /**
- * 🖥️ eBro AI Agent 독립 데스크톱 스튜디오 창 호출
+ *  eBro AI Agent 독립 데스크톱 스튜디오 창 호출
  */
 export async function openAgentStudio(): Promise<boolean> {
   try {
@@ -168,7 +168,7 @@ export interface AgentHealthInfo {
 }
 
 /**
- * 🌐 테넌트 관리 센터의 기능 정책을 로컬 에이전트에 실시간 핫 동기화
+ *  테넌트 관리 센터의 기능 정책을 로컬 에이전트에 실시간 핫 동기화
  */
 export async function syncTenantPolicyToAgent(
   tenant?: {
@@ -242,14 +242,14 @@ export async function syncTenantPolicyToAgent(
   }
 }
 
-// 활성 에이전트 베이스 URL (127.0.0.1 ➔ localhost 자동 동적 폴백)
+// 활성 에이전트 베이스 URL (127.0.0.1  localhost 자동 동적 폴백)
 let activeAgentBaseUrl = 'http://localhost:5175';
 
 export function getAgentBaseUrl(): string {
   return activeAgentBaseUrl;
 }
 
-// ── 🌐 전역 에이전트 상태 버스 및 실시간 동기화 ──
+// ──  전역 에이전트 상태 버스 및 실시간 동기화 ──
 let lastKnownAgentOnline: boolean = false;
 let lastKnownAgentInfo: AgentHealthInfo | null = null;
 const agentStatusListeners = new Set<(online: boolean, info: AgentHealthInfo | null) => void>();
@@ -278,7 +278,7 @@ export function setGlobalAgentStatus(online: boolean, info?: AgentHealthInfo | n
   });
 }
 
-// 브라우저 런타임 이벤트 리스너 (확장 프로그램 ➔ ERP 실시간 수신)
+// 브라우저 런타임 이벤트 리스너 (확장 프로그램  ERP 실시간 수신)
 if (typeof window !== 'undefined') {
   window.addEventListener('message', (event: MessageEvent) => {
     if (event.source !== window || !event.data || event.data.source !== 'EBRO_EXTENSION') return;
@@ -296,7 +296,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * 🌐 브라우저 확장 프로그램 존재 여부 감지
+ *  브라우저 확장 프로그램 존재 여부 감지
  */
 export function isExtensionBridgeAvailable(): boolean {
   if (typeof document === 'undefined') return false;
@@ -305,7 +305,7 @@ export function isExtensionBridgeAvailable(): boolean {
 }
 
 /**
- * 🌐 브라우저 확장 프로그램 프록시를 통한 에이전트 통신
+ *  브라우저 확장 프로그램 프록시를 통한 에이전트 통신
  * Chrome Private Network Access (PNA) 및 Mixed Content 제약을 우회하여 로컬 에이전트와 완벽 통신
  */
 export async function fetchViaExtensionBridge(pathOrUrl: string, init?: RequestInit): Promise<Response> {
@@ -413,7 +413,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:' && !window.location.hostname.includes('localhost');
   const hasExtension = isExtensionBridgeAvailable();
 
-  // 🛡️ [1단계: 사전 실행 상태 확인 (Pre-flight Health Check & 구버전 코어 즉시 핫패치 동기화 가드)]
+  //  [1단계: 사전 실행 상태 확인 (Pre-flight Health Check & 구버전 코어 즉시 핫패치 동기화 가드)]
   // 본 작업을 실행하기 전에 먼저 짧은 /health 핑으로 로컬 에이전트가 실행 중인지, 코어가 최신인지 확인합니다.
   if (!isHealthCheck && !init?.skipPrecheck) {
     let alive = false;
@@ -497,8 +497,8 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
     }
   }
 
-  // 🚀 [2단계: 에이전트 생존 확인 완료 -> 본 작업 실행]
-  // 💡 에이전트로부터 HTTP 응답(200, 400, 404, 500 등 상태 코드 무관)을 수신했다면 에이전트는 정상 가동 중임.
+  //  [2단계: 에이전트 생존 확인 완료 -> 본 작업 실행]
+  //  에이전트로부터 HTTP 응답(200, 400, 404, 500 등 상태 코드 무관)을 수신했다면 에이전트는 정상 가동 중임.
   //    500(SMTP 인증 오류, 파일 생성 오류 등)을 에이전트 미실행으로 오판하여 재시도하거나 AgentRequiredModal을 띄우지 않는다.
 
   // 2-1. 직접 루프백 fetch 최우선 시도 (사전 점검에서 응답한 activeAgentBaseUrl 최우선, 확장 프로그램 워커 슬립 영향 없음)
@@ -558,7 +558,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
   throw lastErr || new Error('로컬 에이전트와 통신할 수 없습니다. 에이전트 실행 상태를 확인해 주십시오.');
 }
 
-// ── 🌐 단일 전역 에이전트 헬스체크 매니저 ──
+// ──  단일 전역 에이전트 헬스체크 매니저 ──
 let globalHealthCheckTimer: any = null;
 let activeMonitorCallsign: string = 'admin';
 let consecutiveFailures = 0;
@@ -567,7 +567,7 @@ let lastAutoUpdateTriggerAt = 0;
 let lastAutoR2SyncTriggerAt = 0;
 
 /**
- * ☁️ 로컬 에이전트에 Cloudflare R2 변경 파일 즉시 동기화 명령 전송
+ *  로컬 에이전트에 Cloudflare R2 변경 파일 즉시 동기화 명령 전송
  */
 export async function triggerAgentCloudflareSync(): Promise<boolean> {
   try {
@@ -634,7 +634,7 @@ export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<
       };
       setGlobalAgentStatus(true, info);
 
-      // 🚀 로컬 에이전트 버전이 배포 버전보다 낮거나(동일 버전 내 해시 변경 시) 원격 업데이트 트리거 (구버전 브라우저 탭이 신버전 에이전트를 역공격하지 않도록 방어)
+      //  로컬 에이전트 버전이 배포 버전보다 낮거나(동일 버전 내 해시 변경 시) 원격 업데이트 트리거 (구버전 브라우저 탭이 신버전 에이전트를 역공격하지 않도록 방어)
       const isVersionOutdated = Boolean(data.version && isExpectedNewer(EXPECTED_AGENT_VERSION, data.version));
       const isAgentAlreadyNewer = Boolean(data.version && isExpectedNewer(data.version, EXPECTED_AGENT_VERSION));
       const isHashOutdated = !isAgentAlreadyNewer && Boolean(EXPECTED_CORE_HASH && EXPECTED_CORE_HASH !== 'auto' && data.coreHash !== EXPECTED_CORE_HASH);
@@ -649,7 +649,7 @@ export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<
           triggerAgentSelfUpdate(false).catch(() => {});
         }
       } else if (Date.now() - lastAutoR2SyncTriggerAt > 5 * 60 * 1000) {
-        // ☁️ 최신 에이전트 코어 온라인 확인 즉시 (및 5분 주기) Cloudflare R2 변경 파일 자동 동기화 트리거
+        //  최신 에이전트 코어 온라인 확인 즉시 (및 5분 주기) Cloudflare R2 변경 파일 자동 동기화 트리거
         lastAutoR2SyncTriggerAt = Date.now();
         triggerAgentCloudflareSync().catch(() => {});
       }
@@ -657,7 +657,7 @@ export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<
       return info;
     }
   } catch (err) {
-    // 💡 1회 실패 시 즉각 OFFLINE으로 단정하지 않고 400ms 후 즉시 1회 재시도
+    //  1회 실패 시 즉각 OFFLINE으로 단정하지 않고 400ms 후 즉시 1회 재시도
     consecutiveFailures++;
     if (consecutiveFailures === 1) {
       try {
@@ -737,7 +737,7 @@ export async function checkLocalAgentHealth(callsign: string = 'admin'): Promise
 }
 
 /**
- * 🤖 eBro Web Agent & PC 에이전트 코어 (포트 9002) 헬스체크
+ *  eBro Web Agent & PC 에이전트 코어 (포트 9002) 헬스체크
  */
 export async function checkWebAgentHealth(): Promise<{ online: boolean; extensionConnected: boolean; version?: string }> {
   try {
@@ -758,7 +758,7 @@ export async function checkWebAgentHealth(): Promise<{ online: boolean; extensio
 }
 
 /**
- * 🤖 eBro PC 에이전트에 자연어 명령 전달
+ *  eBro PC 에이전트에 자연어 명령 전달
  */
 export async function executeWebAgentCommand(prompt: string): Promise<any> {
   const res = await fetch('http://127.0.0.1:9002/execute', {
@@ -770,7 +770,7 @@ export async function executeWebAgentCommand(prompt: string): Promise<any> {
 }
 
 /**
- * 🔄 로컬 에이전트 재시작 트리거
+ *  로컬 에이전트 재시작 트리거
  */
 export async function restartLocalAgent(): Promise<boolean> {
   try {
@@ -785,7 +785,7 @@ export async function restartLocalAgent(): Promise<boolean> {
 }
 
 /**
- * 🚀 로컬 에이전트 자가 자동 업데이트(Inno Setup 백그라운드 무음 교체) 즉시 트리거
+ *  로컬 에이전트 자가 자동 업데이트(Inno Setup 백그라운드 무음 교체) 즉시 트리거
  */
 export async function triggerAgentSelfUpdate(force: boolean = false): Promise<{ success: boolean; message?: string; updateState?: any }> {
   try {
@@ -803,7 +803,7 @@ export async function triggerAgentSelfUpdate(force: boolean = false): Promise<{ 
 }
 
 /**
- * 📢 에이전트가 필요한 시점에 응답하지 않을 때 전역 모달 표출 이벤트 디스패치
+ *  에이전트가 필요한 시점에 응답하지 않을 때 전역 모달 표출 이벤트 디스패치
  */
 export function notifyAgentRequired(actionName: string = '로컬 연동 작업'): void {
   if (typeof window !== 'undefined') {
@@ -834,7 +834,7 @@ export interface LocalBackupStatus {
 }
 
 /**
- * 🛡️ 로컬 에이전트의 DB 백업 현황 및 정책 상태 조회
+ *  로컬 에이전트의 DB 백업 현황 및 정책 상태 조회
  */
 export async function getAgentLocalBackupStatus(): Promise<LocalBackupStatus> {
   try {
@@ -852,7 +852,7 @@ export async function getAgentLocalBackupStatus(): Promise<LocalBackupStatus> {
 }
 
 /**
- * 🛡️ 로컬 에이전트에 즉시 전체 DB 백업 실행 명령 전송
+ *  로컬 에이전트에 즉시 전체 DB 백업 실행 명령 전송
  */
 export async function triggerAgentLocalBackupNow(backupPolicy?: {
   autoBackupEnabled?: boolean;
@@ -885,7 +885,7 @@ export async function triggerAgentLocalBackupNow(backupPolicy?: {
 }
 
 /**
- * 📂 로컬 PC 백업 폴더(C:\eBroAgent\문서고\DB백업) 탐색기 열기
+ *  로컬 PC 백업 폴더(C:\eBroAgent\문서고\DB백업) 탐색기 열기
  */
 export async function openAgentLocalBackupFolder(): Promise<boolean> {
   try {

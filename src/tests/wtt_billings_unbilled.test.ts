@@ -403,8 +403,8 @@ export function runWttBillingsSuite(): WttResult[] {
 
     results.push({
       scenarioId: 'WTT-BILL-05',
-      name: '청구서 취소/반려(REJECTED) 발생 시 미청구 목록 복귀 멱등성',
-      axis: '상태(청구 취소 REJECTED) x 회계(재정산 사이클 복귀)',
+      name: '청구서 취소/반려 발생 시 미청구 목록 복귀 멱등성',
+      axis: '상태 x 회계(재정산 사이클 복귀)',
       passed: issues.length === 0,
       issues,
       details: { recoveredCount: activeList.length }
@@ -412,7 +412,7 @@ export function runWttBillingsSuite(): WttResult[] {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // [WTT-BILL-06] 물리 축: 대차 교체(EXCHANGE) 시 전자산 ➔ 후장비 일할 기여액 및 31일 일수 보존 (헌장 4.1, 4.2 준수)
+  // [WTT-BILL-06] 물리 축: 대차 교체(EXCHANGE) 시 전자산  후장비 일할 기여액 및 31일 일수 보존 (헌장 4.1, 4.2 준수)
   // ══════════════════════════════════════════════════════════════════
   {
     const issues: string[] = [];
@@ -438,7 +438,7 @@ export function runWttBillingsSuite(): WttResult[] {
 
     results.push({
       scenarioId: 'WTT-BILL-06',
-      name: '대차 교체(EXCHANGE) 시 전자산 ➔ 후장비 일할 기여액 및 31일 일수 보존',
+      name: '대차 교체 시 전자산 후장비 일할 기여액 및 31일 일수 보존',
       axis: '물리(장비 고장 및 교환) x 날짜·수지 보존 법칙',
       passed: issues.length === 0,
       issues,
@@ -517,7 +517,7 @@ export function runWttBillingsSuite(): WttResult[] {
     results.push({
       scenarioId: 'WTT-BILL-08',
       name: '선수금/예치금 차감 반영 및 종단 수지 대차대조 무결성 (차액 ₩0)',
-      axis: '비용(선수금 차감) x 종단 수지 보존(Balance ₩0)',
+      axis: '비용(선수금 차감) x 종단 수지 보존',
       passed: issues.length === 0,
       issues,
       details: { grossTotal, appliedPrepaid, netPayable, balanceDiff }
@@ -560,7 +560,7 @@ export function runWttBillingsSuite(): WttResult[] {
     results.push({
       scenarioId: 'WTT-BILL-09',
       name: 'SALE(매각) 계약 및 RENTAL(임대) 계약 분리 거버넌스',
-      axis: '공간/계약(RENTAL vs SALE 도메인 격리)',
+      axis: '공간/계약',
       passed: issues.length === 0,
       issues,
       details: { filteredCount: activeList.length }
@@ -568,7 +568,7 @@ export function runWttBillingsSuite(): WttResult[] {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // [WTT-BILL-10] 종단 보존: 일괄 청구 생성 실행 ➔ 멱등성 및 미청구 목록 0건 즉시 소멸
+  // [WTT-BILL-10] 종단 보존: 일괄 청구 생성 실행  멱등성 및 미청구 목록 0건 즉시 소멸
   // ══════════════════════════════════════════════════════════════════
   {
     const issues: string[] = [];
@@ -640,8 +640,8 @@ export function runWttBillingsSuite(): WttResult[] {
 
     results.push({
       scenarioId: 'WTT-BILL-10',
-      name: '일괄 청구 생성 실행 ➔ 멱등성 및 미청구 목록 0건 즉시 소멸 (종단 보존)',
-      axis: '종단 보존(상태 전이 3건 ➔ 0건 멱등성)',
+      name: '일괄 청구 생성 실행 멱등성 및 미청구 목록 0건 즉시 소멸 (종단 보존)',
+      axis: '종단 보존(상태 전이 3건 0건 멱등성)',
       passed: issues.length === 0,
       issues,
       details: { beforeCount: beforeList.length, afterCount: afterList.length }
@@ -654,21 +654,21 @@ export function runWttBillingsSuite(): WttResult[] {
 // CLI 실행 시 결과 출력
 const testResults = runWttBillingsSuite();
 console.log('================================================================');
-console.log(` 🧪 WTT 매출 청구 미청구 정산 ${testResults.length}회 도메인 관통 스트레스 테스트 결과`);
+console.log(` WTT 매출 청구 미청구 정산 ${testResults.length}회 도메인 관통 스트레스 테스트 결과`);
 console.log('================================================================');
 let passCount = 0;
 testResults.forEach(r => {
-  const statusIcon = r.passed ? '✅ PASS' : '❌ FAIL';
+  const statusIcon = r.passed ? 'PASS' : 'FAIL';
   if (r.passed) passCount++;
   console.log(`[${r.scenarioId}] ${statusIcon} | ${r.name}`);
-  console.log(`    - 5대 축: ${r.axis}`);
+  console.log(` - 5대 축: ${r.axis}`);
   if (!r.passed) {
-    console.log(`    - ⚠️ 결함 내역:`);
-    r.issues.forEach(iss => console.log(`      * ${iss}`));
+    console.log(` - 결함 내역:`);
+    r.issues.forEach(iss => console.log(` * ${iss}`));
   }
 });
 console.log('----------------------------------------------------------------');
-console.log(`📊 최종 검증 결과: 총 ${testResults.length}개 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
+console.log(` 최종 검증 결과: 총 ${testResults.length}개 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
 console.log('================================================================');
 
 if (passCount !== testResults.length) {

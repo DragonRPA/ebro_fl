@@ -860,7 +860,7 @@ export async function recordAsRouteStep(params: {
     } else if (params.eventType === 'WORK_COMPLETE' && durationMinutes) {
       labelText += ` (작업 ${durationMinutes}분)`;
     } else if (params.eventType === 'PARTS_SOURCING') {
-      labelText += ` ➔ ${resolvedSourcingTargetName || '부품수급처'}`;
+      labelText += ` ${resolvedSourcingTargetName || '부품수급처'}`;
       if (params.partName?.trim()) {
         labelText += ` (${params.partName.trim()})`;
       }
@@ -869,10 +869,10 @@ export async function recordAsRouteStep(params: {
       }
     } else if (params.eventType === 'REVISIT_SCHEDULED') {
       if (params.revisitDate) {
-        labelText += ` ➔ ${params.revisitDate}`;
+        labelText += ` ${params.revisitDate}`;
       }
     } else if (params.eventType === 'MOVE_NEXT_SITE' && nextSiteNameResolved) {
-      labelText += ` ➔ ${nextSiteNameResolved}`;
+      labelText += ` ${nextSiteNameResolved}`;
     }
     if (params.memo && params.eventType !== 'PARTS_SOURCING') {
       labelText += ` - ${params.memo}`;

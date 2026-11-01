@@ -578,9 +578,6 @@ export const TradeProfitabilityPage: React.FC = () => {
             <TrendingUp size={20} color="var(--primary)" />
             <span>영업실적 및 보고서</span>
           </h2>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
-            월별·연도별 매입 및 매출실적, 제조사·모델·거래처별 매출현황, 월별 지게차 판매대수 및 매출총이익 분석
-          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -590,25 +587,25 @@ export const TradeProfitabilityPage: React.FC = () => {
               className={`segmented-tab-item ${viewMode === 'MONTHLY' ? 'active' : ''}`}
             >
               월별·연도별 매입·매출실적
-            </button>
+ </button>
             <button
               onClick={() => setViewMode('PRODUCT')}
               className={`segmented-tab-item ${viewMode === 'PRODUCT' ? 'active' : ''}`}
             >
               제조사·모델별 매출현황
-            </button>
+ </button>
             <button
               onClick={() => setViewMode('CUSTOMER')}
               className={`segmented-tab-item ${viewMode === 'CUSTOMER' ? 'active' : ''}`}
             >
               거래처별 매출현황
-            </button>
+ </button>
             <button
               onClick={() => setViewMode('ORDER')}
               className={`segmented-tab-item ${viewMode === 'ORDER' ? 'active' : ''}`}
             >
               건별·차대별 매출이익
-            </button>
+ </button>
           </div>
 
           <button
@@ -631,7 +628,7 @@ export const TradeProfitabilityPage: React.FC = () => {
           >
             <Printer size={14} />
             보고서 출력
-          </button>
+ </button>
 
           <button
             onClick={handleExcelDownload}
@@ -653,7 +650,7 @@ export const TradeProfitabilityPage: React.FC = () => {
           >
             <Download size={14} color="#16a34a" />
             현황자료 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -664,7 +661,7 @@ export const TradeProfitabilityPage: React.FC = () => {
           <div style={{ fontSize: '19px', fontWeight: 800, color: '#1d4ed8', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalPurchaseAmt.toLocaleString()}</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             해외수입 도착원가 + 국내매입 합계
-          </div>
+ </div>
         </div>
 
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -672,11 +669,11 @@ export const TradeProfitabilityPage: React.FC = () => {
           <div style={{ fontSize: '19px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', whiteSpace: 'nowrap' }}>{totals.totalForkliftUnits.toLocaleString()}대</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             총 수주 {filteredOrderRows.length}건 기준
-          </div>
+ </div>
         </div>
 
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출실적 (공급가액)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출실적</div>
           <div style={{ fontSize: '19px', fontWeight: 800, color: 'var(--primary)', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalRev.toLocaleString()}</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             매출원가 ₩{totals.totalCogs.toLocaleString()}
@@ -688,7 +685,7 @@ export const TradeProfitabilityPage: React.FC = () => {
           <div style={{ fontSize: '19px', fontWeight: 800, color: '#16a34a', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.grossMargin.toLocaleString()}</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
             매출액 - 도착원가 기준 매출원가
-          </div>
+ </div>
         </div>
 
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -803,7 +800,7 @@ export const TradeProfitabilityPage: React.FC = () => {
         >
           <RotateCcw size={13} />
           초기화
-        </button>
+ </button>
       </div>
 
       {/* Main Analytical Grid */}
@@ -831,7 +828,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                 <tr>
                   <td colSpan={11} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     집계된 월별·연도별 매입 및 매출실적이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 monthlyPerformanceRows.map(m => (
@@ -853,13 +850,13 @@ export const TradeProfitabilityPage: React.FC = () => {
                     </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
                       {m.orderCount}건
-                    </td>
+ </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#0284c7' }}>
                       {m.forkliftSoldUnits}대
-                    </td>
+ </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>
                       {m.partSoldUnits}개
-                    </td>
+ </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
                       ₩{m.salesAmount.toLocaleString()}
                     </td>
@@ -871,7 +868,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                     </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#2563eb' }}>
                       {m.grossMarginPct.toFixed(1)}%
-                    </td>
+ </td>
                   </tr>
                 ))
               )}
@@ -890,7 +887,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>분류</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수주건수</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매대수 · 수량</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출금액 (공급가)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출금액</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출원가</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출총이익</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출이익률</th>
@@ -906,7 +903,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary)' }}>
-                    {p.modelName} <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>({p.skuCode})</span>
+                    {p.modelName} <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>· {p.skuCode}</span>
                   </td>
                   <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>{p.productName}</td>
                   <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--text-muted)' }}>{p.category}</td>
@@ -933,7 +930,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>수주건수</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>지게차 구매대수</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출금액 (공급가)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출금액</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출원가</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출총이익</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>이익률</th>
@@ -980,7 +977,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>품목 명세</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 차대번호</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매금액(공급가)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매금액</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매입원가</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출총이익</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>이익률</th>
@@ -1008,7 +1005,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                     >
                       <Eye size={12} />
                       원가상세
-                    </button>
+ </button>
                   </td>
                   <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                     <span style={{
@@ -1046,7 +1043,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                   </td>
                   <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: '#2563eb' }}>
                     {r.marginPct.toFixed(1)}%
-                  </td>
+ </td>
                 </tr>
               ))}
             </tbody>
@@ -1086,7 +1083,7 @@ export const TradeProfitabilityPage: React.FC = () => {
           <div style={{ backgroundColor: 'var(--bg-card)', width: '640px', borderRadius: '10px', padding: '22px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', marginBottom: '14px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
-                수주건별 손익 및 차대번호 원가 상세 ({selectedDetailRow.order.id})
+                수주건별 손익 및 차대번호 원가 상세 · {selectedDetailRow.order.id}
               </h3>
               <button onClick={() => setSelectedOrderDetailId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -1136,7 +1133,7 @@ export const TradeProfitabilityPage: React.FC = () => {
                 style={{ padding: '7px 16px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1160,7 +1157,7 @@ export const TradeProfitabilityPage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FileSpreadsheet size={18} />
                 영업실적 및 매출총이익 종합 보고서 (미리보기 및 인쇄)
-              </h3>
+ </h3>
               <button onClick={() => setIsReportModalOpen(false)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}>
                 <X size={18} />
               </button>
@@ -1176,7 +1173,7 @@ export const TradeProfitabilityPage: React.FC = () => {
 
               <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
                 1. 월별 매입 · 지게차 판매대수 · 매출총이익 요약
-              </h4>
+ </h4>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '20px' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f1f5f9' }}>
@@ -1210,7 +1207,7 @@ export const TradeProfitabilityPage: React.FC = () => {
 
               <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
                 2. 제조사 · 모델별 매출현황
-              </h4>
+ </h4>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f1f5f9' }}>
@@ -1247,21 +1244,21 @@ export const TradeProfitabilityPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 닫기
-              </button>
+ </button>
               <button
                 onClick={handleExcelDownload}
                 style={{ padding: '8px 16px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
                 <Download size={14} />
                 보고서 데이터 엑셀 다운로드
-              </button>
+ </button>
               <button
                 onClick={handlePrintFormalReport}
                 style={{ padding: '8px 18px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
                 <Printer size={14} />
                 A4 정식 보고서 인쇄
-              </button>
+ </button>
             </div>
           </div>
         </div>

@@ -148,13 +148,13 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
             <ShieldCheck size={20} color="var(--primary)" />
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-main)' }}>
               개인정보 처리방침
-            </h3>
+ </h3>
             <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontWeight: 600 }}>
               {companyName}
             </span>
             <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(34, 197, 94, 0.12)', color: 'var(--success)', fontWeight: 600 }}>
               법 제29조 / 안전성 고시 제8조 준수
-            </span>
+ </span>
           </div>
           <button
             type="button"
@@ -185,29 +185,29 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
         }}>
           {/* 서두: 테넌트 회사명 연동 (이미지 1 요구사항) */}
           <p style={{ margin: 0, fontWeight: 500 }}>
-            <strong>{companyName}</strong>(이하 &apos;당사&apos;)는 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을 수립·공개합니다.
-          </p>
+            <strong>{companyName}</strong>는 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을 수립·공개합니다.
+ </p>
 
           <section style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
               제1조 (개인정보의 처리 목적)
-            </h4>
+ </h4>
             <p style={{ margin: 0 }}>
               당사는 {businessItem} 계약 체결 및 이행, 장비 출고·회수 배차 운송, 현장 AS 정비 및 정산, 세금계산서 발행, 임직원 인사·노무 관리 등의 목적으로 최소한의 개인정보를 처리합니다.
-            </p>
+ </p>
           </section>
 
           <section style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
               제2조 (처리하는 개인정보 항목 및 주민등록번호 미수집 원칙)
-            </h4>
+ </h4>
             <div style={{ backgroundColor: 'var(--bg-header)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
               <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
                 주민등록번호 미수집 원칙 (개인정보 보호법 제24조의2 준수)
-              </div>
+ </div>
               <p style={{ margin: 0, fontSize: '12px' }}>
                 당사는 법률·대통령령에 구체적 수집 근거가 없는 경우 주민등록번호를 일체 수집·보관하지 않으며, 운송기사 및 거래처의 본인 확인 시 <strong>생년월일</strong>만을 제한적으로 수집합니다.
-              </p>
+ </p>
             </div>
             <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <li><strong>고객사/거래처</strong>: 대표자 성명, 담당자 성명, 직급, 유무선 전화번호, 전자세금계산서 이메일, 현장 주소</li>
@@ -220,10 +220,10 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
           <section style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
               제3조 (개인정보의 안전성 확보조치 - 법 제29조 준수)
-            </h4>
+ </h4>
             <p style={{ margin: 0, marginBottom: '6px' }}>
               당사는 개인정보의 분실·도난·유출·위조·변조 또는 훼손을 방지하기 위하여 다음 각 호의 기술적·관리적 보호조치를 이행하고 있습니다:
-            </p>
+ </p>
             <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <li><strong>접근 권한 관리</strong>: 사용자 역할 및 직무별 세부 메뉴 권한 통제 적용</li>
               <li><strong>비밀번호 일방향 암호화</strong>: 사용자 비밀번호는 복호화 불가능한 안전한 일방향 해시 함수로 암호화 보관</li>
@@ -235,10 +235,10 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
           <section style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
               제4조 (개인정보 접속기록의 보관 및 점검 - 안전성 확보조치 기준 제8조 준수)
-            </h4>
+ </h4>
             <p style={{ margin: 0, marginBottom: '6px' }}>
               당사는 개인정보취급자가 개인정보처리시스템에 접속하여 수행한 모든 업무 내역을 법정 기준에 따라 보관·관리합니다:
-            </p>
+ </p>
             <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <li><strong>접속기록 항목</strong>: 접속자 계정(사번/성명), 접속일시, 접속지, 수행업무(로그인/로그아웃, 조회, 수정, 삭제, 엑셀 다운로드), 대상 정보주체 식별정보, 마스킹 여부</li>
               <li><strong>보관 기간</strong>: 개인정보 접속기록은 <strong>최소 1년 이상(고유식별정보 처리 시 2년 이상)</strong> 위·변조 방지 보관</li>
@@ -251,7 +251,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                 제5조 (개인정보 보호책임자 및 권익침해 구제)
-              </h4>
+ </h4>
               {canEdit && !isEditingOfficer && (
                 <button
                   type="button"
@@ -269,7 +269,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                 >
                   <Edit2 size={12} />
                   책임자 정보 수정
-                </button>
+ </button>
               )}
             </div>
 
@@ -288,7 +288,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
               }}>
                 <CheckCircle2 size={14} />
                 테넌트({companyName})의 개인정보 보호책임자 정보가 DB에 정상 저장되었습니다.
-              </div>
+ </div>
             )}
 
             {isEditingOfficer ? (
@@ -305,13 +305,13 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                 <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <UserCheck size={14} />
                   [{companyName}] 개인정보 보호책임자 정보 설정
-                </div>
+ </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       성명 *
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={officerForm.name}
@@ -325,7 +325,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       직책 / 직급
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={officerForm.position}
@@ -338,7 +338,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       소속 부서 / 조직
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={officerForm.department}
@@ -351,7 +351,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       대표 연락처 (전화번호)
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={officerForm.phone}
@@ -364,12 +364,12 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                       문의 및 불만처리 (부서/이메일)
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={officerForm.email}
                       onChange={e => setOfficerForm(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="예: 사내 관리부 (giyeonlift@naver.com)"
+                      placeholder="예: 사내 관리부"
                       style={{ fontSize: '12.5px', padding: '6px 10px' }}
                     />
                   </div>
@@ -383,7 +383,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
                     style={{ fontSize: '11.5px', padding: '4px 10px' }}
                   >
                     취소
-                  </button>
+ </button>
                   <button
                     type="submit"
                     disabled={isSaving}
@@ -408,7 +408,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
               }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px', fontSize: '13px' }}>
                   개인정보 보호책임자
-                </div>
+ </div>
                 <div>• 성명: <strong>{currentOfficer.name || '대표이사 / 관리부 총괄'}</strong></div>
                 <div>• 소속/직책: {currentOfficer.department ? `${currentOfficer.department} · ` : ''}{currentOfficer.position || '경영진'}</div>
                 <div>• 문의 및 불만처리: {currentOfficer.email || '사내 관리부'}{currentOfficer.phone ? ` (연락처: ${currentOfficer.phone})` : ''}</div>
@@ -441,7 +441,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
             }}
           >
             확인
-          </button>
+ </button>
         </div>
       </div>
     </div>

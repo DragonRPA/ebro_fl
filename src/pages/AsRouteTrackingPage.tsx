@@ -348,7 +348,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
           liveStateColor = '#06b6d4';
           liveStateBg = 'rgba(6, 182, 212, 0.16)';
           const targetDest = lastLog.sourcingTargetName || lastLog.nextSiteName || '부품수급처';
-          currentSiteLabel = siteStr ? `${siteStr} ➔ ${targetDest}` : targetDest;
+          currentSiteLabel = siteStr ? `${siteStr} ${targetDest}` : targetDest;
         } else if (lastLog.eventType === 'REVISIT_SCHEDULED') {
           liveStateLabel = '재방문 예약 완료';
           liveStateColor = '#fb7185';
@@ -366,7 +366,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
           liveStateColor = '#8b5cf6';
           liveStateBg = 'rgba(139, 92, 246, 0.16)';
           currentSiteLabel = lastLog.nextSiteName
-            ? `${siteStr || '이전 현장'} ➔ ${lastLog.nextSiteName}`
+            ? `${siteStr || '이전 현장'} ${lastLog.nextSiteName}`
             : '다음 현장 이동중';
         } else if (lastLog.eventType === 'RETURN_TO_YARD') {
           liveStateLabel = '주기장 복귀';
@@ -729,7 +729,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               현장정비 동선 관리
-            </h2>
+ </h2>
             <div
               style={{
                 fontSize: '12px',
@@ -738,7 +738,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               일자별 AS팀 출발 · 도착 · 작업시작 · 다음현장 이동 · 퇴근 기록 및 조회
-            </div>
+ </div>
           </div>
         </div>
 
@@ -765,7 +765,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
             }}
           >
             <LogIn size={14} /> 출근 기록
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => handleQuickRecord('RETURN_TO_YARD', null, currentUser?.id, currentUser?.name)}
@@ -787,7 +787,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
             }}
           >
             <Home size={14} /> 주기장 복귀
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => handleQuickRecord('CLOCK_OUT', null, currentUser?.id, currentUser?.name)}
@@ -809,7 +809,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
             }}
           >
             <LogOut size={14} /> 퇴근 기록
-          </button>
+ </button>
           <button
             type="button"
             onClick={handleSyncRemote}
@@ -830,7 +830,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
             }}
           >
             <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} /> 새로고침
-          </button>
+ </button>
           {!isMobileEmbedded && (
             <button
               type="button"
@@ -852,7 +852,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               <Download size={13} /> 엑셀 내보내기
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -883,7 +883,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               조회 일자
-            </label>
+ </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
               <button
                 type="button"
@@ -901,7 +901,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 }}
               >
                 전일
-              </button>
+ </button>
               <input
                 type="date"
                 value={selectedDate}
@@ -935,7 +935,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 }}
               >
                 오늘
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => shiftDate(1)}
@@ -952,7 +952,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 }}
               >
                 익일
-              </button>
+ </button>
             </div>
           </div>
 
@@ -967,7 +967,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               담당 기사
-            </label>
+ </label>
             <select
               value={selectedMechanicId}
               onChange={e => setSelectedMechanicId(e.target.value)}
@@ -1002,7 +1002,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               동선 단계
-            </label>
+ </label>
             <select
               value={selectedEventType}
               onChange={e => setSelectedEventType(e.target.value)}
@@ -1042,7 +1042,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               }}
             >
               검색어
-            </label>
+ </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Search
                 size={13}
@@ -1257,7 +1257,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        📍 {currentSiteLabel}
+                         {currentSiteLabel}
                       </span>
                     )}
                   </div>
@@ -1308,7 +1308,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                         }}
                       >
                         출근
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => handleQuickRecord('RETURN_TO_YARD', null, mechanic.id, mechanic.name)}
@@ -1325,7 +1325,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                         }}
                       >
                         주기장복귀
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => handleQuickRecord('CLOCK_OUT', null, mechanic.id, mechanic.name)}
@@ -1342,7 +1342,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                         }}
                       >
                         퇴근
-                      </button>
+ </button>
                     </div>
                   </div>
                 </div>
@@ -1363,7 +1363,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                       }}
                     >
                       {selectedDate} 기록된 동선 이력이 없습니다. 아래 현장AS 건에서 [출발] · [도착] · [작업시작] 버튼을 누르면 즉시 기록됩니다.
-                    </div>
+ </div>
                   ) : (
                     <div
                       style={{
@@ -1428,7 +1428,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                                     whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  ➔ {log.nextSiteName}
+                                   {log.nextSiteName}
                                 </span>
                               )}
                               {log.eventType === 'PARTS_SOURCING' && (
@@ -1439,7 +1439,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                                     whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  ➔ {log.sourcingTargetName || log.nextSiteName || '부품수급처'}
+                                   {log.sourcingTargetName || log.nextSiteName || '부품수급처'}
                                   {log.partName ? ` [${log.partName}]` : ''}
                                 </span>
                               )}
@@ -1451,7 +1451,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                                     whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  📅 재방문: {log.revisitDate}
+                                   재방문: {log.revisitDate}
                                 </span>
                               )}
                               {typeof log.durationMinutes === 'number' && log.durationMinutes > 0 && (
@@ -1467,7 +1467,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                                   }}
                                 >
                                   {log.durationMinutes}분
-                                </span>
+ </span>
                               )}
                             </div>
                             {idx < logs.length - 1 && (
@@ -1490,7 +1490,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                         }}
                       >
                         담당 현장AS 건별 단계 기록 ({assignedTickets.length}건)
-                      </div>
+ </div>
                       {assignedTickets.map(ticket => {
                         const routeSum = getTicketRouteSummary(ticket, allUnifiedLogs, selectedDate);
                         const assetSourcing = getTicketAssetSourcingInfo(ticket, assets || [], vendors || []);
@@ -1549,7 +1549,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                                 }}
                               >
                                 [{ticket.assetNo || '현장확인'} / {ticket.modelName || '-'}]
-                              </span>
+ </span>
                               {/* 당사자산 vs 임차자산 배지 */}
                               <span
                                 style={{
@@ -1850,7 +1850,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                     }}
                   >
                     해당 일자에 등록 또는 진행된 현장AS 건이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 targetTickets.map(ticket => {
@@ -1890,7 +1890,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                           <span style={{ fontWeight: 800 }}>{ticket.assetNo || '현장확인'}</span>
                           <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
                             ({ticket.modelName || '-'})
-                          </span>
+ </span>
                           <span
                             style={{
                               padding: '2px 6px',
@@ -1956,7 +1956,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                             cursor: 'pointer',
                           }}
                         >
-                          {sum.departedAt ? `🚗 ${formatTimeHm(sum.departedAt)}` : '[출발 기록]'}
+                          {sum.departedAt ? ` ${formatTimeHm(sum.departedAt)}` : '[출발 기록]'}
                         </button>
                       </td>
                       <td style={{ padding: '10px 12px' }}>
@@ -1977,7 +1977,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                           }}
                         >
                           {sum.arrivedAt
-                            ? `📍 ${formatTimeHm(sum.arrivedAt)}${sum.travelMinutes ? ` (${sum.travelMinutes}분)` : ''}`
+                            ? ` ${formatTimeHm(sum.arrivedAt)}${sum.travelMinutes ? ` (${sum.travelMinutes}분)` : ''}`
                             : '[도착 기록]'}
                         </button>
                       </td>
@@ -1998,7 +1998,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                             cursor: 'pointer',
                           }}
                         >
-                          {sum.workStartedAt ? `🔧 ${formatTimeHm(sum.workStartedAt)}` : '[작업시작]'}
+                          {sum.workStartedAt ? ` ${formatTimeHm(sum.workStartedAt)}` : '[작업시작]'}
                         </button>
                       </td>
                       <td style={{ padding: '10px 12px' }}>
@@ -2020,7 +2020,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                             }}
                           >
                             {sum.partsSourcingAt
-                              ? `📦 ${formatTimeHm(sum.partsSourcingAt)} (${sum.sourcingTargetName || '부품수급'})`
+                              ? ` ${formatTimeHm(sum.partsSourcingAt)} (${sum.sourcingTargetName || '부품수급'})`
                               : '[부품수급]'}
                           </button>
                           <button
@@ -2041,7 +2041,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                             }}
                           >
                             {revisitDateLabel
-                              ? `📅 재방문 (${revisitDateLabel.slice(5)})`
+                              ? ` 재방문 (${revisitDateLabel.slice(5)})`
                               : '[재방문예약]'}
                           </button>
                         </div>
@@ -2064,7 +2064,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                           }}
                         >
                           {sum.workCompletedAt
-                            ? `✅ ${formatTimeHm(sum.workCompletedAt)}${sum.workMinutes ? ` (${sum.workMinutes}분)` : ''}`
+                            ? ` ${formatTimeHm(sum.workCompletedAt)}${sum.workMinutes ? ` (${sum.workMinutes}분)` : ''}`
                             : '[작업완료]'}
                         </button>
                       </td>
@@ -2090,7 +2090,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                           }}
                         >
                           {sum.movedNextAt
-                            ? `➔ ${formatTimeHm(sum.movedNextAt)} ${sum.nextSiteName ? `(${sum.nextSiteName})` : ''}`
+                            ? ` ${formatTimeHm(sum.movedNextAt)} ${sum.nextSiteName ? `(${sum.nextSiteName})` : ''}`
                             : '[다음 현장 이동]'}
                         </button>
                       </td>
@@ -2156,7 +2156,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                     }}
                   >
                     조회 조건에 해당하는 동선 기록이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 [...filteredLogs].reverse().map(log => {
@@ -2285,15 +2285,15 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
           >
             <div style={{ fontSize: '15px', fontWeight: 900 }}>
               다음 현장 이동 기록
-            </div>
+ </div>
             <div style={{ fontSize: '12px', color: '#94a3b8' }}>
               현재 현장: <strong style={{ color: '#ffffff' }}>{moveNextTargetTicket.siteName || moveNextTargetTicket.customerName}</strong> ({moveNextTargetTicket.assetNo || '-'})
-            </div>
+ </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                 다음 이동 대상 현장AS 선택 (선택 시 다음 현장 출발도 동시 기록)
-              </label>
+ </label>
               <select
                 value={selectedNextTicketId}
                 onChange={e => setSelectedNextTicketId(e.target.value)}
@@ -2319,7 +2319,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                   .map(t => (
                     <option key={t.id} value={t.id}>
                       [{t.ticketNo || t.id}] {t.customerName || '-'} · {t.siteName || '-'} ({t.modelName || '-'})
-                    </option>
+ </option>
                   ))}
               </select>
             </div>
@@ -2328,7 +2328,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   다음 이동지 직접 입력 (선택사항)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={customNextSiteName}
@@ -2362,7 +2362,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handleConfirmMoveNext}
@@ -2378,7 +2378,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 }}
               >
                 다음 현장 이동 기록
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -2424,7 +2424,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 900, color: '#fb923c' }}>
                   부품 수급 이동 기록
-                </div>
+ </div>
                 <span
                   style={{
                     padding: '3px 9px',
@@ -2468,8 +2468,8 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '11px' }}>
                   장비: {partsSourcingTargetTicket.assetNo || '현장확인'} (
-                  {partsSourcingTargetTicket.modelName || '-'})
-                  {sourcingInfo.ownerType === 'RENTED'
+ {partsSourcingTargetTicket.modelName || '-'})
+ {sourcingInfo.ownerType === 'RENTED'
                     ? ` · 임차처: ${sourcingInfo.vendorName}`
                     : ` · 주기장: ${sourcingInfo.yardName}`}
                 </div>
@@ -2479,7 +2479,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   부품 수급 이동지 구분 ({sourcingInfo.ownerType === 'RENTED' ? '임차자산 → 임차처 자동 매칭' : '당사자산 → 당사 주기장 또는 타 차량 접선'})
-                </label>
+ </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                   {(
                     [
@@ -2549,7 +2549,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                     접선할 동료 AS차량 빠른 선택
-                  </label>
+ </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {asMechanics
                       .filter(m => m.id !== sourcingMechanicOverride.id)
@@ -2573,7 +2573,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            🚐 {m.name} {m.position || ''}
+                             {m.name} {m.position || ''}
                           </button>
                         );
                       })}
@@ -2586,7 +2586,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                     임차처 선택 (장비 임차처 자동 입력됨 · 변경 가능)
-                  </label>
+ </label>
                   <select
                     value={sourcingTargetName}
                     onChange={e => setSourcingTargetName(e.target.value)}
@@ -2602,7 +2602,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                     {sourcingInfo.vendorName && (
                       <option value={sourcingInfo.vendorName}>
                         {sourcingInfo.vendorName} (해당 장비 임차처)
-                      </option>
+ </option>
                     )}
                     {(vendors || []).map(v => (
                       <option key={v.id} value={v.name}>
@@ -2617,7 +2617,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   수급 이동지 명칭
-                </label>
+ </label>
                 <input
                   type="text"
                   value={sourcingTargetName}
@@ -2638,7 +2638,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   수급 필요 부품 (칩 선택 또는 직접 입력)
-                </label>
+ </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '4px' }}>
                   {COMMON_AS_PARTS_PRESETS.map(part => {
                     const selected = sourcingPartName.includes(part);
@@ -2727,7 +2727,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                     onChange={e => setSourcingWithRevisit(e.target.checked)}
                   />
                   당일 완결 불가 — 다음날/다른 날짜 재방문 스케줄 함께 등록
-                </label>
+ </label>
 
                 {sourcingWithRevisit && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2752,7 +2752,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                             }}
                           >
                             {opt.label} ({opt.subLabel})
-                          </button>
+ </button>
                         );
                       })}
                       <input
@@ -2804,7 +2804,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmPartsSourcing}
@@ -2867,19 +2867,19 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
             >
               <div style={{ fontSize: '15px', fontWeight: 900, color: '#f472b6' }}>
                 재방문 스케줄 등록
-              </div>
+ </div>
               <div style={{ fontSize: '12px', color: '#94a3b8' }}>
                 대상 현장:{' '}
                 <strong style={{ color: '#ffffff' }}>
                   {revisitTargetTicket.customerName || '-'} · {revisitTargetTicket.siteName || '현장'}
                 </strong>{' '}
                 ({revisitTargetTicket.assetNo || '현장확인'})
-              </div>
+ </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   재방문 예정일 빠른 선택
-                </label>
+ </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                   {quickDateOptions.map(opt => {
                     const active = revisitDateInput === opt.date;
@@ -2914,7 +2914,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   또는 달력에서 날짜 직접 지정
-                </label>
+ </label>
                 <input
                   type="date"
                   value={revisitDateInput}
@@ -2934,7 +2934,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>
                   재방문 사유 선택 또는 직접 입력
-                </label>
+ </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '4px' }}>
                   {reasonPresets.map(reason => {
                     const active = revisitReasonInput === reason;
@@ -2992,7 +2992,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmRevisitSchedule}
@@ -3008,7 +3008,7 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
                   }}
                 >
                   재방문 일정 확정
-                </button>
+ </button>
               </div>
             </div>
           </div>

@@ -345,7 +345,7 @@ export const SmartAsRequest: React.FC = () => {
   const effectiveAssetQuery = (customAssetNo || (selectedAssetNo !== 'CUSTOM' ? selectedAssetNo : '')).trim();
   const isUnknownAsset = isUnknownAssetLabel(effectiveAssetQuery);
 
-  // 🌟 관리번호 입력 시 매칭 자산 후보군 (대여중/현장배치 우선)
+  //  관리번호 입력 시 매칭 자산 후보군 (대여중/현장배치 우선)
   const matchingAssetCandidates = useMemo(() => {
     const clean = effectiveAssetQuery.toUpperCase();
     if (!clean || isUnknownAssetLabel(clean)) return [] as Asset[];
@@ -641,7 +641,7 @@ export const SmartAsRequest: React.FC = () => {
 
   return (
     <div data-hs-observe="smartasrequest" data-subview="smart_as_request" data-subview-title="Generated" style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-      {/* 🔔 인앱 토스트 알림 (헌장 5.2) */}
+      {/*  인앱 토스트 알림 (헌장 5.2) */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -665,10 +665,10 @@ export const SmartAsRequest: React.FC = () => {
           <Wrench size={18} color="var(--primary)" />
           <h2 data-mid="smart_as-header" style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0, whiteSpace: 'nowrap' }}>
             AS 요청
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             통화 녹음 AI 파싱 및 현장 고장 접수 전용 스튜디오
-          </span>
+ </span>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -684,8 +684,8 @@ export const SmartAsRequest: React.FC = () => {
               fontWeight: 700
             }}
           >
-            현장 AS 관리 이동 ➔
-          </button>
+            현장 AS 관리 이동 
+ </button>
         </div>
       </div>
 
@@ -694,10 +694,10 @@ export const SmartAsRequest: React.FC = () => {
           <CheckCircle2 size={48} color="#10b981" style={{ margin: '0 auto 16px auto' }} />
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-main)', margin: '0 0 8px 0' }}>
             AS 의뢰가 성공적으로 접수되었습니다!
-          </h2>
+ </h2>
           <p style={{ fontSize: '14px', color: '#10b981', margin: '0 0 20px 0' }}>
             접수번호: <strong>{submitSuccessTicket.ticketNo}</strong> (현장: {submitSuccessTicket.siteName} / 장비: {submitSuccessTicket.assetNo})
-          </p>
+ </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
             <button data-mid="btn-new-ticket"
               onClick={handleReset}
@@ -713,7 +713,7 @@ export const SmartAsRequest: React.FC = () => {
               }}
             >
               추가 AS 접수하기
-            </button>
+ </button>
             <button
               onClick={() => setActiveTab('field_as')}
               style={{
@@ -728,7 +728,7 @@ export const SmartAsRequest: React.FC = () => {
               }}
             >
               현장 AS 관리 대장 이동
-            </button>
+ </button>
           </div>
         </div>
       ) : (
@@ -743,20 +743,20 @@ export const SmartAsRequest: React.FC = () => {
             <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '13px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <PhoneCall size={15} /> 통화 접수 대기 ({asDrafts.length}건)
-              </h3>
+ </h3>
               <button
                 onClick={loadAsDrafts}
                 style={{ fontSize: '11px', color: 'var(--primary)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700 }}
               >
                 새로고침
-              </button>
+ </button>
             </div>
 
             {asDrafts.length === 0 ? (
               <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
                 대기 중인 통화 AS 초안이 없습니다.<br />
                 우측 폼에서 직접 수동 접수하십시오.
-              </div>
+ </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {asDrafts.map(d => {
@@ -801,8 +801,8 @@ export const SmartAsRequest: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', fontSize: '10.5px', color: 'var(--text-muted)' }}>
                         <span>{d.createdAt?.slice(5, 16) || ''}</span>
                         <span style={{ color: 'var(--primary)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                          <Sparkles size={11} /> 1-클릭 꽂아넣기 ➔
-                        </span>
+                          <Sparkles size={11} /> 1-클릭 꽂아넣기 
+ </span>
                       </div>
                     </div>
                   );
@@ -820,13 +820,13 @@ export const SmartAsRequest: React.FC = () => {
               }}>
                 <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Sparkles size={14} /> 선택된 통화 내용이 폼에 자동 입력되었습니다. 미비한 점을 확인 후 접수 확정하십시오.
-                </span>
+ </span>
                 <button
                   onClick={handleReset}
                   style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                 >
                   초기화
-                </button>
+ </button>
               </div>
             )}
 
@@ -905,7 +905,7 @@ export const SmartAsRequest: React.FC = () => {
                         }}
                       >
                         닫기
-                      </button>
+ </button>
                       <button
                         type="button"
                         onClick={() => runParse(pasteText)}
@@ -926,12 +926,12 @@ export const SmartAsRequest: React.FC = () => {
             </div>
 
             <form data-mid="smart_as-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* 1. 대상 장비 및 현장 스코핑 카드 (관리번호 최우선 입력 ➔ 기본정보 자동 채움 / 관리번호 모름 시 모델명 기록) */}
+          {/* 1. 대상 장비 및 현장 스코핑 카드 (관리번호 최우선 입력  기본정보 자동 채움 / 관리번호 모름 시 모델명 기록) */}
           <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '20px', boxShadow: 'var(--shadow-sm)' }}>
             <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Building2 size={18} color="var(--primary)" />
               1. 대상 장비 및 현장 선택
-            </h3>
+ </h3>
 
             {/* 1-1행: 관리번호 최우선 입력 + [관리번호 모름] 토글 & 모델명 기록 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -941,7 +941,7 @@ export const SmartAsRequest: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                       관리번호 (장비번호)
-                    </label>
+ </label>
                     {isUnknownAsset && (
                       <span
                         data-testid="pc-as-unknown-asset-badge"
@@ -957,7 +957,7 @@ export const SmartAsRequest: React.FC = () => {
                         }}
                       >
                         관리번호 모름 · 현장확인
-                      </span>
+ </span>
                     )}
                     {!isUnknownAsset && matchedAsset && (
                       <span
@@ -1145,7 +1145,7 @@ export const SmartAsRequest: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     고객사 (업체명)
-                  </label>
+ </label>
                   {customerSearch && (
                     <button
                       type="button"
@@ -1243,7 +1243,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   해당 현장 대여 장비 목록 (보조 선택)
-                </label>
+ </label>
                 <select
                   value={selectedAssetNo}
                   onChange={(e) => {
@@ -1275,7 +1275,7 @@ export const SmartAsRequest: React.FC = () => {
                   {siteRentedAssets.map(a => (
                     <option key={a.id} value={a.assetNo}>
                       {a.assetNo} ({a.modelName})
-                    </option>
+ </option>
                   ))}
                   <option value="CUSTOM">직접 입력 (전체장비 / 다수 장비)</option>
                 </select>
@@ -1284,7 +1284,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   현장 장비 위치 상세 (층/구역/열)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={locationDetail}
@@ -1308,13 +1308,13 @@ export const SmartAsRequest: React.FC = () => {
             <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Tag size={18} color="var(--primary)" />
               2. 고장 증상 및 요청 내용
-            </h3>
+ </h3>
 
             {/* 다빈도 고장 1-Click 프리셋 태그 버튼군 */}
             <div style={{ marginBottom: '14px' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                ⚡ 자주 접수되는 고장 증상 (클릭 시 자동 입력)
-              </label>
+                 자주 접수되는 고장 증상 (클릭 시 자동 입력)
+ </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {QUICK_ISSUE_PRESETS.map((preset, idx) => (
                   <button
@@ -1342,7 +1342,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   고장 분류
-                </label>
+ </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -1371,7 +1371,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   계기판 표시 에러코드 (선택)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={errorCode}
@@ -1417,13 +1417,13 @@ export const SmartAsRequest: React.FC = () => {
             <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <User size={18} color="var(--primary)" />
               3. 접수자 연락처 및 우선순위
-            </h3>
+ </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   현장 접수자 성명
-                </label>
+ </label>
                 <input
                   type="text"
                   value={reporterName}
@@ -1443,7 +1443,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   접수자 연락처
-                </label>
+ </label>
                 <input
                   type="text"
                   value={reporterContact}
@@ -1463,7 +1463,7 @@ export const SmartAsRequest: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   출동 긴급도
-                </label>
+ </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as any)}
@@ -1501,7 +1501,7 @@ export const SmartAsRequest: React.FC = () => {
               }}
             >
               초기화
-            </button>
+ </button>
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1528,7 +1528,7 @@ export const SmartAsRequest: React.FC = () => {
           </div>
         </div>
       )}
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 현장 AS 접수 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 현장 AS 접수 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         flexShrink: 0,
         height: '40px',

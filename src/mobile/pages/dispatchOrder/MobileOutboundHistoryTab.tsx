@@ -457,7 +457,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
               className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold whitespace-nowrap"
             >
               오늘
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => {
@@ -469,7 +469,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
               className="px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold whitespace-nowrap"
             >
               전체 기간
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => {
@@ -560,7 +560,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
         {filteredRows.length === 0 ? (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-xs text-slate-400">
             조회 조건에 해당하는 출고 요청 내역이 없습니다.
-          </div>
+ </div>
         ) : (
           filteredRows.map(row => {
             const equipSummary = row.equipmentItems.map(e => `${e.modelName}×${e.qty}대`).join(', ');
@@ -609,8 +609,8 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                             : '배차대기'}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-600 text-white whitespace-nowrap">
-                      상세 ➔
-                    </span>
+                      상세 
+ </span>
                   </div>
                 </div>
 
@@ -624,7 +624,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                   {hasFinancialAccess && totalMonthlyRentalAmount > 0 && (
                     <span className="font-mono font-bold text-emerald-300 whitespace-nowrap">
                       월 {totalMonthlyRentalAmount.toLocaleString()}원
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -657,7 +657,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
               <span className="text-sm font-black text-white whitespace-nowrap">출고 요청 상세 명세</span>
               <span className="font-mono text-xs font-bold text-blue-400 truncate">
                 {selectedRow.id} ({selectedRow.contractNo})
-              </span>
+ </span>
             </div>
             <button
               type="button"
@@ -723,7 +723,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                     ? editEquipments.reduce((s, e) => s + (Number(e.qty) || 1), 0)
                     : selectedRow.totalQty}
                   대)
-                </span>
+ </span>
                 {canSave &&
                   selectedRow.dispatchStatus !== 'CANCELLED' &&
                   (selectedRow.canEditPreInspection || hasFinancialAccess) &&
@@ -757,7 +757,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                         className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-bold whitespace-nowrap"
                       >
                         취소
-                      </button>
+ </button>
                     </div>
                   ))}
               </div>
@@ -798,7 +798,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                           {catalogModels.map(m => (
                             <option key={m.modelName} value={m.modelName}>
                               {m.modelName} (가용 {m.availableCount}대)
-                            </option>
+ </option>
                           ))}
                         </select>
 
@@ -815,7 +815,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                             className="w-7 h-7 rounded bg-slate-800 text-white font-bold border border-slate-700"
                           >
                             -
-                          </button>
+ </button>
                           <span className="px-2 font-mono font-bold text-white">{eq.qty}대</span>
                           <button
                             type="button"
@@ -829,7 +829,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                             className="w-7 h-7 rounded bg-slate-800 text-white font-bold border border-slate-700"
                           >
                             +
-                          </button>
+ </button>
                           {editEquipments.length > 1 && (
                             <button
                               type="button"
@@ -837,7 +837,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                               className="px-2 py-1 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[11px] font-bold"
                             >
                               삭제
-                            </button>
+ </button>
                           )}
                         </div>
                       </div>
@@ -897,7 +897,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                       {catalogModels.map(m => (
                         <option key={m.modelName} value={m.modelName}>
                           {m.modelName} (가용 {m.availableCount}대)
-                        </option>
+ </option>
                       ))}
                     </select>
                     <button
@@ -921,7 +921,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                       className="px-3 py-1.5 rounded bg-emerald-700 text-white font-bold text-xs whitespace-nowrap"
                     >
                       + 모델 추가
-                    </button>
+ </button>
                   </div>
                 </div>
               ) : (
@@ -931,11 +931,11 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-mono font-bold text-white">
                           {eq.modelName} × {eq.qty}대
-                        </span>
+ </span>
                         {hasFinancialAccess && (
                           <span className="font-mono font-bold text-emerald-400">
                             월 {eq.monthlyRate.toLocaleString()}원 / 일 {eq.dailyRate.toLocaleString()}원
-                          </span>
+ </span>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-slate-400">
@@ -1003,7 +1003,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                       className="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold whitespace-nowrap"
                     >
                       일정 · 개시일 변경
-                    </button>
+ </button>
                   ) : (
                     <div className="flex flex-wrap items-center gap-1">
                       <button
@@ -1031,7 +1031,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                         className="px-2.5 py-1 rounded bg-emerald-600 text-white text-[11px] font-bold whitespace-nowrap"
                       >
                         일정 저장
-                      </button>
+ </button>
                       {selectedRow.totalAssignedCount > 0 && selectedRow.contractId && (
                         <button
                           type="button"
@@ -1061,8 +1061,8 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                           }}
                           className="px-2.5 py-1 rounded bg-indigo-600 text-white text-[11px] font-bold whitespace-nowrap"
                         >
-                          저장 후 계약서 재발송 ➔
-                        </button>
+                          저장 후 계약서 재발송 
+ </button>
                       )}
                       <button
                         type="button"
@@ -1070,7 +1070,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                         className="px-2 py-1 rounded bg-slate-800 text-slate-300 text-[11px] font-bold whitespace-nowrap"
                       >
                         취소
-                      </button>
+ </button>
                     </div>
                   ))}
               </div>
@@ -1131,7 +1131,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                   className="px-3 py-2 rounded-xl bg-rose-700 text-white text-xs font-bold whitespace-nowrap"
                 >
                   출고 요청 취소
-                </button>
+ </button>
               ) : (
                 <div className="flex items-center gap-1.5">
                   <span className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-amber-300 text-xs font-bold whitespace-nowrap">
@@ -1144,7 +1144,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                       className="px-3 py-1.5 rounded-lg bg-indigo-600 border border-indigo-400 text-white text-xs font-bold whitespace-nowrap"
                     >
                       계약수정
-                    </button>
+ </button>
                   )}
                 </div>
               )}
@@ -1207,7 +1207,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
             </div>
             <div className="text-slate-200 leading-relaxed">
               <strong>{cancelTargetRow.customerName}</strong> ({cancelTargetRow.siteName}) — {cancelTargetRow.equipSummary} 출고 요청을 취소하시겠습니까?
-            </div>
+ </div>
             <input
               type="text"
               value={cancelReasonInput}
@@ -1222,7 +1222,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-200 font-bold"
               >
                 닫기
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isCancelling}
@@ -1271,7 +1271,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
             <div className="text-sm font-black text-rose-400">취소한 출고 요청 영구 삭제</div>
             <div className="text-slate-200">
               취소 완료 상태인 출고 요청({deleteCancelledTarget.allIds.length}건)을 목록에서 삭제하시겠습니까?
-            </div>
+ </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -1279,7 +1279,7 @@ export const MobileOutboundHistoryTab: React.FC<MobileOutboundHistoryTabProps> =
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-200 font-bold"
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isDeletingCancelled}

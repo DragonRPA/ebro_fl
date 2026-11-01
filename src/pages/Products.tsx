@@ -607,10 +607,10 @@ export const Products: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             제품 모델 관리
-          </h2>
+ </h2>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 <strong>{products.length}</strong>개 모델 (조회 <strong>{filtered.length}</strong>개)
-          </span>
+ </span>
         </div>
 
         {/* 우상단 파이프라인 액션 - 표준 횡배치: 조회 -> 저장/등록 -> 엑셀업로드 -> 엑셀다운로드 */}
@@ -621,7 +621,7 @@ export const Products: React.FC = () => {
             disabled={refreshing}
           >
             <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} /> 조회
-          </button>
+ </button>
           {canSave && (
             <button
               data-hs-trigger="Register"
@@ -630,14 +630,14 @@ export const Products: React.FC = () => {
               onClick={handleOpenAddModal}
             >
               <Plus size={13} /> 모델 등록
-            </button>
+ </button>
           )}
           <button
             className="btn-excel-download"
             onClick={handleExport}
           >
             <Download size={13} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -776,7 +776,7 @@ export const Products: React.FC = () => {
             }}
           >
             <RefreshCw size={11} /> 초기화
-          </button>
+ </button>
         )}
       </div>
 
@@ -818,7 +818,7 @@ export const Products: React.FC = () => {
                 <tr>
                   <td colSpan={16} style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                     조회 조건에 해당하는 제품 모델이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 sortedProducts.map(p => {
@@ -853,7 +853,7 @@ export const Products: React.FC = () => {
                           }}
                         >
                           보기
-                        </button>
+ </button>
                       </td>
 
                       {/* 모델명 */}
@@ -869,7 +869,7 @@ export const Products: React.FC = () => {
                       {/* 톤급코드 */}
                       <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         <strong>{(Number(p.feet || 25) / 10).toFixed(1)}</strong> 톤급
-                      </td>
+ </td>
 
                       {/* 실물자산 보유 현황 */}
                       <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>
@@ -877,15 +877,15 @@ export const Products: React.FC = () => {
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                             <span className="badge badge-primary" style={{ fontSize: '10.5px', padding: '2px 6px' }}>
                               총 {stats.total}대
-                            </span>
+ </span>
                             <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)' }}>
                               (자사 {stats.owned} · 임차 {stats.leased})
-                            </span>
+ </span>
                           </div>
                         ) : (
                           <span className="badge badge-secondary" style={{ fontSize: '10px', padding: '2px 6px' }}>
                             미보유 (0대)
-                          </span>
+ </span>
                         )}
                       </td>
 
@@ -905,7 +905,7 @@ export const Products: React.FC = () => {
                           }}
                         >
                           <Folder size={11} /> {docList.length}건
-                        </button>
+ </button>
                       </td>
 
                       {/* 제조사 */}
@@ -1031,7 +1031,7 @@ export const Products: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Layers size={14} className="text-primary" /> 실물 자산 보유 및 가동 현황
-                  </div>
+ </div>
                   {stats.total > 0 && (
                     <button
                       type="button"
@@ -1040,7 +1040,7 @@ export const Products: React.FC = () => {
                       style={{ padding: '2px 6px', fontSize: '10.5px' }}
                     >
                       자산대장 바로가기
-                    </button>
+ </button>
                   )}
                 </div>
 
@@ -1074,7 +1074,7 @@ export const Products: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Folder size={14} style={{ color: '#0070C0' }} /> R2 클라우드 문서함
-                  </div>
+ </div>
                   
                   {/* 파일 업로드 버튼 */}
                   <label className="btn-primary" style={{
@@ -1108,7 +1108,7 @@ export const Products: React.FC = () => {
                   {docList.length === 0 ? (
                     <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '14px 0', fontSize: '11px' }}>
                       보관된 안전인증서나 제원표 문서가 없습니다.
-                    </div>
+ </div>
                   ) : (
                     docList.map((doc, dIdx) => (
                       <div
@@ -1151,7 +1151,7 @@ export const Products: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     3. VDI 2198 지게차 상세 물리 제원 규격
-                  </div>
+ </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {!isEditing && (
                       <button
@@ -1161,7 +1161,7 @@ export const Products: React.FC = () => {
                         style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <FileText size={12} /> 제원표 보기
-                      </button>
+ </button>
                     )}
                     {canSave && !isEditing && (
                       <button
@@ -1171,7 +1171,7 @@ export const Products: React.FC = () => {
                         style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <Edit2 size={12} /> 수정
-                      </button>
+ </button>
                     )}
                     {isEditing && (
                       <>
@@ -1182,7 +1182,7 @@ export const Products: React.FC = () => {
                           style={{ padding: '3px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
                           <Save size={12} /> 저장
-                        </button>
+ </button>
                         <button
                           type="button"
                           className="btn-secondary"
@@ -1190,7 +1190,7 @@ export const Products: React.FC = () => {
                           style={{ padding: '3px 8px', fontSize: '11px' }}
                         >
                           취소
-                        </button>
+ </button>
                       </>
                     )}
                   </div>
@@ -1264,7 +1264,7 @@ export const Products: React.FC = () => {
                 style={{ padding: '5px 14px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         );
@@ -1338,7 +1338,7 @@ export const Products: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
                 [{selectedProduct.modelName}] 지게차 VDI 2198 표준 제원표
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowSpecPreviewModal(false)}
@@ -1354,7 +1354,7 @@ export const Products: React.FC = () => {
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>정격하중 · 하중중심</div>
                 <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--primary)', marginTop: '4px' }}>
                   {selectedProduct.ratedCapacityKg ? `${selectedProduct.ratedCapacityKg} kg` : (selectedProduct.capacityPreExt || '-')} / {selectedProduct.loadCenterMm || 500} mm
-                </div>
+ </div>
               </div>
               <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>표준 · 최대 인상고</div>
@@ -1420,7 +1420,7 @@ export const Products: React.FC = () => {
                 style={{ padding: '5px 14px', fontSize: '12px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

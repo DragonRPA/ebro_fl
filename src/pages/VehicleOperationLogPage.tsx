@@ -325,7 +325,7 @@ export const VehicleOperationLogPage: React.FC = () => {
         '유종': f.fuelType,
         '주유량(리터)': f.fuelVolume,
         '주유금액(원)': f.fuelAmount,
-        '단가(원/L)': f.fuelUnitPrice || (f.fuelVolume > 0 ? Math.round(f.fuelAmount / f.fuelVolume) : 0),
+        '단가': f.fuelUnitPrice || (f.fuelVolume > 0 ? Math.round(f.fuelAmount / f.fuelVolume) : 0),
         '계기판 거리': f.currentMileage,
         '주유소명': f.gasStationName || '',
         '결제수단': f.paymentMethod === 'CORPORATE_CARD' ? '법인카드' : '개인경비',
@@ -454,7 +454,7 @@ export const VehicleOperationLogPage: React.FC = () => {
           </div>
           <h2 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             법인 차량 및 주유 관리
-          </h2>
+ </h2>
         </div>
 
         {/* 상단 퀵 액션 버튼군 */}
@@ -710,7 +710,7 @@ export const VehicleOperationLogPage: React.FC = () => {
               {corporateVehicles.map(v => (
                 <option key={v.id} value={v.id}>
                   {v.vehicleNo} - {v.modelName} ({v.assignedDepartment})
-                </option>
+ </option>
               ))}
             </select>
           </div>
@@ -786,7 +786,7 @@ export const VehicleOperationLogPage: React.FC = () => {
               }}
             >
               초기화
-            </button>
+ </button>
           </div>
         </div>
       )}
@@ -818,7 +818,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                   <tr>
                     <td colSpan={13} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                       조회 조건에 해당하는 운행일지 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedOperationLogs.map((log: VehicleOperationLog, idx: number) => {
@@ -860,7 +860,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 10px' }}>
                           <span style={{ color: 'var(--text-secondary)' }}>{log.departureLocation}</span>
-                          <span style={{ margin: '0 4px', color: 'var(--text-muted, #94a3b8)' }}>➔</span>
+                          <span style={{ margin: '0 4px', color: 'var(--text-muted, #94a3b8)' }}></span>
                           <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{log.arrivalLocation}</span>
                         </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', color: 'var(--text-secondary)' }}>
@@ -871,10 +871,10 @@ export const VehicleOperationLogPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)' }}>
                           {log.driveDistance.toLocaleString()} km
-                        </td>
+ </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>
                           {log.businessDistance.toLocaleString()} km
-                        </td>
+ </td>
                         <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                           <div style={{ display: 'inline-flex', gap: '4px' }}>
                             {log.dashboardPhotoStart ? (
@@ -991,10 +991,10 @@ export const VehicleOperationLogPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <span>🚗 운행건수: <strong style={{ color: 'var(--primary)' }}>{operationMetrics.totalCount}</strong>건</span>
-              <span>🛣️ 총 주행거리: <strong style={{ color: 'var(--primary)' }}>{operationMetrics.totalDistance.toLocaleString()}</strong> km</span>
+              <span> 운행건수: <strong style={{ color: 'var(--primary)' }}>{operationMetrics.totalCount}</strong>건</span>
+              <span> 총 주행거리: <strong style={{ color: 'var(--primary)' }}>{operationMetrics.totalDistance.toLocaleString()}</strong> km</span>
               <span>업무용: <strong style={{ color: '#10b981' }}>{operationMetrics.businessDistance.toLocaleString()}</strong> km</span>
-              <span>🏠 출퇴근: <strong style={{ color: '#a855f7' }}>{operationMetrics.commuteDistance.toLocaleString()}</strong> km</span>
+              <span> 출퇴근: <strong style={{ color: '#a855f7' }}>{operationMetrics.commuteDistance.toLocaleString()}</strong> km</span>
             </div>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <span>업무사용비율: <strong style={{ color: '#eab308' }}>{operationMetrics.businessRatio}%</strong></span>
@@ -1031,7 +1031,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                   <tr>
                     <td colSpan={14} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                       조회 조건에 해당하는 주유 영수증 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedFuelLogs.map((fuel: VehicleFuelLog, idx: number) => {
@@ -1065,7 +1065,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: '700', color: 'var(--text-main)' }}>
                           {fuel.fuelVolume.toFixed(1)} L
-                        </td>
+ </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: '800', color: '#10b981' }}>
                           ₩{fuel.fuelAmount.toLocaleString()}
                         </td>
@@ -1074,7 +1074,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', color: 'var(--text-secondary)' }}>
                           {fuel.currentMileage.toLocaleString()} km
-                        </td>
+ </td>
                         <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                           {fuel.dashboardPhotoUrl ? (
                             <button
@@ -1179,12 +1179,12 @@ export const VehicleOperationLogPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <span>⛽ 주유건수: <strong style={{ color: 'var(--primary)' }}>{fuelMetrics.totalCount}</strong>건</span>
-              <span>🛢️ 총 주유용량: <strong style={{ color: 'var(--primary)' }}>{fuelMetrics.totalVolume.toFixed(1)}</strong> L</span>
+              <span> 주유건수: <strong style={{ color: 'var(--primary)' }}>{fuelMetrics.totalCount}</strong>건</span>
+              <span> 총 주유용량: <strong style={{ color: 'var(--primary)' }}>{fuelMetrics.totalVolume.toFixed(1)}</strong> L</span>
               <span>총 주유금액: <strong style={{ color: '#10b981' }}>₩{fuelMetrics.totalAmount.toLocaleString()}</strong></span>
             </div>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <span>🧾 영수증 증빙율: <strong style={{ color: '#eab308' }}>{fuelMetrics.proofRatio}% ({fuelMetrics.receiptProofCount}/{fuelMetrics.totalCount})</strong></span>
+              <span> 영수증 증빙율: <strong style={{ color: '#eab308' }}>{fuelMetrics.proofRatio}% ({fuelMetrics.receiptProofCount}/{fuelMetrics.totalCount})</strong></span>
             </div>
           </div>
         </>
@@ -1245,7 +1245,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                   <tr>
                     <td colSpan={13} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                       등록된 법인 차량이 없습니다. [법인 차량 신규 등록] 버튼을 눌러 등록하십시오.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedVehicles.map((veh: CorporateVehicle, idx: number) => (
@@ -1278,7 +1278,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                       </td>
                       <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)' }}>
                         {veh.currentMileage.toLocaleString()} km
-                      </td>
+ </td>
                       <td style={{ padding: '6px 10px', color: 'var(--text-secondary)' }}>
                         {veh.insuranceExpiryDate || '-'}
                       </td>
@@ -1440,7 +1440,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -1596,7 +1596,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                     {users.map(u => (
                       <option key={u.id} value={u.id}>
                         {u.name} ({u.role || u.id})
-                      </option>
+ </option>
                     ))}
                   </select>
                 </div>
@@ -1659,7 +1659,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                 />
                 <label htmlFor="vehIsActive" style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)', cursor: 'pointer' }}>
                   운행 가능 (체크 해제 시 휴차 처리)
-                </label>
+ </label>
               </div>
 
               {/* 비고 */}
@@ -1691,7 +1691,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Save"
                   type="submit"
                   style={{
@@ -1706,7 +1706,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                   }}
                 >
                   저장 완료
-                </button>
+ </button>
               </div>
             </form>
           </div>
@@ -1767,7 +1767,7 @@ export const VehicleOperationLogPage: React.FC = () => {
                 }}
               >
                 취소
-              </button>
+ </button>
               <button data-hs-trigger="Delete"
                 onClick={handleExecuteDelete}
                 style={{
@@ -1782,13 +1782,13 @@ export const VehicleOperationLogPage: React.FC = () => {
                 }}
               >
                 삭제
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ⛽ 주유내역 엑셀 일괄 등록 모달 */}
+      {/*  주유내역 엑셀 일괄 등록 모달 */}
       <ExcelUploadModal
         isOpen={fuelExcelModalOpen}
         onClose={() => setFuelExcelModalOpen(false)}

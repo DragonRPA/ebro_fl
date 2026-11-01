@@ -96,10 +96,10 @@ export const PrintSuccessModal: React.FC<PrintSuccessModalProps> = ({
             <div>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--success)', letterSpacing: '-0.02em' }}>
                 인쇄 요청 전송 완료
-              </h3>
+ </h3>
               <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)' }}>
                 프린터 큐에 등록되었습니다.
-              </p>
+ </p>
             </div>
           </div>
           <button
@@ -176,7 +176,7 @@ export const PrintSuccessModal: React.FC<PrintSuccessModalProps> = ({
                 whiteSpace: 'nowrap'
               }}>
                 <CheckCircle2 size={12} /> 전송 완료 (에이전트 출력 대기)
-              </span>
+ </span>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export const PrintSuccessModal: React.FC<PrintSuccessModalProps> = ({
 
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '0 4px', lineHeight: '1.4' }}>
             현장 스테이션 PC의 eBroAgent가 큐를 감지하여 자동 출력을 진행합니다.
-          </div>
+ </div>
         </div>
 
         {/* 모달 하단 버튼 */}
@@ -219,7 +219,7 @@ export const PrintSuccessModal: React.FC<PrintSuccessModalProps> = ({
             }}
           >
             확인
-          </button>
+ </button>
         </div>
       </div>
     </div>

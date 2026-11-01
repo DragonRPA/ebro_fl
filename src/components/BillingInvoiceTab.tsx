@@ -55,7 +55,7 @@ function CategoryBadge({ category }: { category: 'RENTAL' | 'REPAIR' | 'TRANSPOR
         backgroundColor: '#fed7aa', color: 'var(--warning)', whiteSpace: 'nowrap'
       }}>
         수리비
-      </span>
+ </span>
     );
   }
   if (category === 'TRANSPORT') {
@@ -65,7 +65,7 @@ function CategoryBadge({ category }: { category: 'RENTAL' | 'REPAIR' | 'TRANSPOR
         backgroundColor: '#e9d5ff', color: '#7e22ce', whiteSpace: 'nowrap'
       }}>
         운반비
-      </span>
+ </span>
     );
   }
   if (category === 'OTHER') {
@@ -75,7 +75,7 @@ function CategoryBadge({ category }: { category: 'RENTAL' | 'REPAIR' | 'TRANSPOR
         backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)', whiteSpace: 'nowrap'
       }}>
         기타
-      </span>
+ </span>
     );
   }
   return (
@@ -84,7 +84,7 @@ function CategoryBadge({ category }: { category: 'RENTAL' | 'REPAIR' | 'TRANSPOR
       backgroundColor: 'var(--info-light)', color: 'var(--primary)', whiteSpace: 'nowrap'
     }}>
       렌탈료
-    </span>
+ </span>
   );
 }
 
@@ -200,7 +200,7 @@ export const BillingInvoiceTab: React.FC = () => {
     }
   }, [filteredCustomers, selectedCustomerId, customerSearchQuery]);
 
-  // 고객사 변경 시 납기일 기본값 자동 세팅 (현장 우선 ➔ 고객사 기본값)
+  // 고객사 변경 시 납기일 기본값 자동 세팅 (현장 우선  고객사 기본값)
   useEffect(() => {
     if (!selectedCustomerId || !customers) return;
     const cust = customers.find(c => c.id === selectedCustomerId);
@@ -660,7 +660,7 @@ export const BillingInvoiceTab: React.FC = () => {
       console.warn('PDF 에이전트 연결 불가 안내:', err);
       showErrorModal?.(
         `${err.message || err}\n\n` +
-        `💡 [대안]: [정품 엑셀 다운로드]를 통해 엑셀 파일을 다운로드하신 후, 엑셀에서 바로 PDF로 저장하시거나 [인쇄] 기능을 사용하실 수 있습니다.`
+        ` [대안]: [정품 엑셀 다운로드]를 통해 엑셀 파일을 다운로드하신 후, 엑셀에서 바로 PDF로 저장하시거나 [인쇄] 기능을 사용하실 수 있습니다.`
       );
     }
   };
@@ -956,7 +956,7 @@ export const BillingInvoiceTab: React.FC = () => {
           <div data-mid="invoice-period-ym" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
               귀속연월
-            </span>
+ </span>
             <input
               type="month"
               value={selectedYm}
@@ -973,7 +973,7 @@ export const BillingInvoiceTab: React.FC = () => {
           <div data-mid="invoice-customer-search" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
               고객명 검색
-            </span>
+ </span>
             <input
               type="text"
               placeholder="고객명/초성 (예: ㄷㅇ)..."
@@ -990,7 +990,7 @@ export const BillingInvoiceTab: React.FC = () => {
           <div data-mid="invoice-customer-select" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
               고객사 선택 ({filteredCustomers.length}개사)
-            </span>
+ </span>
             <select
               value={selectedCustomerId}
               onChange={e => setSelectedCustomerId(e.target.value)}
@@ -1013,7 +1013,7 @@ export const BillingInvoiceTab: React.FC = () => {
           <div data-mid="invoice-groupby-select" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
               통합 단위
-            </span>
+ </span>
             <select
               value={groupBy}
               onChange={e => setGroupBy(e.target.value as InvoiceGroupBy)}
@@ -1046,7 +1046,7 @@ export const BillingInvoiceTab: React.FC = () => {
               }}
             >
               통합 발행 스튜디오
-            </button>
+ </button>
             <button
               onClick={() => setViewMode('HISTORY')}
               style={{
@@ -1057,7 +1057,7 @@ export const BillingInvoiceTab: React.FC = () => {
               }}
             >
               발행 이력 대장 ({invoices.length})
-            </button>
+ </button>
           </div>
 
           {/* 홈택스 일괄발행 엑셀 버튼 */}
@@ -1073,7 +1073,7 @@ export const BillingInvoiceTab: React.FC = () => {
           >
             <FileText size={13} />
             홈택스 세금계산서 엑셀
-          </button>
+ </button>
 
           {/* 소급 묶기 버튼 */}
           <button
@@ -1132,9 +1132,9 @@ export const BillingInvoiceTab: React.FC = () => {
                 <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <FileText size={16} color="var(--primary)" />
                   미통합 청구 목록
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
+ <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
                     ({displayedBillings.length}건 / 선택 {selectedBillingIds.length}건)
-                  </span>
+ </span>
                 </div>
               </div>
 
@@ -1168,7 +1168,7 @@ export const BillingInvoiceTab: React.FC = () => {
               </div>
             </div>
 
-            {/* ⚠️ 미청구 부가비용 동반선택 배너 */}
+            {/*  미청구 부가비용 동반선택 배너 */}
             {pendingExtraBillings.length > 0 && (
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -1180,7 +1180,7 @@ export const BillingInvoiceTab: React.FC = () => {
                   <ShieldAlert size={16} color="#d97706" />
                   <span>
                     <strong>미청구 부가비용 감지:</strong> 수리비 {categoryCounts.REPAIR}건, 운반비 {categoryCounts.TRANSPORT}건이 대기 중입니다.
-                  </span>
+ </span>
                 </div>
                 <button
                   onClick={handleSelectAllExtraCharges}
@@ -1191,7 +1191,7 @@ export const BillingInvoiceTab: React.FC = () => {
                   }}
                 >
                   동반 선택
-                </button>
+ </button>
               </div>
             )}
 
@@ -1295,7 +1295,7 @@ export const BillingInvoiceTab: React.FC = () => {
             }}>
               <span style={{ color: 'var(--text-muted)' }}>
                 선택 항목: <strong>{selectedBillingIds.length}</strong>건 / 총 {displayedBillings.length}건
-              </span>
+ </span>
               <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>
                 선택 공급가계: <strong>{fmtAmt(accountingSummary.supplyAmount)}</strong>
               </span>
@@ -1314,15 +1314,15 @@ export const BillingInvoiceTab: React.FC = () => {
               <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Printer size={16} color="var(--primary)" />
                 통합 인보이스 작업대
-              </div>
+ </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
                   eBroAgent 엑셀 연동
-                </span>
+ </span>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   공식 거래명세서 싱크
-                </span>
+ </span>
               </div>
             </div>
 
@@ -1335,17 +1335,17 @@ export const BillingInvoiceTab: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   발행 예정 인보이스 번호
-                </span>
+ </span>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>
                   INV-{selectedYm.replace('-', '')}-AUTO
-                </span>
+ </span>
               </div>
 
               {/* 납기일자 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   납기일자 (입금 마감일)
-                </span>
+ </span>
                 <input
                   type="date"
                   value={invoiceDueDate}
@@ -1361,7 +1361,7 @@ export const BillingInvoiceTab: React.FC = () => {
               <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   통합 비고 / 전달사항
-                </span>
+ </span>
                 <input
                   type="text"
                   placeholder="예: 2026년 8월 정기 렌탈료 및 현장 부대비용 통합 청구"
@@ -1395,7 +1395,7 @@ export const BillingInvoiceTab: React.FC = () => {
               <div style={{ textAlign: 'center', borderBottom: '2px solid var(--text-main)', paddingBottom: '8px', marginBottom: '10px' }}>
                 <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '4px', color: 'var(--text-main)' }}>
                   거 래 명 세 서
-                </h2>
+ </h2>
                 <div style={{ fontSize: '11px', color: 'var(--text-main)', marginTop: '2px' }}>
                   (공급받는자 보관용) | 발행일자: {new Date().toISOString().slice(0, 10)}
                 </div>
@@ -1409,7 +1409,7 @@ export const BillingInvoiceTab: React.FC = () => {
                     <tr>
                       <td rowSpan={4} style={{ width: '20px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', textAlign: 'center', fontWeight: 700, borderRight: '1px solid var(--border-color)', padding: '4px' }}>
                         공<br/>급<br/>자
-                      </td>
+ </td>
                       <td style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', padding: '3px 4px', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '55px', fontWeight: 600 }}>등록번호</td>
                       <td colSpan={3} style={{ padding: '3px 4px', borderBottom: '1px solid var(--border-color)', fontWeight: 700, color: 'var(--text-main)' }}>
                         {currentTenant?.businessNumber || '138-81-83251'}
@@ -1463,7 +1463,7 @@ export const BillingInvoiceTab: React.FC = () => {
                     <tr>
                       <td rowSpan={4} style={{ width: '20px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', textAlign: 'center', fontWeight: 700, borderRight: '1px solid var(--border-color)', padding: '4px' }}>
                         공<br/>급<br/>받<br/>는<br/>자
-                      </td>
+ </td>
                       <td style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', padding: '3px 4px', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '55px', fontWeight: 600 }}>등록번호</td>
                       <td colSpan={3} style={{ padding: '3px 4px', borderBottom: '1px solid var(--border-color)', fontWeight: 700, color: 'var(--text-main)' }}>
                         {selectedCustomer?.businessNumber || '-'}
@@ -1505,7 +1505,7 @@ export const BillingInvoiceTab: React.FC = () => {
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: 800 }}>
                   ₩{accountingSummary.grandTotal.toLocaleString()} (부가세 포함)
-                </div>
+ </div>
               </div>
 
               {/* ── 11행 정규 규격 그리드 (table-layout fixed, no-wrap 방어) ── */}
@@ -1560,7 +1560,7 @@ export const BillingInvoiceTab: React.FC = () => {
                   <tr style={{ backgroundColor: 'var(--bg-app)', borderTop: '2px solid var(--border-color)', fontWeight: 700 }}>
                     <td colSpan={5} style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', fontWeight: 800 }}>
                       소계 및 합계
-                    </td>
+ </td>
                     <td style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 700 }}>
                       {accountingSummary.supplyAmount.toLocaleString()}
                     </td>
@@ -1602,7 +1602,7 @@ export const BillingInvoiceTab: React.FC = () => {
               <div data-mid="invoice-reconcile-summary" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   청구 대상: <strong>{selectedBillingIds.length}</strong>건 선택됨
-                </span>
+ </span>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   공급가: {fmtAmt(accountingSummary.supplyAmount)} + 세액: {fmtAmt(accountingSummary.vatAmount)} = <span style={{ color: 'var(--primary)' }}>{fmtAmt(accountingSummary.grandTotal)}</span>
                 </span>
@@ -1629,7 +1629,7 @@ export const BillingInvoiceTab: React.FC = () => {
                 >
                   <Download size={14} />
                   정품 엑셀 다운로드
-                </button>
+ </button>
 
                 <div data-mid="invoice-print-email-actions" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 {/* 2. PDF 변환 / 다운로드 */}
@@ -1650,7 +1650,7 @@ export const BillingInvoiceTab: React.FC = () => {
                 >
                   <FileText size={14} />
                   PDF 다운로드
-                </button>
+ </button>
 
                 {/* 3. 브라우저 인쇄 */}
                 <button
@@ -1670,7 +1670,7 @@ export const BillingInvoiceTab: React.FC = () => {
                 >
                   <Printer size={14} />
                   인쇄
-                </button>
+ </button>
 
                 {/* 3-1. 이메일 발송 */}
                 <button
@@ -1730,10 +1730,10 @@ export const BillingInvoiceTab: React.FC = () => {
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
                 기발행 통합 청구서 이력
-              </span>
+ </span>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 (총 {filteredInvoices.length}건)
-              </span>
+ </span>
             </div>
 
             {/* 상태 필터 */}
@@ -1837,7 +1837,7 @@ export const BillingInvoiceTab: React.FC = () => {
                               title="정품 거래명세서 PDF 다운로드"
                             >
                               <Download size={11} /> PDF
-                            </button>
+ </button>
                             <button
                               type="button"
                               onClick={() => handleExportHistoryExcel(inv)}
@@ -1849,7 +1849,7 @@ export const BillingInvoiceTab: React.FC = () => {
                               title="정품 거래명세서 엑셀 다운로드"
                             >
                               <FileText size={11} /> 엑셀
-                            </button>
+ </button>
                             {inv.status !== 'CANCELLED' && (
                               <button
                                 onClick={() => handleCancelInvoice(inv.id)}
@@ -1860,7 +1860,7 @@ export const BillingInvoiceTab: React.FC = () => {
                                 }}
                               >
                                 취소
-                              </button>
+ </button>
                             )}
                           </div>
                         </td>
@@ -1876,7 +1876,7 @@ export const BillingInvoiceTab: React.FC = () => {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                                   포함된 원천 청구 내역 ({historyDetail.billings?.length || 0}건)
-                                </div>
+ </div>
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px' }}>
                                   <thead>
                                     <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
@@ -1932,7 +1932,7 @@ export const BillingInvoiceTab: React.FC = () => {
             }}>
               <CheckSquare size={16} color="var(--primary)" />
               선택 {accountingSummary.count}건
-            </span>
+ </span>
             <span style={{ color: 'var(--text-muted)' }}>|</span>
             <span style={{ color: 'var(--text-main)' }}>
               공급가: <strong>{fmtAmt(accountingSummary.supplyAmount)}</strong>
@@ -1971,7 +1971,7 @@ export const BillingInvoiceTab: React.FC = () => {
             >
               <Printer size={14} />
               A4 명세서 인쇄
-            </button>
+ </button>
 
             {/* 거래명세서 엑셀 다운로드 */}
             <button
@@ -1987,7 +1987,7 @@ export const BillingInvoiceTab: React.FC = () => {
             >
               <Download size={14} />
               엑셀 다운로드
-            </button>
+ </button>
 
             {/* 통합 인보이스 발행 (주 터미널 액션) */}
             <button

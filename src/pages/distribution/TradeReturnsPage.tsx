@@ -227,7 +227,7 @@ export const TradeReturnsPage: React.FC = () => {
           품목코드: prod?.skuCode || '-',
           품명: prod?.name || '-',
           반품수량: r.qty,
-          품질판정: r.condition === 'SELLABLE' ? '정상(재판매)' : '불량(폐기)',
+          품질판정: r.condition === 'SELLABLE' ? '정상' : '불량',
           환불차감액: r.refundAmount,
           처리상태: st === 'COMPLETED' ? '환입완료' : st === 'REQUESTED' ? '반품접수' : '반품취소',
           반품사유: r.reason || '-',
@@ -266,7 +266,7 @@ export const TradeReturnsPage: React.FC = () => {
           <RotateCcw size={18} color="var(--primary)" />
           <h2 data-mid="trade_returns-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             환입 및 반품
-          </h2>
+ </h2>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -290,7 +290,7 @@ export const TradeReturnsPage: React.FC = () => {
           >
             <PlusCircle size={14} />
             반품 접수/등록
-          </button>
+ </button>
 
           <button
             onClick={handleExcelDownload}
@@ -312,7 +312,7 @@ export const TradeReturnsPage: React.FC = () => {
           >
             <Download size={14} color="#16a34a" />
             엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -323,17 +323,17 @@ export const TradeReturnsPage: React.FC = () => {
           <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{kpi.totalReturnCount}건</div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>반품 검수 대기 (접수)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>반품 검수 대기</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>{kpi.requestedCount}건</div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>정상 환입 (재판매 복원)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>정상 환입</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
             {kpi.sellableQty}개 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({kpi.sellableRefund.toLocaleString()}원)</span>
           </div>
         </div>
         <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>불량 반품 (폐기 손실)</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>불량 반품</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: '#ef4444', marginTop: '2px' }}>
             {kpi.defectiveQty}개 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({kpi.defectiveRefund.toLocaleString()}원)</span>
           </div>
@@ -407,8 +407,8 @@ export const TradeReturnsPage: React.FC = () => {
             style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
           >
             <option value="ALL">전체 판정</option>
-            <option value="SELLABLE">정상 (재판매 입고)</option>
-            <option value="DEFECTIVE">불량 (폐기 처리)</option>
+            <option value="SELLABLE">정상</option>
+            <option value="DEFECTIVE">불량</option>
           </select>
         </div>
 
@@ -420,7 +420,7 @@ export const TradeReturnsPage: React.FC = () => {
             style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
           >
             <option value="ALL">전체 상태</option>
-            <option value="REQUESTED">반품접수 (대기)</option>
+            <option value="REQUESTED">반품접수</option>
             <option value="COMPLETED">환입/검수완료</option>
             <option value="CANCELLED">반품취소</option>
           </select>
@@ -457,7 +457,7 @@ export const TradeReturnsPage: React.FC = () => {
         >
           <RotateCcw size={13} />
           초기화
-        </button>
+ </button>
       </div>
 
       {/* Main Content Split: 1. 수주 품목 라인별 반품 처리 대상 테이블 + 2. 반품 접수/완료 대장 */}
@@ -466,7 +466,7 @@ export const TradeReturnsPage: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
           <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
             수주 품목 라인별 반품 접수 및 처리 대상
-          </div>
+ </div>
           <div style={{ overflowX: 'auto' }}>
             <table data-mid="trade_returns-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -485,7 +485,7 @@ export const TradeReturnsPage: React.FC = () => {
                   <tr>
                     <td colSpan={7} style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                       조건에 해당하는 수주 품목 라인이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   filteredLines.map(l => {
@@ -504,7 +504,7 @@ export const TradeReturnsPage: React.FC = () => {
                               data-mid="trade_returns-btn-sellable"
                               onClick={() => {
                                 processReturn(l.id, 1, 'SELLABLE', l.unitPrice, '정상 반품(재판매 입고)')
-                                  .then(() => showSuccessToast && showSuccessToast('정상(재판매) 환입 처리가 완료되었습니다.'))
+                                  .then(() => showSuccessToast && showSuccessToast('정상 환입 처리가 완료되었습니다.'))
                                   .catch(err => alert(err.message));
                               }}
                               style={{
@@ -519,13 +519,13 @@ export const TradeReturnsPage: React.FC = () => {
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              정상(재판매)
-                            </button>
+                              정상
+ </button>
                             <button
                               data-mid="trade_returns-btn-defective"
                               onClick={() => {
                                 processReturn(l.id, 1, 'DEFECTIVE', l.unitPrice, '불량 반품(폐기 처리)')
-                                  .then(() => showSuccessToast && showSuccessToast('불량(폐기) 반품 처리가 완료되었습니다.'))
+                                  .then(() => showSuccessToast && showSuccessToast('불량 반품 처리가 완료되었습니다.'))
                                   .catch(err => alert(err.message));
                               }}
                               style={{
@@ -540,8 +540,8 @@ export const TradeReturnsPage: React.FC = () => {
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              불량(폐기)
-                            </button>
+                              불량
+ </button>
                             <button
                               onClick={() => openReturnModal(l, 'SELLABLE')}
                               style={{
@@ -557,12 +557,12 @@ export const TradeReturnsPage: React.FC = () => {
                               }}
                             >
                               상세반품등록
-                            </button>
+ </button>
                           </div>
                         </td>
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                           <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{l.id}</span>
-                          <span style={{ color: 'var(--text-muted)', marginLeft: '6px', fontSize: '11.5px' }}>({l.orderId})</span>
+                          <span style={{ color: 'var(--text-muted)', marginLeft: '6px', fontSize: '11.5px' }}>· {l.orderId}</span>
                         </td>
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                           <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{custName}</span>
@@ -579,15 +579,15 @@ export const TradeReturnsPage: React.FC = () => {
                           {lineReturnedQty > 0 && (
                             <span style={{ marginLeft: '6px', color: '#ef4444', fontWeight: 700, fontSize: '11.5px' }}>
                               (반품: {lineReturnedQty}개)
-                            </span>
+ </span>
                           )}
                         </td>
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           {l.unitPrice.toLocaleString()}원
-                        </td>
+ </td>
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                           {(l.qty * l.unitPrice).toLocaleString()}원
-                        </td>
+ </td>
                       </tr>
                     );
                   })
@@ -601,11 +601,11 @@ export const TradeReturnsPage: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
           <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
-              환입 및 반품 처리 대장 (접수 / 검수완료 / 취소 관리)
-            </span>
+              환입 및 반품 처리 대장
+ </span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
               총 {filteredReturns.length}건
-            </span>
+ </span>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -627,7 +627,7 @@ export const TradeReturnsPage: React.FC = () => {
                   <tr>
                     <td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                       등록된 환입/반품 처리 내역이 없습니다. 상단 목록에서 반품을 등록하세요.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   filteredReturns.map(r => {
@@ -665,7 +665,7 @@ export const TradeReturnsPage: React.FC = () => {
                               >
                                 <CheckCircle size={11} />
                                 검수완료
-                              </button>
+ </button>
                             )}
 
                             {st !== 'CANCELLED' && (
@@ -692,7 +692,7 @@ export const TradeReturnsPage: React.FC = () => {
                               >
                                 <Ban size={11} />
                                 반품취소
-                              </button>
+ </button>
                             )}
 
                             {st === 'CANCELLED' && (
@@ -719,7 +719,7 @@ export const TradeReturnsPage: React.FC = () => {
                               >
                                 <Trash2 size={11} />
                                 삭제
-                              </button>
+ </button>
                             )}
                           </div>
                         </td>
@@ -766,17 +766,17 @@ export const TradeReturnsPage: React.FC = () => {
                             gap: '4px'
                           }}>
                             {r.condition === 'SELLABLE' ? <PackageCheck size={11} /> : <AlertTriangle size={11} />}
-                            {r.condition === 'SELLABLE' ? '정상(재판매)' : '불량(폐기)'}
+                            {r.condition === 'SELLABLE' ? '정상' : '불량'}
                           </span>
                         </td>
 
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           {r.qty}개
-                        </td>
+ </td>
 
                         <td style={{ padding: '8px 12px', fontSize: '12.5px', textAlign: 'right', fontWeight: 800, color: '#ef4444', whiteSpace: 'nowrap' }}>
                           -{r.refundAmount.toLocaleString()}원
-                        </td>
+ </td>
 
                         <td style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                           <div>{r.reason || '고객 반품'}</div>
@@ -800,7 +800,7 @@ export const TradeReturnsPage: React.FC = () => {
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <RotateCcw size={18} color="var(--primary)" />
                 환입 및 반품 등록
-              </h3>
+ </h3>
               <button onClick={() => setIsModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
               </button>
@@ -821,7 +821,7 @@ export const TradeReturnsPage: React.FC = () => {
                     return (
                       <option key={l.id} value={l.id}>
                         [{l.orderId}] {custName} - {prod?.name || '상품'} ({l.qty}개 / 단가 {l.unitPrice.toLocaleString()}원)
-                      </option>
+ </option>
                     );
                   })}
                 </select>
@@ -835,8 +835,8 @@ export const TradeReturnsPage: React.FC = () => {
                     onChange={e => setProcessMode(e.target.value as 'IMMEDIATE' | 'REQUEST')}
                     style={{ padding: '8px 10px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   >
-                    <option value="IMMEDIATE">즉시 검수완료 (재고/매출 즉시반영)</option>
-                    <option value="REQUEST">반품 접수 등록 (검수대기)</option>
+                    <option value="IMMEDIATE">즉시 검수완료</option>
+                    <option value="REQUEST">반품 접수 등록</option>
                   </select>
                 </div>
 
@@ -847,8 +847,8 @@ export const TradeReturnsPage: React.FC = () => {
                     onChange={e => setReturnCondition(e.target.value as 'SELLABLE' | 'DEFECTIVE')}
                     style={{ padding: '8px 10px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
                   >
-                    <option value="SELLABLE">정상 (재판매 가용재고 복원)</option>
-                    <option value="DEFECTIVE">불량 (폐기 손실 처리)</option>
+                    <option value="SELLABLE">정상</option>
+                    <option value="DEFECTIVE">불량</option>
                   </select>
                 </div>
               </div>
@@ -866,7 +866,7 @@ export const TradeReturnsPage: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>환불 / 매출차감 금액 (원) *</label>
+                  <label style={{ fontWeight: 700, color: 'var(--text-secondary)', fontSize: '12px' }}>환불 / 매출차감 금액 *</label>
                   <input
                     type="number"
                     value={refundAmount}
@@ -907,13 +907,13 @@ export const TradeReturnsPage: React.FC = () => {
                 style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 onClick={handleSubmitReturnModal}
                 style={{ padding: '8px 18px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
               >
                 반품 처리 확정
-              </button>
+ </button>
             </div>
           </div>
         </div>

@@ -135,7 +135,7 @@ export interface DriveFolderFileInfo {
 
 export async function listFilesInDriveFolder(folderId: string, token: string): Promise<DriveFolderFileInfo[]> {
   const q = `'${folderId}' in parents and trashed = false`;
-  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType)&orderBy=name`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files&orderBy=name`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -148,7 +148,7 @@ export async function listFilesInDriveFolder(folderId: string, token: string): P
 }
 
 /**
- * 🌲 구글 드라이브 하위 폴더 전체 재귀 탐색 (상대경로 relativePath 보존)
+ *  구글 드라이브 하위 폴더 전체 재귀 탐색 (상대경로 relativePath 보존)
  */
 export async function listDriveFolderRecursively(
   folderId: string,
@@ -215,7 +215,7 @@ export async function downloadDriveFileViaAppsScript(appsScriptUrl: string, file
 // ─────────────────────────────────────────────────────────────────────────────
 async function findDriveFolder(token: string, folderName: string): Promise<string> {
   const q = `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false and 'root' in parents`;
-  const res = await fetch(`${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)`, {
+  const res = await fetch(`${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   const data = await res.json();

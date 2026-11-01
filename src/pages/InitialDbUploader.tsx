@@ -149,12 +149,12 @@ export const InitialDbUploader: React.FC = () => {
 
   const bandFileInputRef = useRef<HTMLInputElement>(null);
 
-  // 📊 업로드 적재 건수 집계
+  //  업로드 적재 건수 집계
   const uploadedDispatchCount = (db.deliveries || []).filter((d: any) => d.id?.startsWith('DEL-HIST-')).length;
   const uploadedBandAsCount = (db.repairs || []).filter((r: any) => r.source === 'BAND_IMPORT' || r.ticketNo?.startsWith('BAND-') || r.id?.startsWith('rep-band-')).length;
   const unassignedAsCount = (db.repairs || []).filter((r: any) => !r.siteId || r.siteName === '미지정현장' || r.siteName === '일반 현장').length;
 
-  // 🌟 밴드 출고요청 분석 및 고객사/현장 기본 요구사항 마스터 동기화 상태
+  //  밴드 출고요청 분석 및 고객사/현장 기본 요구사항 마스터 동기화 상태
   const [dispatchHistFileName, setDispatchHistFileName] = useState<string>('');
   const [dispatchAnalysisResult, setDispatchAnalysisResult] = useState<DispatchAnalysisResult | null>(null);
   const [isAnalyzingDispatchHist, setIsAnalyzingDispatchHist] = useState(false);
@@ -163,14 +163,14 @@ export const InitialDbUploader: React.FC = () => {
   const [showIgnoredPostsModal, setShowIgnoredPostsModal] = useState(false);
   const dispatchHistFileInputRef = useRef<HTMLInputElement>(null);
 
-  // 📦 소모품 및 부품 재고 업로드 상태
+  //  소모품 및 부품 재고 업로드 상태
   const [consumableFileName, setConsumableFileName] = useState<string>('');
   const [parsedConsumables, setParsedConsumables] = useState<ParsedConsumableItem[] | null>(null);
   const [isConsumableParsing, setIsConsumableParsing] = useState(false);
   const [isConsumableIngesting, setIsConsumableIngesting] = useState(false);
   const consumableFileInputRef = useRef<HTMLInputElement>(null);
 
-  // 🛠️ 정비 점검항목 마스터 엑셀 업로드 상태
+  //  정비 점검항목 마스터 엑셀 업로드 상태
   const [inspectionFileName, setInspectionFileName] = useState<string>('');
   const [parsedInspectionData, setParsedInspectionData] = useState<ParsedInspectionChecklistData | null>(null);
   const [isInspectionParsing, setIsInspectionParsing] = useState(false);
@@ -237,7 +237,7 @@ export const InitialDbUploader: React.FC = () => {
     }
   };
 
-  // 🔐 임직원 권한 마스터 업로드 상태
+  //  임직원 권한 마스터 업로드 상태
   const [permFileName, setPermFileName] = useState<string>('');
   const [parsedPermData, setParsedPermData] = useState<ParsedPermissionData | null>(null);
   const [isPermParsing, setIsPermParsing] = useState(false);
@@ -602,7 +602,7 @@ export const InitialDbUploader: React.FC = () => {
       const res = await resetAllDatabaseTables(keepAdminUser, targetTenantId);
       if (res.success) {
         showSuccessToast?.(res.message);
-        // 🛡️ 로컬 인메모리/캐시 즉시 제로화 (UI 잔존 방지)
+        //  로컬 인메모리/캐시 즉시 제로화 (UI 잔존 방지)
         db.siteMasters = [];
         db.sites = [];
         db.bankTransactions = [];
@@ -618,7 +618,7 @@ export const InitialDbUploader: React.FC = () => {
           localStorage.removeItem('erp_sites');
         }
         refreshAllData();
-        // ✅ DB 초기화 완료 후 localStorage stale 캐시 차단 + Supabase 최신 상태로 React state 즉시 동기화
+        //  DB 초기화 완료 후 localStorage stale 캐시 차단 + Supabase 최신 상태로 React state 즉시 동기화
         await fullRefreshFromServer();
       } else {
         showErrorModal?.(res.message);
@@ -815,12 +815,12 @@ export const InitialDbUploader: React.FC = () => {
       } else if (label.includes('업체')) {
         contractor = val;
       } else if (label.includes('위치') || label.includes('장비위치')) {
-        // 🛡️ 위치를 먼저 파싱하여 장비번호 오염 원천 방지
+        //  위치를 먼저 파싱하여 장비번호 오염 원천 방지
         location = val;
       } else if (label.includes('관리번호') || label.includes('자산번호') || label.includes('호기') || label === '장비') {
         assetNo = val;
       } else if (label.includes('접수자') || label.includes('연락처') || label.includes('전화') || label.includes('담당자')) {
-        // 🛡️ 밴드 98% 빈도 '접수자' 라벨 완벽 지원
+        //  밴드 98% 빈도 '접수자' 라벨 완벽 지원
         contact = val;
       } else if (label.includes('고장내용') || label.includes('고장증상') || label.includes('증상') || label.includes('내용') || label.includes('고장')) {
         issue = val;
@@ -857,7 +857,7 @@ export const InitialDbUploader: React.FC = () => {
     let inspectionItemCode = '';
     let degradationScore = 0;
     
-    // 💡 [Phase 1/2] 밴드 빅데이터 고장 증상 키워드 기반 정비 마스터 코드 및 정비점수 1:1 정밀 매핑
+    //  [Phase 1/2] 밴드 빅데이터 고장 증상 키워드 기반 정비 마스터 코드 및 정비점수 1:1 정밀 매핑
     const lowerIssue = issue.toLowerCase();
     if (lowerIssue.includes('타이어') || lowerIssue.includes('바퀴') || lowerIssue.includes('주행') || lowerIssue.includes('조향') || lowerIssue.includes('거북이') || lowerIssue.includes('핸들') || lowerIssue.includes('전진') || lowerIssue.includes('후진')) {
       inspectionItemCode = 'CHK-000004'; // 주행/타이어/조향
@@ -1036,7 +1036,7 @@ export const InitialDbUploader: React.FC = () => {
     }
   };
 
-  // ── 🌟 정비항목 마스터 동기화 (AS 빅데이터 클러스터링 기반) ──
+  // ──  정비항목 마스터 동기화 (AS 빅데이터 클러스터링 기반) ──
   const handleSyncInspectionChecklist = async () => {
     if (!window.confirm('기존 DB의 AS 정비 이력을 유사어 클러스터링 분석하여 정비항목 마스터를 형성하고 repairs 매핑을 갱신하시겠습니까?')) {
       return;
@@ -1061,7 +1061,7 @@ export const InitialDbUploader: React.FC = () => {
     }
   };
 
-  // ── 🌟 밴드 출고요청 분석 및 고객/현장 요구사항 동기화 핸들러 ──
+  // ──  밴드 출고요청 분석 및 고객/현장 요구사항 동기화 핸들러 ──
   const handleDispatchHistFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1127,7 +1127,7 @@ export const InitialDbUploader: React.FC = () => {
   // ── 밴드 콘솔 추출 스크립트 클립보드 복사 ──
   const handleCopyBandScraperScript = () => {
     const scriptCode = `(async () => {
-  console.log('[ERP] 밴드 postDetailView ➔ txtBody 정밀 순차 수집기 v8.0 시작...');
+  console.log('[ERP] 밴드 postDetailView  txtBody 정밀 순차 수집기 v8.0 시작...');
 
   const hudId = 'band_modal_scraper_hud';
   const oldHud = document.getElementById(hudId);
@@ -1138,7 +1138,7 @@ export const InitialDbUploader: React.FC = () => {
   hud.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999999;background:rgba(15,23,42,0.96);color:#fff;padding:18px 22px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.5);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:13px;line-height:1.5;min-width:340px;border:2px solid #38bdf8;backdrop-filter:blur(8px);';
   hud.innerHTML = 
     '<div style="font-weight:700;font-size:15px;margin-bottom:10px;color:#38bdf8;display:flex;align-items:center;justify-content:space-between;">' +
-      '<span>🚜 밴드 순차 수집기 v8.0</span>' +
+      '<span> 밴드 순차 수집기 v8.0</span>' +
       '<span id="hud_status_badge" style="font-size:11px;font-weight:600;padding:3px 8px;background:#0284c7;border-radius:6px;color:#fff;">수집 중</span>' +
     '</div>' +
     '<div data-mid="initial_db_hud_row" style="margin-bottom:6px;display:flex;justify-content:space-between;border-bottom:1px solid #334155;padding-bottom:6px;">' +
@@ -1322,7 +1322,7 @@ export const InitialDbUploader: React.FC = () => {
   let step = 0;
   let consecutiveFailCount = 0;
 
-  console.log('🔄 밴드 상세뷰 모달 순차 수집 시작...');
+  console.log(' 밴드 상세뷰 모달 순차 수집 시작...');
 
   while (isRunning && step < 4000) {
     step++;
@@ -1346,7 +1346,7 @@ export const InitialDbUploader: React.FC = () => {
       await new Promise(r => setTimeout(r, 1000));
       nextBtn = await waitForNextButton(2000);
       if (!nextBtn) {
-        console.log('🏁 다음(>) 버튼이 더 이상 없습니다. 마지막 글 도달 완료!');
+        console.log(' 다음(>) 버튼이 더 이상 없습니다. 마지막 글 도달 완료!');
         break;
       }
     }
@@ -1365,14 +1365,14 @@ export const InitialDbUploader: React.FC = () => {
         if (!retryChanged) {
           consecutiveFailCount++;
           if (consecutiveFailCount >= 2) {
-            console.log('🏁 2회 연속 글 변경 없음 -> 마지막 글 완료로 판정!');
+            console.log(' 2회 연속 글 변경 없음 -> 마지막 글 완료로 판정!');
             break;
           }
         } else {
           consecutiveFailCount = 0;
         }
       } else {
-        console.log('🏁 다음 버튼 없음 -> 마지막 글 완료!');
+        console.log(' 다음 버튼 없음 -> 마지막 글 완료!');
         break;
       }
     } else {
@@ -1416,7 +1416,7 @@ export const InitialDbUploader: React.FC = () => {
       if (result.success) {
         setReconciliationReport(result.report);
         showSuccessToast?.(result.message);
-        // ✅ 적재 완료 후 localStorage stale 캐시 전체 차단 + Supabase 최신 데이터로 React state 즉시 동기화
+        //  적재 완료 후 localStorage stale 캐시 전체 차단 + Supabase 최신 데이터로 React state 즉시 동기화
         // (db.ts의 pullFromSupabase가 ALL_DB_KEYS 전체를 선제 초기화한 뒤 Supabase pull을 수행함)
         setProgressInfo({ step: 12, total: 12, message: 'Supabase 최신 데이터 동기화 중...' });
         await fullRefreshFromServer();
@@ -1740,7 +1740,7 @@ export const InitialDbUploader: React.FC = () => {
                 padding: '7px 12px', backgroundColor: 'var(--warning-light)', border: '1px solid #fcd34d',
                 borderRadius: '6px', fontSize: '12px', color: '#92400e', whiteSpace: 'nowrap'
               }}>
-                ⚠️ {histBillingStart} ~ {histBillingEnd} 기간 계약별 월별 청구서 대량 생성
+                 {histBillingStart} ~ {histBillingEnd} 기간 계약별 월별 청구서 대량 생성
               </div>
             </div>
 
@@ -2007,7 +2007,7 @@ export const InitialDbUploader: React.FC = () => {
 
               {bandFileName && (
                 <span style={{ fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                  📄 {bandFileName}
+                   {bandFileName}
                 </span>
               )}
 
@@ -2243,7 +2243,7 @@ export const InitialDbUploader: React.FC = () => {
                 {/* 우하단 종결 버튼 */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap', gap: '8px' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    💡 총 <strong>{bandAnalysisResult.totalCount.toLocaleString()}건</strong>의 과거 AS 이력을 정비 마스터(`repairs`) 및 자산/계약 타임라인에 무누락 저장합니다.
+                     총 <strong>{bandAnalysisResult.totalCount.toLocaleString()}건</strong>의 과거 AS 이력을 정비 마스터 및 자산/계약 타임라인에 무누락 저장합니다.
                   </div>
 
                   <button
@@ -2259,7 +2259,7 @@ export const InitialDbUploader: React.FC = () => {
                   >
                     {isBandIngesting
                       ? <><RefreshCw size={15} className="animate-spin" /> 밴드 AS 이력 일괄 적재 중...</>
-                      : <><Upload size={15} /> 🚀 과거 AS 이력 전수 정비 마스터(`repairs`) DB 일괄 적재 실행</>
+                      : <><Upload size={15} /> 과거 AS 이력 전수 정비 마스터 DB 일괄 적재 실행</>
                     }
                   </button>
                 </div>
@@ -2451,7 +2451,7 @@ export const InitialDbUploader: React.FC = () => {
                 {dispatchAnalysisResult.ignoredPosts.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}>
                     <span style={{ color: 'var(--text-muted)' }}>
-                      🚫 과거 종료 거래처 / 계약 미보유 건 <strong>{dispatchAnalysisResult.ignoredPosts.length}건</strong>은 대장 오염 방지 원칙에 따라 안전하게 제외되었습니다.
+                       과거 종료 거래처 / 계약 미보유 건 <strong>{dispatchAnalysisResult.ignoredPosts.length}건</strong>은 대장 오염 방지 원칙에 따라 안전하게 제외되었습니다.
                     </span>
                     <button data-hs-trigger="Confirm"
                       onClick={() => setShowIgnoredPostsModal(!showIgnoredPostsModal)}
@@ -2563,7 +2563,7 @@ export const InitialDbUploader: React.FC = () => {
               </button>
 
               <span style={{ fontSize: '13px', color: consumableFileName ? 'var(--text-main)' : 'var(--text-muted)', fontWeight: consumableFileName ? 600 : 400 }}>
-                {consumableFileName || '선택된 파일 없음 (.txt / .xlsx 등)'}
+                {consumableFileName || '선택된 파일 없음'}
               </span>
             </div>
 
@@ -3007,7 +3007,7 @@ export const InitialDbUploader: React.FC = () => {
                 {/* 미매핑 알림 (있을 경우) */}
                 {parsedPermData.unmatchedUsers.length > 0 && (
                   <div style={{ padding: '8px 12px', backgroundColor: 'var(--danger-light)', borderRadius: '6px', border: '1px solid #fecaca', fontSize: '12px', color: 'var(--danger)' }}>
-                    ⚠️ 현재 DB에서 일치하지 않는 사용자: {parsedPermData.unmatchedUsers.join(', ')} ({parsedPermData.unmatchedRecordsCount}건 제외됨)
+                     현재 DB에서 일치하지 않는 사용자: {parsedPermData.unmatchedUsers.join(', ')} ({parsedPermData.unmatchedRecordsCount}건 제외됨)
                   </div>
                 )}
 
@@ -3103,7 +3103,7 @@ export const InitialDbUploader: React.FC = () => {
                   라이프사이클 이벤트 체인 및 회계 데이터 분석 현황
                 </h3>
                 <span style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  ✓ 스키마 및 외래키 무결성 검증 완료
+                   스키마 및 외래키 무결성 검증 완료
                 </span>
               </div>
 
@@ -3298,7 +3298,7 @@ export const InitialDbUploader: React.FC = () => {
                     <span style={{ fontWeight: 600, color: 'var(--success)' }}>{reconciliationReport.assetCountMatch.db} 대</span>
                   </div>
                   <div style={{ marginTop: '6px', fontSize: '12px', color: reconciliationReport.assetCountMatch.isMatch ? '#059669' : '#dc2626', fontWeight: 600 }}>
-                    {reconciliationReport.assetCountMatch.isMatch ? '✓ 100% 일치' : '✗ 수량 불일치'}
+                    {reconciliationReport.assetCountMatch.isMatch ? ' 100% 일치' : ' 수량 불일치'}
                   </div>
                 </div>
 
@@ -3314,7 +3314,7 @@ export const InitialDbUploader: React.FC = () => {
                     <span style={{ fontWeight: 600, color: 'var(--success)' }}>₩{reconciliationReport.currentBillingTotalMatch.db.toLocaleString()}</span>
                   </div>
                   <div style={{ marginTop: '6px', fontSize: '12px', color: reconciliationReport.currentBillingTotalMatch.isMatch ? '#059669' : '#dc2626', fontWeight: 600 }}>
-                    {reconciliationReport.currentBillingTotalMatch.isMatch ? '✓ 차액 ₩0 (완전 일치)' : `✗ 차액 ₩${reconciliationReport.currentBillingTotalMatch.diff.toLocaleString()}`}
+                    {reconciliationReport.currentBillingTotalMatch.isMatch ? ' 차액 ₩0 (완전 일치)' : ` 차액 ₩${reconciliationReport.currentBillingTotalMatch.diff.toLocaleString()}`}
                   </div>
                 </div>
 
@@ -3330,7 +3330,7 @@ export const InitialDbUploader: React.FC = () => {
                     <span style={{ fontWeight: 600, color: 'var(--success)' }}>₩{reconciliationReport.currentDetailsTotalMatch.detailSum.toLocaleString()}</span>
                   </div>
                   <div style={{ marginTop: '6px', fontSize: '12px', color: reconciliationReport.currentDetailsTotalMatch.isMatch ? '#059669' : '#dc2626', fontWeight: 600 }}>
-                    {reconciliationReport.currentDetailsTotalMatch.isMatch ? '✓ 단수 오차 보정 완료 (₩0)' : `✗ 차액 ₩${reconciliationReport.currentDetailsTotalMatch.diff.toLocaleString()}`}
+                    {reconciliationReport.currentDetailsTotalMatch.isMatch ? ' 단수 오차 보정 완료 (₩0)' : ` 차액 ₩${reconciliationReport.currentDetailsTotalMatch.diff.toLocaleString()}`}
                   </div>
                 </div>
 
@@ -3346,7 +3346,7 @@ export const InitialDbUploader: React.FC = () => {
                     <span style={{ fontWeight: 600, color: 'var(--success)' }}>{reconciliationReport.lifecycleChainMatch.outboundDeliveries} 건</span>
                   </div>
                   <div style={{ marginTop: '6px', fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
-                    ✓ 계약 대비 100% 출고 배차 연계 완료
+                     계약 대비 100% 출고 배차 연계 완료
                   </div>
                 </div>
               </div>
@@ -3368,7 +3368,7 @@ export const InitialDbUploader: React.FC = () => {
               전체 데이터베이스 백업 내보내기
             </h3>
             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              현재 Supabase / 중앙 플랫폼 DB에 적재된 모든 76개 테이블(중앙 지식DB 및 비즈니스 원장 전수)의 데이터를 JSON 파일로 다운로드하여 영구 보관합니다.
+              현재 Supabase / 중앙 플랫폼 DB에 적재된 모든 76개 테이블의 데이터를 JSON 파일로 다운로드하여 영구 보관합니다.
             </span>
           </div>
 
@@ -3397,7 +3397,7 @@ export const InitialDbUploader: React.FC = () => {
 
             {backupResult && (
               <span style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                ✓ {backupResult.filename} 다운로드 완료 ({backupResult.count.toLocaleString()}건)
+                 {backupResult.filename} 다운로드 완료 ({backupResult.count.toLocaleString()}건)
               </span>
             )}
           </div>
@@ -3428,7 +3428,7 @@ export const InitialDbUploader: React.FC = () => {
               }}
             >
               <RotateCcw size={14} />
-              DB 복원 화면으로 이동 ➔
+              DB 복원 화면으로 이동 
             </button>
           </div>
         </div>
@@ -3445,7 +3445,7 @@ export const InitialDbUploader: React.FC = () => {
               </h3>
             </div>
             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-              보관해 둔 전체 DB 백업 JSON 파일(`.json`)을 업로드하여, 외래키 토폴로지 의존성 순서에 따라 1건의 유실도 없이 완벽히 원상 복구합니다.
+              보관해 둔 전체 DB 백업 JSON 파일을 업로드하여, 외래키 토폴로지 의존성 순서에 따라 1건의 유실도 없이 완벽히 원상 복구합니다.
             </span>
           </div>
 
@@ -3530,10 +3530,10 @@ export const InitialDbUploader: React.FC = () => {
             <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'var(--bg-main)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  📋 백업 파일 내 포함 테이블 현황 (총 {restoreSummary.totalTables}개 테이블, {restoreSummary.totalRows.toLocaleString()}건)
+                   백업 파일 내 포함 테이블 현황 (총 {restoreSummary.totalTables}개 테이블, {restoreSummary.totalRows.toLocaleString()}건)
                 </span>
                 <span style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
-                  ✓ 데이터 무결성 검증 통과 (FK 역순 복원 준비 완료)
+                   데이터 무결성 검증 통과
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px', maxHeight: '240px', overflowY: 'auto' }}>

@@ -68,7 +68,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
   const [items, setItems] = useState<ConstructionPermitItem[]>(INITIAL_PERMIT_DATA);
   const [selectedItem, setSelectedItem] = useState<ConstructionPermitItem | null>(INITIAL_PERMIT_DATA[0]);
 
-  // 테이블 헤더 정렬 상태 (오름차순 ▲ ➔ 내림차순 ▼ ➔ 정렬안함 ↕)
+  // 테이블 헤더 정렬 상태 (오름차순 ▲  내림차순 ▼  정렬안함 ↕)
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: null, direction: 'NONE' });
 
   const handleToggleSort = (field: SortField) => {
@@ -311,7 +311,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           transition: 'all 0.15s ease',
           ...extraStyle
         }}
-        title={`${label} 정렬 (클릭 시: 오름차순 ➔ 내림차순 ➔ 정렬안함)`}
+        title={`${label} 정렬 (클릭 시: 오름차순 내림차순 정렬안함)`}
       >
         <div style={{
           display: 'inline-flex',
@@ -342,10 +342,10 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
           background: 'rgba(239, 68, 68, 0.12)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.35)',
           display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap'
-        }} title={`도로폭 ${road.roadWidth}m (폭원 4m 미만)`}>
+        }} title={`도로폭 ${road.roadWidth}m`}>
           <AlertTriangle size={12} color="var(--danger)" />
           {road.roadWidth}m
-        </span>
+ </span>
       );
     }
     return (
@@ -355,7 +355,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
         display: 'inline-flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap'
       }} title={`도로폭 ${road.roadWidth}m`}>
         {road.roadWidth}m
-      </span>
+ </span>
     );
   };
 
@@ -370,7 +370,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
         }}>
           <ShieldAlert size={12} color="var(--warning)" />
           CSI 법정의무
-        </span>
+ </span>
       );
     }
     return (
@@ -379,7 +379,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
         background: 'var(--bg-app)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap'
       }}>
         일반
-      </span>
+ </span>
     );
   };
 
@@ -403,7 +403,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           }}>
             {golden && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />}
             마감·설비
-          </span>
+ </span>
         );
       case 'COMPLETED':
         return <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, background: 'var(--bg-app)', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}>준공임박</span>;
@@ -417,21 +417,21 @@ export const PublicConstructionPermitsPage: React.FC = () => {
     if (score === 'HIGH') {
       return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', fontWeight: 600, fontSize: '12px' }}>
-          <span>★★★</span>
+          <span></span>
           <span style={{ fontSize: '11px', background: 'var(--primary-light)', color: 'var(--primary)', padding: '1px 5px', borderRadius: '3px', border: '1px solid rgba(79, 70, 229, 0.3)' }}>A급({units}대)</span>
         </span>
       );
     } else if (score === 'MID') {
       return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '12px' }}>
-          <span>★★☆</span>
+          <span></span>
           <span style={{ fontSize: '11px', background: 'var(--bg-app)', color: 'var(--text-secondary)', padding: '1px 5px', borderRadius: '3px', border: '1px solid var(--border-color)' }}>B급({units}대)</span>
         </span>
       );
     }
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '12px' }}>
-        <span>★☆☆</span>
+        <span></span>
         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>일반({units}대)</span>
       </span>
     );
@@ -739,14 +739,14 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           <Building2 size={20} color="var(--primary)" />
           <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, whiteSpace: 'nowrap', color: 'var(--text-main)' }}>
             인허가 건축공정 조회
-          </h2>
+ </h2>
           <span style={{ 
             fontSize: '11px', padding: '2px 8px', borderRadius: '4px', 
             background: 'var(--bg-app)', color: 'var(--text-secondary)', fontWeight: 600,
             border: '1px solid var(--border-color)', whiteSpace: 'nowrap'
           }}>
             공공인허가 · 도로망 · 안전관리
-          </span>
+ </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -766,7 +766,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           >
             <Calculator size={14} color="var(--primary)" />
             공정·장비 산출 공식
-          </button>
+ </button>
 
           {/* 실시간 공공데이터포털 수신 버튼 */}
           <button
@@ -784,7 +784,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           >
             {isLiveApiFetching ? <RefreshCw size={14} className="animate-spin" /> : <Globe size={14} />}
             공공데이터 수신
-          </button>
+ </button>
           
           <button
             data-mid="permits-pipeline-excel"
@@ -801,7 +801,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           >
             <FileSpreadsheet size={14} color="var(--success)" />
             엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
@@ -933,7 +933,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <Navigation size={11} color="var(--text-muted)" />
             도로폭
-          </label>
+ </label>
           <select
             value={roadFilter}
             onChange={e => setRoadFilter(e.target.value as any)}
@@ -954,7 +954,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <Shield size={11} color="var(--text-muted)" />
             안전관리
-          </label>
+ </label>
           <select
             value={csiFilter}
             onChange={e => setCsiFilter(e.target.value as any)}
@@ -984,7 +984,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           >
             {goldenTimeOnly ? <Check size={13} color="#ffffff" /> : <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-muted)' }} />}
             골든타임 현장만 보기
-          </button>
+ </button>
         </div>
 
         {/* 통합 검색어 */}
@@ -1062,20 +1062,20 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     title="정렬 초기화"
                   >
                     ×
-                  </button>
+ </button>
                 </span>
               )}
               {goldenTimeOnly && <span style={{ color: 'var(--success)', marginLeft: '6px' }}>(장비투입 골든타임 필터링 중)</span>}
               {roadFilter !== 'ALL' && <span style={{ color: 'var(--primary)', marginLeft: '6px' }}>(도로망 필터 적용)</span>}
-              {csiFilter !== 'ALL' && <span style={{ color: 'var(--warning)', marginLeft: '6px' }}>(CSI 안전의무 필터 적용)</span>}
+              {csiFilter !== 'ALL' && <span style={{ color: 'var(--warning)', marginLeft: '6px' }}>안전의무 필터 적용</span>}
             </span>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }} />
                 공공데이터포털 수신 가능
-              </span>
+ </span>
               | 컬럼 클릭 시 오름/내림/해제 정렬 | 행 클릭 시 상세 패널
-            </span>
+ </span>
           </div>
 
           {/* 고밀도 테이블 스크롤 컨테이너 */}
@@ -1116,7 +1116,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                   <tr>
                     <td colSpan={14} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       설정한 조건에 부합하는 데이터가 없습니다. 상단 [공공데이터 수신] 버튼을 눌러보세요.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedItems.map(item => {
@@ -1146,8 +1146,8 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                               border: '1px solid var(--border-color)', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600
                             }}
                           >
-                            상세 ➔
-                          </button>
+                            상세 
+ </button>
                         </td>
 
                         {/* 출처 */}
@@ -1155,11 +1155,11 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                           {item.dataSource === 'PUBLIC_API_REALTIME' ? (
                             <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 600, border: '1px solid rgba(79, 70, 229, 0.3)' }}>
                               공공API
-                            </span>
+ </span>
                           ) : (
                             <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'var(--bg-app)', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}>
                               기본제공
-                            </span>
+ </span>
                           )}
                         </td>
 
@@ -1171,12 +1171,12 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                         {/* 공식 연면적 */}
                         <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color)' }}>
                           {item.totArea.toLocaleString()} ㎡
-                        </td>
+ </td>
 
                         {/* 규모 */}
                         <td style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '11px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color)' }}>
                           {item.underFloors > 0 ? `지하${item.underFloors}/` : ''}지상{item.groundFloors}층
-                        </td>
+ </td>
 
                         {/* 주용도 */}
                         <td style={{ padding: '6px 10px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color)' }}>
@@ -1232,7 +1232,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                             }}>
                               <CheckCircle2 size={13} />
                               등록됨
-                            </span>
+ </span>
                           ) : (
                             <button data-hs-trigger="Register"
                               onClick={(e) => handleRegisterLead(item, e)}
@@ -1243,7 +1243,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                               }}
                             >
                               리드 등록
-                            </button>
+ </button>
                           )}
                         </td>
                       </tr>
@@ -1284,7 +1284,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       background: 'rgba(34, 197, 94, 0.15)', color: 'var(--success, #22c55e)', border: '1px solid rgba(34, 197, 94, 0.3)', fontWeight: 700
                     }}>
                       고객·현장 등록 완료
-                    </span>
+ </span>
                   )}
                 </div>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, lineHeight: 1.4, color: 'var(--text-main)' }}>
@@ -1314,7 +1314,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     }}>
                       <Navigation size={14} color={selectedItem.roadAccess.truckFeasibility === 'SMALL_ONLY_WARNING' ? '#ef4444' : 'var(--primary)'} />
                       접면 도로 정보
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
                       background: selectedItem.roadAccess.truckFeasibility === 'SMALL_ONLY_WARNING' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-app)',
@@ -1367,7 +1367,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     }}>
                       <ShieldAlert size={14} color={selectedItem.csiSafety.safetyPlanRequired ? '#f59e0b' : 'var(--text-muted)'} />
                       안전관리망 현장 요건
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
                       background: selectedItem.csiSafety.safetyPlanRequired ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-app)',
@@ -1380,7 +1380,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
 
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
                     고소작업대 투입 시 필수 요구 안전장치:
-                  </div>
+ </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
                     {selectedItem.csiSafety.requiredSafetyOptions.map((opt, idx) => (
                       <span key={idx} style={{
@@ -1400,7 +1400,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-app)', padding: '2px 6px', borderRadius: '3px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
                         안전옵션 상속: 비활성화 (수동 등록)
-                      </span>
+ </span>
                     </div>
                   </div>
                 </div>
@@ -1420,7 +1420,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     }}>
                       <HardHat size={14} color={selectedItem.awpGoldenTime ? 'var(--success, #22c55e)' : 'var(--text-muted)'} />
                       고소작업대 투입 적기 진단
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px', fontWeight: 600,
                       padding: '2px 8px', borderRadius: '4px',
@@ -1451,7 +1451,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>건축 층수 규모</div>
                       <div style={{ fontSize: '12px', fontWeight: 600, marginTop: '2px', color: 'var(--text-main)' }}>
                         {selectedItem.underFloors > 0 ? `지하 ${selectedItem.underFloors}층 / ` : ''}지상 {selectedItem.groundFloors}층
-                      </div>
+ </div>
                     </div>
                   </div>
                 </div>
@@ -1466,10 +1466,10 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <TrendingUp size={14} color="var(--primary)" />
                       AI 공정 역산 진척도
-                    </span>
+ </span>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>
                       진척률 {selectedItem.progressRate}%
-                    </span>
+ </span>
                   </div>
 
                   <div style={{ height: '6px', background: 'var(--bg-app)', borderRadius: '3px', overflow: 'hidden', marginBottom: '10px', border: '1px solid var(--border-color)' }}>
@@ -1490,7 +1490,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       border: `1px solid ${selectedItem.progressStage === 'FOUNDATION' ? 'var(--primary)' : 'var(--border-color)'}`
                     }}>
                       1.기초·토공
-                    </div>
+ </div>
                     <div style={{
                       padding: '5px 2px', borderRadius: '4px',
                       background: selectedItem.progressStage === 'STRUCTURE' ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-app)',
@@ -1499,7 +1499,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       border: `1px solid ${selectedItem.progressStage === 'STRUCTURE' ? 'var(--primary)' : 'var(--border-color)'}`
                     }}>
                       2.골조공사
-                    </div>
+ </div>
                     <div style={{
                       padding: '5px 2px', borderRadius: '4px',
                       background: selectedItem.progressStage === 'FINISHING' ? 'rgba(34, 197, 94, 0.15)' : 'var(--bg-app)',
@@ -1507,8 +1507,8 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       fontWeight: selectedItem.progressStage === 'FINISHING' ? 700 : 500,
                       border: `1px solid ${selectedItem.progressStage === 'FINISHING' ? 'var(--success, #22c55e)' : 'var(--border-color)'}`
                     }}>
-                      3.마감·설비 ★
-                    </div>
+                      3.마감·설비 
+ </div>
                     <div style={{
                       padding: '5px 2px', borderRadius: '4px',
                       background: selectedItem.progressStage === 'COMPLETED' ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-app)',
@@ -1517,7 +1517,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       border: `1px solid ${selectedItem.progressStage === 'COMPLETED' ? 'var(--primary)' : 'var(--border-color)'}`
                     }}>
                       4.준공
-                    </div>
+ </div>
                   </div>
 
                   <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
@@ -1534,7 +1534,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 }}>
                   <div style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-main)' }}>
                     건축 제원 및 참여업체 정보
-                  </div>
+ </div>
 
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <tbody>
@@ -1576,7 +1576,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     <span style={{ fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Briefcase size={14} color="var(--primary)" />
                       경영 판단 및 영업 지시
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px',
                       background: selectedItem.awpGoldenTime ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)',
@@ -1584,7 +1584,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       border: `1px solid ${selectedItem.awpGoldenTime ? 'rgba(34, 197, 94, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
                     }}>
                       예상 {selectedItem.estimatedAwpUnits}대 규모
-                    </span>
+ </span>
                   </div>
 
                   <div style={{ marginBottom: '8px' }}>
@@ -1609,7 +1609,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <CheckCircle2 size={13} color="var(--primary)" />
                       영업 지시 핵심 체크포인트:
-                    </div>
+ </div>
                     <div style={{ color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: '11px' }}>
                       {selectedItem.awpGoldenTime
                         ? '• [골든타임] 마감·설비 공정 진입 중. 시공사 공무팀 방문 및 대규모 일괄 견적 즉시 전달 필요.'
@@ -1623,7 +1623,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                     {selectedItem.roadAccess.truckFeasibility === 'SMALL_ONLY_WARNING' && (
                       <div style={{ color: '#ef4444', fontWeight: 600, lineHeight: 1.5, fontSize: '11px' }}>
                         • [배차 주의] 진입로 폭 4m 미만 협소. 대형 카고 진입 불가, 1톤 분할 배차 사전 안내 필수.
-                      </div>
+ </div>
                     )}
                   </div>
                 </div>
@@ -1655,7 +1655,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
               공사를 선택하면 도로망 및 안전 분석이 표출됩니다.
-            </div>
+ </div>
           )}
         </div>
       </div>
@@ -1689,7 +1689,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 <Calculator size={18} color="var(--primary)" />
                 <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
                   AI 공정 단계 추론 및 추천 장비 산출 메커니즘
-                </h3>
+ </h3>
               </div>
               <button
                 onClick={() => setIsFormulaModalOpen(false)}
@@ -1711,15 +1711,15 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <TrendingUp size={16} />
                   1. AI 공정 단계 및 진척도 역산 모델
-                </div>
+ </div>
                 <div style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   세움터(건축행정시스템)의 행정 이벤트 타임스탬프를 기반으로 공학적 진도 곡선을 역산하여 현재 시점의 공정 단계를 자동 추론합니다:
-                </div>
+ </div>
                 <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', margin: '8px 0', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-main)' }}>
                   • 총 예정공기: T_total = 사용승인예정일 - 실제착공일<br />
                   • 경과일수: T_elapsed = 현재일자 - 실제착공일<br />
-                  • <b>추정 공정 진척률</b>: P(t) = (T_elapsed / T_total) × 100 (%) [최소 5% ~ 최대 100%]
-                </div>
+                  • <b>추정 공정 진척률</b>: 공정률 = [경과일수 / 전체일수] × 100 (%) [최소 5% ~ 최대 100%]
+ </div>
                 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginTop: '8px' }}>
                   <thead>
@@ -1744,10 +1744,10 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                       <td style={{ padding: '6px 8px', color: 'var(--primary)' }}>사전 영업 제안기</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(34, 197, 94, 0.1)' }}>
-                      <td style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--success, #22c55e)' }}>3단계 마감·설비 ★</td>
+                      <td style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--success, #22c55e)' }}>3단계 마감·설비 </td>
                       <td style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--success, #22c55e)' }}>55% ~ 89%</td>
                       <td style={{ padding: '6px 8px', color: 'var(--success, #22c55e)' }}>외벽 판넬, 창호 유리, 소방 배관, 전기/덕트 설비</td>
-                      <td style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--success, #22c55e)' }}>★ 최고 집중 투입기</td>
+                      <td style={{ padding: '6px 8px', fontWeight: 700, color: 'var(--success, #22c55e)' }}> 최고 집중 투입기</td>
                     </tr>
                     <tr>
                       <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--text-main)' }}>4단계 준공검사</td>
@@ -1768,22 +1768,22 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <HardHat size={16} />
                   2. 추천 장비군 및 고소작업대 소요 대수 산정 수학식
-                </div>
+ </div>
                 <div style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  건물의 연면적(TotArea, ㎡), 지상 층수, 주용도(물류창고/공장/지식산업센터 등) 제원을 매핑하여 최적 규격과 대수를 자동 계산합니다:
-                </div>
+                  건물의 연면적, 지상 층수, 주용도(물류창고/공장/지식산업센터 등) 제원을 매핑하여 최적 규격과 대수를 자동 계산합니다:
+ </div>
 
                 <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', margin: '8px 0', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-main)' }}>
                   • <b>대형 산업시설 (연면적 ≥ 10,000㎡ 또는 물류센터/공장/지식산업센터)</b><br />
                   &nbsp;&nbsp;- 규모 분류: <b>대형 (연면적 3,000평 이상)</b><br />
-                  &nbsp;&nbsp;- 적용 장비군: 대형 시저리프트 (10m·12m·14m, 판넬/소방배관용 광폭 플랫폼), 굴절렌탈 15m<br />
+                  &nbsp;&nbsp;- 적용 장비군: 대형 시저리프트, 굴절렌탈 15m<br />
                   • <b>중형 일반건축물 (연면적 2,000㎡ ~ 10,000㎡)</b><br />
                   &nbsp;&nbsp;- 규모 분류: <b>중형 (연면적 600평 ~ 3,000평)</b><br />
-                  &nbsp;&nbsp;- 적용 장비군: 표준 시저리프트 (8m·10m, 실내 마감 및 전기/덕트 설비용)<br />
-                  • <b>소형 근린생활시설 (연면적 &lt; 2,000㎡)</b><br />
+                  &nbsp;&nbsp;- 적용 장비군: 표준 시저리프트<br />
+                  • <b>소형 근린생활시설</b><br />
                   &nbsp;&nbsp;- 규모 분류: <b>소형 (연면적 600평 미만)</b><br />
-                  &nbsp;&nbsp;- 적용 장비군: 소형 슬림 시저리프트 (6m·8m, 엘리베이터 진입형)
-                </div>
+                  &nbsp;&nbsp;- 적용 장비군: 소형 슬림 시저리프트
+ </div>
               </div>
 
               {/* 섹션 3: V-World 도로망 & CSI 안전망 판정 기준 */}
@@ -1795,14 +1795,14 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Navigation size={16} />
                   3. V-World 도로망 및 CSI 안전관리 법정 요건 판정 기준
-                </div>
+ </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div style={{ background: 'var(--bg-app)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>V-World 도로망 (국토부 표준노드링크)</div>
                     <ul style={{ margin: 0, paddingLeft: '16px', color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: '11px' }}>
                       <li><b>도로폭 ≥ 12m</b>: 광폭 대로변, 폭원 및 회차 공간 충분</li>
                       <li><b>도로폭 6m ~ 12m</b>: 5톤/11톤 트럭 진입 가능</li>
-                      <li><b>도로폭 &lt; 4m</b>: 🔴 <b>폭원 협소 경고</b> (사전 진입로 폭원 확인 필수)</li>
+                      <li><b>도로폭 &lt; 4m</b>: <b>폭원 협소 경고</b> (사전 진입로 폭원 확인 필수)</li>
                     </ul>
                   </div>
 
@@ -1834,7 +1834,7 @@ export const PublicConstructionPermitsPage: React.FC = () => {
                 }}
               >
                 확인 완료
-              </button>
+ </button>
             </div>
           </div>
         </div>

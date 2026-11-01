@@ -37,7 +37,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // 🚨 비상 마스터 복구 필드
+  //  비상 마스터 복구 필드
   const [emergencyKey, setEmergencyKey] = useState<string>('');
   const [emergencyReason, setEmergencyReason] = useState<string>('메인 PC 고장으로 인한 비상 복구 접속');
   const [registerAsPermanent, setRegisterAsPermanent] = useState<boolean>(true);
@@ -118,7 +118,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
     }
   };
 
-  // 🚨 비상 마스터 복구 제출
+  //  비상 마스터 복구 제출
   const handleBreakGlassSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -191,7 +191,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
-                {activeTab === 'BREAK_GLASS' ? '🚨 개발자 비상 마스터 복구' : '개발자 물리 단말기 인가 절차'}
+                {activeTab === 'BREAK_GLASS' ? '개발자 비상 마스터 복구' : '개발자 물리 단말기 인가 절차'}
               </h3>
               <span style={{ fontSize: '11.5px', color: 'var(--text-secondary, #64748b)' }}>
                 대상 계정: [{targetLoginId}] • {activeTab === 'BREAK_GLASS' ? '단말기 고장/도난/분실 비상 절차' : '비인가 기기 감지'}
@@ -235,7 +235,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
             }}
           >
             공인 단말기 등록 및 바인딩
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => { setActiveTab('BREAK_GLASS'); setErrorMessage(null); }}
@@ -251,8 +251,8 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               cursor: 'pointer'
             }}
           >
-            🚨 비상 마스터 복구 (고장/도난/분실)
-          </button>
+             비상 마스터 복구 (고장/도난/분실)
+ </button>
         </div>
 
         {/* 탭 1: 일반 공인 단말기 등록 */}
@@ -268,7 +268,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               lineHeight: 1.5
             }}>
               <strong>안내:</strong> 현재 PC의 하드웨어 지문과 MAC 주소를 개발자 공인 기기로 DB에 등록하면, 이후 로그인 시 추가 확인 없이 즉시 자동 통과됩니다.
-            </div>
+ </div>
 
             {/* 소형 단일실행 등록기 다운로드 & 실시간 확인 카드 */}
             <div style={{
@@ -285,10 +285,10 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               <div style={{ flex: '1 1 200px' }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '12.5px', marginBottom: '2px' }}>
                   소형 단일실행 등록기
-                </div>
+ </div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '11px', lineHeight: 1.4 }}>
                   PC 고장/교체나 신규 입사 시, 이 PC에서 프로그램을 실행하면 자동으로 하드웨어를 감지하여 DB에 공인 개발자 PC로 등록합니다.
-                </div>
+ </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                 <a
@@ -350,7 +350,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #334155)', marginBottom: '4px' }}>
                 <Cpu size={14} color="var(--primary, #2563eb)" />
                 자동 감지된 로컬 PC 물리 식별 정보
-              </label>
+ </label>
               <input
                 type="text"
                 readOnly
@@ -379,7 +379,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #334155)', marginBottom: '4px' }}>
                 담당 개발자명
-              </label>
+ </label>
               <input
                 type="text"
                 value={developerName}
@@ -402,7 +402,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #334155)', marginBottom: '4px' }}>
                 <Laptop size={14} />
                 단말기 명칭
-              </label>
+ </label>
               <input
                 type="text"
                 value={machineName}
@@ -425,7 +425,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #334155)', marginBottom: '4px' }}>
                 <Key size={14} color="#d97706" />
                 물리 마스터 보안키
-              </label>
+ </label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showKey ? 'text' : 'password'}
@@ -485,7 +485,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
                 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -510,7 +510,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
           </form>
         )}
 
-        {/* 탭 2: 🚨 비상 마스터 복구 (고장/도난/분실 시) */}
+        {/* 탭 2:  비상 마스터 복구 (고장/도난/분실 시) */}
         {activeTab === 'BREAK_GLASS' && (
           <form onSubmit={handleBreakGlassSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{
@@ -522,9 +522,9 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               color: '#991b1b',
               lineHeight: 1.5
             }}>
-              <strong>🚨 비상 복구 절차 안내:</strong><br />
+              <strong> 비상 복구 절차 안내:</strong><br />
               개발자 PC의 고장, 도난, 침수, 분실 등 정상 단말기로 접근할 수 없는 비상 상황 시 긴급 로그인 절차입니다. 본 비상 접속은 시스템 전산 감사 로그에 전수 영구 기록됩니다.
-            </div>
+ </div>
 
             {errorMessage && (
               <div style={{
@@ -544,7 +544,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#991b1b', marginBottom: '4px' }}>
                 비상 복구 사유 (감사 로그 필수 저장 항목)
-              </label>
+ </label>
               <input
                 type="text"
                 required
@@ -568,7 +568,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
               <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #334155)', marginBottom: '4px' }}>
                 <Lock size={14} color="#dc2626" />
                 비상 마스터 복구 보안키
-              </label>
+ </label>
               <input
                 type="password"
                 required
@@ -591,8 +591,8 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
             {activeDeviceList.length > 0 && (
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#b91c1c', marginBottom: '4px' }}>
-                  도난/분실된 기존 단말기 즉시 인가 회수 (선택 시 해당 PC 접속 영구 차단)
-                </label>
+                  도난/분실된 기존 단말기 즉시 인가 회수
+ </label>
                 <select
                   value={revokeStolenDeviceId}
                   onChange={e => setRevokeStolenDeviceId(e.target.value)}
@@ -648,7 +648,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
                 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -667,7 +667,7 @@ export const DeveloperDeviceGuardModal: React.FC<DeveloperDeviceGuardModalProps>
                 }}
               >
                 <AlertTriangle size={14} />
-                {isSubmitting ? '비상 복구 검증 중...' : '🚨 비상 마스터 복구 접속 승인'}
+                {isSubmitting ? '비상 복구 검증 중...' : '비상 마스터 복구 접속 승인'}
               </button>
             </div>
           </form>

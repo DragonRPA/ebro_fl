@@ -1,6 +1,6 @@
 // src/utils/hindsightTracker.ts
-// 🧠 eBro Hindsight Stealth Telemetry Engine (Zero-Overhead & 0ms Main-Thread Blocking)
-// 🏛️ 대한민국 개인정보보호법 준수 및 전사 시스템 개발 표준 헌장 준수
+//  eBro Hindsight Stealth Telemetry Engine (Zero-Overhead & 0ms Main-Thread Blocking)
+//  대한민국 개인정보보호법 준수 및 전사 시스템 개발 표준 헌장 준수
 
 import { centralSupabase } from '../services/centralDb';
 import { supabase } from '../services/db';

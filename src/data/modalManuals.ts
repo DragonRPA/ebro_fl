@@ -166,7 +166,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'button[type="submit"], button:contains("승계"), button.btn-primary:contains("저장"), button.btn-primary',
         type: 'click_ripple',
         label: '계약 변경 이력 무누락 저장',
-        description: '계약 마스터 및 타임라인에 변경 이력이 영구 보존되며, 승계 시 후속 채권 주체가 자동 전환됩니다.',
+        description: '계약 마스터 및 타임라인에 변경 이력이 보관되며, 승계 시 후속 채권 주체가 자동 전환됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: true,
@@ -215,7 +215,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         seq: 4,
         selector: 'button.btn-primary:contains("승인"), button.btn-primary:contains("출고"), button[type="submit"]',
         type: 'click_ripple',
-        label: '출고 승인 ➔ 대여중 상태 전환',
+        label: '출고 승인 대여중 상태 전환',
         description: '헌장 1.3 원칙에 따라 검수 승인 완료 즉시 자산 상태가 대여중으로 전환 마감됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
@@ -575,7 +575,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         seq: 4,
         selector: 'button.btn-primary:contains("확정"), button.btn-primary:contains("매칭"), button[type="submit"]',
         type: 'click_ripple',
-        label: '1:1 매칭 확정 ➔ 수납 완료 전이',
+        label: '1:1 매칭 확정 수납 완료 전이',
         description: '통장 입금과 매출 청구가 1:1로 확정 바인딩되며 영수증 발행 가능 상태로 전환됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
@@ -616,7 +616,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'button.btn-primary:contains("발송"), button[type="submit"]',
         type: 'click_ripple',
         label: '독촉장 정식 발송 및 이력 영구 기록',
-        description: '고객사에 정식 발송되며 채권 추심 타임라인에 발송 시각 및 전문이 영구 보존됩니다.',
+        description: '고객사에 정식 발송되며 채권 추심 타임라인에 발송 시각 및 전문이 보관됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: true,
@@ -756,7 +756,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'button.btn-primary:contains("반영"), button.btn-primary:contains("저장")',
         type: 'click_ripple',
         label: '거래처 마스터 자동 반영',
-        description: '검증된 정품 사업자 정보와 첨부 사본이 거래처 마스터에 영구 보존됩니다.',
+        description: '검증된 정품 사업자 정보와 첨부 사본이 거래처 마스터에 보관됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: true,
@@ -816,7 +816,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'input[name*="asset"], input[placeholder*="자산번호"], .card h3',
         type: 'callout',
         label: '자산 관리 번호 (사번식 식별자)',
-        description: '회사 고유 자산번호(예: SJ-001) 및 제조번호를 기재합니다.',
+        description: '회사 고유 자산번호 및 제조번호를 기재합니다.',
         badgeColor: '#1D4ED8',
         positionHint: 'bottom',
         spotlight: true,
@@ -845,7 +845,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         seq: 4,
         selector: 'button.btn-primary:contains("저장"), button.btn-primary:contains("등록")',
         type: 'click_ripple',
-        label: '자산 등록 ➔ 임대가능 전환',
+        label: '자산 등록 임대가능 전환',
         description: '자산 대장에 즉시 신규 자산으로 등록되어 계약 출고 대기군에 편성됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
@@ -916,7 +916,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: '[data-mid="rec-modal-search-box"]',
         type: 'stamp',
         label: '계약·고객사·현장 검색',
-        description: '고객사 상호, 한글 초성(예: "ㅅㅅ"), 계약번호(예: C202603-XXXX), 현장명을 입력하여 하위 3단 드롭다운을 실시간 필터링합니다.',
+        description: '고객사 상호, 한글 초성(예: "ㅅㅅ"), 계약번호, 현장명을 입력하여 하위 3단 드롭다운을 실시간 필터링합니다.',
         badgeColor: '#047857',
         positionHint: 'bottom',
         spotlight: false,
@@ -1089,7 +1089,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: '[data-mid="trade_contract_modal-test_mode_toggle"]',
         type: 'stamp',
         label: '헌장 5.9조 안전 격리 테스트 모드',
-        description: '외부 오발송을 차단하기 위해 테스트 모드 활성 시 개발자 계정(admin@ebro.co.kr)으로만 격리 발송합니다.',
+        description: '외부 오발송을 차단하기 위해 테스트 모드 활성 시 개발자 계정으로만 격리 발송합니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: true,
@@ -1109,7 +1109,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: '[data-mid="trade_contract_modal-send_email_btn"]',
         type: 'click_ripple',
         label: '계약서 이메일 발송 완결',
-        description: '엑셀 계약서를 첨부하여 이메일을 발송하고 발송 시각 및 수신처를 영구 보존합니다.',
+        description: '엑셀 계약서를 첨부하여 이메일을 발송하고 발송 시각 및 수신처를 보관합니다.',
         badgeColor: '#047857',
         positionHint: 'top',
         spotlight: true,
@@ -1151,7 +1151,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'button:contains("오류 복사"), button:contains("복사")',
         type: 'click_ripple',
         label: '[시스템 에러 전용] 기술 스택 복사',
-        description: '시스템 코드 에러 발생 시 개발팀 디버깅을 위해 스택 트레이스를 클립보드에 원클릭 복사합니다. (업무 안내 시에는 불필요하여 자동 제거됨)',
+        description: '시스템 코드 에러 발생 시 개발팀 디버깅을 위해 스택 트레이스를 클립보드에 복사합니다. (업무 안내 시에는 불필요하여 자동 제거됨)',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: false,
@@ -1281,7 +1281,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: '[data-mid="btn-submit-product"], button[type="submit"]',
         type: 'click_ripple',
         label: '제품 등록 완료',
-        description: '19개 제원 정보를 제품 마스터 DB에 즉시 저장하며, 이후 자산 취득 및 Cloudflare R2 문서함(Eq_doc/{모델명}/)과 연동됩니다.',
+        description: '19개 제원 정보를 제품 마스터 DB에 즉시 저장하며, 이후 자산 취득 및 Cloudflare R2 문서함과 연동됩니다.',
         badgeColor: '#DC2626',
         positionHint: 'top',
         spotlight: true,
@@ -1292,7 +1292,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
   // ── 25. 테넌트 설정 및 공식메일설정·R2 스토리지 모달 ──
   modal_tenant_config: {
     modalId: 'modal_tenant_config',
-    modalName: '테넌트 설정 (공식메일설정 / R2 스토리지 / 모듈 라이선스)',
+    modalName: '테넌트 설정',
     category: '시스템/테넌트',
     keywords: ['테넌트 설정', '신규 테넌트 등록', '공식메일설정', '모듈 라이선스', '클라우드 스토리지'],
     annotations: [
@@ -1311,7 +1311,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'button:contains("개발모드"), button:contains("서비스모드"), input[placeholder*="smtp"], input[placeholder*="이메일"]',
         type: 'stamp',
         label: '공식메일설정 및 발송 모드 (개발모드 ↔ 서비스모드)',
-        description: '중앙 플랫폼 DB(tenants.features.officialMailConfig)에 테넌트별 SMTP 계정과 발송 모드(개발모드 안전 격리 / 서비스모드 실발송)를 영구 보존합니다.',
+        description: '중앙 플랫폼 DB에 테넌트별 SMTP 계정과 발송 모드(개발모드 안전 격리 / 서비스모드 실발송)를 보관합니다.',
         badgeColor: '#047857',
         positionHint: 'bottom',
         spotlight: true,
@@ -1351,7 +1351,7 @@ export const MODAL_MANUAL_REGISTRY: Record<string, {
         selector: 'input[type="checkbox"], .package-doc-list',
         type: 'callout',
         label: '표준 출고·계약 서류 패키지 구성 선택',
-        description: '임대차계약서, 반입전체크리스트(점검일시=배차일-2일 자동 기입), 장비 제원표·안전인증서(Cloudflare R2 Eq_doc/{모델명}/), 사업자등록증·통장사본·보험증권을 선택합니다.',
+        description: '임대차계약서, 반입전체크리스트(점검일시=배차일-2일 자동 기입), 장비 제원표·안전인증서, 사업자등록증·통장사본·보험증권을 선택합니다.',
         badgeColor: '#1D4ED8',
         positionHint: 'bottom',
         spotlight: true,
@@ -1493,7 +1493,7 @@ export function detectActiveModalElement(): { modalEl: HTMLElement; title: strin
 
     // 실제 백드롭이거나 모달 클래스가 있는 경우
     if (hasRealBackdropBg || (isModalClass && zIndexVal >= 100)) {
-      // 💡 [핵심 검증] 화면 전체를 덮는 백드롭이라면, 그 내부에 실제로 팝업 창(카드)이 존재하는지 확인!
+      //  [핵심 검증] 화면 전체를 덮는 백드롭이라면, 그 내부에 실제로 팝업 창(카드)이 존재하는지 확인!
       const innerCards = Array.from(el.querySelectorAll<HTMLElement>('div, section')).filter(child => {
         const cStyle = window.getComputedStyle(child);
         const cRect = child.getBoundingClientRect();
@@ -1535,7 +1535,7 @@ export function getModalManualPage(modalKey: string, customTitle?: string): Manu
 }
 
 /**
- * 💡 [전사 표준] 현재 화면의 실행 컨텍스트(활성 모달, 활성 서브뷰/탭, 기본 메뉴)를 동적으로 실시간 감지
+ *  [전사 표준] 현재 화면의 실행 컨텍스트(활성 모달, 활성 서브뷰/탭, 기본 메뉴)를 동적으로 실시간 감지
  * @param baseMenuId 현재 상위 메뉴 ID (예: 'contract', 'billing')
  * @param defaultTitle 현재 상위 메뉴명 (예: '계약 관리', '청구 / 수납 관리')
  */
@@ -1552,7 +1552,7 @@ export function detectCurrentContext(baseMenuId: string, defaultTitle?: string):
   // 1. 최우선 순위: 화면에 열려있는 팝업/모달 감지
   const activeModal = detectActiveModalElement();
   if (activeModal) {
-    // 💡 [가드] 모달 키가 특정되지 않고 'modal_generic_dialog'인 경우,
+    //  [가드] 모달 키가 특정되지 않고 'modal_generic_dialog'인 경우,
     // 메인 메뉴가 명확하게 주어진 상태라면 가짜 감지일 가능성을 배제하기 위해
     // 실제 role="dialog", aria-modal="true" 또는 명시적 모달 클래스일 경우에만 모달로 인정!
     const isExplicit = activeModal.modalEl.getAttribute('role') === 'dialog' ||

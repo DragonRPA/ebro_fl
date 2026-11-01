@@ -30,7 +30,7 @@ interface DefectOption {
   category: string;
 }
 
-// 🛡️ [안전 폴백] DB 점검항목 미등록 시 비상 대비 기본 시드
+//  [안전 폴백] DB 점검항목 미등록 시 비상 대비 기본 시드
 const FALLBACK_DEFECT_PRESETS: DefectOption[] = [
   { id: 'CHK-001', name: '외관 파손 및 도색 불량', score: 10, category: '외관/바디' },
   { id: 'CHK-002', name: '안전 난간 및 확장 데크 변형', score: 20, category: '외관/바디' },
@@ -394,7 +394,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
               <span>장비 입고 등록</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 출고팀
-              </span>
+ </span>
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">회수 장비 기능 점검 및 정비 자동 연동</p>
           </div>
@@ -416,14 +416,14 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
         <div className="flex items-center justify-between gap-2">
           <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
             입고 대상 장비
-          </label>
+ </label>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {currentAsset && (
               <>
                 {currentAsset.isSublease && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-900/80 text-purple-300 border border-purple-700 whitespace-nowrap">
                     타사전대
-                  </span>
+ </span>
                 )}
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${
                   currentAsset.isRented
@@ -479,7 +479,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
                 handleQuickAssetNoApply();
               }
             }}
-            placeholder="자산번호 직접 입력 (예: G19007 또는 007)"
+            placeholder="자산번호 직접 입력"
             className="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500 uppercase font-mono"
           />
           <button
@@ -488,7 +488,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl whitespace-nowrap shrink-0"
           >
             선택
-          </button>
+ </button>
         </div>
 
         {/* 자산 선택 버튼 */}
@@ -537,7 +537,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
         <div className="flex flex-col gap-1 pt-1">
           <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
             입고 일자
-          </label>
+ </label>
           <input
             type="date"
             value={returnDate}
@@ -551,7 +551,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
         <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
           외관 및 기능 상태 판정
-        </label>
+ </label>
         
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -597,10 +597,10 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
               <Wrench className="w-4 h-4 text-rose-400" />
               <span className="text-xs font-bold text-white whitespace-nowrap flex-shrink-0">
                 정비 불량 증상 선택
-              </span>
+ </span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">
                 SSOT
-              </span>
+ </span>
             </div>
             <div className="flex items-center gap-2">
               {selectedDefects.length > 0 && (
@@ -611,13 +611,13 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
                 >
                   <RotateCcw className="w-3 h-3" />
                   초기화
-                </button>
+ </button>
               )}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">누적:</span>
                 <span className="font-mono font-black text-rose-400 text-sm px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800">
                   +{totalDegradationScore}점
-                </span>
+ </span>
               </div>
             </div>
           </div>
@@ -680,7 +680,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
             {displayedDefects.length === 0 ? (
               <div className="w-full py-6 text-center text-xs text-slate-500">
                 검색된 정비 점검 항목이 없습니다.
-              </div>
+ </div>
             ) : (
               displayedDefects.map((preset) => {
                 const isChecked = selectedDefects.includes(preset.id);
@@ -704,7 +704,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
                     <span>{preset.name}</span>
                     <span className={`text-[11px] font-mono font-bold shrink-0 ${isChecked ? 'text-rose-300' : 'text-slate-500'}`}>
                       +{preset.score}점
-                    </span>
+ </span>
                   </button>
                 );
               })
@@ -715,7 +715,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
           <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-800">
             <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
               기타 특이 불량 내용 (자유 텍스트 입력)
-            </label>
+ </label>
             <textarea
               value={otherDefectText}
               onChange={(e) => setOtherDefectText(e.target.value)}
@@ -742,7 +742,7 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
         <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
           입고 비고
-        </label>
+ </label>
         <input
           type="text"
           value={memo}
@@ -813,10 +813,10 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-black text-white whitespace-nowrap flex-shrink-0">
                   입고 대상 자산 선택
-                </span>
+ </span>
                 <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
                   {filteredAssets.length}대
-                </span>
+ </span>
               </div>
               <button
                 type="button"
@@ -899,12 +899,12 @@ export const MobileInboundRegister: React.FC<MobileInboundRegisterProps> = ({
                         {asset.isSublease && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-900/80 text-purple-300 border border-purple-700 whitespace-nowrap flex-shrink-0">
                             타사전대
-                          </span>
+ </span>
                         )}
                         {asset.isRented ? (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-900/80 text-sky-300 border border-sky-700 whitespace-nowrap flex-shrink-0">
                             대여중
-                          </span>
+ </span>
                         ) : (
                           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 whitespace-nowrap flex-shrink-0">
                             {asset.status}

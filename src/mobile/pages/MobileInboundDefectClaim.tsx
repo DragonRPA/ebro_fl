@@ -992,7 +992,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
           </div>
           <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400 border border-blue-500/30 whitespace-nowrap shrink-0">
             외상미수금 연동
-          </span>
+ </span>
         </div>
 
         {/* 출고팀에서 진입했을 때만 등록/협상 탭 전환 노출 (영업부는 전용 협상 화면만 노출) */}
@@ -1031,7 +1031,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
             <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-between gap-2">
               <div className="text-xs font-bold text-amber-300">
                 기존 청구건({editingReceivableId}) 수정 모드
-              </div>
+ </div>
               <button
                 type="button"
                 onClick={() => {
@@ -1041,7 +1041,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                 className="px-2.5 py-1 rounded-lg bg-slate-800 text-white text-xs font-bold whitespace-nowrap"
               >
                 신규 등록 전환
-              </button>
+ </button>
             </div>
           )}
 
@@ -1051,10 +1051,10 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
                   1
-                </span>
+ </span>
                 <h3 className="text-xs font-black text-white whitespace-nowrap">
                   대상 장비 선택
-                </h3>
+ </h3>
                 {selectedAssetNo && (
                   <span
                     className={`text-[10.5px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${
@@ -1079,7 +1079,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
               <div className="flex flex-wrap items-center gap-1.5 pb-1">
                 <span className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap shrink-0">
                   최근입고:
-                </span>
+ </span>
                 {recentInboundAssetChips.map((chip) => (
                   <button
                     key={chip.assetNo}
@@ -1124,7 +1124,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                         handleSelectAssetAndAutoFill(assetNoQuery);
                       }
                     }}
-                    placeholder="자산번호 입력 (예: G14002)"
+                    placeholder="자산번호 입력"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-black text-white uppercase"
                   />
                 </div>
@@ -1134,7 +1134,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   className="px-3.5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black whitespace-nowrap shrink-0 active:scale-95"
                 >
                   선택
-                </button>
+ </button>
               </div>
 
               {showAssetDropdown && matchingAssets.length > 0 && (
@@ -1197,7 +1197,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex flex-col gap-1">
                     <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                       고객사명
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={customerName}
@@ -1209,7 +1209,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex flex-col gap-1">
                     <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                       현장명
-                    </label>
+ </label>
                     <input
                       type="text"
                       value={siteName}
@@ -1221,7 +1221,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex flex-col gap-1">
                     <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                       입고일자
-                    </label>
+ </label>
                     <input
                       type="date"
                       value={inboundDate}
@@ -1240,14 +1240,14 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
                   2
-                </span>
+ </span>
                 <h3 className="text-xs font-black text-white whitespace-nowrap">
                   불량 증상 선택
-                </h3>
+ </h3>
               </div>
               <span className="text-xs font-bold text-blue-400 whitespace-nowrap">
                 선택 {defectItems.length}건
-              </span>
+ </span>
             </div>
 
             {/* 카테고리 필터 */}
@@ -1299,7 +1299,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
               <div className="flex items-center justify-between">
                 <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                   신규 불량 증상 추가 (저장 시 퀵버튼 등록)
-                </label>
+ </label>
                 <select
                   value={newSymptomCategory}
                   onChange={(e) => setNewSymptomCategory(e.target.value)}
@@ -1346,10 +1346,10 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
                   3
-                </span>
+ </span>
                 <h3 className="text-xs font-black text-white whitespace-nowrap">
                   증상별 사진 촬영 및 비용 기록
-                </h3>
+ </h3>
               </div>
               <span className="text-xs font-black text-rose-400 whitespace-nowrap">
                 사진 {totalPhotoCount}장 · ₩{totalEstimatedCost.toLocaleString()}
@@ -1359,7 +1359,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
             {defectItems.length === 0 ? (
               <div className="py-5 text-center rounded-xl border border-dashed border-slate-800 text-xs font-bold text-slate-500">
                 위 퀵버튼을 눌러 불량 증상을 선택해 주십시오.
-              </div>
+ </div>
             ) : (
               <div className="space-y-2.5">
                 {defectItems.map((item, idx) => (
@@ -1401,7 +1401,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                       <div className="flex flex-wrap items-center justify-between gap-1">
                         <label className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap">
                           예상 수리비 (미정 시 0원 가능)
-                        </label>
+ </label>
                         <div className="flex flex-wrap gap-1">
                           <button
                             type="button"
@@ -1409,7 +1409,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                             className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-bold text-slate-400 whitespace-nowrap"
                           >
                             미정(0원)
-                          </button>
+ </button>
                           {[10000, 30000, 50000, 100000].map((amt) => (
                             <button
                               key={amt}
@@ -1422,7 +1422,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                               className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-bold text-blue-300 whitespace-nowrap active:scale-95"
                             >
                               +{amt / 10000}만
-                            </button>
+ </button>
                           ))}
                         </div>
                       </div>
@@ -1454,8 +1454,8 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
 
             <div className="flex flex-col gap-1 pt-1">
               <label className="text-[11px] font-bold text-slate-400">
-                영업사원 전달 메모 (PC 외상미수금 대장 표시)
-              </label>
+                영업사원 전달 메모
+ </label>
               <input
                 type="text"
                 value={claimMemo}
@@ -1484,7 +1484,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
       )}
 
       {/* =====================================================================
-          탭 2: 영업부 수리비용 건별 조회 ➔ 최초견적서 전달 ➔ 통화 협상 ➔ 최종 청구 결정
+          탭 2: 영업부 수리비용 건별 조회  최초견적서 전달  통화 협상  최종 청구 결정
          ===================================================================== */}
       {viewMode === 'NEGOTIATE' && (
         <div className="p-3 space-y-3">
@@ -1545,7 +1545,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <AlertTriangle className="w-7 h-7 text-slate-500 mx-auto" />
                   <div className="text-xs font-bold text-slate-300">
                     해당 조건의 수리비용 내역이 없습니다.
-                  </div>
+ </div>
                   {statusFilter === 'UNRESOLVED' && statusCounts.agreed > 0 && (
                     <button
                       type="button"
@@ -1553,7 +1553,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                       className="px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-blue-400"
                     >
                       결정완료 포함 전체 보기 ({statusCounts.all}건)
-                    </button>
+ </button>
                   )}
                 </div>
               ) : (
@@ -1727,10 +1727,10 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex items-center gap-1.5">
                     <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       1
-                    </span>
+ </span>
                     <h3 className="text-xs font-black text-white">
                       출고팀 작성 수리비용 내역 확인
-                    </h3>
+ </h3>
                   </div>
                   <span className="text-xs font-mono font-black text-slate-200 whitespace-nowrap">
                     최초견적 ₩{(activeClaimEntry.meta.initialEstimatedAmount || 0).toLocaleString()}
@@ -1779,7 +1779,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                               />
                               <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-bold">
                                 사진 {pIdx + 1} 확대
-                              </span>
+ </span>
                             </button>
                           ))}
                         </div>
@@ -1795,17 +1795,17 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex items-center gap-1.5">
                     <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       2
-                    </span>
+ </span>
                     <h3 className="text-xs font-black text-white">최초견적서 고객 전달</h3>
                   </div>
                   {activeClaimEntry.meta.sentAt ? (
                     <span className="text-[10.5px] font-bold text-sky-400 whitespace-nowrap">
                       전달완료 ({activeClaimEntry.meta.sentAt.slice(5, 10)})
-                    </span>
+ </span>
                   ) : (
                     <span className="text-[10.5px] font-bold text-amber-400 whitespace-nowrap">
                       전달 대기
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -1881,12 +1881,12 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex items-center gap-1.5">
                     <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       3
-                    </span>
+ </span>
                     <h3 className="text-xs font-black text-white">담당자 통화 및 협상 조정</h3>
                   </div>
                   <span className="text-[11px] font-bold text-emerald-400">
-                    현장담당 원터치 통화
-                  </span>
+                    현장담당 통화
+ </span>
                 </div>
 
                 {/* 고객현장 담당자 원터치 통화 버튼 목록 */}
@@ -1931,7 +1931,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                 ) : (
                   <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
                     등록된 현장 담당자 연락처가 없습니다.
-                  </div>
+ </div>
                 )}
 
                 {/* 협상 금액 간편 조정 */}
@@ -1939,7 +1939,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold text-slate-300">
                       협상 후 최종 청구할 금액 (원)
-                    </label>
+ </label>
                     {negotiationItems.length > 1 && (
                       <button
                         type="button"
@@ -1975,7 +1975,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                       className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px] font-bold text-slate-200 whitespace-nowrap active:scale-95"
                     >
                       전액 청구
-                    </button>
+ </button>
                     {[10000, 30000, 50000].map((cut) => (
                       <button
                         key={cut}
@@ -1988,7 +1988,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                         className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px] font-bold text-amber-300 whitespace-nowrap active:scale-95"
                       >
                         -{cut / 10000}만
-                      </button>
+ </button>
                     ))}
                     <button
                       type="button"
@@ -2000,14 +2000,14 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                       className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px] font-bold text-sky-300 whitespace-nowrap active:scale-95"
                     >
                       50% 감액
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => handleApplyTotalNegotiatedAmount(0)}
                       className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px] font-bold text-rose-300 whitespace-nowrap active:scale-95"
                     >
                       무상면제 (0원)
-                    </button>
+ </button>
                   </div>
 
                   {/* 다중 증상일 때만 선택적으로 펼치는 증상별 금액 조정 */}
@@ -2017,8 +2017,8 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                         <div key={it.id} className="flex items-center justify-between gap-2">
                           <span className="text-xs font-bold text-slate-300 truncate flex-1">
                             {i + 1}. {it.symptomName} (견적 ₩
-                            {(it.estimatedCost || 0).toLocaleString()})
-                          </span>
+ {(it.estimatedCost || 0).toLocaleString()})
+ </span>
                           <input
                             type="number"
                             value={it.agreedCost !== undefined ? it.agreedCost : it.estimatedCost}
@@ -2037,7 +2037,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                 <div className="pt-1 border-t border-slate-800 space-y-1.5">
                   <label className="text-[11px] font-bold text-slate-300">
                     통화 협상 및 결정 사유 메모
-                  </label>
+ </label>
                   <div className="flex flex-wrap gap-1">
                     {QUICK_MEMO_CHIPS.map((chip) => (
                       <button
@@ -2070,11 +2070,11 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                   <div className="flex items-center gap-1.5">
                     <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       4
-                    </span>
+ </span>
                     <h3 className="text-xs font-black text-white">최종 청구 결정</h3>
                   </div>
                   <div className="text-xs font-mono font-bold text-slate-300">
-                    최초 ₩{(activeClaimEntry.meta.initialEstimatedAmount || 0).toLocaleString()} ➔{' '}
+                    최초 ₩{(activeClaimEntry.meta.initialEstimatedAmount || 0).toLocaleString()} {' '}
                     <strong className="text-emerald-400 font-black">
                       결정 ₩{(negotiatedTotalAmount || 0).toLocaleString()}
                     </strong>

@@ -137,19 +137,19 @@ export function parseAddressToRegion(rawAddress: string): { region: DestinationR
 
 export function getWeatherInfo(code: number) {
   if (code === 0) {
-    return { text: '맑음', emoji: '☀️', color: '#F59E0B', icon: <Sun size={18} color="#F59E0B" /> };
+    return { text: '맑음', emoji: '', color: '#F59E0B', icon: <Sun size={18} color="#F59E0B" /> };
   } else if (code >= 1 && code <= 3) {
-    return { text: code === 1 ? '대체로 맑음' : code === 2 ? '구름 조금' : '흐림', emoji: '⛅', color: 'var(--text-muted)', icon: <CloudSun size={18} color="#64748B" /> };
+    return { text: code === 1 ? '대체로 맑음' : code === 2 ? '구름 조금' : '흐림', emoji: '', color: 'var(--text-muted)', icon: <CloudSun size={18} color="#64748B" /> };
   } else if (code === 45 || code === 48) {
-    return { text: '안개', emoji: '🌫️', color: 'var(--text-muted)', icon: <CloudFog size={18} color="#94A3B8" /> };
+    return { text: '안개', emoji: '', color: 'var(--text-muted)', icon: <CloudFog size={18} color="#94A3B8" /> };
   } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-    return { text: '비', emoji: '🌧️', color: 'var(--primary)', icon: <CloudRain size={18} color="#3B82F6" /> };
+    return { text: '비', emoji: '', color: 'var(--primary)', icon: <CloudRain size={18} color="#3B82F6" /> };
   } else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-    return { text: '눈', emoji: '❄️', color: 'var(--info)', icon: <Snowflake size={18} color="#38BDF8" /> };
+    return { text: '눈', emoji: '', color: 'var(--info)', icon: <Snowflake size={18} color="#38BDF8" /> };
   } else if (code >= 95) {
-    return { text: '뇌우', emoji: '⚡', color: '#8B5CF6', icon: <CloudLightning size={18} color="#8B5CF6" /> };
+    return { text: '뇌우', emoji: '', color: '#8B5CF6', icon: <CloudLightning size={18} color="#8B5CF6" /> };
   }
-  return { text: '구름', emoji: '☁️', color: 'var(--text-muted)', icon: <Cloud size={18} color="#64748B" /> };
+  return { text: '구름', emoji: '', color: 'var(--text-muted)', icon: <Cloud size={18} color="#64748B" /> };
 }
 
 interface CurrentWeatherData {
@@ -333,7 +333,7 @@ export const DestinationWeatherModal: React.FC<Props> = ({
             <MapPin size={20} color="#3B82F6" />
             <h3 style={{ margin: 0, fontSize: '16.5px', fontWeight: '800', color: 'var(--text-main)' }}>
               운송 하차지 날씨 및 예보
-            </h3>
+ </h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
             <X size={20} />
@@ -347,16 +347,16 @@ export const DestinationWeatherModal: React.FC<Props> = ({
           <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-app)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
               <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--primary)' }}>
-                🏢 {customerName} | 📍 {siteName}
+                 {customerName} | {siteName}
               </div>
               {isAutoParsed ? (
                 <span style={{ fontSize: '11.5px', color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
                   <CheckCircle2 size={13} /> 주소 자동파싱 성공 ('{parsedKeyword}')
-                </span>
+ </span>
               ) : (
                 <span style={{ fontSize: '11.5px', color: '#F59E0B', display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
                   <AlertTriangle size={13} /> 하차지 직접 2단계 선택
-                </span>
+ </span>
               )}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
@@ -367,7 +367,7 @@ export const DestinationWeatherModal: React.FC<Props> = ({
           {/* 2단계 주소 선택기 (1단계 시/도 -> 2단계 시/군/구) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span>🎯 하차지 기상지역 2단계 정밀 선택 (전역 지정 지역 독립 설정)</span>
+              <span> 하차지 기상지역 2단계 정밀 선택 (전역 지정 지역 독립 설정)</span>
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
@@ -417,21 +417,21 @@ export const DestinationWeatherModal: React.FC<Props> = ({
                 <div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>
                     {selectedRegion.name} 하차지 현재 기온
-                  </div>
+ </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
                     <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-main)' }}>{current.temp}°C</span>
                     <span style={{ fontSize: '14px', fontWeight: '700', color: weatherMeta.color }}>{weatherMeta.text} {weatherMeta.emoji}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                     체감 {current.apparentTemp}°C · 습도 {current.humidity}% · 풍속 {current.windSpeed} m/s
-                  </div>
+ </div>
                 </div>
                 <div>{weatherMeta.icon}</div>
               </div>
 
               {/* 시간별 예보 (24시간) */}
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', marginBottom: '8px' }}>⏰ 시간별 예보 (24시간)</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', marginBottom: '8px' }}> 시간별 예보 (24시간)</div>
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
                   {hourly.map((h, i) => {
                     const hMeta = getWeatherInfo(h.weatherCode);
@@ -444,7 +444,7 @@ export const DestinationWeatherModal: React.FC<Props> = ({
                         <div style={{ color: 'var(--text-muted)', marginBottom: '4px' }}>{h.time}</div>
                         <div style={{ marginBottom: '2px' }}>{hMeta.icon}</div>
                         <div style={{ fontWeight: '700' }}>{h.temp}°C</div>
-                        <div style={{ color: 'var(--primary)', fontSize: '10px', marginTop: '2px' }}>☔{h.pop}%</div>
+                        <div style={{ color: 'var(--primary)', fontSize: '10px', marginTop: '2px' }}>{h.pop}%</div>
                       </div>
                     );
                   })}
@@ -453,7 +453,7 @@ export const DestinationWeatherModal: React.FC<Props> = ({
 
               {/* 주간 예보 (7일) */}
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', marginBottom: '8px' }}>📅 주간 예보 (7일)</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', marginBottom: '8px' }}> 주간 예보 (7일)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {daily.map((d, i) => {
                     const dMeta = getWeatherInfo(d.weatherCode);
@@ -467,7 +467,7 @@ export const DestinationWeatherModal: React.FC<Props> = ({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
                           {dMeta.icon}
                           <span style={{ color: dMeta.color }}>{dMeta.text}</span>
-                          <span style={{ color: 'var(--primary)', fontSize: '11px', marginLeft: '6px' }}>☔ {d.popMax}%</span>
+                          <span style={{ color: 'var(--primary)', fontSize: '11px', marginLeft: '6px' }}> {d.popMax}%</span>
                         </div>
                         <span style={{ fontWeight: '700' }}>
                           <span style={{ color: 'var(--primary)' }}>{d.tempMin}°</span> / <span style={{ color: 'var(--danger)' }}>{d.tempMax}°</span>

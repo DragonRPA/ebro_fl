@@ -291,7 +291,7 @@ export const LeaveApplicationPage: React.FC = () => {
           <h2 data-mid="leave_application-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <Calendar size={18} style={{ color: 'var(--primary)' }} />
             연차신청
-          </h2>
+ </h2>
         </div>
 
         <button
@@ -301,10 +301,10 @@ export const LeaveApplicationPage: React.FC = () => {
         >
           <Download size={14} style={{ marginRight: '6px' }} />
           엑셀 다운로드
-        </button>
+ </button>
       </div>
 
-      {/* 📊 본인 연차 현황 카드 */}
+      {/*  본인 연차 현황 카드 */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -319,7 +319,7 @@ export const LeaveApplicationPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>신청 대상 임직원</span>
           <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>
             {getApplicantDisplayName(activeApplicantUser)} ({activeApplicantUser?.department || '미지정'})
-          </strong>
+ </strong>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -333,21 +333,21 @@ export const LeaveApplicationPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>1년 부여 연차</span>
           <strong style={{ fontSize: '16px', color: 'var(--primary)' }}>
             {mySummary.grantedDays}일
-          </strong>
+ </strong>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>누적 소진 일수</span>
           <strong style={{ fontSize: '16px', color: 'var(--warning)' }}>
             {mySummary.usedDays}일
-          </strong>
+ </strong>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>잔여 연차</span>
           <strong style={{ fontSize: '18px', color: mySummary.remainingDays > 0 ? '#10b981' : '#ef4444' }}>
             {mySummary.remainingDays}일
-          </strong>
+ </strong>
         </div>
       </div>
 
@@ -370,7 +370,7 @@ export const LeaveApplicationPage: React.FC = () => {
         }}>
           <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
             연차 / 반차 소진 등록
-          </h3>
+ </h3>
 
           {/* 주말·법정공휴일 자동 제외 및 임시공휴일 미제외 상신자 사전 안내 */}
           <div style={{
@@ -389,8 +389,8 @@ export const LeaveApplicationPage: React.FC = () => {
             <div style={{ wordBreak: 'keep-all', overflowWrap: 'break-word', flex: 1, minWidth: 0 }}>
               <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>안내: </span>
               주말(토/일) 및 법정공휴일은 연차 소진 일수에서 <strong>자동 제외</strong>됩니다. 
-              정부 수시 지정 <strong>임시공휴일은 자동 제외되지 않으므로</strong>, 해당 일자 신청 시 확인 바랍니다.
-            </div>
+ 정부 수시 지정 <strong>임시공휴일은 자동 제외되지 않으므로</strong>, 해당 일자 신청 시 확인 바랍니다.
+ </div>
           </div>
 
           <form data-mid="leave-form" onSubmit={handleLeaveUsageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -399,7 +399,7 @@ export const LeaveApplicationPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 신청 임직원:
-              </label>
+ </label>
               {isSystemAdmin ? (
                 <select
                   required
@@ -412,7 +412,7 @@ export const LeaveApplicationPage: React.FC = () => {
                   {currentUser && !users.some(u => u.id === currentUser.id) && (
                     <option value={currentUser.id}>
                       {getApplicantDisplayName(currentUser)} ({currentUser.department || '시스템'} / {currentUser.role}) - 본인
-                    </option>
+ </option>
                   )}
                   {users.map(u => (
                     <option key={u.id} value={u.id}>
@@ -431,7 +431,7 @@ export const LeaveApplicationPage: React.FC = () => {
                   color: 'var(--text-main)'
                 }}>
                   {getApplicantDisplayName(currentUser)} ({currentUser?.department || '미지정'} / {currentUser?.position || '직원'})
-                </div>
+ </div>
               )}
             </div>
 
@@ -439,7 +439,7 @@ export const LeaveApplicationPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 휴가 구분 (차감 일수):
-              </label>
+ </label>
               <select data-mid="leave-type-select"
                 value={leaveType}
                 onChange={(e: any) => setLeaveType(e.target.value)}
@@ -456,7 +456,7 @@ export const LeaveApplicationPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 시작 일자:
-              </label>
+ </label>
               <input data-mid="leave-start-date"
                 type="date"
                 required
@@ -475,7 +475,7 @@ export const LeaveApplicationPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   종료 일자:
-                </label>
+ </label>
                 <input
  type="date"
                   required
@@ -589,7 +589,7 @@ export const LeaveApplicationPage: React.FC = () => {
                     <div>
                       총 {calcResult.totalCalendarDays}일 중 <strong>주말 {calcResult.weekendDays}일</strong>
                       {calcResult.holidayDays > 0 && <>, <strong>법정공휴일 {calcResult.holidayDays}일</strong></>}
-                      {' '}제외 ➔ <strong>실제 소정근로 {calcResult.workingDays}일만 차감</strong>
+                      {' '}제외 <strong>실제 소정근로 {calcResult.workingDays}일만 차감</strong>
                     </div>
                     {calcResult.excludedBreakdownText && (
                       <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
@@ -605,7 +605,7 @@ export const LeaveApplicationPage: React.FC = () => {
                     paddingTop: '4px' 
                   }}>
                     기간 내 주말 및 법정공휴일이 포함되지 않아 신청 일수 전액({calcResult.deductedDays}일)이 소진됩니다.
-                  </div>
+ </div>
                 )
               )}
             </div>
@@ -614,7 +614,7 @@ export const LeaveApplicationPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 휴가 사유:
-              </label>
+ </label>
               <textarea data-mid="leave-reason-input"
                 required
                 rows={3}
@@ -663,14 +663,14 @@ export const LeaveApplicationPage: React.FC = () => {
                   style={{ fontSize: '11.5px', padding: '4px 8px', whiteSpace: 'nowrap' }}
                 >
                   내 신청 내역
-                </button>
+ </button>
                 <button
                   onClick={() => setViewScope('ALL')}
                   className={`btn ${viewScope === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
                   style={{ fontSize: '11.5px', padding: '4px 8px', whiteSpace: 'nowrap' }}
                 >
                   전체 임직원 내역
-                </button>
+ </button>
               </div>
             )}
           </div>
@@ -694,7 +694,7 @@ export const LeaveApplicationPage: React.FC = () => {
                   <tr>
                     <td colSpan={isSystemAdmin ? 7 : 6} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조회 조건에 해당하는 연차/반차 신청 내역이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedUsages.map((l) => {
@@ -732,17 +732,17 @@ export const LeaveApplicationPage: React.FC = () => {
                           {l.status === 'PENDING' && (
                             <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, backgroundColor: 'rgba(245, 158, 11, 0.16)', color: '#d97706' }}>
                               결재대기
-                            </span>
+ </span>
                           )}
                           {l.status === 'REJECTED' && (
                             <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', fontWeight: 700, backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}>
                               반려
-                            </span>
+ </span>
                           )}
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--danger)' }}>
                           -{l.usedDays} 일
-                        </td>
+ </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontSize: '12px' }}>
                           {l.startDate} {l.startDate !== l.endDate ? `~ ${l.endDate}` : ''}
                         </td>

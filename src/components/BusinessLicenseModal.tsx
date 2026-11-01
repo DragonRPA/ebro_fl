@@ -151,7 +151,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
       setNtsValidation(valData);
       setNtsResult(ntsData);
 
-      // 기존 고객사 매칭 탐색 (targetCustomerId 우선 ➔ bizRegNo 매칭 ➔ 상호 매칭)
+      // 기존 고객사 매칭 탐색 (targetCustomerId 우선  bizRegNo 매칭  상호 매칭)
       let matched: Customer | null = null;
       if (targetCustomerId) {
         matched = customers.find(c => c.id === targetCustomerId) || null;
@@ -238,7 +238,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
           fileUrl = uploadRes.fileUrl;
         }
       } catch (uploadErr) {
-        console.warn('[BusinessLicenseModal] 스토리지 업로드 경고 (DB 등록 속행):', uploadErr);
+        console.warn('[BusinessLicenseModal] 스토리지 업로드 경고:', uploadErr);
       }
 
       // 2) 분기 A: 신규 고객 등록
@@ -343,7 +343,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
             <div>
               <h2 className="text-sm sm:text-base font-semibold text-white tracking-tight flex items-center gap-2">
                 사업자등록증 고객 등록 / 정보 보완
-                {step === 'RESULT' && (
+ {step === 'RESULT' && (
                   <span className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
                     matchedCustomer 
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
@@ -399,15 +399,15 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                 </div>
                 <p className="text-base font-medium text-white mb-1">
                   사업자등록증 파일 선택 또는 드래그 앤 드롭
-                </p>
+ </p>
                 <p className="text-xs text-slate-400 max-w-sm mb-4">
                   카카오톡/문자로 받은 사진, 전자발급 PDF, 스캔본을 모두 지원합니다.
-                </p>
+ </p>
 
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors">
                     PC / 앨범 파일 선택
-                  </span>
+ </span>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -416,8 +416,8 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                     }}
                     className="sm:hidden px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors"
                   >
-                    📷 카메라 촬영
-                  </button>
+                     카메라 촬영
+ </button>
                 </div>
 
                 {/* 숨김 인풋 */}
@@ -460,7 +460,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
               {selectedFile && (
                 <div className="px-3 py-1 rounded bg-slate-800 border border-slate-700 text-xs text-slate-300">
                   {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                </div>
+ </div>
               )}
             </div>
           )}
@@ -481,10 +481,10 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                   className="text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-700 transition-colors shrink-0 cursor-pointer"
                 >
                   다른 파일 재업로드
-                </button>
+ </button>
               </div>
 
-              {/* 🏛️ 국세청 홈택스 상호 진위확인 및 휴폐업 검증 카드 */}
+              {/*  국세청 홈택스 상호 진위확인 및 휴폐업 검증 카드 */}
               {(ntsResult || ntsValidation) && (
                 <div className={`px-3 py-2 rounded-lg border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                   ntsResult?.status === 'ACTIVE'
@@ -508,7 +508,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                         {ntsResult?.closedDate && (
                           <span className="text-rose-400 font-mono text-[11px]">
                             (폐업일: {ntsResult.closedDate})
-                          </span>
+ </span>
                         )}
                         {/* 상호·대표자 진위확인 배지 */}
                         {ntsValidation && (
@@ -518,7 +518,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                               : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           }`}>
                             {ntsValidation.isValid 
-                              ? '✓ 상호·대표자 원부 일치' 
+                              ? '상호·대표자 원부 일치' 
                               : '! 상호·대표자 불일치 주의'}
                           </span>
                         )}
@@ -541,7 +541,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                   <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-200 flex items-center justify-between">
                     <div>
                       <span className="font-semibold text-amber-300">[{matchedCustomer.name}]</span> 기존 등록 데이터와 일치합니다.
-                      <p className="text-slate-400 text-[11px] mt-0.5">사업자등록증에서 새로 판독된 항목을 선택하여 갱신하세요.</p>
+ <p className="text-slate-400 text-[11px] mt-0.5">사업자등록증에서 새로 판독된 항목을 선택하여 갱신하세요.</p>
                     </div>
                     <span className="px-2 py-0.5 bg-amber-400/20 text-amber-300 rounded font-mono text-[11px]">
                       {matchedCustomer.id}
@@ -577,7 +577,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                             {analysisResult.companyName && matchedCustomer.name !== analysisResult.companyName && (
                               <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-normal">
                                 등록증 기준 교체
-                              </span>
+ </span>
                             )}
                           </td>
                         </tr>
@@ -713,7 +713,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                 <div className="space-y-2 sm:space-y-2.5">
                   <div className="px-3 py-1.5 sm:py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-200">
                     <span className="font-semibold text-emerald-300">신규 고객사 자동 감지</span> — 사업자등록증에서 추출된 데이터가 자동 입력되었습니다.
-                  </div>
+ </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                     {/* 상호 */}
@@ -830,7 +830,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
               className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
             >
               닫기
-            </button>
+ </button>
             {step === 'RESULT' && (
               <button
                 type="button"
@@ -847,7 +847,7 @@ export const BusinessLicenseModal: React.FC<BusinessLicenseModalProps> = ({
                   <>
                     <RefreshCw size={13} className="animate-spin" />
                     저장 중...
-                  </>
+ </>
                 ) : (
                   <>
                     <CheckCircle2 size={14} />

@@ -88,7 +88,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       >
         {/* ── 1행: 좌상단 날씨 위젯 & 우상단 퀵 액션 버튼군 (360px 모바일 화면 줄바꿈·잘림 없는 컴팩트 레이아웃) ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '6px', minWidth: 0 }}>
-          {/* 🌤️ 좌상단 실시간 현장 날씨 위젯 */}
+          {/*  좌상단 실시간 현장 날씨 위젯 */}
           <div style={{ flexShrink: 1, minWidth: 0 }}>
             <WeatherWidget compact />
           </div>
@@ -103,7 +103,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               marginLeft: 'auto'
             }}
           >
-            {/* 🔄 화면 새로고침 버튼 (아이콘 컴팩트) */}
+            {/*  화면 새로고침 버튼 (아이콘 컴팩트) */}
             <button
               type="button"
               onClick={handleRefresh}
@@ -136,7 +136,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               />
             </button>
 
-            {/* 📻 현장 무전기 버튼 (테넌트 관리 센터 설정에 따라 노출) */}
+            {/*  현장 무전기 버튼 (테넌트 관리 센터 설정에 따라 노출) */}
             {isWalkieTalkieEnabled && onOpenWalkieTalkie && (
               <button
                 type="button"
@@ -171,7 +171,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               </button>
             )}
 
-            {/* 📱 통화캡처 APK 다운로드 & 모니터링 버튼 */}
+            {/*  통화캡처 APK 다운로드 & 모니터링 버튼 */}
             <button
               type="button"
               onClick={onOpenApkMonitor}
@@ -201,7 +201,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
                 boxShadow: isWorking ? '0 0 5px #10b981' : 'none'
               }} />
             </button>
-            {/* 🚪 로그아웃 버튼 (웹앱 우상단 표준 - 아이콘만 작게) */}
+            {/*  로그아웃 버튼 (웹앱 우상단 표준 - 아이콘만 작게) */}
             <button
               type="button"
               onClick={logout}
@@ -239,7 +239,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         {/* ── 2행: 회사 로고 & 사용자 정보 & 출퇴근 토글 ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-            {/* 🏢 테넌트 회사 CI 로고 표출 (모바일 헤더) */}
+            {/*  테넌트 회사 CI 로고 표출 (모바일 헤더) */}
             <img 
               src={isDemoMode() ? '/images/ci/ebro_rental_ci.svg' : (currentTenant?.ciUrl || currentTenant?.logoUrl || '/images/ci/giyeun_ci.png')} 
               alt="CI" 
@@ -277,13 +277,13 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
                   flexShrink: 0
                 }}>
                   현장
-                </span>
+ </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
                 <span style={{ fontSize: '10.5px', color: '#e2e8f0', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1 }}>
                   {currentUser?.name || '담당자'} ({currentUser?.position || (currentUser?.role === 'ADMIN' ? '개발자' : currentUser?.role === 'MECHANIC' ? '정비기사' : '임직원')})
-                </span>
-                {/* 🌟 컴팩트 출근/퇴근 토글 버튼 (헌장 3.1 무수식어 건조 표준) */}
+ </span>
+                {/*  컴팩트 출근/퇴근 토글 버튼 (헌장 3.1 무수식어 건조 표준) */}
                 {onToggleWork && (
                   <button
                     type="button"
@@ -322,7 +322,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         </div>
       </header>
 
-      {/* 🏛️ [원칙 1: 각자 로그인한 아이디의 소속 탭만 보인다 / 개발자는 모든 탭이 다 보인다] */}
+      {/*  [원칙 1: 각자 로그인한 아이디의 소속 탭만 보인다 / 개발자는 모든 탭이 다 보인다] */}
       {isDeveloper ? (
         <div style={{
           backgroundColor: 'rgba(15, 23, 42, 0.98)',
@@ -394,12 +394,12 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             {currentUser?.position && (
               <span style={{ color: '#64748b', fontSize: '10.5px' }}>
                 ({currentUser.position})
-              </span>
+ </span>
             )}
           </div>
           <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '600' }}>
             {deptMode === 'EXECUTIVE' ? '경영진' : deptMode === 'ADMIN' ? '관리부' : deptMode === 'OUTBOUND' ? '출고팀' : deptMode === 'AS' ? 'AS팀' : '영업부'} 모드
-          </span>
+ </span>
         </div>
       )}
     </>

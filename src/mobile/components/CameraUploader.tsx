@@ -61,7 +61,7 @@ export const CameraUploader: React.FC<CameraUploaderProps> = ({
         </label>
         <span className="text-[11px] font-mono font-bold text-slate-400">
           ({images.length} / {maxImages}장)
-        </span>
+ </span>
       </div>
 
       {/* 액션 버튼: 앨범 사진 첨부 vs 현장 카메라 촬영 */}

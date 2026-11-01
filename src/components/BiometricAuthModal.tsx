@@ -75,7 +75,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
   const handleRegisterNew = async () => {
     setIsVerifying(true);
     setErrorMessage(null);
-    setStatusMessage('Windows Hello 창에서 신규 지문(또는 PIN)을 등록해 주십시오...');
+    setStatusMessage('Windows Hello 창에서 신규 지문을 등록해 주십시오...');
 
     const res = await registerAdminFingerprint(targetLoginId);
     setIsVerifying(false);
@@ -127,7 +127,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
             <Fingerprint size={20} color="var(--primary)" />
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>
               2단계 지문 생체인증
-            </h3>
+ </h3>
           </div>
           <button 
             type="button" 
@@ -167,7 +167,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>
               {targetLoginId} 관리자 계정 2차 인증
-            </span>
+ </span>
             <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
               {statusMessage}
             </span>
@@ -213,7 +213,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
             >
               <Fingerprint size={16} />
               지문 인증 재시도
-            </button>
+ </button>
           ) : (
             <button
               type="button"
@@ -232,7 +232,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
             >
               <KeyRound size={16} />
               이 PC에 신규 관리자 지문 등록
-            </button>
+ </button>
           )}
 
           {hasCredential && (
@@ -251,7 +251,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
               }}
             >
               다른 손가락 또는 신규 기기로 지문 재등록
-            </button>
+ </button>
           )}
 
           <button
@@ -265,7 +265,7 @@ export const BiometricAuthModal: React.FC<BiometricAuthModalProps> = ({
             }}
           >
             로그인 취소
-          </button>
+ </button>
         </div>
       </div>
     </div>

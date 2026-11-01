@@ -291,8 +291,8 @@ export const AssetInboundStaging: React.FC = () => {
           <div className="card" style={{ width: '400px', padding: '30px', textAlign: 'center', backgroundColor: 'var(--bg-card)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>일괄 처리 진행 중</h3>
             <p style={{ color: '#ef4444', fontSize: '13.5px', marginBottom: '24px', fontWeight: 500 }}>
-              ⚠️ 데이터 동기화 중입니다.<br/>화면을 닫거나 다른 탭으로 이동하지 마세요.
-            </p>
+               데이터 동기화 중입니다.<br/>화면을 닫거나 다른 탭으로 이동하지 마세요.
+ </p>
             
             <div style={{ width: '100%', backgroundColor: 'var(--bg-main)', height: '14px', borderRadius: '7px', overflow: 'hidden', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
               <div style={{ 
@@ -327,7 +327,7 @@ export const AssetInboundStaging: React.FC = () => {
         <div style={{ flex: 1 }}>
           <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
             입고 장비 관리번호 연속 입력 (바코드 스캔) *
-          </label>
+ </label>
           <div style={{ position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '9px', color: 'var(--text-muted)' }} />
             <input
@@ -336,7 +336,7 @@ export const AssetInboundStaging: React.FC = () => {
               onChange={(e) => setScanInput(e.target.value)}
               onKeyDown={handleScanInput}
               onBlur={handleBlurScan}
-              placeholder="예: G19004, RENT-0001 (입력 후 Enter 또는 콤마로 다수 장비 스캔 가능)"
+              placeholder="예: G19004, RENT-0001"
               style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '14px', backgroundColor: 'var(--bg-main)' }}
             />
           </div>
@@ -344,7 +344,7 @@ export const AssetInboundStaging: React.FC = () => {
         <div style={{ width: '200px' }}>
           <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
             입고일 *
-          </label>
+ </label>
           <input
             type="date"
             value={inboundDate}
@@ -387,7 +387,7 @@ export const AssetInboundStaging: React.FC = () => {
                 <tr>
                   <td colSpan={5} style={{ padding: '20px 12px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     바코드를 스캔하여 입고 처리할 자산을 대기열에 추가하세요.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 stagedAssets.map(asset => (
@@ -436,7 +436,7 @@ export const AssetInboundStaging: React.FC = () => {
             
 
             <div style={{ padding: '20px' }}>
-              {/* 💡 출고 당시 장착 옵션 내역 표시 */}
+              {/*  출고 당시 장착 옵션 내역 표시 */}
               {(() => {
                 const optItems = outboundOptionsData?.checkpoints?.filter((cp: any) => cp.type === 'OPTION' || cp.type === 'SPEC' || cp.id?.startsWith('opt_') || cp.label?.includes('[옵션]') || cp.label?.includes('보양')) || [];
                 
@@ -506,7 +506,7 @@ export const AssetInboundStaging: React.FC = () => {
                   <label style={{ fontSize: '13px', fontWeight: 600 }}>정비 필요 항목 체크 (자동 감점 합산)</label>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: activeInspectionItem.penaltyScore > 0 ? '#ef4444' : '#10b981' }}>
                     총 정비필요점수: {activeInspectionItem.penaltyScore}점
-                  </span>
+ </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                   {inspectionChecklistItems.map(item => {
@@ -570,7 +570,7 @@ export const AssetInboundStaging: React.FC = () => {
             <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-main)', display: 'flex', justifyContent: 'flex-end' }}>
               <button className="btn-primary" onClick={() => setInspectionModalAssetId(null)} style={{ padding: '8px 24px', fontSize: '13px' }}>
                 완료
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -582,10 +582,10 @@ export const AssetInboundStaging: React.FC = () => {
           <div className="modal-content" style={{ backgroundColor: 'var(--bg-card)', padding: '24px', borderRadius: '8px', minWidth: '400px', maxWidth: '500px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid var(--border-color)' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangle size={18} /> 입고 처리 불가 자산
-            </h3>
+ </h3>
             <div style={{ fontSize: '13px', color: '#4b5563', marginBottom: '16px', lineHeight: '1.5' }}>
               다음 자산은 대여/출고 상태가 아니므로 입고 처리가 불가합니다.<br/>전산상 출고 누락 여부를 확인하십시오.
-            </div>
+ </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
               <thead>
                 <tr>
@@ -605,7 +605,7 @@ export const AssetInboundStaging: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button type="button" className="btn-secondary" onClick={() => setInvalidAssets([])} style={{ padding: '6px 16px' }}>
                 확인
-              </button>
+ </button>
             </div>
           </div>
         </div>

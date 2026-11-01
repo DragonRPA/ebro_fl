@@ -474,7 +474,7 @@ export const TradePurchasesPage: React.FC = () => {
 
   // Delete Purchase Item
   const handleDeletePurchase = async (p: TradePurchase, pi: TradePurchaseItem, prodName: string) => {
-    if (!window.confirm(`발주번호 [${p.id}]의 품목 [${prodName}] 내역을 영구 삭제하시겠습니까?`)) return;
+    if (!window.confirm(`발주번호 [${p.id}]의 품목 [${prodName}] 내역을 삭제하시겠습니까?`)) return;
     try {
       await deletePurchase(p.id, pi.id);
       showToast(`발주번호 [${p.id}] 품목 [${prodName}] 내역이 삭제되었습니다.`);
@@ -682,9 +682,6 @@ export const TradePurchasesPage: React.FC = () => {
             <ShoppingCart size={20} color="var(--primary)" />
             <span>국내매입 및 해외수입 원가관리</span>
           </h2>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap' }}>
-            중국 수입 지게차 외화금액·적용환율·통관 부대비용 반영 도착원가 산출 및 차대번호별 입고 관리
-          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -706,7 +703,7 @@ export const TradePurchasesPage: React.FC = () => {
             }}
           >
             <Plus size={15} /> 수입·매입 발주 등록
-          </button>
+ </button>
 
           <button
             type="button"
@@ -726,32 +723,32 @@ export const TradePurchasesPage: React.FC = () => {
             }}
           >
             <Download size={14} /> 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
       {/* 2. KPI 요약 카드 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>해외수입 도착원가 누계 (공급가)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>해외수입 도착원가 누계</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#1d4ed8', whiteSpace: 'nowrap' }}>
             ₩{kpi.importSupplyAmt.toLocaleString()}
           </div>
         </div>
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>수입 부대비용 합계 (관세·통관·운임)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>수입 부대비용 합계</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#d97706', whiteSpace: 'nowrap' }}>
             ₩{kpi.totalIncidental.toLocaleString()}
           </div>
         </div>
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>국내매입 원가 누계 (공급가)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>국내매입 원가 누계</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#059669', whiteSpace: 'nowrap' }}>
             ₩{kpi.domesticSupplyAmt.toLocaleString()}
           </div>
         </div>
         <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입·수입 합계 (부가세 포함)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입·수입 합계</div>
           <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
             ₩{kpi.totalPurchaseAmt.toLocaleString()}
           </div>
@@ -780,8 +777,8 @@ export const TradePurchasesPage: React.FC = () => {
             style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
           >
             <option value="ALL">전체 구분</option>
-            <option value="IMPORT">해외수입 (중국·외화)</option>
-            <option value="DOMESTIC">국내매입 (원화)</option>
+            <option value="IMPORT">해외수입</option>
+            <option value="DOMESTIC">국내매입</option>
           </select>
         </div>
 
@@ -805,7 +802,7 @@ export const TradePurchasesPage: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>매입처 (공급사)</label>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>매입처</label>
           <select
             value={vendorFilter}
             onChange={e => setVendorFilter(e.target.value)}
@@ -855,7 +852,7 @@ export const TradePurchasesPage: React.FC = () => {
           >
             <option value="ALL">전체 상태</option>
             <option value="REQUESTED">발주요청</option>
-            <option value="ORDERED">발주접수 (입고대기)</option>
+            <option value="ORDERED">발주접수</option>
             <option value="PARTIAL_RECEIVED">부분입고</option>
             <option value="RECEIVED">입고완료</option>
             <option value="CANCELLED">발주취소</option>
@@ -870,7 +867,7 @@ export const TradePurchasesPage: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
             <RefreshCw size={12} /> 필터 초기화
-          </button>
+ </button>
         )}
       </div>
 
@@ -898,7 +895,7 @@ export const TradePurchasesPage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '230px' }}>입고 / 업무 처리</th>
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>발주번호 / 일자</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>매입처 (공급사)</th>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>매입처</th>
                 <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>입고창고</th>
                 <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>품목코드 / 제품명</th>
                 <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>발주 / 입고</th>
@@ -915,7 +912,7 @@ export const TradePurchasesPage: React.FC = () => {
                 <tr>
                   <td colSpan={13} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     조회된 국내매입 및 해외수입 원가 데이터가 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 filteredRows.map(({ p, pi, isImport, productName, skuCode, unit, vendorName, effectiveUnitCost, supplyAmt, remainQty }) => (
@@ -929,7 +926,7 @@ export const TradePurchasesPage: React.FC = () => {
                             style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                           >
                             <FileCheck size={11} /> 접수승인
-                          </button>
+ </button>
                         )}
 
                         {(p.status === 'ORDERED' || p.status === 'REQUESTED' || p.status === 'PARTIAL_RECEIVED') && remainQty > 0 && (
@@ -942,14 +939,14 @@ export const TradePurchasesPage: React.FC = () => {
                               style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                             >
                               <Check size={11} /> 입고 확정
-                            </button>
+ </button>
                             <button
                               type="button"
                               onClick={() => openInboundModal(p, pi, productName)}
                               style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #059669', backgroundColor: '#ecfdf5', color: '#047857', cursor: 'pointer' }}
                             >
                               차대검수
-                            </button>
+ </button>
                           </>
                         )}
 
@@ -960,7 +957,7 @@ export const TradePurchasesPage: React.FC = () => {
                             style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                           >
                             <Edit2 size={11} /> 원가수정
-                          </button>
+ </button>
                         )}
 
                         {p.status !== 'CANCELLED' && !(pi.receivedQty === 0 && (pi.memo || '').includes('[품목취소')) && (
@@ -970,7 +967,7 @@ export const TradePurchasesPage: React.FC = () => {
                             style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}
                           >
                             취소
-                          </button>
+ </button>
                         )}
 
                         {(p.status === 'CANCELLED' || p.status === 'REQUESTED' || p.status === 'ORDERED' || pi.receivedQty === 0) && (
@@ -1112,7 +1109,7 @@ export const TradePurchasesPage: React.FC = () => {
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
                   <td colSpan={6} style={{ padding: '10px 12px', color: 'var(--text-main)' }}>
                     조회 합계 ({filteredRows.length}건)
-                  </td>
+ </td>
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
                     발주 {filteredRows.reduce((s, r) => s + r.pi.orderQty, 0).toLocaleString()} / 입고 {filteredRows.reduce((s, r) => s + r.pi.receivedQty, 0).toLocaleString()}
                   </td>
@@ -1135,7 +1132,7 @@ export const TradePurchasesPage: React.FC = () => {
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calculator size={18} color="var(--primary)" />
-                <span>{editingPurchase ? `매입·수입 원가 및 발주 수정 (${editingPurchase.id})` : '신규 국내매입 · 해외수입 원가 등록'}</span>
+                <span>{editingPurchase ? `매입·수입 원가 및 발주 수정 · ${editingPurchase.id}` : '신규 국내매입 · 해외수입 원가 등록'}</span>
               </h3>
               <button type="button" onClick={() => setIsPurchaseModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -1161,13 +1158,13 @@ export const TradePurchasesPage: React.FC = () => {
                     }}
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
                   >
-                    <option value="IMPORT">해외수입 (외화·통관)</option>
-                    <option value="DOMESTIC">국내매입 (원화)</option>
+                    <option value="IMPORT">해외수입</option>
+                    <option value="DOMESTIC">국내매입</option>
                   </select>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>매입처 (해외 제조사 / 국내 공급사) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>매입처 *</label>
                   <select
                     data-mid="trade_purchases-vendor-select"
                     value={formVendorId}
@@ -1187,8 +1184,8 @@ export const TradePurchasesPage: React.FC = () => {
                     onChange={e => setFormWarehouseName(e.target.value)}
                     style={{ padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 600 }}
                   >
-                    <option value="A창고">A창고 (신차 주기장)</option>
-                    <option value="B창고">B창고 (출고대기동)</option>
+                    <option value="A창고">A창고</option>
+                    <option value="B창고">B창고</option>
                     <option value="부품창고">부품창고</option>
                   </select>
                 </div>
@@ -1220,8 +1217,8 @@ export const TradePurchasesPage: React.FC = () => {
                 <div style={{ padding: '14px 16px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#1e40af' }}>
-                      해외수입 외화 환율 및 부대비용 안분 계산기 (품목별 금액 비례 자동 배부)
-                    </span>
+                      외화 환율 및 부대비용 계산
+ </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <button
                         type="button"
@@ -1252,7 +1249,7 @@ export const TradePurchasesPage: React.FC = () => {
                         }}
                       >
                         일일 기준환율 자동불러오기
-                      </button>
+ </button>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#1d4ed8' }}>
                         부대비용 합계: ₩{totalIncidentalCost.toLocaleString()}
                       </span>
@@ -1272,13 +1269,13 @@ export const TradePurchasesPage: React.FC = () => {
                         }}
                         style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid #93c5fd', backgroundColor: '#fff', fontWeight: 700 }}
                       >
-                        <option value="CNY">CNY (위안화)</option>
-                        <option value="USD">USD (달러화)</option>
-                        <option value="KRW">KRW (원화)</option>
+                        <option value="CNY">위안화 · CNY</option>
+                        <option value="USD">달러화 · USD</option>
+                        <option value="KRW">원화 · KRW</option>
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>적용 환율 (원)</label>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>적용 환율</label>
                       <input
                         type="number"
                         step="0.1"
@@ -1288,7 +1285,7 @@ export const TradePurchasesPage: React.FC = () => {
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>관세 (원)</label>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>관세</label>
                       <input
                         type="number"
                         min={0}
@@ -1298,7 +1295,7 @@ export const TradePurchasesPage: React.FC = () => {
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>통관수수료 (원)</label>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>통관수수료</label>
                       <input
                         type="number"
                         min={0}
@@ -1308,7 +1305,7 @@ export const TradePurchasesPage: React.FC = () => {
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>해상·내륙운임 (원)</label>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>해상·내륙운임</label>
                       <input
                         type="number"
                         min={0}
@@ -1318,7 +1315,7 @@ export const TradePurchasesPage: React.FC = () => {
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>기타 부대비용 (원)</label>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', whiteSpace: 'nowrap' }}>기타 부대비용</label>
                       <input
                         type="number"
                         min={0}
@@ -1352,7 +1349,7 @@ export const TradePurchasesPage: React.FC = () => {
                     style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Plus size={12} /> 품목 행 추가
-                  </button>
+ </button>
                 </div>
 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
@@ -1362,13 +1359,13 @@ export const TradePurchasesPage: React.FC = () => {
                       <th style={{ padding: '8px 10px', textAlign: 'right', width: '75px' }}>수량 *</th>
                       {formPurchaseType === 'IMPORT' ? (
                         <>
-                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '110px' }}>외화단가 ({formCurrency})</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'right', width: '110px' }}>외화단가 · {formCurrency}</th>
                           <th style={{ padding: '8px 10px', textAlign: 'right', width: '105px' }}>대당 부대비용</th>
                         </>
                       ) : null}
-                      <th style={{ padding: '8px 10px', textAlign: 'right', width: '120px' }}>대당 도착원가(원)</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'right', width: '120px' }}>대당 도착원가</th>
                       <th style={{ padding: '8px 10px', textAlign: 'right', width: '120px' }}>공급가액</th>
-                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '180px' }}>입고 차대번호 (쉼표 구분)</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'left', width: '180px' }}>입고 차대번호</th>
                       <th style={{ padding: '8px 10px', textAlign: 'center', width: '45px' }}>삭제</th>
                     </tr>
                   </thead>
@@ -1516,7 +1513,7 @@ export const TradePurchasesPage: React.FC = () => {
                   style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   data-mid="trade_purchases-modal-submit-btn"
@@ -1537,7 +1534,7 @@ export const TradePurchasesPage: React.FC = () => {
           <div style={{ backgroundColor: 'var(--bg-card)', width: '500px', maxWidth: '95vw', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                입고 검수 및 차대번호 확정 ({inboundTarget.purchase.id})
+                입고 검수 및 차대번호 확정 · {inboundTarget.purchase.id}
               </h3>
               <button type="button" onClick={() => setInboundTarget(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -1566,7 +1563,7 @@ export const TradePurchasesPage: React.FC = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>확정 도착원가 (원) *</label>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>확정 도착원가 *</label>
                   <input
                     type="number"
                     required
@@ -1591,7 +1588,7 @@ export const TradePurchasesPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>입고 차대번호 목록 (쉼표 구분, 미입력 시 자동 부여)</label>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>입고 차대번호 목록</label>
                 <input
                   type="text"
                   value={inboundSerialsText}
@@ -1620,14 +1617,14 @@ export const TradePurchasesPage: React.FC = () => {
                   style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   className="btn-primary"
                   style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   입고 확정 및 차대 재고 반영
-                </button>
+ </button>
               </div>
             </form>
           </div>

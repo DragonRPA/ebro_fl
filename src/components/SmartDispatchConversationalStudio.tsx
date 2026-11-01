@@ -675,10 +675,10 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
             gap: '4px'
           }}>
             <Sparkles size={12} /> 대화형 인터뷰
-          </span>
+ </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             각 단계별 검색창에 직접 타이핑하거나 음성으로 편리하게 입력하세요.
-          </span>
+ </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -834,7 +834,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
             title="인식된 텍스트를 현재 입력창에 넣어 키보드로 수정"
           >
             클릭하여 수정
-          </button>
+ </button>
         </div>
       )}
 
@@ -944,7 +944,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                     [{selectedCustomer?.name || '고객사'}] 등록 현장 목록:
-                  </span>
+ </span>
                   <button
                     type="button"
                     onClick={() => setShowNewSiteForm(!showNewSiteForm)}
@@ -1049,7 +1049,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     ) : (
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '6px 0' }}>
                         검색 조건에 맞는 현장이 없습니다. 신규 현장을 직접 입력해주세요.
-                      </div>
+ </div>
                     )}
                   </div>
                 ) : (
@@ -1076,7 +1076,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                       style={{ padding: '7px 12px', fontSize: '12px', fontWeight: 700 }}
                     >
                       신규 현장 확정 및 장비 단계 이동
-                    </button>
+ </button>
                   </div>
                 )}
               </>
@@ -1087,7 +1087,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-main)' }}>
                   현장 담당자: <strong>{pendingSite.contactName}</strong> 님 (연락처: {pendingSite.contact || '미등록'})
-                </div>
+ </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     type="button"
@@ -1104,7 +1104,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: 700 }}
                   >
                     [예] 동일 담당자 확정
-                  </button>
+ </button>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -1115,7 +1115,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: 700 }}
                   >
                     [아니오] 새 담당자 입력
-                  </button>
+ </button>
                 </div>
               </div>
             )}
@@ -1149,7 +1149,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                   style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 700 }}
                 >
                   다음
-                </button>
+ </button>
               </div>
             )}
 
@@ -1180,7 +1180,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                   style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 700 }}
                 >
                   확정
-                </button>
+ </button>
               </div>
             )}
 
@@ -1198,7 +1198,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: 700 }}
                   >
                     [동일] 기존 옵션 100% 승계
-                  </button>
+ </button>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -1206,7 +1206,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: 700 }}
                   >
                     [변경] 새 옵션 직접 설정
-                  </button>
+ </button>
                 </div>
               </div>
             )}
@@ -1277,7 +1277,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                 style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}
               >
                 <Plus size={13} /> 추가
-              </button>
+ </button>
             </div>
 
             {/* 3-2. 신청 장비 목록 (장바구니 패널 - 복수 모델 가시화 및 개별 수량 증감) */}
@@ -1292,8 +1292,8 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  📋 신청 장비 목록 (총 <strong style={{ color: 'var(--primary)' }}>{totalEquipmentQty}</strong>대)
-                </span>
+                   신청 장비 목록 (총 <strong style={{ color: 'var(--primary)' }}>{totalEquipmentQty}</strong>대)
+ </span>
                 {equipmentList.length > 0 && (
                   <button
                     type="button"
@@ -1301,14 +1301,14 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                     style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     전체비우기
-                  </button>
+ </button>
                 )}
               </div>
 
               {equipmentList.length === 0 ? (
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
                   아래 규격 칩을 누르거나 음성으로 장비를 추가하세요.
-                </div>
+ </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {equipmentList.map((item, idx) => (
@@ -1383,7 +1383,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                 장비 규격 추가 (클릭 시 수량 증가):
-              </span>
+ </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {EQUIPMENT_SPEC_MATRIX.map(spec => {
                   const existing = equipmentList.find(e => e.modelName === spec.modelName);
@@ -1410,7 +1410,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                       {existing && (
                         <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 800 }}>
                           [{existing.qty}대]
-                        </span>
+ </span>
                       )}
                     </button>
                   );
@@ -1518,8 +1518,8 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                 onClick={() => handleConfirmDateTime(customDate, customTime, false)}
                 style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 700 }}
               >
-                일시 확정 및 옵션 이동 ➔
-              </button>
+                일시 확정 및 옵션 이동 
+ </button>
             </div>
           </div>
         )}
@@ -1547,7 +1547,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                       cursor: 'pointer'
                     }}
                   >
-                    {opt} {isSelected ? '✓' : ''}
+                    {opt} {isSelected ? '' : ''}
                   </button>
                 );
               })}
@@ -1622,8 +1622,8 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
               onClick={handleFinishOptions}
               style={{ padding: '7px 14px', fontSize: '12.5px', fontWeight: 700, alignSelf: 'flex-end' }}
             >
-              확인 단계로 이동 ➔
-            </button>
+              확인 단계로 이동 
+ </button>
           </div>
         )}
 
@@ -1643,7 +1643,7 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
               }}>
                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <AlertTriangle size={13} /> 현장 기억 옵션과 변경점이 감지되었습니다.
-                </div>
+ </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     type="button"
@@ -1663,8 +1663,8 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                       cursor: 'pointer'
                     }}
                   >
-                    🟢 현장 기본값 저장 (유지)
-                  </button>
+                     현장 기본값 저장 (유지)
+ </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1683,15 +1683,15 @@ export const SmartDispatchConversationalStudio: React.FC<SmartDispatchConversati
                       cursor: 'pointer'
                     }}
                   >
-                    🔵 이번만 1회성 적용 (보존)
-                  </button>
+                     이번만 1회성 적용 (보존)
+ </button>
                 </div>
               </div>
             )}
 
             <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CheckCircle2 size={13} /> 우측 폼에 모든 정보가 동기화되었습니다. 우측 상단의 [출고지시] 버튼으로 저장하세요.
-            </div>
+ </div>
           </div>
         )}
 

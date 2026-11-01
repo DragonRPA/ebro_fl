@@ -128,7 +128,7 @@ export const FieldAsCreateModal: React.FC<FieldAsCreateModalProps> = ({
           <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Wrench size={18} color="#2563eb" />
             신규 현장 AS 접수 등록
-          </h3>
+ </h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
             <X size={20} />
           </button>
@@ -177,8 +177,8 @@ export const FieldAsCreateModal: React.FC<FieldAsCreateModalProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                현장 도로명 주소 (T맵 연동)
-              </label>
+                현장 도로명 주소
+ </label>
               {siteName.trim() && (
                 <button
                   type="button"
@@ -208,8 +208,8 @@ export const FieldAsCreateModal: React.FC<FieldAsCreateModalProps> = ({
                     fontWeight: 600
                   }}
                 >
-                  📍 마스터 주소 자동적용
-                </button>
+                   마스터 주소 자동적용
+ </button>
               )}
             </div>
             <input
@@ -240,8 +240,8 @@ export const FieldAsCreateModal: React.FC<FieldAsCreateModalProps> = ({
                       fontWeight: 600
                     }}
                   >
-                    🔍 계약/현장/주소 자동완성
-                  </button>
+                     계약/현장/주소 자동완성
+ </button>
                 )}
               </div>
               <input
@@ -339,7 +339,7 @@ export const FieldAsCreateModal: React.FC<FieldAsCreateModalProps> = ({
               style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}
             >
               취소
-            </button>
+ </button>
             <button
               type="submit"
               disabled={isSubmitting}

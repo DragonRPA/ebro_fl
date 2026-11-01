@@ -358,7 +358,7 @@ export async function generateRepairClaimPdfBytes(
         ctx.fillStyle = '#475569';
         ctx.font = `600 17px ${FONT_FAMILY}`;
         const subText = isAdjusted
-          ? `최초 예상 수리비 합계: ${formatKRW(meta.initialEstimatedAmount)}  ➔  조정·합의 수리비 합계: ${formatKRW(meta.agreedAmount)}`
+          ? `최초 예상 수리비 합계: ${formatKRW(meta.initialEstimatedAmount)} 조정·합의 수리비 합계: ${formatKRW(meta.agreedAmount)}`
           : `예상 수리비 합계: ${formatKRW(meta.initialEstimatedAmount)}`;
         ctx.fillText(subText, 92, currentY + 72);
 

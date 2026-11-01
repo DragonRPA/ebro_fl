@@ -24,19 +24,19 @@ export const WEATHER_REGIONS: WeatherRegion[] = [
 
 export function getWeatherInfo(code: number) {
   if (code === 0) {
-    return { text: '맑음', emoji: '☀️', color: '#F59E0B', icon: <Sun size={18} color="#F59E0B" /> };
+    return { text: '맑음', emoji: '', color: '#F59E0B', icon: <Sun size={18} color="#F59E0B" /> };
   } else if (code >= 1 && code <= 3) {
-    return { text: code === 1 ? '대체로 맑음' : code === 2 ? '구름 조금' : '흐림', emoji: '⛅', color: 'var(--text-muted)', icon: <CloudSun size={18} color="#64748B" /> };
+    return { text: code === 1 ? '대체로 맑음' : code === 2 ? '구름 조금' : '흐림', emoji: '', color: 'var(--text-muted)', icon: <CloudSun size={18} color="#64748B" /> };
   } else if (code === 45 || code === 48) {
-    return { text: '안개', emoji: '🌫️', color: 'var(--text-muted)', icon: <CloudFog size={18} color="#94A3B8" /> };
+    return { text: '안개', emoji: '', color: 'var(--text-muted)', icon: <CloudFog size={18} color="#94A3B8" /> };
   } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-    return { text: '비', emoji: '🌧️', color: 'var(--primary)', icon: <CloudRain size={18} color="#3B82F6" /> };
+    return { text: '비', emoji: '', color: 'var(--primary)', icon: <CloudRain size={18} color="#3B82F6" /> };
   } else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-    return { text: '눈', emoji: '❄️', color: 'var(--info)', icon: <Snowflake size={18} color="#38BDF8" /> };
+    return { text: '눈', emoji: '', color: 'var(--info)', icon: <Snowflake size={18} color="#38BDF8" /> };
   } else if (code >= 95) {
-    return { text: '뇌우', emoji: '⚡', color: '#8B5CF6', icon: <CloudLightning size={18} color="#8B5CF6" /> };
+    return { text: '뇌우', emoji: '', color: '#8B5CF6', icon: <CloudLightning size={18} color="#8B5CF6" /> };
   }
-  return { text: '구름', emoji: '☁️', color: 'var(--text-muted)', icon: <Cloud size={18} color="#64748B" /> };
+  return { text: '구름', emoji: '', color: 'var(--text-muted)', icon: <Cloud size={18} color="#64748B" /> };
 }
 
 interface CurrentWeatherData {
@@ -185,9 +185,9 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
         onMouseLeave={e => (e.currentTarget.style.borderColor = compact ? '#334155' : 'var(--border-color)')}
       >
         {loading ? (
-          <span style={{ fontSize: compact ? '10.5px' : '11.5px', color: 'var(--text-muted)' }}>🌤️ 날씨 조회중</span>
+          <span style={{ fontSize: compact ? '10.5px' : '11.5px', color: 'var(--text-muted)' }}> 날씨 조회중</span>
         ) : error || !current || !weatherMeta ? (
-          <span style={{ fontSize: compact ? '10.5px' : '11.5px', color: 'var(--text-muted)' }}>🌤️ 날씨 ({selectedRegion.name})</span>
+          <span style={{ fontSize: compact ? '10.5px' : '11.5px', color: 'var(--text-muted)' }}> 날씨 ({selectedRegion.name})</span>
         ) : (
           <>
             <span style={{ display: 'flex', alignItems: 'center', transform: compact ? 'scale(0.85)' : 'none' }}>{weatherMeta.icon}</span>
@@ -306,11 +306,11 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>{selectedRegion.name} 현재 기온</div>
                     <div style={{ fontSize: '32px', fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.1 }}>
                       {current.temp}°C
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: weatherMeta.color }}>{weatherMeta.text} {weatherMeta.emoji}</span>
+ <span style={{ fontSize: '14px', fontWeight: 600, color: weatherMeta.color }}>{weatherMeta.text} {weatherMeta.emoji}</span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '6px' }}>
                       체감 {current.apparentTemp}°C · 습도 {current.humidity}% · 풍속 {current.windSpeed} m/s
-                    </div>
+ </div>
                   </div>
                   <div style={{ transform: 'scale(1.7)', transformOrigin: 'center right', paddingRight: '12px' }}>
                     {weatherMeta.icon}
@@ -321,7 +321,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Clock size={15} color="#38bdf8" /> 시간대별 예보 (24시간)
-                  </div>
+ </div>
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
                     {hourly.map((h, idx) => {
                       const hMeta = getWeatherInfo(h.weatherCode);
@@ -339,7 +339,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
                           <div style={{ margin: '4px 0', display: 'flex', justifyContent: 'center' }}>{hMeta.icon}</div>
                           <div style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>{h.temp}°C</div>
                           {h.pop > 0 && (
-                            <div style={{ fontSize: '10px', color: '#38bdf8', marginTop: '2px', fontWeight: 700 }}>☔ {h.pop}%</div>
+                            <div style={{ fontSize: '10px', color: '#38bdf8', marginTop: '2px', fontWeight: 700 }}> {h.pop}%</div>
                           )}
                         </div>
                       );
@@ -351,7 +351,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Calendar size={15} color="#38bdf8" /> 주간 예보 (7일)
-                  </div>
+ </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {daily.map((d, idx) => {
                       const dMeta = getWeatherInfo(d.weatherCode);
@@ -374,7 +374,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ compact = false, s
                             {dMeta.icon}
                             <span style={{ fontSize: '12px', color: dMeta.color, fontWeight: 600 }}>{dMeta.text}</span>
                             {d.popMax > 0 && (
-                              <span style={{ fontSize: '11px', color: '#38bdf8', marginLeft: '4px', fontWeight: 700 }}>☔ {d.popMax}%</span>
+                              <span style={{ fontSize: '11px', color: '#38bdf8', marginLeft: '4px', fontWeight: 700 }}> {d.popMax}%</span>
                             )}
                           </div>
                           <div style={{ fontWeight: 700, fontSize: '12.5px', whiteSpace: 'nowrap' }}>

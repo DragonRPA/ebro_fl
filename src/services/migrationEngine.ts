@@ -233,7 +233,7 @@ export function filterRecordBySchema(table: string, record: any): any {
       filtered[col] = record[col];
     }
   });
-  // 🛡️ 멀티테넌트 필수 격리 필드 보존: tenant_id가 존재하면 화이트리스트와 무관하게 100% 보존
+  //  멀티테넌트 필수 격리 필드 보존: tenant_id가 존재하면 화이트리스트와 무관하게 100% 보존
   if (record.tenant_id !== undefined) {
     filtered.tenant_id = record.tenant_id;
   }
@@ -570,7 +570,7 @@ export async function exportFullDatabaseBackup(): Promise<{ backupData: Record<s
 }
 
 /**
- * 🛡️ [원클릭 DB 복원] 백업 JSON 데이터를 외래키 정방향 위상 정렬 순서로 100% 원상 복원
+ *  [원클릭 DB 복원] 백업 JSON 데이터를 외래키 정방향 위상 정렬 순서로 100% 원상 복원
  */
 export async function restoreFullDatabaseBackup(
   backupData: Record<string, any[]>,
@@ -702,7 +702,7 @@ export async function resetAllDatabaseTables(
   keepAdmin: boolean = true,
   targetTenantId?: string
 ): Promise<{ success: boolean; message: string }> {
-  // 🛡️ 매뉴얼(equipment_manuals, system_manuals, manual_annotations, legal_notice_templates),
+  //  매뉴얼(equipment_manuals, system_manuals, manual_annotations, legal_notice_templates),
   // 중앙 테넌트 원장 및 공식메일설정, 관리자 계정은 초기화 대상에서 영구 제외
   const DELETION_ORDER = [
     'monthly_income_statements',
@@ -770,7 +770,7 @@ export async function resetAllDatabaseTables(
       return { success: false, message: '초기화 대상 테넌트 식별자가 지정되지 않아 안전을 위해 작업을 원천 차단했습니다.' };
     }
 
-    // 🛡️ 유령 초기화 방지: DB에 파편화된 모든 테넌트 ID 변형을 포괄 매칭
+    //  유령 초기화 방지: DB에 파편화된 모든 테넌트 ID 변형을 포괄 매칭
     const tenantVariants = Array.from(new Set([
       scopeId,
       'tenant-' + scopeId.replace(/^tenant-/, ''),
@@ -783,7 +783,7 @@ export async function resetAllDatabaseTables(
 
     if (supabase) {
       for (const table of DELETION_ORDER) {
-        // 🛡️ 멀티테넌트 안전 삭제: 타 테넌트 침범 없이 대상 테넌트(후보 ID 포함) 레코드 일괄 안전 삭제
+        //  멀티테넌트 안전 삭제: 타 테넌트 침범 없이 대상 테넌트(후보 ID 포함) 레코드 일괄 안전 삭제
         const { error } = await supabase.from(table).delete().in('tenant_id', tenantVariants);
         if (error) {
           const msg = error.message || '';
@@ -791,7 +791,7 @@ export async function resetAllDatabaseTables(
             throw new Error(`[DB 초기화 삭제 실패] ${table}: ${msg}`);
           }
         }
-        // 🛡️ 테넌트 미지정 레거시 항목도 함께 안전 소탕
+        //  테넌트 미지정 레거시 항목도 함께 안전 소탕
         if (table === 'inspection_checklist_items' || table === 'site_masters' || table === 'customer_sites') {
           await supabase.from(table).delete().is('tenant_id', null);
         }
@@ -901,7 +901,7 @@ function getCol(row: any[], map: Map<string, number>, keys: string[], fallbackId
   return row[fallbackIdx];
 }
 
-// 🔍 엑셀 워크북 내 유연한 시트 탐색기 (공백 무시 및 다의어 방지 정밀 매칭)
+//  엑셀 워크북 내 유연한 시트 탐색기 (공백 무시 및 다의어 방지 정밀 매칭)
 export function findSheet(wb: XLSX.WorkBook, patterns: string[]): XLSX.WorkSheet | undefined {
   const sheetNames = wb.SheetNames || [];
   for (const pat of patterns) {
@@ -951,7 +951,7 @@ export function parseInitialExcelWorkbook(
   const siteMap = new Map<string, any>();
   const contactMap = new Map<string, any>();
 
-  // 🌟 [보강 1] 내장된 표준 제원 마스터를 선제 등록하여 제원표/안전문서 자동 연결
+  //  [보강 1] 내장된 표준 제원 마스터를 선제 등록하여 제원표/안전문서 자동 연결
   let productSeqCounter = 1000;
   const generateUniqueProductId = () => {
     return `PROD-${String(++productSeqCounter).padStart(7, '0')}`;
@@ -1459,7 +1459,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
       if (mKey) canonicalProductKeyMap.set(mKey, targetModel);
     }
 
-    // 💡 [단일 진실의 원천]: '반납일'이라는 범용 명칭과 하드코딩된 컬럼 인덱스(19)가 '고객사 현장 반납일'과 충돌하여 
+    //  [단일 진실의 원천]: '반납일'이라는 범용 명칭과 하드코딩된 컬럼 인덱스(19)가 '고객사 현장 반납일'과 충돌하여 
     // 멀쩡한 임차 자산을 '임차처 반납완료'로 오인하게 만드는 치명적 버그 수정.
     const leaseVendorName = getCol(r, mainHeaderMap, ['임차업체', '매입처', '임차처'], -1) ? String(getCol(r, mainHeaderMap, ['임차업체', '매입처', '임차처'], -1)).trim() : '';
     const leasePrice = sanitizeNumber(getCol(r, mainHeaderMap, ['임차단가', '매입단가'], -1));
@@ -1631,9 +1631,9 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
 
     // ── 계약 그룹핑: 헌장 원칙에 따라 동일 (고객사 + 현장) = 단 1개 계약 ──
     // 동일 현장의 장비는 출고일자가 다르더라도 단일 계약에 묶이며 자산별로 독립 라이프사이클을 가짐
-    // 🌟 [방어 가드]: 실물 장비 식별자가 전무한 행은
+    //  [방어 가드]: 실물 장비 식별자가 전무한 행은
     // 유상수리비, 안전옵션/부품비, 운송비, 전월 미수금 등 단순 부대비용/정산 청구 행임.
-    // ➔ 기존 (고객+현장) 계약이 없을 때 빈 껍데기 계약이나
+    //  기존 (고객+현장) 계약이 없을 때 빈 껍데기 계약이나
     //    장비 슬롯을 생성하지 않고, 청구서로만 직행시켜
     //    빈 계약 생성·장비 할당 대기 화면 잔류 및 소급 청구 왜곡을 원천 차단함.
     const isRealAssetRow = Boolean(ownAssetNo || leaseAssetNo || rawModel);
@@ -1755,7 +1755,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
       }
     }
 
-    // 🌟 [보강 2] 자산 ➔ 계약정보 양방향 동기화 바인딩
+    //  [보강 2] 자산  계약정보 양방향 동기화 바인딩
     // 계약기간 만료 자산도 연장/반납 미결 상태이므로 RENTED + 현장 바인딩 유지.
     // 엑셀 Col[8]='종료' 명시 시에만 COMPLETED/RENTED_RETURNED 처리.
     if (matchedAsset) {
@@ -1868,7 +1868,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
           });
         }
       } else if (!isRealAssetRow) {
-        // 🌟 실물 장비가 아닌 단독 부대비용 행 (수리비, 미수금, 옵션비 등)
+        //  실물 장비가 아닌 단독 부대비용 행 (수리비, 미수금, 옵션비 등)
         custBill.details.push({
           contractAssetId: null,
           assetId: null,
@@ -2075,7 +2075,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
             billingDetails.push(d);
           });
 
-          // 🌟 계약 이력에 정규 소급 청구 생성 이력 1:1 무누락 적재
+          //  계약 이력에 정규 소급 청구 생성 이력 1:1 무누락 적재
           contractHistories.push({
             id: `CH-HIST-${contract.id.replace(/[^a-zA-Z0-9]/g, '')}-${ymStr.replace('-', '')}`,
             contractId: contract.id,
@@ -2161,7 +2161,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
 
 
   // ────────────────────────────────────────────────────────────────
-  // 🌟 [방어 가드 - SSOT] ContractAsset 슬롯 병합 로직 (중복 행 제거)
+  //  [방어 가드 - SSOT] ContractAsset 슬롯 병합 로직 (중복 행 제거)
   // 초기 엑셀 데이터가 청구 목적으로 8, 9월 등으로 나뉘어 있어도, 
   // 물리적 투입 이력인 ContractAsset은 동일 계약 + 동일 장비에 대해 단일 슬롯으로 통합되어야 함.
   // ────────────────────────────────────────────────────────────────
@@ -2218,7 +2218,7 @@ contact: getCol(r, custHeaderMap, ['청구담당자'], 10) ? String(getCol(r, cu
     }
   }
 
-  // 🌟 [방어 가드]: 체결 자산이 단 1건도 없는 빈 껍데기 계약 및 연관 이력 제거
+  //  [방어 가드]: 체결 자산이 단 1건도 없는 빈 껍데기 계약 및 연관 이력 제거
   const validContractIds = new Set(contractAssets.map(ca => ca.contractId));
   for (let i = contracts.length - 1; i >= 0; i--) {
     if (!validContractIds.has(contracts[i].id)) {
@@ -2296,13 +2296,13 @@ async function batchUpsertChunked(
 ) {
   if (!records || records.length === 0) return;
 
-  // 🌟 스키마 화이트리스트로 불필요한 클라이언트 가상 필드 사전 정제
+  //  스키마 화이트리스트로 불필요한 클라이언트 가상 필드 사전 정제
   const sanitizedRecords = records.map(r => filterRecordBySchema(table, r));
 
-  // 🔒 충돌 타겟 키 결정 (products는 UNIQUE(modelName)을 우선 충돌 키로 설정)
+  //  충돌 타겟 키 결정 (products는 UNIQUE(modelName)을 우선 충돌 키로 설정)
   const conflictKey = customConflictKey || (table === 'products' ? 'modelName' : 'id');
 
-  // 🔒 conflictKey 기준 중복 제거 — 동일 키가 두 번 이상 존재하면 PostgreSQL UPSERT에서
+  //  conflictKey 기준 중복 제거 — 동일 키가 두 번 이상 존재하면 PostgreSQL UPSERT에서
   // "ON CONFLICT DO UPDATE command cannot affect row a second time" 에러 발생
   const dedupMap = new Map<string, any>();
   for (const r of sanitizedRecords) {
@@ -2345,10 +2345,10 @@ export async function ingestExcelInitialData(
     const scopeId = targetTenantId || 'giyeonlift';
 
     // Step 0: 기존 비즈니스 데이터 정리 (대상 테넌트 한정 안전 삭제)
-    // 🛡️ 멀티테넌트 원칙: 타 테넌트의 데이터는 절대 건드리지 않고, 오직 scopeId 테넌트 행만 격리 삭제
+    //  멀티테넌트 원칙: 타 테넌트의 데이터는 절대 건드리지 않고, 오직 scopeId 테넌트 행만 격리 삭제
     onProgress?.(0, totalSteps, `0/13: [${scopeId}] 기존 데이터 정리 중 (해당 테넌트 격리 삭제)...`);
     
-    // 🛡️ 유령 초기화 방지: DB에 파편화된 모든 테넌트 ID 변형을 포괄 매칭
+    //  유령 초기화 방지: DB에 파편화된 모든 테넌트 ID 변형을 포괄 매칭
     const tenantVariants = Array.from(new Set([
       scopeId,
       'tenant-' + scopeId.replace(/^tenant-/, ''),
@@ -2397,7 +2397,7 @@ export async function ingestExcelInitialData(
       }
     }
 
-    // 🛡️ 멀티테넌트 필수: 파싱된 모든 엔티티에 scopeId (tenant_id) 강제 일괄 주입
+    //  멀티테넌트 필수: 파싱된 모든 엔티티에 scopeId (tenant_id) 강제 일괄 주입
     const injectTenantId = (items: any[]) => {
       if (!Array.isArray(items)) return;
       items.forEach(item => {
@@ -2448,7 +2448,7 @@ export async function ingestExcelInitialData(
     await batchUpsertChunked('customer_sites', parsed.customerSites, 100);
     await batchUpsertChunked('customer_contacts', parsed.customerContacts, 100);
 
-    // Step 4.9: 🛡️ [무결성 절대 보장] assets -> products 외래키 100% 선행 검증 및 자동 등록
+    // Step 4.9:  [무결성 절대 보장] assets -> products 외래키 100% 선행 검증 및 자동 등록
     onProgress?.(4.9, totalSteps, `자산 모델 외래키 무결성 선행 검증 및 누락 모델 자동 등록 중...`);
 
     // 1) parsed.assets 전수 모델명 정규화
@@ -2897,7 +2897,7 @@ export function parseDispatchExcelWorkbook(
     }
   }
 
-  // 🚚 2026년 이후 시트('26년'으로 시작)에서 등장한 고유 운송사 마스터 목록 추출
+  //  2026년 이후 시트('26년'으로 시작)에서 등장한 고유 운송사 마스터 목록 추출
   const nowIso = new Date().toISOString();
   const tcom2026Names = Array.from(new Set(
     rows
@@ -3005,12 +3005,12 @@ export async function ingestDispatchData(
   };
 }
 
-/** 🚚 배차 이력 업로드 데이터 일괄 삭제 (롤백) */
+/**  배차 이력 업로드 데이터 일괄 삭제 (롤백) */
 export async function rollbackDispatchData(
   onProgress?: (msg: string) => void
 ): Promise<{ success: boolean; message: string; deletedCount: number }> {
   try {
-    onProgress?.('배차 이력 업로드 데이터(DEL-HIST-*) 조회 중...');
+    onProgress?.('배차 이력 업로드 데이터 조회 중...');
     let deletedDeliveriesCount = 0;
 
     if (supabase) {
@@ -3070,8 +3070,8 @@ export async function rollbackDispatchData(
 }
 
 /**
- * 💡 과거 소급 청구서 독립 선택 생성 및 적재 (기능 테스트 및 선택적 실행용)
- * 🌟 [전사 표준 헌장 4.1 준수] 소급 청구 생성 시 자산별 누적렌탈료 1원도 오차 없이 정밀 가산 및 기존 소급액 롤백
+ *  과거 소급 청구서 독립 선택 생성 및 적재 (기능 테스트 및 선택적 실행용)
+ *  [전사 표준 헌장 4.1 준수] 소급 청구 생성 시 자산별 누적렌탈료 1원도 오차 없이 정밀 가산 및 기존 소급액 롤백
  */
 export async function generateAndIngestHistoricalBillingsDirect(
   contracts: any[],
@@ -3109,14 +3109,14 @@ export async function generateAndIngestHistoricalBillingsDirect(
   const billings: any[] = [];
   const billingDetails: any[] = [];
   const contractHistories: any[] = [];
-  const newAssetAdditions = new Map<string, number>(); // 🌟 자산별 신규 소급 렌탈료 집계 맵 (헌장 4.1)
+  const newAssetAdditions = new Map<string, number>(); //  자산별 신규 소급 렌탈료 집계 맵 (헌장 4.1)
   let bdSeq = 1;
   let totalSum = 0;
 
   const [rangeEndY, rangeEndM] = range.end.split('-').map(Number);
 
   for (const contract of contracts) {
-    if ((contract.contractType || 'RENTAL') === 'SALE') continue; // 🚫 자산 매각 계약 소급 렌탈 청구 제외
+    if ((contract.contractType || 'RENTAL') === 'SALE') continue; //  자산 매각 계약 소급 렌탈 청구 제외
     const caList = contractAssetsByContract.get(contract.id) || [];
     if (caList.length === 0) continue;
 
@@ -3185,7 +3185,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
 
         contractBillTotal += itemAmount;
 
-        // 🌟 자산별 소급 렌탈료 누적 합산 (헌장 4.1)
+        //  자산별 소급 렌탈료 누적 합산 (헌장 4.1)
         if (ca.assetId) {
           newAssetAdditions.set(ca.assetId, (newAssetAdditions.get(ca.assetId) || 0) + itemAmount);
         }
@@ -3228,7 +3228,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
           billingDetails.push(d);
         });
 
-        // 🌟 계약 이력에 소급 청구 생성 이력 1:1 무누락 생성
+        //  계약 이력에 소급 청구 생성 이력 1:1 무누락 생성
         contractHistories.push({
           id: `CH-HIST-${contract.id.replace(/[^a-zA-Z0-9]/g, '')}-${ymStr.replace('-', '')}`,
           contractId: contract.id,
@@ -3253,7 +3253,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
   const oldAssetDeductions = new Map<string, number>();
 
   try {
-    // 🧹 [클린업 단계] 기존 파편화 소급 청구서, 상세, 계약이력 완전 삭제 및 기존 자산 기여액 수집 (롤백용)
+    //  [클린업 단계] 기존 파편화 소급 청구서, 상세, 계약이력 완전 삭제 및 기존 자산 기여액 수집 (롤백용)
     if (supabase) {
       // 기존 소급 청구서에 연결된 품목 금액 집계 (자산 cumRentalFee 차감 롤백용)
       const { data: oldHistBills } = await supabase.from('billings').select('id').like('id', 'BILL-HIST-%');
@@ -3292,7 +3292,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
           await supabase.from('billings').delete().in('id', chunk);
         }
       }
-      // 🛡️ 오직 소급 생성된 계약이력(CH-HIST-%)만 정확히 한정 삭제 (정상 업무 이력 보존)
+      //  오직 소급 생성된 계약이력(CH-HIST-%)만 정확히 한정 삭제 (정상 업무 이력 보존)
       await supabase.from('contract_history').delete().like('id', 'CH-HIST-%');
     } else {
       const dbAny = db as any;
@@ -3329,7 +3329,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
       await batchUpsertChunked('contract_history', contractHistories, 100, msg => onProgress?.(4, 5, msg));
     }
 
-    // 🌟 [5단계: 자산 원장 재정산 및 보존 (헌장 4.1)]
+    //  [5단계: 자산 원장 재정산 및 보존 (헌장 4.1)]
     let updatedAssetCount = 0;
     if (assets && assets.length > 0) {
       onProgress?.(5, 5, '자산별 누적렌탈료 정밀 재집계 및 동기화 중...');
@@ -3391,7 +3391,7 @@ export async function generateAndIngestHistoricalBillingsDirect(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 🌟 밴드 출고요청 텍스트 파서 & 유효 계약처 기본 요구사항(옵션/보양/스펙) 마스터 동기화 엔진
+//  밴드 출고요청 텍스트 파서 & 유효 계약처 기본 요구사항(옵션/보양/스펙) 마스터 동기화 엔진
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ParsedDispatchPost {
@@ -3475,7 +3475,7 @@ export interface DispatchAnalysisResult {
 }
 
 /**
- * 🛠️ [옵션 수량 제거 및 순수 품목명 정규화 헬퍼]
+ *  [옵션 수량 제거 및 순수 품목명 정규화 헬퍼]
  * 출고요청 본문이나 엑셀 비고에서 장비 대수(n대)에 비례하여 발생한 수량 표기
  * (예: '협착난간대 * 6', '감지봉 4EA', '중간발판 3개', '(4EA)', '과상승방지봉(4)', '2개씩', '2대씩', 'x 2')를
  * 정밀하게 제거하고 순수 품목/사양명만 남깁니다.
@@ -3522,7 +3522,7 @@ export function cleanOptionItem(raw: string): string {
 }
 
 /**
- * 🛠️ [옵션 목록 일괄 정규화 및 중복 제거]
+ *  [옵션 목록 일괄 정규화 및 중복 제거]
  * 콤마/슬래시/파이프/줄바꿈 또는 배열로 입력된 복수 옵션을 각각 순수 품목명으로 정제한 후
  * Set을 통해 중복을 완벽히 제거하여 표준 콤마 구분 문자열로 결합합니다.
  */
@@ -3569,7 +3569,7 @@ export function parseDispatchHistoryText(rawText: string): ParsedDispatchPost[] 
     const m = line.match(postHeaderRe);
     if (m) {
       const timeStr = m[1];
-      // 💡 [네이버 밴드 중복 헤더 방지] 동일한 시간 문자열의 헤더가 3줄 이내에 연달아 등장하면 중복 병합
+      //  [네이버 밴드 중복 헤더 방지] 동일한 시간 문자열의 헤더가 3줄 이내에 연달아 등장하면 중복 병합
       if ((idx - lastIdx) <= 3 && timeStr === lastHeaderTime) {
         return;
       }
@@ -3623,7 +3623,7 @@ export function parseDispatchHistoryText(rawText: string): ParsedDispatchPost[] 
 
     const fullContentText = rawContent.join('\n');
 
-    // 💡 밴드 멤버 가입/기념일 알림글은 출고요청이 아니므로 배제
+    //  밴드 멤버 가입/기념일 알림글은 출고요청이 아니므로 배제
     if (fullContentText.includes('환영해주세요') || fullContentText.includes('주년입니다') || header.includes('멤버를 환영')) {
       return;
     }
@@ -3743,7 +3743,7 @@ export function parseDispatchHistoryText(rawText: string): ParsedDispatchPost[] 
       } else if (
         /^(?:배터리|트레이|주행속도|오버로드|조이스틱|탑승구|미끄럼방지|소화기함|타이어|정밀등|점멸등|작업높이|하부상승|확장대|확장부|비상정지|비상하강|시저구간|풋스위치|감지봉|함석|아크릴|철망)/i.test(l)
       ) {
-        // 🌟 [무압축 전수 보존 및 순수 품목명 정제] 세부 옵션 불릿 라인을 수량 없이 순수 품목으로 정제하여 수집
+        //  [무압축 전수 보존 및 순수 품목명 정제] 세부 옵션 불릿 라인을 수량 없이 순수 품목으로 정제하여 수집
         const cleanedBullet = cleanOptionItem(l);
         if (cleanedBullet && !paidOptions.includes(cleanedBullet)) {
           paidOptions = paidOptions ? `${paidOptions}, ${cleanedBullet}` : cleanedBullet;
@@ -3768,7 +3768,7 @@ export function parseDispatchHistoryText(rawText: string): ParsedDispatchPost[] 
       }
     });
 
-    // 🌟 [고객 요구사항 순수 통합] 본문 키워드 매칭 사양을 기본 유상옵션과 기본 보양작업으로 자동 통합
+    //  [고객 요구사항 순수 통합] 본문 키워드 매칭 사양을 기본 유상옵션과 기본 보양작업으로 자동 통합
     const cleanedText = fullContentText.replace(/\s+/g, '');
     STANDARD_SPECS.forEach(spec => {
       const isMatched = spec.keywords.some(kw => cleanedText.includes(kw.replace(/\s+/g, '')));
@@ -4171,7 +4171,7 @@ contact: (ct as any).contact,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 🛠️ [AS 이력 전수 분석 & 정비 마스터 일괄 동기화 엔진]
+//  [AS 이력 전수 분석 & 정비 마스터 일괄 동기화 엔진]
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ParsedBandAsRecord {
@@ -4205,7 +4205,7 @@ contact: string;
   resolutionType: 'REPAIR_DONE' | 'REVISIT_NEEDED' | 'GUIDED_END';
   actionTaken: string;
   isSingleAssetGuessed: boolean;
-  isAssetBacktracked?: boolean; // 🌟 자산 마스터 기준 현장/고객사 역추적 성공 여부
+  isAssetBacktracked?: boolean; //  자산 마스터 기준 현장/고객사 역추적 성공 여부
   inspectionItemId?: string;
   inspectionItemCode?: string;
   degradationScore?: number;
@@ -4216,7 +4216,7 @@ export interface BandAsAnalysisResult {
   uniqueAssetsCount: number;
   matchedContractCount: number;
   singleAssetGuessedCount: number;
-  assetBacktrackedSiteCount: number; // 🌟 자산 마스터 기준 현장/고객사 역추적 성공 건수
+  assetBacktrackedSiteCount: number; //  자산 마스터 기준 현장/고객사 역추적 성공 건수
   completedCount: number;
   revisitCount: number;
   guidedCount: number;
@@ -4281,7 +4281,7 @@ contact: string; raw: string; address?: string }[] {
         if (j - i > 40) break;
       }
 
-      // 🛡️ 작성자 닉네임에 '현장명:'이 포함된 경우(예: '현장명: 용인 SK하이닉스') 현장명 즉시 파싱 및 작성자 이름 정규화
+      //  작성자 닉네임에 '현장명:'이 포함된 경우(예: '현장명: 용인 SK하이닉스') 현장명 즉시 파싱 및 작성자 이름 정규화
       let cleanAuthor = author;
       let siteFromAuthor = '';
       if (['현장명:', '현장명 :', '현장 :'].some(k => author.includes(k))) {
@@ -4295,7 +4295,7 @@ contact: string; raw: string; address?: string }[] {
       const full = collectedLines.join(' ');
       const combinedWithAuthor = `${author} ${full}`;
 
-      // 🛡️ 다단계 정밀 일자 파싱 (하드코딩 배제)
+      //  다단계 정밀 일자 파싱 (하드코딩 배제)
       let dateStr = '';
       // 1순위: 이전 줄 (웹 밴드 복사 시 '2026년 9월 4일 오후 2:18 게시글'이 멤버/리더 바로 윗줄에 위치)
       dateStr = dateExtractFn(prevLine) || '';
@@ -4340,7 +4340,7 @@ contact: string; raw: string; address?: string }[] {
 
         if (assetNo.startsWith(':')) assetNo = assetNo.substring(1).trim();
 
-        // 🛡️ 장비번호 미인식 시 대체 키워드 및 패턴 매칭
+        //  장비번호 미인식 시 대체 키워드 및 패턴 매칭
         if (!assetNo || assetNo === '현장확인') {
           const altAsset = extractKeywordSection(combinedWithAuthor, ['장비번호 :', '장비번호:', '장비번호', '장비 :', '장비:', '호기 :', '호기:', '관리 :'], ['고장내용', '접수자:', '위치']);
           if (altAsset) {
@@ -4373,7 +4373,7 @@ contact: string; raw: string; address?: string }[] {
     i++;
   }
 
-  // 🛡️ 날짜 미인식 레코드 대상 전후 인접 게시글 순차 보간
+  //  날짜 미인식 레코드 대상 전후 인접 게시글 순차 보간
   for (let idx = 0; idx < records.length; idx++) {
     if (!records[idx].date) {
       let prevDate = '';
@@ -4392,7 +4392,7 @@ contact: string; raw: string; address?: string }[] {
 }
 
 // ──────────────────────────────────────────────
-// 🛠️ AS 유사어 클러스터링 및 정비항목 마스터 자동 추출 엔진
+//  AS 유사어 클러스터링 및 정비항목 마스터 자동 추출 엔진
 // ──────────────────────────────────────────────
 export interface AsClusterRule {
   clusterId: string;
@@ -4672,7 +4672,7 @@ export function buildInspectionMasterFromAsRecords(
   const checklistItems: InspectionChecklistItem[] = [];
 
   activeClusters.forEach((c, idx) => {
-    // 🌟 핵심 원칙: 유사 표현 중 빈도수가 가장 높은 쪽으로 공식 명칭 정의!
+    //  핵심 원칙: 유사 표현 중 빈도수가 가장 높은 쪽으로 공식 명칭 정의!
     const sortedPhrases = Array.from(c.phraseFreq.entries()).sort((a, b) => b[1] - a[1]);
     const representativeName = sortedPhrases[0][0];
 
@@ -4778,7 +4778,7 @@ export function analyzeBandAsHistory(
 
     const actionText = isCompleted ? '현장 정비 및 조치 완료' : isRevisit ? '익일 현장 재방문 접수' : '전화 설명 및 안내 종결';
 
-    // 1. 작성자 ➔ 정비사 매칭
+    // 1. 작성자  정비사 매칭
     const authorName = (post.author || '').trim();
     const matchedUser = (users || []).find((u: any) => u.name && authorName && (u.name.trim() === authorName || authorName.includes(u.name.trim())));
     const mechanicId = matchedUser?.id || '';
@@ -4822,7 +4822,7 @@ export function analyzeBandAsHistory(
       matchedAsset = (assets || []).find((a: any) => a.assetNo && a.assetNo.replace(/[^A-Za-z0-9]/g, '').toUpperCase() === cleanNo);
     }
 
-    // 🛡️ 다수 장비번호 기재 시(예: 'G32021, H2494' 또는 'G19113,G19193') 첫 번째 유효 장비로 매칭 시도
+    //  다수 장비번호 기재 시(예: 'G32021, H2494' 또는 'G19113,G19193') 첫 번째 유효 장비로 매칭 시도
     if (!matchedAsset && finalAssetNo && (finalAssetNo.includes(',') || finalAssetNo.includes('/') || finalAssetNo.includes(' '))) {
       const splitNos = finalAssetNo.split(/[,/\s]+/).map(x => x.trim()).filter(Boolean);
       for (const singleNo of splitNos) {
@@ -4857,7 +4857,7 @@ export function analyzeBandAsHistory(
       }
     }
 
-    // 🌟 5. 자산 마스터 및 계약 기반 현장/고객사 역추적
+    //  5. 자산 마스터 및 계약 기반 현장/고객사 역추적
     let isAssetBacktracked = false;
     if (matchedAsset) {
       // 5-1. 현장명이 누락되었거나 미지정현장인 경우, 자산의 현재 현장 정보 역추적
@@ -4936,7 +4936,7 @@ contact: (post as any).contact,
     });
   });
 
-  // 🌟 [핵심] AS 빅데이터 유사어 클러스터링 및 정비항목 마스터 자동 형성 (최빈도 대표 표기어 채택)
+  //  [핵심] AS 빅데이터 유사어 클러스터링 및 정비항목 마스터 자동 형성 (최빈도 대표 표기어 채택)
   const { checklistItems, updatedRecords } = buildInspectionMasterFromAsRecords(parsedRecords, db.consumables || []);
 
   return {
@@ -4972,7 +4972,7 @@ export async function ingestBandAsHistoryDirect(
     existingList.map(t => `${t.siteName}_${t.assetNo}_${t.requestDate}_${(t.issueDescription || t.details || '').slice(0, 20)}`)
   );
 
-  // 🌟 [핵심] 정비항목 마스터가 생성되었으면 Supabase 및 메모리 DB에 먼저 무누락 일괄 적재
+  //  [핵심] 정비항목 마스터가 생성되었으면 Supabase 및 메모리 DB에 먼저 무누락 일괄 적재
   if (analysis.generatedChecklistItems && analysis.generatedChecklistItems.length > 0) {
     onProgress?.(0, total, `정비항목 마스터 (${analysis.generatedChecklistItems.length}개 항목) DB 등록 중...`);
     await batchUpsertChunked('inspection_checklist_items', analysis.generatedChecklistItems, 50);
@@ -5060,7 +5060,7 @@ export async function ingestBandAsHistoryDirect(
           siteId: realSiteId,
           siteName: repairRow.siteName,
           repairId: repairRow.id,
-          memo: `[현장AS] ${r.issue} ➔ ${r.actionTaken} (정비사: ${r.mechanicName})`,
+          memo: `[현장AS] ${r.issue} ${r.actionTaken} (정비사: ${r.mechanicName})`,
           createdAt: new Date().toISOString()
         });
       }
@@ -5073,7 +5073,7 @@ export async function ingestBandAsHistoryDirect(
         contractId: r.matchedContractId,
         changeType: 'AS_SERVICE',
         changeDate: r.date,
-        description: `[과거 현장 AS] ${r.issue} ➔ ${r.actionTaken} (${r.matchedAssetNo || '현장장비'}, 정비사: ${r.mechanicName})`,
+        description: `[과거 현장 AS] ${r.issue} ${r.actionTaken} (${r.matchedAssetNo || '현장장비'}, 정비사: ${r.mechanicName})`,
         createdAt: new Date().toISOString()
       });
     }
@@ -5105,17 +5105,17 @@ export async function ingestBandAsHistoryDirect(
 
   return {
     success: true,
-    message: `🎉 밴드 과거 AS 이력 총 ${importedCount.toLocaleString()}건이 정비 마스터 및 자산/계약 이력에 성공적으로 일괄 적재되었습니다.`,
+    message: ` 밴드 과거 AS 이력 총 ${importedCount.toLocaleString()}건이 정비 마스터 및 자산/계약 이력에 성공적으로 일괄 적재되었습니다.`,
     count: importedCount
   };
 }
 
-/** 🔧 밴드 AS 과거 이력 일괄 삭제 (롤백) */
+/**  밴드 AS 과거 이력 일괄 삭제 (롤백) */
 export async function rollbackBandAsHistory(
   onProgress?: (msg: string) => void
 ): Promise<{ success: boolean; message: string; deletedCount: number }> {
   try {
-    onProgress?.('밴드 AS 이력 데이터(source=BAND_IMPORT) 조회 중...');
+    onProgress?.('밴드 AS 이력 데이터 조회 중...');
     let deletedRepairsCount = 0;
 
     if (supabase) {
@@ -5214,7 +5214,7 @@ export async function rollbackBandAsHistory(
   }
 }
 
-/** 🌟 기존 DB의 미지정현장 AS 티켓들을 자산 마스터 기준으로 일괄 역추적 매핑 복원 */
+/**  기존 DB의 미지정현장 AS 티켓들을 자산 마스터 기준으로 일괄 역추적 매핑 복원 */
 export async function reconcileUnassignedBandRepairsWithAssets(
   assets: any[],
   sites: any[],
@@ -5294,7 +5294,7 @@ export async function reconcileUnassignedBandRepairsWithAssets(
       let foundSite = matchedAsset?.currentSiteId ? siteMap.get(matchedAsset.currentSiteId) : undefined;
       let foundCust = matchedAsset?.currentCustomerId ? custMap.get(matchedAsset.currentCustomerId) : undefined;
 
-      // 🛡️ mechanicName이나 memo에 '현장명: ...'이 들어있는 경우 텍스트 현장명 대사
+      //  mechanicName이나 memo에 '현장명: ...'이 들어있는 경우 텍스트 현장명 대사
       if (!foundSite) {
         const checkText = `${rep.mechanicName || ''} ${rep.memo || ''}`;
         if (checkText.includes('현장명')) {
@@ -5375,7 +5375,7 @@ export async function reconcileUnassignedBandRepairsWithAssets(
   }
 }
 
-/** 🌟 기존 DB의 밴드 AS(또는 전체 정비) 이력을 분석하여 정비항목 마스터 형성 및 매핑 동기화 */
+/**  기존 DB의 밴드 AS(또는 전체 정비) 이력을 분석하여 정비항목 마스터 형성 및 매핑 동기화 */
 export async function syncInspectionChecklistFromBandRepairs(
   onProgress?: (step: number, total: number, msg: string) => void
 ): Promise<{ success: boolean; message: string; itemCount: number; updatedRepairsCount: number }> {
@@ -5498,7 +5498,7 @@ contact: r.reporterContact || '',
 }
 
 /**
- * 📊 신규 테넌트 초기 데이터 업로드를 위한 표준 엑셀 템플릿(3대 핵심 시트) 생성 및 브라우저 다운로드
+ *  신규 테넌트 초기 데이터 업로드를 위한 표준 엑셀 템플릿(3대 핵심 시트) 생성 및 브라우저 다운로드
  */
 export function exportInitialDataExcelTemplate(tenantName: string = '신규테넌트'): void {
   const wb = XLSX.utils.book_new();
@@ -5548,7 +5548,7 @@ export function exportInitialDataExcelTemplate(tenantName: string = '신규테�
 }
 
 /**
- * 🛠️ 정비 점검항목 마스터 엑셀 표준 템플릿 생성 및 브라우저 다운로드
+ *  정비 점검항목 마스터 엑셀 표준 템플릿 생성 및 브라우저 다운로드
  */
 export function exportInspectionChecklistExcelTemplate(tenantName: string = '기연리프트'): void {
   const wb = XLSX.utils.book_new();

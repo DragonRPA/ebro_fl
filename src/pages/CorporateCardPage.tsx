@@ -341,7 +341,7 @@ export const CorporateCardPage: React.FC = () => {
 
   return (
     <div data-hs-observe="corporatecardpage" data-subview="corporate_card" data-subview-title="Generated" style={{ position: 'relative' }}>
-      {/* 🔔 인앱 토스트 알림 (헌장 5.2) */}
+      {/*  인앱 토스트 알림 (헌장 5.2) */}
       {toastMessage && (
         <div style={{
           position: 'fixed',
@@ -378,7 +378,7 @@ export const CorporateCardPage: React.FC = () => {
             }}
           >
             월별 매입정산 & 누락 검증
-          </button>
+ </button>
           <button
             onClick={() => setActiveSubTab('settings')}
             style={{
@@ -389,7 +389,7 @@ export const CorporateCardPage: React.FC = () => {
             }}
           >
             매입유형 항목 설정
-          </button>
+ </button>
         </div>
       </div>
 
@@ -426,7 +426,7 @@ export const CorporateCardPage: React.FC = () => {
                     <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} id="card-upload-file" />
                     <label htmlFor="card-upload-file" className="btn-secondary" style={{ padding: '5px 10px', fontSize: '11px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <Upload size={12} /> 파일 업로드
-                    </label>
+ </label>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -435,7 +435,7 @@ export const CorporateCardPage: React.FC = () => {
                       title="유니코드 UTF-8 BOM 지원 템플릿 다운로드"
                     >
                       <Download size={12} /> 템플릿 받기
-                    </button>
+ </button>
                   </div>
                 </div>
               </div>
@@ -474,24 +474,24 @@ export const CorporateCardPage: React.FC = () => {
                         <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{c.categoryName}</div>
                         <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                           기준: {expected.toLocaleString()}원 / 실지출: {actual.toLocaleString()}원
-                        </div>
+ </div>
                       </div>
 
                       {/* 상태 렌더링 */}
                       {status === 'MISSING' && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--danger)', fontSize: '11px', fontWeight: 'bold' }}>
-                          <AlertTriangle size={14} /> ⚠️ 누락 의심
-                        </div>
+                          <AlertTriangle size={14} />  누락 의심
+ </div>
                       )}
                       {status === 'WARN' && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--warning)', fontSize: '11px', fontWeight: 'bold' }}>
-                          <Lightbulb size={14} /> 💡 오차 과다
-                        </div>
+                          <Lightbulb size={14} />  오차 과다
+ </div>
                       )}
                       {status === 'OK' && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '11px', fontWeight: 'bold' }}>
-                          <CheckCircle2 size={14} /> ✅ 정상확인
-                        </div>
+                          <CheckCircle2 size={14} />  정상확인
+ </div>
                       )}
                     </div>
                   );
@@ -528,7 +528,7 @@ export const CorporateCardPage: React.FC = () => {
             <div className="card" style={{ margin: 0, backgroundColor: 'rgba(239, 68, 68, 0.01)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--danger)', fontWeight: 'bold', fontSize: '13px', marginBottom: '6px' }}>
                 <AlertTriangle size={14} /> 매입 세금계산서 증빙 대조
-              </div>
+ </div>
               <div style={{ fontSize: '11.5px', lineHeight: '1.5' }}>
                 홈택스 세금계산서 총액: {totalTaxInvoicesReceived.toLocaleString()}원<br/>
                 ERP 총매입 대조 차액: <strong style={{ color: 'var(--danger)' }}>{(totalCalculated - totalTaxInvoicesReceived).toLocaleString()}원</strong>
@@ -549,11 +549,11 @@ export const CorporateCardPage: React.FC = () => {
                   style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
                 >
                   <Download size={12} /> 엑셀 내보내기
-                </button>
+ </button>
                 {isUploaded && (
                   <button className="btn-success" onClick={handleAutoMatch} style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <RefreshCw size={12} /> 자동 매칭
-                  </button>
+ </button>
                 )}
               </div>
             </div>
@@ -561,7 +561,7 @@ export const CorporateCardPage: React.FC = () => {
             {!isUploaded ? (
               <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
                 좌측에서 법인카드 거래내역 파일을 업로드해 주십시오.
-              </div>
+ </div>
             ) : (
               <div className="table-container" style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto', overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                 <table style={{ width: '100%', fontSize: '11.5px' }}>
@@ -585,7 +585,7 @@ export const CorporateCardPage: React.FC = () => {
                       <td>
                         <strong>{tx.merchantName}</strong><br/>
                         {tx.amount.toLocaleString()}원
-                      </td>
+ </td>
                       <td>
                         <span style={{
                           padding: '2px 6px', borderRadius: '4px', fontSize: '9.5px', fontWeight: 'bold',
@@ -713,7 +713,7 @@ export const CorporateCardPage: React.FC = () => {
                 style={{ marginTop: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
                 <Plus size={16} /> 매입유형 등록
-              </button>
+ </button>
             </div>
           </div>
 
@@ -749,9 +749,9 @@ export const CorporateCardPage: React.FC = () => {
                     </td>
                     <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
                       {c.defaultExpectedAmount.toLocaleString()}원
-                    </td>
+ </td>
                     <td style={{ textAlign: 'center' }}>
-                      {c.isRequiredProof ? '✔️ 필수' : '선택'}
+                      {c.isRequiredProof ? '필수' : '선택'}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <button 
@@ -782,7 +782,7 @@ export const CorporateCardPage: React.FC = () => {
 
         </div>
       )}
-      {/* 💬 인앱 확인 모달 (헌장 5.2: alert/confirm 퇴출) */}
+      {/*  인앱 확인 모달 (헌장 5.2: alert/confirm 퇴출) */}
       {confirmModal && confirmModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '20px' }}>
           <div className="card" style={{ width: '90%', maxWidth: '440px', backgroundColor: 'var(--bg-card)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -795,7 +795,7 @@ export const CorporateCardPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
               <button type="button" className="btn-secondary" onClick={() => setConfirmModal(null)} style={{ padding: '6px 14px', fontSize: '12px' }}>
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn-primary"
@@ -814,7 +814,7 @@ export const CorporateCardPage: React.FC = () => {
         </div>
       )}
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 법인카드 매입정산 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 법인카드 매입정산 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         position: 'fixed',
         bottom: 0,
@@ -837,11 +837,11 @@ export const CorporateCardPage: React.FC = () => {
           <span style={{ color: 'var(--border-color)' }}>|</span>
           <span><strong>총 예상매입:</strong> ₩{cardAuditSummary.totalExpected.toLocaleString()}원</span>
           <span style={{ color: 'var(--border-color)' }}>|</span>
-          <span style={{ color: 'var(--success)' }}>💳 <strong>당월 실지출:</strong> ₩{cardAuditSummary.totalActual.toLocaleString()}원</span>
+          <span style={{ color: 'var(--success)' }}> <strong>당월 실지출:</strong> ₩{cardAuditSummary.totalActual.toLocaleString()}원</span>
           <span style={{ color: 'var(--border-color)' }}>|</span>
           <span style={{ color: cardAuditSummary.diff > 0 ? 'var(--warning)' : 'var(--primary)' }}>
-            ⚖️ <strong>예실차액:</strong> ₩{Math.abs(cardAuditSummary.diff).toLocaleString()}원 ({cardAuditSummary.diff >= 0 ? '예산 잔여' : '예산 초과'})
-          </span>
+             <strong>예실차액:</strong> ₩{Math.abs(cardAuditSummary.diff).toLocaleString()}원 ({cardAuditSummary.diff >= 0 ? '예산 잔여' : '예산 초과'})
+ </span>
         </div>
       </div>
       <div style={{ height: '50px' }} aria-hidden="true" />

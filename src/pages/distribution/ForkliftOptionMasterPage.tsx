@@ -301,10 +301,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
           <div>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
               지게차 옵션·부착물 단가관리
-            </h2>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              백레스트 변경 · 사이드시프트 · 문열림구조별 캐빈 · 에어컨 · 길이별 덧발 · 후방감지센서 · 경광등 · 무상 장비보호 단가 및 출고 청구 연동
-            </div>
+ </h2>
           </div>
         </div>
 
@@ -316,7 +313,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', fontWeight: 700 }}
           >
             <Download size={15} /> 엑셀 내보내기
-          </button>
+ </button>
           <button
             type="button"
             className="btn btn-primary"
@@ -324,7 +321,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', fontWeight: 700 }}
           >
             <Plus size={16} /> 옵션·단가 신규등록
-          </button>
+ </button>
         </div>
       </div>
 
@@ -340,7 +337,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         >
           <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
             등록 지게차 옵션 총수
-          </div>
+ </div>
           <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
             {summaryStats.totalCount}종 <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#2563eb' }}>8대 분류</span>
           </div>
@@ -355,10 +352,10 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         >
           <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
             유상 청구 옵션·부착물
-          </div>
+ </div>
           <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1d4ed8', marginTop: '4px' }}>
             {summaryStats.paidCount}종
-          </div>
+ </div>
         </div>
         <div
           style={{
@@ -370,10 +367,10 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         >
           <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
             무상 기본 장비보호 옵션
-          </div>
+ </div>
           <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#047857', marginTop: '4px' }}>
             {summaryStats.freeCount}종
-          </div>
+ </div>
         </div>
         <div
           style={{
@@ -385,7 +382,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         >
           <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
             출고 반영 유상청구비용 누계
-          </div>
+ </div>
           <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#7c3aed', marginTop: '4px' }}>
             ₩{summaryStats.totalOutboundOptionRevenue.toLocaleString()}
           </div>
@@ -421,7 +418,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
             }}
           >
             전체 분류 ({optionMasters.length})
-          </button>
+ </button>
           {FORKLIFT_OPTION_GROUPS.map(g => {
             const count = optionMasters.filter(o => o.optionGroup === g.group).length;
             const active = selectedGroup === g.group;
@@ -443,7 +440,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 }}
               >
                 {g.label} ({count})
-              </button>
+ </button>
             );
           })}
         </div>
@@ -452,7 +449,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '170px' }}>
             <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               표준 도메인 구분
-            </label>
+ </label>
             <select
               className="form-input"
               value={selectedDomainType}
@@ -471,7 +468,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '260px' }}>
             <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               옵션명 · 문열림구조 · 덧발길이 · 제원 검색
-            </label>
+ </label>
             <div style={{ position: 'relative' }}>
               <Search
                 size={15}
@@ -529,7 +526,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 <tr>
                   <td colSpan={13} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-secondary)' }}>
                     조회 조건에 일치하는 지게차 옵션 항목이 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 filteredOptions.map(opt => {
@@ -547,7 +544,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                             style={{ padding: '4px 8px', fontSize: '0.74rem', fontWeight: 700, whiteSpace: 'nowrap' }}
                           >
                             <Edit2 size={12} style={{ marginRight: '3px' }} /> 단가수정
-                          </button>
+ </button>
                           <button
                             type="button"
                             className="btn btn-secondary"
@@ -632,7 +629,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                             }}
                           >
                             무상기본
-                          </span>
+ </span>
                         ) : (
                           <span
                             style={{
@@ -645,14 +642,14 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                             }}
                           >
                             출고청구추가
-                          </span>
+ </span>
                         )}
                       </td>
                       <td style={{ whiteSpace: 'nowrap', textAlign: 'center', fontSize: '0.78rem' }}>
                         {usage ? (
                           <span style={{ fontWeight: 700, color: '#7c3aed' }}>
                             {usage.count}건 (₩{usage.totalBilled.toLocaleString()})
-                          </span>
+ </span>
                         ) : (
                           <span style={{ color: 'var(--text-secondary)' }}>0건</span>
                         )}
@@ -694,10 +691,10 @@ export const ForkliftOptionMasterPage: React.FC = () => {
         >
           <div style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
             조회된 지게차 옵션 마스터: <strong>{filteredOptions.length}종</strong> · 표 내 표준 청구단가 입력란 수정 시 출고 옵션 선택 단가에 즉시 반영됩니다.
-          </div>
+ </div>
           <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
             유상옵션·부착물 평균 청구단가: ₩
-            {Math.round(
+ {Math.round(
               filteredOptions.filter(o => !o.isFreeDefault).reduce((s, o) => s + o.unitPrice, 0) /
                 Math.max(1, filteredOptions.filter(o => !o.isFreeDefault).length)
             ).toLocaleString()}{' '}
@@ -804,7 +801,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
                     세부 구조 · 문열림방식 · 길이 규격
-                  </label>
+ </label>
                   <input
                     type="text"
                     className="form-input"
@@ -860,7 +857,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 700, whiteSpace: 'nowrap', color: '#0369a1' }}>
                     대리점 공급단가 · 원
-                  </label>
+ </label>
                   <input
                     type="number"
                     step={10000}
@@ -872,7 +869,7 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 700, whiteSpace: 'nowrap', color: '#1d4ed8' }}>
                     최종고객 표준 청구단가 · 원
-                  </label>
+ </label>
                   <input
                     type="number"
                     step={10000}
@@ -903,13 +900,13 @@ export const ForkliftOptionMasterPage: React.FC = () => {
                 />
                 <label htmlFor="chk-free-default" style={{ fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}>
                   출고 시 무상옵션 기본 적용 여부 · 체크 해제 시 출고 청구액에 단가 자동 합산
-                </label>
+ </label>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
                   취소
-                </button>
+ </button>
                 <button type="submit" className="btn btn-primary" style={{ fontWeight: 800 }}>
                   {editingOption ? '단가·옵션 저장' : '신규 옵션 등록'}
                 </button>

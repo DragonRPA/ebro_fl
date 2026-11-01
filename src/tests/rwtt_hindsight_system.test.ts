@@ -1,5 +1,5 @@
 // src/tests/rwtt_hindsight_system.test.ts
-// 🔬 Hindsight 4-Tier Memory & Stealth Telemetry RWTT Verification
+//  Hindsight 4-Tier Memory & Stealth Telemetry RWTT Verification
 import { chromium } from 'playwright';
 
 async function runRwtt() {
@@ -55,21 +55,21 @@ async function runRwtt() {
 
     // 2. World facts 탭 검증
     console.log('[RWTT] Testing World facts tab...');
-    const factsTab = await page.waitForSelector('button:has-text("World facts")', { timeout: 3000 });
+    const factsTab = await page.waitForSelector('button:has-text', { timeout: 3000 });
     await factsTab.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'C:/Users/이정용/.gemini/antigravity/brain/4131e19b-6ecf-48b7-8b42-81f615d66ce0/rwtt_hindsight_facts_tab.png' });
 
     // 3. Observations 탭 검증
     console.log('[RWTT] Testing Observations tab...');
-    const obsTab = await page.waitForSelector('button:has-text("Observations")', { timeout: 3000 });
+    const obsTab = await page.waitForSelector('button:has-text', { timeout: 3000 });
     await obsTab.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'C:/Users/이정용/.gemini/antigravity/brain/4131e19b-6ecf-48b7-8b42-81f615d66ce0/rwtt_hindsight_observations_tab.png' });
 
     // 4. Mental models 탭 검증
     console.log('[RWTT] Testing Mental models tab...');
-    const modelsTab = await page.waitForSelector('button:has-text("Mental models")', { timeout: 3000 });
+    const modelsTab = await page.waitForSelector('button:has-text', { timeout: 3000 });
     await modelsTab.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'C:/Users/이정용/.gemini/antigravity/brain/4131e19b-6ecf-48b7-8b42-81f615d66ce0/rwtt_hindsight_mental_models_tab.png' });

@@ -86,7 +86,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
     ).length;
   }, [assets]);
 
-  // 🚨 약정 납기일 도과 연체 고객사 수 배지 (헌장 4.1 & 5.1 준수)
+  //  약정 납기일 도과 연체 고객사 수 배지 (헌장 4.1 & 5.1 준수)
   const overdueBadgeCount = useMemo(() => {
     const todayStr = new Date().toISOString().split('T')[0];
     const overdueCustIds = new Set<string>();
@@ -124,7 +124,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
     return overdueCustIds.size;
   }, [billings, customers]);
 
-  // 📋 정보 누락 고객사 수 배지 (헌장 1.2 준수)
+  //  정보 누락 고객사 수 배지 (헌장 1.2 준수)
   const incompleteCustomerCount = useMemo(() => {
     return (customers || []).filter(c => 
       !c.bizRegNo || c.bizRegNo === '미상' ||
@@ -144,7 +144,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
     }).length;
   }, [receivables]);
 
-  // 1. 🏛️ 부서 모드 결정
+  // 1.  부서 모드 결정
   const userResolvedMode = useMemo(() => {
     return resolveUserMobileDeptMode(currentUser, departments || []);
   }, [currentUser, departments]);
@@ -171,11 +171,11 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
   const [asInitialParams, setAsInitialParams] = useState<{ assetNo?: string; siteId?: string } | null>(null);
   const [defectClaimInitialAssetNo, setDefectClaimInitialAssetNo] = useState<string | undefined>(undefined);
 
-  // 📻 무전기 모달 및 전원 상태
+  //  무전기 모달 및 전원 상태
   const [isWalkieModalOpen, setIsWalkieModalOpen] = useState(false);
   const [isWalkieOn, setIsWalkieOn] = useState(() => walkieService.getIsPowerOn());
 
-  // 📱 통화캡처 APK 모니터링 & 출퇴근 상태
+  //  통화캡처 APK 모니터링 & 출퇴근 상태
   const [isApkMonitorOpen, setIsApkMonitorOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [workStatus, setWorkStatus] = useState<WorkStatus | null>(null);
@@ -265,7 +265,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  // 🛡️ 미처리 배지 카운트 (기완료·반납·취소 건 100% 제외하여 무한 누적 방지)
+  //  미처리 배지 카운트 (기완료·반납·취소 건 100% 제외하여 무한 누적 방지)
   const activeContractIdSet = useMemo(() => {
     const set = new Set<string>();
     (contracts || []).forEach(c => {
@@ -557,7 +557,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
         />
       )}
 
-      {/* 📻 현장 무전기 모달 */}
+      {/*  현장 무전기 모달 */}
       {isWalkieTalkieEnabled && (
         <ErrorBoundary fallbackTitle="무전기 오류 복구" isModal onClose={() => setIsWalkieModalOpen(false)}>
           <MobileWalkieTalkieModal
@@ -571,7 +571,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
         </ErrorBoundary>
       )}
 
-      {/* 📱 통화 녹음 APK 다운로드 및 모니터링 모달 */}
+      {/*  통화 녹음 APK 다운로드 및 모니터링 모달 */}
       <MobileApkMonitorModal
         isOpen={isApkMonitorOpen}
         onClose={() => setIsApkMonitorOpen(false)}
@@ -582,7 +582,7 @@ export const MobileApp: React.FC<MobileAppProps> = ({ onSwitchToPc: _onSwitchToP
         apkRelease={apkRelease}
       />
 
-      {/* 📁 통화 녹음 파일 직접 업로드 모달 (아이폰/미설치자 대응) */}
+      {/*  통화 녹음 파일 직접 업로드 모달 (아이폰/미설치자 대응) */}
       <CallAudioUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}

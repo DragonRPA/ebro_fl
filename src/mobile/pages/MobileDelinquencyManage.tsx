@@ -83,7 +83,7 @@ export const MobileDelinquencyManage: React.FC = () => {
   }, [navigationPayload, customers, billings]);
   const today = useMemo(() => new Date(), []);
 
-  // 헌장 4.1 & 5.1 준수: 고객현장 ➔ 계약 ➔ 고객사 우선순위 기반 약정 납기일 정밀 동적 산출 함수
+  // 헌장 4.1 & 5.1 준수: 고객현장  계약  고객사 우선순위 기반 약정 납기일 정밀 동적 산출 함수
   const getAgreedDueDate = (
     billing: Billing,
     customer?: Customer,
@@ -379,7 +379,7 @@ export const MobileDelinquencyManage: React.FC = () => {
           </div>
           <div className="text-xl font-black text-rose-400 font-mono mt-1 whitespace-nowrap">
             ₩{(totalOverdueSum / 10000).toLocaleString()}만
-          </div>
+ </div>
           <div className="text-[10px] text-slate-400 font-mono mt-1">
             약정 도과 거래처 <strong className="text-white">{calculatedList.length}사</strong>
           </div>
@@ -391,14 +391,14 @@ export const MobileDelinquencyManage: React.FC = () => {
             <span>고위험 상습연체</span>
             <span className="px-1.5 py-0.2 rounded bg-rose-950 text-rose-200 text-[10px] font-bold border border-rose-800">
               집중관리
-            </span>
+ </span>
           </div>
           <div className="text-xl font-black text-white font-mono mt-1 whitespace-nowrap">
             {highRiskList.length}개사
-          </div>
+ </div>
           <div className="text-[10px] text-rose-300 font-mono mt-1">
             ₩{(highRiskAmount / 10000).toLocaleString()}만원
-          </div>
+ </div>
         </div>
 
         {/* 출고제한 처분사 */}
@@ -409,10 +409,10 @@ export const MobileDelinquencyManage: React.FC = () => {
           </div>
           <div className="text-xl font-black text-amber-400 font-mono mt-1 whitespace-nowrap">
             {blockedCount}개사
-          </div>
+ </div>
           <div className="text-[10px] text-slate-400 font-mono mt-1">
             신규 배차/출고 차단 운용
-          </div>
+ </div>
         </div>
 
         {/* 수금지시 미조치 방치 */}
@@ -427,10 +427,10 @@ export const MobileDelinquencyManage: React.FC = () => {
             neglectedCount > 0 ? 'text-amber-400' : 'text-white'
           }`}>
             {neglectedCount}건
-          </div>
+ </div>
           <div className="text-[10px] text-slate-400 font-mono mt-1">
             3일 이상 조치 없는 건
-          </div>
+ </div>
         </div>
       </div>
 
@@ -438,7 +438,7 @@ export const MobileDelinquencyManage: React.FC = () => {
       <div className="flex flex-col gap-1.5 px-1">
         <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
           연체 거래처 검색
-        </label>
+ </label>
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
           <input
@@ -453,11 +453,11 @@ export const MobileDelinquencyManage: React.FC = () => {
         <div className="flex flex-wrap gap-1.5 pt-0.5">
           {[
             { id: 'ALL', label: '전체' },
-            { id: 'HIGH_RISK', label: '고위험 (🔴)' },
+            { id: 'HIGH_RISK', label: '고위험 ()' },
             { id: 'OVERDUE_30', label: '30일+' },
             { id: 'OVERDUE_60', label: '60일+' },
             { id: 'BLOCKED', label: '출고제한' },
-            { id: 'NEGLECTED', label: '지시방치 (🚨)' }
+            { id: 'NEGLECTED', label: '지시방치 ()' }
           ].map(f => (
             <button
               key={f.id}
@@ -480,7 +480,7 @@ export const MobileDelinquencyManage: React.FC = () => {
         {filteredList.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/60 rounded-2xl border border-slate-800">
             해당 조건의 연체 관리 대상이 없습니다.
-          </div>
+ </div>
         ) : (
           filteredList.map(item => {
             const isBlk = isCustomerRestricted(item.transactionStatus);
@@ -508,20 +508,20 @@ export const MobileDelinquencyManage: React.FC = () => {
                       {isHigh ? (
                         <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] font-bold border border-rose-800 whitespace-nowrap flex-shrink-0">
                           고위험
-                        </span>
+ </span>
                       ) : item.riskTier === 'MID' ? (
                         <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800 whitespace-nowrap flex-shrink-0">
                           주의
-                        </span>
+ </span>
                       ) : null}
                       {item.transactionStatus === 'RESTRICT_NEW' ? (
                         <span className="px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 text-[10px] font-bold border border-amber-700 whitespace-nowrap flex-shrink-0">
                           추가금지
-                        </span>
+ </span>
                       ) : isCustomerTotalBlocked(item.transactionStatus) ? (
                         <span className="px-1.5 py-0.5 rounded bg-rose-900 text-rose-200 text-[10px] font-bold whitespace-nowrap flex-shrink-0">
                           전면차단
-                        </span>
+ </span>
                       ) : null}
                     </div>
                     <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
@@ -535,10 +535,10 @@ export const MobileDelinquencyManage: React.FC = () => {
                   <div className="text-right flex-shrink-0">
                     <div className="text-sm font-black text-rose-400 font-mono whitespace-nowrap">
                       ₩{item.totalOverdueAmount.toLocaleString()}원
-                    </div>
+ </div>
                     <div className="text-[11px] font-bold text-amber-400 font-mono mt-0.5 whitespace-nowrap">
                       {item.overdueDays}일 도과 ({item.unpaidBillingCount}건)
-                    </div>
+ </div>
                   </div>
                 </div>
 
@@ -551,7 +551,7 @@ export const MobileDelinquencyManage: React.FC = () => {
                     </span>
                     <span className="text-amber-400 font-mono text-[11px] font-bold whitespace-nowrap">
                       방치 {item.directiveNeglectedDays}일차
-                    </span>
+ </span>
                   </div>
                 )}
 
@@ -566,7 +566,7 @@ export const MobileDelinquencyManage: React.FC = () => {
                     {item.lastLog.promiseDate && (
                       <div className="text-emerald-400 mt-1 font-mono">
                         약속일자: {item.lastLog.promiseDate} (₩{(item.lastLog.promiseAmount || 0).toLocaleString()}원)
-                      </div>
+ </div>
                     )}
                   </div>
                 )}
@@ -630,10 +630,10 @@ export const MobileDelinquencyManage: React.FC = () => {
       <div className="mx-1 mt-2 p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs font-mono">
         <span className="text-slate-400 font-bold whitespace-nowrap">
           연체 {calculatedList.length}사 • 고위험 {highRiskList.length}사
-        </span>
+ </span>
         <span className="text-rose-400 font-black whitespace-nowrap">
           합계 ₩{totalOverdueSum.toLocaleString()}원
-        </span>
+ </span>
       </div>
 
       {/* 5. 경영진 수금지시 하달 모달 (헌장 3.4 상하 세로 스택) */}
@@ -645,7 +645,7 @@ export const MobileDelinquencyManage: React.FC = () => {
                 <span className="font-bold text-sm text-white">수금 독촉 지시 하달</span>
                 <div className="text-[11px] text-slate-400 font-mono mt-0.5">
                   {directiveTarget.customerName} (담당: {directiveTarget.salespersonName})
-                </div>
+ </div>
               </div>
               <button 
                 type="button" 
@@ -660,7 +660,7 @@ export const MobileDelinquencyManage: React.FC = () => {
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 프리셋 지시문구 선택
-              </label>
+ </label>
               <div className="flex flex-col gap-1">
                 {QUICK_DIRECTIVE_PRESETS.map((preset, idx) => (
                   <button
@@ -679,7 +679,7 @@ export const MobileDelinquencyManage: React.FC = () => {
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 지시 본문
-              </label>
+ </label>
               <textarea
                 value={directiveText}
                 onChange={e => setDirectiveText(e.target.value)}
@@ -693,7 +693,7 @@ export const MobileDelinquencyManage: React.FC = () => {
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
                 완료 기한
-              </label>
+ </label>
               <input
                 type="date"
                 value={directiveDueDate}
@@ -709,14 +709,14 @@ export const MobileDelinquencyManage: React.FC = () => {
                 className="flex-1 py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700 active:scale-95"
               >
                 취소
-              </button>
+ </button>
               <button 
                 type="button" 
                 onClick={handleSubmitDirective} 
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg active:scale-95"
               >
                 지시 하달
-              </button>
+ </button>
             </div>
           </div>
         </div>

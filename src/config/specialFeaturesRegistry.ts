@@ -1,6 +1,6 @@
 // src/config/specialFeaturesRegistry.ts
 /**
- * 🛡️ [전사 단일 진실의 원천] 선별적 특수 탭 / 특수 버튼 통제 레지스트리
+ *  [전사 단일 진실의 원천] 선별적 특수 탭 / 특수 버튼 통제 레지스트리
  * 
  * [설계 철학 - Safe Default Open]:
  * 1. 시스템 내 수백 개의 일반 탭과 일반 버튼은 이 명부에 등록되지 않으며, 100% 기본 노출됩니다.
@@ -24,7 +24,7 @@ export interface SpecialFeatureDef {
 }
 
 /**
- * 📋 사장님 지목 특수 기능 명부 (지목될 때마다 1건씩 추가)
+ *  사장님 지목 특수 기능 명부 (지목될 때마다 1건씩 추가)
  */
 export const SPECIAL_FEATURES_REGISTRY: SpecialFeatureDef[] = [
   {

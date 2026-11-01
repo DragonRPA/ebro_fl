@@ -217,7 +217,7 @@ export function subscribeWorkStatus(
 
 // ─── APK 최신 릴리즈 조회 ────────────────────────────────
 export async function getLatestApkRelease(): Promise<ApkRelease> {
-  // 1) 🌐 [중앙 SSOT DB 우선 조회] ebro-platform-core centralSupabase
+  // 1)  [중앙 SSOT DB 우선 조회] ebro-platform-core centralSupabase
   if (centralSupabase) {
     try {
       const { data, error } = await centralSupabase

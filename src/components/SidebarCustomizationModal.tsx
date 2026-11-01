@@ -95,10 +95,10 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
             <div>
               <h3 style={{ margin: 0, fontSize: '16.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
                 좌측 메뉴 패널 개인화 설정
-              </h3>
+ </h3>
               <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
                 권한이 부여된 메뉴 그룹 및 하위 메뉴의 노출 여부, 순서 재배치, 메뉴별 강조 색상을 설정할 수 있습니다.
-              </p>
+ </p>
             </div>
           </div>
           <button
@@ -137,10 +137,10 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 6px 4px 6px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 메뉴 그룹 선택
-              </span>
+ </span>
               <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 ▲/▼ 순서변경
-              </span>
+ </span>
             </div>
             {groups.map((grp, grpIdx) => {
               const isSelected = (currentGroup?.id || '') === grp.id;
@@ -271,10 +271,10 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {currentGroup?.name} 하위 메뉴 목록 ({currentGroup?.items.length}개)
-              </span>
+ </span>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                 ▲ / ▼ 버튼으로 노출 순서 변경, 팔레트 칩으로 메뉴별 색상 지정
-              </span>
+ </span>
             </div>
 
             {currentGroup?.items.map((item, idx) => {
@@ -460,7 +460,7 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
           >
             <RotateCcw size={13} />
             기본값 복원
-          </button>
+ </button>
 
           <button
             type="button"
@@ -477,7 +477,7 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
             }}
           >
             설정 완료
-          </button>
+ </button>
         </div>
       </div>
     </div>

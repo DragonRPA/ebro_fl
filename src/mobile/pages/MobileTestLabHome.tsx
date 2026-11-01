@@ -90,7 +90,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
         deliveryType: isExchange ? ('EXCHANGE' as const) : ('OUTBOUND' as const),
         status: 'PENDING' as const,
         requestedDate: new Date().toISOString().split('T')[0],
-        requestNote: isExchange ? '⚡ [테스트랩 원패스] 현장 긴급 대차 의뢰 (1터치 발행)' : '⚡ [테스트랩 원패스] 긴급 출고 의뢰 (1터치 발행)',
+        requestNote: isExchange ? '[테스트랩 원패스] 현장 긴급 대차 의뢰 (1터치 발행)' : '[테스트랩 원패스] 긴급 출고 의뢰 (1터치 발행)',
         specFt: targetSpec,
       };
 
@@ -129,7 +129,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 패스트트랙 액션 3: [출고 검수 승인 ➔ 기사 SMS 원패스]
+  // 패스트트랙 액션 3: [출고 검수 승인  기사 SMS 원패스]
   // ─────────────────────────────────────────────────────────────
   const handleFastInspectionApprove = async (inspection: any) => {
     setProcessingId(`insp_${inspection.id}`);
@@ -170,7 +170,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
 
   return (
     <div className="flex flex-col gap-4 pb-24 p-3 font-sans text-slate-100">
-      {/* 🧪 테스트 랩 헤더 배너 */}
+      {/*  테스트 랩 헤더 배너 */}
       <div className="bg-gradient-to-br from-pink-950/70 via-slate-900 to-indigo-950/70 border border-pink-500/40 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
           </div>
           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
             ADMIN 전용
-          </span>
+ </span>
         </div>
 
         <h2 className="text-xl font-black text-white leading-tight">
@@ -189,8 +189,8 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
           <span className="text-pink-400">4대 핵심 패스트트랙</span>
         </h2>
         <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-          헌장 1.1(최대 편익) 및 1.4(1단어 1뜻) 원칙에 입각하여 개발된 고효율 원터치 액션을 기존 방식과 직접 조작하며 비교하실 수 있습니다.
-        </p>
+          헌장 1.1(최대 편익) 및 1.4(1단어 1뜻) 원칙에 입각하여 개발된 고효율 액션을 기존 방식과 직접 조작하며 비교하실 수 있습니다.
+ </p>
 
         {/* 뷰 모드 토글 바 */}
         <div className="mt-4 flex items-center gap-2 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
@@ -241,28 +241,28 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
             <div>
               <h3 className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
                 ① 출고 & 대차 의뢰 원패스 (영업/관리)
-              </h3>
+ </h3>
               <p className="text-[11px] text-slate-400">현장 정보 자동 상속 & 1터치 발행 (헌장 2.2, 2.3)</p>
             </div>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30" style={{ whiteSpace: 'nowrap' }}>
             입력 80% 단축
-          </span>
+ </span>
         </div>
 
         {viewMode === 'diff' && (
           <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
             <div className="border-r border-slate-800 pr-2">
-              <span className="font-black text-red-400 block mb-1">❌ 기존 방식 (4단계)</span>
+              <span className="font-black text-red-400 block mb-1"> 기존 방식 (4단계)</span>
               <p className="text-slate-400 text-[10.5px] leading-tight">
-                자산검색 ➔ 상세확인 ➔ 폼 이동 ➔ 고객/현장/단가/기사 수동입력
-              </p>
+                자산검색 상세확인 폼 이동 고객/현장/단가/기사 수동입력
+ </p>
             </div>
             <div className="pl-1">
-              <span className="font-black text-emerald-400 block mb-1">✨ 개선 패스트트랙 (1단계)</span>
+              <span className="font-black text-emerald-400 block mb-1"> 개선 패스트트랙 (1단계)</span>
               <p className="text-slate-300 text-[10.5px] leading-tight">
-                최근 현장 자동 상속 ➔ 원터치 단일 'EXCHANGE' or 'OUTBOUND' 즉시 의뢰
-              </p>
+                최근 현장 자동 상속 단일 'EXCHANGE' or 'OUTBOUND' 즉시 의뢰
+ </p>
             </div>
           </div>
         )}
@@ -272,7 +272,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
             <span className="text-slate-400">대상 고객/현장:</span>
             <span className="font-bold text-white truncate max-w-[200px]">
               {targetCustomer?.name || '기연리프트 거래처'} (최근 활성현장)
-            </span>
+ </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mt-1">
@@ -312,29 +312,29 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
-                ② 1초 긴급 출동 완료 (AS/정비)
-              </h3>
-              <p className="text-[11px] text-slate-400">다빈도 고장 템플릿 원터치 조치 및 종결</p>
+                ② 긴급 출동 완료
+ </h3>
+              <p className="text-[11px] text-slate-400">다빈도 고장 템플릿 조치 및 종결</p>
             </div>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" style={{ whiteSpace: 'nowrap' }}>
             현장 조작 0마찰
-          </span>
+ </span>
         </div>
 
         {viewMode === 'diff' && (
           <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
             <div className="border-r border-slate-800 pr-2">
-              <span className="font-black text-red-400 block mb-1">❌ 기존 방식 (4단계)</span>
+              <span className="font-black text-red-400 block mb-1"> 기존 방식 (4단계)</span>
               <p className="text-slate-400 text-[10.5px] leading-tight">
-                티켓상세 진입 ➔ 수리내용 수동타이핑 ➔ 부품 다중선택 ➔ 점수/완료 분리저장
-              </p>
+                티켓상세 진입 수리내용 수동타이핑 부품 다중선택 점수/완료 분리저장
+ </p>
             </div>
             <div className="pl-1">
-              <span className="font-black text-emerald-400 block mb-1">✨ 개선 패스트트랙 (1단계)</span>
+              <span className="font-black text-emerald-400 block mb-1"> 개선 패스트트랙 (1단계)</span>
               <p className="text-slate-300 text-[10.5px] leading-tight">
                 다빈도 증상(배터리/유압/컨트롤러) 프리셋 버튼 1터치로 즉시 완료 종결
-              </p>
+ </p>
             </div>
           </div>
         )}
@@ -358,24 +358,24 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
                     onClick={() => handleFastAsComplete(ticket.id, '배터리 충전/단자 조치')}
                     className="py-1.5 px-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold text-[10.5px] truncate border border-slate-600"
                   >
-                    🔋 배터리조치
-                  </button>
+                     배터리조치
+ </button>
                   <button
                     type="button"
                     disabled={processingId === `as_${ticket.id}`}
                     onClick={() => handleFastAsComplete(ticket.id, '유압 호스 교체/누유 정비')}
                     className="py-1.5 px-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold text-[10.5px] truncate border border-slate-600"
                   >
-                    🔧 유압정비
-                  </button>
+                     유압정비
+ </button>
                   <button
                     type="button"
                     disabled={processingId === `as_${ticket.id}`}
                     onClick={() => handleFastAsComplete(ticket.id, '조종기/상승센서 접점 세척')}
                     className="py-1.5 px-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-black text-[10.5px] truncate border border-emerald-500"
                   >
-                    ⚡ 원터치완결
-                  </button>
+                     완결
+ </button>
                 </div>
               </div>
             ))}
@@ -383,19 +383,19 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
         ) : (
           <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
             현재 대기 중인 AS 티켓이 없습니다.
-            <button
+ <button
               type="button"
               onClick={() => onOpenCreateAs()}
               className="mt-2 text-amber-400 font-bold underline block mx-auto"
             >
               + 모바일 AS 등록하기
-            </button>
+ </button>
           </div>
         )}
       </div>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* 과제 3: [출고팀] 출고 검수 승인 ➔ 기사 알림 원패스 */}
+      {/* 과제 3: [출고팀] 출고 검수 승인  기사 알림 원패스 */}
       {/* ───────────────────────────────────────────────────────────── */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -405,29 +405,29 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
-                ③ 검수 승인 ➔ 기사 알림 원패스 (출고/주기장)
-              </h3>
+                ③ 검수 승인 기사 알림 원패스 (출고/주기장)
+ </h3>
               <p className="text-[11px] text-slate-400">승인 즉시 자산 대여중 전환 + 기사 문자 복사 (헌장 1.3)</p>
             </div>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" style={{ whiteSpace: 'nowrap' }}>
             핑퐁 0건
-          </span>
+ </span>
         </div>
 
         {viewMode === 'diff' && (
           <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
             <div className="border-r border-slate-800 pr-2">
-              <span className="font-black text-red-400 block mb-1">❌ 기존 방식 (3단계)</span>
+              <span className="font-black text-red-400 block mb-1"> 기존 방식 (3단계)</span>
               <p className="text-slate-400 text-[10.5px] leading-tight">
-                체크리스트 작성 ➔ 승인 ➔ 배차 탭 이동 ➔ 기사 정보 확인 ➔ 개별 전화/문자
-              </p>
+                체크리스트 작성 승인 배차 탭 이동 기사 정보 확인 개별 전화/문자
+ </p>
             </div>
             <div className="pl-1">
-              <span className="font-black text-emerald-400 block mb-1">✨ 개선 패스트트랙 (1단계)</span>
+              <span className="font-black text-emerald-400 block mb-1"> 개선 패스트트랙 (1단계)</span>
               <p className="text-slate-300 text-[10.5px] leading-tight">
-                원클릭 승인 즉시 자산 '대여중' 확정 + 클립보드에 기사 SMS 자동 장전
-              </p>
+                승인 즉시 자산 '대여중' 확정 + 클립보드에 기사 SMS 자동 장전
+ </p>
             </div>
           </div>
         )}
@@ -445,7 +445,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
                     </div>
                     <div className="text-[11px] text-slate-400 truncate mt-0.5">
                       출고검수 대기중
-                    </div>
+ </div>
                   </div>
 
                   <button
@@ -465,7 +465,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
         ) : (
           <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
             현재 대기 중인 출고 검수 건이 없습니다.
-          </div>
+ </div>
         )}
       </div>
 
@@ -480,14 +480,14 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
-                ④ 긴급 의사결정 원터치 피드 (경영/관리)
-              </h3>
+                ④ 긴급 의사결정 피드 (경영/관리)
+ </h3>
               <p className="text-[11px] text-slate-400">전대 회수 독촉, 연체 고객 알림톡 1터치 발송</p>
             </div>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30" style={{ whiteSpace: 'nowrap' }}>
             의사결정 0초
-          </span>
+ </span>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

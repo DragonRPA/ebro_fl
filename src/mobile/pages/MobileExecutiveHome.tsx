@@ -212,7 +212,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
         <h2 className="text-xl font-black text-white leading-tight">
           대표이사 {currentUser?.name || '사장님'}님,<br />
           전사 자산 가동률 <span className="text-amber-400 font-mono">{assetStats.utilRate}%</span> • 가동 중
-        </h2>
+ </h2>
       </div>
 
       {/* ── [신규 핵심] 경영진 가용재고 및 출고예정 실시간 조회 카드 ── */}
@@ -228,7 +228,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
             <div className="min-w-0 flex-1">
               <div className="text-sm font-black text-white truncate">
                 가용재고 및 출고예정 현황
-              </div>
+ </div>
             </div>
           </div>
           <span
@@ -245,16 +245,16 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
             <div className="text-[10.5px] font-extrabold text-sky-300" style={{ whiteSpace: 'nowrap', color: '#7dd3fc' }}>계약가능 재고</div>
             <div className={`text-lg font-black font-mono mt-0.5 ${availableInventorySummary.contractableTotal < 0 ? 'text-rose-400' : 'text-emerald-400'}`} style={{ whiteSpace: 'nowrap' }}>
               {availableInventorySummary.contractableTotal}대
-            </div>
+ </div>
             <div className="text-[10px] text-slate-200 font-bold" style={{ whiteSpace: 'nowrap', color: '#cbd5e1' }}>
               재고 - 출고예정
-            </div>
+ </div>
           </div>
           <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-600 flex flex-col justify-between">
             <div className="text-[10.5px] font-extrabold text-emerald-300" style={{ whiteSpace: 'nowrap', color: '#6ee7b7' }}>주기장 현재고</div>
             <div className="text-lg font-black font-mono text-white mt-0.5" style={{ whiteSpace: 'nowrap', color: '#ffffff' }}>
               {availableInventorySummary.totalStock}대
-            </div>
+ </div>
             <div className="text-[10px] text-slate-200 font-mono font-bold" style={{ whiteSpace: 'nowrap', color: '#e2e8f0' }}>
               당사 {availableInventorySummary.stockOurs} · 임차 {availableInventorySummary.stockSub}
             </div>
@@ -263,7 +263,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
             <div className="text-[10.5px] font-extrabold text-amber-300" style={{ whiteSpace: 'nowrap', color: '#fcd34d' }}>출고예정</div>
             <div className="text-lg font-black font-mono text-amber-400 mt-0.5" style={{ whiteSpace: 'nowrap', color: '#fbbf24' }}>
               {availableInventorySummary.scheduledTotal}대
-            </div>
+ </div>
             <div className="text-[10px] text-slate-200 font-mono font-bold" style={{ whiteSpace: 'nowrap', color: '#e2e8f0' }}>
               당사 {availableInventorySummary.scheduledOurs} · 임차 {availableInventorySummary.scheduledSub}
             </div>
@@ -283,7 +283,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
             <div className="text-2xl font-black text-white font-mono">{assetStats.utilRate}%</div>
             <div className="text-[11px] text-slate-300 mt-1" style={{ whiteSpace: 'nowrap' }}>
               대여 {assetStats.rentedCount}대 / 총 {assetStats.totalCount}대
-            </div>
+ </div>
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
             <div 
@@ -303,7 +303,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
             <div className="text-2xl font-black text-white font-mono">{billingStats.collectRate}%</div>
             <div className="text-[11px] text-slate-300 mt-1" style={{ whiteSpace: 'nowrap' }}>
               수납 ₩{(billingStats.totalCollected / 10000).toLocaleString()}만
-            </div>
+ </div>
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
             <div 
@@ -321,11 +321,11 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-lg font-black font-mono ${totalCashBalance < 0 ? 'text-rose-400' : totalCashBalance === 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               ₩{totalCashBalance.toLocaleString()}원
-            </span>
+ </span>
             {totalCashBalance <= 0 && (
               <span className="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-700 text-rose-200 text-[10px] font-bold" style={{ whiteSpace: 'nowrap' }}>
                 유동자금 주의
-              </span>
+ </span>
             )}
           </div>
         </div>
@@ -360,7 +360,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
         {highRiskCustomers.length === 0 ? (
           <div className="p-4 text-center text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-xl">
             현재 200만원 이상 장기 연체 거래처가 없습니다.
-          </div>
+ </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {highRiskCustomers.map(({ customer: c, unpaidAmount, isBlocked }) => (
@@ -378,21 +378,21 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
                     {isBlocked ? (
                       <span className="px-1.5 py-0.5 rounded bg-rose-900 text-rose-200 text-[10px] font-bold" style={{ whiteSpace: 'nowrap' }}>
                         출고금지
-                      </span>
+ </span>
                     ) : (
                       <span className="px-1.5 py-0.5 rounded bg-amber-900/80 text-amber-200 text-[10px] font-bold" style={{ whiteSpace: 'nowrap' }}>
                         연체관리
-                      </span>
+ </span>
                     )}
                   </div>
                   <span className="text-xs font-bold text-rose-400 font-mono">
                     ₩{unpaidAmount.toLocaleString()}원
-                  </span>
+ </span>
                 </div>
 
                 <div className="text-[11px] text-slate-300">
                   대표: {c.representative || '미등록'} ({c.repContact || '연락처없음'})
-                </div>
+ </div>
 
                 <div className="flex items-center gap-2 mt-1 pt-2 border-t border-slate-700">
                   <button
@@ -439,7 +439,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
               <span style={{ whiteSpace: 'nowrap' }}>현장정비 동선 관리</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                 AS팀 일자별 동선
-              </span>
+ </span>
             </div>
             <div className="text-xs text-slate-300 mt-0.5">누가 언제 출발·도착·작업시작·다음현장 이동·퇴근했는지 조회</div>
           </div>
@@ -462,7 +462,7 @@ export const MobileExecutiveHome: React.FC<MobileExecutiveHomeProps> = ({ onNavi
                 <span style={{ whiteSpace: 'nowrap' }}>법인차량 주유영수증 등록</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   전사 공용
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300 mt-0.5">주유 영수증 촬영 및 주유 대장 연동</div>
             </div>

@@ -44,7 +44,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
   const [recordDuration, setRecordDuration] = useState<number>(0);
 
-  // 📡 동적 채널 목록 및 채널 모달 상태
+  //  동적 채널 목록 및 채널 모달 상태
   const [channels, setChannels] = useState<WalkieChannel[]>(() => walkieService.getChannels(currentUser?.id));
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState<boolean>(false);
   const [newChannelName, setNewChannelName] = useState<string>('');
@@ -56,11 +56,11 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
   const [inviteMemberIds, setInviteMemberIds] = useState<string[]>([]);
   const [inviteSearchQuery, setInviteSearchQuery] = useState<string>('');
 
-  // 📜 스마트 바닥 스크롤 감지 및 제어
+  //  스마트 바닥 스크롤 감지 및 제어
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const isAtBottomRef = useRef<boolean>(true);
 
-  // 🛠️ 디버그 로그 표시 토글 (기본값: OFF — 필요 시 켤 수 있음)
+  //  디버그 로그 표시 토글 (기본값: OFF — 필요 시 켤 수 있음)
   const [showDebugLogs, setShowDebugLogs] = useState<boolean>(() => {
     try {
       return typeof window !== 'undefined' && window.localStorage && localStorage.getItem('walkie_show_debug') === 'true';
@@ -68,20 +68,20 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
       return false;
     }
   });
-  // 🎙️ STT 엔진 상태 ('GROQ' | 'BROWSER')
+  //  STT 엔진 상태 ('GROQ' | 'BROWSER')
   const [sttEngine, setSttEngine] = useState<WalkieSttEngine>(() => walkieService.getSttEngine());
 
-  // 🌟 순차 재생 큐 대기 건수
+  //  순차 재생 큐 대기 건수
   const [queueLength, setQueueLength] = useState<number>(() => walkieService.getQueueLength());
 
-  // 🌟 실시간 발언자 인디케이터 ("누가 말하고 있습니다")
+  //  실시간 발언자 인디케이터 ("누가 말하고 있습니다")
   const [talkingStatus, setTalkingStatus] = useState<TalkingStatus | null>(() => walkieService.getCurrentTalkingStatus());
   const [receiveMode, setReceiveMode] = useState<WalkieReceiveMode>(() => walkieService.getReceiveMode());
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [sttStatus, setSttStatus] = useState<'IDLE' | 'LISTENING' | 'ERROR' | 'UNSUPPORTED'>('IDLE');
   const [sttErrorDetail, setSttErrorDetail] = useState<string>('');
 
-  // 🔒 PTT 비동기 트리거 레이스 컨디션 및 모바일 터치 고스트 클릭 방지 상태 & Refs
+  //  PTT 비동기 트리거 레이스 컨디션 및 모바일 터치 고스트 클릭 방지 상태 & Refs
   const [isStarting, setIsStarting] = useState<boolean>(false);
   const [isStopping, setIsStopping] = useState<boolean>(false);
   const isTransmittingRef = useRef<boolean>(false);
@@ -91,7 +91,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
   const lastToggleTimeRef = useRef<number>(0);
   const durationTimerRef = useRef<any>(null);
 
-  // 📜 대화 스크롤용 Refs
+  //  대화 스크롤용 Refs
   const logContainerRef = useRef<HTMLDivElement | null>(null);
   const pttFeedContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -167,7 +167,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
     });
   };
 
-  // 🛠️ 현재 채널 메시지 및 디버그 메시지 필터링
+  //  현재 채널 메시지 및 디버그 메시지 필터링
   const currentChMessages = history.filter(m => {
     if (m.isDebug) return showDebugLogs;
     return m.channel === currentChannel;
@@ -314,17 +314,17 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
     soundEngine.playStartBeep();
   };
 
-  // ── 🌟 토글형 PTT 터치 핸들러 (터치하고 말하고 다시 터치해서 종료 및 전송) ──
+  // ──  토글형 PTT 터치 핸들러 (터치하고 말하고 다시 터치해서 종료 및 전송) ──
   const handleTogglePtt = async () => {
     if (!isPowerOn) return;
 
-    // 🛡️ [고스트 클릭 / 모바일 연타 방지 쿨다운] 700ms 이내 연속 클릭 원천 무시
+    //  [고스트 클릭 / 모바일 연타 방지 쿨다운] 700ms 이내 연속 클릭 원천 무시
     const now = Date.now();
     if (now - lastToggleTimeRef.current < 700) {
       return;
     }
 
-    // 🛡️ 기동 중이거나 송신 전송/종료 처리 중일 때 터치 차단
+    //  기동 중이거나 송신 전송/종료 처리 중일 때 터치 차단
     if (isStartingRef.current || isStoppingRef.current) {
       if (isStartingRef.current) {
         stopRequestedRef.current = true;
@@ -393,7 +393,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
 
   // ── 송신 완료 및 전송 실행 함수 ──
   const finishRecordingAndSend = async () => {
-    // 🛡️ 이미 종료 처리 중이면 중복 실행 방지
+    //  이미 종료 처리 중이면 중복 실행 방지
     if (isStoppingRef.current) return;
     isStoppingRef.current = true;
     setIsStopping(true);
@@ -432,7 +432,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
       console.error('finishRecordingAndSend error:', err);
     } finally {
       setRecordDuration(0);
-      // 🛡️ 모바일 브라우저의 지연 합성 클릭 및 손가락 잔여 터치가 완전히 소멸된 후 버튼 잠금 해제
+      //  모바일 브라우저의 지연 합성 클릭 및 손가락 잔여 터치가 완전히 소멸된 후 버튼 잠금 해제
       setTimeout(() => {
         isStoppingRef.current = false;
         setIsStopping(false);
@@ -564,7 +564,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
             <Radio size={14} color={isPowerOn ? '#38bdf8' : '#64748b'} />
             <span style={{ fontSize: '13px', fontWeight: '900', color: '#f8fafc' }}>
               현장 무전기
-            </span>
+ </span>
             {/* 전원 ON / OFF 버튼 */}
             <button
               type="button"
@@ -589,7 +589,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            {/* 수신 모드 1-Click 원터치 순환 버튼 (음성 ➔ 비프 ➔ 무음) */}
+            {/* 수신 모드 1-Click 원터치 순환 버튼 (음성  비프  무음) */}
             <button
               type="button"
               onClick={handleCycleReceiveMode}
@@ -606,7 +606,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 fontWeight: '800',
                 cursor: 'pointer'
               }}
-              title="수신 모드 전환 (음성 ➔ 비프 ➔ 무음)"
+              title="수신 모드 전환 (음성 비프 무음)"
             >
               {receiveMode === 'VOICE' ? <Volume2 size={11} /> : receiveMode === 'BEEP' ? <Bell size={11} /> : <BellOff size={11} />}
               <span>{receiveMode === 'VOICE' ? '음성' : receiveMode === 'BEEP' ? '비프' : '무음'}</span>
@@ -871,7 +871,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 flexShrink: 0
               }}>
                 <span style={{ width: '7px', height: '7px', borderRadius: '9999px', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
-                <span>🔴 [{talkingStatus?.senderName}] 발언 중...</span>
+                <span> [{talkingStatus?.senderName}] 발언 중...</span>
               </div>
             ) : null}
 
@@ -893,7 +893,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 </span>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3.5px', flexWrap: 'wrap' }}>
-                  {/* ⚡ Groq STT 단일 뱃지 */}
+                  {/*  Groq STT 단일 뱃지 */}
                   <span
                     style={{
                       backgroundColor: 'rgba(16, 185, 129, 0.15)',
@@ -907,10 +907,10 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                     }}
                     title="Groq LPU Whisper (0.3초)"
                   >
-                    ⚡ Groq STT
-                  </span>
+                     Groq STT
+ </span>
 
-                  {/* 🐞 디버그 로그 ON/OFF 토글 버튼 */}
+                  {/*  디버그 로그 ON/OFF 토글 버튼 */}
                   <button
                     type="button"
                     onClick={handleToggleDebug}
@@ -927,7 +927,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                     }}
                     title="디버깅 로그 화면 출력 켜기 / 끄기"
                   >
-                    {showDebugLogs ? '🐞 디버그ON' : '디버그OFF'}
+                    {showDebugLogs ? '디버그ON' : '디버그OFF'}
                   </button>
 
                   <button
@@ -945,15 +945,15 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    로그 ➔
-                  </button>
+                    로그 
+ </button>
                 </div>
               </div>
 
               {currentChMessages.length === 0 ? (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#64748b' }}>
                   오늘 무전 내역이 없습니다. (하단 버튼을 터치하여 말씀하세요)
-                </div>
+ </div>
               ) : (
                 <div 
                   ref={pttFeedContainerRef}
@@ -1019,7 +1019,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                           gap: '6px'
                         }}
                       >
-                        {/* 좌측: [채널] 화자명 시간 💬 줄바꿈 허용 풀텍스트 */}
+                        {/* 좌측: [채널] 화자명 시간  줄바꿈 허용 풀텍스트 */}
                         <div style={{
                           flex: 1,
                           minWidth: 0,
@@ -1142,20 +1142,20 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 }}>
                   {sttStatus === 'UNSUPPORTED' ? (
                     <span style={{ fontSize: '10.5px', color: '#fbbf24', fontWeight: '700' }}>
-                      ⚠️ 브라우저 음성인식 미지원 (음성은 정상 녹음·전송됨)
-                    </span>
+                       브라우저 음성인식 미지원 (음성은 정상 녹음·전송됨)
+ </span>
                   ) : sttStatus === 'ERROR' ? (
                     <span style={{ fontSize: '10.5px', color: '#f87171', fontWeight: '700' }}>
-                      ⚠️ 음성인식 대기중 ({sttErrorDetail || '마이크 확인'})
-                    </span>
+                       음성인식 대기중 ({sttErrorDetail || '마이크 확인'})
+ </span>
                   ) : liveTranscript ? (
                     <div style={{ fontSize: '12px', color: '#fef08a', fontWeight: '800', wordBreak: 'break-all' }}>
-                      💬 "{liveTranscript}"
-                    </div>
+                       "{liveTranscript}"
+ </div>
                   ) : (
                     <span style={{ fontSize: '11px', color: '#38bdf8' }}>
                       한국어 음성 인식 중... (말씀하세요)
-                    </span>
+ </span>
                   )}
                 </div>
               )}
@@ -1212,48 +1212,48 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                     <Loader2 size={20} className="animate-spin" color="#38bdf8" />
                     <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#e0f2fe' }}>
                       음성 전송 중...
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', opacity: 0.85, fontWeight: '500', color: '#bae6fd' }}>
                       (잠시만 대기)
-                    </span>
+ </span>
                   </>
                 ) : isStarting ? (
                   <>
                     <Loader2 size={20} className="animate-spin" color="#38bdf8" />
                     <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#e0f2fe' }}>
                       마이크 연결 중...
-                    </span>
+ </span>
                   </>
                 ) : isTransmitting ? (
                   <>
                     <Mic size={20} color="#ffffff" />
                     <span style={{ fontSize: '14.5px', fontWeight: '900', letterSpacing: '0.5px' }}>
                       발언 중 ({recordDuration}s) [터치하여 전송]
-                    </span>
+ </span>
                   </>
                 ) : isSomeoneElseTalking ? (
                   <>
                     <Volume2 size={20} color="#fde68a" />
                     <span style={{ fontSize: '14px', fontWeight: '800', color: '#fef08a' }}>
                       [{talkingStatus?.senderName}] 발언 중... (잠시 대기)
-                    </span>
+ </span>
                   </>
                 ) : isPowerOn ? (
                   <>
                     <Radio size={20} color="#ffffff" />
                     <span style={{ fontSize: '14.5px', fontWeight: '800' }}>
                       터치하고 말하기
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', opacity: 0.85, fontWeight: '500' }}>
                       (완료 시 다시 터치)
-                    </span>
+ </span>
                   </>
                 ) : (
                   <>
                     <MicOff size={18} color="#94a3b8" />
                     <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#94a3b8' }}>
                       무전기 전원 꺼짐 (상단 전원을 켜주세요)
-                    </span>
+ </span>
                   </>
                 )}
               </button>
@@ -1299,9 +1299,9 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                   {currentChInfo.name} • {currentChMessages.length}건
-                </span>
+ </span>
 
-                {/* 🐞 디버그 로그 ON/OFF 토글 버튼 */}
+                {/*  디버그 로그 ON/OFF 토글 버튼 */}
                 <button
                   type="button"
                   onClick={handleToggleDebug}
@@ -1318,7 +1318,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                   }}
                   title="디버깅 로그 화면 출력 켜기 / 끄기"
                 >
-                  {showDebugLogs ? '🐞 디버그ON' : '디버그OFF'}
+                  {showDebugLogs ? '디버그ON' : '디버그OFF'}
                 </button>
 
                 {history.length > 0 && (
@@ -1341,7 +1341,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                     }}
                   >
                     대화 비우기
-                  </button>
+ </button>
                 )}
               </div>
             </div>
@@ -1370,7 +1370,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                   <div>이 채널의 무전 대화 기록이 없습니다.</div>
                   <div style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>
                     무전으로 말한 내용은 음성과 함께 텍스트로 자동 기록됩니다.
-                  </div>
+ </div>
                 </div>
               ) : (
                 [...currentChMessages].reverse().map(msg => {
@@ -1420,7 +1420,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                         gap: '6px'
                       }}
                     >
-                      {/* 좌측: [채널] 화자명 시간 💬 줄바꿈 허용 풀텍스트 */}
+                      {/* 좌측: [채널] 화자명 시간  줄바꿈 허용 풀텍스트 */}
                       <div style={{
                         flex: 1,
                         minWidth: 0,
@@ -1517,7 +1517,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
             }}>
               <span style={{ fontSize: '13px', fontWeight: '900', color: '#f8fafc' }}>
                 새 채널 개설
-              </span>
+ </span>
               <button
                 type="button"
                 onClick={() => setIsCreateChannelOpen(false)}
@@ -1541,7 +1541,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
                   채널명 *
-                </label>
+ </label>
                 <input
                   type="text"
                   value={newChannelName}
@@ -1563,7 +1563,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
                   채널 설명 (선택)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={newChannelDesc}
@@ -1586,7 +1586,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <label style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
                     참여 사원 선택 ({selectedMemberIds.length}명 선택됨)
-                  </label>
+ </label>
                   <button
                     type="button"
                     onClick={() => {
@@ -1719,7 +1719,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 }}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={!newChannelName.trim()}
@@ -1751,7 +1751,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 }}
               >
                 개설
-              </button>
+ </button>
             </div>
           </div>
         )}
@@ -1780,10 +1780,10 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
               <div>
                 <span style={{ fontSize: '13px', fontWeight: '900', color: '#f8fafc' }}>
                   사원 초대
-                </span>
+ </span>
                 <span style={{ fontSize: '11px', color: '#38bdf8', marginLeft: '6px' }}>
                   [{currentChInfo.name}]
-                </span>
+ </span>
               </div>
               <button
                 type="button"
@@ -1830,7 +1830,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                   <div>기본 채널은 회사의 모든 임직원이 자동으로 소통에 참여하고 있습니다.</div>
                   <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
                     특정 인원만 참여하는 채널이 필요하신 경우 상단의 <b>[+ 새 채널]</b>을 통해 개설해 주세요.
-                  </div>
+ </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -1866,7 +1866,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <label style={{ fontSize: '11px', fontWeight: '800', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
                       초대할 사원 선택 ({inviteMemberIds.length}명 선택됨)
-                    </label>
+ </label>
                     <button
                       type="button"
                       onClick={() => {
@@ -1977,7 +1977,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                     {activeUsers.filter(u => !(currentChInfo.memberIds || []).includes(u.id)).length === 0 && (
                       <div style={{ padding: '20px 10px', textAlign: 'center', color: '#64748b', fontSize: '11.5px' }}>
                         모든 임직원이 이미 이 채널에 참여 중입니다.
-                      </div>
+ </div>
                     )}
                   </div>
                 </>
@@ -2010,7 +2010,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                 }}
               >
                 닫기
-              </button>
+ </button>
               {!(currentChInfo.isDefault && (!currentChInfo.memberIds || currentChInfo.memberIds.length === 0)) && (
                 <button
                   type="button"
@@ -2034,7 +2034,7 @@ export const MobileWalkieTalkieModal: React.FC<MobileWalkieTalkieModalProps> = (
                   }}
                 >
                   초대 ({inviteMemberIds.length}명)
-                </button>
+ </button>
               )}
             </div>
           </div>

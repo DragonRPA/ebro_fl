@@ -419,7 +419,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
             <span>·</span>
             <strong className="text-emerald-300 font-extrabold">
               현재고 {inventoryTotals.stockOwned + inventoryTotals.stockRented}대 (계약가능 {inventoryTotals.availableContractQty}대)
-            </strong>
+ </strong>
           </div>
         </div>
 
@@ -495,7 +495,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
               }`}
             >
               전체 피트
-            </button>
+ </button>
             {uniqueFeetList.map(ft => (
               <button
                 key={ft}
@@ -508,7 +508,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                 }`}
               >
                 {ft}ft
-              </button>
+ </button>
             ))}
           </div>
         )}
@@ -528,7 +528,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                   inventoryTotals.availableContractQty < 0 ? 'text-rose-400' : 'text-sky-300'
                 }`}>
                   {inventoryTotals.availableContractQty}대
-                </strong>
+ </strong>
                 <span className="text-[10px] text-slate-300 whitespace-nowrap">재고-예정</span>
               </div>
             </div>
@@ -538,7 +538,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
               <div className="flex items-baseline justify-between mt-1">
                 <strong className="text-lg font-black text-emerald-300 whitespace-nowrap">
                   {inventoryTotals.stockOwned + inventoryTotals.stockRented}대
-                </strong>
+ </strong>
                 <span className="text-[10px] text-slate-200 font-bold whitespace-nowrap">
                   {inventoryTotals.stockOwned}/{inventoryTotals.stockRented}
                 </span>
@@ -550,7 +550,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
               <div className="flex items-baseline justify-between mt-1">
                 <strong className="text-lg font-black text-amber-300 whitespace-nowrap">
                   {inventoryTotals.scheduledOwned + inventoryTotals.scheduledRented}대
-                </strong>
+ </strong>
                 <span className="text-[10px] text-slate-200 font-bold whitespace-nowrap">
                   {inventoryTotals.scheduledOwned}/{inventoryTotals.scheduledRented}
                 </span>
@@ -569,13 +569,13 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                     <th rowSpan={2} style={{ padding: '6px 6px', textAlign: 'left', fontWeight: 800, color: '#ffffff', backgroundColor: '#1e293b', borderRight: '1px solid #334155', whiteSpace: 'nowrap' }}>모델명</th>
                     <th rowSpan={2} style={{ padding: '6px 5px', textAlign: 'center', fontWeight: 900, backgroundColor: '#172554', color: '#7dd3fc', borderRight: '1px solid #334155', whiteSpace: 'nowrap' }}>
                       계약가능<br/>재고
-                    </th>
+ </th>
                     <th colSpan={2} style={{ padding: '4px 3px', textAlign: 'center', fontWeight: 800, backgroundColor: '#064e3b', color: '#6ee7b7', borderRight: '1px solid #334155', borderBottom: '1px solid #334155', whiteSpace: 'nowrap' }}>
                       재고
-                    </th>
+ </th>
                     <th colSpan={2} style={{ padding: '4px 3px', textAlign: 'center', fontWeight: 800, backgroundColor: '#78350f', color: '#fde68a', borderBottom: '1px solid #334155', whiteSpace: 'nowrap' }}>
                       출고예정
-                    </th>
+ </th>
                   </tr>
                   <tr style={{ backgroundColor: '#1e293b', color: '#f8fafc', borderBottom: '2px solid #475569' }}>
                     <th style={{ padding: '4px 4px', textAlign: 'center', fontWeight: 800, color: '#a7f3d0', backgroundColor: '#064e3b', borderRight: '1px solid #334155', whiteSpace: 'nowrap', fontSize: '10px' }}>당사</th>
@@ -589,7 +589,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                     <tr style={{ backgroundColor: '#0f172a' }}>
                       <td colSpan={8} style={{ padding: '24px 12px', textAlign: 'center', color: '#e2e8f0', backgroundColor: '#0f172a', fontWeight: 700 }}>
                         조건에 일치하는 모델 재고 내역이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     filteredInventoryRows.map((row, idx) => {
@@ -645,7 +645,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                   <tr style={{ backgroundColor: '#1e293b', borderTop: '2px solid #64748b', color: '#ffffff', fontWeight: 900 }}>
                     <td colSpan={3} style={{ padding: '8px 6px', textAlign: 'left', color: '#ffffff', backgroundColor: '#1e293b', borderRight: '1px solid #334155', whiteSpace: 'nowrap' }}>
                       합계 ({filteredInventoryRows.length}개 모델)
-                    </td>
+ </td>
                     <td style={{ padding: '8px 5px', textAlign: 'right', color: inventoryTotals.availableContractQty < 0 ? '#fda4af' : '#7dd3fc', backgroundColor: '#172554', borderRight: '1px solid #334155', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 900 }}>
                       {inventoryTotals.availableContractQty}
                     </td>
@@ -673,10 +673,10 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
               <div>
                 <div className="text-xs font-black text-amber-300 tracking-wide whitespace-nowrap">
                   ----------출고 예정------------
-                </div>
+ </div>
                 <div className="text-[11px] text-slate-300 mt-0.5 whitespace-nowrap">
                   미완결 출고요청 {scheduledOutboundLines.length}건 · 총 {scheduledOutboundLines.reduce((s, l) => s + l.totalQty, 0)}대
-                </div>
+ </div>
               </div>
               <button
                 type="button"
@@ -691,7 +691,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
             {scheduledOutboundLines.length === 0 ? (
               <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-300 font-semibold">
                 현재 미완결 출고예정 내역이 없습니다.
-              </div>
+ </div>
             ) : (
               <div className="flex flex-col gap-1.5 bg-slate-950/80 p-2.5 rounded-lg border border-slate-700">
                 {scheduledOutboundLines.map((line) => (
@@ -704,7 +704,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                     </span>
                     <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10.5px] font-extrabold whitespace-nowrap shrink-0">
                       {line.totalQty}대
-                    </span>
+ </span>
                   </div>
                 ))}
               </div>
@@ -734,7 +734,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
             </span>
             <span className="text-emerald-300 font-extrabold">
               임대가능 {inventoryTotals.stockOwned + inventoryTotals.stockRented}대
-            </span>
+ </span>
           </div>
 
           {searchTerm.trim() && (
@@ -746,7 +746,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
               {searchResults.length === 0 ? (
                 <div className="p-6 text-center text-xs text-slate-300 bg-slate-900 rounded-2xl border border-slate-700">
                   일치하는 장비가 없습니다.
-                </div>
+ </div>
               ) : (
                 <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
                   {searchResults.map(a => {
@@ -870,11 +870,11 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                     <h3 className="text-lg font-black text-white">{selectedSpec.ft} 상세 재고</h3>
                     <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-xs font-extrabold border border-blue-500/40">
                       가용 {availList.length}대
-                    </span>
+ </span>
                   </div>
                   <div className="text-xs text-slate-300 mt-0.5">
                     {selectedSpec.workHeight} ({selectedSpec.subModels})
-                  </div>
+ </div>
                 </div>
                 <button
                   type="button"
@@ -890,11 +890,11 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                   <h4 className="text-xs font-extrabold text-emerald-300 mb-2 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
                     임대 가능 장비 ({availList.length}대)
-                  </h4>
+ </h4>
                   {availList.length === 0 ? (
                     <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-700 text-center text-xs text-slate-300">
                       현재 해당 규격의 임대 가능 자산이 없습니다.
-                    </div>
+ </div>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {availList.map(asset => {
@@ -946,7 +946,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                     <h4 className="text-xs font-extrabold text-sky-300 mb-2 flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
                       3일 이내 반납 예정 장비 ({specStat.returnDueCount}대)
-                    </h4>
+ </h4>
                     <div className="flex flex-col gap-2">
                       {specStat.matchedAssets
                         .filter(a => a.id && upcomingReturns[a.id])
@@ -968,7 +968,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                               </div>
                               <span className="px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-200 text-[11px] font-bold border border-sky-500/40 flex-shrink-0">
                                 {retInfo.endDate} 반납예정
-                              </span>
+ </span>
                             </div>
                           );
                         })}
@@ -998,7 +998,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
                   className={`${(deptMode === 'SALES' || !deptMode) && onNavigateToOrder ? 'w-24' : 'w-full'} py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-600 active:scale-98 transition-all`}
                 >
                   닫기
-                </button>
+ </button>
               </div>
             </div>
           </div>

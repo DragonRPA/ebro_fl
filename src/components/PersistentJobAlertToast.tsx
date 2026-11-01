@@ -153,7 +153,7 @@ export const PersistentJobAlertToast: React.FC<Props> = ({ onNavigateMenu }) => 
             >
               <Check size={13} color="var(--text-muted)" />
               확인
-            </button>
+ </button>
 
             {alert.actionMenuId && (
               <button

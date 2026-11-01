@@ -450,10 +450,10 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
           <Camera className="w-5 h-5 text-cyan-400 shrink-0" />
           <span className="text-sm font-black text-white whitespace-nowrap truncate">
             카메라 관리번호 실시간 스캔
-          </span>
+ </span>
           <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-950 text-blue-300 border border-blue-800 whitespace-nowrap shrink-0">
             선택 {selectedAssetIds.length} / {requiredSlotCount}대
-          </span>
+ </span>
         </div>
 
         <button
@@ -476,7 +476,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
           <span className="text-slate-500">|</span>
           <span className="text-slate-300 font-bold whitespace-nowrap">
             가용 후보 {availableAssets.length}대
-          </span>
+ </span>
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -490,7 +490,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
             }`}
           >
             {zoomLevel}배 확대
-          </button>
+ </button>
 
           <button
             type="button"
@@ -622,14 +622,14 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
                 className="px-3.5 py-2 rounded-xl bg-slate-800 text-white border border-slate-600 text-xs font-bold whitespace-nowrap"
               >
                 카메라 다시 연결
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold whitespace-nowrap"
               >
                 사진 촬영 판독
-              </button>
+ </button>
             </div>
           </div>
         )}
@@ -670,7 +670,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
               <div className="flex flex-col min-w-0">
                 <span className="text-xs font-black text-white font-mono">
                   {recentAutoSelectedAsset.assetNo} ({recentAutoSelectedAsset.modelName}) 선택 완료
-                </span>
+ </span>
                 <span className="text-[11px] text-emerald-300">
                   {remainingNeeded > 0
                     ? `추가로 ${remainingNeeded}대 더 스캔할 수 있습니다.`
@@ -686,7 +686,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
                 className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black whitespace-nowrap shrink-0"
               >
                 선택 완료 닫기
-              </button>
+ </button>
             )}
           </div>
         )}
@@ -696,7 +696,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-300">
               인식된 관리번호 매칭 후보 ({matchedCandidates.length}건)
-            </span>
+ </span>
             <div className="grid grid-cols-1 gap-1.5">
               {matchedCandidates.map(cand => {
                 const isAlreadySelected = selectedAssetIds.includes(cand.id);

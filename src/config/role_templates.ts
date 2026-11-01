@@ -154,7 +154,7 @@ export const MECHANIC_TEMPLATE: PermissionRuleMap = {
 };
 
 /**
- * 🏢 부서 ID 또는 부서명, 직무 Role 기반 표준 권한 템플릿 반환
+ *  부서 ID 또는 부서명, 직무 Role 기반 표준 권한 템플릿 반환
  */
 export function getRoleTemplate(role?: string, departmentIdOrName?: string): PermissionRuleMap {
   const r = (role || '').toUpperCase();
@@ -195,7 +195,7 @@ export function getRoleTemplate(role?: string, departmentIdOrName?: string): Per
 }
 
 /**
- * 🔍 특정 사용자의 직무 템플릿에서 해당 메뉴의 기본 권한 판정
+ *  특정 사용자의 직무 템플릿에서 해당 메뉴의 기본 권한 판정
  */
 export function getRoleTemplatePermission(
   role: string | undefined,

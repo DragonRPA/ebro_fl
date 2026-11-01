@@ -89,19 +89,19 @@ function getGroupCheckpoints(
     }
   });
 
-  // 3. 유상옵션 (site.paidOptions ➔ 옵션 그룹 ➔ customer.defaultPaidOptions, 옵션마스터 등록 항목만)
+  // 3. 유상옵션 (site.paidOptions  옵션 그룹  customer.defaultPaidOptions, 옵션마스터 등록 항목만)
   const paidOpts = site?.paidOptions || siteMaster?.paidOptions || customer?.defaultPaidOptions || '';
   splitMasterAwareOptions(paidOpts, masterOpts, { onlyMasterOptions: true, stripPrice: true }).forEach((opt, i) => {
     checkpoints.push({ id: `paid_${i}`, label: `[유상옵션] ${opt} 장착 확인`, type: 'OPTION' });
   });
 
-  // 4. 무상옵션 / 보양 (site.protection ➔ 옵션 그룹 ➔ customer.defaultProtection, 옵션마스터 등록 항목만)
+  // 4. 무상옵션 / 보양 (site.protection  옵션 그룹  customer.defaultProtection, 옵션마스터 등록 항목만)
   const protOpts = site?.protection || siteMaster?.protection || customer?.defaultProtection || '';
   splitMasterAwareOptions(protOpts, masterOpts, { onlyMasterOptions: true }).forEach((opt, i) => {
     checkpoints.push({ id: `prot_${i}`, label: `[무상옵션] ${opt} 시공 확인`, type: 'OPTION' });
   });
 
-  // 5. 부착물 (site.attachments ➔ 옵션 그룹 ➔ customer.defaultAttachments, 옵션마스터 등록 항목만)
+  // 5. 부착물 (site.attachments  옵션 그룹  customer.defaultAttachments, 옵션마스터 등록 항목만)
   const attOpts = site?.attachments || siteMaster?.attachments || customer?.defaultAttachments || '';
   splitMasterAwareOptions(attOpts, masterOpts, { onlyMasterOptions: true }).forEach((opt, i) => {
     checkpoints.push({ id: `att_${i}`, label: `[부착물] ${opt} 비치/부착 확인`, type: 'OPTION' });
@@ -119,7 +119,7 @@ interface InspectionGroup {
   customerName: string;
   siteName: string;
   requestDate: string;
-  loadingDate: string; // 🚚 상차일자(일자)
+  loadingDate: string; //  상차일자(일자)
   deliveryId?: string; // 연결된 출고 배차 ID
   status: OutboundInspectionStatus;
   items: OutboundInspection[];
@@ -177,13 +177,13 @@ export const OutboundInspections: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 📅 상차일자 기간 필터 state — 기본값: 오늘 기준 과거 3개월 ~ 무한(종료일 미설정)
+  //  상차일자 기간 필터 state — 기본값: 오늘 기준 과거 3개월 ~ 무한(종료일 미설정)
   const _today = new Date();
   const _start = new Date(_today); _start.setMonth(_today.getMonth() - 3);
   const [startDate, setStartDate] = useState<string>(_start.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState<string>('');
 
-  // 💡 [사장님 지시] Quick 날짜 선택 헬퍼 - 오늘 이후 미래 기준 조회 (1주일: 오늘~+7일, 1개월: 오늘~+30일)
+  //  [사장님 지시] Quick 날짜 선택 헬퍼 - 오늘 이후 미래 기준 조회 (1주일: 오늘~+7일, 1개월: 오늘~+30일)
   const handleSetDateRange = (type: 'TODAY' | 'WEEK' | 'MONTH' | 'ALL') => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -218,15 +218,15 @@ export const OutboundInspections: React.FC = () => {
   // 반려 시 수리정비중 전환 선택 옵션 (기본값: true)
   const [rejectToRepairing, setRejectToRepairing] = useState<boolean>(true);
 
-  // 🔄 장비 교체 모달 상태
+  //  장비 교체 모달 상태
   const [exchangeModalAsset, setExchangeModalAsset] = useState<Asset | null>(null);
   const [targetNewAssetId, setTargetNewAssetId] = useState<string>('');
-  const [selectedChecklistId, setSelectedChecklistId] = useState<string>(''); // 💡 마스터 등록 정비사유 ID
+  const [selectedChecklistId, setSelectedChecklistId] = useState<string>(''); //  마스터 등록 정비사유 ID
   const [exchangeReason, setExchangeReason] = useState<string>('');
-  const [exchangeToRepairing, setExchangeToRepairing] = useState<boolean>(false); // 💡 기본값: false (수리 미전환)
-  const [exchangeSearchQuery, setExchangeSearchQuery] = useState<string>(''); // 🔍 대체 장비 관리번호 검색어
+  const [exchangeToRepairing, setExchangeToRepairing] = useState<boolean>(false); //  기본값: false (수리 미전환)
+  const [exchangeSearchQuery, setExchangeSearchQuery] = useState<string>(''); //  대체 장비 관리번호 검색어
 
-  // 💡 O(1) 룩업 맵 사전 생성
+  //  O(1) 룩업 맵 사전 생성
   const contractMap = useMemo(() => {
     const map = new Map<string, Contract>();
     for (let i = 0; i < contracts.length; i++) map.set(contracts[i].id, contracts[i]);
@@ -312,7 +312,7 @@ export const OutboundInspections: React.FC = () => {
     return { pending, inProgress, completed, rejected };
   }, [outboundInspections]);
 
-  // 💡 교체 모달 오픈 시 또는 검색 시 조건에 맞는 첫번째 대체 장비 100% 자동선택!
+  //  교체 모달 오픈 시 또는 검색 시 조건에 맞는 첫번째 대체 장비 100% 자동선택!
   React.useEffect(() => {
     if (exchangeModalAsset) {
       const q = exchangeSearchQuery.trim();
@@ -355,7 +355,7 @@ export const OutboundInspections: React.FC = () => {
     };
 
     outboundInspections.forEach(item => {
-      // 💡 고아 레코드 가드: 계약 대장이 로드된 상태에서 계약 연결이 없는 고아 검수의뢰는 대기열에서 제외
+      //  고아 레코드 가드: 계약 대장이 로드된 상태에서 계약 연결이 없는 고아 검수의뢰는 대기열에서 제외
       if (hasContracts && (!item.contractId || !contractMap.has(item.contractId))) {
         return;
       }
@@ -409,7 +409,7 @@ export const OutboundInspections: React.FC = () => {
         )
         || (firstItem.contractId ? outboundDeliveryByContractMap.get(firstItem.contractId) : undefined);
 
-      // 🔍 해당 출고 건(또는 계약)의 전체 슬롯 대비 미할당 슬롯 정밀 집계 (부분 할당 시 출고검수 승인 차단용)
+      //  해당 출고 건(또는 계약)의 전체 슬롯 대비 미할당 슬롯 정밀 집계 (부분 할당 시 출고검수 승인 차단용)
       const targetCaIds = extractDeliveryCaIds(delivery);
       const targetCas = targetCaIds.length > 0
         ? targetCaIds.map(id => contractAssetMap.get(id)).filter((ca): ca is ContractAsset => !!ca && ca.status !== 'RETURNED')
@@ -554,7 +554,7 @@ export const OutboundInspections: React.FC = () => {
     setCheckedItems(initialMap);
   };
 
-  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 출고검수 그룹을 즉시 탐색·필터 동기화 후 스튜디오에 오픈
+  //  대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 출고검수 그룹을 즉시 탐색·필터 동기화 후 스튜디오에 오픈
   useEffect(() => {
     if (!navigationPayload || inspectionGroups.length === 0) return;
     const targetInspId = navigationPayload.inspectionId || '';
@@ -607,7 +607,7 @@ export const OutboundInspections: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3. 작업 접수 실행 (PENDING ➔ IN_PROGRESS & 자산 status ➔ OUTBOUND_INSPECTION)
+  // 3. 작업 접수 실행 (PENDING  IN_PROGRESS & 자산 status  OUTBOUND_INSPECTION)
   // ──────────────────────────────────────────────────────────────────────────
   const handleAcceptGroup = async (group: InspectionGroup) => {
     if (!canEdit) return;
@@ -649,7 +649,7 @@ export const OutboundInspections: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3-B. 작업 접수 취소 롤백 (IN_PROGRESS ➔ PENDING & 자산 status ➔ ASSIGNED)
+  // 3-B. 작업 접수 취소 롤백 (IN_PROGRESS  PENDING & 자산 status  ASSIGNED)
   // ──────────────────────────────────────────────────────────────────────────
   const handleCancelAcceptGroup = async (group: InspectionGroup) => {
     if (!canEdit) return;
@@ -690,12 +690,12 @@ export const OutboundInspections: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4. 최종 출고 승인 완료 (IN_PROGRESS ➔ COMPLETED & 자산 status ➔ ASSIGNED)
+  // 4. 최종 출고 승인 완료 (IN_PROGRESS  COMPLETED & 자산 status  ASSIGNED)
   // ──────────────────────────────────────────────────────────────────────────
   const handleApproveGroup = async () => {
     if (!selectedGroup || !canEdit) return;
 
-    // 🔴 [출고제한 가드] 연체 및 거래차단 고객사 최종 출고 승인 원천 차단
+    //  [출고제한 가드] 연체 및 거래차단 고객사 최종 출고 승인 원천 차단
     const contract = db.contracts.find(c => c.id === selectedGroup.contractId);
     const customer = contract ? db.customers.find(c => c.id === contract.customerId) : undefined;
     if (customer && isCustomerRestricted(customer.transactionStatus)) {
@@ -703,7 +703,7 @@ export const OutboundInspections: React.FC = () => {
       return;
     }
 
-    // 🔴 [결재 대기 차단 가드] 고객 등록 또는 계약 체결 결재가 미승인(PENDING)인 경우 출고검수 승인 차단
+    //  [결재 대기 차단 가드] 고객 등록 또는 계약 체결 결재가 미승인(PENDING)인 경우 출고검수 승인 차단
     const pendingReqs = ((db as any).approvalRequests || []).filter((r: any) => r.status === 'PENDING');
     if (customer) {
       const custPending = pendingReqs.some((r: any) =>
@@ -726,7 +726,7 @@ export const OutboundInspections: React.FC = () => {
       }
     }
 
-    // 🔴 [절차적 무결성 가드 1]: 해당 출고 요청(배차/계약)의 전체 요청 수량 중 미할당 슬롯이 1대라도 남아있으면 승인 원천 차단
+    //  [절차적 무결성 가드 1]: 해당 출고 요청(배차/계약)의 전체 요청 수량 중 미할당 슬롯이 1대라도 남아있으면 승인 원천 차단
     if ((selectedGroup.unassignedSlotCount || 0) > 0) {
       showErrorModal(
         `해당 출고 건에 아직 장비가 할당되지 않은 미할당 슬롯이 ${selectedGroup.unassignedSlotCount}대(${selectedGroup.unassignedSlotSummary || '미할당'}) 존재합니다.\n\n` +
@@ -737,7 +737,7 @@ export const OutboundInspections: React.FC = () => {
       return;
     }
 
-    // 🔴 [절차적 무결성 가드 2]: 모든 검수 품목에 실물 장비 및 계약 슬롯 매핑 무결성 검증
+    //  [절차적 무결성 가드 2]: 모든 검수 품목에 실물 장비 및 계약 슬롯 매핑 무결성 검증
     const unassignedItems = selectedGroup.items.filter(item => {
       if (!item.assetId || !assetMap.has(item.assetId)) return true;
       if (item.contractAssetId) {
@@ -791,7 +791,7 @@ export const OutboundInspections: React.FC = () => {
           updatedAt: nowIso
         });
 
-        // 🟢 출고 검수 완료 시 해당 고유 장비의 status ➔ 'AWAITING_TRANSPORT' (운송대기) 으로 변동!
+        //  출고 검수 완료 시 해당 고유 장비의 status  'AWAITING_TRANSPORT' (운송대기) 으로 변동!
         if (item.assetId) {
           const linkedDeliv = itemDeliveryId ? db.deliveries.find(d => d.id === itemDeliveryId) : undefined;
           const matchedCa = item.contractAssetId ? db.contractAssets.find(ca => ca.id === item.contractAssetId) : undefined;
@@ -823,7 +823,7 @@ export const OutboundInspections: React.FC = () => {
             });
           }
 
-          // 🟢 [헌장 1.2] 발생 사건 무누락 DB 저장: 출고 검수 승인 시 자산 입출고 이력 1:1 정규화 저장 (하차 예정일 기준)
+          //  [헌장 1.2] 발생 사건 무누락 DB 저장: 출고 검수 승인 시 자산 입출고 이력 1:1 정규화 저장 (하차 예정일 기준)
           const targetAsset = db.assets.find(a => a.id === item.assetId);
           const site = contract ? db.sites.find(s => s.id === contract.siteId) : undefined;
 
@@ -844,7 +844,7 @@ export const OutboundInspections: React.FC = () => {
         }
       });
 
-      // 🟢 [단일 업무 인계 파이프라인] 출고 PDI 검수 ToDo 자동 상계
+      //  [단일 업무 인계 파이프라인] 출고 PDI 검수 ToDo 자동 상계
       for (const item of selectedGroup.items) {
         await clearHandoverTasks({
           entityId: item.id,
@@ -873,7 +873,7 @@ export const OutboundInspections: React.FC = () => {
         });
       }
 
-      // 🚀 [단일 업무 인계 파이프라인] 배차팀에 장비 상차 출발 ToDo 발행 (헌장 2.1 영업과 배차 R&R 엄격 분리)
+      //  [단일 업무 인계 파이프라인] 배차팀에 장비 상차 출발 ToDo 발행 (헌장 2.1 영업과 배차 R&R 엄격 분리)
       await issueHandoverTask({
         category: 'OUTBOUND_SHIPMENT_START',
         title: `[장비 상차 출발] ${selectedGroup.customerName} (${selectedGroup.items.length}대 PDI 완료)`,
@@ -900,7 +900,7 @@ export const OutboundInspections: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4-B. 출고 승인 취소 롤백 (COMPLETED ➔ IN_PROGRESS & 자산 AWAITING_TRANSPORT ➔ OUTBOUND_INSPECTION)
+  // 4-B. 출고 승인 취소 롤백 (COMPLETED  IN_PROGRESS & 자산 AWAITING_TRANSPORT  OUTBOUND_INSPECTION)
   // ──────────────────────────────────────────────────────────────────────────
   const handleConfirmRollback = async () => {
     if (!selectedGroup || !canEdit || selectedGroup.status !== 'COMPLETED') return;
@@ -915,7 +915,7 @@ export const OutboundInspections: React.FC = () => {
       const userName = currentUser?.name || '담당엔지니어';
       const contract = db.contracts.find(c => c.id === selectedGroup.contractId);
 
-      // 1. 검수 레코드 원복 (COMPLETED ➔ IN_PROGRESS 검수 진행중)
+      // 1. 검수 레코드 원복 (COMPLETED  IN_PROGRESS 검수 진행중)
       selectedGroup.items.forEach(item => {
         db.updateRow<OutboundInspection>('outboundInspections', item.id, {
           status: 'IN_PROGRESS',
@@ -924,7 +924,7 @@ export const OutboundInspections: React.FC = () => {
           updatedAt: nowIso
         });
 
-        // 2. 자산 상태 롤백 (AWAITING_TRANSPORT / RENTED ➔ OUTBOUND_INSPECTION 출고검수)
+        // 2. 자산 상태 롤백 (AWAITING_TRANSPORT / RENTED  OUTBOUND_INSPECTION 출고검수)
         if (item.assetId) {
           db.updateRow<Asset>('assets', item.assetId, {
             status: 'OUTBOUND_INSPECTION',
@@ -1163,7 +1163,7 @@ export const OutboundInspections: React.FC = () => {
 
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 5. 출고 반려 처리 (REJECTED & 자산 status ➔ REPAIRING 로 불량 전환)
+  // 5. 출고 반려 처리 (REJECTED & 자산 status  REPAIRING 로 불량 전환)
   // ──────────────────────────────────────────────────────────────────────────
   const handleConfirmReject = async () => {
     if (!selectedGroup || !canEdit) return;
@@ -1185,7 +1185,7 @@ export const OutboundInspections: React.FC = () => {
         const site = contract ? db.sites.find(s => s.id === contract.siteId) : undefined;
         let createdRepairId: string | undefined = undefined;
 
-        // 🔴 1. 수리정비중 전환 시 긴급 수리 티켓 1:1 자동 발행 (헌장 1.2 무누락 저장)
+        //  1. 수리정비중 전환 시 긴급 수리 티켓 1:1 자동 발행 (헌장 1.2 무누락 저장)
         if (item.assetId && rejectToRepairing) {
           const newRepair = db.insertRow<Repair>('repairs', {
             assetId: item.assetId,
@@ -1224,7 +1224,7 @@ export const OutboundInspections: React.FC = () => {
             createdAt: nowIso
           });
 
-          // 🔴 2. 계약자산에서 결함 장비 안전 해제 (계약 결함장비 잔류 원천 방어)
+          //  2. 계약자산에서 결함 장비 안전 해제 (계약 결함장비 잔류 원천 방어)
           if (item.contractAssetId) {
             db.updateRow<ContractAsset>('contractAssets', item.contractAssetId, {
               assetId: null as any
@@ -1260,7 +1260,7 @@ export const OutboundInspections: React.FC = () => {
         }
       });
 
-      // 🟢 [단일 업무 인계 파이프라인] 출고 PDI 검수 ToDo 상계
+      //  [단일 업무 인계 파이프라인] 출고 PDI 검수 ToDo 상계
       for (const item of selectedGroup.items) {
         await clearHandoverTasks({
           entityId: item.id,
@@ -1280,7 +1280,7 @@ export const OutboundInspections: React.FC = () => {
         }
       }
 
-      // 🚀 결함 수리 전환 시 주기장 정비 ToDo 및 배차 대체배정 ToDo 발행
+      //  결함 수리 전환 시 주기장 정비 ToDo 및 배차 대체배정 ToDo 발행
       if (rejectToRepairing) {
         await issueHandoverTask({
           category: 'INBOUND_REPAIR_DEFECT',
@@ -1324,7 +1324,7 @@ export const OutboundInspections: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 6. 🔄 장비 교체 실행 (출고 검수 진행 중 장비 교체)
+  // 6.  장비 교체 실행 (출고 검수 진행 중 장비 교체)
   // ──────────────────────────────────────────────────────────────────────────
   const handleConfirmExchangeAsset = async () => {
     if (!exchangeModalAsset || !targetNewAssetId || !selectedGroup) {
@@ -1332,7 +1332,7 @@ export const OutboundInspections: React.FC = () => {
       return;
     }
 
-    // 💡 수리정비중 전환 시에만 사유 입력 필수, 수리 미전환 시 사유 입력은 선택 사항 (빈값 허용!)
+    //  수리정비중 전환 시에만 사유 입력 필수, 수리 미전환 시 사유 입력은 선택 사항 (빈값 허용!)
     const matchedChecklist = inspectionChecklistItems.find(item => item.id === selectedChecklistId);
     const customPenaltyScore = matchedChecklist ? Number(matchedChecklist.score) : undefined;
     const finalReason = matchedChecklist
@@ -1341,7 +1341,7 @@ export const OutboundInspections: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      // 💡 선택된 의뢰 그룹 및 장비에 정확히 매칭되는 contractAsset ID 탐색
+      //  선택된 의뢰 그룹 및 장비에 정확히 매칭되는 contractAsset ID 탐색
       const targetInsp = selectedGroup.items.find(i => i.assetId === exchangeModalAsset.id);
       const targetCaId = targetInsp?.contractAssetId || selectedGroup.contractId;
 
@@ -1351,7 +1351,7 @@ export const OutboundInspections: React.FC = () => {
         targetNewAssetId,
         finalReason,
         exchangeToRepairing, // 사용자 선택 전송!
-        customPenaltyScore // 💡 관리 정비사유 점수 (지정 시 기본 5점 제외)
+        customPenaltyScore //  관리 정비사유 점수 (지정 시 기본 5점 제외)
       );
 
       await db.awaitPendingWrites();
@@ -1467,7 +1467,7 @@ export const OutboundInspections: React.FC = () => {
         <div>
           <h2 data-mid="outbound_inspections-header" style={{ fontWeight: 700, fontSize: '17px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, whiteSpace: 'nowrap' }}>
             <CheckSquare size={18} color="var(--primary)" /> 출고 검수 관리
-          </h2>
+ </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
@@ -1491,7 +1491,7 @@ export const OutboundInspections: React.FC = () => {
           >
             <Boxes size={14} color="#d97706" />
             주기장 소모품 재고
-          </button>
+ </button>
           <button
             onClick={handleExportInspectionExcel}
             style={{
@@ -1513,7 +1513,7 @@ export const OutboundInspections: React.FC = () => {
           >
             <Download size={14} />
             엑셀 내보내기
-          </button>
+ </button>
         </div>
       </div>
 
@@ -1522,7 +1522,7 @@ export const OutboundInspections: React.FC = () => {
         {[
           { key: 'ALL', label: '전체 의뢰 보기', count: scopedGroups.length },
           { key: 'PENDING', label: '접수 대기', count: scopedStatusCounts.pending },
-          { key: 'IN_PROGRESS', label: '🔵 검수 진행중', count: scopedStatusCounts.inProgress },
+          { key: 'IN_PROGRESS', label: '검수 진행중', count: scopedStatusCounts.inProgress },
           { key: 'COMPLETED', label: '출고 승인 마감', count: scopedStatusCounts.completed },
           { key: 'REJECTED', label: '의뢰 반려', count: scopedStatusCounts.rejected },
         ].map(tab => (
@@ -1560,18 +1560,18 @@ export const OutboundInspections: React.FC = () => {
         ))}
       </div>
 
-      {/* 2열 메인 레이아웃 (좌: 의뢰 묶음 카드리스트 + 📅 기간 선택 | 우: 상세 검수서) */}
+      {/* 2열 메인 레이아웃 (좌: 의뢰 묶음 카드리스트 +  기간 선택 | 우: 상세 검수서) */}
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(340px, 420px) 1fr', gap: '16px', overflow: 'hidden' }}>
         
-        {/* [좌측] 의뢰 묶음 카드리스트 + 📅 요청일자 기간 지정 피커 */}
+        {/* [좌측] 의뢰 묶음 카드리스트 +  요청일자 기간 지정 피커 */}
         <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
           
-          {/* 📅 의뢰 신청일자 기간 지정 피커 및 1-Click Quick 버튼 */}
+          {/*  의뢰 신청일자 기간 지정 피커 및 1-Click Quick 버튼 */}
           <div style={{ marginBottom: '12px', padding: '10px 12px', backgroundColor: 'var(--bg-body)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Calendar size={13} /> 상차일자 기간 조회
-              </span>
+ </span>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {[
                   { label: '오늘', type: 'TODAY' },
@@ -1678,7 +1678,7 @@ export const OutboundInspections: React.FC = () => {
             {filteredGroups.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
                 조건에 해당하는 출고 요청 건이 없습니다.
-              </div>
+ </div>
             ) : (
               filteredGroups.map(group => {
                 const isSelected = selectedGroupId === group.groupId;
@@ -1721,7 +1721,7 @@ export const OutboundInspections: React.FC = () => {
                       {group.customerName}
                     </div>
                     <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                      📍 {group.siteName}
+                       {group.siteName}
                     </div>
 
                     {/* 포함 장비 요약 및 할당 장비 관리번호 */}
@@ -1744,7 +1744,7 @@ export const OutboundInspections: React.FC = () => {
                     <div>
                       <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                         검수 항목 ({group.checkpoints.length}개):
-                      </span>
+ </span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                         {group.checkpoints.slice(0, 4).map(cp => (
                           <span key={cp.id} style={{
@@ -1779,7 +1779,7 @@ export const OutboundInspections: React.FC = () => {
                           }}
                         >
                           ▶ 작업 접수 실행
-                        </button>
+ </button>
                       </div>
                     )}
                     {group.status === 'IN_PROGRESS' && canEdit && (
@@ -1798,8 +1798,8 @@ export const OutboundInspections: React.FC = () => {
                             cursor: 'pointer'
                           }}
                         >
-                          ↩️ 접수 취소
-                        </button>
+                          ↩ 접수 취소
+ </button>
                       </div>
                     )}
                   </div>
@@ -1824,9 +1824,9 @@ export const OutboundInspections: React.FC = () => {
                   <div>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <FileText size={14} /> 출고 요청 건 상세정보 (계약: {selectedGroup.contractNo})
-                    </span>
+ </span>
                     <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '4px 0 0 0' }}>
-                      🏢 {selectedGroup.customerName} — {selectedGroup.siteName}
+                       {selectedGroup.customerName} — {selectedGroup.siteName}
                     </h2>
                   </div>
                   {getStatusBadge(selectedGroup.status)}
@@ -1841,18 +1841,18 @@ export const OutboundInspections: React.FC = () => {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#15803d', fontSize: '13px', fontWeight: 700 }}>
                       <CheckCircle size={16} /> 출고 승인 마감 완료 (자산 운송대기 전환됨)
-                    </div>
+ </div>
                     <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                       장비 변경이나 재검수가 필요한 경우 하단의 [출고 승인 취소]를 진행하세요.
-                    </div>
+ </div>
                   </div>
                 )}
 
-                {/* 포함 장비 다수 묶음 상세 표출 + 🔄 [장비 교체] 버튼 장착! */}
+                {/* 포함 장비 다수 묶음 상세 표출 +  [장비 교체] 버튼 장착! */}
                 <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Wrench size={14} color="var(--primary)" /> 출고 장비 ({selectedGroup.assets.length}대)
-                  </div>
+ </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                     {selectedGroup.assets.map((asset, aIdx) => (
                       <div key={`${asset.id}-${aIdx}`} style={{ padding: '10px 12px', borderRadius: '8px', backgroundColor: 'var(--bg-body)', border: '1px solid var(--border-color)', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1884,7 +1884,7 @@ export const OutboundInspections: React.FC = () => {
                             }}
                           >
                             <ArrowRightLeft size={12} /> 교체
-                          </button>
+ </button>
                         )}
                       </div>
                     ))}
@@ -1902,13 +1902,13 @@ export const OutboundInspections: React.FC = () => {
                 </div>
               )}
 
-              {/* 🎯 의뢰 요구 맞춤 정비 스펙 체크리스트 */}
+              {/*  의뢰 요구 맞춤 정비 스펙 체크리스트 */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div>
                     <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Sparkles size={16} color="var(--primary)" /> 검수 항목 ({selectedGroup.checkpoints.length}개)
-                    </h3>
+ </h3>
                   </div>
                   {canEdit && (
                     <button
@@ -1917,7 +1917,7 @@ export const OutboundInspections: React.FC = () => {
                       style={{ fontSize: '12px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
                       <CheckCircle size={14} /> 전체 선택/해제
-                    </button>
+ </button>
                   )}
                 </div>
 
@@ -1968,7 +1968,7 @@ export const OutboundInspections: React.FC = () => {
                             color: isChecked ? '#16a34a' : cp.type === 'MODEL' ? '#2563eb' : cp.type === 'SPEC' ? '#059669' : '#d97706'
                           }}>
                             [{cp.type}] {index + 1}.
-                          </span>
+ </span>
                           <span style={{ fontSize: '13px', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#15803d' : 'var(--text-primary)' }}>
                             {cp.label}
                           </span>
@@ -1983,7 +1983,7 @@ export const OutboundInspections: React.FC = () => {
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 700, marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
                   검수 메모
-                </label>
+ </label>
                 <textarea
                   placeholder="예: 배터리 단자 정비 완료, 4면 망 완비 완료, 타이어 교체 등 특이사항 기록..."
                   value={inspectionNote}
@@ -2006,12 +2006,12 @@ export const OutboundInspections: React.FC = () => {
               </div>
 
               {/* ────────────────────────────────────────────────────────────────── */}
-              {/* 💬 출고 요청 자연어 원본 텍스트 전용 박스 (배차와 동일 디자인) */}
+              {/*  출고 요청 자연어 원본 텍스트 전용 박스 (배차와 동일 디자인) */}
               {/* ────────────────────────────────────────────────────────────────── */}
               <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: 'rgba(59,130,246,0.06)', border: '1.5px solid rgba(59,130,246,0.25)', borderRadius: '10px' }}>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MessageSquare size={16} /> 출고 요청 원문
-                </div>
+ </div>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', lineHeight: '1.6', fontFamily: 'Consolas, Monaco, monospace', backgroundColor: 'var(--bg-card)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                   {selectedGroup.rawText || '요청된 자연어 원문이 없습니다.'}
                 </div>
@@ -2039,7 +2039,7 @@ export const OutboundInspections: React.FC = () => {
                         }}
                       >
                         <Printer size={18} /> 납품증 출력
-                      </button>
+ </button>
 
                       <button data-mid="btn-preview-receipt"
                         onClick={handlePreviewReceipt}
@@ -2060,7 +2060,7 @@ export const OutboundInspections: React.FC = () => {
                         }}
                       >
                         <Eye size={16} /> 미리보기
-                      </button>
+ </button>
 
                       <button data-mid="btn-rollback-approval"
                         onClick={() => setShowRollbackModal(true)}
@@ -2081,7 +2081,7 @@ export const OutboundInspections: React.FC = () => {
                         }}
                       >
                         <RotateCcw size={16} /> 출고 승인 취소 (검수 롤백)
-                      </button>
+ </button>
                     </>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
@@ -2099,7 +2099,7 @@ export const OutboundInspections: React.FC = () => {
                           justifyContent: 'space-between',
                           gap: '8px'
                         }}>
-                          <span>🚨 [절차 차단] 장비 미할당 슬롯 {selectedGroup.unassignedSlotCount}대 존재 ({selectedGroup.unassignedSlotSummary}) — 전 수량 장비 할당 완료 전까지 출고검수 승인이 불가합니다.</span>
+                          <span> [절차 차단] 장비 미할당 슬롯 {selectedGroup.unassignedSlotCount}대 존재 ({selectedGroup.unassignedSlotSummary}) — 전 수량 장비 할당 완료 전까지 출고검수 승인이 불가합니다.</span>
                         </div>
                       )}
                       <div style={{ display: 'flex', gap: '10px' }}>
@@ -2127,8 +2127,8 @@ export const OutboundInspections: React.FC = () => {
                         >
                           <ShieldCheck size={18} />
                           {(selectedGroup.unassignedSlotCount || 0) > 0
-                            ? `[🚫 장비 미할당 ${selectedGroup.unassignedSlotCount}대 · 출고 승인 불가]`
-                            : `[🟢 최종 출고 승인 마감] (할당 완료)`}
+                            ? `[ 장비 미할당 ${selectedGroup.unassignedSlotCount}대 · 출고 승인 불가]`
+                            : `[ 최종 출고 승인 마감] (할당 완료)`}
                         </button>
 
                         {selectedGroup.status === 'IN_PROGRESS' && (
@@ -2151,7 +2151,7 @@ export const OutboundInspections: React.FC = () => {
                             }}
                           >
                             <RotateCcw size={16} /> 접수 취소
-                          </button>
+ </button>
                         )}
                         <button
                           onClick={() => setShowRejectModal(true)}
@@ -2170,8 +2170,8 @@ export const OutboundInspections: React.FC = () => {
                             gap: '6px'
                           }}
                         >
-                          <XCircle size={16} /> 🚫 요청 반려
-                        </button>
+                          <XCircle size={16} />  요청 반려
+ </button>
                       </div>
                     </div>
                   )}
@@ -2182,7 +2182,7 @@ export const OutboundInspections: React.FC = () => {
         </div>
       </div>
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
       <div style={{
         padding: '8px 14px',
         backgroundColor: 'var(--bg-app)',
@@ -2213,20 +2213,20 @@ export const OutboundInspections: React.FC = () => {
           <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '480px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--danger)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ShieldAlert size={20} /> 출고 요청 반려 사유 작성
-            </h3>
+ </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               출고 요청을 반려하면 대상 장비의 자산 상태 변경 여부를 직접 지정할 수 있습니다.
-            </p>
+ </p>
 
             {/* 수리정비중 전환 선택 토글 */}
             <div style={{ marginBottom: '16px', padding: '10px 14px', backgroundColor: 'var(--bg-body)', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  🛠️ 반려 대상 장비를 ['수리정비중']으로 전환
-                </div>
+                   반려 대상 장비를 ['수리정비중']으로 전환
+ </div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                   해제 선택 시 '임대가능' 재고 상태로 원복됩니다.
-                </div>
+ </div>
               </div>
               <ToggleSwitch
                 data-mid='switch-maintenance' checked={rejectToRepairing}
@@ -2245,33 +2245,33 @@ export const OutboundInspections: React.FC = () => {
               <button onClick={() => setShowRejectModal(false)} className="btn-secondary">취소</button>
               <button data-hs-trigger="Process" data-mid='btn-reject-confirm' onClick={handleConfirmReject} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'var(--danger)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>
                 반려 처리 실행
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
       
-      {/* ↩️ 출고 승인 취소 (검수 롤백) 모달 */}
+      {/* ↩ 출고 승인 취소 (검수 롤백) 모달 */}
       {showRollbackModal && selectedGroup && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
           <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '520px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--danger)' }}>
               <RotateCcw size={20} /> 출고 승인 취소 (검수 단계 롤백)
-            </h3>
+ </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '14px' }}>
               <strong>[{selectedGroup.customerName}] ({selectedGroup.siteName})</strong> 출고 검수를 완료 전 상태(검수 진행중)로 되돌립니다.
-            </p>
+ </p>
 
             <div style={{ padding: '12px 14px', backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', fontSize: '12px', color: 'var(--danger)', marginBottom: '16px', lineHeight: '1.5' }}>
-              ⚠️ <strong>롤백 시 동작:</strong><br />
+               <strong>롤백 시 동작:</strong><br />
               • 자산 상태가 <strong>운송대기</strong>에서 <strong>출고검수</strong>로 원복됩니다.<br />
-              • 검수 항목 재확인 및 <strong>[🔁 장비 교체]</strong> 또는 <strong>[접수 취소]</strong>를 진행할 수 있습니다.
-            </div>
+              • 검수 항목 재확인 및 <strong>[ 장비 교체]</strong> 또는 <strong>[접수 취소]</strong>를 진행할 수 있습니다.
+ </div>
 
             <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '6px', display: 'block', color: 'var(--text-primary)' }}>
               취소(롤백) 사유 입력 (필수)
-            </label>
+ </label>
             <textarea
               data-mid='rollback-reason-input'
               placeholder="예: 고객 요청으로 다른 모델 교체, 현장 일정 변경으로 인한 출고 대기 전환 등..."
@@ -2283,7 +2283,7 @@ export const OutboundInspections: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button onClick={() => { setShowRollbackModal(false); setRollbackReason(''); }} className="btn-secondary">
                 취소
-              </button>
+ </button>
               <button
                 data-mid='btn-rollback-confirm'
                 onClick={handleConfirmRollback}
@@ -2291,32 +2291,32 @@ export const OutboundInspections: React.FC = () => {
                 style={{ padding: '8px 18px', borderRadius: '8px', backgroundColor: 'var(--danger)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}
               >
                 출고 승인 취소 실행
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🔄 1-Click 장비 교체 모달 */}
+      {/*  1-Click 장비 교체 모달 */}
       {exchangeModalAsset && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
           <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ArrowRightLeft size={20} color="var(--primary)" /> 출고 요청 장비 교체
-            </h3>
+ </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               기존 장비 <strong style={{ color: 'var(--primary)' }}>{exchangeModalAsset.assetNo} ({exchangeModalAsset.modelName})</strong>를 대체 가능한 동급 장비로 교체합니다.
-            </p>
+ </p>
 
             {/* 기존 장비 수리정비중 전환 토글 */}
             <div style={{ marginBottom: '16px', padding: '10px 14px', backgroundColor: 'var(--bg-body)', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  🛠️ 기존 교체 대상 장비 {exchangeModalAsset.assetNo}를 ['수리정비중']으로 전환
-                </div>
+                   기존 교체 대상 장비 {exchangeModalAsset.assetNo}를 ['수리정비중']으로 전환
+ </div>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                   해제 선택 시 '임대가능' 재고 상태로 유지됩니다.
-                </div>
+ </div>
               </div>
               <ToggleSwitch
                 checked={exchangeToRepairing}
@@ -2324,11 +2324,11 @@ export const OutboundInspections: React.FC = () => {
               />
             </div>
 
-            {/* 📋 관리 정비사유 마스터 선택 */}
+            {/*  관리 정비사유 마스터 선택 */}
             <div style={{ marginBottom: '14px' }}>
               <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>
                 관리 정비 사유 선택
-              </label>
+ </label>
               <select
                 value={selectedChecklistId}
                 onChange={e => setSelectedChecklistId(e.target.value)}
@@ -2347,26 +2347,26 @@ export const OutboundInspections: React.FC = () => {
                 {inspectionChecklistItems.map(item => (
                   <option key={item.id} value={item.id}>
                     [{item.category}] {item.name} (+{item.score}점)
-                  </option>
+ </option>
                 ))}
               </select>
             </div>
 
-            {/* 💡 정비점수 가산 안내 배너 */}
+            {/*  정비점수 가산 안내 배너 */}
             {(() => {
               const matched = inspectionChecklistItems.find(item => item.id === selectedChecklistId);
               if (matched) {
                 return (
                   <div style={{ marginBottom: '14px', padding: '8px 12px', backgroundColor: 'rgba(59,130,246,0.08)', border: '1px solid var(--primary)', borderRadius: '6px', fontSize: '11.5px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <ShieldCheck size={14} style={{ flexShrink: 0 }} />
-                    <span>관리 정비사유 <strong>[{matched.name}]</strong> 지정됨 ➔ 정비점수 <strong>+{matched.score}점</strong> 부여 (기본 벌점 5점 제외)</span>
+                    <span>관리 정비사유 <strong>[{matched.name}]</strong> 지정됨 정비점수 <strong>+{matched.score}점</strong> 부여 (기본 벌점 5점 제외)</span>
                   </div>
                 );
               }
               return (
                 <div style={{ marginBottom: '14px', padding: '8px 12px', backgroundColor: 'var(--warning-light, rgba(245,158,11,0.08))', border: '1px solid var(--warning, #f59e0b)', borderRadius: '6px', fontSize: '11.5px', color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <AlertTriangle size={13} style={{ flexShrink: 0 }} />
-                  <span>관리 정비사유 미지정 교체 ➔ 기본 벌점 <strong>+5점</strong> 자동 가산</span>
+                  <span>관리 정비사유 미지정 교체 기본 벌점 <strong>+5점</strong> 자동 가산</span>
                 </div>
               );
             })()}
@@ -2385,25 +2385,25 @@ export const OutboundInspections: React.FC = () => {
               />
             </div>
 
-            {/* 🔍 [사장님 지시] 대체 장비 관리번호/시리얼 검색창 탑재 */}
+            {/*  [사장님 지시] 대체 장비 관리번호/시리얼 검색창 탑재 */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Search size={14} color="var(--primary)" /> 대체 장비 관리번호 검색
-                </label>
+ </label>
                 {exchangeSearchQuery && (
                   <button
                     onClick={() => setExchangeSearchQuery('')}
                     style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                   >
-                    🔄 전체 목록 보기
-                  </button>
+                     전체 목록 보기
+ </button>
                 )}
               </div>
               <div style={{ position: 'relative' }}>
                 <input
                   type="text"
-                  placeholder="관리번호 (예: G19008) 또는 제조번호 입력시 1초 필터링..."
+                  placeholder="관리번호 또는 제조번호 입력시 필터링..."
                   value={exchangeSearchQuery}
                   onChange={e => setExchangeSearchQuery(e.target.value)}
                   style={{
@@ -2435,7 +2435,7 @@ export const OutboundInspections: React.FC = () => {
             <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '12.5px', fontWeight: 700, marginBottom: '6px', display: 'block' }}>
                 대체 장비 선택 (동일 모델 {exchangeModalAsset.modelName} 내 임대가능 장비만 노출)
-              </label>
+ </label>
 
               {(() => {
                 const q = exchangeSearchQuery.trim();
@@ -2512,7 +2512,7 @@ export const OutboundInspections: React.FC = () => {
                     }}
                   >
                     <ArrowRightLeft size={15} /> 교체 실행
-                  </button>
+ </button>
                 );
               })()}
             </div>
@@ -2520,7 +2520,7 @@ export const OutboundInspections: React.FC = () => {
         </div>
       )}
 
-      {/* 📦 주기장 소모품 재고조회 모달 */}
+      {/*  주기장 소모품 재고조회 모달 */}
       {showConsumableModal && (
         <div style={{
           position: 'fixed',
@@ -2561,7 +2561,7 @@ export const OutboundInspections: React.FC = () => {
                 <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800 }}>주기장 소모품 재고조회</h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   (출고 검수 및 부속품 가용 수량)
-                </span>
+ </span>
               </div>
               <button
                 onClick={() => setShowConsumableModal(false)}
@@ -2594,13 +2594,13 @@ export const OutboundInspections: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', fontSize: '12px', fontWeight: 700 }}>
                 <span style={{ padding: '6px 10px', borderRadius: '6px', background: 'rgba(59,130,246,0.1)', color: 'var(--primary)' }}>
                   총 {consumableCounts.total}종
-                </span>
+ </span>
                 <span style={{ padding: '6px 10px', borderRadius: '6px', background: 'rgba(16,185,129,0.1)', color: 'var(--success)' }}>
                   보유 {consumableCounts.inStock}종
-                </span>
+ </span>
                 <span style={{ padding: '6px 10px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', color: 'var(--danger)' }}>
                   품절 {consumableCounts.outOfStock}종
-                </span>
+ </span>
               </div>
             </div>
 
@@ -2636,7 +2636,7 @@ export const OutboundInspections: React.FC = () => {
                         <tr>
                           <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                             일치하는 소모품이 없습니다.
-                          </td>
+ </td>
                         </tr>
                       );
                     }
@@ -2710,7 +2710,7 @@ export const OutboundInspections: React.FC = () => {
                 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

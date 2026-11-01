@@ -301,8 +301,8 @@ export const OperationManualPage: React.FC = () => {
                 onClick={() => setSearchQuery('')}
                 style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '12px' }}
               >
-                ✕
-              </button>
+                
+ </button>
             )}
           </div>
 
@@ -354,7 +354,7 @@ export const OperationManualPage: React.FC = () => {
               }}
             >
               선택 메뉴
-            </button>
+ </button>
             <button
               onClick={() => setViewMode('all')}
               style={{
@@ -364,7 +364,7 @@ export const OperationManualPage: React.FC = () => {
               }}
             >
               전체 연속 보기
-            </button>
+ </button>
           </div>
 
           {/* 줌 컨트롤 */}
@@ -378,7 +378,7 @@ export const OperationManualPage: React.FC = () => {
             </button>
             <span style={{ fontSize: '11.5px', fontWeight: '700', padding: '0 4px', minWidth: '35px', textAlign: 'center' }}>
               {zoomLevel}%
-            </span>
+ </span>
             <button
               onClick={() => handleZoom(10)}
               style={{ padding: '3px 5px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
@@ -438,7 +438,7 @@ export const OperationManualPage: React.FC = () => {
 
       {seedingSuccess && (
         <div style={{ padding: '8px 20px', backgroundColor: 'rgba(4, 120, 87, 0.12)', color: 'var(--success)', fontSize: '12.5px', fontWeight: 700, borderBottom: '1px solid var(--border-color)' }}>
-          ✓ {seedingSuccess}
+           {seedingSuccess}
         </div>
       )}
 
@@ -459,7 +459,7 @@ export const OperationManualPage: React.FC = () => {
         }}>
           <div style={{ padding: '0 8px 6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
             메뉴 목록 ({filteredManuals.length}건)
-          </div>
+ </div>
 
           {groupedMenus.map(grp => {
             const isExp = expandedGroups[grp.groupId] !== false;
@@ -485,7 +485,7 @@ export const OperationManualPage: React.FC = () => {
                 >
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {grp.groupName} ({grp.items.length})
-                  </span>
+ </span>
                   {isExp ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </button>
 
@@ -699,7 +699,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
           <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
             {item.menuName} 표준 업무 매뉴얼
-          </h2>
+ </h2>
           <button
             className="no-print"
             onClick={() => handleStartGuide(item.menuId, null, item.menuName)}
@@ -804,7 +804,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>
                       총 {proc.steps?.length || 0}단계 절차
-                    </span>
+ </span>
                     <button
                       className="no-print"
                       onClick={() => handleStartGuide(item.menuId, proc.processId, item.menuName)}
@@ -1047,7 +1047,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <AlertCircle size={14} color="var(--warning, #b45309)" />
-          <span>현장 실무 마찰 방지 주의사항 (WTT 대비)</span>
+          <span>현장 실무 마찰 방지 주의사항</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(180, 83, 9, 0.08)', border: '1px solid rgba(180, 83, 9, 0.25)' }}>
           {item.precautions.map((prec, pIdx) => (
@@ -1064,7 +1064,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
           <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} color="var(--primary)" />
-            <span>화면 인앱 오버레이 안내 항목 (상단 [📖 매뉴얼 보기] 연동)</span>
+            <span>화면 인앱 오버레이 안내 항목 (상단 [ 매뉴얼 보기] 연동)</span>
           </div>
           <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>

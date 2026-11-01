@@ -161,7 +161,7 @@ export const OtManagementPage: React.FC = () => {
     u.name?.includes('테스터') ||
     u.loginId?.includes('tester');
 
-  // 🏛️ 조직도의 부서 및 직급 배치 순서대로 정렬된 임직원 목록
+  //  조직도의 부서 및 직급 배치 순서대로 정렬된 임직원 목록
   const sortedUsers = useMemo(() => {
     const nonTesters = users.filter(u => !isTester(u));
     return [...nonTesters].sort((a, b) => {
@@ -185,7 +185,7 @@ export const OtManagementPage: React.FC = () => {
     });
   }, [users, orderedDeptIds]);
 
-  // 🔍 다계층 임직원 검색 헬퍼 (대소문자, loginId, 성명, 최고관리자 Fallback 완벽 지원)
+  //  다계층 임직원 검색 헬퍼 (대소문자, loginId, 성명, 최고관리자 Fallback 완벽 지원)
   const findUser = (userId?: string): UserType | undefined => {
     if (!userId) return undefined;
     const cleanId = String(userId).trim();
@@ -508,7 +508,7 @@ export const OtManagementPage: React.FC = () => {
 
   const { items: sortedRecords, requestSort, sortConfig } = useSortableData(filteredRecords);
 
-  // 📅 캘린더 월간 데이터 계산 (윤달/역법 정합성 준수)
+  //  캘린더 월간 데이터 계산 (윤달/역법 정합성 준수)
   const daysInMonth = useMemo(() => new Date(calYear, calMonth, 0).getDate(), [calYear, calMonth]);
   const firstDayOfWeek = useMemo(() => new Date(calYear, calMonth - 1, 1).getDay(), [calYear, calMonth]);
   const daysArray = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth]);
@@ -565,7 +565,7 @@ export const OtManagementPage: React.FC = () => {
           <h2 data-mid="ot_management-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <Clock size={22} style={{ color: 'var(--primary)' }} />
             연장근무 관리
-          </h2>
+ </h2>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap' }}>
@@ -585,7 +585,7 @@ export const OtManagementPage: React.FC = () => {
           >
             <Printer size={15} />
             결재 문서 출력
-          </button>
+ </button>
 
           <button
             onClick={handleExportExcel}
@@ -606,11 +606,11 @@ export const OtManagementPage: React.FC = () => {
           >
             <Download size={15} />
             엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
-      {/* 📊 통계 요약 바 */}
+      {/*  통계 요약 바 */}
       <div data-mid="ot_management-terminal-audit" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', flexShrink: 0 }}>
         <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 등록건수</span>
@@ -628,7 +628,7 @@ export const OtManagementPage: React.FC = () => {
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>급여 대장 연동</span>
           <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <CheckCircle2 size={13} /> 반영
-          </span>
+ </span>
         </div>
       </div>
 
@@ -652,7 +652,7 @@ export const OtManagementPage: React.FC = () => {
         }}>
           <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
             OT 등록
-          </h3>
+ </h3>
 
           <form onSubmit={handleOvertimeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
@@ -661,7 +661,7 @@ export const OtManagementPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   1. 날짜 지정
-                </label>
+ </label>
                 {!getDateDisplayInfo(otDate).isToday && (
                   <button
                     type="button"
@@ -677,7 +677,7 @@ export const OtManagementPage: React.FC = () => {
                     }}
                   >
                     오늘로 이동
-                  </button>
+ </button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -724,7 +724,7 @@ export const OtManagementPage: React.FC = () => {
                       whiteSpace: 'nowrap'
                     }}>
                       오늘
-                    </span>
+ </span>
                   )}
                   <input
                     type="date"
@@ -775,7 +775,7 @@ export const OtManagementPage: React.FC = () => {
                     style={{ fontSize: '11px', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
                   >
                     전체선택
-                  </button>
+ </button>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>|</span>
                   <button
                     type="button"
@@ -783,11 +783,11 @@ export const OtManagementPage: React.FC = () => {
                     style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
                   >
                     선택해제
-                  </button>
+ </button>
                 </div>
               </div>
 
-              {/* 🌟 선택된 임직원 태그 배지 (누가 선택되어 있는지 100% 한눈에 확인) */}
+              {/*  선택된 임직원 태그 배지 (누가 선택되어 있는지 100% 한눈에 확인) */}
               {otUserIds.length > 0 && (
                 <div style={{
                   display: 'flex',
@@ -866,7 +866,7 @@ export const OtManagementPage: React.FC = () => {
                         title={`${d.name} 소속 ${deptUsers.length}명 일괄 선택/해제`}
                       >
                         {d.name} ({deptUsers.length})
-                      </button>
+ </button>
                     );
                   })}
                 </div>
@@ -909,7 +909,7 @@ export const OtManagementPage: React.FC = () => {
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      {isSelected && <span style={{ fontSize: '11px', fontWeight: 900 }}>✓</span>}
+                      {isSelected && <span style={{ fontSize: '11px', fontWeight: 900 }}></span>}
                       <span>{u.name}</span>
                       {deptName && (
                         <span style={{
@@ -918,7 +918,7 @@ export const OtManagementPage: React.FC = () => {
                           fontWeight: 400
                         }}>
                           ({deptName})
-                        </span>
+ </span>
                       )}
                     </button>
                   );
@@ -931,7 +931,7 @@ export const OtManagementPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   3. 시작시간 지정
-                </label>
+ </label>
                 {otStartTime !== '17:00' && (
                   <button
                     type="button"
@@ -946,7 +946,7 @@ export const OtManagementPage: React.FC = () => {
                     }}
                   >
                     17:00 복귀
-                  </button>
+ </button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -1022,7 +1022,7 @@ export const OtManagementPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   4. 근로시간 설정
-                </label>
+ </label>
                 {otHours !== 1.0 && (
                   <button
                     type="button"
@@ -1037,7 +1037,7 @@ export const OtManagementPage: React.FC = () => {
                     }}
                   >
                     1.0h 복귀
-                  </button>
+ </button>
                 )}
               </div>
 
@@ -1073,7 +1073,7 @@ export const OtManagementPage: React.FC = () => {
                 }}>
                   <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.5px' }}>
                     {otHours.toFixed(1)} 시간
-                  </span>
+ </span>
                 </div>
                 <button
                   type="button"
@@ -1116,7 +1116,7 @@ export const OtManagementPage: React.FC = () => {
                   }}
                 >
                   <Plus size={12} /> +1시간
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={() => setOtHours(1.0)}
@@ -1133,7 +1133,7 @@ export const OtManagementPage: React.FC = () => {
                   }}
                 >
                   <RotateCcw size={12} /> 초기화
-                </button>
+ </button>
               </div>
             </div>
 
@@ -1141,7 +1141,7 @@ export const OtManagementPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 5. OT 사유 선택
-              </label>
+ </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {OT_REASON_PRESETS.map(reason => (
                   <button
@@ -1180,7 +1180,7 @@ export const OtManagementPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                   6. 식사여부
-                </label>
+ </label>
                 <span style={{ fontSize: '11px', color: otMealYn === 'Y' ? '#10b981' : 'var(--text-muted)', fontWeight: 700 }}>
                   {otMealYn === 'Y' ? '식사 제공' : '식사 없음'}
                 </span>
@@ -1213,7 +1213,7 @@ export const OtManagementPage: React.FC = () => {
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {otMealYn === 'Y' && <span>✓</span>}
+                  {otMealYn === 'Y' && <span></span>}
                   <span>Y</span>
                 </button>
                 <button
@@ -1235,7 +1235,7 @@ export const OtManagementPage: React.FC = () => {
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {otMealYn === 'N' && <span>✓</span>}
+                  {otMealYn === 'N' && <span></span>}
                   <span>N</span>
                 </button>
               </div>
@@ -1388,7 +1388,7 @@ export const OtManagementPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 📋 1. 목록 뷰 */}
+          {/*  1. 목록 뷰 */}
           {viewMode === 'LIST' && (
             <div data-mid="ot_management-inspection-grid" className="table-container" style={{ flex: 1, minHeight: 0, backgroundColor: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-color)', overflowX: 'auto', overflowY: 'auto' }}>
               <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
@@ -1409,7 +1409,7 @@ export const OtManagementPage: React.FC = () => {
                     <tr>
                       <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
                         조회된 OT 연장근무 내역이 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedRecords.map((ot) => {
@@ -1443,7 +1443,7 @@ export const OtManagementPage: React.FC = () => {
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>
                             +{ot.hours} 시간
-                          </td>
+ </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                             <span style={{
                               fontSize: '11px',
@@ -1471,7 +1471,7 @@ export const OtManagementPage: React.FC = () => {
             </div>
           )}
 
-          {/* 📅 2. 캘린더 뷰 */}
+          {/*  2. 캘린더 뷰 */}
           {viewMode === 'CALENDAR' && (
             <div data-mid="ot_management-analytics-grid" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
               {/* 캘린더 월간 이동 헤더 바 */}
@@ -1501,7 +1501,7 @@ export const OtManagementPage: React.FC = () => {
                     whiteSpace: 'nowrap'
                   }}>
                     당월 합계 {calMonthTotalHours.toFixed(1)}시간 ({calMonthRecords.length}건)
-                  </span>
+ </span>
                   {userFilter !== 'ALL' && (
                     <span style={{
                       fontSize: '11.5px',
@@ -1525,7 +1525,7 @@ export const OtManagementPage: React.FC = () => {
                     style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <ChevronLeft size={14} /> 이전달
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={handleTodayCalMonth}
@@ -1533,7 +1533,7 @@ export const OtManagementPage: React.FC = () => {
                     style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700 }}
                   >
                     오늘
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={handleNextCalMonth}
@@ -1654,7 +1654,7 @@ export const OtManagementPage: React.FC = () => {
                               whiteSpace: 'nowrap'
                             }}>
                               +{dayTotalHours.toFixed(1)}h
-                            </span>
+ </span>
                           )}
                         </div>
 
@@ -1694,7 +1694,7 @@ export const OtManagementPage: React.FC = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                                   <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '10px' }}>
                                     +{ot.hours}h
-                                  </span>
+ </span>
                                   {canDelete && (
                                     <button
                                       type="button"
@@ -1738,7 +1738,7 @@ export const OtManagementPage: React.FC = () => {
                               }}
                             >
                               +{dayRecords.length - 3}건 더보기 (상세)
-                            </span>
+ </span>
                           )}
                         </div>
                       </div>
@@ -1747,7 +1747,7 @@ export const OtManagementPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 📌 선택 날짜 상세 패널 */}
+              {/*  선택 날짜 상세 패널 */}
               {selectedCalDate && (
                 <div style={{
                   backgroundColor: 'var(--bg-surface)',
@@ -1761,11 +1761,11 @@ export const OtManagementPage: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-                        📌 {selectedCalDate} 초과근무 상세 ({(recordsByDateMap.get(selectedCalDate) || []).length}건)
-                      </span>
+                         {selectedCalDate} 초과근무 상세 ({(recordsByDateMap.get(selectedCalDate) || []).length}건)
+ </span>
                       <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--warning)' }}>
                         합계 +{((recordsByDateMap.get(selectedCalDate) || []).reduce((sum, r) => sum + (r.hours || 0), 0)).toFixed(1)}시간
-                      </span>
+ </span>
                     </div>
 
                     <button data-hs-trigger="Register"
@@ -1778,13 +1778,13 @@ export const OtManagementPage: React.FC = () => {
                       style={{ fontSize: '12px', padding: '5px 12px', color: 'var(--primary)', fontWeight: 700, backgroundColor: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)' }}
                     >
                       + 이 날짜에 OT 추가 등록
-                    </button>
+ </button>
                   </div>
 
                   {(recordsByDateMap.get(selectedCalDate) || []).length === 0 ? (
                     <div style={{ padding: '16px', textAlign: 'center', fontSize: '12.5px', color: 'var(--text-muted)' }}>
                       선택된 일자에 등록된 OT 내역이 없습니다.
-                    </div>
+ </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '8px' }}>
                       {(recordsByDateMap.get(selectedCalDate) || []).map(ot => {
@@ -1825,7 +1825,7 @@ export const OtManagementPage: React.FC = () => {
                               </div>
                               <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {ot.workDetail} ({ot.startDateTime?.split(' ')[1] || '17:00'} 시작)
-                              </div>
+ </div>
                             </div>
 
                             {canDelete && (
@@ -1851,7 +1851,7 @@ export const OtManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ⚖️ 헌장 3.5 Gutenberg Z-패턴 초과근무 집계 요약 바 */}
+      {/*  헌장 3.5 Gutenberg Z-패턴 초과근무 집계 요약 바 */}
       <div style={{
         marginTop: '16px',
         backgroundColor: 'var(--bg-surface)',
@@ -1869,7 +1869,7 @@ export const OtManagementPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-main)' }}>
             초과근무 집계:
-          </span>
+ </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             총 등록건수 <strong style={{ color: 'var(--text-main)' }}>{overtimeRecords.length}건</strong>
           </span>
@@ -1888,11 +1888,11 @@ export const OtManagementPage: React.FC = () => {
             color: 'var(--primary)'
           }}>
             급여 대장 연동 대기
-          </span>
+ </span>
         </div>
       </div>
 
-      {/* 📌 캘린더 날짜 클릭 시 초과근무 상세 내역 모달 */}
+      {/*  캘린더 날짜 클릭 시 초과근무 상세 내역 모달 */}
       {isDateDetailModalOpen && (
         <div
           style={{
@@ -1962,7 +1962,7 @@ export const OtManagementPage: React.FC = () => {
                   <Calendar size={17} style={{ color: 'var(--primary)' }} />
                   <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                     {activeDetailDate} ({getDayOfWeekKr(activeDetailDate)}) 초과근무 상세
-                  </h3>
+ </h3>
                 </div>
 
                 <span style={{
@@ -1975,7 +1975,7 @@ export const OtManagementPage: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}>
                   총 {activeDateRecords.length}건
-                </span>
+ </span>
 
                 <span style={{
                   fontSize: '11.5px',
@@ -1987,7 +1987,7 @@ export const OtManagementPage: React.FC = () => {
                   whiteSpace: 'nowrap'
                 }}>
                   합계 +{activeDateTotalHours.toFixed(1)}시간
-                </span>
+ </span>
               </div>
 
               <button
@@ -2073,7 +2073,7 @@ export const OtManagementPage: React.FC = () => {
                             </td>
                             <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>
                               +{ot.hours} 시간
-                            </td>
+ </td>
                             <td style={{ padding: '8px 12px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                               <span style={{
                                 fontSize: '10.5px',
@@ -2131,13 +2131,13 @@ export const OtManagementPage: React.FC = () => {
                 style={{ fontSize: '12.5px', padding: '7px 16px' }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📄 월간 OT 수당지급용 결재 문서 출력 모달 */}
+      {/*  월간 OT 수당지급용 결재 문서 출력 모달 */}
       <OtApprovalDocumentModal
         isOpen={isApprovalDocModalOpen}
         onClose={() => setIsApprovalDocModalOpen(false)}

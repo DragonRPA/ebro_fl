@@ -1,5 +1,5 @@
 // src/services/printQueueService.ts
-// 🖨️ 분산 인쇄 큐 및 멀티 프린터 스테이션 서비스 (헌장 1.1, 1.2, 3.1 명사 표준)
+//  분산 인쇄 큐 및 멀티 프린터 스테이션 서비스 (헌장 1.1, 1.2, 3.1 명사 표준)
 
 import { db, PrintStation, PrintQueueItem } from './db';
 import { fetchWithAgentFallback, getAgentBaseUrl } from './agentService';
@@ -188,7 +188,7 @@ export function resolveTargetStation(docType: 'DISPATCH_ORDER' | 'RETURN_ORDER',
   const matchedDocType = stations.find(s => s.docTypeDefault === docType);
   if (matchedDocType) return matchedDocType;
 
-  // 3순위: 명칭 기반 휴리스틱 매핑 (출고 ➔ '프린터1' or '출고', 입고 ➔ '프린터2' or '입고')
+  // 3순위: 명칭 기반 휴리스틱 매핑 (출고  '프린터1' or '출고', 입고  '프린터2' or '입고')
   if (docType === 'DISPATCH_ORDER') {
     const p1 = stations.find(s => s.stationName.includes('프린터1') || s.stationName.includes('출고'));
     if (p1) return p1;
@@ -202,7 +202,7 @@ export function resolveTargetStation(docType: 'DISPATCH_ORDER' | 'RETURN_ORDER',
 }
 
 /**
- * 8. 인쇄 큐에 작업 등록 (사무실 ➔ 중앙 DB)
+ * 8. 인쇄 큐에 작업 등록 (사무실  중앙 DB)
  */
 export async function enqueuePrintJob(params: {
   stationId?: string;
@@ -215,7 +215,7 @@ export async function enqueuePrintJob(params: {
 }): Promise<PrintQueueItem> {
   const targetStation = resolveTargetStation(params.docType, params.stationId);
   if (!targetStation) {
-    throw new Error('등록된 인쇄 스테이션이 없습니다. [시스템 관리 ➔ 프린트 큐 모니터]에서 스테이션을 먼저 등록해 주세요.');
+    throw new Error('등록된 인쇄 스테이션이 없습니다. [시스템 관리 프린트 큐 모니터]에서 스테이션을 먼저 등록해 주세요.');
   }
 
   // 당일 이전 누적 작업 자동 정리 (매일 자정 이전 데이터 자동 삭제)

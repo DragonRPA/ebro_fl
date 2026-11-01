@@ -186,7 +186,7 @@ export const FieldAsManagement: React.FC = () => {
   const [newVisitDate, setNewVisitDate] = useState(new Date().toISOString().split('T')[0]);
   const [newAssignedMechanicId, setNewAssignedMechanicId] = useState(currentUser?.role === 'MECHANIC' ? currentUser.id : '');
 
-  // 💡 장비번호 기준 계약/현장/고객/상세주소 원터치 100% 자동 추적
+  //  장비번호 기준 계약/현장/고객/상세주소 원터치 100% 자동 추적
   const handleAutoLookupByAssetNo = (inputAssetNo: string) => {
     const trimmed = inputAssetNo.trim().toUpperCase();
     if (!trimmed) return;
@@ -353,7 +353,7 @@ export const FieldAsManagement: React.FC = () => {
     }
   };
 
-  // 🏢 조직도 기준 실제 AS팀(정비팀) 소속 담당자 목록만 엄격 필터링
+  //  조직도 기준 실제 AS팀(정비팀) 소속 담당자 목록만 엄격 필터링
   const eligibleAssignees = useMemo(() => {
     const depts = db.departments || [];
     const deptNameMap = new Map<string, string>();
@@ -616,7 +616,7 @@ export const FieldAsManagement: React.FC = () => {
     setActionDegradationScore(selectedTicket.degradationScore || 0);
   }, [selectedTicket?.id]);
 
-  // 🎯 대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 출장 AS 티켓을 즉시 탐색·포커스
+  //  대시보드 [처리 이동] 딥링크 자동 선택 연동: 해당 출장 AS 티켓을 즉시 탐색·포커스
   useEffect(() => {
     if (!navigationPayload || fieldAsTickets.length === 0) return;
     const targetTicketId = navigationPayload.ticketId || navigationPayload.entityId || '';
@@ -794,7 +794,7 @@ export const FieldAsManagement: React.FC = () => {
     };
   }, [fieldAsTickets, calYear, calMonth, calMechanicFilter, calStatusFilter]);
 
-  // ⚖️ 최하단 대차대조 검증 바 단일 useMemo 격리 (매 키 입력/리렌더 시 7,600건 순회 방어)
+  //  최하단 대차대조 검증 바 단일 useMemo 격리 (매 키 입력/리렌더 시 7,600건 순회 방어)
   const globalSummaryStats = useMemo(() => {
     let scheduledCount = 0;
     let completedCount = 0;
@@ -1227,7 +1227,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             <Wrench size={18} color="var(--primary)" />
             <h2 data-mid="field_as-header" style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0, whiteSpace: 'nowrap' }}>
               현장 AS 관리
-            </h2>
+ </h2>
             <button
               type="button"
               onClick={() => setActiveTab('as_route_tracking')}
@@ -1244,8 +1244,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 flexShrink: 0,
               }}
             >
-              현장정비 동선 관리 ➔
-            </button>
+              현장정비 동선 관리 
+ </button>
           </div>
 
           {/* 5대 메인 탭 전환 버튼 (헌장 3.1 무수식어 건조 표준) */}
@@ -1267,7 +1267,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               AS 접수
-            </button>
+ </button>
             <button
               onClick={() => setMainTab('CALENDAR')}
               style={{
@@ -1285,7 +1285,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               AS 방문 일정
-            </button>
+ </button>
             <button
               onClick={() => setMainTab('ANALYTICS')}
               style={{
@@ -1303,7 +1303,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               AS 성과 분석
-            </button>
+ </button>
             <button
               onClick={() => setMainTab('LEDGER')}
               style={{
@@ -1321,7 +1321,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               AS 관리 대장 ({fieldAsTickets.length.toLocaleString()}건)
-            </button>
+ </button>
             <button
               onClick={() => setMainTab('VEHICLE_STOCK')}
               style={{
@@ -1339,7 +1339,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               차량 재고 관리
-            </button>
+ </button>
           </div>
         </div>
 
@@ -1365,7 +1365,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
           >
             <ExternalLink size={15} />
             영업 AS 의뢰 작성
-          </button>
+ </button>
 
           <button data-hs-trigger="Register"
             onClick={() => setActiveTab('initial_db_upload')}
@@ -1387,7 +1387,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
           >
             <Download size={15} />
             과거 이력 등록
-          </button>
+ </button>
 
           <button data-hs-trigger="Register"
             onClick={() => setShowCreateModal(true)}
@@ -1409,7 +1409,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
           >
             <Plus size={16} />
             신규 AS 등록
-          </button>
+ </button>
 
           {/* 모바일 / PC 뷰 전환 토글 */}
           <button
@@ -1437,7 +1437,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
       </div>
 
       {/* ──────────────────────────────────────────────────────────────────────────
-          📱 모바일 전용 뷰 (갤럭시 S24 최적화: 393px 1열 세로 스택 & 바텀시트)
+           모바일 전용 뷰 (갤럭시 S24 최적화: 393px 1열 세로 스택 & 바텀시트)
       ────────────────────────────────────────────────────────────────────────── */}
       {isEffectiveMobile ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '480px', margin: '0 auto' }}>
@@ -1462,7 +1462,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             }}
           >
             출동 ({mobilePendingTickets.length})
-          </button>
+ </button>
           <button
             onClick={() => setMobileActiveTab('VAN_STOCK')}
             style={{
@@ -1482,7 +1482,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             }}
           >
             차량 소모품
-          </button>
+ </button>
           <button
             onClick={() => setMobileActiveTab('HISTORY')}
             style={{
@@ -1502,7 +1502,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             }}
           >
             완료 내역
-          </button>
+ </button>
         </div>
 
         {/* 기본 내비 앱 설정 및 상태 뱃지 */}
@@ -1529,7 +1529,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             }}
           >
             내비 변경
-          </button>
+ </button>
           </div>
 
           {/* 1. 모바일 출동 티켓 피드 */}
@@ -1592,7 +1592,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             color: isRevisit ? '#f59e0b' : (isUrgent ? '#ef4444' : '#3b82f6'),
                             border: `1px solid ${isRevisit ? 'rgba(245, 158, 11, 0.3)' : (isUrgent ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`
                           }}>
-                            {isRevisit ? '🔄 재방문' : (isUrgent ? '긴급' : '출동대기')}
+                            {isRevisit ? '재방문' : (isUrgent ? '긴급' : '출동대기')}
                           </span>
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.ticketNo}</span>
                         </div>
@@ -1612,7 +1612,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         </div>
                         {t.locationDetail && (
                           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                            📍 위치: {t.locationDetail}
+                             위치: {t.locationDetail}
                           </div>
                         )}
                       </div>
@@ -1645,7 +1645,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           >
                             <PhoneCall size={16} />
                             전화걸기
-                          </button>
+ </button>
                         )}
                         <button
                           type="button"
@@ -1706,8 +1706,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         }}
                       >
                         <Wrench size={18} />
-                        ⚡ 지금 현장 조치 & 부품 투입 ➔
-                      </button>
+                         지금 현장 조치 & 부품 투입 
+ </button>
                     </div>
                   );
                 })
@@ -1722,7 +1722,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div>
                   <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>담당 차량 보관소</div>
                   <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
-                    🚐 {(actionAssignMechanicId ? userMap.get(actionAssignMechanicId) : '') || currentUser?.name || '내 차량'}
+                     {(actionAssignMechanicId ? userMap.get(actionAssignMechanicId) : '') || currentUser?.name || '내 차량'}
                   </div>
                 </div>
                 <button
@@ -1739,7 +1739,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   }}
                 >
                   + 주기장 불출요청
-                </button>
+ </button>
               </div>
 
               {/* 부품 목록 */}
@@ -1773,7 +1773,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           color: stock > 0 ? '#166534' : '#991b1b'
                         }}>
                           적재: {stock}개
-                        </span>
+ </span>
                       </div>
                     </div>
                   );
@@ -1793,9 +1793,9 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   </div>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>
                     {t.siteName} ({t.assetNo})
-                  </div>
+ </div>
                   <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 600, marginTop: '4px' }}>
-                    ✓ {t.actionTaken}
+                     {t.actionTaken}
                   </div>
                   {t.partsUsed && t.partsUsed.length > 0 && (
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -1827,7 +1827,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     조회 기간 (기본: 최근 1개월)
-                  </label>
+ </label>
                   <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                     {studioStartDate && studioEndDate ? `${studioStartDate} ~ ${studioEndDate}` : '전체 기간'}
                   </span>
@@ -1921,7 +1921,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   진행 상태
-                </label>
+ </label>
                 <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
                   {[
                     { id: 'UNRESOLVED', label: '미처리 전체' },
@@ -2005,10 +2005,10 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
                 <span>
                   조회 결과: <strong style={{ color: 'var(--primary)' }}>{studioFilteredTickets.length.toLocaleString()}</strong>건
-                </span>
+ </span>
                 <span>
                   화면 표시: <strong>{visibleStudioTickets.length.toLocaleString()}</strong>건
-                </span>
+ </span>
               </div>
             </div>
 
@@ -2061,7 +2061,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           {isUrgent && (
                             <span style={{ padding: '2px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, backgroundColor: 'var(--danger)', color: '#fff' }}>
                               긴급
-                            </span>
+ </span>
                           )}
 
                           <span style={{ padding: '2px 5px', borderRadius: '4px', fontSize: '10px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
@@ -2096,8 +2096,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           }}
                           title="과거 수리 이력 조회"
                         >
-                          {t.assetNo} ➔
-                        </span>
+                          {t.assetNo} 
+ </span>
                       </div>
 
                       {/* 업체명 및 위치 */}
@@ -2140,12 +2140,12 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       {/* 카드 하단: 담당자 지정 및 조치 결과 요약 */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
                         <span>
-                          👨‍🔧 {(t.assignedMechanicId ? userMap.get(t.assignedMechanicId) : '') || '담당자 미지정'}
+                          ‍ {(t.assignedMechanicId ? userMap.get(t.assignedMechanicId) : '') || '담당자 미지정'}
                         </span>
                         {t.actionTaken && (
                           <span style={{ color: 'var(--success)', fontWeight: 600 }}>
-                            ✓ {t.actionTaken.slice(0, 16)}...
-                          </span>
+                             {t.actionTaken.slice(0, 16)}...
+ </span>
                         )}
                       </div>
                     </div>
@@ -2172,7 +2172,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       + 50건 더보기 ({visibleStudioTickets.length} / {studioFilteredTickets.length.toLocaleString()}건)
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => setStudioDisplayLimit(studioFilteredTickets.length)}
@@ -2187,7 +2187,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       전체 {studioFilteredTickets.length.toLocaleString()}건 한 번에 보기
-                    </button>
+ </button>
                   </div>
                 )}
               </>
@@ -2280,10 +2280,10 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       >
                         <Layers size={14} />
                         {selectedTicket.assetNo} 수리 이력 조회
-                      </button>
+ </button>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap' }}>
                         접수자: {selectedTicket.reporterName || '미입력'} ({selectedTicket.reporterContact || '연락처없음'})
-                      </div>
+ </div>
                     </div>
                   </div>
 
@@ -2291,7 +2291,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '12px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', whiteSpace: 'nowrap' }}>
                       고장 증상:
-                    </div>
+ </div>
                     <div style={{ fontSize: '14px', color: 'var(--text-main)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
                       {selectedTicket.issueDescription}
                     </div>
@@ -2308,7 +2308,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                           <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <FileText size={14} /> 증상 연계 매뉴얼 ({linkedManuals.length}건)
-                          </div>
+ </div>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             {linkedManuals.map(m => (
                               <button
@@ -2351,7 +2351,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                       담당자지정
-                    </label>
+ </label>
                     <select
                       value={actionAssignMechanicId}
                       onChange={(e) => setActionAssignMechanicId(e.target.value)}
@@ -2373,7 +2373,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                       현장 방문 일자
-                    </label>
+ </label>
                     <input
                       type="date"
                       value={actionVisitDate}
@@ -2420,7 +2420,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             {siteCandidateAssets.map(a => (
                               <option key={a.id} value={a.id}>
                                 {a.assetNo} — {a.modelName} [{a.ownerType === 'RENTED' ? '임차' : '자사'}]
-                              </option>
+ </option>
                             ))}
                           </optgroup>
                         )}
@@ -2465,10 +2465,10 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                             부품 수급 이동 · 재방문 스케줄 빠른 기록
-                          </span>
+ </span>
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                             ({sInfo.ownerType === 'RENTED' ? `임차자산 → 임차처(${sInfo.vendorName}) 수급` : `당사자산 → ${sInfo.yardName} 또는 타 차량 접선 수급`})
-                          </span>
+ </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <button
@@ -2496,8 +2496,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            📦 부품수급 이동 기록
-                          </button>
+                             부품수급 이동 기록
+ </button>
                           <button
                             type="button"
                             onClick={() => {
@@ -2520,8 +2520,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            📅 타일자 재방문 스케줄 등록
-                          </button>
+                             타일자 재방문 스케줄 등록
+ </button>
                         </div>
                       </div>
 
@@ -2586,7 +2586,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                                 수급 이동지 명칭
-                              </label>
+ </label>
                               <input
                                 type="text"
                                 value={studioSourcingTarget}
@@ -2598,7 +2598,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                                 수급 필요 부품명
-                              </label>
+ </label>
                               <input
                                 type="text"
                                 value={studioSourcingPart}
@@ -2642,7 +2642,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                                 onChange={e => setStudioSourcingAlsoRevisit(e.target.checked)}
                               />
                               당일 미완결 — 타 일자 재방문 스케줄 동시 등록
-                            </label>
+ </label>
                             {studioSourcingAlsoRevisit && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
                                 {quickRevisitDateList.map(opt => (
@@ -2663,7 +2663,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                                     }}
                                   >
                                     {opt.label} ({opt.subLabel})
-                                  </button>
+ </button>
                                 ))}
                                 <input
                                   type="date"
@@ -2721,7 +2721,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#db2777', whiteSpace: 'nowrap' }}>
                               재방문 예정일 선택:
-                            </span>
+ </span>
                             {quickRevisitDateList.map(opt => (
                               <button
                                 key={opt.date}
@@ -2744,7 +2744,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                                 }}
                               >
                                 {opt.label} ({opt.subLabel})
-                              </button>
+ </button>
                             ))}
                             <input
                               type="date"
@@ -2798,7 +2798,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                               }}
                             >
                               재방문 일정 즉시 확정
-                            </button>
+ </button>
                           </div>
                         </div>
                       )}
@@ -2874,7 +2874,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           inspectionChecklistItems.map(item => (
                             <option key={item.id} value={item.code}>
                               [{item.category}] {item.name} ({item.code})
-                            </option>
+ </option>
                           ))
                         ) : (
                           <>
@@ -2936,7 +2936,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             }}
                           >
                             {m}분
-                          </button>
+ </button>
                         ))}
                       </div>
                     </div>
@@ -2947,7 +2947,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '10px', whiteSpace: 'nowrap' }}>
                     처리 결과 판정
-                  </label>
+ </label>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                     <button
@@ -2965,7 +2965,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       조치 완료
-                    </button>
+ </button>
 
                     <button
                       type="button"
@@ -2982,7 +2982,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       재방문 예정
-                    </button>
+ </button>
 
                     <button
                       type="button"
@@ -2999,7 +2999,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       단순 안내 종결
-                    </button>
+ </button>
                   </div>
 
                   {/* 재방문 선택 시 후속 일정 입력창 노출 */}
@@ -3008,7 +3008,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
                         <div style={{ fontSize: '13px', fontWeight: 700, color: '#92400e', whiteSpace: 'nowrap' }}>
                           후속 재방문 일정
-                        </div>
+ </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                           {quickRevisitDateList.map(opt => (
                             <button
@@ -3028,7 +3028,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                               }}
                             >
                               {opt.label} ({opt.subLabel})
-                            </button>
+ </button>
                           ))}
                         </div>
                       </div>
@@ -3093,7 +3093,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     />
                     <label htmlFor="chkExchange" style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                       현장 수리 불가 장비 교환 건의
-                    </label>
+ </label>
                   </div>
                 </div>
 
@@ -3103,10 +3103,10 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     <label style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                       <Truck size={16} color="#2563eb" />
                       사용 소모품 등록
-                    </label>
+ </label>
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       차량 잔여 재고 확인
-                    </span>
+ </span>
                   </div>
 
                   {/* 부품 추가 입력폼 */}
@@ -3128,7 +3128,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         return (
                           <option key={c.id} value={c.id}>
                             {c.modelName} (차량 재고: {stock}개 / 단가: {c.unitPrice.toLocaleString()}원)
-                          </option>
+ </option>
                         );
                       })}
                     </select>
@@ -3158,7 +3158,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       추가
-                    </button>
+ </button>
                   </div>
 
                   {/* 선택된 소모품 목록 */}
@@ -3179,11 +3179,11 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         >
                           <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                             {p.modelName} × {p.quantity}개
-                          </span>
+ </span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                               {(p.unitPrice * p.quantity).toLocaleString()}원
-                            </span>
+ </span>
                             <button
                               type="button"
                               data-testid="remove-part-used-btn"
@@ -3199,7 +3199,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   ) : (
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0', whiteSpace: 'nowrap' }}>
                       사용된 부품이 없습니다. (부품 미사용 단순 점검)
-                    </div>
+ </div>
                   )}
                 </div>
 
@@ -3207,7 +3207,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px' }}>
                   <label style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', display: 'block', marginBottom: '10px', whiteSpace: 'nowrap' }}>
                     현장 수거 부품 관리
-                  </label>
+ </label>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px 70px', gap: '8px', marginBottom: '10px' }}>
                     <input
@@ -3239,7 +3239,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       style={{ padding: '8px', backgroundColor: 'var(--text-secondary)', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700, color: '#ffffff', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       등록
-                    </button>
+ </button>
                   </div>
 
                   {actionCollectedParts.length > 0 && (
@@ -3248,7 +3248,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-app)', padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                           <span style={{ fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                             {cp.partName} × {cp.quantity}개 ({cp.status === 'IN_VEHICLE' ? '차량 보관' : (cp.status === 'YARD_RETURNED' ? '주기장 반납' : '현장 폐기')})
-                          </span>
+ </span>
                           <button type="button" onClick={() => handleRemoveCollectedPart(idx)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
                             <X size={14} />
                           </button>
@@ -3263,7 +3263,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                       유상 / 무상 구분
-                    </label>
+ </label>
                     <select
                       value={actionBillableType}
                       onChange={(e) => setActionBillableType(e.target.value as any)}
@@ -3285,7 +3285,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                       청구 금액 (원)
-                    </label>
+ </label>
                     <input
                       type="number"
                       min={0}
@@ -3308,7 +3308,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     현장 확인자 성명 / 직급
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={actionConfirmName}
@@ -3338,7 +3338,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       접수
-                    </button>
+ </button>
                   )}
 
                   {['SCHEDULED', 'IN_PROGRESS'].includes(selectedTicket.status) && (
@@ -3359,7 +3359,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       접수 취소
-                    </button>
+ </button>
                   )}
 
                   {['SCHEDULED', 'IN_PROGRESS'].includes(selectedTicket.status) && (
@@ -3380,7 +3380,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       출동중 상태 변경
-                    </button>
+ </button>
                   )}
 
                   <button
@@ -3414,7 +3414,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <Wrench size={48} style={{ margin: '0 auto 12px auto', opacity: 0.4 }} />
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-muted)', margin: 0 }}>
                   좌측에서 조치할 AS 접수 건을 선택해 주세요.
-                </h3>
+ </h3>
               </div>
             )}
           </div>
@@ -3472,18 +3472,18 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                    📅 {calYear}년 {calMonth}월 AS 방문 일정
-                  </h3>
+                     {calYear}년 {calMonth}월 AS 방문 일정
+ </h3>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                       총 {calendarMonthData.monthTotal}건
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'var(--warning-light)', color: '#92400e', fontWeight: 700, whiteSpace: 'nowrap' }}>
                       예정 {calendarMonthData.monthScheduled}건
-                    </span>
+ </span>
                     <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'var(--success-light)', color: 'var(--success)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                       완료 {calendarMonthData.monthCompleted}건
-                    </span>
+ </span>
                   </div>
                 </div>
 
@@ -3600,7 +3600,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             fontWeight: 700
                           }}>
                             {dayTickets.length}건
-                          </span>
+ </span>
                         )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -3626,7 +3626,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         {dayTickets.length > 2 && (
                           <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', lineHeight: '12px', flexShrink: 0 }}>
                             +{dayTickets.length - 2}건 더보기
-                          </span>
+ </span>
                         )}
                       </div>
                     </div>
@@ -3655,8 +3655,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '100%', boxSizing: 'border-box', minHeight: 0, overflow: 'hidden', marginBottom: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', gap: '6px' }}>
                 <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: 800, whiteSpace: 'nowrap' }}>
-                  📋 {selectedCalDate} 방문 건 ({selectedDateTickets.length}건)
-                </h4>
+                   {selectedCalDate} 방문 건 ({selectedDateTickets.length}건)
+ </h4>
                 {canSave && (
                   <button data-hs-trigger="Register"
                     type="button"
@@ -3669,7 +3669,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   >
                     <Plus size={12} />
                     일정 등록
-                  </button>
+ </button>
                 )}
               </div>
 
@@ -3689,7 +3689,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       >
                         <Plus size={13} />
                         {selectedCalDate}에 AS 접수 등록
-                      </button>
+ </button>
                     )}
                   </div>
                 ) : (
@@ -3741,8 +3741,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             }}
                             style={{ padding: '2px 8px', fontSize: '11px' }}
                           >
-                            현장 조치 ➔
-                          </button>
+                            현장 조치 
+ </button>
                         </div>
                       </div>
                     );
@@ -3803,7 +3803,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   style={{ padding: '4px 10px', fontSize: '12px' }}
                 >
                   이번달
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -3817,7 +3817,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   style={{ padding: '4px 10px', fontSize: '12px' }}
                 >
                   올해 누적
-                </button>
+ </button>
               </div>
             </div>
 
@@ -3908,7 +3908,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     조회 기간 (기본: 최근 1개월)
-                  </label>
+ </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '3px' }}>
                       {[
@@ -3979,7 +3979,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   조회 건수: <strong style={{ color: 'var(--primary)' }}>{ledgerFilteredTickets.length.toLocaleString()}</strong>건 (표시 <strong>{visibleLedgerTickets.length.toLocaleString()}</strong>건)
-                </span>
+ </span>
                 <button
                   onClick={handleExportLedgerExcel}
                   style={{
@@ -4000,7 +4000,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 >
                   <Download size={14} />
                   엑셀 다운로드
-                </button>
+ </button>
               </div>
             </div>
 
@@ -4148,8 +4148,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                           cursor: 'pointer'
                         }}
                       >
-                        이력 ➔
-                      </button>
+                        이력 
+ </button>
                     </td>
                     <td style={{ padding: '6px 12px', fontWeight: 600, color: 'var(--text-main)' }}>{t.ticketNo}</td>
                     <td style={{ padding: '6px 12px', color: 'var(--text-muted)' }}>{t.requestDate}</td>
@@ -4199,7 +4199,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                                 >
                                   <Copy size={11} />
                                   복사
-                                </button>
+ </button>
                                 <button
                                   type="button"
                                   onClick={() => launchNavigation(resolvedAddr, 'TMAP')}
@@ -4219,7 +4219,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                                 >
                                   <Navigation size={11} />
                                   길안내
-                                </button>
+ </button>
                               </div>
                             )}
                           </div>
@@ -4322,7 +4322,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   }}
                 >
                   + 100건 더보기 ({visibleLedgerTickets.length} / {ledgerFilteredTickets.length.toLocaleString()}건)
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={() => setLedgerDisplayLimit(ledgerFilteredTickets.length)}
@@ -4338,12 +4338,12 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   }}
                 >
                   전체 {ledgerFilteredTickets.length.toLocaleString()}건 한 번에 보기
-                </button>
+ </button>
               </div>
             )}
           </div>
 
-          {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 유상 AS 대사 검증 요약 바 (헌장 3.5) */}
+          {/*  Gutenberg Z-패턴 4단계 최하단 유상 AS 대사 검증 요약 바 (헌장 3.5) */}
           {(() => {
             const { totalTickets, completedCount, billableCount, totalBillableAmount, freeCount } = ledgerFooterStats;
 
@@ -4382,8 +4382,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
-              🚚 AS 담당자별 차량 소모품 적재 현황
-            </h2>
+               AS 담당자별 차량 소모품 적재 현황
+ </h2>
             <button data-hs-trigger="Register"
               onClick={() => setShowTransferModal(true)}
               style={{
@@ -4401,8 +4401,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               <Plus size={16} />
-              주기장 ➔ 차량 소모품 보충(이동) 등록
-            </button>
+              주기장 차량 소모품 보충(이동) 등록
+ </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
@@ -4428,13 +4428,13 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     </div>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '2px 8px', borderRadius: '12px' }}>
                       총 적재 {totalItemsCount}개
-                    </span>
+ </span>
                   </div>
 
                   {myStocks.length === 0 ? (
                     <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                       차량에 적재된 부품이 없습니다.
-                    </div>
+ </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {myStocks.map(ms => {
@@ -4457,7 +4457,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                             </span>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: ms.stockQty <= 1 ? '#ea580c' : '#16a34a' }}>
                               {ms.stockQty}개
-                            </span>
+ </span>
                           </div>
                         );
                       })}
@@ -4473,7 +4473,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
       )}
 
       {/* ──────────────────────────────────────────────────────────────────────────
-          📱 모바일 슬라이드업 바텀시트 (현장 AS 완료 & 부품 차감)
+           모바일 슬라이드업 바텀시트 (현장 AS 완료 & 부품 차감)
       ────────────────────────────────────────────────────────────────────────── */}
       {showMobileActionSheet && selectedTicket && (
         <div
@@ -4544,7 +4544,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
 
             {/* 고장 증상 원문 */}
             <div style={{ backgroundColor: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '10px 12px', borderRadius: '8px', fontSize: '13px', color: '#fb7185' }}>
-              🚨 <strong>[{selectedTicket.issueCategory}]</strong> {selectedTicket.issueDescription}
+               <strong>[{selectedTicket.issueCategory}]</strong> {selectedTicket.issueDescription}
               
               {(() => {
                 const linkedManuals = getLinkedManualsForTicket(selectedTicket);
@@ -4553,7 +4553,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(244, 63, 94, 0.2)' }}>
                     <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px', color: '#fb7185' }}>
                       <FileText size={12} /> 연계 매뉴얼
-                    </div>
+ </div>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {linkedManuals.map(m => (
                         <button
@@ -4624,7 +4624,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     {siteCandidateAssets.map(a => (
                       <option key={a.id} value={a.id}>
                         {a.assetNo} — {a.modelName} [{a.ownerType === 'RENTED' ? '임차' : '자사'}]
-                      </option>
+ </option>
                     ))}
                   </optgroup>
                 )}
@@ -4640,16 +4640,16 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               </select>
             </div>
 
-            {/* 1️⃣ 사용 부품 선택 (50px 대형 스텝퍼 카트) */}
+            {/* 1⃣ 사용 부품 선택 (50px 대형 스텝퍼 카트) */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Truck size={16} color="#2563eb" />
                   1. 사용 부품 선택
-                </label>
+ </label>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   미사용 시 0개 유지
-                </span>
+ </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -4676,7 +4676,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         </div>
                         <div style={{ fontSize: '11px', color: stock > 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
                           내 차량 잔여: {stock}개
-                        </div>
+ </div>
                       </div>
 
                       {/* 50px 스텝퍼 버튼군 */}
@@ -4735,11 +4735,11 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               </div>
             </div>
 
-            {/* 2️⃣ 빈출 조치 태그 (1초 원터치 탭) */}
+            {/* 2⃣ 빈출 조치 태그 (1초 원터치 탭) */}
             <div>
               <label style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
-                2. 현장 조치 내용 (원터치 탭)
-              </label>
+                2. 현장 조치 내용 (탭)
+ </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
                 {QUICK_ACTION_TAGS.map(tag => {
                   const isSelected = actionTakenText.includes(tag);
@@ -4760,7 +4760,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                      {isSelected ? ` ${tag}` : `+ ${tag}`}
                     </button>
                   );
                 })}
@@ -4776,7 +4776,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               {/* 정비 소요시간 (분) */}
               <div style={{ marginTop: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>⏱️ 정비 소요시간</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}> 정비 소요시간</span>
                   <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600 }}>
                     {actionDurationMinutes > 0 ? `${actionDurationMinutes}분 (${(actionDurationMinutes / 60).toFixed(1)} M/H)` : '0분'}
                   </span>
@@ -4800,7 +4800,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                       }}
                     >
                       {m}분
-                    </button>
+ </button>
                   ))}
                   <input
                     type="number"
@@ -4814,11 +4814,11 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               </div>
             </div>
 
-            {/* 3️⃣ 처리 판정 버튼 */}
+            {/* 3⃣ 처리 판정 버튼 */}
             <div>
               <label style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
                 3. 처리 결과 판정
-              </label>
+ </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                 <button
                   type="button"
@@ -4834,8 +4834,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     cursor: 'pointer'
                   }}
                 >
-                  🟢 조치완료
-                </button>
+                   조치완료
+ </button>
                 <button
                   type="button"
                   onClick={() => setActionResolutionType('REVISIT_NEEDED')}
@@ -4850,8 +4850,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     cursor: 'pointer'
                   }}
                 >
-                  🔄 재방문
-                </button>
+                   재방문
+ </button>
                 <button
                   type="button"
                   onClick={() => setActionResolutionType('GUIDED_END')}
@@ -4866,16 +4866,16 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     cursor: 'pointer'
                   }}
                 >
-                  💬 안내종결
-                </button>
+                   안내종결
+ </button>
               </div>
 
               {/* 재방문 일정 입력창 */}
               {actionResolutionType === 'REVISIT_NEEDED' && (
                 <div style={{ backgroundColor: 'var(--warning-light)', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: '#92400e', marginBottom: '6px' }}>
-                    📅 후속 재방문 일정
-                  </div>
+                     후속 재방문 일정
+ </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '6px' }}>
                     <input
                       type="date"
@@ -4895,11 +4895,11 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               )}
             </div>
 
-            {/* 4️⃣ 즉시 사진 촬영 */}
+            {/* 4⃣ 즉시 사진 촬영 */}
             <div>
               <label style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
                 4. 수리 완료 사진 (선택)
-              </label>
+ </label>
               <label
                 style={{
                   height: '48px',
@@ -4917,7 +4917,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 }}
               >
                 <Camera size={20} color="#2563eb" />
-                {actionAfterImage ? '✓ 사진 재촬영' : '📷 카메라로 즉시 촬영하기'}
+                {actionAfterImage ? '사진 재촬영' : '카메라로 즉시 촬영하기'}
                 <input
                   type="file"
                   accept="image/*"
@@ -4935,12 +4935,12 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     style={{ position: 'absolute', top: '-6px', right: '-6px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--danger)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '12px' }}
                   >
                     ×
-                  </button>
+ </button>
                 </div>
               )}
             </div>
 
-            {/* 5️⃣ 최하단 고정 완료 버튼 */}
+            {/* 5⃣ 최하단 고정 완료 버튼 */}
             <button
               type="button"
               onClick={async () => {
@@ -4966,8 +4966,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               }}
             >
               <CheckCircle2 size={22} />
-              ✅ AS 조치 완료 & 차량 재고 차감
-            </button>
+               AS 조치 완료 & 차량 재고 차감
+ </button>
           </div>
         </div>
       )}
@@ -4997,10 +4997,10 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                 <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Layers size={20} color="#2563eb" />
                   장비번호 {historyModalAssetNo} AS 수리 이력 대장
-                </h3>
+ </h3>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
                   해당 장비에 누적 기록된 총 <strong>{assetHistoryTickets.length}건</strong>의 AS 이력입니다.
-                </p>
+ </p>
               </div>
               <button onClick={() => setHistoryModalAssetNo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={22} />
@@ -5010,7 +5010,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             {assetHistoryTickets.length === 0 ? (
               <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                 기록된 AS 이력이 없습니다.
-              </div>
+ </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {assetHistoryTickets.map((t, idx) => (
@@ -5026,7 +5026,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
                         {t.requestDate} | {t.siteName} ({t.customerName})
-                      </span>
+ </span>
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: '4px',
@@ -5107,8 +5107,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Truck size={18} color="#2563eb" />
-                주기장 ➔ 차량 소모품 보충(이동)
-              </h3>
+                주기장 차량 소모품 보충(이동)
+ </h3>
               <button onClick={() => setShowTransferModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={20} />
               </button>
@@ -5140,7 +5140,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   {consumables.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.modelName} (주기장 가용 재고: {c.stockQty}개)
-                    </option>
+ </option>
                   ))}
                 </select>
               </div>
@@ -5163,7 +5163,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   style={{ padding: '8px 16px', backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   취소
-                </button>
+ </button>
                 <button data-hs-trigger="Register"
                   type="button"
                   onClick={async () => {
@@ -5182,7 +5182,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   style={{ padding: '8px 20px', backgroundColor: 'var(--primary)', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 700, color: '#ffffff', cursor: 'pointer' }}
                 >
                   차량 재고 이동 확정
-                </button>
+ </button>
               </div>
             </div>
           </div>
@@ -5190,7 +5190,7 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
       )}
 
       {/* ──────────────────────────────────────────────────────────────────────────
-          🚗 내비게이션 선택 모달 (기사 선호앱 지정 및 1초 실행)
+           내비게이션 선택 모달 (기사 선호앱 지정 및 1초 실행)
       ────────────────────────────────────────────────────────────────────────── */}
       {showNavSelectorTicket && (
         <div
@@ -5225,8 +5225,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
-                🚗 길안내 내비게이션 앱 선택
-              </h3>
+                 길안내 내비게이션 앱 선택
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowNavSelectorTicket(null)}
@@ -5259,8 +5259,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   cursor: 'pointer'
                 }}
               >
-                🔴 T맵으로 바로 길안내
-              </button>
+                 T맵으로 바로 길안내
+ </button>
 
               <button
                 type="button"
@@ -5280,8 +5280,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   cursor: 'pointer'
                 }}
               >
-                🟡 카카오내비로 바로 길안내
-              </button>
+                 카카오내비로 바로 길안내
+ </button>
 
               <button
                 type="button"
@@ -5301,8 +5301,8 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
                   cursor: 'pointer'
                 }}
               >
-                🟢 네이버지도로 바로 길안내
-              </button>
+                 네이버지도로 바로 길안내
+ </button>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
@@ -5314,13 +5314,13 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               />
               <label htmlFor="chkRememberNav" style={{ fontSize: '12px', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 선택한 앱을 기본 내비로 기억하기 (다음부터 즉시 실행)
-              </label>
+ </label>
             </div>
           </div>
         </div>
       )}
 
-      {/* ⚖️ Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (useMemo globalSummaryStats로 7,600건 인라인 순회 0화 - 헌장 3.5) */}
+      {/*  Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (useMemo globalSummaryStats로 7,600건 인라인 순회 0화 - 헌장 3.5) */}
       <div style={{
         padding: '8px 14px',
         backgroundColor: 'var(--bg-app)',

@@ -234,15 +234,15 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                 </span>
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-200 border border-slate-700 whitespace-nowrap">
                   {settlementYm} 귀속
-                </span>
+ </span>
                 {effectiveFileUrl ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap">
                     <CheckCircle2 className="w-3.5 h-3.5" /> 원본 명세서 파일 보관됨
-                  </span>
+ </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 whitespace-nowrap">
                     전자 정산명세 보관중 · 원본파일 추가 가능
-                  </span>
+ </span>
                 )}
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
@@ -263,7 +263,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                   }`}
                 >
                   통합 보기
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={() => setActiveViewTab('DOCUMENT')}
@@ -272,7 +272,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                   }`}
                 >
                   정산 명세표
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={() => setActiveViewTab('ORIGINAL_FILE')}
@@ -281,7 +281,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                   }`}
                 >
                   원본 첨부파일
-                </button>
+ </button>
               </div>
             )}
 
@@ -315,7 +315,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" /> 원본 파일 다운로드
-              </button>
+ </button>
             )}
 
             <button
@@ -324,7 +324,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" /> 명세서 인쇄
-            </button>
+ </button>
 
             <button
               type="button"
@@ -350,7 +350,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-[0.2em] mt-0.5 whitespace-nowrap">
                     매 입 거 래 명 세 서
-                  </h2>
+ </h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-700">
                   <div className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 whitespace-nowrap">
@@ -489,7 +489,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                         <tr>
                           <td colSpan={6} className="py-8 text-center text-slate-400 font-bold whitespace-nowrap">
                             등록된 상세 품목 내역이 없습니다. (총 정산액: ₩{totalAmount.toLocaleString()})
-                          </td>
+ </td>
                         </tr>
                       ) : (
                         items.map((item, idx) => {
@@ -525,7 +525,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold whitespace-nowrap"
                                   >
                                     <ExternalLink className="w-3 h-3" /> 열람
-                                  </a>
+ </a>
                                 ) : item.evidenceFileUrl ? (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold whitespace-nowrap">
                                     {item.evidenceFileUrl}
@@ -574,7 +574,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                   <FileText className="w-4 h-4 text-indigo-600" />
                   <span className="text-xs font-black text-slate-800 whitespace-nowrap">
                     보관된 매입거래명세서 원본 파일
-                  </span>
+ </span>
                   {effectiveFileName && effectiveFileUrl && (
                     <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 whitespace-nowrap">
                       {effectiveFileName}
@@ -601,7 +601,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                     <p className="text-sm font-bold text-slate-600">첨부된 원본 매입거래명세서 파일이 없습니다.</p>
                     <p className="text-xs text-slate-400 mt-1">
                       상단의 표준 매입거래명세서로 내역을 확인하거나, 매입처에서 수령한 거래명세서(이미지, 문서, 엑셀) 파일을 업로드하여 보관할 수 있습니다.
-                    </p>
+ </p>
                     {onSaveStatementFile && (
                       <button
                         type="button"
@@ -609,7 +609,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                         className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black shadow-sm cursor-pointer whitespace-nowrap"
                       >
                         <Upload className="w-4 h-4" /> 매입거래명세서 파일 선택 및 저장
-                      </button>
+ </button>
                     )}
                   </div>
                 ) : isImageFile && isActualUrlOrData ? (
@@ -636,10 +636,10 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                     <div>
                       <div className="text-sm font-black text-slate-800">
                         원본 매입거래명세서 파일이 보관되어 있습니다 ({effectiveFileName})
-                      </div>
+ </div>
                       <div className="text-xs text-slate-500 mt-1">
                         엑셀 또는 문서 원본 파일을 다운로드하여 열람할 수 있으며, 상단 표에서 전체 명세 내역을 바로 확인할 수 있습니다.
-                      </div>
+ </div>
                     </div>
                     <button
                       type="button"
@@ -647,7 +647,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                       className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black shadow-sm whitespace-nowrap cursor-pointer"
                     >
                       <Download className="w-4 h-4" /> 보관된 원본 명세서 다운로드 ({effectiveFileName})
-                    </button>
+ </button>
                   </div>
                 ) : (
                   <div className="py-6 px-4 text-center bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center gap-2">
@@ -657,7 +657,7 @@ export const PurchaseStatementModal: React.FC<PurchaseStatementModalProps> = ({
                     </div>
                     <div className="text-[11px] text-slate-500">
                       파일 원본을 다시 첨부하려면 우측 상단의 파일 교체 버튼을 눌러 저장하십시오.
-                    </div>
+ </div>
                   </div>
                 )}
               </div>

@@ -100,7 +100,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🌟 기본 고장 분류 + 사용자 저장 증상(로컬 & DB 동기화) 통합 퀵버튼 목록
+  //  기본 고장 분류 + 사용자 저장 증상(로컬 & DB 동기화) 통합 퀵버튼 목록
   const allQuickSymptoms = useMemo(() => {
     const dbCustom = (inspectionChecklistItems || [])
       .filter(item => item && item.isDefectSymptom && item.description === '모바일 웹앱 증상저장 퀵버튼' && item.name?.trim())
@@ -147,7 +147,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     return Array.from(new Set([...defaults, ...fromProducts])).slice(0, 12);
   }, [products]);
 
-  // 🌟 입력된 장비번호(자산번호/끝자리 숫자 포함)와 매칭되는 실물 자산 후보군 및 최우선 매칭 자산 판별
+  //  입력된 장비번호(자산번호/끝자리 숫자 포함)와 매칭되는 실물 자산 후보군 및 최우선 매칭 자산 판별
   const matchingAssetCandidates = useMemo(() => {
     const clean = (assetNo || '').trim().toUpperCase();
     if (!clean || isUnknownAssetLabel(clean)) return [] as Asset[];
@@ -263,7 +263,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     return getAssetVendorName(matchedAsset);
   }, [matchedAsset, vendors]);
 
-  // 🌟 AS팀 소속 인원 목록 (퀵버튼 할당용)
+  //  AS팀 소속 인원 목록 (퀵버튼 할당용)
   const asTeamMembers = useMemo(() => {
     const isActualAsTeamUser = (u: any): boolean => {
       if (!u || u.status === 'RETIRED' || isDeveloperUser(u)) return false;
@@ -345,7 +345,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     return raw;
   };
 
-  // 🌟 매칭된 자산으로부터 고객사·현장명·도로명주소·담당자 연락처를 일괄 추출하여 폼에 자동 반영
+  //  매칭된 자산으로부터 고객사·현장명·도로명주소·담당자 연락처를 일괄 추출하여 폼에 자동 반영
   const applyAssetInfoToForm = (targetAsset: Asset) => {
     if (!targetAsset) return;
     if (targetAsset.modelName?.trim()) {
@@ -430,7 +430,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     }
   };
 
-  // 🌟 1. 장비번호 입력 시 계약 현장 및 고객사·도로명 주소·담당자 실시간 자동 역추적
+  //  1. 장비번호 입력 시 계약 현장 및 고객사·도로명 주소·담당자 실시간 자동 역추적
   const handleAssetNoChange = (val: string) => {
     if (typeof val !== 'string') return;
     let nextVal = val;
@@ -458,7 +458,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     }
   }, [matchedAsset?.id, customers.length, sites.length, contracts.length, contractAssets.length]);
 
-  // 🌟 초기 인계 파라미터(내현장/자산조회 등에서 유입) 자동 바인딩 (헌장 1.1 & 과제 6)
+  //  초기 인계 파라미터(내현장/자산조회 등에서 유입) 자동 바인딩 (헌장 1.1 & 과제 6)
   useEffect(() => {
     if (typeof initialAssetNo === 'string' && initialAssetNo.trim()) {
       handleAssetNoChange(initialAssetNo);
@@ -474,7 +474,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     }
   }, [initialAssetNo, initialSiteId]);
 
-  // 🌟 고객사/현장 객체로부터 담당자 연락처 기본값 보조 채움
+  //  고객사/현장 객체로부터 담당자 연락처 기본값 보조 채움
   const applySiteAndCustomerContactFallback = (site?: any, cust?: any) => {
     const siteContacts = Array.isArray(site?.contacts) ? site.contacts : [];
     const primaryContactObj = siteContacts.find(
@@ -501,7 +501,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     }
   };
 
-  // 🌟 2. 고객사명 입력 시 마스터 일치 및 현장·도로명 주소 상속
+  //  2. 고객사명 입력 시 마스터 일치 및 현장·도로명 주소 상속
   const handleCustomerNameChange = (val: string) => {
     if (typeof val !== 'string') return;
     setCustomerName(val);
@@ -528,7 +528,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
     }
   };
 
-  // 🌟 3. 현장명 입력 시 현장 상세 주소 상속
+  //  3. 현장명 입력 시 현장 상세 주소 상속
   const handleSiteNameChange = (val: string) => {
     if (typeof val !== 'string') return;
     setSiteName(val);
@@ -772,7 +772,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
 
     setIsSubmitting(true);
     try {
-      // 🌟 고객사 및 현장 마스터 ID 자동 매핑 (도로명 주소 상속 보장)
+      //  고객사 및 현장 마스터 ID 자동 매핑 (도로명 주소 상속 보장)
       const cleanCustomerName = customerName.trim();
       const cleanSiteName = siteName.trim();
       const matchedCust = (customers || []).find(c => 
@@ -838,7 +838,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
         >
           <ArrowLeft className="w-4 h-4" />
           뒤로가기
-        </button>
+ </button>
         <span className="text-sm font-black text-white">현장 AS 접수</span>
         <div className="w-12" />
       </div>
@@ -851,14 +851,14 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
                 장비번호
-              </label>
+ </label>
               {isUnknownAsset && (
                 <span
                   data-testid="mobile-as-unknown-asset-badge"
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 whitespace-nowrap flex-shrink-0"
                 >
                   관리번호 모름 · 현장확인
-                </span>
+ </span>
               )}
               {!isUnknownAsset && matchedAsset && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap flex-shrink-0 font-mono">
@@ -980,7 +980,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                 data-testid="mobile-as-model-name-input"
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
-                placeholder="모델명 직접 입력 또는 위 버튼 선택 (예: GS-1930, 2646, 3246)"
+                placeholder="모델명 직접 입력 또는 위 버튼 선택"
                 className="w-full rounded-lg p-2.5 text-xs font-mono placeholder-slate-500 focus:outline-none"
                 style={{
                   backgroundColor: '#090d16',
@@ -1019,7 +1019,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
           <div className="flex flex-col gap-1">
             <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap flex-shrink-0">
               등록 현장 선택
-            </span>
+ </span>
             <div className="w-full min-w-0 max-w-full flex flex-wrap items-center gap-1.5 pb-1">
               {matchedCustomerSites.map(s => (
                 <button
@@ -1085,7 +1085,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
               현장 도로명 주소
-            </label>
+ </label>
             {matchedCustomer?.address && typeof matchedCustomer.address === 'string' && siteAddress !== matchedCustomer.address.trim() && (
               <button
                 type="button"
@@ -1093,7 +1093,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                 className="text-[10px] font-bold text-sky-400 bg-sky-950/40 hover:bg-sky-900/60 px-2 py-0.5 rounded border border-sky-800/40 whitespace-nowrap flex-shrink-0"
               >
                 고객사 주소 적용
-              </button>
+ </button>
             )}
           </div>
           <div className="relative">
@@ -1133,7 +1133,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                     : 'bg-slate-800 text-slate-400 border-slate-700'
                 }`}
               >
-                {priority === 'URGENT' ? '🚨 긴급' : '일반'}
+                {priority === 'URGENT' ? '긴급' : '일반'}
               </button>
             </div>
           </div>
@@ -1186,7 +1186,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
               >
                 <Plus className="w-3 h-3" />
                 증상저장
-              </button>
+ </button>
             )}
           </div>
         </div>
@@ -1249,7 +1249,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-300 whitespace-nowrap flex-shrink-0">
               AS팀원 지정
-            </label>
+ </label>
             <span className="text-[11px] font-bold text-sky-400 whitespace-nowrap flex-shrink-0">
               {selectedMechanic
                 ? `${selectedMechanic.name}${selectedMechanic.position ? ` (${selectedMechanic.position})` : ''} 지정됨`
@@ -1283,7 +1283,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                 className="px-2.5 py-2 rounded-xl text-xs font-bold bg-slate-900/60 text-slate-400 border border-slate-800 hover:text-slate-200 whitespace-nowrap flex-shrink-0"
               >
                 미지정
-              </button>
+ </button>
             )}
           </div>
         </div>
@@ -1308,7 +1308,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
         </button>
       </form>
 
-      {/* 📋 통화 텍스트 붙여넣기 모달 */}
+      {/*  통화 텍스트 붙여넣기 모달 */}
       {showPasteModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
@@ -1316,7 +1316,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
               <h3 className="text-sm font-black text-white flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-400" />
                 고객 통화 녹음 텍스트 입력
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowPasteModal(false)}
@@ -1350,14 +1350,14 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                   className="text-left py-1.5 px-2.5 rounded-lg bg-slate-800 text-[11px] text-slate-300 hover:bg-slate-700 transition-colors"
                 >
                   "102호기 상승이 안되고 삐소리 남, 김반장 010-1234-5678 지하 1층 급해요"
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={() => setPastedTranscript('205호 배터리 방전 시동 안걸림 하역장 이소장 010-9876-5432 점검요청')}
                   className="text-left py-1.5 px-2.5 rounded-lg bg-slate-800 text-[11px] text-slate-300 hover:bg-slate-700 transition-colors"
                 >
                   "205호 배터리 방전 시동 안걸림 하역장 이소장 010-9876-5432 점검요청"
-                </button>
+ </button>
               </div>
             </div>
 
@@ -1368,14 +1368,14 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                 className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold"
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handlePasteSubmit}
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black shadow-lg"
               >
                 파싱 및 자동 반영
-              </button>
+ </button>
             </div>
           </div>
         </div>

@@ -474,8 +474,8 @@ export const Deliveries: React.FC = () => {
         <div>
           <h2 style={{ fontWeight: '700', margin: 0 }}>배차 및 운송 정산 관리</h2>
           <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            출고 배차 및 장비 회수를 제어하고, 물류사 차량별 운송비(임시 vs 확정)를 정산 마감합니다.
-          </span>
+            출고 배차 및 장비 회수를 제어하고, 물류사 차량별 운송비를 정산 마감합니다.
+ </span>
         </div>
         <div className="toolbar-actions">
           <button 
@@ -491,14 +491,14 @@ export const Deliveries: React.FC = () => {
             }}
           >
             <Sun size={13} /> 하차지 일기예보
-          </button>
+ </button>
           <button 
             type="button" 
             className="btn-excel-download" 
             onClick={handleExportExcel}
           >
             <Download size={13} /> 배차목록 엑셀 다운로드
-          </button>
+ </button>
         </div>
       </div>
 
@@ -567,7 +567,7 @@ export const Deliveries: React.FC = () => {
               onClick={handleSearchClick}
             >
               <Search size={13} /> 조회
-            </button>
+ </button>
             <button 
               type="button" 
               className="btn-reset" 
@@ -592,7 +592,7 @@ export const Deliveries: React.FC = () => {
               style={{ height: '38px', padding: '0 12px', whiteSpace: 'nowrap' }}
             >
               초기화
-            </button>
+ </button>
           </div>
         </div>
 
@@ -628,7 +628,7 @@ export const Deliveries: React.FC = () => {
               }}
             >
               오늘
-            </button>
+ </button>
             <button 
               type="button" 
               className="btn-secondary" 
@@ -642,7 +642,7 @@ export const Deliveries: React.FC = () => {
               }}
             >
               1주
-            </button>
+ </button>
             <button 
               type="button" 
               className="btn-secondary" 
@@ -656,7 +656,7 @@ export const Deliveries: React.FC = () => {
               }}
             >
               1개월
-            </button>
+ </button>
             <button 
               type="button" 
               className="btn-secondary" 
@@ -667,7 +667,7 @@ export const Deliveries: React.FC = () => {
               }}
             >
               전체
-            </button>
+ </button>
           </div>
         </div>
       </div>
@@ -695,7 +695,7 @@ export const Deliveries: React.FC = () => {
               <tr>
                 <td colSpan={11} style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
                   조회 결과가 없습니다.
-                </td>
+ </td>
               </tr>
             ) : (
               sortedDeliveries.map((d, idx) => {
@@ -722,7 +722,7 @@ export const Deliveries: React.FC = () => {
                         {canSave && d.status === 'REQUESTED' && (
                           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                             배차관리 탭 이용
-                          </span>
+ </span>
                         )}
                         {canSave && d.status === 'DISPATCHED' && (
                           <button data-hs-trigger="Approve"
@@ -743,7 +743,7 @@ export const Deliveries: React.FC = () => {
                             style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '2px' }}
                           >
                             <Check size={12} /> 완료처리
-                          </button>
+ </button>
                         )}
                       </div>
                     </td>
@@ -770,7 +770,7 @@ export const Deliveries: React.FC = () => {
                       {d.contractId ? getContractNo(d.contractId) : (
                         <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
                           일반이동 ({(d.memo || '').substring(0, 15)}...)
-                        </span>
+ </span>
                       )}
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>
@@ -795,7 +795,7 @@ export const Deliveries: React.FC = () => {
                           }}
                         >
                           <Sun size={11} color="#F59E0B" /> 하차지 날씨
-                        </button>
+ </button>
                       </div>
                     </td>
                     <td style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
@@ -835,7 +835,7 @@ export const Deliveries: React.FC = () => {
                             style={{ padding: '2px 8px', fontSize: '11.5px', fontWeight: 'bold' }}
                           >
                             정산등록
-                          </button>
+ </button>
                         )
                       ) : (
                         <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>완료 후 가능</span>
@@ -849,7 +849,7 @@ export const Deliveries: React.FC = () => {
         </table>
       </div>
 
-      {/* 📊 배차 건수 및 총 운송비 집계 요약 바 */}
+      {/*  배차 건수 및 총 운송비 집계 요약 바 */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 18px', backgroundColor: 'var(--bg-card)',
@@ -934,7 +934,7 @@ export const Deliveries: React.FC = () => {
             <h3 className="card-title" style={{ marginBottom: '10px' }}>물류 운송료 정산 및 최종 확정</h3>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               실제 물류 기사로부터 수령한 세금계산서 또는 인수증 영수금액을 기반으로 차량별 <strong>운송료(확정)</strong> 금액을 입력하여 마감 처리합니다.
-            </p>
+ </p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
               <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
@@ -960,7 +960,7 @@ export const Deliveries: React.FC = () => {
                         </td>
                         <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)' }}>
                           {(v.deliveryCost || 0).toLocaleString()}원
-                        </td>
+ </td>
                         <td style={{ padding: '8px', borderBottom: '1px solid var(--border-color)' }}>
                           <input
                             type="number"
@@ -983,7 +983,7 @@ export const Deliveries: React.FC = () => {
                 </div>
                 <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
                   확정운송비 합계: {settleVehicles.reduce((sum, v) => sum + Number(v.deliveryCostConfirmed || 0), 0).toLocaleString()}원
-                </div>
+ </div>
               </div>
             </div>
 
@@ -991,7 +991,7 @@ export const Deliveries: React.FC = () => {
               <button type="button" className="btn-secondary" onClick={() => setShowSettleModal(false)}>취소</button>
               <button data-hs-trigger="Process" type="submit" className="btn-success" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
                 <CheckCircle size={14} /> 정산 마감 처리 완료
-              </button>
+ </button>
             </div>
           </form>
         </div>
@@ -1007,10 +1007,10 @@ export const Deliveries: React.FC = () => {
             <h3 className="card-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Navigation size={20} style={{ color: 'var(--success)' }} />
               장비 반납 입고 등록 및 품질 검수
-            </h3>
+ </h3>
             <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               회수 완료된 각 장비의 외관 상태 및 동작을 검수하고, 다음 출고를 위한 정비 필요 여부를 마킹합니다.
-            </p>
+ </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
               <div>
@@ -1034,7 +1034,7 @@ export const Deliveries: React.FC = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <span style={{ fontSize: '13.5px', fontWeight: '700' }}>
                             {index + 1}. <strong style={{ color: 'var(--primary)' }}>{asset.assetNo}</strong> ({asset.modelName})
-                          </span>
+ </span>
                           <select
                             value={rev.status}
                             onChange={e => handleReviewChange(rev.assetId, 'status', e.target.value)}
@@ -1072,8 +1072,8 @@ export const Deliveries: React.FC = () => {
                           {rev.status === 'REPAIRING' && (
                             <div style={{ gridColumn: 'span 2', marginTop: '4px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.03)', border: '1px dashed var(--danger)', borderRadius: '6px' }}>
                               <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--danger)', marginBottom: '6px', display: 'block' }}>
-                                📸 불량 증빙 사진 촬영/업로드 (필수)
-                              </label>
+                                 불량 증빙 사진 촬영/업로드 (필수)
+ </label>
                               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <input
                                   type="file"
@@ -1098,8 +1098,8 @@ export const Deliveries: React.FC = () => {
                                 />
                                 {rev.faultImageUrl && (
                                   <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 'bold' }}>
-                                    ✓ 사진 매핑 완료
-                                  </span>
+                                     사진 매핑 완료
+ </span>
                                 )}
                               </div>
                             </div>

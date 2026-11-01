@@ -31,7 +31,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const canControlBlock = useMemo(() => canUserControlCustomerBlock(currentUser, hasPermission, rolePermissions), [currentUser, hasPermission, rolePermissions]);
 
-  // 📄 사업자등록증 AI 모달 상태
+  //  사업자등록증 AI 모달 상태
   const [showBizLicenseModal, setShowBizLicenseModal] = useState(false);
   const [targetBizLicenseCustId, setTargetBizLicenseCustId] = useState<string | undefined>(undefined);
   
@@ -98,7 +98,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
       // 2. 소속 담당자 (보조 참조)
       const custContacts = contacts.filter(cnt => cnt.customerId === c.id && cnt.isActive !== false);
 
-      // 3. 고객현장 목록 (가동중 우선 ➔ 현장명 가나다순 정렬) 및 현장별 담당자 추출
+      // 3. 고객현장 목록 (가동중 우선  현장명 가나다순 정렬) 및 현장별 담당자 추출
       const custSites = sites
         .filter(s => s.customerId === c.id && s.isActive !== false && siteMasters.find(sm => sm.id === s.siteMasterId)?.isActive !== false)
         .sort((a, b) => compareCustomerNames(a.name, b.name));
@@ -290,7 +290,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
             고객사 · 현장 · 담당자 검색
-          </label>
+ </label>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
@@ -329,7 +329,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
         <div className="flex flex-wrap items-center gap-1.5 px-0.5">
           <span className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap flex-shrink-0">
             초성
-          </span>
+ </span>
           <ChosungFilterBar
             selected={chosungFilter}
             onChange={setChosungFilter}
@@ -375,7 +375,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
           <span className="text-[10.5px] font-bold text-slate-400 flex items-center gap-1 mr-1 whitespace-nowrap flex-shrink-0">
             <ArrowUpDown className="w-3 h-3 text-blue-400" />
             정렬
-          </span>
+ </span>
           {(
             [
               { id: 'NAME', label: '가나다순' },
@@ -405,7 +405,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
         {filteredList.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/60 rounded-2xl border border-slate-800">
             조건에 부합하는 고객사 데이터가 없습니다.
-          </div>
+ </div>
         ) : (
           filteredList.map(({ customer: c, rentedAssetCount, siteCount, custSites, siteContactMap, primarySite, primarySiteContact, custContacts, unpaidAmount, hasIncomplete }) => {
             const isExp = expandedCustomerId === c.id;
@@ -444,13 +444,13 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                       ) : (
                         <span className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-800/60 text-emerald-300 text-[10px] font-bold whitespace-nowrap flex-shrink-0">
                           정상 거래
-                        </span>
+ </span>
                       )}
                       {hasIncomplete && (
                         <div className="flex items-center gap-1">
                           <span className="px-1.5 py-0.5 rounded bg-amber-950 border border-amber-800/60 text-amber-300 text-[10px] font-bold whitespace-nowrap flex-shrink-0">
                             정보 누락
-                          </span>
+ </span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -485,7 +485,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                     ) : (
                       <div className="text-[11px] text-slate-500 font-mono truncate">
                         {c.bizRegNo || '사업자 미등록'} · 등록 현장 없음
-                      </div>
+ </div>
                     )}
                   </div>
 
@@ -519,11 +519,11 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                   {unpaidAmount > 0 ? (
                     <span className="text-rose-400 font-mono font-bold whitespace-nowrap flex-shrink-0">
                       미수 ₩{unpaidAmount.toLocaleString()}원
-                    </span>
+ </span>
                   ) : (
                     <span className="text-emerald-500 font-mono text-[10px] whitespace-nowrap flex-shrink-0">
                       미수금 없음
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -546,7 +546,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                         <div className="bg-slate-950/70 rounded-xl border border-slate-800 p-3 flex flex-col gap-2">
                           <div className="text-[11px] text-slate-400">
                             등록된 고객현장이 없습니다.
-                          </div>
+ </div>
                           {custContacts.length > 0 && (
                             <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-800">
                               <span className="text-[11px] font-bold text-slate-300">고객사 등록 담당자 ({custContacts.length}명)</span>
@@ -596,7 +596,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                                       {siteRentedCount > 0 && (
                                         <span className="px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold whitespace-nowrap flex-shrink-0">
                                           가동 {siteRentedCount}대
-                                        </span>
+ </span>
                                       )}
                                     </div>
                                     <div className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -651,7 +651,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                                     {stContacts.length === 0 ? (
                                       <div className="text-[11px] text-slate-500 py-2 px-2.5 bg-slate-950 rounded-lg border border-slate-800">
                                         이 현장에 등록된 담당자 정보가 없습니다.
-                                      </div>
+ </div>
                                     ) : (
                                       <div className="flex flex-col gap-1.5">
                                         {stContacts.map(sc => {
@@ -759,7 +759,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                               className="text-blue-400 hover:underline font-bold"
                             >
                               열람
-                            </a>
+ </a>
                           )}
                           <button
                             type="button"
@@ -954,13 +954,13 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                 className="flex-1 py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700 active:scale-95"
               >
                 취소
-              </button>
+ </button>
               <button 
                 type="submit" 
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg active:scale-95"
               >
                 저장
-              </button>
+ </button>
             </div>
           </form>
         </div>
@@ -988,7 +988,7 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
               <span className="text-emerald-300 font-bold flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 사진/PDF 파일로 등록하시겠습니까?
-              </span>
+ </span>
               <button
                 type="button"
                 onClick={() => {
@@ -998,8 +998,8 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                 }}
                 className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs active:scale-95 shadow"
               >
-                AI 자동 판독 ➔
-              </button>
+                AI 자동 판독 
+ </button>
             </div>
             
             {/* 상호 */}
@@ -1140,19 +1140,19 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
                 className="flex-1 py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700 active:scale-95"
               >
                 취소
-              </button>
+ </button>
               <button 
                 type="submit" 
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg active:scale-95"
               >
                 등록 완료
-              </button>
+ </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* 📄 사업자등록증 AI 신규 등록 및 정보 보완 모달 */}
+      {/*  사업자등록증 AI 신규 등록 및 정보 보완 모달 */}
       {showBizLicenseModal && (
         <BusinessLicenseModal
           isOpen={showBizLicenseModal}

@@ -22,7 +22,7 @@ export const SmartDispatch: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // ⚡ 기존 DB 정보 자동 상속 목록 상태 (시각적 배지 노출용)
+  //  기존 DB 정보 자동 상속 목록 상태 (시각적 배지 노출용)
   const [inheritedFieldList, setInheritedFieldList] = useState<string[]>([]);
 
   // 프로세스 진행 릴레이 모달 상태
@@ -68,7 +68,7 @@ export const SmartDispatch: React.FC = () => {
   const [siteName, setSiteName] = useState('');
   const [siteAddress, setSiteAddress] = useState('');
 
-  // 👔 업무 관계자 정보 (영업담당자, 현장담당자, 청구담당자)
+  //  업무 관계자 정보 (영업담당자, 현장담당자, 청구담당자)
   const [salespersonName, setSalespersonName] = useState('');
   const [salespersonPhone, setSalespersonPhone] = useState('');
 
@@ -88,16 +88,16 @@ export const SmartDispatch: React.FC = () => {
   const [paidOptions, setPaidOptions] = useState('');
   const [protection, setProtection] = useState('');
 
-  // 🌟 고객사 기본값 등록 및 전체 현장 일괄 전파 플래그 상태
+  //  고객사 기본값 등록 및 전체 현장 일괄 전파 플래그 상태
   const [isSetAsCustomerDefault, setIsSetAsCustomerDefault] = useState(false);
   const [applyToAllSites, setApplyToAllSites] = useState(false);
-  const [saveOptionsToSite, setSaveOptionsToSite] = useState(true); // 🌟 변경된 옵션을 현장 기본값으로 저장할지 여부
+  const [saveOptionsToSite, setSaveOptionsToSite] = useState(true); //  변경된 옵션을 현장 기본값으로 저장할지 여부
 
   // 요구사항 필수 체크리스트 선택/해제 상태 (Record<specId, boolean>)
   const [checkedSpecs, setCheckedSpecs] = useState<Record<string, boolean>>({});
   const [showAllSpecs, setShowAllSpecs] = useState<boolean>(false);
 
-  // 🌟 현재 매핑된 고객사/현장 및 옵션 변경 감지 memo
+  //  현재 매핑된 고객사/현장 및 옵션 변경 감지 memo
   const currentMatchedCustomer = useMemo(() => {
     return findCustomerByNormalizedName(customers, customerName);
   }, [customers, customerName]);
@@ -124,7 +124,7 @@ export const SmartDispatch: React.FC = () => {
   // 프리뷰 탭 관리
   const [previewTab, setPreviewTab] = useState<'SHEET' | 'TEXT' | 'JSON'>('SHEET');
 
-  // 💡 [동적 맞춤형 라벨 추출기] 원문 텍스트에서 '3면 함석', '4면 철망', '3면 철망' 등 실제로 감지된 구체적 키워드가 있다면 해당 명칭으로 동적 라벨명 렌더링!
+  //  [동적 맞춤형 라벨 추출기] 원문 텍스트에서 '3면 함석', '4면 철망', '3면 철망' 등 실제로 감지된 구체적 키워드가 있다면 해당 명칭으로 동적 라벨명 렌더링!
   const getDynamicSpecLabel = (spec: SpecItem, text: string): string => {
     if (!text.trim()) return spec.label;
     const lowerText = text.toLowerCase();
@@ -168,7 +168,7 @@ export const SmartDispatch: React.FC = () => {
     return spec.label;
   };
 
-  // 💡 [자연어 텍스트 스캐너] rawText 가 변경될 때 텍스트 내 포함된 요구사항을 100% 동적으로 스캔하여 자동 체크!
+  //  [자연어 텍스트 스캐너] rawText 가 변경될 때 텍스트 내 포함된 요구사항을 100% 동적으로 스캔하여 자동 체크!
   useEffect(() => {
     if (!rawText.trim()) return;
 
@@ -186,7 +186,7 @@ export const SmartDispatch: React.FC = () => {
     }));
   }, [rawText]);
 
-  // ⚡ [지능형 자동 상속 엔진] 고객사명 및 현장명 기준 기존 DB 등록 정보 자동 탐색 및 빈칸 상속
+  //  [지능형 자동 상속 엔진] 고객사명 및 현장명 기준 기존 DB 등록 정보 자동 탐색 및 빈칸 상속
   const applyAutoInheritance = (
     cName: string,
     sName: string,
@@ -531,7 +531,7 @@ export const SmartDispatch: React.FC = () => {
       newCheckedSpecs[spec.id] = matched;
     });
 
-    // ⚡ [지능형 자동 상속 엔진 실행] DB에 등록된 기존 정보가 있다면 누락된 빈칸 및 옵션/보양 자동 채움!
+    //  [지능형 자동 상속 엔진 실행] DB에 등록된 기존 정보가 있다면 누락된 빈칸 및 옵션/보양 자동 채움!
     const inheritedResult = applyAutoInheritance(parsedCustomer, parsedSite, {
       address: parsedAddress,
       salespersonName: parsedSalespersonName,
@@ -644,7 +644,7 @@ export const SmartDispatch: React.FC = () => {
 - 유상옵션 : ${paidOptions || '없음'}
 - 무상옵션 : ${protection || '없음'}
 - 필수 요구사항 (적용 항목) :
-${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') || '  - 특이 적용 사양 없음'}
+${activeSpecs.map((s, idx) => ` ${idx + 1}. [적용] ${s.label}`).join('\n') || ' - 특이 적용 사양 없음'}
 
 ■ 회계 정산 정보
 - 마감일 : ${closingDay || '-'}
@@ -864,7 +864,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
       return;
     }
     
-    // 🛡️ 1. [방어 가드 - Validation Guard] 필수 항목 검증 및 진행 차단
+    //  1. [방어 가드 - Validation Guard] 필수 항목 검증 및 진행 차단
     if (!customerName.trim()) {
       showToast('고객사명을 입력하거나 메신저 텍스트를 파싱해주세요.', 'error');
       return;
@@ -876,7 +876,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
 
     const matchedCust = findCustomerByNormalizedName(customers, customerName);
     if (matchedCust?.transactionStatus === 'BLOCKED') {
-      showToast('🚫 경영진 처분으로 인해 거래 불가 상태인 거래처입니다. 신규 출고의뢰 발행이 차단됩니다.', 'error');
+      showToast('경영진 처분으로 인해 거래 불가 상태인 거래처입니다. 신규 출고의뢰 발행이 차단됩니다.', 'error');
       return;
     }
     if (matchedCustOverdue && matchedCustOverdue.overdueSum > 0 && !dispatchOverdueAcknowledged) {
@@ -892,25 +892,25 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
     const finalAddress = siteAddress.trim() || (matchedSite?.address && matchedSite.address !== '미상' ? matchedSite.address : '');
     if (!finalAddress) {
       showToast('현장 상세 주소를 반드시 입력해주세요.', 'error');
-      return; // 🚫 진행 차단
+      return; //  진행 차단
     }
 
     const finalPhone = siteContactPhone.trim() || (matchedSite?.contact && matchedSite.contact !== '미상' ? matchedSite.contact : '');
     if (!finalPhone) {
       showToast('현장 담당자 연락처를 반드시 입력해주세요.', 'error');
-      return; // 🚫 진행 차단
+      return; //  진행 차단
     }
 
     const validEquips = equipments.filter(e => e.modelName?.trim());
     if (validEquips.length === 0) {
       showToast('신청 고소작업대 모델을 최소 1대 이상 선택해주세요.', 'error');
-      return; // 🚫 진행 차단
+      return; //  진행 차단
     }
 
     setIsSubmitting(true);
     try {
 
-    // 🔍 장비 모델명 정식 검증 & 인터랙티브 변경 승인 팝업
+    //  장비 모델명 정식 검증 & 인터랙티브 변경 승인 팝업
     const officialModels: string[] = uniqueModels.length > 0 ? uniqueModels : products.map((p: any) => p.modelName);
     const updatedEquipments = [...equipments];
     for (let i = 0; i < updatedEquipments.length; i++) {
@@ -1004,7 +1004,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
     showToast('입력 폼이 초기화되었습니다.');
   };
 
-  // 🎙️ 대화형 의뢰작성 스튜디오 동기화 핸들러
+  //  대화형 의뢰작성 스튜디오 동기화 핸들러
   const handleStudioSync = (data: Partial<StudioSyncData>) => {
     if (data.customerName !== undefined) setCustomerName(data.customerName);
     if (data.siteName !== undefined) setSiteName(data.siteName);
@@ -1091,7 +1091,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '52px' }}>
               <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                 <Sparkles size={16} className="text-primary" /> 1-A단계: 대화형 의뢰작성 (음성·키보드 인터뷰)
-              </h3>
+ </h3>
             </div>
             <div style={{ padding: '16px' }}>
               <SmartDispatchConversationalStudio
@@ -1106,7 +1106,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '52px', flexWrap: 'wrap', gap: '8px' }}>
               <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
                 <Clipboard size={16} className="text-primary" /> 1-B단계: 메신저 줄글 텍스트 복사/붙여넣기
-              </h3>
+ </h3>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <input
                   type="file"
@@ -1121,8 +1121,8 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                   onClick={() => txtFileInputRef.current?.click()}
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px' }}
                 >
-                  📂 파일 불러오기
-                </button>
+                   파일 불러오기
+ </button>
                 <button
                   type="button"
                   className="btn-primary"
@@ -1130,7 +1130,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                   style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 'bold' }}
                 >
                   <Zap size={14} /> 폼 데이터로 변환 (추출)
-                </button>
+ </button>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '12px', padding: '16px' }}>
@@ -1152,18 +1152,18 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div style={{ display: 'flex', gap: '8px' }}>
               <button type="button" className="btn-secondary" onClick={handleResetForm} style={{ padding: '6px 12px', fontSize: '13px' }}>
                 초기화
-              </button>
+ </button>
               {canSave && (
                 <button data-hs-trigger="Save" type="button" className="btn-primary" onClick={handleSave} style={{ padding: '6px 12px', fontSize: '13px', fontWeight: 'bold' }}>
                   출고 지시 (자동 생성 및 저장)
-                </button>
+ </button>
               )}
             </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             
-            {/* ⚡ 기존 DB 정보 자동 상속 안내 배너 */}
+            {/*  기존 DB 정보 자동 상속 안내 배너 */}
             {inheritedFieldList.length > 0 && (
               <div style={{
                 display: 'flex',
@@ -1181,7 +1181,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                 <span>기존 DB 자동 상속: {inheritedFieldList.join(', ')}</span>
                 <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: '400', marginLeft: 'auto' }}>
                   (새로운 입력 시 고객/현장 마스터가 자동 최신화됩니다)
-                </span>
+ </span>
               </div>
             )}
 
@@ -1191,15 +1191,15 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                 <span>1. 기본 고객 및 현장 정보</span>
                 {findCustomerByNormalizedName(customers, customerName) && (
                   <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-light)', padding: '2px 8px', borderRadius: '4px' }}>
-                    ✓ 등록 고객사 매핑됨
-                  </span>
+                     등록 고객사 매핑됨
+ </span>
                 )}
               </h4>
               {matchedCustOverdue && (
                 <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: matchedCustOverdue.isBlocked ? '#fef2f2' : '#fffbeb', border: `1px solid ${matchedCustOverdue.isBlocked ? '#f87171' : '#fcd34d'}`, color: matchedCustOverdue.isBlocked ? '#991b1b' : '#92400e', marginBottom: '12px', fontSize: '12px' }}>
                   <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                     <AlertTriangle size={15} color={matchedCustOverdue.isBlocked ? '#dc2626' : '#d97706'} />
-                    {matchedCustOverdue.isBlocked ? '🚫 [경영진 처분] 거래 불가' : '[연체 채권 경각심 통제 경보]'}
+                    {matchedCustOverdue.isBlocked ? '[경영진 처분] 거래 불가' : '[연체 채권 경각심 통제 경보]'}
                   </div>
                   <div>
                     {matchedCustOverdue.isBlocked
@@ -1210,7 +1210,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                   {!matchedCustOverdue.isBlocked && (
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontWeight: 700, cursor: 'pointer' }}>
                       <input type="checkbox" checked={dispatchOverdueAcknowledged} onChange={e => setDispatchOverdueAcknowledged(e.target.checked)} />
-                      <span>☑️ [수금 책임 인지] "위 연체 사실 및 경영진 모니터링 현황을 확인하였으며, 신규 출고 진행에 따른 수금 관리에 책임을 다할 것을 확인합니다."</span>
+                      <span> [수금 책임 인지] "위 연체 사실 및 경영진 모니터링 현황을 확인하였으며, 신규 출고 진행에 따른 수금 관리에 책임을 다할 것을 확인합니다."</span>
                     </label>
                   )}
                 </div>
@@ -1345,7 +1345,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div>
               <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
                 2. 업무 관계자 정보 (영업, 현장, 청구)
-              </h4>
+ </h4>
               <div className="mobile-grid-1col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                 <div>
                   <label>영업담당자 이름</label>
@@ -1421,7 +1421,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div>
               <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
                 3. 배송 배차 일정 및 신청 장비 모델
-              </h4>
+ </h4>
               <div className="mobile-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
                 <div>
                   <label>상차 스케줄</label>
@@ -1438,7 +1438,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                   <span>신청 고소작업대 모델 목록</span>
                   <button type="button" className="btn-secondary" onClick={handleAddEquipment} style={{ padding: '2px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '2px' }}>
                     <Plus size={12} /> 모델 추가
-                  </button>
+ </button>
                 </label>
                 
                 {equipments.map((eq, index) => (
@@ -1446,7 +1446,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                     <input
                       type="text"
                       list="unique-models"
-                      placeholder="모델 선택 또는 직접 입력 (예: GS3246)"
+                      placeholder="모델 선택 또는 직접 입력"
                       value={eq.modelName}
                       onChange={e => handleEquipmentChange(index, 'modelName', e.target.value)}
                       style={{ flex: 2 }}
@@ -1481,7 +1481,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
                 <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   4. 요구 사양 체크리스트
-                </h4>
+ </h4>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <button type="button" className="btn-secondary" onClick={() => setShowAllSpecs(!showAllSpecs)} style={{ padding: '3px 8px', fontSize: '11.5px', fontWeight: 700 }}>
                     {showAllSpecs ? '▲ 추출 항목만 보기' : '▼ 전체 사양 펼치기'}
@@ -1498,7 +1498,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                     {(inheritedFieldList.includes('유상옵션(현장)') || inheritedFieldList.includes('유상옵션(고객기본)')) && (
                       <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700 }}>
                         [{inheritedFieldList.includes('유상옵션(현장)') ? '현장 DB 상속' : '고객 기본 상속'}]
-                      </span>
+ </span>
                     )}
                   </label>
                   <input type="text" value={paidOptions} onChange={e => setPaidOptions(e.target.value)} placeholder="예: 3면 함석, 감지봉 4EA..." />
@@ -1509,14 +1509,14 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                     {(inheritedFieldList.includes('보양작업(현장)') || inheritedFieldList.includes('보양작업(고객기본)')) && (
                       <span style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 700 }}>
                         [{inheritedFieldList.includes('보양작업(현장)') ? '현장 DB 상속' : '고객 기본 상속'}]
-                      </span>
+ </span>
                     )}
                   </label>
                   <input type="text" value={protection} onChange={e => setProtection(e.target.value)} placeholder="예: 4면 망 포함 보양..." />
                 </div>
               </div>
 
-              {/* 🌟 고객사 기본값 등록 및 전체 현장 일괄 전파 체크 패널 */}
+              {/*  고객사 기본값 등록 및 전체 현장 일괄 전파 체크 패널 */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1545,7 +1545,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                   <span>'{customerName || '해당 고객사'}'의 등록된 모든 현장에도 이 옵션·보양을 동일하게 일괄 적용</span>
                 </label>
 
-                {/* 🌟 옵션 변경 시 현장 마스터 저장 확인 토글 (PC 버전) */}
+                {/*  옵션 변경 시 현장 마스터 저장 확인 토글 (PC 버전) */}
                 {currentMatchedSite && isOptionsDiff && (
                   <div style={{
                     padding: '8px 12px',
@@ -1572,12 +1572,12 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                 )}
               </div>
 
-              {/* 💡 [텍스트 추출 감지 수량 안내 뱃지] */}
+              {/*  [텍스트 추출 감지 수량 안내 뱃지] */}
               {(() => {
                 const detectedSpecs = STANDARD_SPECS.filter(s => !!checkedSpecs[s.id]);
                 return (
                   <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: 800, color: detectedSpecs.length > 0 ? '#16a34a' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    ✨ 요청 텍스트 기반 감지 및 자동 동적 생성된 요구사항: <span style={{ color: 'var(--primary)', fontSize: '13px' }}>{detectedSpecs.length}개</span>
+                     요청 텍스트 기반 감지 및 자동 동적 생성된 요구사항: <span style={{ color: 'var(--primary)', fontSize: '13px' }}>{detectedSpecs.length}개</span>
                   </div>
                 );
               })()}
@@ -1636,7 +1636,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             <div>
               <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
                 5. 정산 회계 및 특이사항
-              </h4>
+ </h4>
               <div className="mobile-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label>매달 청구 마감일</label>
@@ -1677,7 +1677,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
               </h3>
               <span style={{ fontSize: '13px', fontWeight: '700', color: isProcessCompleted ? '#10b981' : '#38bdf8', padding: '2px 10px', borderRadius: '12px', backgroundColor: isProcessCompleted ? 'rgba(16,185,129,0.15)' : 'rgba(56,189,248,0.15)' }}>
                 {progressPercent}%
-              </span>
+ </span>
             </div>
 
             {/* 프로그레스 바 */}
@@ -1710,9 +1710,9 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
             {isProcessCompleted && (
               <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  ✅ 출고 지시 1건이 데이터베이스에 안전하게 등록되었습니다.<br />
+                   출고 지시 1건이 데이터베이스에 안전하게 등록되었습니다.<br />
                   [배차 관리] 담당자가 배차 차량 및 고유 장비 번호를 매핑할 예정입니다.
-                </div>
+ </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button data-hs-trigger="Confirm"
                     type="button"
@@ -1721,7 +1721,7 @@ ${activeSpecs.map((s, idx) => `  ${idx + 1}. [적용] ${s.label}`).join('\n') ||
                     style={{ padding: '10px 24px', backgroundColor: 'var(--success)', borderColor: '#10b981', fontWeight: '800' }}
                   >
                     확인 (출고 지시 완료)
-                  </button>
+ </button>
                 </div>
               </div>
             )}

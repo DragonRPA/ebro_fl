@@ -845,7 +845,7 @@ export const MobileInlineCameraAssetScanner: React.FC<MobileInlineCameraAssetSca
           aria-label="거리 배율 전환"
         >
           {zoomPreset}배
-        </button>
+ </button>
         {torchSupported && (
           <button
             type="button"

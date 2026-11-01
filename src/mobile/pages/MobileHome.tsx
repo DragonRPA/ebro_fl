@@ -332,7 +332,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
           <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
             <span className="text-xs font-black px-2 py-0.5 rounded-md bg-blue-500/20 text-sky-300 border border-blue-500/40" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
               {userTodos.length}건 대기
-            </span>
+ </span>
           </div>
         </summary>
         <div className="details-content mt-2">
@@ -382,11 +382,11 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                       {isDirective ? (
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-red-600 text-white flex items-center gap-1" style={{ whiteSpace: 'nowrap' }}>
                           특별지시
-                        </span>
+ </span>
                       ) : isPackageResend ? (
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-600 text-white flex items-center gap-1" style={{ whiteSpace: 'nowrap' }}>
                           <FileText className="w-3 h-3" /> 패키지 재발송
-                        </span>
+ </span>
                       ) : (
                         <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded border ${priorityBg}`} style={{ whiteSpace: 'nowrap' }}>
                           {task.priority === 'URGENT' ? '긴급' : task.priority === 'HIGH' ? '높음' : '일반'}
@@ -502,14 +502,14 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
             </div>
             <span className="text-sm font-black text-white" style={{ whiteSpace: 'nowrap' }}>
               계약서 미발송 출고 요청
-            </span>
+ </span>
           </div>
           <span
             className="text-xs font-black px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
             style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             미발송 {unsentContractOutboundItems.length}건
-          </span>
+ </span>
         </summary>
 
         <div className="flex flex-col gap-2.5 mt-2">
@@ -522,10 +522,10 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-600 text-white" style={{ whiteSpace: 'nowrap' }}>
                     계약서 미발송
-                  </span>
+ </span>
                   <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" style={{ whiteSpace: 'nowrap' }}>
                     장비할당 완료 {row.totalAssignedCount}대
-                  </span>
+ </span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700" style={{ whiteSpace: 'nowrap' }}>
                     {row.reqTypeLabel}
                   </span>
@@ -546,7 +546,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 </h4>
                 <p className="text-[11px] text-indigo-300 font-bold mt-1 leading-relaxed">
                   {equipSummary} ({assignedAssetSummary})
-                </p>
+ </p>
                 <div className="text-[10px] text-slate-300 mt-1 flex items-center gap-2 flex-wrap">
                   <span>계약번호: {row.contractNo}</span>
                   <span>요청자: {row.requesterName}</span>
@@ -624,7 +624,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
           <h2 className="text-xl font-black text-white leading-tight">
             {currentUser?.name || '영업담당'}님,<br />
             가동 계약 <span className="text-sky-400">{activeContracts.length}건</span> 운용 중
-          </h2>
+ </h2>
         </div>
 
         {/* 영업부 직무 맞춤형 미결 과제 ToDo 피드 */}
@@ -646,7 +646,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-black text-white truncate">
                   가용재고 및 출고예정 현황
-                </div>
+ </div>
               </div>
             </div>
             <span
@@ -663,16 +663,16 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
               <div className="text-[10.5px] font-extrabold text-sky-300" style={{ whiteSpace: 'nowrap', color: '#7dd3fc' }}>계약가능 재고</div>
               <div className={`text-lg font-black font-mono mt-0.5 ${availableInventorySummary.contractableTotal < 0 ? 'text-rose-400' : 'text-emerald-400'}`} style={{ whiteSpace: 'nowrap' }}>
                 {availableInventorySummary.contractableTotal}대
-              </div>
+ </div>
               <div className="text-[10px] text-slate-200 font-bold" style={{ whiteSpace: 'nowrap', color: '#cbd5e1' }}>
                 재고 - 출고예정
-              </div>
+ </div>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-600 flex flex-col justify-between">
               <div className="text-[10.5px] font-extrabold text-emerald-300" style={{ whiteSpace: 'nowrap', color: '#6ee7b7' }}>주기장 현재고</div>
               <div className="text-lg font-black font-mono text-white mt-0.5" style={{ whiteSpace: 'nowrap', color: '#ffffff' }}>
                 {availableInventorySummary.totalStock}대
-              </div>
+ </div>
               <div className="text-[10px] text-slate-200 font-mono font-bold" style={{ whiteSpace: 'nowrap', color: '#e2e8f0' }}>
                 당사 {availableInventorySummary.stockOurs} · 임차 {availableInventorySummary.stockSub}
               </div>
@@ -681,7 +681,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
               <div className="text-[10.5px] font-extrabold text-amber-300" style={{ whiteSpace: 'nowrap', color: '#fcd34d' }}>출고예정</div>
               <div className="text-lg font-black font-mono text-amber-400 mt-0.5" style={{ whiteSpace: 'nowrap', color: '#fbbf24' }}>
                 {availableInventorySummary.scheduledTotal}대
-              </div>
+ </div>
               <div className="text-[10px] text-slate-200 font-mono font-bold" style={{ whiteSpace: 'nowrap', color: '#e2e8f0' }}>
                 당사 {availableInventorySummary.scheduledOurs} · 임차 {availableInventorySummary.scheduledSub}
               </div>
@@ -719,11 +719,11 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                   <span style={{ whiteSpace: 'nowrap' }}>통화 녹음 파일 업로드</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-sky-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                     출고 요청 자동 생성
-                  </span>
+ </span>
                 </div>
                 <div className="text-[11px] text-slate-300 mt-0.5">
                   녹음 파일 선택 시 출고 요청 초안 등록
-                </div>
+ </div>
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-sky-400 flex-shrink-0" />
@@ -745,7 +745,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                   <span style={{ whiteSpace: 'nowrap' }}>법인차량 주유영수증 등록</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                     전사 공용
-                  </span>
+ </span>
                 </div>
                 <div className="text-xs text-slate-300 mt-0.5">주유 영수증 촬영 및 주유 대장 연동</div>
               </div>
@@ -858,7 +858,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <span style={{ whiteSpace: 'nowrap' }}>가용재고조회</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   계약가능 {availableInventorySummary.contractableTotal}대
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300">주기장 현재고 {availableInventorySummary.totalStock}대 · 출고예정 {availableInventorySummary.scheduledTotal}대</div>
             </div>
@@ -904,9 +904,9 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <span style={{ whiteSpace: 'nowrap' }}>입고 불량 상태·수리비 청구 등록</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   외상미수금 1건 연동
-                </span>
+ </span>
               </div>
-              <div className="text-xs text-slate-300">관리번호 입력 ➔ 증상·사진(2장)·예상수리비 ➔ 영업부 인계</div>
+              <div className="text-xs text-slate-300">관리번호 입력 증상·사진(2장)·예상수리비 영업부 인계</div>
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-rose-400" />
@@ -926,7 +926,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <span style={{ whiteSpace: 'nowrap' }}>주기장 소모품 재고조회</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   {(consumables || []).length}종
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300">출고 부속품, 충전기, 안전용품 및 부품 가용 수량 조회</div>
             </div>
@@ -949,7 +949,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                   <span style={{ whiteSpace: 'nowrap' }}>법인차량 주유영수증 등록</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                     전사 공용
-                  </span>
+ </span>
                 </div>
                 <div className="text-xs text-slate-300 mt-0.5">주유 영수증 촬영 및 주유 대장 연동</div>
               </div>
@@ -972,7 +972,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <span style={{ whiteSpace: 'nowrap' }}>장비 매뉴얼 관리</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-sky-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   출고·정비
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300 mt-0.5">파츠북, 에러코드 진단표, 전기/유압 회로도 열람</div>
             </div>
@@ -1042,7 +1042,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
               <span style={{ whiteSpace: 'nowrap' }}>현장정비 동선 관리</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                 출발·도착·작업·퇴근
-              </span>
+ </span>
             </div>
             <div className="text-xs text-slate-300 mt-0.5">일자별 AS팀 업무처리 동선 기록 및 조회</div>
           </div>
@@ -1064,7 +1064,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
               <span style={{ whiteSpace: 'nowrap' }}>장비 매뉴얼 관리</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-sky-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                 출고·정비
-              </span>
+ </span>
             </div>
             <div className="text-xs text-slate-300 mt-0.5">파츠북, 에러코드 진단표, 전기/유압 회로도 열람</div>
           </div>
@@ -1084,14 +1084,14 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
             onClick={() => onNavigate('as')}
             className="text-xs text-sky-400 font-semibold"
           >
-            전체보기 ➔
-          </button>
+            전체보기 
+ </button>
         </div>
 
         {pendingAsTickets.length === 0 ? (
           <div className="p-8 rounded-2xl bg-slate-900 border border-slate-700 text-center text-slate-300 text-xs">
             대기 중인 현장 정비 출동 건이 없습니다.
-          </div>
+ </div>
         ) : (
           pendingAsTickets.slice(0, 3).map((ticket) => (
             <div
@@ -1137,7 +1137,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 {(mechanicConsumableStocks || [])
                   .filter(s => s.mechanicId === currentUser?.id && s.stockQty > 0)
                   .reduce((sum, s) => sum + s.stockQty, 0)}개 적재
-              </span>
+ </span>
             </div>
             <div className="text-xs text-slate-300">보충 수령, 주기장 반납 및 실사 관리</div>
           </div>
@@ -1184,7 +1184,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({
                 <span style={{ whiteSpace: 'nowrap' }}>법인차량 주유영수증 등록</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold" style={{ whiteSpace: 'nowrap' }}>
                   전사 공용
-                </span>
+ </span>
               </div>
               <div className="text-xs text-slate-300 mt-0.5">주유 영수증 촬영 및 주유 대장 연동</div>
             </div>

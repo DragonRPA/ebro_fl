@@ -137,7 +137,7 @@ export interface CompressedResult {
 }
 
 /**
- * Consumables.tsx 호환용 File ➔ CompressedResult 반환 압축 헬퍼
+ * Consumables.tsx 호환용 File  CompressedResult 반환 압축 헬퍼
  */
 export async function compressFileIfNeeded(file: File, maxMB: number = 1): Promise<CompressedResult> {
   if (!file.type.startsWith('image/')) {

@@ -166,7 +166,7 @@ const ManualHeaderButtons: React.FC<{ activeTab: string; currentUser: any; activ
 
   const pageTitle = activeTabName || activeTab;
 
-  // 💡 [메뉴 전환 시 매뉴얼 단계 수 동기화]
+  //  [메뉴 전환 시 매뉴얼 단계 수 동기화]
   useEffect(() => {
     if (activeTab && hasPermission(activeTab, 'view')) {
       const ctx = detectCurrentContext(activeTab, pageTitle);
@@ -208,7 +208,7 @@ const ManualHeaderButtons: React.FC<{ activeTab: string; currentUser: any; activ
         }}
         title="현재 화면 매뉴얼 오버레이 표시"
       >
-        📖 {mode === 'viewing' ? '매뉴얼 닫기' : '매뉴얼 보기'}
+         {mode === 'viewing' ? '매뉴얼 닫기' : '매뉴얼 보기'}
         {page && page.items.length > 0 && mode !== 'viewing' && (
           <span style={{ background: '#1d4ed8', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '11px' }}>
             {page.items.length}
@@ -226,7 +226,7 @@ const ManualHeaderButtons: React.FC<{ activeTab: string; currentUser: any; activ
           fontWeight: 600
         }}>
           Ctrl+M
-        </span>
+ </span>
       </button>
       {canAuthor && (
         <button
@@ -241,7 +241,7 @@ const ManualHeaderButtons: React.FC<{ activeTab: string; currentUser: any; activ
           }}
           title="현재 화면 매뉴얼 작성/편집 모드 (개발자 전용)"
         >
-          ✏️ {mode === 'authoring' ? '작성 종료' : '매뉴얼 작성'}
+           {mode === 'authoring' ? '작성 종료' : '매뉴얼 작성'}
         </button>
       )}
     </div>
@@ -303,7 +303,7 @@ const ContextualManualButton: React.FC = () => {
           }}
         >
           <BookOpen size={12} /> 매뉴얼 보기
-        </button>
+ </button>
       ) : (
         <button
           onClick={(e) => { e.stopPropagation(); window.alert('이 메뉴에 등록된 매뉴얼이 없습니다. [메뉴 매뉴얼 관리]에서 HTML 문서를 연결해주세요.'); }}
@@ -315,7 +315,7 @@ const ContextualManualButton: React.FC = () => {
           title="등록된 매뉴얼 없음"
         >
           <BookOpen size={12} /> 매뉴얼 보기
-        </button>
+ </button>
       )}
 
       {showIframe && manualUrl && (
@@ -370,11 +370,11 @@ const App: React.FC = () => {
   const [showBiometricModal, setShowBiometricModal] = useState(false);
   const [pendingDeviceLogin, setPendingDeviceLogin] = useState<{ id: string; pw: string } | null>(null);
 
-  // 🔔 주기장/공장 현장용 업무 알림 설정 상태
+  //  주기장/공장 현장용 업무 알림 설정 상태
   const [showJobAlertModal, setShowJobAlertModal] = useState(false);
   const [jobNotifySettings, setJobNotifySettings] = useState(jobNotificationService.getSettings());
 
-  // 🧠 전사 업무 지식 콘솔 모달 상태
+  //  전사 업무 지식 콘솔 모달 상태
   const [showHindsightModal, setShowHindsightModal] = useState(false);
 
   useEffect(() => {
@@ -428,7 +428,7 @@ const App: React.FC = () => {
     return false;
   });
 
-  // 📱 브라우저 URL 경로 동적 감지
+  //  브라우저 URL 경로 동적 감지
   useEffect(() => {
     const handleUrlCheck = () => {
       const pathname = window.location.pathname.toLowerCase();
@@ -453,7 +453,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handleUrlCheck);
   }, []);
 
-  // 🤖 온디맨드 로컬 에이전트 실행 안내 모달 상태 (평상시 비노출, 필요 시점에 미응답일 때만 표출)
+  //  온디맨드 로컬 에이전트 실행 안내 모달 상태 (평상시 비노출, 필요 시점에 미응답일 때만 표출)
   const [agentRequiredModal, setAgentRequiredModal] = useState<{
     isOpen: boolean;
     actionName?: string;
@@ -499,7 +499,7 @@ const App: React.FC = () => {
         setAutoLogin(true);
       }
 
-      // 🛡️ [개발자 공인 단말기 자동 바인딩 URL 파라미터 처리 (?dev_bind_id=...&dev_token=...)]
+      //  [개발자 공인 단말기 자동 바인딩 URL 파라미터 처리 (?dev_bind_id=...&dev_token=...)]
       const urlParams = new URLSearchParams(window.location.search);
       const devBindId = urlParams.get('dev_bind_id');
       const devToken = urlParams.get('dev_token');
@@ -519,7 +519,7 @@ const App: React.FC = () => {
     }
   }, [currentUser]);
 
-  // 🧭 eBro Web Agent 및 외부 자동화 신호에 따른 메뉴 전환 리스너
+  //  eBro Web Agent 및 외부 자동화 신호에 따른 메뉴 전환 리스너
   useEffect(() => {
     const handleErpNavigate = (e: any) => {
       const targetMenu = e.detail?.menuId || e.detail?.menu;
@@ -545,7 +545,7 @@ const App: React.FC = () => {
     loadTablesForMenu(activeTab);
   }, [activeTab]);
 
-  // 🚀 에이전틱 AI 및 MCP 자동화를 위한 시스템 Ready 상태 공표 + 로컬 에이전트 최신 코어 핫패치 & CF R2 변경 파일 자동 동기화 가동
+  //  에이전틱 AI 및 MCP 자동화를 위한 시스템 Ready 상태 공표 + 로컬 에이전트 최신 코어 핫패치 & CF R2 변경 파일 자동 동기화 가동
   useEffect(() => {
     const callsign = currentUser?.loginId || currentUser?.name || 'admin';
     startGlobalAgentHealthMonitor(callsign);
@@ -602,7 +602,7 @@ const App: React.FC = () => {
 
       } else if (res.requireDeviceVerification) {
         setPendingDeviceLogin({ id: loginId, pw: password });
-        // 🛡️ 모바일 환경에서만 지문(생체인증) 모달 표출, PC에서는 단말기 인가 모달 표출
+        //  모바일 환경에서만 지문(생체인증) 모달 표출, PC에서는 단말기 인가 모달 표출
         const isMobileDevice = isMobileView || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (isMobileDevice) {
           setShowBiometricModal(true);
@@ -892,7 +892,7 @@ const App: React.FC = () => {
     }
   };
 
-  // ── 🎨 좌측 메뉴 패널 개인화 상태 및 훅 ──
+  // ──  좌측 메뉴 패널 개인화 상태 및 훅 ──
   const [showSidebarCustomModal, setShowSidebarCustomModal] = useState(false);
   const {
     preferences: menuPreferences,
@@ -987,7 +987,7 @@ const App: React.FC = () => {
     document.body.setAttribute('data-active-menu', title);
   }, [activeTab, menuGroups, setBaseMenu]);
 
-  // ── 🧭 메뉴 Keep-Alive 캐시: 이전(<) / 다음(>) 이동 시 직전 메뉴의 설정값·입력값 100% 보존 ──
+  // ──  메뉴 Keep-Alive 캐시: 이전(<) / 다음(>) 이동 시 직전 메뉴의 설정값·입력값 100% 보존 ──
   // 좌측 메뉴그룹에서 직접 메뉴를 새로 클릭할 때만 해당 메뉴의 mountKey를 갱신하여 초기 상태로 열고,
   // 상단 이전/다음(goBack/goForward) 이동 시에는 기존 마운트된 인스턴스를 그대로 복원한다.
   const [tabMountKeys, setTabMountKeys] = useState<Record<string, number>>({});
@@ -1050,12 +1050,12 @@ const App: React.FC = () => {
 
   const domainMode = getDomainMode();
 
-  // 🌐 [1단계: ebro.run 공식 홍보 마케팅 랜딩 페이지]
+  //  [1단계: ebro.run 공식 홍보 마케팅 랜딩 페이지]
   if (domainMode === 'LANDING') {
     return <LandingPage />;
   }
 
-  // 🌐 [1.5단계: 스마트 운송 포털 (기사용 모바일 웹) - 로그인 우회]
+  //  [1.5단계: 스마트 운송 포털 (기사용 모바일 웹) - 로그인 우회]
   if (typeof window !== 'undefined' && (window.location.pathname.startsWith('/driver-portal/') || window.location.pathname.startsWith('/driver/'))) {
     return (
       <React.Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>}>
@@ -1088,7 +1088,7 @@ const App: React.FC = () => {
                 </div>
                 <h1 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.5px', margin: 0 }}>
                   eBro 플랫폼 최고관리자
-                </h1>
+ </h1>
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '700',
@@ -1099,10 +1099,10 @@ const App: React.FC = () => {
                   borderRadius: '9999px'
                 }}>
                   admin.ebro.run 관제탑
-                </span>
+ </span>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
                   플랫폼 최고관리자 전용 로그인
-                </p>
+ </p>
               </div>
             ) : (
               <>
@@ -1119,7 +1119,7 @@ const App: React.FC = () => {
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '600', letterSpacing: '0.3px' }}>
                   지게차·호환부품 유통영업 관리 시스템
-                </p>
+ </p>
               </>
             )}
           </div>
@@ -1180,7 +1180,7 @@ const App: React.FC = () => {
                   }}
                 />
                 아이디 저장
-              </label>
+ </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -1200,7 +1200,7 @@ const App: React.FC = () => {
                   }}
                 />
                 비밀번호 저장
-              </label>
+ </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -1214,7 +1214,7 @@ const App: React.FC = () => {
                   }}
                 />
                 자동 로그인
-              </label>
+ </label>
             </div>
 
             {loginSuccessMsg && (
@@ -1254,7 +1254,7 @@ const App: React.FC = () => {
               {isLoggingIn ? '로그인 확인 중...' : '로그인'}
             </button>
 
-            {/* 👆 모바일 전용: admin 입력 시 2단계 지문(생체인증) 로그인 버튼 (PC에서는 비노출) */}
+            {/*  모바일 전용: admin 입력 시 2단계 지문(생체인증) 로그인 버튼 (PC에서는 비노출) */}
             {isMobileView && loginId.trim().toLowerCase() === 'admin' && (
               <button
                 type="button"
@@ -1284,7 +1284,7 @@ const App: React.FC = () => {
             )}
           </form>
 
-          {/* 🌐 플랫폼 최고관리자 도메인 접속 시 일반 사용자용 고객사 포털 안내 */}
+          {/*  플랫폼 최고관리자 도메인 접속 시 일반 사용자용 고객사 포털 안내 */}
           {domainMode === 'ADMIN' && (
             <div style={{
               marginTop: '12px',
@@ -1309,8 +1309,8 @@ const App: React.FC = () => {
                   gap: '4px'
                 }}
               >
-                고객사 ERP 바로가기 ➔
-              </a>
+                고객사 ERP 바로가기 
+ </a>
             </div>
           )}
 
@@ -1343,7 +1343,7 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* 💻 PC 전용: PC 에이전트 설치 프로그램 다운로드 (모바일 화면 모드에서는 비노출) */}
+          {/*  PC 전용: PC 에이전트 설치 프로그램 다운로드 (모바일 화면 모드에서는 비노출) */}
           {!isMobileView && (
           <div style={{
             marginTop: '16px',
@@ -1360,7 +1360,7 @@ const App: React.FC = () => {
                 <Monitor size={15} color="var(--primary)" style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   PC 에이전트 설치 프로그램
-                </span>
+ </span>
               </div>
               <span style={{
                 fontSize: '11px',
@@ -1406,7 +1406,7 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            {/* 🧩 크롬 웹스토어 웹 확장프로그램 연동 링크 (테넌트 설정에서 AI/웹 확장 기능이 활성화된 테넌트에만 노출) */}
+            {/*  크롬 웹스토어 웹 확장프로그램 연동 링크 (테넌트 설정에서 AI/웹 확장 기능이 활성화된 테넌트에만 노출) */}
             {Boolean(currentTenant?.features?.agentAiEnabled) && (
               <div style={{ marginTop: '2px' }}>
                 <a
@@ -1547,7 +1547,7 @@ const App: React.FC = () => {
               </div>
               <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', fontSize: '11px', color: 'var(--warning)' }}>
                 • 계정 항목을 클릭하면 아이디와 비밀번호가 자동 입력됩니다.
-              </div>
+ </div>
             </div>
           )}
 
@@ -1567,11 +1567,11 @@ const App: React.FC = () => {
               }}
             >
               개인정보처리방침
-            </button>
+ </button>
           </div>
         </div>
 
-        {/* 🛡️ 개인정보 처리방침 모달 (로그인 전 열람 가능) */}
+        {/*  개인정보 처리방침 모달 (로그인 전 열람 가능) */}
         {showPrivacyPolicy && (
           <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
         )}
@@ -1622,7 +1622,7 @@ const App: React.FC = () => {
 
   // 3. 로그인 상태: 메인 ERP 대시보드 렌더링
   
-  // 🛡️ [특급 보안] 어드민 모드 독립 격리 레이아웃 (정보보호서약 완벽 준수)
+  //  [특급 보안] 어드민 모드 독립 격리 레이아웃 (정보보호서약 완벽 준수)
   if (domainMode === 'ADMIN') {
     return (
       <div style={{ display: 'flex', height: '100dvh', maxHeight: '100dvh', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1644,7 +1644,7 @@ const App: React.FC = () => {
             </div>
             <button onClick={logout} style={{ padding: '7px 14px', borderRadius: '6px', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff', fontSize: '12px', fontWeight: '700', border: '1px solid rgba(255, 255, 255, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <LogOut size={14} /> 로그아웃
-            </button>
+ </button>
           </div>
         </header>
 
@@ -1652,15 +1652,15 @@ const App: React.FC = () => {
           <aside style={{ width: '260px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-color)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '8px', backgroundColor: '#eef2ff', color: '#4f46e5', fontWeight: '800', fontSize: '14.5px', border: '1px solid #c7d2fe', cursor: 'pointer', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.05)' }}>
               <Building2 size={18} /> 테넌트 인프라 관리
-            </button>
+ </button>
             <div style={{ marginTop: 'auto', padding: '16px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px dashed var(--border-color)', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a', fontWeight: '800', marginBottom: '8px' }}>
                 <ShieldAlert size={16} color="#ef4444" />
                 접근 통제 및 보안 알림
-              </div>
+ </div>
               데이터 보호 규정에 따라, 최고관리자라 하더라도 <strong>개별 고객사(테넌트)의 비즈니스 데이터 및 ERP 화면에는 원천적으로 접근할 수 없도록 격리</strong>되어 있습니다.<br/><br/>
               본 관제탑에서는 오직 인프라 할당, 계정 상태, 구독 설정만을 제어합니다.
-            </div>
+ </div>
           </aside>
           
           <main className="main-content-area" style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--bg-app)', padding: '24px' }}>
@@ -1689,7 +1689,7 @@ const App: React.FC = () => {
     <div style={{ display: 'flex', height: '100dvh', maxHeight: '100dvh', flexDirection: 'column', overflow: 'hidden' }}>
       <DemoModeBanner />
       
-      {/* 🌐 플랫폼 최고관리자 관제탑 안내 띠 배너 */}
+      {/*  플랫폼 최고관리자 관제탑 안내 띠 배너 */}
       {domainMode === 'ADMIN' && (
         <div style={{
           backgroundColor: '#1e1b4b',
@@ -1707,7 +1707,7 @@ const App: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ backgroundColor: '#4f46e5', color: '#fff', padding: '1px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '800' }}>
               ADMIN
-            </span>
+ </span>
             <span>eBro 플랫폼 최고관리자 관제탑 - 멀티테넌트 통합 제어</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -1729,8 +1729,8 @@ const App: React.FC = () => {
                 backgroundColor: 'rgba(255, 255, 255, 0.08)'
               }}
             >
-              공식 솔루션 소개 ➔
-            </a>
+              공식 솔루션 소개 
+ </a>
           </div>
         </div>
       )}
@@ -1783,7 +1783,7 @@ const App: React.FC = () => {
                       title="클릭 시 테넌트 관리 센터로 이동"
                     >
                       eBro 플랫폼 본부
-                    </span>
+ </span>
                     <span style={{
                       padding: '1px 6px',
                       borderRadius: '10px',
@@ -1794,23 +1794,23 @@ const App: React.FC = () => {
                       border: '1px solid var(--border-color)'
                     }}>
                       admin.ebro.run
-                    </span>
+ </span>
                   </div>
                   <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--primary)', letterSpacing: '0.2px', whiteSpace: 'nowrap', marginTop: '2px' }}>
                     테넌트 통합 관제 센터
-                  </span>
+ </span>
                 </div>
               </>
             ) : (
               <>
-                {/* 🏢 테넌트 회사 CI 이미지 (회사이름 바로 왼쪽) */}
+                {/*  테넌트 회사 CI 이미지 (회사이름 바로 왼쪽) */}
                 <img 
                   src={isDemoMode() ? '/images/ci/ebro_rental_ci.svg' : (currentTenant?.ciUrl || currentTenant?.logoUrl || '/images/ci/giyeun_ci.png')} 
                   alt="CI" 
                   style={{ height: '32px', maxWidth: isDemoMode() ? '110px' : '90px', objectFit: 'contain', flexShrink: 0 }} 
                   onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
                 />
-                {/* 🏢 1열: 고객회사명(강조) + 만료상태 / 2열: e-Bro ERP System (작은 글씨) */}
+                {/*  1열: 고객회사명(강조) + 만료상태 / 2열: e-Bro ERP System (작은 글씨) */}
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span 
@@ -1880,7 +1880,7 @@ const App: React.FC = () => {
                 transition: 'all 0.15s ease',
                 boxShadow: canGoBack ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
               }}
-              title={canGoBack ? `이전: ${prevMenuTitle} (Alt+←)` : '이전 화면 없음 (Alt+←)'}
+              title={canGoBack ? `이전: ${prevMenuTitle}` : '이전 화면 없음'}
             >
               <ChevronLeft size={16} />
             </button>
@@ -1903,7 +1903,7 @@ const App: React.FC = () => {
                 transition: 'all 0.15s ease',
                 boxShadow: canGoForward ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
               }}
-              title={canGoForward ? `다음: ${nextMenuTitle} (Alt+→)` : '다음 화면 없음 (Alt+→)'}
+              title={canGoForward ? `다음: ${nextMenuTitle}` : '다음 화면 없음'}
             >
               <ChevronRight size={16} />
             </button>
@@ -1938,7 +1938,7 @@ const App: React.FC = () => {
               <Search size={14} style={{ flexShrink: 0 }} />
               <span style={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 메뉴 검색
-              </span>
+ </span>
               <span style={{
                 fontSize: '11px',
                 padding: '2px 6px',
@@ -1950,7 +1950,7 @@ const App: React.FC = () => {
                 fontFamily: 'monospace',
               }}>
                 Ctrl+K
-              </span>
+ </span>
             </button>
           )}
 
@@ -2044,14 +2044,14 @@ const App: React.FC = () => {
         {/* 사용자 정보 및 화면 모드 (밝은화면모드 / 어두운화면모드) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
 
-          {/* 📖 인앱 오버레이 매뉴얼 보기/작성 버튼 */}
+          {/*  인앱 오버레이 매뉴얼 보기/작성 버튼 */}
           <ManualHeaderButtons
             activeTab={activeTab}
             currentUser={currentUser}
             activeTabName={menuGroups.flatMap(g => g.items).find(i => i.id === activeTab)?.name || (activeTab === 'dashboard' ? '대시보드' : activeTab)}
           />
 
-          {/* 🧠 전사 업무 지식 콘솔 버튼 (개발자 전용 노출) */}
+          {/*  전사 업무 지식 콘솔 버튼 (개발자 전용 노출) */}
           {isDeveloperUser(currentUser) && (
             <button
               onClick={() => setShowHindsightModal(true)}
@@ -2079,7 +2079,7 @@ const App: React.FC = () => {
             </button>
           )}
 
-          {/* 🔔 주기장/공장 현장용 업무 알림 설정 버튼 (소리-차임벨 & 팝업 토스트) */}
+          {/*  주기장/공장 현장용 업무 알림 설정 버튼 (소리-차임벨 & 팝업 토스트) */}
           <button
             onClick={() => setShowJobAlertModal(true)}
             style={{
@@ -2458,7 +2458,7 @@ const App: React.FC = () => {
             );
           })}
 
-          {/* ⚙️ 사이드바 최하단: 향후 업무확장 모듈 미리보기 & 메뉴 패널 설정 */}
+          {/*  사이드바 최하단: 향후 업무확장 모듈 미리보기 & 메뉴 패널 설정 */}
           <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <button
               type="button"
@@ -2481,7 +2481,7 @@ const App: React.FC = () => {
               }}
               title="향후 업무 확장 시 즉시 활성화 가능한 렌탈·회계·인사 메뉴 미리보기"
             >
-              <span>{showExtendedErpModules ? '✓ 확장모듈 미리보기 끄기' : '+ 향후 업무확장 메뉴 보기'}</span>
+              <span>{showExtendedErpModules ? '확장모듈 미리보기 끄기' : '+ 향후 업무확장 메뉴 보기'}</span>
             </button>
             <button
               type="button"
@@ -2540,7 +2540,7 @@ const App: React.FC = () => {
               <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>
                 선택하신 메뉴에 대한 조회 권한이 비활성화되어 있습니다.<br />
                 권한이 필요할 경우 개발자에게 문의하시기 바랍니다.
-              </p>
+ </p>
             </div>
           )}
         </main>
@@ -2565,7 +2565,7 @@ const App: React.FC = () => {
 
       {/* 모바일 다이나믹 반응형 전용 스타일 (PC vs 모바일 분리) */}
       <style>{`
-        @media (max-width: 768px) {
+        @media {
           .mobile-burger-btn {
             display: inline-flex !important;
           }
@@ -2594,19 +2594,19 @@ const App: React.FC = () => {
         }
       `}</style>
 
-      {/* 🚀 구글 드라이브 미러링 진행상황 플로팅 토스트 */}
+      {/*  구글 드라이브 미러링 진행상황 플로팅 토스트 */}
       <MirrorSyncProgressToast />
 
-      {/* 📖 인앱 오버레이 매뉴얼 시스템 */}
+      {/*  인앱 오버레이 매뉴얼 시스템 */}
       <ManualOverlay />
       <ManualAuthorPanel />
 
-      {/* 🛡️ 개인정보 처리방침 법정 고지 모달 */}
+      {/*  개인정보 처리방침 법정 고지 모달 */}
       {showPrivacyPolicy && (
         <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
       )}
 
-      {/* 🎨 좌측 메뉴 패널 개인화 설정 모달 */}
+      {/*  좌측 메뉴 패널 개인화 설정 모달 */}
       <SidebarCustomizationModal
         isOpen={showSidebarCustomModal}
         onClose={() => setShowSidebarCustomModal(false)}
@@ -2621,29 +2621,29 @@ const App: React.FC = () => {
         onReset={resetMenuPreferences}
       />
 
-      {/* 🔔 주기장/공장 현장용 고정 팝업 토스트 (확인 버튼 클릭 시까지 상주) */}
+      {/*  주기장/공장 현장용 고정 팝업 토스트 (확인 버튼 클릭 시까지 상주) */}
       <PersistentJobAlertToast onNavigateMenu={(menuId) => setActiveTab(menuId)} />
 
-      {/* ⚙️ 직무별 업무 알림 설정 모달 */}
+      {/*  직무별 업무 알림 설정 모달 */}
       <JobAlertModal
         isOpen={showJobAlertModal}
         onClose={() => setShowJobAlertModal(false)}
       />
 
-      {/* 🧠 전사 업무 지식 콘솔 모달 */}
+      {/*  전사 업무 지식 콘솔 모달 */}
       <HindsightQueryModal
         isOpen={showHindsightModal}
         onClose={() => setShowHindsightModal(false)}
       />
 
-      {/* 🤖 온디맨드 로컬 에이전트 실행 안내 모달 (실행 필요 시점에만 팝업) */}
+      {/*  온디맨드 로컬 에이전트 실행 안내 모달 (실행 필요 시점에만 팝업) */}
       <AgentRequiredModal
         isOpen={agentRequiredModal.isOpen}
         onClose={() => setAgentRequiredModal(prev => ({ ...prev, isOpen: false }))}
         actionName={agentRequiredModal.actionName}
       />
 
-      {/* 👆 admin 최고관리자 2단계 지문 생체인증 모달 */}
+      {/*  admin 최고관리자 2단계 지문 생체인증 모달 */}
       <BiometricAuthModal
         isOpen={showBiometricModal}
         onClose={() => {

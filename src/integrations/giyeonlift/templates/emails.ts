@@ -11,7 +11,7 @@ ${tenantCorp} 입니다.
 
 요청하신 [${siteName}] 현장의 계약서패키지를 첨부 파일로 송부드립니다.
 
-■ 첨부 서류 내역 (단일 패키지 PDF):
+■ 첨부 서류 내역:
 1. 고소작업대 임대차 계약서
 2. 자산별 반입 전 CHECK LIST (${mappedAssetsCount}대)
 3. 자산별 안전점검 결과서 (${mappedAssetsCount}대)

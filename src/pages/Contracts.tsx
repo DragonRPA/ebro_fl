@@ -69,7 +69,7 @@ export const Contracts: React.FC = () => {
   const [monthlyChecklistContractId, setMonthlyChecklistContractId] = useState<string | undefined>(undefined);
 
   // 계약 변경 권한 검증 함수 (매각 계약은 1회성 완결 계약이므로 변경 불가)
-  // 💡 다른 직원이 계약기간의 연장/단축 및 승계 등을 수행할 수 있도록 contract.save 또는 billing.save 권한 보유자에게 허용하되,
+  //  다른 직원이 계약기간의 연장/단축 및 승계 등을 수행할 수 있도록 contract.save 또는 billing.save 권한 보유자에게 허용하되,
   //    계약 연장/단축/승계 과정에서 계약의 최초 영업담당자(salespersonId)는 절대 임의 변경되지 않고 그대로 유지됨!
   const canModifyContract = (contract: Contract) => {
     if ((contract.contractType || 'RENTAL') === 'SALE') return false;
@@ -100,7 +100,7 @@ export const Contracts: React.FC = () => {
   // 선택된 계약 ID
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
 
-  // 💡 네비게이션 페이로드 수신 (대시보드 등 외부 메뉴에서 특정 계약 또는 필터 지정 이동 연동)
+  //  네비게이션 페이로드 수신 (대시보드 등 외부 메뉴에서 특정 계약 또는 필터 지정 이동 연동)
   useEffect(() => {
     if (navigationPayload) {
       if (navigationPayload.contractId) {
@@ -185,7 +185,7 @@ export const Contracts: React.FC = () => {
   const [customMonthly, setCustomMonthly] = useState(0);
   const [customDaily, setCustomDaily] = useState(0);
 
-  // --- 💡 모달 팝업 상태들 ---
+  // ---  모달 팝업 상태들 ---
   // 0) 체결자산 상세 모달
   const [showAssetsDetailModalContractId, setShowAssetsDetailModalContractId] = useState<string | null>(null);
 
@@ -203,7 +203,7 @@ export const Contracts: React.FC = () => {
   const [modDesc, setModDesc] = useState('');
   const [selectedExtendAssetIds, setSelectedExtendAssetIds] = useState<Set<string>>(new Set());
 
-  // 🔒 제출 중복 방지 상태
+  //  제출 중복 방지 상태
   const [isSubmittingContract, setIsSubmittingContract] = useState(false);
   const [isSubmittingExtend, setIsSubmittingExtend] = useState(false);
 
@@ -229,7 +229,7 @@ export const Contracts: React.FC = () => {
 
   // 3) 계약 승계 모달
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [succCustSearch, setSuccCustSearch] = useState(''); // 🔍 양수 고객사 초성/검색어
+  const [succCustSearch, setSuccCustSearch] = useState(''); //  양수 고객사 초성/검색어
   const [succCustId, setSuccCustId] = useState('');
   const [succContactId, setSuccContactId] = useState('');
   const [succSiteId, setSuccSiteId] = useState('');
@@ -295,7 +295,7 @@ export const Contracts: React.FC = () => {
   const [salespersonChangeReasonText, setSalespersonChangeReasonText] = useState('');
   const [isSubmittingSalespersonChange, setIsSubmittingSalespersonChange] = useState(false);
 
-  // ⚡ O(1) 조회용 인덱스 맵 사전 계산 (필터 변경 시 O(N*M) 중첩 탐색 방지)
+  //  O(1) 조회용 인덱스 맵 사전 계산 (필터 변경 시 O(N*M) 중첩 탐색 방지)
   const customerMap = useMemo(() => {
     const map = new Map<string, Customer>();
     for (const c of customers) map.set(c.id, c);
@@ -446,7 +446,7 @@ export const Contracts: React.FC = () => {
   const getSiteName = (id?: string) => (id ? siteMap.get(id)?.name : undefined) || '-';
   const getContactName = (id?: string) => (id ? contactNameMap.get(id) : undefined) || '-';
 
-  // 💡 계약별·현장별 최초개시일(현장 최초 투입일) O(1) 산출 맵 (체결자산 firstStartDate, 체결자산 startDate, 계약 자체 startDate, 출고배차 상차일, 동일 현장 최초 계약일 중 가장 빠른 일자)
+  //  계약별·현장별 최초개시일(현장 최초 투입일) O(1) 산출 맵 (체결자산 firstStartDate, 체결자산 startDate, 계약 자체 startDate, 출고배차 상차일, 동일 현장 최초 계약일 중 가장 빠른 일자)
   const initialContractDateMap = useMemo(() => {
     const extractYmd = (raw?: string | null): string => {
       if (!raw) return '';
@@ -529,7 +529,7 @@ export const Contracts: React.FC = () => {
     return initialContractDateMap.get(c.id) || c.startDate || '-';
   };
 
-  // 💡 계약별 운송료 청구기준 산출 ('3/5' 기본 | '2/4') — 계약 ➔ 고객현장 ➔ 배차메타 순으로 조회
+  //  계약별 운송료 청구기준 산출 ('3/5' 기본 | '2/4') — 계약  고객현장  배차메타 순으로 조회
   const getContractFreightBillingStandard = (c?: Contract | null): '3/5' | '2/4' => {
     if (!c) return '3/5';
     if (c.freightBillingStandard === '2/4' || c.freightBillingStandard === '3/5') {
@@ -575,7 +575,7 @@ export const Contracts: React.FC = () => {
     return { text: `D-${diff}일`, isWarning: false };
   };
 
-  // 💡 영업부 출고 진행 4대 마일스톤(배차, 장비할당, 출고검수, 계약서패키지) 판정 함수 (헌장 1.1 ~ 3.1, O(1) 맵 조회)
+  //  영업부 출고 진행 4대 마일스톤(배차, 장비할당, 출고검수, 계약서패키지) 판정 함수 (헌장 1.1 ~ 3.1, O(1) 맵 조회)
   const getContractOutboundMilestones = (c: Contract) => {
     const relDels = deliveriesByContractMap.get(c.id) || [];
     const outboundDel = relDels.find(d => d.type === 'OUTBOUND' || d.type === 'EXCHANGE') || relDels[0];
@@ -654,7 +654,7 @@ export const Contracts: React.FC = () => {
     };
   };
 
-  // 💡 테이블 및 피드용 4대 마일스톤 배지 렌더러 (건조하고 직관적인 전문 표준 준수)
+  //  테이블 및 피드용 4대 마일스톤 배지 렌더러 (건조하고 직관적인 전문 표준 준수)
   const renderMilestoneBadges = (c: Contract, onOpenPackageModal?: (contractId: string) => void) => {
     const m = getContractOutboundMilestones(c);
 
@@ -663,7 +663,7 @@ export const Contracts: React.FC = () => {
         <div data-hs-observe="contracts" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
           <span className="badge badge-success" style={{ fontSize: '11px', padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
             운송완료
-          </span>
+ </span>
         </div>
       );
     }
@@ -673,7 +673,7 @@ export const Contracts: React.FC = () => {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
           <span className="badge badge-secondary" style={{ fontSize: '11px', padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
             계약종료
-          </span>
+ </span>
         </div>
       );
     }
@@ -686,15 +686,15 @@ export const Contracts: React.FC = () => {
             style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(34, 197, 94, 0.15)', color: 'var(--success)', border: '1px solid rgba(34, 197, 94, 0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title={m.driverName ? `기사: ${m.driverName}` : '배차완료'}
           >
-            ✓ 배차완료
-          </span>
+             배차완료
+ </span>
         ) : (
           <span
             style={{ fontSize: '10.5px', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title="배차 대기 (기사 미배정)"
           >
             배차대기
-          </span>
+ </span>
         )}
 
         {/* 2. 장비할당 */}
@@ -703,8 +703,8 @@ export const Contracts: React.FC = () => {
             style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(34, 197, 94, 0.15)', color: 'var(--success)', border: '1px solid rgba(34, 197, 94, 0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title={`총 ${m.cas.length}대 매핑 완료`}
           >
-            ✓ 장비할당
-          </span>
+             장비할당
+ </span>
         ) : (
           <span
             style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(239, 68, 68, 0.12)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
@@ -720,22 +720,22 @@ export const Contracts: React.FC = () => {
             style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(34, 197, 94, 0.15)', color: 'var(--success)', border: '1px solid rgba(34, 197, 94, 0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title="출고 검수 승인 완료 (자산 상태: 대여중)"
           >
-            ✓ 검수완료
-          </span>
+             검수완료
+ </span>
         ) : m.isInspecting ? (
           <span
             style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', border: '1px solid rgba(245, 158, 11, 0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title="출고 검수 진행중"
           >
             검수진행
-          </span>
+ </span>
         ) : (
           <span
             style={{ fontSize: '10.5px', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap', flexShrink: 0 }}
             title="출고 검수 대기"
           >
             검수대기
-          </span>
+ </span>
         )}
 
         {/* 4. 계약서패키지 */}
@@ -746,7 +746,7 @@ export const Contracts: React.FC = () => {
               title={m.packageSentInfo?.desc || '계약서패키지 발송 완료'}
             >
               발송완료
-            </span>
+ </span>
             {m.packageSentInfo && (
               <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                 {m.packageSentInfo.actor} {m.packageSentInfo.timeShort}
@@ -776,7 +776,7 @@ export const Contracts: React.FC = () => {
             title={onOpenPackageModal ? '클릭 시 계약서패키지 발송 창 열기' : '계약서패키지 미발송'}
           >
             패키지미발송
-          </span>
+ </span>
         )}
       </div>
     );
@@ -787,7 +787,7 @@ export const Contracts: React.FC = () => {
     return contracts.some(con => con.salespersonId === currentUser.id);
   }, [contracts, currentUser]);
 
-  // 💡 다차원 필터링 (고객사, 현장, 시작일, 종료일 - O(1) 맵 및 단일 matcher 적용)
+  //  다차원 필터링 (고객사, 현장, 시작일, 종료일 - O(1) 맵 및 단일 matcher 적용)
   const filteredContracts = useMemo(() => {
     const q = searchTerm.trim();
     const qLower = q.toLowerCase();
@@ -959,7 +959,7 @@ export const Contracts: React.FC = () => {
     return sortable;
   }, [filteredContracts, sortConfig, contractAssetsByContractMap, customerMap, siteMap, userMap]);
 
-  // 💡 출고 진행 중인 계약 건수 (운송 완료 전)
+  //  출고 진행 중인 계약 건수 (운송 완료 전)
   const pendingDeliveryCount = useMemo(() => {
     let count = 0;
     for (const c of contracts) {
@@ -972,7 +972,7 @@ export const Contracts: React.FC = () => {
     return count;
   }, [contracts, deliveriesByContractMap, contractAssetsByContractMap, outboundInspectionsByContractMap, packageSentContractIds, currentUser, hasCurrentUserSalesContracts]);
 
-  // 🔍 조회 버튼 핸들러 (서버 데이터 재동기화 및 필터 반영)
+  //  조회 버튼 핸들러 (서버 데이터 재동기화 및 필터 반영)
   const handleSearchClick = async () => {
     setCustomerDropdownOpen(false);
     setSiteDropdownOpen(false);
@@ -1004,7 +1004,7 @@ export const Contracts: React.FC = () => {
     }
   );
 
-  // 🔍 양수 고객사 초성 검색 필터링 목록
+  //  양수 고객사 초성 검색 필터링 목록
   const filteredSuccCustomers = useMemo(() => {
     const currentCustId = activeContract?.customerId;
     const candidates = customers.filter(c => c.id !== currentCustId);
@@ -1023,7 +1023,7 @@ export const Contracts: React.FC = () => {
     return matched;
   }, [customers, customerMap, activeContract, succCustSearch, succCustId]);
 
-  // 📜 계약 변경 및 이력 타임라인
+  //  계약 변경 및 이력 타임라인
   const activeTimeline = useMemo(() => {
     if (!activeContract) return [];
 
@@ -1035,13 +1035,13 @@ export const Contracts: React.FC = () => {
       
       let historyTitle = '계약 이력';
       if (h.changeType === 'BILLING_CREATED' || h.description?.includes('소급 청구') || h.description?.includes('청구서 발행')) {
-        historyTitle = '🧾 정기 청구 발행';
+        historyTitle = '정기 청구 발행';
       } else if (h.changeType === 'MONTHLY_CHECKLIST_SENT' || h.description?.includes('월간 안전점검 체크리스트')) {
-        historyTitle = '📋 월간 안전점검 체크리스트 발송';
+        historyTitle = '월간 안전점검 체크리스트 발송';
       } else if (h.description?.includes('[유통출고')) {
-        historyTitle = '📦 유통출고 및 청구 반영';
+        historyTitle = '유통출고 및 청구 반영';
       } else if (isExchange) {
-        historyTitle = '🔄 자산 교환 이력';
+        historyTitle = '자산 교환 이력';
       } else if (h.changeType === 'FEE_CHANGE' || h.description?.includes('단가')) {
         if (h.description.includes('월/일') || (h.description.includes('월') && h.description.includes('일'))) {
           historyTitle = '월/일 렌탈료 단가 변경';
@@ -1051,7 +1051,7 @@ export const Contracts: React.FC = () => {
           historyTitle = '월 렌탈료 단가 변경';
         }
       } else if (h.changeType === 'SALESPERSON_CHANGE' || h.description?.includes('영업담당자 변경')) {
-        historyTitle = '👤 영업담당자 변경';
+        historyTitle = '영업담당자 변경';
       } else if (h.changeType === 'REGISTER') {
         historyTitle = '계약 등록';
       } else if (h.changeType === 'EXTEND') {
@@ -1122,7 +1122,7 @@ export const Contracts: React.FC = () => {
     setShowFeeModal(true);
   };
 
-  // 💰 계약 귀속 배차(출고) 건별 유상옵션 청구 단가 수정 상태
+  //  계약 귀속 배차(출고) 건별 유상옵션 청구 단가 수정 상태
   const [editingOptDeliveryId, setEditingOptDeliveryId] = useState<string | null>(null);
   const [editingOptPrices, setEditingOptPrices] = useState<Record<string, number>>({});
   const [isSavingOptPrices, setIsSavingOptPrices] = useState<boolean>(false);
@@ -1149,11 +1149,11 @@ export const Contracts: React.FC = () => {
       let changeDesc = '';
 
       if (isMonthlyChanged && isDailyChanged) {
-        changeDesc = `월/일 렌탈료 단가 수정 ${assetTag}: (월 ${oldMonthly.toLocaleString()}원 ➔ ${editMonthlyFee.toLocaleString()}원, 일 ${oldDaily.toLocaleString()}원 ➔ ${editDailyFee.toLocaleString()}원) (사유: ${feeChangeReason || '단가 조정'})`;
+        changeDesc = `월/일 렌탈료 단가 수정 ${assetTag}: (월 ${oldMonthly.toLocaleString()}원 ${editMonthlyFee.toLocaleString()}원, 일 ${oldDaily.toLocaleString()}원 ${editDailyFee.toLocaleString()}원) (사유: ${feeChangeReason || '단가 조정'})`;
       } else if (isDailyChanged) {
-        changeDesc = `일 렌탈료 단가 수정 ${assetTag}: ${oldDaily.toLocaleString()}원 ➔ ${editDailyFee.toLocaleString()}원 (사유: ${feeChangeReason || '단가 조정'})`;
+        changeDesc = `일 렌탈료 단가 수정 ${assetTag}: ${oldDaily.toLocaleString()}원 ${editDailyFee.toLocaleString()}원 (사유: ${feeChangeReason || '단가 조정'})`;
       } else {
-        changeDesc = `월 렌탈료 단가 수정 ${assetTag}: ${oldMonthly.toLocaleString()}원 ➔ ${editMonthlyFee.toLocaleString()}원 (사유: ${feeChangeReason || '단가 조정'})`;
+        changeDesc = `월 렌탈료 단가 수정 ${assetTag}: ${oldMonthly.toLocaleString()}원 ${editMonthlyFee.toLocaleString()}원 (사유: ${feeChangeReason || '단가 조정'})`;
       }
 
       db.insertRow<ContractHistory>('contractHistory', {
@@ -1173,7 +1173,7 @@ export const Contracts: React.FC = () => {
     }
   };
 
-  // 💡 유형 2: 장기 사용 고객 렌탈료 단가 할인 ('계약의 할인') 모달 열기
+  //  유형 2: 장기 사용 고객 렌탈료 단가 할인 ('계약의 할인') 모달 열기
   const handleOpenDiscountModal = () => {
     if (!activeContract) return;
     const allContractCAs = contractAssets.filter(ca => ca.contractId === activeContract.id && ca.status !== 'SOLD');
@@ -1244,7 +1244,7 @@ export const Contracts: React.FC = () => {
       const totalDiscountDiff = totalOldMonthly - totalNewMonthly;
 
       const itemDiffLines = targetItems.map(
-        it => `${it.assetNo}(${it.modelName}): 월 ${it.oldMonthlyFee.toLocaleString()}원(일 ${it.oldDailyFee.toLocaleString()}원) ➔ 월 ${it.newMonthlyFee.toLocaleString()}원(일 ${it.newDailyFee.toLocaleString()}원)`
+        it => `${it.assetNo}(${it.modelName}): 월 ${it.oldMonthlyFee.toLocaleString()}원(일 ${it.oldDailyFee.toLocaleString()}원) 월 ${it.newMonthlyFee.toLocaleString()}원(일 ${it.newDailyFee.toLocaleString()}원)`
       );
 
       let ruleData: any = null;
@@ -1295,7 +1295,7 @@ export const Contracts: React.FC = () => {
             }))
           },
           reason: discountReason.trim(),
-          summaryText: `[계약의 할인] ${activeContract.contractNo} (${custName} / ${siteName}) 장비 ${targetItems.length}대 월 렌탈료 합계 ${totalOldMonthly.toLocaleString()}원 ➔ ${totalNewMonthly.toLocaleString()}원 (${totalDiscountDiff >= 0 ? `-${totalDiscountDiff.toLocaleString()}원 할인` : `+${Math.abs(totalDiscountDiff).toLocaleString()}원 조정`})`
+          summaryText: `[계약의 할인] ${activeContract.contractNo} (${custName} / ${siteName}) 장비 ${targetItems.length}대 월 렌탈료 합계 ${totalOldMonthly.toLocaleString()}원 ${totalNewMonthly.toLocaleString()}원 (${totalDiscountDiff >= 0 ? `-${totalDiscountDiff.toLocaleString()}원 할인` : `+${Math.abs(totalDiscountDiff).toLocaleString()}원 조정`})`
         };
 
         const req = await createApprovalRequest(
@@ -1456,7 +1456,7 @@ export const Contracts: React.FC = () => {
         : defaultTargetCAs;
       const isPartial = targetCAssets.length < allContractCAs.length;
 
-      // 💡 결재선 규칙 조회 및 결재 상신 판정
+      //  결재선 규칙 조회 및 결재 상신 판정
       let ruleData: any = null;
       try {
         const res = await fetchRuleForEvent('CONTRACT_EXTEND');
@@ -1482,7 +1482,7 @@ export const Contracts: React.FC = () => {
             targetAssetIds: Array.from(selectedExtendAssetIds)
           },
           reason: modDesc || (isShortened ? '계약 기간 단축' : '계약 기간 연장'),
-          summaryText: `${activeContract.contractNo} 계약 기간 ${isShortened ? '단축' : '연장'} 요청 (${prevEnd || '미정'} ➔ ${targetEndDate})`
+          summaryText: `${activeContract.contractNo} 계약 기간 ${isShortened ? '단축' : '연장'} 요청 (${prevEnd || '미정'} ${targetEndDate})`
         };
 
         let createdRequestId: string | undefined = undefined;
@@ -1520,7 +1520,7 @@ export const Contracts: React.FC = () => {
           changeDate: todayStr,
           prevEndDate: prevEnd,
           newEndDate: targetEndDate,
-          description: `[결재 상신] 계약 기간 ${isShortened ? '단축' : '연장'} 결재 요청: ${prevEnd || '미정'} ➔ ${targetEndDate} (사유: ${modDesc || '기간 조정'}) (결재상태: PENDING)`,
+          description: `[결재 상신] 계약 기간 ${isShortened ? '단축' : '연장'} 결재 요청: ${prevEnd || '미정'} ${targetEndDate} (사유: ${modDesc || '기간 조정'})`,
           createdAt: new Date().toISOString()
         });
 
@@ -1533,7 +1533,7 @@ export const Contracts: React.FC = () => {
 
       // ── 결재선 미적용 시 즉시 라이브 갱신 ──
       // 1. 대상 자산 슬롯 및 장비 마스터 만료일 갱신
-      // 💡 반납완료(RETURNED) 자산의 기간 연장/단축 시 actualReturnDate도 함께 갱신하여 청구(Billings)에 100% 반영 보장
+      //  반납완료(RETURNED) 자산의 기간 연장/단축 시 actualReturnDate도 함께 갱신하여 청구(Billings)에 100% 반영 보장
       // 단, 이미 반납 완료된 자산의 물리 장비 마스터(assets.contractEnd)는 타 계약 운용 보호를 위해 변경하지 않음
       targetCAssets.forEach(ca => {
         const caUpdates: Partial<ContractAsset> = {
@@ -1583,8 +1583,8 @@ export const Contracts: React.FC = () => {
         prevEndDate: prevEnd,
         newEndDate: targetEndDate,
         description: isPartial
-          ? `[부분 ${isShortened ? '단축' : '연장'}] 자산 ${targetCAssets.length}대 만료일 조정: ${prevEnd || '미정'} ➔ ${targetEndDate} (사유: ${modDesc || '기간 조정'})`
-          : `계약 기간 ${isShortened ? '단축' : '연장'}: ${prevEnd || '미정'} ➔ ${targetEndDate} (사유: ${modDesc || '기간 조정'})`,
+          ? `[부분 ${isShortened ? '단축' : '연장'}] 자산 ${targetCAssets.length}대 만료일 조정: ${prevEnd || '미정'} ${targetEndDate} (사유: ${modDesc || '기간 조정'})`
+          : `계약 기간 ${isShortened ? '단축' : '연장'}: ${prevEnd || '미정'} ${targetEndDate} (사유: ${modDesc || '기간 조정'})`,
         createdAt: new Date().toISOString()
       });
 
@@ -1648,8 +1648,8 @@ export const Contracts: React.FC = () => {
         const approvalPayload: ApprovalPayload = {
           version: 1,
           eventCode: 'CONTRACT_SUCCEED',
-          title: `[계약 승계] ${oldCust?.name || '-'} ➔ ${newCust?.name || '-'} (${activeContract.contractNo})`,
-          summary: `승계일자 ${succDate} 기준 체결 자산 ${targetCount}대 승계 (${oldSite?.name || '-'} ➔ ${newSite?.name || '-'})`,
+          title: `[계약 승계] ${oldCust?.name || '-'} ${newCust?.name || '-'} (${activeContract.contractNo})`,
+          summary: `승계일자 ${succDate} 기준 체결 자산 ${targetCount}대 승계 (${oldSite?.name || '-'} ${newSite?.name || '-'})`,
           reason: succDesc.trim() || '고객사 변경에 따른 계약 승계',
           targetTable: 'contracts',
           targetRecordId: activeContract.id,
@@ -1855,7 +1855,7 @@ export const Contracts: React.FC = () => {
         contractId: activeContract.id,
         changeType: 'SALESPERSON_CHANGE',
         changeDate: todayStr,
-        description: `[영업담당자 변경] ${prevName} ➔ ${nextName} (사유: ${reasonDetail} / 처리자: ${currentUser?.name || '관리자'})`,
+        description: `[영업담당자 변경] ${prevName} ${nextName} (사유: ${reasonDetail} / 처리자: ${currentUser?.name || '관리자'})`,
         createdAt: nowIso
       });
 
@@ -1911,7 +1911,7 @@ export const Contracts: React.FC = () => {
     }
   };
 
-  // 💡 계약의 청구/명세서 마감일 및 당월 청구 기발행 여부를 판정하여 유통출고 기본 합산 귀속월(당월 vs 익월) 산출
+  //  계약의 청구/명세서 마감일 및 당월 청구 기발행 여부를 판정하여 유통출고 기본 합산 귀속월(당월 vs 익월) 산출
   const resolveDefaultTradeBillingYm = (contract: Contract) => {
     const [curY, curM, curD] = todayStr.split('-').map(Number);
     const curYm = `${curY}-${String(curM).padStart(2, '0')}`;
@@ -2165,7 +2165,7 @@ export const Contracts: React.FC = () => {
     e.preventDefault();
     if (!canSave || !selectedContractId) return;
 
-    // 💡 [ERR-003] 중복 대차 방지: 동일 계약에 처리 대기 중인 EXCHANGE 배차/슬롯이 이미 존재하는지 검증
+    //  [ERR-003] 중복 대차 방지: 동일 계약에 처리 대기 중인 EXCHANGE 배차/슬롯이 이미 존재하는지 검증
     const pendingExchangeDelivery = deliveries.find(d => 
       d.contractId === selectedContractId && 
       d.type === 'EXCHANGE' && 
@@ -2203,7 +2203,7 @@ export const Contracts: React.FC = () => {
         ? `[식별됨] 관리번호:${oldAssetObj?.assetNo || '미지정'} / SN:${oldAssetObj?.serialNo || '미지정'}`
         : `[미식별] 모델명(${targetModelName}) 현장 입고 검수 시 자산 확정 필요`;
 
-      // 💡 [ERR-001] 기존 자산 ContractAsset 종료 처리 (endDate 고정, status=RETURNED, actualReturnDate)
+      //  [ERR-001] 기존 자산 ContractAsset 종료 처리 (endDate 고정, status=RETURNED, actualReturnDate)
       const targetOldContractAsset = contractAssets.find(ca => 
         ca.contractId === selectedContractId && 
         (isKnown 
@@ -2224,7 +2224,7 @@ export const Contracts: React.FC = () => {
         });
       }
 
-      // 1. contractHistory 기록 (헌장 4.1 & 4.2 전자산 전일 마감 ➔ 후장비 당일 승계)
+      // 1. contractHistory 기록 (헌장 4.1 & 4.2 전자산 전일 마감  후장비 당일 승계)
       db.insertRow<ContractHistory>('contractHistory', {
         contractId: selectedContractId,
         changeType: 'EXCHANGE',
@@ -2246,7 +2246,7 @@ export const Contracts: React.FC = () => {
         unloadingTimeSlot: exchangeTimeSlot,
         originAddress: '본사 주기장',
         destinationAddress: targetSite?.address || '',
-        memo: `[대차/교환 왕복 배차] 현장: ${targetSite?.name || '현장'} | 희망시간: ${exchangeTimeSlot} | 회수대상: ${isKnown ? `${oldAssetObj?.assetNo}(${targetModelName})` : `${targetModelName}(미식별)`} ➔ 대차출고요구: ${targetModelName} | 사유: ${exchangeReason}`,
+        memo: `[대차/교환 왕복 배차] 현장: ${targetSite?.name || '현장'} | 희망시간: ${exchangeTimeSlot} | 회수대상: ${isKnown ? `${oldAssetObj?.assetNo}(${targetModelName})` : `${targetModelName}(미식별)`} 대차출고요구: ${targetModelName} | 사유: ${exchangeReason}`,
         vehicleType: '5톤 렉카',
         driverName: '',
         deliveryCost: 0,
@@ -2321,10 +2321,10 @@ export const Contracts: React.FC = () => {
           : c.status === 'COMPLETED'
             ? '계약종료'
             : [
-                m.isDispatched ? '✓ 배차완료' : '배차대기',
-                m.isAssigned ? '✓ 장비할당' : (m.unassignedCount > 0 ? `미할당 ${m.unassignedCount}대` : '장비미할당'),
-                m.isInspected ? '✓ 출고검수' : '검수대기',
-                m.isPackageSent ? '✓ 계약서발송' : '계약서미발송'
+                m.isDispatched ? '배차완료' : '배차대기',
+                m.isAssigned ? '장비할당' : (m.unassignedCount > 0 ? `미할당 ${m.unassignedCount}대` : '장비미할당'),
+                m.isInspected ? '출고검수' : '검수대기',
+                m.isPackageSent ? '계약서발송' : '계약서미발송'
               ].join(' / ');
       }
 
@@ -2366,7 +2366,7 @@ export const Contracts: React.FC = () => {
     exportToExcel(excelData, `계약대장_${todayStr}`, '계약목록');
   };
 
-  // 🌟 가상자산은 관리부(관리/회계/경리/ADMIN/SUPER_ADMIN)만 계약 자산으로 선택 가능 (타 부서는 실물 임대가능 자산만 노출)
+  //  가상자산은 관리부(관리/회계/경리/ADMIN/SUPER_ADMIN)만 계약 자산으로 선택 가능 (타 부서는 실물 임대가능 자산만 노출)
   const canUseVirtualAssetInContract = useMemo(() => {
     if (!currentUser) return false;
     const dept = String(currentUser.department || '');
@@ -2422,7 +2422,7 @@ export const Contracts: React.FC = () => {
     if (custSelect !== 'NEW' && custSelect) {
       const selectedCustomer = customers.find(c => c.id === custSelect);
       if (isCustomerRestricted(selectedCustomer?.transactionStatus)) {
-        showToast('🚫 경영진 처분으로 인해 거래 제한 상태인 거래처입니다. 신규 계약 등록이 원천 차단됩니다.', 'error');
+        showToast('경영진 처분으로 인해 거래 제한 상태인 거래처입니다. 신규 계약 등록이 원천 차단됩니다.', 'error');
         return;
       }
       if (selectedCustOverdue && !overdueAcknowledged) {
@@ -2753,7 +2753,7 @@ export const Contracts: React.FC = () => {
               style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12px' }}
             >
               <ChevronLeft size={16} /> 목록으로 돌아가기
-            </button>
+ </button>
           )}
           <div>
             <h2 style={{ fontWeight: '700', marginBottom: '2px', fontSize: '18px' }}>
@@ -2809,7 +2809,7 @@ export const Contracts: React.FC = () => {
                 style={{ padding: '7px 14px', fontSize: '12px' }}
               >
                 계약 목록 ({filteredContracts.length})
-              </button>
+ </button>
               <button
                 data-uia="btn-new-contract"
                 className={activeTab === 'CREATE' ? 'btn-primary' : 'btn-secondary'}
@@ -2817,7 +2817,7 @@ export const Contracts: React.FC = () => {
                 style={{ padding: '7px 14px', fontSize: '12px' }}
               >
                 신규 계약 등록
-              </button>
+ </button>
             </div>
           )}
         </div>
@@ -2883,7 +2883,7 @@ export const Contracts: React.FC = () => {
                 }}
               >
                 렌탈 계약 ({contractKpiStats.rentalCount}건)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setContractTypeFilter('SALE')}
@@ -2903,7 +2903,7 @@ export const Contracts: React.FC = () => {
                 }}
               >
                 매각 계약 ({contractKpiStats.saleCount}건)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setContractTypeFilter('ALL')}
@@ -2920,7 +2920,7 @@ export const Contracts: React.FC = () => {
                 }}
               >
                 전체 ({contractKpiStats.totalCount}건)
-              </button>
+ </button>
             </div>
 
             {/* 1행: 검색어 & 표준 횡배치 버튼군 (조회 -> 엑셀 다운로드) */}
@@ -2936,14 +2936,14 @@ export const Contracts: React.FC = () => {
                   style={{ flex: 1, border: 'none', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-primary)' }}
                 />
                 {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>✕</button>
+                  <button onClick={() => setSearchTerm('')} style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}></button>
                 )}
               </div>
 
               <div className="toolbar-actions">
                 <button className="btn-excel-download" onClick={handleExportExcel}>
                   <Download size={13} /> 엑셀 다운로드
-                </button>
+ </button>
               </div>
             </div>
 
@@ -2970,7 +2970,7 @@ export const Contracts: React.FC = () => {
                     <button
                       onMouseDown={e => { e.preventDefault(); setCustomerInputText(''); setCustomerFilter('ALL'); setSiteFilter('ALL'); setSiteInputText(''); }}
                       style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', padding: 0 }}
-                    >✕</button>
+                    ></button>
                   )}
                   {customerDropdownOpen && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', marginTop: '2px', minHeight: '44px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
@@ -3013,7 +3013,7 @@ export const Contracts: React.FC = () => {
                     <button
                       onMouseDown={e => { e.preventDefault(); setSiteInputText(''); setSiteFilter('ALL'); }}
                       style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', padding: 0 }}
-                    >✕</button>
+                    ></button>
                   )}
                   {siteDropdownOpen && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', marginTop: '2px', minHeight: '44px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
@@ -3081,7 +3081,7 @@ export const Contracts: React.FC = () => {
                   </select>
               </div>
 
-              {/* 🌟 [조회] 버튼 (사용자 지정 위치: 상태 필터 바로 우측) */}
+              {/*  [조회] 버튼 (사용자 지정 위치: 상태 필터 바로 우측) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, visibility: 'hidden', whiteSpace: 'nowrap', userSelect: 'none' }}>조회</label>
                 <button
@@ -3141,8 +3141,8 @@ export const Contracts: React.FC = () => {
                       boxSizing: 'border-box'
                     }}
                   >
-                    필터 초기화 ✕
-                  </button>
+                    필터 초기화 
+ </button>
                 </div>
               )}
             </div>
@@ -3185,19 +3185,19 @@ export const Contracts: React.FC = () => {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
                   <input type="checkbox" checked={showOutboundProgressCol} onChange={e => setShowOutboundProgressCol(e.target.checked)} />
                   출고진행현황
-                </label>
+ </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
                   <input type="checkbox" checked={showPeriodCol} onChange={e => setShowPeriodCol(e.target.checked)} />
                   계약기간
-                </label>
+ </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
                   <input type="checkbox" checked={showLastBilledCol} onChange={e => setShowLastBilledCol(e.target.checked)} />
                   최근청구기간
-                </label>
+ </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
                   <input type="checkbox" checked={showBillingCountCol} onChange={e => setShowBillingCountCol(e.target.checked)} />
                   청구건수
-                </label>
+ </label>
               </div>
             </div>
           </div>
@@ -3231,7 +3231,7 @@ export const Contracts: React.FC = () => {
                     <tr>
                       <td colSpan={12 + (showOutboundProgressCol ? 1 : 0) + (showPeriodCol ? 1 : 0) + (showLastBilledCol ? 1 : 0) + (showBillingCountCol ? 1 : 0)} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
                         조회 결과가 없습니다.
-                      </td>
+ </td>
                     </tr>
                   ) : (
                     sortedContracts.map((c, idx) => {
@@ -3240,7 +3240,7 @@ export const Contracts: React.FC = () => {
                       const dday = getDDayText(c.endDate);
                       const hasZeroFee = cas.some(ca => ca.monthlyRentalFee === 0);
 
-                      // 💡 자산 표기: 모델명 * 수량 요약 집계 (예: GS-1930 2대, GS-3246 1대)
+                      //  자산 표기: 모델명 * 수량 요약 집계 (예: GS-1930 2대, GS-3246 1대)
                       const modelCountMap: Record<string, number> = {};
                       cas.forEach(ca => {
                         const a = ca.assetId ? assetMap.get(ca.assetId) : undefined;
@@ -3260,7 +3260,7 @@ export const Contracts: React.FC = () => {
                         modelSummaryText = `${firstModel} 외 ${otherCount}대`;
                       }
 
-                      // 💡 계약별 청구 건수 집계 (휴먼에러 및 청구 누락 방지 교차 검증 - O(1) Map 조회)
+                      //  계약별 청구 건수 집계 (휴먼에러 및 청구 누락 방지 교차 검증 - O(1) Map 조회)
                       const cBillings = showBillingCountCol ? (billingsByContractMap.get(c.id) || []) : [];
                       const unpaidCount = showBillingCountCol ? cBillings.filter(b => b.status !== 'PAID').length : 0;
                       const custObj = customerMap.get(c.customerId);
@@ -3278,8 +3278,8 @@ export const Contracts: React.FC = () => {
                               style={{ padding: '3px 10px', fontSize: '11px' }}
                               onClick={() => handleSelectContract(c.id)}
                             >
-                              상세 ➔
-                            </button>
+                              상세 
+ </button>
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3287,7 +3287,7 @@ export const Contracts: React.FC = () => {
                               {c.contractType === 'SALE' && (
                                 <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--primary)', color: '#fff', flexShrink: 0 }}>
                                   매각
-                                </span>
+ </span>
                               )}
                             </div>
                           </td>
@@ -3297,12 +3297,12 @@ export const Contracts: React.FC = () => {
                               {custObj?.transactionStatus === 'RESTRICT_NEW' && (
                                 <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b', flexShrink: 0 }}>
                                   추가금지
-                                </span>
+ </span>
                               )}
                               {isCustomerTotalBlocked(custObj?.transactionStatus) && (
                                 <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--danger)', color: '#fff', flexShrink: 0 }}>
                                   전면차단
-                                </span>
+ </span>
                               )}
                             </div>
                           </td>
@@ -3329,7 +3329,7 @@ export const Contracts: React.FC = () => {
                             {c.contractType === 'SALE' ? (
                               <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
                                 매각가 ₩{cas.reduce((s, ca) => s + (ca.salePrice || 0), 0).toLocaleString()}원
-                              </span>
+ </span>
                             ) : hasZeroFee ? (
                               <span style={{ color: 'var(--danger)', fontWeight: 700 }}>0원 (미입력)</span>
                             ) : (
@@ -3350,7 +3350,7 @@ export const Contracts: React.FC = () => {
                                   {c.lastBillingDate && (
                                     <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                                       ({c.lastBilledYm || ''}월분 / {c.lastBillingDate} 발행)
-                                    </span>
+ </span>
                                   )}
                                 </div>
                               ) : (
@@ -3366,11 +3366,11 @@ export const Contracts: React.FC = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <span className="badge badge-info" style={{ fontSize: '10.5px', fontWeight: 700 }}>
                                     총 {cBillings.length}건
-                                  </span>
+ </span>
                                   {unpaidCount > 0 && (
                                     <span style={{ fontSize: '10.5px', color: 'var(--danger)', fontWeight: 600 }}>
                                       (미수 {unpaidCount})
-                                    </span>
+ </span>
                                   )}
                                 </div>
                               )}
@@ -3404,7 +3404,7 @@ export const Contracts: React.FC = () => {
                                   title={std === '2/4' ? '2개월 이하 왕복 임차인 / 4개월 이하 편도 임차인 / 4개월 초과 임대인 부담' : '3개월 이하 왕복 임차인 / 5개월 이하 편도 임차인 / 5개월 초과 임대인 부담'}
                                 >
                                   {std} 기준
-                                </span>
+ </span>
                               );
                             })()}
                           </td>
@@ -3420,7 +3420,7 @@ export const Contracts: React.FC = () => {
                               {c.approvalStatus === 'PENDING' && (
                                 <span style={{ fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', background: '#fef3c7', color: '#b45309', fontWeight: 700 }}>
                                   결재대기
-                                </span>
+ </span>
                               )}
                             </div>
                           </td>
@@ -3489,23 +3489,23 @@ export const Contracts: React.FC = () => {
               <div className="card" style={{ padding: '12px 18px', margin: 0, backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <strong style={{ fontSize: '13px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Network size={16} /> 연관 계약 (족보)
-                </strong>
+ </strong>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {parentContracts.length > 0 && (
                     <div style={{ fontSize: '12px', color: '#15803d', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontWeight: 700 }}>⬆️ 부모 계약 (이전):</span>
+                      <span style={{ fontWeight: 700 }}>⬆ 부모 계약 (이전):</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '12px' }}>
                         {parentContracts.map(parent => (
                           <a key={parent.id} href="#" onClick={(e) => { e.preventDefault(); handleSelectContract(parent.id); }} style={{ color: '#16a34a', textDecoration: 'underline', fontWeight: 700 }}>
                             ↳ {parent.contractNo} ({customers.find(cust => cust.id === parent.customerId)?.name} / {db.sites.find(s => s.id === parent.siteId)?.name})
-                          </a>
+ </a>
                         ))}
                       </div>
                     </div>
                   )}
                   {childContracts.length > 0 && (
                     <div style={{ fontSize: '12px', color: '#15803d', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontWeight: 700 }}>⬇️ 파생 계약 (이후):</span>
+                      <span style={{ fontWeight: 700 }}>⬇ 파생 계약 (이후):</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '12px' }}>
                         {childContracts.map(child => (
                           <a key={child.id} href="#" onClick={(e) => { e.preventDefault(); handleSelectContract(child.id); }} style={{ color: '#16a34a', textDecoration: 'underline', fontWeight: 700 }}>
@@ -3528,7 +3528,7 @@ export const Contracts: React.FC = () => {
               </span>
               {activeContract.approvalStatus === 'PENDING' && (
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#fef3c7', color: '#b45309', fontWeight: 800 }}>
-                  ⏳ 결재 대기 중 {activeContract.stagedExtend ? `(변경요청일: ${activeContract.stagedExtend.targetEndDate})` : ''}
+                   결재 대기 중 {activeContract.stagedExtend ? `(변경요청일: ${activeContract.stagedExtend.targetEndDate})` : ''}
                 </span>
               )}
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>등록일: {activeContract.createdAt?.split('T')[0]}</span>
@@ -3569,7 +3569,7 @@ export const Contracts: React.FC = () => {
                     }}
                   >
                     <ShieldCheck size={14} /> 월간 안전점검 체크리스트 이메일 ({isSentThisMonth ? '당월 발송완료' : '당월 미발송'})
-                  </button>
+ </button>
                 );
               })()}
 
@@ -3583,7 +3583,7 @@ export const Contracts: React.FC = () => {
                 style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', fontWeight: 'bold' }}
               >
                 <Download size={14} /> 계약서패키지 파일 / 이메일
-              </button>
+ </button>
 
               {canSave && canModifyContract(activeContract) && (
                 <>
@@ -3602,15 +3602,15 @@ export const Contracts: React.FC = () => {
                     }}
                   >
                     <Receipt size={14} /> 계약의 할인
-                  </button>
+ </button>
 
                   <button className="btn-primary" onClick={handleOpenExtendModal} style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Calendar size={14} /> 기간 연장/단축
-                  </button>
+ </button>
 
                   <button className="btn-secondary" onClick={handleOpenTransferModal} style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <ArrowLeftRight size={14} /> 계약 승계
-                  </button>
+ </button>
 
                   {activeContract.status !== 'COMPLETED' && (
                     <button
@@ -3630,14 +3630,14 @@ export const Contracts: React.FC = () => {
                       }}
                     >
                       <AlertTriangle size={14} /> 계약의 해제
-                    </button>
+ </button>
                   )}
                 </>
               )}
             </div>
           </div>
 
-          {/* 🚚 출고 진행 4대 마일스톤 현황 카드 (운송 완료 전 상태 점검) */}
+          {/*  출고 진행 4대 마일스톤 현황 카드 (운송 완료 전 상태 점검) */}
           {(() => {
             const m = getContractOutboundMilestones(activeContract);
             return (
@@ -3660,12 +3660,12 @@ export const Contracts: React.FC = () => {
                   </div>
                   {m.isDelivered ? (
                     <span className="badge badge-success" style={{ fontSize: '12px', padding: '4px 10px', fontWeight: 800 }}>
-                      ✓ 현장 운송 완료
-                    </span>
+                       현장 운송 완료
+ </span>
                   ) : (
                     <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', backgroundColor: 'rgba(59,130,246,0.1)', padding: '3px 10px', borderRadius: '4px', border: '1px solid rgba(59,130,246,0.3)' }}>
                       운송 완료 대기중
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -3676,7 +3676,7 @@ export const Contracts: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 700 }}>1. 배차 여부</span>
                       {m.isDispatched ? (
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}>✓ 배차완료</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}> 배차완료</span>
                       ) : (
                         <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', backgroundColor: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>배차대기</span>
                       )}
@@ -3694,14 +3694,14 @@ export const Contracts: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 700 }}>2. 장비할당 여부</span>
                       {m.isAssigned ? (
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}>✓ 장비할당</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}> 장비할당</span>
                       ) : (
                         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--danger)', backgroundColor: 'rgba(239,68,68,0.12)', padding: '2px 6px', borderRadius: '4px' }}>{m.unassignedCount > 0 ? `미할당 ${m.unassignedCount}대` : '장비미할당'}</span>
                       )}
                     </div>
                     <div style={{ fontSize: '12.5px', color: 'var(--text-main)', fontWeight: 600 }}>
                       총 {m.cas.length}대 중 {m.cas.length - m.unassignedCount}대 매핑 완료
-                    </div>
+ </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       {m.unassignedCount > 0 ? '출고부서(주기장) 가용 자산 지정 대기' : '모든 요구 수량 장비번호 지정 완료'}
                     </div>
@@ -3712,7 +3712,7 @@ export const Contracts: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 700 }}>3. 출고검수 완료</span>
                       {m.isInspected ? (
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}>✓ 검수완료</span>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--success)', backgroundColor: 'rgba(34,197,94,0.15)', padding: '2px 6px', borderRadius: '4px' }}> 검수완료</span>
                       ) : m.isInspecting ? (
                         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--warning)', backgroundColor: 'rgba(245,158,11,0.15)', padding: '2px 6px', borderRadius: '4px' }}>검수진행</span>
                       ) : (
@@ -3724,7 +3724,7 @@ export const Contracts: React.FC = () => {
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       검수 의뢰 {m.relInsps.length}건 등록됨
-                    </div>
+ </div>
                   </div>
 
                   {/* 4. 계약서패키지 */}
@@ -3758,7 +3758,7 @@ export const Contracts: React.FC = () => {
             <div className="card" style={{ margin: 0, height: '100%' }}>
               <h3 className="card-title" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Building2 size={16} /> 계약 기본 정보
-              </h3>
+ </h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
                 <div>
@@ -3768,12 +3768,12 @@ export const Contracts: React.FC = () => {
                     {customers.find(cu => cu.id === activeContract.customerId)?.transactionStatus === 'RESTRICT_NEW' && (
                       <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b', flexShrink: 0 }}>
                         추가금지
-                      </span>
+ </span>
                     )}
                     {isCustomerTotalBlocked(customers.find(cu => cu.id === activeContract.customerId)?.transactionStatus) && (
                       <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--danger)', color: '#fff', flexShrink: 0 }}>
                         전면차단
-                      </span>
+ </span>
                     )}
                   </div>
                 </div>
@@ -3800,7 +3800,7 @@ export const Contracts: React.FC = () => {
                         title="퇴사 또는 부서 변경 발생 시 영업담당자 변경"
                       >
                         <Edit3 size={11} /> 영업담당자 변경
-                      </button>
+ </button>
                     )}
                   </div>
                 </div>
@@ -3899,7 +3899,7 @@ export const Contracts: React.FC = () => {
                             }}
                           >
                             {stdOpt} 기준 ({stdOpt === '2/4' ? '2개월 왕복·4개월 편도' : '3개월 왕복·5개월 편도'})
-                          </button>
+ </button>
                         );
                       })}
                     </div>
@@ -3939,8 +3939,8 @@ export const Contracts: React.FC = () => {
               {(activeContract.predecessorContractNo || activeContract.predecessorCustomerName) && (
                 <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}>
                   <div style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    🔄 승계 이전 계약 정보
-                  </div>
+                     승계 이전 계약 정보
+ </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', color: 'var(--text-primary)' }}>
                     <div><span style={{ color: 'var(--text-muted)' }}>이전 고객사:</span> <strong>{activeContract.predecessorCustomerName || '-'}</strong></div>
                     <div><span style={{ color: 'var(--text-muted)' }}>이전 계약번호:</span> <strong>{activeContract.predecessorContractNo || '-'}</strong></div>
@@ -3978,7 +3978,7 @@ export const Contracts: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         총 {contractReceivables.length}건 발생
-                      </div>
+ </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: contractReceivables.length > 0 ? '10px' : '0' }}>
@@ -4006,7 +4006,7 @@ export const Contracts: React.FC = () => {
                             </span>
                             <span style={{ fontWeight: 600, color: r.status === 'CLEARED' ? 'var(--success)' : 'var(--danger)', flexShrink: 0 }}>
                               {r.totalAmount.toLocaleString()}원 ({r.status === 'CLEARED' ? '청구완료' : '미청구'})
-                            </span>
+ </span>
                           </div>
                         ))}
                       </div>
@@ -4050,11 +4050,11 @@ export const Contracts: React.FC = () => {
                       title="색인 명칭 복사"
                     >
                       <Copy size={12} /> 색인 복사
-                    </button>
+ </button>
                     
                     <label className="btn-secondary" style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}>
                       <ExternalLink size={12} /> 로컬 서류 열기
-                      <input
+ <input
                         type="file"
                         accept=".pdf,.xlsx,.xls,.zip,.png,.jpg"
                         style={{ display: 'none' }}
@@ -4078,7 +4078,7 @@ export const Contracts: React.FC = () => {
                       style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', color: '#d97706', borderColor: '#fcd34d', fontWeight: 700 }}
                     >
                       <ShieldCheck size={12} /> 월간 안전점검 체크리스트 발송
-                    </button>
+ </button>
 
                     {canGeneratePackage ? (
                     <button
@@ -4091,11 +4091,11 @@ export const Contracts: React.FC = () => {
                       style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
                       <FileText size={12} /> 계약서패키지 생성
-                    </button>
+ </button>
                     ) : (
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', whiteSpace: 'nowrap' }}>
                       <FileText size={12} /> 패키지 생성 권한 없음
-                    </span>
+ </span>
                     )}
                   </div>
                 </div>
@@ -4107,7 +4107,7 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Wrench size={16} /> 체결 자산 (운용 {activeContractAssets.filter(ca => ca.status !== 'RETURNED').length}대 / 누적 {activeContractAssets.length}대)
-                </h3>
+ </h3>
                 {canSave && canModifyContract(activeContract) && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {canUseContractTradeOutbound && (
@@ -4127,7 +4127,7 @@ export const Contracts: React.FC = () => {
                         title="해당 계약(현장)에 안전용품/옵션/소모품 유통출고를 등록하고 당월 렌탈 청구에 자동 합산합니다."
                       >
                         <Package size={13} /> + 유통출고 등록
-                      </button>
+ </button>
                     )}
                     {activeContract.status !== 'COMPLETED' && (
                       <>
@@ -4143,13 +4143,13 @@ export const Contracts: React.FC = () => {
                             });
                           }} 
                           style={{ padding: '5px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
-                          title="해당 계약 현장으로 옵션 추가장착(유상 AS) 접수 이동"
+                          title="해당 계약 현장으로 옵션 추가장착 접수 이동"
                         >
                           <Plus size={13} /> 옵션 장착 AS 의뢰
-                        </button>
+ </button>
                         <button className="btn-secondary" onClick={() => handleOpenExchangeGlobal()} style={{ padding: '5px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Repeat size={13} /> 자산 교체/대차 의뢰
-                        </button>
+ </button>
                       </>
                     )}
                   </div>
@@ -4221,7 +4221,7 @@ export const Contracts: React.FC = () => {
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                               {ca.status === 'RETURNED' ? (
-                                <span style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>🚫 반납완료</span>
+                                <span style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}> 반납완료</span>
                               ) : (asset?.status === 'OUTBOUND_INSPECTION' || ca.status === 'OUTBOUND_INSPECTION') ? (
                                 <span style={{ backgroundColor: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>출고검수</span>
                               ) : (asset?.status === 'AWAITING_TRANSPORT' || ca.status === 'AWAITING_TRANSPORT') ? (
@@ -4279,7 +4279,7 @@ export const Contracts: React.FC = () => {
                               <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                                 <button className="btn-secondary" onClick={() => handleOpenFeeModal(ca)} style={{ padding: '2px 6px', fontSize: '10.5px' }}>
                                   <Edit3 size={11} /> 렌탈료 수정
-                                </button>
+ </button>
                                 <button className="btn-secondary" onClick={() => {
                                   const effectiveEnd = ca.status === 'RETURNED'
                                     ? (ca.endDate && ca.actualReturnDate && ca.endDate > ca.actualReturnDate ? ca.endDate : (ca.actualReturnDate || ca.endDate || ''))
@@ -4291,12 +4291,12 @@ export const Contracts: React.FC = () => {
                                   setShowCaPeriodModal(true);
                                 }} style={{ padding: '2px 6px', fontSize: '10.5px' }}>
                                   <Edit3 size={11} /> 기간 수정
-                                </button>
+ </button>
                                 {ca.status !== 'RETURNED' && (
                                   <>
                                     <button className="btn-secondary" onClick={() => handleOpenRelocateModal(ca)} style={{ padding: '2px 6px', fontSize: '10.5px' }} title="동일 고객 타 현장으로 장비 이동">
                                       <Truck size={11} /> 현장 이동
-                                    </button>
+ </button>
                                     <button 
                                       className="btn-secondary" 
                                       onClick={() => {
@@ -4310,10 +4310,10 @@ export const Contracts: React.FC = () => {
                                         });
                                       }} 
                                       style={{ padding: '2px 6px', fontSize: '10.5px', color: 'var(--primary)' }} 
-                                      title="해당 장비로 옵션 추가장착(유상 AS) 접수 이동"
+                                      title="해당 장비로 옵션 추가장착 접수 이동"
                                     >
                                       <Plus size={11} /> 옵션 장착 AS
-                                    </button>
+ </button>
                                   </>
                                 )}
                               </div>
@@ -4328,7 +4328,7 @@ export const Contracts: React.FC = () => {
                 </table>
               </div>
 
-              {/* 💰 체결 유상옵션 및 1회성/월단위 청구 금액 명세 (출고 배차 연동 및 단가 수정) */}
+              {/*  체결 유상옵션 및 1회성/월단위 청구 금액 명세 (출고 배차 연동 및 단가 수정) */}
               {(() => {
                 const contractDeliveries = (deliveries || []).filter(
                   d => d.contractId === activeContract.id && d.status !== 'CANCELLED' && (d.type === 'OUTBOUND' || d.type === 'EXCHANGE' || d.dispatchCategory === '출고' || d.dispatchCategory === '교환')
@@ -4390,17 +4390,17 @@ export const Contracts: React.FC = () => {
                         <span>유상옵션 · 1회성 청구 금액 명세</span>
                         <span className="badge badge-danger" style={{ fontSize: '10px' }}>
                           {deliveryOptBatches.reduce((s, b) => s + b.optItems.length, 0)}건
-                        </span>
+ </span>
                       </strong>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         출고 건별 1회성(대/건) 및 월단위 유상옵션 청구 단가 확인·수정
-                      </span>
+ </span>
                     </div>
 
                     {deliveryOptBatches.length === 0 ? (
                       <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', fontSize: '12px' }}>
                         등록된 유상옵션(1회성/월 청구) 내역이 없습니다.
-                      </div>
+ </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {deliveryOptBatches.map(batch => {
@@ -4424,7 +4424,7 @@ export const Contracts: React.FC = () => {
                                   <strong style={{ color: 'var(--primary)', fontFamily: 'monospace' }}>{batch.delivery.id}</strong>
                                   <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
                                     ({batch.delivery.loadingDate || batch.delivery.requestDate || '-'} · {batch.equipText || `${batch.batchQty}대`})
-                                  </span>
+ </span>
                                 </div>
                                 {canSave && canModifyContract(activeContract) && (
                                   !isEditing ? (
@@ -4440,7 +4440,7 @@ export const Contracts: React.FC = () => {
                                       style={{ padding: '2px 8px', fontSize: '11px' }}
                                     >
                                       <Edit3 size={11} /> 옵션단가 수정
-                                    </button>
+ </button>
                                   ) : (
                                     <div style={{ display: 'flex', gap: '4px' }}>
                                       <button
@@ -4475,7 +4475,7 @@ export const Contracts: React.FC = () => {
                                         style={{ padding: '2px 8px', fontSize: '11px' }}
                                       >
                                         취소
-                                      </button>
+ </button>
                                     </div>
                                   )
                                 )}
@@ -4523,7 +4523,7 @@ export const Contracts: React.FC = () => {
                                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>원/{opt.unit}</span>
                                           <strong style={{ color: '#e11d48', marginLeft: '4px' }}>
                                             (합계 {curTotal.toLocaleString()}원)
-                                          </strong>
+ </strong>
                                         </div>
                                       ) : (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'monospace' }}>
@@ -4532,7 +4532,7 @@ export const Contracts: React.FC = () => {
                                           </span>
                                           <strong style={{ color: '#e11d48', fontSize: '12.5px' }}>
                                             청구액 ₩{opt.subTotal.toLocaleString()}원
-                                          </strong>
+ </strong>
                                         </div>
                                       )}
                                     </div>
@@ -4548,7 +4548,7 @@ export const Contracts: React.FC = () => {
                 );
               })()}
 
-              {/* 📦 계약 연동 유통출고 및 당월 청구 반영 내역 */}
+              {/*  계약 연동 유통출고 및 당월 청구 반영 내역 */}
               {(() => {
                 const contractTradeOrders = (tradeSalesOrders || []).filter(
                   so =>
@@ -4567,7 +4567,7 @@ export const Contracts: React.FC = () => {
                         <span>계약 연동 유통출고 내역</span>
                         <span className="badge" style={{ fontSize: '10px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
                           {contractTradeOrders.length}건
-                        </span>
+ </span>
                       </strong>
                       {canUseContractTradeOutbound && canSave && canModifyContract(activeContract) && (
                         <button
@@ -4577,14 +4577,14 @@ export const Contracts: React.FC = () => {
                           style={{ padding: '2px 8px', fontSize: '11px', color: '#0284c7', borderColor: '#7dd3fc', fontWeight: 700 }}
                         >
                           + 유통출고 추가
-                        </button>
+ </button>
                       )}
                     </div>
 
                     {contractTradeOrders.length === 0 ? (
                       <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', fontSize: '12px' }}>
                         이 계약에 연동된 유통출고 내역이 없습니다. 상단 [+ 유통출고 등록] 버튼으로 안전용품·소모품 출고 및 당월 청구 합산을 등록할 수 있습니다.
-                      </div>
+ </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {contractTradeOrders.map(so => {
@@ -4645,17 +4645,17 @@ export const Contracts: React.FC = () => {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
                                   ₩{(so.totalSalesAmount || 0).toLocaleString()}원
-                                </strong>
+ </strong>
                                 {so.billingMode === 'STANDALONE' ? (
                                   <span className="badge badge-secondary" style={{ fontSize: '10px' }}>유통 별도 청구</span>
                                 ) : isBilled ? (
                                   <span className="badge badge-success" style={{ fontSize: '10px' }}>
-                                    ✓ {so.targetBillingYm || '당월'} 청구 합산됨
-                                  </span>
+                                     {so.targetBillingYm || '당월'} 청구 합산됨
+ </span>
                                 ) : (
                                   <span className="badge badge-info" style={{ fontSize: '10px' }}>
-                                    ⏳ {so.targetBillingYm || '당월'} 청구 자동합산 대기
-                                  </span>
+                                     {so.targetBillingYm || '당월'} 청구 자동합산 대기
+ </span>
                                 )}
                                 {canSave && canModifyContract(activeContract) && linkedOb?.status !== 'SHIPPED' && linkedOb?.status !== 'DELIVERED' && (
                                   <button
@@ -4670,7 +4670,7 @@ export const Contracts: React.FC = () => {
                                     style={{ padding: '2px 6px', fontSize: '10.5px', color: 'var(--danger)' }}
                                   >
                                     취소
-                                  </button>
+ </button>
                                 )}
                               </div>
                             </div>
@@ -4704,24 +4704,24 @@ export const Contracts: React.FC = () => {
                       <div>
                         <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Receipt size={16} color="var(--primary)" /> 청구 발행 현황 ({contractBillings.length}건)
-                        </h3>
+ </h3>
                         {activeContract?.lastBilledPeriodStart && activeContract?.lastBilledPeriodEnd && (
                           <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '2px', fontWeight: 600 }}>
                             ※ 직전 청구 마일스톤: {activeContract.lastBilledPeriodStart} ~ {activeContract.lastBilledPeriodEnd} ({activeContract.lastBillingDate ? `${activeContract.lastBillingDate} 발행` : ''})
-                          </div>
+ </div>
                         )}
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         누적청구: <strong style={{ color: 'var(--text-primary)' }}>₩{totalBilled.toLocaleString()}</strong> | 
-                        미수잔액: <strong style={{ color: totalUnpaid > 0 ? 'var(--danger)' : 'var(--success)' }}>₩{totalUnpaid.toLocaleString()}</strong>
+ 미수잔액: <strong style={{ color: totalUnpaid > 0 ? 'var(--danger)' : 'var(--success)' }}>₩{totalUnpaid.toLocaleString()}</strong>
                       </div>
                     </div>
 
                     <div className="table-container" style={{ border: 'none', maxHeight: '240px', overflowY: 'auto' }}>
                       {contractBillings.length === 0 ? (
                         <div style={{ color: 'var(--danger)', textAlign: 'center', padding: '30px 0', fontSize: '12.5px', fontWeight: 600 }}>
-                          ⚠️ 발행된 청구 내역이 없습니다. (미청구 계약)
-                        </div>
+                           발행된 청구 내역이 없습니다. (미청구 계약)
+ </div>
                       ) : (
                         <table style={{ width: '100%', fontSize: '12px', whiteSpace: 'nowrap' }}>
                           <thead>
@@ -4745,7 +4745,7 @@ export const Contracts: React.FC = () => {
                                   <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--success)' }}>{(b.paidAmount || 0).toLocaleString()}원</td>
                                   <td style={{ padding: '6px 8px', textAlign: 'right', color: unpaid > 0 ? 'var(--danger)' : 'var(--text-muted)', fontWeight: unpaid > 0 ? 700 : 400 }}>
                                     {unpaid.toLocaleString()}원
-                                  </td>
+ </td>
                                   <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                                     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                       <span className={`badge ${
@@ -4802,7 +4802,7 @@ export const Contracts: React.FC = () => {
             <div className="card" style={{ margin: 0, height: '100%' }}>
               <h3 className="card-title" style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Clock size={16} color="var(--primary)" /> 계약 변경 및 이력 ({activeTimeline.length}건)
-              </h3>
+ </h3>
 
               <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
                 {activeTimeline.length === 0 ? (
@@ -4835,8 +4835,8 @@ export const Contracts: React.FC = () => {
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(item.receiptUrl, '_blank', 'noopener,noreferrer'); }}
                             style={{ marginLeft: '8px', padding: '2px 6px', fontSize: '10.5px', fontWeight: 800, backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '4px', cursor: 'pointer', verticalAlign: 'middle' }}
                           >
-                            🧾 납품증 보기
-                          </button>
+                             납품증 보기
+ </button>
                         )}
                       </div>
                     </div>
@@ -4863,11 +4863,11 @@ export const Contracts: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Wrench size={16} color="var(--primary)" /> 계약 현장 AS 및 정비 이력 ({contractRepairs.length}건)
-                    </h3>
+ </h3>
                     {isFrequent && (
                       <span className="badge badge-danger" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⚠️ AS {contractRepairs.length}회 발생 - 장비 교환 검토 요망
-                      </span>
+                         AS {contractRepairs.length}회 발생 - 장비 교환 검토 요망
+ </span>
                     )}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -4878,8 +4878,8 @@ export const Contracts: React.FC = () => {
                 <div className="table-container" style={{ border: 'none', maxHeight: '280px', overflowY: 'auto' }}>
                   {contractRepairs.length === 0 ? (
                     <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0', fontSize: '12.5px' }}>
-                      ✓ 이 계약에 발생한 현장 AS 및 정비 이력이 없습니다. (무장애 운용중)
-                    </div>
+                       이 계약에 발생한 현장 AS 및 정비 이력이 없습니다. (무장애 운용중)
+ </div>
                   ) : (
                     <table style={{ width: '100%', fontSize: '12px', whiteSpace: 'nowrap' }}>
                       <thead>
@@ -4959,7 +4959,7 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Wrench size={16} /> 체결 자산 상세 ({cas.length}대)
-                </h3>
+ </h3>
                 <button type="button" onClick={() => setShowAssetsDetailModalContractId(null)} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
               </div>
               
@@ -5054,12 +5054,12 @@ export const Contracts: React.FC = () => {
             <h3 className="card-title" style={{ marginBottom: '10px' }}>계약 기간 연장 / 단축</h3>
             <div style={{ marginBottom: '12px', padding: '8px 10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               계약 영업담당자: <strong style={{ color: 'var(--primary)' }}>{users.find(u => u.id === activeContract.salespersonId)?.name || '-'}</strong> (기간 변경 시에도 기존 영업담당자 유지)
-            </div>
+ </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={modIsOpen} onChange={e => setModIsOpen(e.target.checked)} />
                 종료일 미정 (상시 대여중)
-              </label>
+ </label>
 
               {!modIsOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -5096,14 +5096,14 @@ export const Contracts: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, margin: 0 }}>
                       적용 대상 자산 ({selectedExtendAssetIds.size === 0 ? `전체 ${activeContractAssets.length}대` : `${selectedExtendAssetIds.size}대 선택`})
-                    </label>
+ </label>
                     <button data-hs-trigger="Apply"
                       type="button"
                       onClick={() => setSelectedExtendAssetIds(new Set())}
                       style={{ border: 'none', background: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', padding: 0 }}
                     >
                       전체 적용
-                    </button>
+ </button>
                   </div>
                   <div style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: 'var(--bg-app)' }}>
                     {activeContractAssets.map(ca => {
@@ -5141,8 +5141,8 @@ export const Contracts: React.FC = () => {
                   </div>
                   {selectedExtendAssetIds.size > 0 && selectedExtendAssetIds.size < activeContractAssets.length && (
                     <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--warning, #f59e0b)' }}>
-                      ⚠ {selectedExtendAssetIds.size}대 부분 연장/단축 — 미선택 자산은 기존 만료일을 유지합니다.
-                    </div>
+                       {selectedExtendAssetIds.size}대 부분 연장/단축 — 미선택 자산은 기존 만료일을 유지합니다.
+ </div>
                   )}
                 </div>
               )}
@@ -5200,14 +5200,14 @@ export const Contracts: React.FC = () => {
                 <div>
                   <h3 className="card-title" style={{ margin: 0, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Receipt size={18} /> 계약의 할인 품의 상신
-                  </h3>
+ </h3>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                     현재 계약 단가 상태와 할인을 희망하는 단가 상태를 함께 입력하여 결재를 상신합니다. 결재 승인 시 희망 단가로 자동 변경됩니다.
-                  </div>
+ </div>
                 </div>
                 <button type="button" className="btn-secondary" onClick={() => setShowDiscountModal(false)} style={{ padding: '4px 10px', fontSize: '12px' }}>
                   닫기
-                </button>
+ </button>
               </div>
 
               {/* 현재 계약 요약 배너 */}
@@ -5228,13 +5228,13 @@ export const Contracts: React.FC = () => {
                   <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>최초 계약개시일 / 누적 사용</span>
                   <strong style={{ color: 'var(--primary)' }}>
                     {activeContract.startDate} ({usedDays}일 경과)
-                  </strong>
+ </strong>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>선택 장비 월 렌탈료 변동</span>
                   <strong style={{ color: totalDiffMonthly > 0 ? '#7c3aed' : 'var(--text-primary)' }}>
-                    {totalOldMonthly.toLocaleString()}원 ➔ {totalNewMonthly.toLocaleString()}원 ({totalDiffMonthly >= 0 ? `-${totalDiffMonthly.toLocaleString()}원` : `+${Math.abs(totalDiffMonthly).toLocaleString()}원`})
-                  </strong>
+                    {totalOldMonthly.toLocaleString()}원 {totalNewMonthly.toLocaleString()}원 ({totalDiffMonthly >= 0 ? `-${totalDiffMonthly.toLocaleString()}원` : `+${Math.abs(totalDiffMonthly).toLocaleString()}원`})
+ </strong>
                 </div>
               </div>
 
@@ -5243,7 +5243,7 @@ export const Contracts: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
                     선택 장비 일괄 할인율 계산 도우미 (현재 단가 대비)
-                  </label>
+ </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     {[5, 10, 15, 20].map(pct => (
                       <button
@@ -5266,7 +5266,7 @@ export const Contracts: React.FC = () => {
                         }}
                       >
                         {pct}% 할인 적용
-                      </button>
+ </button>
                     ))}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <input
@@ -5286,7 +5286,7 @@ export const Contracts: React.FC = () => {
                         style={{ padding: '5px 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
                       >
                         비율 적용
-                      </button>
+ </button>
                       <button
                         type="button"
                         className="btn-secondary"
@@ -5294,7 +5294,7 @@ export const Contracts: React.FC = () => {
                         style={{ padding: '5px 8px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
                       >
                         원복
-                      </button>
+ </button>
                     </div>
                   </div>
                 </div>
@@ -5302,7 +5302,7 @@ export const Contracts: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
                     할인 단가 적용 기준일 *
-                  </label>
+ </label>
                   <input
                     type="date"
                     value={discountEffectiveDate}
@@ -5318,7 +5318,7 @@ export const Contracts: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, margin: 0 }}>
                     체결 자산별 현재 단가 및 변경 희망 단가 입력 ({selectedItems.length}대 선택)
-                  </label>
+ </label>
                   <div style={{ display: 'flex', gap: '8px', fontSize: '11.5px' }}>
                     <button
                       type="button"
@@ -5326,14 +5326,14 @@ export const Contracts: React.FC = () => {
                       style={{ border: 'none', background: 'none', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                     >
                       전체 선택
-                    </button>
+ </button>
                     <button
                       type="button"
                       onClick={() => setDiscountItemsState(prev => prev.map(it => ({ ...it, selected: it.status !== 'RETURNED' })))}
                       style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                     >
                       운용중만 선택
-                    </button>
+ </button>
                   </div>
                 </div>
 
@@ -5377,14 +5377,14 @@ export const Contracts: React.FC = () => {
                               {item.startDate}{' '}
                               <span style={{ color: item.status === 'RETURNED' ? 'var(--text-muted)' : '#16a34a', fontWeight: 700 }}>
                                 [{item.status === 'RETURNED' ? '반납완료' : '운용중'}]
-                              </span>
+ </span>
                             </td>
                             <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontFamily: 'monospace', fontWeight: 700 }}>
                               {item.oldMonthlyFee.toLocaleString()}원
-                            </td>
+ </td>
                             <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
                               {item.oldDailyFee.toLocaleString()}원
-                            </td>
+ </td>
                             <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <input
                                 type="text"
@@ -5467,16 +5467,16 @@ export const Contracts: React.FC = () => {
               {/* 하단 대조 요약 및 상신 버튼 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ fontSize: '12.5px', fontWeight: 700 }}>
-                  현재 월 렌탈료 합계: <span>{totalOldMonthly.toLocaleString()}원</span> ➔ 변경 희망 합계:{' '}
+                  현재 월 렌탈료 합계: <span>{totalOldMonthly.toLocaleString()}원</span> 변경 희망 합계:{' '}
                   <span style={{ color: '#7c3aed' }}>{totalNewMonthly.toLocaleString()}원</span>{' '}
                   <span style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>
                     (총 {totalDiffMonthly >= 0 ? `${totalDiffMonthly.toLocaleString()}원 / ${totalDiffPct}% 할인` : `${Math.abs(totalDiffMonthly).toLocaleString()}원 증액`})
-                  </span>
+ </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button type="button" className="btn-secondary" onClick={() => setShowDiscountModal(false)}>
                     취소
-                  </button>
+ </button>
                   <button
                     type="submit"
                     disabled={isSubmittingDiscount || selectedItems.length === 0 || !discountEffectiveDate || !discountReason.trim()}
@@ -5499,7 +5499,7 @@ export const Contracts: React.FC = () => {
             <h3 className="card-title" style={{ marginBottom: '10px' }}>계약 승계 처리</h3>
             <div style={{ marginBottom: '12px', padding: '8px 10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               승계 후 유지될 영업담당자: <strong style={{ color: 'var(--primary)' }}>{users.find(u => u.id === activeContract.salespersonId)?.name || '-'}</strong> (최초 영업담당자 자동 유지)
-            </div>
+ </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -5507,11 +5507,11 @@ export const Contracts: React.FC = () => {
                   {succCustSearch.trim() && (
                     <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>
                       검색 {filteredSuccCustomers.length}건
-                    </span>
+ </span>
                   )}
                 </div>
 
-                {/* 🔍 가장 상단 조회필터 (초성검색) */}
+                {/*  가장 상단 조회필터 (초성검색) */}
                 <div style={{ position: 'relative' }}>
                   <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                   <input
@@ -5561,8 +5561,8 @@ export const Contracts: React.FC = () => {
                       }}
                       title="검색어 초기화"
                     >
-                      ✕
-                    </button>
+                      
+ </button>
                   )}
                 </div>
 
@@ -5594,7 +5594,7 @@ export const Contracts: React.FC = () => {
                   {filteredSuccCustomers.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.bizRegNo || '사업자번호 미상'})
-                    </option>
+ </option>
                   ))}
                 </select>
               </div>
@@ -5708,8 +5708,8 @@ export const Contracts: React.FC = () => {
                 </div>
                 {selectedSuccessionAssetIds.size > 0 && selectedSuccessionAssetIds.size < activeContractAssets.length && (
                   <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--warning, #f59e0b)' }}>
-                    ⚠ {selectedSuccessionAssetIds.size}대 부분 승계 — 미선택 자산은 원 계약에 잔류합니다.
-                  </div>
+                     {selectedSuccessionAssetIds.size}대 부분 승계 — 미선택 자산은 원 계약에 잔류합니다.
+ </div>
                 )}
               </div>
 
@@ -5744,7 +5744,7 @@ export const Contracts: React.FC = () => {
           <form onSubmit={handleExchangeSubmit} className="card" style={{ width: '100%', maxWidth: '500px', backgroundColor: 'var(--bg-card)' }}>
             <h3 className="card-title" style={{ marginBottom: '14px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <ArrowLeftRight size={18} /> 자산 교체 / 대차 의뢰
-            </h3>
+ </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
               
@@ -5758,16 +5758,16 @@ export const Contracts: React.FC = () => {
                     onClick={() => setExchangeIdentifyType('KNOWN')}
                     style={{ flex: 1, padding: '8px 10px', fontSize: '11.5px', fontWeight: 'bold', borderRadius: '6px' }}
                   >
-                    🔵 모델 + 관리번호/S/N 식별됨
-                  </button>
+                     모델 + 관리번호/S/N 식별됨
+ </button>
                   <button
                     type="button"
                     className={exchangeIdentifyType === 'UNKNOWN' ? 'btn-primary' : 'btn-secondary'}
                     onClick={() => setExchangeIdentifyType('UNKNOWN')}
                     style={{ flex: 1, padding: '8px 10px', fontSize: '11.5px', fontWeight: 'bold', borderRadius: '6px' }}
                   >
-                    🟠 모델명만 지정 (현장회수시 확정)
-                  </button>
+                     모델명만 지정 (현장회수시 확정)
+ </button>
                 </div>
               </div>
 
@@ -5797,8 +5797,8 @@ export const Contracts: React.FC = () => {
                     </select>
                   </div>
                   <div style={{ padding: '8px 10px', backgroundColor: 'var(--warning-light)', border: '1px solid var(--warning)', borderRadius: '6px', fontSize: '11.5px', color: 'var(--warning-hover)' }}>
-                    💡 <strong>미식별 교체 안내:</strong> 현장의 정확한 관리번호/제조번호을 모르는 상태입니다. 대차 장비 출고 후 회수 장비가 센터에 <strong>입고 검수 승인되는 시점에 자산번호가 최종 매핑 완성</strong>됩니다.
-                  </div>
+                     <strong>미식별 교체 안내:</strong> 현장의 정확한 관리번호/제조번호을 모르는 상태입니다. 대차 장비 출고 후 회수 장비가 센터에 <strong>입고 검수 승인되는 시점에 자산번호가 최종 매핑 완성</strong>됩니다.
+ </div>
                 </div>
               )}
 
@@ -5813,7 +5813,7 @@ export const Contracts: React.FC = () => {
 
               {/* 후속 업무 흐름 연계 시각화 카드 */}
               <div style={{ padding: '10px 12px', backgroundColor: 'var(--info-light)', border: '1px solid var(--info)', borderRadius: '6px', fontSize: '11.5px', color: 'var(--info)' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '3px' }}>🔄 후속 업무 자동 연계 체인</div>
+                <div style={{ fontWeight: 'bold', marginBottom: '3px' }}> 후속 업무 자동 연계 체인</div>
                 <div>1. <strong>[배차 관리]</strong>에 교환 왕복 배차 1건 자동 발행 (출고/회수 1:1 통합 관리)</div>
                 <div>2. <strong>[장비 할당]</strong> 보드 최상단 카드로 대차 출고 할당 요청 자동 노출</div>
                 <div>3. <strong>[입고 검수]</strong> 승인 마감 시 회수 자산 임대가능(또는 수리) 자동 마감 연동</div>
@@ -5860,7 +5860,7 @@ export const Contracts: React.FC = () => {
               <button type="button" className="btn-secondary" onClick={() => setShowExchangeModal(false)}>취소</button>
               <button type="submit" className="btn-success" style={{ fontWeight: 'bold', padding: '8px 14px' }}>
                 대차 의뢰 접수 (출고/회수 배차 발행)
-              </button>
+ </button>
             </div>
           </form>
         </div>
@@ -5875,7 +5875,7 @@ export const Contracts: React.FC = () => {
             <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: selectedCustOverdue.isBlocked ? '#fef2f2' : '#fffbeb', border: `1px solid ${selectedCustOverdue.isBlocked ? '#f87171' : '#fcd34d'}`, color: selectedCustOverdue.isBlocked ? '#991b1b' : '#92400e', marginBottom: '14px', fontSize: '12px' }}>
               <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                 <AlertTriangle size={15} color={selectedCustOverdue.isBlocked ? '#dc2626' : '#d97706'} />
-                {selectedCustOverdue.isBlocked ? '🚫 [경영진 처분] 거래 불가' : '[연체 채권 경각심 통제 경보]'}
+                {selectedCustOverdue.isBlocked ? '[경영진 처분] 거래 불가' : '[연체 채권 경각심 통제 경보]'}
               </div>
               <div>
                 {selectedCustOverdue.isBlocked
@@ -5886,7 +5886,7 @@ export const Contracts: React.FC = () => {
               {!selectedCustOverdue.isBlocked && (
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontWeight: 700, cursor: 'pointer' }}>
                   <input type="checkbox" checked={overdueAcknowledged} onChange={e => setOverdueAcknowledged(e.target.checked)} />
-                  <span>☑️ [수금 책임 인지] "위 연체 사실 및 경영진 모니터링 현황을 확인하였으며, 신규 계약 진행에 따른 수금 관리에 책임을 다할 것을 확인합니다."</span>
+                  <span> [수금 책임 인지] "위 연체 사실 및 경영진 모니터링 현황을 확인하였으며, 신규 계약 진행에 따른 수금 관리에 책임을 다할 것을 확인합니다."</span>
                 </label>
               )}
             </div>
@@ -5936,7 +5936,7 @@ export const Contracts: React.FC = () => {
                 {filteredCustModalList.map(c => (
                   <option key={c.id} value={c.id}>
                     {c.transactionStatus === 'RESTRICT_NEW' ? `[추가계약금지] ${c.name}` : isCustomerTotalBlocked(c.transactionStatus) ? `[전면차단] ${c.name}` : c.name} ({c.bizRegNo})
-                  </option>
+ </option>
                 ))}
               </select>
             </div>
@@ -5977,7 +5977,7 @@ export const Contracts: React.FC = () => {
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={isEndDateOpen} onChange={e => setIsEndDateOpen(e.target.checked)} />
                 종료일 미정 (상시 대여중)
-              </label>
+ </label>
               {!isEndDateOpen && (
                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required style={{ width: '100%', padding: '8px', marginTop: '4px' }} />
               )}
@@ -6074,7 +6074,7 @@ export const Contracts: React.FC = () => {
                   return (
                     <div key={idx} style={{ padding: '4px 10px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--primary)', borderRadius: '4px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <strong>{ast?.assetNo || b.expectedModel}</strong> (월 {b.monthlyRentalFee.toLocaleString()}원)
-                      <button type="button" onClick={() => handleRemoveFromBasket(b.assetId || b.expectedModel)} style={{ border: 'none', background: 'none', color: 'red', cursor: 'pointer' }}>✕</button>
+ <button type="button" onClick={() => handleRemoveFromBasket(b.assetId || b.expectedModel)} style={{ border: 'none', background: 'none', color: 'red', cursor: 'pointer' }}></button>
                     </div>
                   );
                 })
@@ -6125,26 +6125,26 @@ export const Contracts: React.FC = () => {
               이미 활성 계약(<code style={{ fontSize: '12px', backgroundColor: 'var(--bg-muted)', padding: '1px 5px', borderRadius: '3px' }}>{duplicateContractModal.id.slice(0, 8)}…</code>)이 존재합니다.<br/><br/>
               동일 고객·현장은 <strong>단일 계약 원칙</strong>에 따라 1개의 계약으로 통합 관리합니다.<br/>
               아래 중 처리 방법을 선택하십시오.
-            </div>
+ </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button
                 onClick={handleAddBasketToExistingContract}
                 style={{ padding: '12px 16px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}
               >
-                ✅ 기존 계약에 장비 추가 <span style={{ fontSize: '12px', fontWeight: 400, opacity: 0.85 }}>(권장 — 단일 계약 원칙 준수)</span>
+                 기존 계약에 장비 추가 <span style={{ fontSize: '12px', fontWeight: 400, opacity: 0.85 }}>(권장 — 단일 계약 원칙 준수)</span>
               </button>
               <button data-hs-trigger="Register"
                 onClick={handleForceCreateNewContract}
                 style={{ padding: '12px 16px', backgroundColor: 'var(--bg-muted)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
               >
-                ➕ 별도 신규 계약으로 등록 <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)' }}>(예외 사유 있을 때만)</span>
+                 별도 신규 계약으로 등록 <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)' }}>(예외 사유 있을 때만)</span>
               </button>
               <button
                 onClick={() => { setDuplicateContractModal(null); setPendingContractPayload(null); }}
                 style={{ padding: '10px 16px', backgroundColor: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}
               >
                 취소
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -6199,7 +6199,7 @@ export const Contracts: React.FC = () => {
                 onClick={() => { setShowCaPeriodModal(false); setEditCaForPeriod(null); }}
               >
                 취소
-              </button>
+ </button>
               <button data-hs-trigger="Save"
                 type="button"
                 className="btn-primary"
@@ -6214,7 +6214,7 @@ export const Contracts: React.FC = () => {
                 }}
               >
                 저장
-              </button>
+ </button>
             </div>
           </div>
         </div>
@@ -6234,8 +6234,8 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Truck size={18} color="var(--primary)" /> 현장간 장비 이동
-                </h3>
-                <button type="button" onClick={() => { setShowRelocateModal(false); setRelocateCa(null); }} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+ </h3>
+                <button type="button" onClick={() => { setShowRelocateModal(false); setRelocateCa(null); }} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}></button>
               </div>
 
               {/* 기본 장비 및 현장 정보 */}
@@ -6275,7 +6275,7 @@ export const Contracts: React.FC = () => {
                   {availableSites.length === 0 && (
                     <span style={{ fontSize: '11px', color: 'var(--danger)' }}>
                       해당 고객사에 등록된 다른 현장이 없습니다. [거래처 관리]에서 새 현장을 먼저 등록하십시오.
-                    </span>
+ </span>
                   )}
                 </div>
 
@@ -6302,7 +6302,7 @@ export const Contracts: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 🚚 운송 배차 의뢰 옵션 섹션 */}
+                {/*  운송 배차 의뢰 옵션 섹션 */}
                 <div style={{ padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 800 }}>
                     <input
@@ -6311,7 +6311,7 @@ export const Contracts: React.FC = () => {
                       onChange={e => setRelocateNeedTransport(e.target.checked)}
                       style={{ width: '16px', height: '16px' }}
                     />
-                    <span>🚚 현장간 장비 이동 운송 배차 즉시 의뢰 발행</span>
+                    <span> 현장간 장비 이동 운송 배차 즉시 의뢰 발행</span>
                   </label>
 
                   {relocateNeedTransport && (
@@ -6319,7 +6319,7 @@ export const Contracts: React.FC = () => {
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         • 상차지: {currentSite?.name || '1현장'} ({currentSite?.address || '주소지'})<br/>
                         • 하차지: {sites.find(s => s.id === relocateTargetSiteId)?.name || '2현장'} ({sites.find(s => s.id === relocateTargetSiteId)?.address || '주소지'})
-                      </div>
+ </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '11.5px', fontWeight: 700 }}>운송 비용 (원)</label>
@@ -6355,7 +6355,7 @@ export const Contracts: React.FC = () => {
                     onClick={() => { setShowRelocateModal(false); setRelocateCa(null); }}
                   >
                     취소
-                  </button>
+ </button>
                   <button
                     type="submit"
                     className="btn-primary"
@@ -6363,7 +6363,7 @@ export const Contracts: React.FC = () => {
                     style={{ fontWeight: 800 }}
                   >
                     현장 이동 확정
-                  </button>
+ </button>
                 </div>
               </form>
             </div>
@@ -6422,14 +6422,14 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#0284c7' }}>
                   <Package size={18} color="#0284c7" /> 계약 연동 유통출고 및 당월 청구 등록
-                </h3>
+ </h3>
                 <button
                   type="button"
                   onClick={() => setShowTradeOutboundModal(false)}
                   style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}
                 >
-                  ✕
-                </button>
+                  
+ </button>
               </div>
 
               {/* 1. 계약 컨텍스트 자동 상속 배너 */}
@@ -6470,7 +6470,7 @@ export const Contracts: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                     <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                       1단계: 출고 품목 선택 (클릭 시 즉시 담기) *
-                    </label>
+ </label>
                   </div>
 
                   {/* 품목 칩 버튼 그리드 */}
@@ -6490,7 +6490,7 @@ export const Contracts: React.FC = () => {
                     {activeTradeProducts.length === 0 ? (
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                         등록된 유통 품목이 없습니다.
-                      </span>
+ </span>
                     ) : (
                       activeTradeProducts.map(prod => {
                         const selectedEntry = tradeSelectedItems.find(it => it.productId === prod.id);
@@ -6529,7 +6529,7 @@ export const Contracts: React.FC = () => {
                             <span>+ {prod.name}</span>
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                               (₩{(prod.standardPrice || 0).toLocaleString()} / 재고 {getTradeProductStock(prod.id).availableQty}{prod.unit})
-                            </span>
+ </span>
                             {selectedEntry && (
                               <span
                                 style={{
@@ -6575,7 +6575,7 @@ export const Contracts: React.FC = () => {
                                   {prod?.spec && (
                                     <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginLeft: '6px' }}>
                                       ({prod.spec})
-                                    </span>
+ </span>
                                   )}
                                 </td>
                                 <td style={{ padding: '6px 10px', textAlign: 'center' }}>
@@ -6608,15 +6608,15 @@ export const Contracts: React.FC = () => {
                                 </td>
                                 <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace' }}>
                                   ₩{rowAmt.toLocaleString()}원
-                                </td>
+ </td>
                                 <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                                   <button
                                     type="button"
                                     onClick={() => setTradeSelectedItems(prev => prev.filter((_, i) => i !== idx))}
                                     style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '14px' }}
                                   >
-                                    ✕
-                                  </button>
+                                    
+ </button>
                                 </td>
                               </tr>
                             );
@@ -6631,7 +6631,7 @@ export const Contracts: React.FC = () => {
                 <div style={{ padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     2단계: 출고 방식 및 현장 수령 정보
-                  </label>
+ </label>
 
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {([
@@ -6663,7 +6663,7 @@ export const Contracts: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         동봉할 렌탈 출고·교환 배차 선택 (선택 시 배차 메모에 동봉 품목 자동 각인)
-                      </label>
+ </label>
                       <select
                         value={tradeLinkedRentalDeliveryId}
                         onChange={e => setTradeLinkedRentalDeliveryId(e.target.value)}
@@ -6673,7 +6673,7 @@ export const Contracts: React.FC = () => {
                         {pendingRentalDeliveries.map(d => (
                           <option key={d.id} value={d.id}>
                             {d.id} ({d.dispatchCategory || d.type} · 상차일: {d.loadingDate || d.scheduledDate || d.requestDate || '-'} · 상태: {d.status === 'COMPLETED' ? '운송완료' : d.status === 'DISPATCHED' ? '배차완료' : '배차대기'})
-                          </option>
+ </option>
                         ))}
                       </select>
                     </div>
@@ -6714,7 +6714,7 @@ export const Contracts: React.FC = () => {
                 <div style={{ padding: '12px', backgroundColor: 'rgba(2, 132, 199, 0.06)', borderRadius: '8px', border: '1px solid rgba(2, 132, 199, 0.3)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#0369a1' }}>
                     3단계: 당월 청구 반영 방식
-                  </label>
+ </label>
 
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <button
@@ -6731,8 +6731,8 @@ export const Contracts: React.FC = () => {
                         color: tradeBillingMode === 'MERGE_CURRENT_MONTH' ? '#fff' : 'var(--text-primary)'
                       }}
                     >
-                      ✓ 당월 렌탈 청구에 합산 (권장)
-                    </button>
+                       당월 렌탈 청구에 합산 (권장)
+ </button>
                     <button
                       type="button"
                       onClick={() => setTradeBillingMode('SEPARATE_TRADE_BILLING')}
@@ -6748,7 +6748,7 @@ export const Contracts: React.FC = () => {
                       }}
                     >
                       유통 별도 청구
-                    </button>
+ </button>
 
                     {tradeBillingMode === 'MERGE_CURRENT_MONTH' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto', flexShrink: 0 }}>
@@ -6768,7 +6768,7 @@ export const Contracts: React.FC = () => {
                       {billingYmDecision.isRolledOverToNextMonth && tradeTargetBillingYm === billingYmDecision.nextYm && (
                         <div style={{ color: '#b45309', backgroundColor: '#fef3c7', padding: '5px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
                           • 금일({todayStr})이 이 계약의 청구/명세서 마감일(매월 {billingYmDecision.effectiveClosingDay}일) 이후이거나 당월({billingYmDecision.curYm}) 청구가 이미 발행되었으므로, 합산 귀속월이 <strong>다음 달({billingYmDecision.nextYm})</strong>로 자동 설정되었습니다.
-                        </div>
+ </div>
                       )}
                       <div>
                         {existingMonthBilling
@@ -6790,7 +6790,7 @@ export const Contracts: React.FC = () => {
                   />
                   <div style={{ fontSize: '14px', fontWeight: 800, color: '#0284c7' }}>
                     출고 공급가 합계: ₩{totalSupplyAmount.toLocaleString()}원
-                  </div>
+ </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
@@ -6800,7 +6800,7 @@ export const Contracts: React.FC = () => {
                     onClick={() => setShowTradeOutboundModal(false)}
                   >
                     취소
-                  </button>
+ </button>
                   <button
                     type="submit"
                     className="btn-primary"
@@ -6845,14 +6845,14 @@ export const Contracts: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h3 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Edit3 size={17} color="var(--primary)" /> 영업담당자 변경
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowSalespersonModal(false)}
                 style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}
               >
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             <div
@@ -6869,20 +6869,20 @@ export const Contracts: React.FC = () => {
             >
               <div>
                 계약번호: <strong>{activeContract.contractNo}</strong> ({getCustName(activeContract.customerId)} / {getSiteName(activeContract.siteId)})
-              </div>
+ </div>
               <div style={{ marginTop: '4px' }}>
                 현재 영업담당자: <strong style={{ color: 'var(--primary)' }}>{users.find(u => u.id === activeContract.salespersonId)?.name || '미지정'}</strong>
               </div>
               <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
                 ※ 계약의 영업담당자는 최초 출고 요청자가 기본 유지되며, 퇴사 또는 부서 변경 등 업무 인계가 필요한 경우에만 변경합니다.
-              </div>
+ </div>
             </div>
 
             <form onSubmit={handleSaveSalespersonChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   인수 영업담당자 선택 *
-                </label>
+ </label>
                 <select
                   value={newSalespersonId}
                   onChange={e => setNewSalespersonId(e.target.value)}
@@ -6911,7 +6911,7 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   변경 사유 구분 *
-                </label>
+ </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                   {(['퇴사 인계', '부서 변경', '업무 분장 조정', '기타'] as const).map(rType => (
                     <button
@@ -6938,7 +6938,7 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   상세 변경 사유 메모
-                </label>
+ </label>
                 <input
                   type="text"
                   placeholder="예: 담당자 퇴사로 인한 현장 인계, 영업부서 개편 등"
@@ -6962,7 +6962,7 @@ export const Contracts: React.FC = () => {
                   onClick={() => setShowSalespersonModal(false)}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="submit"
                   className="btn-primary"
@@ -7010,25 +7010,25 @@ export const Contracts: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <h3 className="card-title" style={{ margin: 0, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <AlertTriangle size={18} /> 계약의 해제
-              </h3>
+ </h3>
               <button
                 type="button"
                 onClick={() => setShowRescindModal(false)}
                 style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}
               >
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             <div style={{ padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '12.5px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>대상 계약:</span>{' '}
                 <strong>{activeContract.contractNo}</strong> ({getCustName(activeContract.customerId)} / {getSiteName(activeContract.siteId)})
-              </div>
+ </div>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>체결 자산 수량:</span>{' '}
                 <strong>총 {activeContractAssets.length}대</strong> (승인 즉시 전수 <strong style={{ color: 'var(--success)' }}>임대가능</strong> 상태로 일괄 원상복구)
-              </div>
+ </div>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>렌탈료·유상옵션 청구:</span>{' '}
                 <strong style={{ color: 'var(--danger)' }}>₩0원 소급 무효화</strong>
@@ -7038,7 +7038,7 @@ export const Contracts: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                 기발생 운송비(회차비) 처리 방식 *
-              </label>
+ </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                 {([
                   { id: 'NONE', label: '없음 (출고 전 취소)' },
@@ -7071,7 +7071,7 @@ export const Contracts: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                   고객 청구 운송비(회차비) 금액 (원) *
-                </label>
+ </label>
                 <input
                   type="number"
                   min={0}
@@ -7095,7 +7095,7 @@ export const Contracts: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                 계약의 해제 사유 *
-              </label>
+ </label>
               <input
                 type="text"
                 value={rescindReason}
@@ -7120,7 +7120,7 @@ export const Contracts: React.FC = () => {
                 onClick={() => setShowRescindModal(false)}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="submit"
                 className="btn-primary"

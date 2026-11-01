@@ -505,7 +505,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
       const upperModel = rawModel.trim().toUpperCase();
       const canonicalModel = getCanonicalModelKey(rawModel);
 
-      // 💡 1. 모델 마스터 조회 (정확 일치 -> 대소문자 무관 -> 축약명 -> 정규화 키 순)
+      //  1. 모델 마스터 조회 (정확 일치 -> 대소문자 무관 -> 축약명 -> 정규화 키 순)
       const allProducts = products.length > 0 ? products : db.products;
       const prod =
         allProducts.find(p => p.modelName === rawModel) ||
@@ -520,7 +520,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
 
       const model = prod?.modelName || preset?.modelName || rawModel;
 
-      // 💡 2. 모델별 안전인증일: Product 마스터 -> 안전인증서 URL 파일명 -> Preset 순
+      //  2. 모델별 안전인증일: Product 마스터 -> 안전인증서 URL 파일명 -> Preset 순
       const resolvedCertDate =
         prod?.safetyCertDate ||
         (prod as any)?.certDate ||
@@ -529,7 +529,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
         extractCertDateFromText(preset?.safetyCertUrl) ||
         '-';
 
-      // 💡 3. 자산별 제조연도(연식): Asset 대장의 manufactureYear에 'yyyy년mm월' 형식 데이터가 있더라도 'mm월'을 떼어내고 'yyyy년'만 표시
+      //  3. 자산별 제조연도(연식): Asset 대장의 manufactureYear에 'yyyy년mm월' 형식 데이터가 있더라도 'mm월'을 떼어내고 'yyyy년'만 표시
       const rawYear = a?.manufactureYear ? String(a.manufactureYear).trim() : '';
       const yrMatch = rawYear.match(/(\d{4})/);
       const resolvedManufactureYear = yrMatch
@@ -537,7 +537,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
         : (rawYear && rawYear !== '-' ? rawYear : '-');
 
       const assetInspector = customInspectorName.trim() || defaultInspectorName;
-      // 💡 02.반입전체크리스트 {점검일시} 값은 03.안전점검결과서 {{배차일)-2} 또는 {지정} 값과 100% 동일한 값 사용
+      //  02.반입전체크리스트 {점검일시} 값은 03.안전점검결과서 {{배차일)-2} 또는 {지정} 값과 100% 동일한 값 사용
       const unifiedInspectionDate = customInspectionDate || defaultInspectionDate;
 
       return {
@@ -570,7 +570,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
     });
   }, [selectedContract, contractAssets, assets, products, filterDate, contractOutboundDeliveries, initialDeliveryId, initialContractAssetIds, customInspectorName, customInspectionDate, defaultInspectorName, defaultInspectionDate]);
 
-  // 💡 계약서 품목 테이블에 표기할 유상옵션 목록 산출 (오직 유상옵션(PAID)만 표기, 무상옵션·부착물·현장요구사양 제외)
+  //  계약서 품목 테이블에 표기할 유상옵션 목록 산출 (오직 유상옵션(PAID)만 표기, 무상옵션·부착물·현장요구사양 제외)
   const mappedPaidOptions = useMemo(() => {
     if (!selectedContract) return [];
     const activeCaIds = new Set(mappedAssets.map(a => a.caId));
@@ -941,7 +941,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
     setManualInputEmail('');
     setManualInputName('');
 
-    // 🌟 [수신인 추가 즉시 고객현장(CustomerSite) 담당자 이메일 동기화]:
+    //  [수신인 추가 즉시 고객현장(CustomerSite) 담당자 이메일 동기화]:
     // 담당자 이메일이 비어 있던 현장에서 수신인 이메일을 추가하면 고객현장 담당자 정보에 즉시 저장
     if (site) {
       const normName = (raw?: string | null) =>
@@ -1063,7 +1063,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
     }
   };
 
-  // ── 💡 핵심 PDF 조립 헬퍼 (로컬 에이전트 COM 엔진 가동) ──
+  // ──  핵심 PDF 조립 헬퍼 (로컬 에이전트 COM 엔진 가동) ──
   const buildBundlePdf = async (): Promise<{ filePath: string; fileName: string; pageCount: number; url: string; }> => {
     if (generatedResult?.filePath) {
       return generatedResult;
@@ -1084,7 +1084,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
 
       const tenantCorp = currentTenant?.corporateName || currentTenant?.tradeName || currentTenant?.displayName || '(주)기연리프트';
 
-      // 💡 영업담당자 동적 산출 (1순위: 계약 배정 영업사원, 2순위: 현재 로그인 사용자, 3순위: 테넌트 대표/기본값)
+      //  영업담당자 동적 산출 (1순위: 계약 배정 영업사원, 2순위: 현재 로그인 사용자, 3순위: 테넌트 대표/기본값)
       const salesUser = (selectedContract?.salespersonId ? users?.find(u => u.id === selectedContract.salespersonId) : null) || currentUser;
       const salesDuty = salesUser?.duty || salesUser?.position || '';
       const dynamicSalesRepName = salesUser?.name
@@ -1092,13 +1092,13 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
         : (currentTenant?.representativeName ? `${currentTenant.representativeName} 대표` : '영업담당자');
       const dynamicSalesRepPhone = salesUser?.phone || currentTenant?.salesPhone || currentTenant?.tel || '010-0000-0000';
 
-      // 💡 테넌트 주거래 입금계좌 포맷팅
+      //  테넌트 주거래 입금계좌 포맷팅
       const primaryAccount = currentTenant?.bankAccounts?.[0];
       const bankAccountText = primaryAccount
         ? `${primaryAccount.bankName} ${primaryAccount.accountNumber} (${primaryAccount.accountHolder})`
         : '';
 
-      // 💡 현장 담당자(장비담당자/대표담당자) 성명 및 휴대폰 번호 산출 (고객현장 CustomerSite SSOT 최우선, 대표자명·비전화번호 유입 원천 차단)
+      //  현장 담당자(장비담당자/대표담당자) 성명 및 휴대폰 번호 산출 (고객현장 CustomerSite SSOT 최우선, 대표자명·비전화번호 유입 원천 차단)
       const isValidPhoneText = (raw?: string | null): boolean => {
         if (!raw) return false;
         const digits = String(raw).replace(/[^0-9]/g, '');
@@ -1426,12 +1426,12 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
           createdAt: new Date().toISOString()
         });
 
-        // 💡 계약 레코드에 패키지 발송 일시 직접 저장 (즉각적인 배지 상태 반영)
+        //  계약 레코드에 패키지 발송 일시 직접 저장 (즉각적인 배지 상태 반영)
         db.updateRow<any>('contracts', selectedContract.id, {
           packageSentAt: new Date().toISOString()
         });
 
-        // 🌟 [고객현장(CustomerSite) 담당자 이메일 자동 역동기화]:
+        //  [고객현장(CustomerSite) 담당자 이메일 자동 역동기화]:
         // 현장에 담당자 이메일이 비어 있거나 발송 시 직접 입력한 수신인 이메일이 있는 경우 고객현장(site) 담당자 정보에 자동 등록
         if (site && recipients.length > 0) {
           const normName = (raw?: string | null) =>
@@ -1537,7 +1537,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
           }
         }
 
-        // 🌟 [ToDo 자동 상계]: 계약서 미발송(CONTRACT_PACKAGE_SEND) 및 재발송(CONTRACT_PACKAGE_RESEND) ToDo 원자적 자동 완료
+        //  [ToDo 자동 상계]: 계약서 미발송(CONTRACT_PACKAGE_SEND) 및 재발송(CONTRACT_PACKAGE_RESEND) ToDo 원자적 자동 완료
         if (activeDelId) {
           await clearHandoverTasks({
             entityId: activeDelId,
@@ -1638,7 +1638,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
             <FileText size={20} color="var(--primary)" />
             <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
               계약서패키지 PDF 생성 및 이메일 발송
-            </h3>
+ </h3>
           </div>
           <button
             type="button"
@@ -1660,7 +1660,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <strong>계약서 패키지 생성 권한 없음</strong>
                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   현재 사용자 계정에 계약서 패키지 생성 권한이 부여되지 않았습니다. 관리자에게 문의하세요.
-                </span>
+ </span>
               </div>
             </div>
           )}
@@ -1671,13 +1671,13 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <AlertCircle size={18} style={{ flexShrink: 0 }} />
                 <div>
-                  <strong>로컬 에이전트(eBroAgent, 포트 5175) 통신 대기</strong>
+                  <strong>로컬 에이전트 통신 대기</strong>
                   <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     엑셀 COM 엔진을 통한 계약서 번들 PDF 생성을 위해 PC에서 eBroAgent가 가동 중이어야 합니다.
-                    {typeof window !== 'undefined' && window.location.protocol === 'https:' && (
+ {typeof window !== 'undefined' && window.location.protocol === 'https:' && (
                       <span style={{ display: 'block', marginTop: '3px', color: '#ea580c' }}>
-                        * HTTPS 보안 정책 안내: ebro web agent 확장 프로그램 활성화 또는 주소창 좌측 사이트 설정 ➔ '기기에서 호스팅되는 앱' 허용 필요
-                      </span>
+                        * HTTPS 보안 정책 안내: ebro web agent 확장 프로그램 활성화 또는 주소창 좌측 사이트 설정 '기기에서 호스팅되는 앱' 허용 필요
+ </span>
                     )}
                   </span>
                 </div>
@@ -1701,7 +1701,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                   style={{ padding: '6px 10px', fontSize: '12px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <RefreshCw size={13} /> 재점검
-                </button>
+ </button>
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1709,7 +1709,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                   style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <Play size={13} /> 에이전트 실행
-                </button>
+ </button>
               </div>
             </div>
           )}
@@ -1718,15 +1718,15 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
           {!agentChecking && isAgentOnline === true && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', backgroundColor: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', borderRadius: '6px', color: 'var(--success)', fontSize: '12px' }}>
               <CheckCircle2 size={15} />
-              <span>로컬 에이전트 정상 연결됨 (포트 5175, 엑셀 COM 자동화 및 PDF 생성 준비 완료)</span>
+              <span>로컬 에이전트 정상 연결됨</span>
             </div>
           )}
 
           {/* 1. 대상 계약 선택 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-              대상 계약 선택 (계약 DB 연동)
-            </label>
+              대상 계약 선택
+ </label>
             <select
               value={selectedContractId}
               onChange={(e) => setSelectedContractId(e.target.value)}
@@ -1750,7 +1750,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 return (
                   <option key={c.id} value={c.id}>
                     {c.contractNo || c.id} {custName} — {siteName} ({c.startDate} ~ {formatContractEndDate(c.endDate)})
-                  </option>
+ </option>
                 );
               })}
             </select>
@@ -1762,11 +1762,11 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <label style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Filter size={14} color="var(--primary)" /> 계약서패키지 분할 발행 (출고 요청 건별 / 투입일별)
-                  </span>
+ </span>
                   {filterDate.startsWith('DELIVERY:') && (
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.12)', color: 'var(--primary)', fontWeight: 700 }}>
                       출고 요청 지정됨 ({mappedAssets.length}대)
-                    </span>
+ </span>
                   )}
                 </label>
                 <select
@@ -1781,7 +1781,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                       {contractOutboundDeliveries.map(item => (
                         <option key={`DELIVERY:${item.id}`} value={`DELIVERY:${item.id}`}>
                           [출고 요청] {item.dateLabel} 상차 · {item.id} ({item.modelSummary} — 총 {item.effectiveCount}대 / 할당 {item.assignedCount}대)
-                        </option>
+ </option>
                       ))}
                     </optgroup>
                   )}
@@ -1792,7 +1792,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                         return (
                           <option key={date} value={date}>
                             [투입일자] {date} 투입 장비 분리 생성 ({count}대)
-                          </option>
+ </option>
                         );
                       })}
                     </optgroup>
@@ -1800,12 +1800,12 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                   <optgroup label="계약 전체">
                     <option value="ALL">
                       전체 체결 자산 일괄 생성 ({contractAssets.filter(ca => ca.contractId === selectedContractId && ca.status !== 'RETURNED' && ca.status !== 'SOLD').length}대)
-                    </option>
+ </option>
                   </optgroup>
                 </select>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   * 대형 현장에 누적 출고된 계약은 개별 출고 요청 건을 선택하여 당일 출고 장비만 계약서패키지로 신속하게 생성·발송할 수 있습니다.
-                </span>
+ </span>
               </div>
             )}
             
@@ -1862,7 +1862,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   점검일시:
-                </span>
+ </span>
                 <input
                   type="date"
                   value={customInspectionDate}
@@ -1882,7 +1882,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   점검자:
-                </span>
+ </span>
                 <input
                   type="text"
                   value={customInspectorName}
@@ -1932,7 +1932,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 }}
               >
                 기본값({defaultInspectionDate} / {defaultInspectorName}) 복원
-              </button>
+ </button>
             )}
           </div>
 
@@ -1943,7 +1943,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                   <Mail size={15} color="var(--primary)" />
                   이메일 수신인 ({recipients.length}명 지정됨)
-                </label>
+ </label>
                 {recipients.length > 0 ? (
                   <button
                     type="button"
@@ -1961,7 +1961,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                     }}
                   >
                     전체 해제
-                  </button>
+ </button>
                 ) : availableCustomerContacts.length > 0 ? (
                   <button
                     type="button"
@@ -1989,12 +1989,12 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                     }}
                   >
                     현장 담당자 전체 선택
-                  </button>
+ </button>
                 ) : null}
               </div>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                 * 등록된 현장에 저장된 수신인 자동 지정됨 (임의 추가 및 삭제 가능)
-              </span>
+ </span>
             </div>
 
             {/* 3-1. 선택된 수신인 칩 목록 */}
@@ -2014,7 +2014,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               {recipients.length === 0 ? (
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', paddingLeft: '4px' }}>
                   지정된 수신인이 없습니다. 아래 선택 또는 직접 입력을 통해 추가해 주세요.
-                </span>
+ </span>
               ) : (
                 recipients.map(r => (
                   <div
@@ -2080,7 +2080,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 value={manualInputEmail}
                 onChange={e => setManualInputEmail(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddManualRecipient(); } }}
-                placeholder="추가할 수신인 이메일 (예: manager@company.com)"
+                placeholder="추가할 수신인 이메일"
                 style={{
                   padding: '7px 10px',
                   borderRadius: '4px',
@@ -2109,7 +2109,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 }}
               >
                 <Plus size={14} /> 추가
-              </button>
+ </button>
             </div>
 
             {/* 3-3. 등록된 현장 수신인 추가/제외 헬퍼 */}
@@ -2118,7 +2118,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Users size={12} color="var(--primary)" />
                   등록된 현장 담당자 선택 (클릭하여 추가/제외):
-                </span>
+ </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                   {availableCustomerContacts.map(c => {
                     const isAdded = recipients.some(r => r.email.toLowerCase() === c.email.toLowerCase());
@@ -2183,7 +2183,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <Mail size={15} color="var(--primary)" />
                 이메일 발송 서식 및 본문
-              </label>
+ </label>
               <button
                 type="button"
                 onClick={() => setIsEmailContentOpen(prev => !prev)}
@@ -2206,7 +2206,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     메일 제목
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={emailSubject}
@@ -2226,7 +2226,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     메일 본문
-                  </label>
+ </label>
                   <textarea
                     rows={9}
                     value={emailBody}
@@ -2257,7 +2257,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               계약서패키지 서류 구성 (첨부 실물 표준 순서)
-            </label>
+ </label>
             <div
               style={{
                 border: '1px solid var(--border-color)',
@@ -2272,7 +2272,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle2 size={14} color="var(--success)" />
-                <span><strong>1. 고소작업대 임대차 계약서</strong> (1p)</span>
+                <span><strong>1. 고소작업대 임대차 계약서</strong> 1쪽</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle2 size={14} color="var(--success)" />
@@ -2338,8 +2338,8 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               </div>
               {emailSentSuccess && (
                 <span style={{ fontSize: '11.5px', backgroundColor: 'var(--success)', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
-                  ✓ 이메일 발송 완료
-                </span>
+                   이메일 발송 완료
+ </span>
               )}
             </div>
           )}
@@ -2360,7 +2360,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               <div style={{ backgroundColor: 'var(--bg-app)', borderRadius: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                   계약서 발급 및 이메일 발송 이력 ({docLogs.length}건)
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '110px', overflowY: 'auto' }}>
                   {docLogs.map(log => {
                     const isIssuedOnly = (log.description || '').includes('[계약서패키지 발급]');
@@ -2420,7 +2420,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
               }}
             >
               닫기
-            </button>
+ </button>
 
 
           </div>
@@ -2448,7 +2448,7 @@ export const ContractDocumentBundleModal: React.FC<Props> = ({
             >
               {isGenerating ? <RefreshCw size={14} className="animate-spin" /> : <FolderOpen size={14} />}
               문서고 저장 파일 열기
-            </button>
+ </button>
 
             {/* 2. 이메일 발송 버튼 (논스톱 발송) */}
             <button

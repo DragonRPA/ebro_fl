@@ -627,7 +627,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             <Save size={16} color="var(--primary)" />
             <span>
               <strong>작업 중이던 임시보관본 발견:</strong> {existingDraft.savedAt.slice(0, 16)} 저장 ({existingDraft.fileName}, 총 {existingDraft.stats.totalEntitiesCount}건)
-            </span>
+ </span>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
@@ -637,7 +637,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
               style={{ height: '32px', padding: '0 14px', fontSize: '12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
               임시보관본 불러오기
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleDiscardDraft}
@@ -645,7 +645,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
               style={{ height: '32px', padding: '0 12px', fontSize: '12px', color: 'var(--text-muted)' }}
             >
               폐기
-            </button>
+ </button>
           </div>
         </div>
       )}
@@ -662,7 +662,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           >
             <Download size={15} />
             표준 엑셀 양식 다운로드 (8개 시트)
-          </button>
+ </button>
 
           {/* 샘플 데이터 로드 */}
           <button
@@ -674,7 +674,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           >
             <FileSpreadsheet size={15} color="var(--primary)" />
             샘플 데이터 로드 (8대 도메인 전수)
-          </button>
+ </button>
 
           {/* 엑셀 파일 선택 */}
           <label
@@ -693,7 +693,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           >
             <Upload size={15} />
             엑셀 파일 업로드 (멀티시트/단일시트 자동 판별)
-            <input
+ <input
               ref={fileInputRef}
               type="file"
               accept=".xlsx, .xls, .csv"
@@ -720,7 +720,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           >
             <FolderOpen size={15} color="var(--primary)" />
             중간 저장 파일 불러오기
-            <input
+ <input
               ref={draftFileInputRef}
               type="file"
               accept=".json, .xlsx, .xls"
@@ -743,7 +743,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
               >
                 <Download size={15} />
                 중간 저장 파일 내보내기
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handleSaveDraft}
@@ -752,7 +752,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
               >
                 <Save size={15} />
                 중간 저장 (임시보관)
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handleReset}
@@ -761,7 +761,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
               >
                 <RotateCcw size={14} />
                 초기화
-              </button>
+ </button>
             </>
           )}
         </div>
@@ -780,7 +780,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           fontSize: '13px'
         }}>
           <div>
-            📄 분석 대상: <strong>{parseResult.fileName}</strong> · 형식: <strong>{parseResult.sourceType === 'MULTI_SHEET' ? '8시트 통합 양식' : parseResult.sourceType === 'SAMPLE' ? '검증용 샘플 데이터' : '단일 대여장부 플랫 시트 (지능 분해됨)'}</strong> · 분석일시: {parseResult.analyzedAt.slice(0, 19).replace('T', ' ')}
+             분석 대상: <strong>{parseResult.fileName}</strong> · 형식: <strong>{parseResult.sourceType === 'MULTI_SHEET' ? '8시트 통합 양식' : parseResult.sourceType === 'SAMPLE' ? '검증용 샘플 데이터' : '단일 대여장부 플랫 시트 (지능 분해됨)'}</strong> · 분석일시: {parseResult.analyzedAt.slice(0, 19).replace('T', ' ')}
           </div>
           <div style={{ display: 'flex', gap: '12px', fontWeight: 700 }}>
             <span>총 수집 데이터: <strong style={{ color: 'var(--primary)' }}>{parseResult.stats.totalEntitiesCount}건</strong></span>
@@ -835,7 +835,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
                     whiteSpace: 'nowrap'
                   }}>
                     정상
-                  </span>
+ </span>
                 </div>
                 <div style={{ fontSize: '13px', fontWeight: 800, color: isSelected ? 'var(--primary)' : 'var(--text-main)' }}>
                   {card.countFn(parseResult.entities)}
@@ -856,7 +856,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
                 {currentDomainMeta.label} 데이터 검증 목록 ({currentTableData.length}건)
-              </h3>
+ </h3>
               {currentDomainMeta.subTableKey && (
                 <div style={{ display: 'inline-flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                   <button
@@ -873,7 +873,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
                     }}
                   >
                     {currentDomainMeta.mainTabLabel} ({parseResult.entities[currentDomainMeta.tableKey]?.length || 0})
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => setSelectedSubTab('SUB')}
@@ -888,14 +888,14 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
                     }}
                   >
                     {currentDomainMeta.subTabLabel || '하위/연결 엔티티'} ({parseResult.entities[currentDomainMeta.subTableKey]?.length || 0})
-                  </button>
+ </button>
                 </div>
               )}
             </div>
 
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               * 중복 제거 및 N:M 정규화 연결이 적용된 데이터입니다.
-            </span>
+ </span>
           </div>
 
           {/* 고밀도 데이터 테이블 */}
@@ -903,7 +903,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             {currentTableData.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '13px' }}>
                 해당 도메인에 수집된 데이터가 없습니다.
-              </div>
+ </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                 <thead>
@@ -933,7 +933,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
                       <td style={{ padding: '6px 12px', textAlign: 'center' }}>
                         <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(34,197,94,0.1)', color: 'var(--success, #22c55e)', fontWeight: 700 }}>
                           정상
-                        </span>
+ </span>
                       </td>
                     </tr>
                   ))}
@@ -944,7 +944,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           {currentTableData.length > 50 && (
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right' }}>
               상위 50건 미리보기 표시 중 (전체 {currentTableData.length}건)
-            </div>
+ </div>
           )}
         </div>
       )}
@@ -962,7 +962,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
         }}>
           <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             총 <strong>{parseResult.stats.totalEntitiesCount}건</strong>의 데이터가 검증을 통과했습니다. 중간 저장하거나 운영 DB로 확정 적재하세요.
-          </div>
+ </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
@@ -972,7 +972,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               <Download size={16} />
               중간 저장 파일 내보내기
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleSaveDraft}
@@ -981,7 +981,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               <Save size={16} />
               중간 저장 (임시보관)
-            </button>
+ </button>
             <button
               type="button"
               onClick={handleCommitIngestion}
@@ -1001,7 +1001,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               {isIngesting ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <DatabaseIcon size={16} />}
               DB 확정 주입 (최종 적재 실행)
-            </button>
+ </button>
           </div>
         </div>
       )}
@@ -1054,11 +1054,11 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
           <FileSpreadsheet size={48} color="var(--primary)" style={{ opacity: 0.8 }} />
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
             통합 엑셀 지능 적재 (8대 도메인 17개 엔티티)
-          </h3>
+ </h3>
           <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '640px', lineHeight: 1.6 }}>
             조직도(부서/사원), 제품(10대 상세제원) 및 장비, 물리현장과 전사표준옵션, 고객사 및 3대 담당자, 정비점검 및 수리이력, 부품/소모품 마스터 및 입고, 매입거래처(5대 유형) 및 운송기사, 대여계약까지<br />
             <strong>1개의 엑셀 파일</strong>로 분석하고 수집 현황을 조망하여, 중간 저장 및 안전한 계층적 DB 적재를 수행합니다.
-          </p>
+ </p>
           <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
               type="button"
@@ -1068,7 +1068,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               <FileSpreadsheet size={15} />
               샘플 데이터 로드 (8대 도메인)
-            </button>
+ </button>
             <label
               className="btn-secondary"
               style={{
@@ -1085,7 +1085,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               <FolderOpen size={15} color="var(--primary)" />
               중간 저장 파일 불러오기
-              <input
+ <input
                 type="file"
                 accept=".json, .xlsx, .xls"
                 onChange={handleDraftFileUpload}
@@ -1101,7 +1101,7 @@ export const SmartIntegratedUploaderStudio: React.FC = () => {
             >
               <Download size={15} />
               표준 양식 엑셀 다운로드 (8개 시트)
-            </button>
+ </button>
           </div>
         </div>
       )}

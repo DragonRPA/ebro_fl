@@ -1,6 +1,6 @@
 // src/components/HindsightQueryModal.tsx
-// 🧠 Hindsight 4-Tier Memory & Real-DB Diagnostic Console
-// 🏛️ 전사 시스템 개발 표준 헌장 3.1(무수식어 건조 표준) & 3.2(nowrap) 준수 (무목업·무시드 100% 실DB 연동)
+//  Hindsight 4-Tier Memory & Real-DB Diagnostic Console
+//  전사 시스템 개발 표준 헌장 3.1(무수식어 건조 표준) & 3.2(nowrap) 준수 (무목업·무시드 100% 실DB 연동)
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
@@ -192,7 +192,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
             <Brain size={20} style={{ color: '#2563eb' }} />
             <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700', whiteSpace: 'nowrap' }}>
               전사 업무 지식 콘솔
-            </h2>
+ </h2>
             <span style={{
               fontSize: '11px',
               padding: '2px 8px',
@@ -203,7 +203,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
               whiteSpace: 'nowrap'
             }}>
               무목업 · 100% 실DB 직결 모드
-            </span>
+ </span>
             {diagnostics && (
               <span style={{
                 fontSize: '11px',
@@ -215,7 +215,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                 whiteSpace: 'nowrap'
               }}>
                 실DB 동기화 {diagnostics.syncLatencyMs}ms
-              </span>
+ </span>
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -270,20 +270,20 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
           }}>
             <span style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
               [Central DB 테이블]
-            </span>
+ </span>
             <span style={{ whiteSpace: 'nowrap' }}>
               awp_shared_memories: <strong style={{ color: '#16a34a' }}>{diagnostics.remoteTables.awp_shared_memories.totalCount.toLocaleString()}건</strong> (최근 300건 중 SQL캡처 {diagnostics.remoteTables.awp_shared_memories.sqlCapturedCount}건)
-            </span>
+ </span>
             <span style={{ whiteSpace: 'nowrap', color: diagnostics.remoteTables.hindsight_world_facts.exists ? '#16a34a' : '#b45309' }}>
-              hindsight_world_facts: {diagnostics.remoteTables.hindsight_world_facts.exists ? `${diagnostics.remoteTables.hindsight_world_facts.rowCount}건` : '테이블 미생성(ERP 마스터 동적추출)'}
+              hindsight_world_facts: {diagnostics.remoteTables.hindsight_world_facts.exists ? `${diagnostics.remoteTables.hindsight_world_facts.rowCount}건` : '테이블 미생성'}
             </span>
             <span style={{ whiteSpace: 'nowrap', color: diagnostics.remoteTables.hindsight_observations.exists ? '#16a34a' : '#b45309' }}>
-              hindsight_observations: {diagnostics.remoteTables.hindsight_observations.exists ? `${diagnostics.remoteTables.hindsight_observations.rowCount}건` : '테이블 미생성(실DB 귀납추출)'}
+              hindsight_observations: {diagnostics.remoteTables.hindsight_observations.exists ? `${diagnostics.remoteTables.hindsight_observations.rowCount}건` : '테이블 미생성'}
             </span>
             <span style={{ color: '#cbd5e1' }}>|</span>
             <span style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
               [Tenant 실DB 원장]
-            </span>
+ </span>
             <span style={{ whiteSpace: 'nowrap' }}>
               고객 {diagnostics.liveErpCounts.customers} · 현장 {diagnostics.liveErpCounts.siteMasters} · 계약 {diagnostics.liveErpCounts.contracts} · 계약자산 {diagnostics.liveErpCounts.contractAssets} · 보유자산 {diagnostics.liveErpCounts.assets} · 모델 {diagnostics.liveErpCounts.products} · 배차 {diagnostics.liveErpCounts.deliveries} · 청구 {diagnostics.liveErpCounts.billings} · 수리 {diagnostics.liveErpCounts.repairs} · 검수 {diagnostics.liveErpCounts.outboundInspections}
             </span>
@@ -391,7 +391,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 <span style={{ fontSize: '11px', color: '#64748b', alignSelf: 'center', fontWeight: '600', whiteSpace: 'nowrap' }}>
                   실DB 샘플 질의:
-                </span>
+ </span>
                 {dynamicPrompts.map((p, idx) => (
                   <button
                     key={idx}
@@ -468,18 +468,18 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                     {reflectResult.sources.fact_keys.slice(0, 6).map((fk, i) => (
                       <span key={i} style={{ fontSize: '11px', padding: '2px 6px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '3px' }}>
-                        🌐 {fk}
+                         {fk}
                       </span>
                     ))}
                     {reflectResult.sources.observation_clusters.slice(0, 6).map((ob, i) => (
                       <span key={i} style={{ fontSize: '11px', padding: '2px 6px', backgroundColor: '#fef3c7', color: '#92400e', borderRadius: '3px' }}>
-                        🧠 {ob}
+                         {ob}
                       </span>
                     ))}
                     {reflectResult.sources.experience_count > 0 && (
                       <span style={{ fontSize: '11px', padding: '2px 6px', backgroundColor: '#f1f5f9', color: '#475569', borderRadius: '3px' }}>
-                        ⚡ 과거 경험 {reflectResult.sources.experience_count}건 참조
-                      </span>
+                         과거 경험 {reflectResult.sources.experience_count}건 참조
+ </span>
                     )}
                   </div>
                 </div>
@@ -495,7 +495,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                   <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
                       매칭 World Facts ({recallResult.world_facts.length}건)
-                    </div>
+ </div>
                     {recallResult.world_facts.length === 0 ? (
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>매칭 없음</div>
                     ) : (
@@ -510,14 +510,14 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                   <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
                       매칭 Observations ({recallResult.observations.length}건)
-                    </div>
+ </div>
                     {recallResult.observations.length === 0 ? (
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>매칭 없음</div>
                     ) : (
                       recallResult.observations.slice(0, 4).map(obs => (
                         <div key={obs.id} style={{ fontSize: '11px', color: '#334155', marginBottom: '4px' }}>
                           • <strong>{obs.belief_title}</strong> ({obs.proof_count}건)
-                        </div>
+ </div>
                       ))
                     )}
                   </div>
@@ -525,7 +525,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                   <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
                       매칭 Experiences ({recallResult.experiences.length}건)
-                    </div>
+ </div>
                     {recallResult.experiences.length === 0 ? (
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>매칭 없음</div>
                     ) : (
@@ -546,8 +546,8 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b' }}>
-                  실제 DB의 장비 모델 제원(`products`), 표준 옵션(`standard_options`), 시스템 매뉴얼(`system_manuals`)에서 로드된 기준 사실 목록입니다. (총 {filteredFacts.length}건)
-                </span>
+                  실제 DB의 장비 모델 제원, 표준 옵션, 시스템 매뉴얼에서 로드된 기준 사실 목록입니다. (총 {filteredFacts.length}건)
+ </span>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <select
                     value={factDomainFilter}
@@ -599,8 +599,8 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ fontSize: '12px', color: '#64748b' }}>
-                  Central DB(`awp_shared_memories`)에 실제 적재된 사용자 업무 인터랙션 및 CUD SQL 로그입니다. (표시 {filteredExperiences.length}건 / 전체 {diagnostics?.remoteTables.awp_shared_memories.totalCount || recentExperiences.length}건)
-                </span>
+                  Central DB에 실제 적재된 사용자 업무 인터랙션 및 CUD SQL 로그입니다. (표시 {filteredExperiences.length}건 / 전체 {diagnostics?.remoteTables.awp_shared_memories.totalCount || recentExperiences.length}건)
+ </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     <input
@@ -625,7 +625,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
               ) : filteredExperiences.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '30px', color: '#64748b', backgroundColor: '#ffffff', borderRadius: '6px' }}>
                   조건에 일치하는 경험 데이터가 없습니다.
-                </div>
+ </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {filteredExperiences.map((exp, idx) => (
@@ -640,17 +640,17 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontWeight: '700', fontSize: '13px', color: '#1e293b' }}>
-                          ⚡ {exp.action_name}
+                           {exp.action_name}
                         </span>
                         <span style={{ fontSize: '11px', color: '#64748b' }}>
                           {new Date(exp.created_at).toLocaleString('ko-KR')}
                         </span>
                       </div>
                       <div style={{ fontSize: '11px', color: '#475569', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                        <span>📍 메뉴: {exp.menu_path}</span>
-                        {exp.domain && <span>🏷️ 도메인: {exp.domain}</span>}
-                        <span>👣 선행조작: {(exp.interaction_history || []).length}건</span>
-                        {exp.pii_masked && <span style={{ color: '#16a34a' }}>🛡️ PII 마스킹됨</span>}
+                        <span> 메뉴: {exp.menu_path}</span>
+                        {exp.domain && <span> 도메인: {exp.domain}</span>}
+                        <span> 선행조작: {(exp.interaction_history || []).length}건</span>
+                        {exp.pii_masked && <span style={{ color: '#16a34a' }}> PII 마스킹됨</span>}
                       </div>
                       {exp.raw_sql && (
                         <div style={{
@@ -677,8 +677,8 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
           {activeTab === 'OBSERVATIONS' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ fontSize: '12px', color: '#64748b' }}>
-                실제 DB(`awp_shared_memories`, `contracts`, `contract_assets`, `deliveries`, `billings`) 원장을 실시간 클러스터링하여 귀납 추출한 통계 및 패턴입니다.
-              </div>
+                실제 DB 원장을 실시간 클러스터링하여 귀납 추출한 통계 및 패턴입니다.
+ </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
                 {observations.map(obs => (
                   <div key={obs.id} style={{
@@ -695,10 +695,10 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                       <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                         <span style={{ fontSize: '11px', backgroundColor: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                           실DB 표본 {obs.proof_count}건
-                        </span>
+ </span>
                         <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                           신뢰도 {Math.round(obs.confidence * 100)}%
-                        </span>
+ </span>
                       </div>
                     </div>
                     <div style={{ fontSize: '12px', color: '#334155', lineHeight: '1.5' }}>
@@ -707,7 +707,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
                     {obs.supporting_quotes && obs.supporting_quotes.length > 0 && (
                       <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
                         실DB 근거: "{obs.supporting_quotes.join('", "')}"
-                      </div>
+ </div>
                     )}
                   </div>
                 ))}
@@ -720,7 +720,7 @@ export const HindsightQueryModal: React.FC<HindsightQueryModalProps> = ({ isOpen
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ fontSize: '12px', color: '#64748b' }}>
                 실제 운영 DB 원장 건수 및 상태 분포로부터 실시간 합성된 도메인별 요약 멘탈 모델입니다.
-              </div>
+ </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                 {mentalModels.map(mm => (
                   <div key={mm.id} style={{

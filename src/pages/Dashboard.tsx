@@ -269,10 +269,7 @@ export const Dashboard: React.FC = () => {
           <Activity size={18} color="var(--primary)" />
           <h2 data-mid="dashboard-header" style={{ margin: 0, fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             대시보드
-          </h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-            직무 중심 당면 과제 및 가용재고 운영 현황
-          </span>
+ </h2>
         </div>
         <div className="toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
@@ -283,7 +280,7 @@ export const Dashboard: React.FC = () => {
           >
             <ClipboardList size={14} />
             가용재고조회
-          </button>
+ </button>
           <button
             data-mid="dashboard-btn-refresh"
             data-uia="btn-refresh-feed"
@@ -296,7 +293,7 @@ export const Dashboard: React.FC = () => {
           >
             <RefreshCw size={14} />
             새로고침
-          </button>
+ </button>
         </div>
       </div>
 
@@ -326,14 +323,14 @@ export const Dashboard: React.FC = () => {
                   whiteSpace: 'nowrap',
                 }}>
                   계약서 발송 대기
-                </span>
+ </span>
                 <h4 style={{ margin: 0, fontSize: '15.5px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                   <FileText size={17} color="#4f46e5" />
                   계약서 미발송 출고 요청
-                </h4>
+ </h4>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   장비할당 완료 · 계약서 발송 가능 상태
-                </span>
+ </span>
               </div>
               <span style={{
                 fontSize: '12px',
@@ -346,7 +343,7 @@ export const Dashboard: React.FC = () => {
                 whiteSpace: 'nowrap',
               }}>
                 미발송 {unsentContractOutboundItems.length}건
-              </span>
+ </span>
             </div>
           </summary>
 
@@ -385,7 +382,7 @@ export const Dashboard: React.FC = () => {
                       whiteSpace: 'nowrap',
                     }}>
                       계약서 미발송
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px',
                       fontWeight: 800,
@@ -397,7 +394,7 @@ export const Dashboard: React.FC = () => {
                       whiteSpace: 'nowrap',
                     }}>
                       장비할당 완료 {row.totalAssignedCount}대
-                    </span>
+ </span>
                     <span style={{
                       fontSize: '11px',
                       fontWeight: 700,
@@ -433,7 +430,7 @@ export const Dashboard: React.FC = () => {
                         border: '1px solid rgba(245, 158, 11, 0.3)',
                         whiteSpace: 'nowrap',
                       }}>
-                        상차예정 {row.loadingDateVal}{row.loadingTimeSlotVal ? ` (${row.loadingTimeSlotVal})` : ''}
+                        상차예정 {row.loadingDateVal}{row.loadingTimeSlotVal ? ` · ${row.loadingTimeSlotVal}` : ''}
                       </span>
                     )}
                     {issuedInfo && (
@@ -447,8 +444,8 @@ export const Dashboard: React.FC = () => {
                         border: '1px solid rgba(245, 158, 11, 0.35)',
                         whiteSpace: 'nowrap',
                       }}>
-                        발급이력 {issuedInfo.actor} {issuedInfo.timeStr} (이메일 미발송)
-                      </span>
+                        발급이력 {issuedInfo.actor} {issuedInfo.timeStr} · 이메일 미발송
+ </span>
                     )}
                   </div>
 
@@ -457,8 +454,8 @@ export const Dashboard: React.FC = () => {
                       [{row.customerName}] {row.siteName}
                     </span>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#4f46e5' }}>
-                      {equipSummary} ({assignedAssetSummary})
-                    </span>
+                      {equipSummary} · {assignedAssetSummary}
+ </span>
                   </div>
 
                   <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -466,7 +463,7 @@ export const Dashboard: React.FC = () => {
                     <span>계약번호: <strong>{row.contractNo}</strong></span>
                     <span>요청자: <strong>{row.requesterName}</strong></span>
                     {row.siteContactName && row.siteContactName !== '-' && (
-                      <span>현장담당자: {row.siteContactName}{row.siteContactPhone && row.siteContactPhone !== '-' ? ` (${row.siteContactPhone})` : ''}</span>
+                      <span>현장담당자: {row.siteContactName}{row.siteContactPhone && row.siteContactPhone !== '-' ? ` · ${row.siteContactPhone}` : ''}</span>
                     )}
                     {row.siteContactEmail && (
                       <span>수신이메일: {row.siteContactEmail}</span>
@@ -499,7 +496,7 @@ export const Dashboard: React.FC = () => {
                     }}
                   >
                     <FileText size={13} /> 계약서 발송
-                  </button>
+ </button>
 
                   {hasPermission('smart_dispatch4', 'view') && (
                     <button
@@ -563,10 +560,7 @@ export const Dashboard: React.FC = () => {
             <div>
               <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                 가용재고 및 출고예정 현황
-              </div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                모델별 계약가능 재고 · 당사/임차 재고 · 출고예정 일정 통합 조회
-              </div>
+ </div>
             </div>
           </div>
 
@@ -579,7 +573,7 @@ export const Dashboard: React.FC = () => {
               <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>계약가능 재고</span>
               <strong style={{ fontSize: '15px', fontWeight: 900, color: 'var(--primary)' }}>
                 {inventorySummary.availableContractQty}대
-              </strong>
+ </strong>
             </div>
 
             <div style={{
@@ -590,10 +584,10 @@ export const Dashboard: React.FC = () => {
               <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>주기장 현재고</span>
               <strong style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)' }}>
                 {inventorySummary.totalStock}대
-              </strong>
+ </strong>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                (당사 {inventorySummary.stockOwned} / 임차 {inventorySummary.stockRented})
-              </span>
+                당사 {inventorySummary.stockOwned} / 임차 {inventorySummary.stockRented}
+ </span>
             </div>
 
             <div style={{
@@ -605,7 +599,7 @@ export const Dashboard: React.FC = () => {
               <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>출고예정</span>
               <strong style={{ fontSize: '14px', fontWeight: 800, color: inventorySummary.pendingUnassignedCount > 0 ? '#d97706' : 'var(--text-main)' }}>
                 {inventorySummary.pendingUnassignedCount}대
-              </strong>
+ </strong>
             </div>
           </div>
         </div>
@@ -619,7 +613,7 @@ export const Dashboard: React.FC = () => {
           >
             <ClipboardList size={14} />
             가용재고 보기
-          </button>
+ </button>
           {hasPermission('smart_dispatch4', 'view') && (
             <button
               type="button"
@@ -628,7 +622,7 @@ export const Dashboard: React.FC = () => {
               style={{ display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 700 }}
             >
               출고 요청 이동
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -642,17 +636,17 @@ export const Dashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
               <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', backgroundColor: 'var(--primary-light)', padding: '3px 9px', borderRadius: '4px' }}>
                 담당 업무
-              </span>
+ </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   총 <strong>{activeTasks.length}건</strong> 대기
-                </span>
+ </span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
               <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
                 <Bell size={18} color="var(--primary)" /> 업무 목록
-              </h4>
+ </h4>
               <div
                 onClick={e => {
                   e.preventDefault();
@@ -731,22 +725,22 @@ export const Dashboard: React.FC = () => {
                             fontSize: '11px', fontWeight: '900', padding: '2px 8px', borderRadius: '4px',
                             backgroundColor: 'var(--danger)', color: '#fff', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px'
                           }}>
-                            ⚡ 경영진 특별지시
-                          </span>
+                             경영진 특별지시
+ </span>
                         ) : isPackageSend ? (
                           <span style={{
                             fontSize: '11px', fontWeight: '900', padding: '2px 8px', borderRadius: '4px',
                             backgroundColor: '#4f46e5', color: '#fff', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px'
                           }}>
                             <FileText size={11} /> 계약서 미발송
-                          </span>
+ </span>
                         ) : isPackageResend ? (
                           <span style={{
                             fontSize: '11px', fontWeight: '900', padding: '2px 8px', borderRadius: '4px',
                             backgroundColor: 'var(--primary)', color: '#fff', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px'
                           }}>
                             <FileText size={11} /> 패키지 재발송 필요
-                          </span>
+ </span>
                         ) : (
                           <span style={{
                             fontSize: '11px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px',
@@ -770,7 +764,7 @@ export const Dashboard: React.FC = () => {
                             fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px',
                             backgroundColor: 'rgba(245,158,11,0.12)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.25)', whiteSpace: 'nowrap'
                           }}>
-                            📅 마감: {task.dueDate}
+                             마감: {task.dueDate}
                           </span>
                         )}
 
@@ -815,7 +809,7 @@ export const Dashboard: React.FC = () => {
                             whiteSpace: 'nowrap'
                           }}
                         >
-                          <FileText size={13} /> {isPackageSend ? '계약서 발송' : '패키지 재발송 ➔'}
+                          <FileText size={13} /> {isPackageSend ? '계약서 발송' : '패키지 재발송'}
                         </button>
                       )}
 
@@ -849,7 +843,7 @@ export const Dashboard: React.FC = () => {
                           }}
                         >
                           <CheckSquare size={13} /> 조치 결과 보고 & 완료
-                        </button>
+ </button>
                       )}
                     </div>
                   </div>
@@ -865,10 +859,7 @@ export const Dashboard: React.FC = () => {
           <div style={{ display: 'inline-flex', padding: '12px', borderRadius: '50%', backgroundColor: 'var(--success-light)', color: 'var(--success)', marginBottom: '12px' }}>
             <CheckCircle size={36} />
           </div>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0' }}>처리 대기 과제 없음</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
-            권한 범위 내 처리 대기 항목 없음.
-          </p>
+          <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 12px 0' }}>처리 대기 과제 없음</h3>
           <button
             data-uia="btn-refresh-feed"
             type="button"
@@ -880,7 +871,7 @@ export const Dashboard: React.FC = () => {
             style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
             <RefreshCw size={13} /> 피드 새로고침
-          </button>
+ </button>
         </div>
       )}
 
@@ -899,7 +890,7 @@ export const Dashboard: React.FC = () => {
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
               특별지시 조치 결과 보고 및 완료
-            </h3>
+ </h3>
             <p style={{ margin: '0 0 12px 0', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
               {reportingDirectiveTodo.title}
             </p>
@@ -920,7 +911,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => setReportingDirectiveTodo(null)}
               >
                 취소
-              </button>
+ </button>
               <button
                 type="button"
                 className="btn btn-primary btn-sm"

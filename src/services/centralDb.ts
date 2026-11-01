@@ -1,5 +1,5 @@
 // src/services/centralDb.ts
-// 🌐 eBro Platform Central Database Service (ebro-platform-core)
+//  eBro Platform Central Database Service (ebro-platform-core)
 // Tier 1: Control Plane & Global Knowledge Base SSOT
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -147,7 +147,7 @@ export async function saveCentralTenant(tenant: Partial<Tenant> & { id: string }
       payload.stampImageUrl = payload.stampBase64;
     }
 
-    // 🛡️ centralSupabase의 tenants 테이블에 top-level 컬럼이 없는 확장 속성은 features JSONB에 안전 병합
+    //  centralSupabase의 tenants 테이블에 top-level 컬럼이 없는 확장 속성은 features JSONB에 안전 병합
     const mergedFeatures: any = { ...(payload.features || {}) };
     let featuresTouched = Boolean(payload.features);
 
@@ -507,12 +507,12 @@ export async function fetchCentralLatestApk(): Promise<any> {
 
 // ──────────────────────────────────────────────
 // 7. 개발자 권한 물리 단말기 인가 대장
-// 🌐 멀티 테넌트 독립 중앙 플랫폼 SSOT (테넌트 계약과 무관한 영구 보존 Control Plane)
+//  멀티 테넌트 독립 중앙 플랫폼 SSOT (테넌트 계약과 무관한 영구 보존 Control Plane)
 // ──────────────────────────────────────────────
 
 /**
  * 중앙 플랫폼 DB에서 모든 인가된 개발자 물리 단말기 목록 조회
- * (1순위: developer_authorized_devices 테이블 ➔ 2순위: 중앙 테넌트 글로벌 메타)
+ * (1순위: developer_authorized_devices 테이블  2순위: 중앙 테넌트 글로벌 메타)
  */
 export async function fetchCentralDeveloperDevices(): Promise<any[]> {
   // 1순위: developer_authorized_devices 전용 테이블 조회

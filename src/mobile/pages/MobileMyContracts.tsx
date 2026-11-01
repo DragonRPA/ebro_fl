@@ -178,7 +178,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
           compareName(a.siteName, b.siteName, '현장')
         );
       }
-      // 기본값: 고객사 ➔ 고객현장 가나다순 정렬
+      // 기본값: 고객사  고객현장 가나다순 정렬
       return (
         compareName(a.customerName, b.customerName, '거래처') ||
         compareName(a.siteName, b.siteName, '현장') ||
@@ -213,7 +213,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
           </h2>
           <div className="text-[11px] text-slate-400 mt-0.5">
             가동 중 계약 {myContractList.length}건
-          </div>
+ </div>
         </div>
 
         {/* 상태 필터 토글 */}
@@ -228,7 +228,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
             }`}
           >
             가동중
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setFilterStatus('ALL')}
@@ -239,7 +239,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
             }`}
           >
             전체
-          </button>
+ </button>
         </div>
       </div>
 
@@ -261,7 +261,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
             <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 mr-1 whitespace-nowrap">
               <ArrowUpDown className="w-3 h-3 text-blue-400" />
               정렬
-            </span>
+ </span>
             {(
               [
                 { id: 'CUSTOMER_SITE', label: '고객·현장순' },
@@ -292,7 +292,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
               className="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10.5px] font-bold text-slate-300 whitespace-nowrap flex-shrink-0"
             >
               전체 접기
-            </button>
+ </button>
           )}
         </div>
       </div>
@@ -302,7 +302,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
         {myContractList.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800">
             조회된 계약 내역이 없습니다.
-          </div>
+ </div>
         ) : (
           myContractList.map(c => {
             const isAssetsExpanded = expandedCardIds.has(c.id);
@@ -367,7 +367,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[11px] font-bold text-slate-300 whitespace-nowrap">
                       투입 장비 ({c.assignedAssets.length}대)
-                    </span>
+ </span>
                     {!isAssetsExpanded && c.modelSummary && (
                       <span className="text-[10.5px] font-mono text-sky-400 truncate">
                         · {c.modelSummary}
@@ -485,7 +485,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
                       {customers.find(cu => cu.id === selectedContract.customerId)?.transactionStatus === 'BLOCKED' && (
                         <span className="px-1.5 py-0.2 text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded flex-shrink-0">
                           출고제한
-                        </span>
+ </span>
                       )}
                     </div>
                     <h3 className="text-sm font-black text-white truncate">
@@ -720,7 +720,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
                       {selectedContract.assignedAssets.length === 0 ? (
                         <div className="text-center py-4 text-slate-500 text-xs">
                           배정된 장비가 없습니다.
-                        </div>
+ </div>
                       ) : (
                         selectedContract.assignedAssets.map((ast: any, idx: number) => (
                           <div 
@@ -787,7 +787,7 @@ export const MobileMyContracts: React.FC<MobileMyContractsProps> = ({ onOpenCrea
                   className="w-full py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs transition-all active:scale-98"
                 >
                   닫기
-                </button>
+ </button>
               </div>
             </div>
           </div>

@@ -1051,15 +1051,15 @@ class WalkieTalkieService {
       this.recordingStartTime = Date.now();
 
       if (sttOnly) {
-        // 🎙️ [독백의뢰 모드]: MediaRecorder를 아예 켜지 않고 Web Speech API 단독 구동
+        //  [독백의뢰 모드]: MediaRecorder를 아예 켜지 않고 Web Speech API 단독 구동
         // 안드로이드 마이크 독점 충돌이 원천 차단되어 0원/무제한으로 100% 정상 인식됨!
-        this.addDebugLog('[STT ONLY] Starting browser speech recognition exclusively (no MediaRecorder)...');
+        this.addDebugLog('[STT ONLY] Starting browser speech recognition exclusively...');
         this.startBrowserRecognition();
         this.liveTranscriptListeners.forEach(l => { try { l('', 'LISTENING'); } catch {} });
         return true;
       }
 
-      // 🔊 [일반 무전기 모드]: 음성 녹음을 위해 MediaRecorder 구동
+      //  [일반 무전기 모드]: 음성 녹음을 위해 MediaRecorder 구동
       this.addDebugLog('[PTT] getUserMedia() requesting mic...');
       if (!this.currentStream) {
         this.currentStream = await navigator.mediaDevices.getUserMedia({
@@ -1074,7 +1074,7 @@ class WalkieTalkieService {
       }
       this.addDebugLog('[PTT] mic granted: ' + (this.currentStream.getAudioTracks()[0]?.label || 'unknown'));
 
-      // 🌟 범용 오디오 코덱 우선순위:
+      //  범용 오디오 코덱 우선순위:
       // 1순위: audio/mp4 (iOS Safari 및 최신 Chromium 모두 완벽 호환, duration 헤더 정상 산출)
       // 2순위: audio/webm;codecs=opus (Chromium 표준 고음질)
       // 3순위: audio/webm, audio/aac
@@ -1085,7 +1085,7 @@ class WalkieTalkieService {
         'audio/aac'
       ];
       const mimeType = candidates.find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || '';
-      this.addDebugLog(`[PTT] MediaRecorder mimeType="${mimeType || '(browser default)'}"`);
+      this.addDebugLog(`[PTT] MediaRecorder mimeType="${mimeType || ''}"`);
 
       try {
         this.mediaRecorder = new MediaRecorder(this.currentStream, {
@@ -1098,7 +1098,7 @@ class WalkieTalkieService {
       }
       this.mediaRecorder.ondataavailable = (e) => { if (e.data?.size > 0) this.audioChunks.push(e.data); };
       this.mediaRecorder.start();
-      this.addDebugLog('[PTT] recording started (24kbps mono voice)');
+      this.addDebugLog('[PTT] recording started');
 
       // Broadcast talking status
       if (sender) {
@@ -1154,7 +1154,7 @@ class WalkieTalkieService {
     if (sttOnly) {
       this.addDebugLog('[STT ONLY] finalizing browser speech recognition...');
       const transcriptText = await this.stopBrowserRecognition();
-      this.addDebugLog(`[STT ONLY] transcript result: "${transcriptText || '(empty)'}"`);
+      this.addDebugLog(`[STT ONLY] transcript result: "${transcriptText || ''}"`);
 
       const msg: WalkieMessage = {
         id: `walkie-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -1219,11 +1219,11 @@ class WalkieTalkieService {
             createdAt: new Date().toISOString()
           };
 
-          // ⚡ [1] 로컬 화면에 음성 카드 즉시 표출 (0초 반응)
+          //  [1] 로컬 화면에 음성 카드 즉시 표출 (0초 반응)
           this.addHistory(msg);
           this.addDebugLog(`[PTT] msg added to local history: id=${msg.id}`);
 
-          // 🚀 [2] 음성 브로드캐스트 즉시 전송 (상대방도 0초 즉시 청취 가능)
+          //  [2] 음성 브로드캐스트 즉시 전송 (상대방도 0초 즉시 청취 가능)
           if (activeCh) {
             activeCh.send({ type: 'broadcast', event: 'voice', payload: msg })
               .then((status: any) => {
@@ -1236,7 +1236,7 @@ class WalkieTalkieService {
               .catch((e: any) => this.addDebugLog(`[PTT] voice broadcast err: ${e?.message}`));
           }
 
-          // ⚡ [3] Groq LPU Whisper (기본) 및 Cloudflare 백그라운드 전사 호출
+          //  [3] Groq LPU Whisper (기본) 및 Cloudflare 백그라운드 전사 호출
           this.runStt(msg.id, base64, mime, ch);
 
           this.liveTranscriptListeners.forEach(l => { try { l('', 'IDLE'); } catch {} });
@@ -1331,7 +1331,7 @@ class WalkieTalkieService {
     }
     this.sttInProgress = true;
     const t0 = Date.now();
-    this.addDebugLog('[GROQ STT] sending audio to Groq LPU Whisper (/api/groq-stt)...');
+    this.addDebugLog('[GROQ STT] sending audio to Groq LPU Whisper...');
 
     try {
       const res = await fetch('/api/groq-stt', {
@@ -1386,7 +1386,7 @@ class WalkieTalkieService {
       return false;
     } finally {
       this.sttInProgress = false;
-      this.addDebugLog('[GROQ STT] done (sttInProgress=false)');
+      this.addDebugLog('[GROQ STT] done');
     }
   }
 

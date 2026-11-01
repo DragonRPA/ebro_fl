@@ -503,7 +503,7 @@ export const MonthlySafetyChecklistModal: React.FC<Props> = ({
     const monthLabel = yr && mo ? `${yr}년 ${Number(mo)}월` : targetMonth;
 
     const assetSummaryLines = siteActiveAssets
-      .map((a, idx) => `  ${idx + 1}. 모델명: ${a.modelName} / 장비번호: ${a.assetNo}`)
+      .map((a, idx) => ` ${idx + 1}. 모델명: ${a.modelName} / 장비번호: ${a.assetNo}`)
       .join('\n');
 
     setEmailSubject(`[${tenantCorp}] ${custName} (${siteName}) ${monthLabel} 고소작업대 월간 안전점검 체크리스트 송부의 건 (총 ${siteActiveAssets.length}대)`);
@@ -519,7 +519,7 @@ ${tenantCorp} 입니다.
 • 안전점검일시: ${inspectionDate}
 • 점검부서 / 점검자: ${tenantCorp} / ${inspectorName}
 • 점검 대상 장비 (총 ${siteActiveAssets.length}대):
-${assetSummaryLines || '  - 대상 장비 없음'}
+${assetSummaryLines || ' - 대상 장비 없음'}
 
 첨부된 월간 안전점검 체크리스트를 확인하신 후 현장 안전관리에 활용하여 주시기 바랍니다.
 추가 문의사항이나 정비 요청 사항이 있으시면 언제든 연락 주십시오.
@@ -947,7 +947,7 @@ ${contactFooterLine}`
             <ShieldCheck size={20} color="#d97706" />
             <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
               월간 안전점검 체크리스트 생성 및 이메일 발송
-            </h3>
+ </h3>
             <span
               style={{
                 fontSize: '11.5px',
@@ -960,7 +960,7 @@ ${contactFooterLine}`
                 whiteSpace: 'nowrap'
               }}
             >
-              {sentRecordForTargetMonth ? `✓ ${targetMonth}월 발송완료 (${sentRecordForTargetMonth.changeDate})` : `${targetMonth}월 미발송 (매월 1회 정기 발송)`}
+              {sentRecordForTargetMonth ? ` ${targetMonth}월 발송완료 (${sentRecordForTargetMonth.changeDate})` : `${targetMonth}월 미발송 (매월 1회 정기 발송)`}
             </span>
           </div>
           <button
@@ -999,7 +999,7 @@ ${contactFooterLine}`
                 style={{ padding: '5px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}
               >
                 에이전트 실행
-              </button>
+ </button>
             </div>
           )}
 
@@ -1042,7 +1042,7 @@ ${contactFooterLine}`
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   점검 귀속월 (매월 1회)
-                </label>
+ </label>
                 <input
                   type="month"
                   value={targetMonth}
@@ -1069,7 +1069,7 @@ ${contactFooterLine}`
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   안전점검일시 (수정 가능)
-                </label>
+ </label>
                 <input
                   type="date"
                   value={inspectionDate}
@@ -1090,7 +1090,7 @@ ${contactFooterLine}`
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                   점검자 성명 (수정 가능)
-                </label>
+ </label>
                 <input
                   type="text"
                   value={inspectorName}
@@ -1127,16 +1127,16 @@ ${contactFooterLine}`
               <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <CheckCircle2 size={15} color="var(--success)" />
                 현장 사용 중인 자산 전체 목록 (총 {siteActiveAssets.length}대 — 각 자산별 체크리스트 1장씩 생성)
-              </label>
+ </label>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 서식: 고소작업대 월간 안전점검 체크리스트
-              </span>
+ </span>
             </div>
 
             {siteActiveAssets.length === 0 ? (
               <div style={{ padding: '12px', textAlign: 'center', color: 'var(--danger)', fontSize: '12.5px', fontWeight: 600 }}>
                 현재 현장에서 사용 중인 장비가 없습니다.
-              </div>
+ </div>
             ) : (
               <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-card)' }}>
                 <table className="table" style={{ margin: 0, fontSize: '12px' }}>
@@ -1182,7 +1182,7 @@ ${contactFooterLine}`
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                   <Mail size={15} color="#d97706" />
                   현장 안전담당자 이메일 수신인 ({recipients.length}명 지정됨)
-                </label>
+ </label>
                 {recipients.length > 0 ? (
                   <button
                     type="button"
@@ -1200,7 +1200,7 @@ ${contactFooterLine}`
                     }}
                   >
                     전체 해제
-                  </button>
+ </button>
                 ) : availableContacts.length > 0 ? (
                   <button
                     type="button"
@@ -1230,12 +1230,12 @@ ${contactFooterLine}`
                     }}
                   >
                     현장 담당자 전체 선택
-                  </button>
+ </button>
                 ) : null}
               </div>
               <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                 * 현장 안전담당자 최우선 자동 지정 (직접 입력 시 현장 안전담당자로 자동 등록)
-              </span>
+ </span>
             </div>
 
             {/* 선택된 수신인 칩 */}
@@ -1255,7 +1255,7 @@ ${contactFooterLine}`
               {recipients.length === 0 ? (
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', paddingLeft: '4px' }}>
                   지정된 안전담당자 이메일이 없습니다. 아래에서 선택하거나 직접 입력해 주세요.
-                </span>
+ </span>
               ) : (
                 recipients.map(r => (
                   <div
@@ -1354,7 +1354,7 @@ ${contactFooterLine}`
                 }}
               >
                 <Plus size={14} /> 추가
-              </button>
+ </button>
             </div>
 
             {/* 등록된 현장 담당자 선택 도우미 */}
@@ -1363,7 +1363,7 @@ ${contactFooterLine}`
                 <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Users size={12} color="#d97706" />
                   등록된 현장 담당자 선택 (클릭하여 수신인 추가/제외):
-                </span>
+ </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                   {availableContacts.map(c => {
                     const isAdded = recipients.some(r => r.email.toLowerCase() === c.email.toLowerCase());
@@ -1437,7 +1437,7 @@ ${contactFooterLine}`
               <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <FileText size={15} color="var(--primary)" />
                 이메일 제목 및 본문
-              </label>
+ </label>
               <button
                 type="button"
                 onClick={() => setIsEmailContentOpen(prev => !prev)}
@@ -1538,8 +1538,8 @@ ${contactFooterLine}`
               </div>
               {emailSentSuccess && (
                 <span style={{ fontSize: '11.5px', backgroundColor: 'var(--success)', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
-                  ✓ 이메일 발송 완료
-                </span>
+                   이메일 발송 완료
+ </span>
               )}
             </div>
           )}
@@ -1574,7 +1574,7 @@ ${contactFooterLine}`
             }}
           >
             닫기
-          </button>
+ </button>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -1599,7 +1599,7 @@ ${contactFooterLine}`
             >
               <FolderOpen size={14} />
               엑셀 파일 열기
-            </button>
+ </button>
 
             <button
               type="button"
@@ -1623,7 +1623,7 @@ ${contactFooterLine}`
             >
               {isGenerating ? <RefreshCw size={14} className="animate-spin" /> : <FileText size={14} />}
               체크리스트 미리보기
-            </button>
+ </button>
 
             <button
               type="button"

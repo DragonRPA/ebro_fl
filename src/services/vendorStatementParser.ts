@@ -396,7 +396,7 @@ export function parseVendorStatementExcel(
       continue;
     }
 
-    // 💡 [핵심] colAssetNo 컬럼이 없거나 비어있고, rawModelName에 괄호 속 관리번호가 있는 경우 분리 추출
+    //  [핵심] colAssetNo 컬럼이 없거나 비어있고, rawModelName에 괄호 속 관리번호가 있는 경우 분리 추출
     // 예: "S1412AC+ (HS1406)", "SJ3219(신형)(BS1020)", "JCPT1008AC (D1531)", "ES1330L(J71)"
     if (!rawAssetNo && rawModelName) {
       const pMatch = rawModelName.match(/\(([A-Z0-9\-]{2,15})\)/i);

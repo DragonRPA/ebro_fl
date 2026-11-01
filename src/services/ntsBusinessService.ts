@@ -111,7 +111,7 @@ export async function testNtsConnection(serviceKey?: string): Promise<{ success:
           source: json.source,
           message: isLive 
             ? `국세청 공식 API 연동 성공 (${item.b_stt || '정상'})` 
-            : `체크섬 알고리즘 응답 (API키 미인식)`
+            : `체크섬 알고리즘 응답`
         };
       }
     }

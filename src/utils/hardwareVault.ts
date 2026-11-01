@@ -17,13 +17,13 @@ export type { DeveloperDeviceProfile };
 const STORAGE_KEY_AUTHORIZED_DEVICES = 'ebro_authorized_developer_devices_v1';
 const STORAGE_KEY_LOCAL_DEVICE_TOKEN = 'ebro_local_developer_device_token_v1';
 
-// 🔑 개발자 물리 단말기 2단계 인가 마스터 보안키 (사전에 허가된 보안 패스프레이즈)
+//  개발자 물리 단말기 2단계 인가 마스터 보안키 (사전에 허가된 보안 패스프레이즈)
 export const MASTER_HARDWARE_SECURITY_KEY = 'ebro-dev-master-2026!';
 
-// 🚨 비상 마스터 복구 보안키 (단말기 고장, 도난, 분실 시 긴급 Break-Glass 인증용)
+//  비상 마스터 복구 보안키 (단말기 고장, 도난, 분실 시 긴급 Break-Glass 인증용)
 export const EMERGENCY_BREAK_GLASS_KEY = 'ebro-breakglass-recovery-2026!';
 
-// 🖥️ 최초 시스템 등록 기본 공인 개발자 물리 워크스테이션 목록
+//  최초 시스템 등록 기본 공인 개발자 물리 워크스테이션 목록
 export const DEFAULT_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
   {
     id: 'DEV-PC-PRIMARY-01',
@@ -64,7 +64,7 @@ export const DEFAULT_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     deviceId: 'DEV-PC-PRIMARY-02',
     developerId: 'sys-admin',
     developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (Wi-Fi 2 메인 어댑터)',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: 'D4-AB-61-46-47-81',
     hardwareFingerprint: 'HW-D4AB-6146-4781-MASTER',
     platform: 'Win32/x86_64',
@@ -81,14 +81,14 @@ export const DEFAULT_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
     deviceId: 'DEV-PC-PRIMARY-03',
     developerId: 'sys-admin',
     developerName: '대표 개발자 (시스템 총괄)',
-    machineName: 'D-RPA_PRESIDENT (이더넷 I226-V)',
+    machineName: 'D-RPA_PRESIDENT',
     macAddress: '18-3D-2D-58-F1-8C',
     hardwareFingerprint: 'HW-5AA3-E370-24C',
     platform: 'Win32/x86_64',
     status: 'ACTIVE',
     isPrimary: false,
     emergencyBreakGlassUsed: false,
-    note: '공인 개발 단말기 원클릭 등록 (이더넷)',
+    note: '공인 개발 단말기 등록 (이더넷)',
     registeredAt: '2026-10-11T00:00:00.000Z',
     lastVerifiedAt: '2026-10-11T00:00:00.000Z',
     tenant_id: 'tenant-giyeonlift'
@@ -634,7 +634,7 @@ export function reactivateDeveloperDevice(deviceId: string): boolean {
 }
 
 /**
- * 10. 🚨 비상 마스터 복구 인증 실행
+ * 10.  비상 마스터 복구 인증 실행
  * - PC 고장, 도난, 분실 시 긴급 복구키로 개발자 접근을 복원하고 감사 로그를 즉시 생성
  */
 export async function executeBreakGlassEmergencyLogin(params: {
@@ -653,7 +653,7 @@ export async function executeBreakGlassEmergencyLogin(params: {
   if (!params.reason.trim()) {
     return {
       success: false,
-      error: '비상 복구 사유(PC 고장, 도난, 분실 등)를 반드시 입력해야 합니다.'
+      error: '비상 복구 사유를 반드시 입력해야 합니다.'
     };
   }
 
@@ -678,7 +678,7 @@ export async function executeBreakGlassEmergencyLogin(params: {
       targetMenu: 'login',
       targetSubjectId: 'developer_emergency_break_glass',
       targetSubjectName: '개발자 비상 마스터 복구 접속',
-      actionDetail: `🚨 [비상 마스터 복구 접속 승인] 사유: ${params.reason} | 감지 MAC: ${activeMac} | 지문: ${fingerprint} | 플랫폼: ${details.platform} | 신규등록: ${params.registerCurrentDevice ? 'Y' : 'N'}`,
+      actionDetail: ` [비상 마스터 복구 접속 승인] 사유: ${params.reason} | 감지 MAC: ${activeMac} | 지문: ${fingerprint} | 플랫폼: ${details.platform} | 신규등록: ${params.registerCurrentDevice ? 'Y' : 'N'}`,
       isMasked: false,
       createdAt: nowIso
     });

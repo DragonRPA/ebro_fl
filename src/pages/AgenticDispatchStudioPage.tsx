@@ -115,7 +115,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>배차 관제 스튜디오</h2>
           <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', fontWeight: '700' }}>
             헌장 2.3 단일 EXCHANGE 및 왕복할인 자동 적용
-          </span>
+ </span>
         </div>
       </div>
 
@@ -162,7 +162,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleRunAiDispatch(); }}
-            placeholder="자연어로 배차 의뢰를 입력하십시오 (예: 판교 현장 S-45 고장 대차 교체 의뢰)"
+            placeholder="자연어로 배차 의뢰를 입력하십시오"
             style={{ flex: 1, padding: '10px 12px', fontSize: '13px' }}
             data-uia="agentic-dispatch-prompt"
           />
@@ -264,7 +264,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
                   {item.discountAmount > 0 && (
                     <span style={{ fontSize: '11px', color: '#10b981', marginRight: '6px' }} data-uia="badge-exchange-discount">
                       (왕복할인 -₩{item.discountAmount.toLocaleString()})
-                    </span>
+ </span>
                   )}
                   <span>₩{item.finalCost.toLocaleString()}</span>
                 </div>
@@ -276,7 +276,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
                 <ShieldCheck size={13} />
                 헌장 2.3 단일 EXCHANGE 배차 1건 발행 및 왕복할인 정산 완료
-              </span>
+ </span>
               <span>배차 ID: {item.id}</span>
             </div>
           </div>

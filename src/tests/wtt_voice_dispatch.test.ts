@@ -157,7 +157,7 @@ export function runWttSuite(): WttResult[] {
     if (dt.isAsap) issues.push('일반 시간에 ASAP 잘못 감지');
     results.push({
       scenarioId: 'WTT-DISP-01',
-      name: '표준 단일 출고 (기존 고객 + 기존 현장 + 19ft 1대 + 익일 08:00)',
+      name: '표준 단일 출고',
       axis: '공간(기존) x 시간(익일) x 수량(1대)',
       passed: issues.length === 0,
       issues,
@@ -190,9 +190,9 @@ export function runWttSuite(): WttResult[] {
     const res = parseOptionsAndSpecsVoiceInput(utterance);
     if (!res.paidOptions.includes('4면 철망')) issues.push('4면 철망 누락');
     if (!res.protection.includes('플라베니아')) issues.push('플라베니아 누락');
-    if (!res.checkedSpecs['spec3']) issues.push('협착방지봉(spec3) 누락');
-    if (!res.checkedSpecs['spec4']) issues.push('원판(spec4) 누락');
-    if (!res.checkedSpecs['spec13']) issues.push('소화기(spec13) 누락');
+    if (!res.checkedSpecs['spec3']) issues.push('협착방지봉 누락');
+    if (!res.checkedSpecs['spec4']) issues.push('원판 누락');
+    if (!res.checkedSpecs['spec13']) issues.push('소화기 누락');
     results.push({
       scenarioId: 'WTT-DISP-03',
       name: '유상옵션(4면 철망) + 바닥보양(플라베니아) + 요구사양 3EA',
@@ -244,7 +244,7 @@ export function runWttSuite(): WttResult[] {
     if (totalQty !== 4) issues.push(`총 수량 오류: ${totalQty} (기대치: 4)`);
     results.push({
       scenarioId: 'WTT-DISP-06',
-      name: '복합 다종 동시 발주 (19ft 2대 + 26ft 광폭 1대 + 40ft 1대 = 총 4대)',
+      name: '복합 다종 동시 발주',
       axis: '수량(복합 다종 4대)',
       passed: issues.length === 0,
       issues,
@@ -261,7 +261,7 @@ export function runWttSuite(): WttResult[] {
     }
     results.push({
       scenarioId: 'WTT-DISP-07',
-      name: '물리 공간 제약 (지하 2층 진입, 높이제한 2.3m, 지게차 하차)',
+      name: '물리 공간 제약',
       axis: '공간(지하) x 물리(진입제한)',
       passed: issues.length === 0,
       issues,
@@ -291,7 +291,7 @@ export function runWttSuite(): WttResult[] {
     if (!cust || cust.transactionStatus !== 'BLOCKED') issues.push('거래정지 상태 인식 실패');
     results.push({
       scenarioId: 'WTT-DISP-09',
-      name: '거래 정지(BLOCKED) 고객사 출고 원천 차단 거버넌스 가드',
+      name: '거래 정지 고객사 출고 원천 차단 거버넌스 가드',
       axis: '비용/거버넌스(신용 위험 차단)',
       passed: issues.length === 0,
       issues,
@@ -321,7 +321,7 @@ export function runWttSuite(): WttResult[] {
     });
   }
 
-  // WTT-DISP-11: [신규] 현장 담당자 확인 - 긍정 ("네") ➔ 기존 정보 유지
+  // WTT-DISP-11: [신규] 현장 담당자 확인 - 긍정 ("네")  기존 정보 유지
   {
     const issues: string[] = [];
     const answer = parseYesNoVoiceInput('네, 맞습니다');
@@ -333,7 +333,7 @@ export function runWttSuite(): WttResult[] {
     if (confirmedName !== '박소장' || confirmedPhone !== '010-5555-6666') issues.push('기존 담당자 유지 실패');
     results.push({
       scenarioId: 'WTT-DISP-11',
-      name: '현장 담당자 확인 ("박소장인가요?") ➔ "네, 맞습니다" (기존 정보 100% 유지)',
+      name: '현장 담당자 확인 ("박소장인가요?") "네, 맞습니다" (기존 정보 100% 유지)',
       axis: '맥락(담당자 확인: 긍정)',
       passed: issues.length === 0,
       issues,
@@ -341,7 +341,7 @@ export function runWttSuite(): WttResult[] {
     });
   }
 
-  // WTT-DISP-12: [신규] 현장 담당자 확인 - 부정 ("아니요") ➔ 새 성함 ➔ 번호 갱신
+  // WTT-DISP-12: [신규] 현장 담당자 확인 - 부정 ("아니요")  새 성함  번호 갱신
   {
     const issues: string[] = [];
     const answer = parseYesNoVoiceInput('아니요 달라졌어요');
@@ -352,7 +352,7 @@ export function runWttSuite(): WttResult[] {
     if (newPhone !== '010-1234-5678') issues.push('새 전화번호 파싱 실패');
     results.push({
       scenarioId: 'WTT-DISP-12',
-      name: '현장 담당자 확인 ➔ "아니요" ➔ 새 성함 ("김철수 소장") ➔ 번호 ("010-1234-5678") 갱신',
+      name: '현장 담당자 확인 "아니요" 새 성함 ("김철수 소장") 번호 ("010-1234-5678") 갱신',
       axis: '맥락(담당자 확인: 부정 분기)',
       passed: issues.length === 0,
       issues,
@@ -367,7 +367,7 @@ export function runWttSuite(): WttResult[] {
     if (phone !== '010-2345-6789') issues.push(`한글 음성 전화번호 파싱 실패: ${phone} (기대치: 010-2345-6789)`);
     results.push({
       scenarioId: 'WTT-DISP-13',
-      name: '한글 음성 전화번호 파싱 ("공일공 이삼사오 육칠팔구" ➔ 010-2345-6789)',
+      name: '한글 음성 전화번호 파싱 ("공일공 이삼사오 육칠팔구" 010-2345-6789)',
       axis: '물리(한국어 음성 번호 인식)',
       passed: issues.length === 0,
       issues,
@@ -390,7 +390,7 @@ export function runWttSuite(): WttResult[] {
     if (!inheritedOptions?.includes('4면 철망') || !inheritedSpecs?.['spec3']) issues.push('옵션/스펙 100% 상속 누락');
     results.push({
       scenarioId: 'WTT-DISP-14',
-      name: '기존 출고 옵션 상속 확인 ➔ "예, 동일합니다" (유상옵션/보양/스펙 100% 상속)',
+      name: '기존 출고 옵션 상속 확인 "예, 동일합니다" (유상옵션/보양/스펙 100% 상속)',
       axis: '맥락(옵션 상속: 긍정)',
       passed: issues.length === 0,
       issues,
@@ -410,7 +410,7 @@ export function runWttSuite(): WttResult[] {
     if (resetOptions !== '' || Object.keys(resetSpecs).length !== 0) issues.push('옵션 초기화 실패');
     results.push({
       scenarioId: 'WTT-DISP-15',
-      name: '기존 출고 옵션 상속 확인 ➔ "아니요, 조건 변경" (옵션 리셋 및 신규 발화 유도)',
+      name: '기존 출고 옵션 상속 확인 "아니요, 조건 변경" (옵션 리셋 및 신규 발화 유도)',
       axis: '맥락(옵션 상속: 부정 분기)',
       passed: issues.length === 0,
       issues,
@@ -418,7 +418,7 @@ export function runWttSuite(): WttResult[] {
     });
   }
 
-  // WTT-DISP-16: 2-턴 쾌속 완결 (기존현장 ➔ 담당자 "네" ➔ 옵션 "예")
+  // WTT-DISP-16: 2-턴 쾌속 완결 (기존현장  담당자 "네"  옵션 "예")
   {
     const issues: string[] = [];
     const site = parseSiteVoiceInput('판교 R&D', mockSites, 'CUST-001');
@@ -427,7 +427,7 @@ export function runWttSuite(): WttResult[] {
     if (!site?.site || contactConfirm !== true || optionConfirm !== true) issues.push('2턴 쾌속 인터뷰 실패');
     results.push({
       scenarioId: 'WTT-DISP-16',
-      name: '기존 현장 ➔ 담당자 "네" ➔ 옵션 "예" (2턴 쾌속 완결 스트레스)',
+      name: '기존 현장 담당자 "네" 옵션 "예" (2턴 쾌속 완결 스트레스)',
       axis: '맥락(최소 조작 쾌속 통과)',
       passed: issues.length === 0,
       issues,
@@ -491,7 +491,7 @@ export function runWttSuite(): WttResult[] {
     if (!dt.date.includes('2026-09-16') || dt.time !== '09:00') issues.push(`상대 일자 계산 오류: ${dt.date} ${dt.time}`);
     results.push({
       scenarioId: 'WTT-DISP-20',
-      name: '상대 일자 계산 ("다음주 수요일 오전 9시" ➔ 2026-09-16 09:00)',
+      name: '상대 일자 계산 ("다음주 수요일 오전 9시" 2026-09-16 09:00)',
       axis: '시간(상대 달력 연산)',
       passed: issues.length === 0,
       issues,
@@ -499,14 +499,14 @@ export function runWttSuite(): WttResult[] {
     });
   }
 
-  // WTT-DISP-21: "일찍" 단독 발화 ➔ ASAP 유도
+  // WTT-DISP-21: "일찍" 단독 발화  ASAP 유도
   {
     const issues: string[] = [];
     const dt = parseDateTimeVoiceInput('내일 아침 일찍 도착');
     if (!dt.isAsap) issues.push('일찍 발화 ASAP 감지 실패');
     results.push({
       scenarioId: 'WTT-DISP-21',
-      name: '"일찍" 단독 발화 ➔ 시간무관 최우선 배차(ASAP) 플래그 유도',
+      name: '"일찍" 단독 발화 시간무관 최우선 배차 플래그 유도',
       axis: '시간(일찍 단독 발화)',
       passed: issues.length === 0,
       issues,
@@ -521,7 +521,7 @@ export function runWttSuite(): WttResult[] {
     if (res.billableToCustomer !== false) issues.push('당사부담 미인식');
     results.push({
       scenarioId: 'WTT-DISP-22',
-      name: '운송비 당사부담 ("운송비는 당사부담으로 처리해" ➔ false)',
+      name: '운송비 당사부담',
       axis: '비용(당사 부담 귀속선)',
       passed: issues.length === 0,
       issues,
@@ -536,7 +536,7 @@ export function runWttSuite(): WttResult[] {
     if (res.vehicleType !== '셀프로더') issues.push('셀프로더 차종 미인식');
     results.push({
       scenarioId: 'WTT-DISP-23',
-      name: '특수 운송 차량 지정 ("셀프로더 세이프티" ➔ 셀프로더)',
+      name: '특수 운송 차량 지정 ("셀프로더 세이프티" 셀프로더)',
       axis: '물리(특수차종)',
       passed: issues.length === 0,
       issues,
@@ -552,7 +552,7 @@ export function runWttSuite(): WttResult[] {
     if (eq1?.order.count !== 2 || eq2?.order.count !== 3) issues.push('고유어 수량 매핑 실패');
     results.push({
       scenarioId: 'WTT-DISP-24',
-      name: '한글 고유어 수량 매핑 ("1930 둘" ➔ 2대, "3246 셋" ➔ 3대)',
+      name: '한글 고유어 수량 매핑 ("1930 둘" 2대, "3246 셋" 3대)',
       axis: '수량(한국어 고유어 수량)',
       passed: issues.length === 0,
       issues,
@@ -570,7 +570,7 @@ export function runWttSuite(): WttResult[] {
     if (!narrow || !wide) issues.push('2632(협폭) 또는 2646(광폭) 매핑 오류');
     results.push({
       scenarioId: 'WTT-DISP-25',
-      name: '동일 피트 차폭 분기 ("26피트 협폭 1대랑 26피트 광폭 2대" ➔ 2632 + 2646)',
+      name: '동일 피트 차폭 분기 ("26피트 협폭 1대랑 26피트 광폭 2대" 2632 + 2646)',
       axis: '수량/물리(차폭 분기 매핑)',
       passed: issues.length === 0,
       issues,
@@ -585,7 +585,7 @@ export function runWttSuite(): WttResult[] {
     if (eq?.order.modelName !== 'GTJZ0812' || eq?.order.count !== 2) issues.push('시노붐 0812 매칭 실패');
     results.push({
       scenarioId: 'WTT-DISP-26',
-      name: '제조사 지식 매트릭스 ("시노붐 0812 2대" ➔ Sinoboom GTJZ0812 2대)',
+      name: '제조사 지식 매트릭스',
       axis: '물리(제조사 지식 매트릭스)',
       passed: issues.length === 0,
       issues,
@@ -600,7 +600,7 @@ export function runWttSuite(): WttResult[] {
     if (eq?.order.modelName !== 'S1614AC+' || eq?.order.ft !== '53ft') issues.push('딩리 53ft 매칭 실패');
     results.push({
       scenarioId: 'WTT-DISP-27',
-      name: '초대형 53피트 규격 매칭 ("딩리 53피트 1대" ➔ Dingli S1614AC+ 1대)',
+      name: '초대형 53피트 규격 매칭',
       axis: '물리(초대형 특수 규격)',
       passed: issues.length === 0,
       issues,
@@ -640,7 +640,7 @@ export function runWttSuite(): WttResult[] {
     });
   }
 
-  // WTT-DISP-30: 음성 위자드 ➔ 종단 상태 머신 및 보존 법칙 종합 검증
+  // WTT-DISP-30: 음성 위자드  종단 상태 머신 및 보존 법칙 종합 검증
   {
     const issues: string[] = [];
     const draft: VoiceOrderDraft = {
@@ -681,7 +681,7 @@ export function runWttSuite(): WttResult[] {
 
     results.push({
       scenarioId: 'WTT-DISP-30',
-      name: '음성 위자드 ➔ 종단 상태 머신 및 3대 보존 법칙 종합 검증',
+      name: '음성 위자드 종단 상태 머신 및 3대 보존 법칙 종합 검증',
       axis: '종단 보존(날짜·수량·비용 3대 법칙)',
       passed: issues.length === 0,
       issues,
@@ -735,7 +735,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-31',
-      name: '옵션 변경 감지 ➔ 이번 출고만 1회성 적용 (현장 마스터 원형 보존)',
+      name: '옵션 변경 감지 이번 출고만 1회성 적용 (현장 마스터 원형 보존)',
       axis: '거버넌스(1회성 옵션 분기 & 마스터 보존)',
       passed: issues.length === 0,
       issues,
@@ -787,7 +787,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-32',
-      name: '옵션 변경 감지 ➔ 현장 기본값으로 저장 (현장 마스터 최신화)',
+      name: '옵션 변경 감지 현장 기본값으로 저장 (현장 마스터 최신화)',
       axis: '관리(현장 마스터 갱신 & 향후 유지)',
       passed: issues.length === 0,
       issues,
@@ -814,8 +814,8 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-33',
-      name: 'STT 오인식 시 들린 내용 1터치 인라인 수정 (Tap-to-Edit Buffer) 및 재파싱 검증',
-      axis: '물리(STT 오인식 보정) x 맥락(인라인 에디터)',
+      name: 'STT 오인식 시 들린 내용 1터치 인라인 수정 및 재파싱 검증',
+      axis: '물리 x 맥락(인라인 에디터)',
       passed: issues.length === 0,
       issues,
       details: { faultySttText, correctedText, parsedResult: correctedParse?.confirmedDescription }
@@ -823,7 +823,7 @@ contact: '010-5555-6666',
   }
 
   // -------------------------------------------------------------
-  // 시나리오 34: 고객사 음성 매칭 실패 ➔ 검색/칩 터치 선택 ➔ 다음 단계 음성 연동
+  // 시나리오 34: 고객사 음성 매칭 실패  검색/칩 터치 선택  다음 단계 음성 연동
   // 5대 축: 공간/맥락(고객사 터치 검색 및 음성 연동)
   // -------------------------------------------------------------
   {
@@ -844,7 +844,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-34',
-      name: '고객사 음성 실패 ➔ 검색/칩 터치 선택 ➔ 다음 단계 음성 연동 검증',
+      name: '고객사 음성 실패 검색/칩 터치 선택 다음 단계 음성 연동 검증',
       axis: '공간/맥락(고객사 검색 칩)',
       passed: issues.length === 0,
       issues,
@@ -853,12 +853,12 @@ contact: '010-5555-6666',
   }
 
   // -------------------------------------------------------------
-  // 시나리오 35: 장비 규격 및 수량 터치 증감 카운터 ➔ 터치 확정 ➔ 하차일시 음성 복귀
+  // 시나리오 35: 장비 규격 및 수량 터치 증감 카운터  터치 확정  하차일시 음성 복귀
   // 5대 축: 수량/물리(장비 규격 터치 선택 & 카운터 연산)
   // -------------------------------------------------------------
   {
     const issues: string[] = [];
-    // 터치 조작 시뮬레이션: 26ft 광폭 (GS-2646) 선택 + 수량 1에서 [+] 2회 클릭 ➔ 3대
+    // 터치 조작 시뮬레이션: 26ft 광폭 (GS-2646) 선택 + 수량 1에서 [+] 2회 클릭  3대
     const touchFt = '26ft';
     const touchModel = 'GS-2646';
     let touchQty = 1;
@@ -874,7 +874,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-35',
-      name: '장비 규격 및 수량 터치 증감 카운터 ➔ 터치 확정 ➔ 하차일시 음성 복귀 검증',
+      name: '장비 규격 및 수량 터치 증감 카운터 터치 확정 하차일시 음성 복귀 검증',
       axis: '수량/물리(인라인 터치 카운터)',
       passed: issues.length === 0,
       issues,
@@ -911,7 +911,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-36',
-      name: '음성 입력 도중 중간 데이터 100% 보존형 일반 폼 핸드오프 (Safe Hand-off) 검증',
+      name: '음성 입력 도중 중간 데이터 100% 보존형 일반 폼 핸드오프 검증',
       axis: '종단 보존(중간 상태 100% 무손실 전달)',
       passed: issues.length === 0,
       issues,
@@ -920,7 +920,7 @@ contact: '010-5555-6666',
   }
 
   // -------------------------------------------------------------
-  // 시나리오 37: PC 대화형 스튜디오 키보드 텍스트 대화 ➔ 우측 폼 필드 동기화 검증
+  // 시나리오 37: PC 대화형 스튜디오 키보드 텍스트 대화  우측 폼 필드 동기화 검증
   // 5대 축: 시간/수량(키보드 텍스트 대화 파싱 및 즉시 동기화)
   // -------------------------------------------------------------
   {
@@ -966,7 +966,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-37',
-      name: 'PC 대화형 스튜디오 키보드 텍스트 대화 ➔ 우측 폼 필드 동기화 검증',
+      name: 'PC 대화형 스튜디오 키보드 텍스트 대화 우측 폼 필드 동기화 검증',
       axis: '시간/수량(키보드 텍스트 대화 파싱 및 즉시 동기화)',
       passed: issues.length === 0,
       issues,
@@ -975,7 +975,7 @@ contact: '010-5555-6666',
   }
 
   // -------------------------------------------------------------
-  // 시나리오 38: PC 대화형 스튜디오 규격 칩 및 수량 카운터 클릭 ➔ 우측 장비 목록 동기화 검증
+  // 시나리오 38: PC 대화형 스튜디오 규격 칩 및 수량 카운터 클릭  우측 장비 목록 동기화 검증
   // 5대 축: 물리/수량(인라인 규격 칩 및 카운터)
   // -------------------------------------------------------------
   {
@@ -992,7 +992,7 @@ contact: '010-5555-6666',
 
     results.push({
       scenarioId: 'WTT-DISP-38',
-      name: 'PC 대화형 스튜디오 규격 칩 및 수량 카운터 클릭 ➔ 우측 장비 목록 동기화 검증',
+      name: 'PC 대화형 스튜디오 규격 칩 및 수량 카운터 클릭 우측 장비 목록 동기화 검증',
       axis: '물리/수량(인라인 규격 칩 및 카운터)',
       passed: issues.length === 0,
       issues,
@@ -1001,7 +1001,7 @@ contact: '010-5555-6666',
   }
 
   // -------------------------------------------------------------
-  // 시나리오 39: PC 대화형 스튜디오 옵션 변경 감지 ➔ saveOptionsToSite 선택값 우측 폼 연동 검증
+  // 시나리오 39: PC 대화형 스튜디오 옵션 변경 감지  saveOptionsToSite 선택값 우측 폼 연동 검증
   // 5대 축: 비용/종단 보존(현장 옵션 마스터 불변 보존)
   // -------------------------------------------------------------
   {
@@ -1026,7 +1026,7 @@ contact: '010-9999-8888',
 
     if (!isDiff) issues.push('옵션 변경 감지 실패');
 
-    // 사용자가 [🔵 이번만 1회성 적용] 선택
+    // 사용자가 [ 이번만 1회성 적용] 선택
     const saveOptionsToSite = false;
 
     // 우측 폼 반영 시뮬레이션
@@ -1039,7 +1039,7 @@ contact: '010-9999-8888',
 
     results.push({
       scenarioId: 'WTT-DISP-39',
-      name: 'PC 대화형 스튜디오 옵션 변경 감지 ➔ saveOptionsToSite 선택값 우측 폼 연동 검증',
+      name: 'PC 대화형 스튜디오 옵션 변경 감지 saveOptionsToSite 선택값 우측 폼 연동 검증',
       axis: '비용/종단 보존(현장 옵션 마스터 불변 보존)',
       passed: issues.length === 0,
       issues,
@@ -1135,7 +1135,7 @@ contact: '010-9999-8888',
 
     results.push({
       scenarioId: 'WTT-DISP-42',
-      name: '초성 자음 임의 전치(Swap) 배제 및 의도왜곡 방지 거버넌스 가드 검증 (ㅅㅂㅇㅇ -> null 안전 차단)',
+      name: '초성 자음 임의 전치 배제 및 의도왜곡 방지 거버넌스 가드 검증',
       axis: '공간/거버넌스(임의 자음 치환 금지 및 거래처 의도왜곡 원천 차단)',
       passed: issues.length === 0,
       issues,
@@ -1246,7 +1246,7 @@ contact: '010-9999-8888',
     results.push({
       scenarioId: 'WTT-DISP-45',
       name: '한글 11종 복자음(겹받침) 자동 분해 정규화 및 초성 연속 타이핑 무결성 검증 (ㅄ -> 백산이엔씨)',
-      axis: '물리/맥락(IME 복자음 자동 분해 및 무오류 매칭)',
+      axis: '물리/맥락',
       passed: issues.length === 0,
       issues,
       details: {
@@ -1315,21 +1315,21 @@ contact: '010-9999-8888',
 // CLI 실행 시 결과 출력
 const testResults = runWttSuite();
 console.log('================================================================');
-console.log(` 🧪 WTT ${testResults.length}회 도메인 관통 스트레스 테스트 실행 결과 리포트`);
+console.log(` WTT ${testResults.length}회 도메인 관통 스트레스 테스트 실행 결과 리포트`);
 console.log('================================================================');
 let passCount = 0;
 testResults.forEach(r => {
-  const statusIcon = r.passed ? '✅ PASS' : '❌ FAIL';
+  const statusIcon = r.passed ? 'PASS' : 'FAIL';
   if (r.passed) passCount++;
   console.log(`[${r.scenarioId}] ${statusIcon} | ${r.name}`);
-  console.log(`    - 5대 축: ${r.axis}`);
+  console.log(` - 5대 축: ${r.axis}`);
   if (!r.passed) {
-    console.log(`    - ⚠️ 발견된 결함/이슈:`);
-    r.issues.forEach(iss => console.log(`      * ${iss}`));
+    console.log(` - 발견된 결함/이슈:`);
+    r.issues.forEach(iss => console.log(` * ${iss}`));
   }
 });
 console.log('----------------------------------------------------------------');
-console.log(`📊 최종 결과: 총 ${testResults.length}개 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
+console.log(` 최종 결과: 총 ${testResults.length}개 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
 console.log('================================================================');
 
 if (passCount !== testResults.length) {

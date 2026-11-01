@@ -256,7 +256,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
             targetDept: '출고배차부',
             type: 'URGENT',
             priority: 'URGENT',
-            title: `[🚨긴급] 폐업 고객사 가동장비 회수 지시: ${cust.name}`,
+            title: `[긴급] 폐업 고객사 가동장비 회수 지시: ${cust.name}`,
             content: `국세청 조회 결과 [${cust.name}]의 폐업(폐업일: ${closedDt})이 공식 확인되었습니다. 현재 현장에 투입된 ${item.rentedCount}대의 렌탈 자산에 대해 즉시 회수 배차 및 임대료 채권 회수를 집행하십시오.`,
             relatedEntityId: cust.id,
             isCompleted: false,
@@ -376,7 +376,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                 국세청 휴폐업 점검
-              </h3>
+ </h3>
             </div>
           </div>
 
@@ -444,7 +444,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               >
                 <Building2 size={13} />
                 매출처 ({customers.length})
-              </button>
+ </button>
               <button
                 type="button"
                 disabled={isScanning}
@@ -466,7 +466,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               >
                 <Layers size={13} />
                 매입처 ({vendors.length})
-              </button>
+ </button>
             </div>
 
             {/* 필터 칩 */}
@@ -487,7 +487,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 }}
               >
                 전체 ({stats.total})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setFilterType('RENTED_RISK')}
@@ -508,7 +508,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               >
                 <Truck size={13} />
                 가동장비 위험 ({stats.rentedRisk})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setFilterType('CLOSED')}
@@ -525,7 +525,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 }}
               >
                 폐업 ({stats.closed})
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={() => setFilterType('ACTIVE')}
@@ -542,7 +542,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 }}
               >
                 정상 ({stats.active})
-              </button>
+ </button>
             </div>
           </div>
 
@@ -620,7 +620,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
             >
               <Key size={14} color="var(--primary)" />
               API 설정
-            </button>
+ </button>
 
             <button
               type="button"
@@ -642,7 +642,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
             >
               <Download size={14} color="#059669" />
               엑셀 내보내기
-            </button>
+ </button>
           </div>
         </div>
 
@@ -661,10 +661,10 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <RefreshCw size={12} style={{ animation: 'nts-spin 1s linear infinite' }} />
                 국세청 공공데이터 공식 DB 대사 진행 중...
-              </span>
+ </span>
               <span>
                 {scanProgress.processed} / {scanProgress.total}개사 ({Math.round((scanProgress.processed / (scanProgress.total || 1)) * 100)}%)
-              </span>
+ </span>
             </div>
             <div style={{
               width: '100%',
@@ -742,7 +742,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 }}>
                   <ShieldCheck size={13} />
                   국세청 대사 완료 ({scanResults.size}건)
-                </span>
+ </span>
               ) : (
                 <span style={{
                   padding: '2px 8px',
@@ -757,7 +757,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 }}>
                   <AlertTriangle size={13} />
                   번호 체크섬 판정 ({scanResults.size}건)
-                </span>
+ </span>
               )
             )}
           </div>
@@ -779,7 +779,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               }}>
                 <AlertTriangle size={12} />
                 가동장비 위험 {stats.rentedRisk}개사
-              </span>
+ </span>
             )}
           </div>
         </div>
@@ -823,7 +823,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 <tr>
                   <td colSpan={10} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                     조회 조건에 해당하는 거래처가 없습니다.
-                  </td>
+ </td>
                 </tr>
               ) : (
                 filteredItems.map((item, idx) => {
@@ -874,7 +874,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             gap: '3px'
                           }}>
                             <AlertCircle size={12} /> 폐업자
-                          </span>
+ </span>
                         ) : isNtsSuspended ? (
                           <span style={{
                             padding: '2px 8px',
@@ -889,7 +889,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             gap: '3px'
                           }}>
                             휴업자
-                          </span>
+ </span>
                         ) : isNtsActive ? (
                           <span style={{
                             padding: '2px 8px',
@@ -904,7 +904,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             gap: '3px'
                           }}>
                             <CheckCircle2 size={12} /> 계속사업자
-                          </span>
+ </span>
                         ) : (
                           <span style={{
                             padding: '2px 6px',
@@ -945,7 +945,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             gap: '4px'
                           }}>
                             <Truck size={12} /> {item.rentedCount}대 가동
-                          </span>
+ </span>
                         ) : (
                           <span style={{ color: 'var(--text-muted, #94a3b8)', fontSize: '11px', fontFamily: 'monospace' }}>0대</span>
                         )}
@@ -964,7 +964,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             border: '1px solid #fca5a5'
                           }}>
                             출고제한
-                          </span>
+ </span>
                         ) : (
                           <span style={{
                             padding: '2px 6px',
@@ -975,7 +975,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             border: '1px solid #a7f3d0'
                           }}>
                             정상거래
-                          </span>
+ </span>
                         )}
                       </td>
 
@@ -1000,11 +1000,11 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                             }}
                           >
                             <ShieldAlert size={12} /> 출고제한/회수 지시
-                          </button>
+ </button>
                         ) : isAlreadyApplied ? (
                           <span style={{ fontSize: '11px', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                             <Check size={12} /> 조치완료
-                          </span>
+ </span>
                         ) : (
                           <span style={{ color: 'var(--text-muted, #cbd5e1)', fontSize: '11px' }}>-</span>
                         )}
@@ -1029,10 +1029,10 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
         }}>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary, #475569)' }}>
             총 <strong>{filteredItems.length}</strong>개사 표시
-            {stats.rentedRisk > 0 && (
+ {stats.rentedRisk > 0 && (
               <span style={{ color: 'var(--danger)', fontWeight: 800, marginLeft: '8px' }}>
                 (가동장비 위험: {stats.rentedRisk}개사 즉시 회수 필요)
-              </span>
+ </span>
             )}
           </div>
 
@@ -1058,7 +1058,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               >
                 <ShieldAlert size={14} />
                 폐업처 일괄 출고제한/회수 지시
-              </button>
+ </button>
             )}
 
             <button
@@ -1077,7 +1077,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               }}
             >
               닫기
-            </button>
+ </button>
           </div>
         </div>
       </div>
@@ -1122,7 +1122,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 <Key size={18} color="var(--primary)" />
                 <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>
                   국세청 공공데이터 API 연동 설정
-                </h3>
+ </h3>
               </div>
               <button
                 type="button"
@@ -1138,7 +1138,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   공공데이터포털 일반 인증키
-                </label>
+ </label>
                 <input
                   type="text"
                   value={configKeyInput}
@@ -1158,7 +1158,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 />
                 <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', marginTop: '2px' }}>
                   공공데이터포털 &gt; '국세청_사업자등록정보 진위확인 및 상태조회 서비스' 발급 승인키
-                </span>
+ </span>
               </div>
 
               {/* 연동 테스트 결과 표시 */}
@@ -1198,7 +1198,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                   gap: '6px'
                 }}>
                   <Check size={14} /> 설정이 성공적으로 저장되었습니다.
-                </div>
+ </div>
               )}
             </div>
 
@@ -1232,7 +1232,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
               >
                 <RefreshCw size={13} />
                 연동 테스트
-              </button>
+ </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
@@ -1251,7 +1251,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                   }}
                 >
                   취소
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleSaveApiKey}
@@ -1268,7 +1268,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                   }}
                 >
                   설정 저장
-                </button>
+ </button>
               </div>
             </div>
           </div>

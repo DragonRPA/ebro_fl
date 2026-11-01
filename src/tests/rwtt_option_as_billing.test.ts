@@ -1,5 +1,5 @@
 // src/tests/rwtt_option_as_billing.test.ts
-// 🔬 옵션 추가장착(유상 AS) 접수 ➔ 조치 완료 ➔ 월말 청구 마법사 연동 RWTT 관통 테스트
+//  옵션 추가장착(유상 AS) 접수  조치 완료  월말 청구 마법사 연동 RWTT 관통 테스트
 import { db, Repair, Billing } from '../services/db';
 
 export interface RwttResult {
@@ -140,7 +140,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
   db.assetInOutLogs = [];
 
   // ══════════════════════════════════════════════════════════════════
-  // [Step 1] 옵션 추가장착 AS 의뢰 접수 (SmartAsRequest ➔ Repairs 티켓 생성)
+  // [Step 1] 옵션 추가장착 AS 의뢰 접수 (SmartAsRequest  Repairs 티켓 생성)
   // ══════════════════════════════════════════════════════════════════
   {
     const issues: string[] = [];
@@ -184,7 +184,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
 
     results.push({
       step: 'Step 1',
-      name: '옵션 추가장착 AS 의뢰 접수 (SmartAsRequest ➔ Repairs 티켓 생성 및 계약/자산 매핑)',
+      name: '옵션 추가장착 AS 의뢰 접수',
       passed: issues.length === 0,
       issues,
       details: { ticketNo: savedTicket?.ticketNo, category: savedTicket?.issueCategory }
@@ -192,7 +192,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // [Step 2] 기사 출동 및 옵션 장착 조치 완료 (FieldAsManagement ➔ 유상 BILLABLE 100,000원 확정 & 차량재고 차감)
+  // [Step 2] 기사 출동 및 옵션 장착 조치 완료 (FieldAsManagement  유상 BILLABLE 100,000원 확정 & 차량재고 차감)
   // ══════════════════════════════════════════════════════════════════
   {
     const issues: string[] = [];
@@ -231,7 +231,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
         status: 'COMPLETED',
         mechanicId: TEST_MECHANIC_ID,
         mechanicName: '정기사',
-        actionTaken: '옵션 추가장착 완료 (상부 협착방지봉 1SET 장착 및 동작 테스트 정상)',
+        actionTaken: '옵션 추가장착 완료',
         resolutionType: 'REPAIR_DONE',
         billableType: 'BILLABLE',
         billableAmount: billableAmount,
@@ -270,12 +270,12 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
     const savedCompletedTicket = db.repairs.find(r => r.id === ticketId);
     if (!savedCompletedTicket?.billableToCustomer) issues.push('billableToCustomer가 true가 아닙니다.');
     if (savedCompletedTicket?.billableAmount !== 100000) issues.push(`유상 청구금액 불일치: ${savedCompletedTicket?.billableAmount}`);
-    if (db.contractHistory.length === 0) issues.push('계약 이력(contractHistory)이 기록되지 않았습니다.');
-    if (db.assetInOutLogs.length === 0) issues.push('자산 이력(assetInOutLogs)이 기록되지 않았습니다.');
+    if (db.contractHistory.length === 0) issues.push('계약 이력이 기록되지 않았습니다.');
+    if (db.assetInOutLogs.length === 0) issues.push('자산 이력이 기록되지 않았습니다.');
 
     results.push({
       step: 'Step 2',
-      name: '기사 출동 및 옵션 장착 조치 완료 (유상 BILLABLE 100,000원 확정 & 차량재고 차감 & 이력 무누락)',
+      name: '기사 출동 및 옵션 장착 조치 완료',
       passed: issues.length === 0,
       issues,
       details: { billableAmount: savedCompletedTicket?.billableAmount, contractHistoryCount: db.contractHistory.length }
@@ -283,7 +283,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // [Step 3] 월말 청구 마법사(Billings)에서 미청구 옵션장착비 자동 포착 ➔ 1회성 청구 생성 완료
+  // [Step 3] 월말 청구 마법사(Billings)에서 미청구 옵션장착비 자동 포착  1회성 청구 생성 완료
   // ══════════════════════════════════════════════════════════════════
   {
     const issues: string[] = [];
@@ -364,7 +364,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
         quantity: 1,
         unitPrice: optionFee,
         amount: optionFee,
-        description: '추가 청구 항목 (유상 AS 연동)',
+        description: '추가 청구 항목',
         createdAt: '2026-10-31T18:00:00Z'
       }
     ];
@@ -398,7 +398,7 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
 
     results.push({
       step: 'Step 3',
-      name: '월말 청구 마법사(Billings)에서 미청구 옵션장착비 자동 포착 ➔ 1회성 청구 생성 및 무누락 바인딩 종단 보존',
+      name: '월말 청구 마법사에서 미청구 옵션장착비 자동 포착 1회성 청구 생성 및 무누락 바인딩 종단 보존',
       passed: issues.length === 0,
       issues,
       details: { billingId, totalAmount: newBilling.totalAmount, unbilledRemainingCount: recheckedUnbilled.length }
@@ -411,22 +411,22 @@ export function runRwttOptionAsBillingSuite(): RwttResult[] {
 // 직접 Node 실행 시 콘솔 출력
 const testResults = runRwttOptionAsBillingSuite();
 console.log('================================================================');
-console.log(` 🔬 RWTT: 옵션 추가장착(유상 AS) ➔ 조치 완료 ➔ 월말 청구 생성 관통 테스트 결과`);
+console.log(` RWTT: 옵션 추가장착 조치 완료 월말 청구 생성 관통 테스트 결과`);
 console.log('================================================================');
 let passCount = 0;
 testResults.forEach(r => {
-  const statusIcon = r.passed ? '✅ PASS' : '❌ FAIL';
+  const statusIcon = r.passed ? 'PASS' : 'FAIL';
   if (r.passed) passCount++;
   console.log(`[${r.step}] ${statusIcon} | ${r.name}`);
   if (!r.passed) {
-    console.log(`    - ⚠️ 결함 내역:`);
-    r.issues.forEach(iss => console.log(`      * ${iss}`));
+    console.log(` - 결함 내역:`);
+    r.issues.forEach(iss => console.log(` * ${iss}`));
   } else {
-    console.log(`    - 상세:`, JSON.stringify(r.details));
+    console.log(` - 상세:`, JSON.stringify(r.details));
   }
 });
 console.log('----------------------------------------------------------------');
-console.log(`📊 최종 검증 결과: 총 ${testResults.length}개 단계 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
+console.log(` 최종 검증 결과: 총 ${testResults.length}개 단계 중 ${passCount}개 통과, ${testResults.length - passCount}개 결함 발견`);
 console.log('================================================================');
 
 if (passCount !== testResults.length) {

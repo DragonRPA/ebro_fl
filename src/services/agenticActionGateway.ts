@@ -50,12 +50,12 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
   {
     name: 'system_check_readiness',
     domain: 'D0_System',
-    description: 'ERP 시스템이 브라우저에서 조작 가능한 준비 상태인지, 인증 세션, 활성 메뉴, DOM 속성(body[data-erp-status="ready"]), 헌장 가드레일 활성화 여부를 종합 진단합니다. 모든 자동화 액션 실행 전에 반드시 이 도구를 먼저 호출하여 준비 상태를 확인하십시오.',
+    description: 'ERP 시스템이 브라우저에서 조작 가능한 준비 상태인지, 인증 세션, 활성 메뉴, DOM 속성, 헌장 가드레일 활성화 여부를 종합 진단합니다. 모든 자동화 액션 실행 전에 반드시 이 도구를 먼저 호출하여 준비 상태를 확인하십시오.',
     charterRule: '헌장 1.1 (최대 편익 및 무누락 안전 운용 원칙)',
     parameters: {
       type: 'object',
       properties: {
-        timeoutMs: { type: 'number', description: '최대 대기 제한시간 (ms, 기본 5000)' }
+        timeoutMs: { type: 'number', description: '최대 대기 제한시간' }
       },
       required: []
     }
@@ -64,7 +64,7 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'dispatch_create_exchange',
     domain: 'D4_Dispatch',
     description: '교환 발생 시 왕복 운송비 할인을 적용하여 단일 EXCHANGE 1건의 왕복 배차를 원자적으로 발행합니다.',
-    charterRule: '헌장 2.3 (단일 EXCHANGE 1건 발행 원칙 및 왕복할인 자동산정)',
+    charterRule: '헌장 2.3',
     parameters: {
       type: 'object',
       properties: {
@@ -83,7 +83,7 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'inspection_approve_outbound',
     domain: 'D5_InOut',
     description: '출고 검수 승인을 마감하고 자산 상태를 대여중으로 즉시 전환합니다.',
-    charterRule: '헌장 1.3 (출고 검수 승인 마감 시 자산 상태 RENTED 전환 원칙)',
+    charterRule: '헌장 1.3',
     parameters: {
       type: 'object',
       properties: {
@@ -114,7 +114,7 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'consumable_bulk_purchase',
     domain: 'D6_Maintenance',
     description: '소모품 구매 신청을 일괄 등록하고 소모품 재고 및 수불 로그를 무누락 반영합니다.',
-    charterRule: '헌장 1.2 (발생 사건 무누락 DB 저장) 및 헌장 5.2 (무음 실패 방지)',
+    charterRule: '헌장 1.2 및 헌장 5.2 (무음 실패 방지)',
     parameters: {
       type: 'object',
       properties: {
@@ -146,7 +146,7 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'bank_match_deposit',
     domain: 'D7_Management',
     description: '통장 입금 내역을 외상매출금 채권과 1:1 대사하고 타행 수수료를 보정하여 대차 차액 0원을 입증합니다.',
-    charterRule: '헌장 3.5 (구텐베르크 Z-패턴) 및 헌장 5.5 (수지 보존 법칙)',
+    charterRule: '헌장 3.5 및 헌장 5.5 (수지 보존 법칙)',
     parameters: {
       type: 'object',
       properties: {
@@ -191,7 +191,7 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'repair_complete_maintenance',
     domain: 'D6_Maintenance',
     description: '장비 정비 완결 보고를 수행하고 자산 상태를 AVAILABLE로 복원하며 정비점수를 0점으로 리셋합니다.',
-    charterRule: '헌장 5.5 (상태 보존 법칙: 정비 완료 시 AVAILABLE 및 점수 0점 복원)',
+    charterRule: '헌장 5.5',
     parameters: {
       type: 'object',
       properties: {
@@ -220,13 +220,13 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'error_report_create',
     domain: 'D9_SystemDev',
     description: '시스템 오류/버그 신고를 등록하고 첨부파일(스크린샷, 엑셀) 및 사용자 환경 정보를 보존합니다.',
-    charterRule: '헌장 1.1 (최대 편익), 헌장 1.2 (발생 사건 무누락 DB 저장) 및 헌장 5.2 (무음 실패 방지)',
+    charterRule: '헌장 1.1 (최대 편익), 헌장 1.2 및 헌장 5.2 (무음 실패 방지)',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string', description: '오류 제목' },
         description: { type: 'string', description: '오류 현상 상세 설명' },
-        category: { type: 'string', description: '오류 분류 (UI_BUG, DATA_ERROR, NETWORK_ERROR, CALCULATION_ERROR, OTHER)', enum: ['UI_BUG', 'DATA_ERROR', 'NETWORK_ERROR', 'CALCULATION_ERROR', 'OTHER'] },
+        category: { type: 'string', description: '오류 분류', enum: ['UI_BUG', 'DATA_ERROR', 'NETWORK_ERROR', 'CALCULATION_ERROR', 'OTHER'] },
         severity: { type: 'string', description: '심각도', enum: ['CRITICAL', 'MAJOR', 'MINOR', 'TRIVIAL'] },
         menuId: { type: 'string', description: '발생 메뉴 ID' },
         menuName: { type: 'string', description: '발생 메뉴명' },
@@ -240,16 +240,16 @@ export const AGENTIC_TOOLS_MANIFEST: AgenticToolDef[] = [
     name: 'error_report_update_status',
     domain: 'D9_SystemDev',
     description: '오류 신고의 처리 상태를 접수 또는 완료로 전환하고 조치 내용과 해결 버전을 무누락 기록합니다.',
-    charterRule: '헌장 1.2 (발생 사건 무누락 DB 저장) 및 헌장 3.1 (건조한 명사·동사 UI 표준)',
+    charterRule: '헌장 1.2 및 헌장 3.1',
     parameters: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: '오류 신고 번호 (예: ERR-202609-001)' },
+        id: { type: 'string', description: '오류 신고 번호' },
         status: { type: 'string', description: '변경 상태', enum: ['IN_PROGRESS', 'COMPLETED', 'CANCELLED'] },
         assigneeName: { type: 'string', description: '담당 조치자 성명' },
         receptionNote: { type: 'string', description: '접수 확인 메모' },
         resolutionNote: { type: 'string', description: '원인 분석 및 조치 내역' },
-        resolvedVersion: { type: 'string', description: '해결 반영 버전 (예: v1.1.0.Build.42)' },
+        resolvedVersion: { type: 'string', description: '해결 반영 버전' },
         rootCause: { type: 'string', description: '근본 원인 분석' }
       },
       required: ['id', 'status']
@@ -355,7 +355,7 @@ export const runAgenticWorkflow = async (prompt: string): Promise<AgenticExecuti
 
     // 가드레일 점검
     const guardrail = checkCharterGuardrails(toolToCall, params);
-    addStep('GUARDRAIL_CHECK', `헌장 2.3 가드레일 사전 점검: ${guardrail.allowed ? '통과 (단일 EXCHANGE 1건 발행 및 왕복할인 ₩60,000 강제)' : '차단'}`, toolToCall, params, guardrail);
+    addStep('GUARDRAIL_CHECK', `헌장 2.3 가드레일 사전 점검: ${guardrail.allowed ? '통과' : '차단'}`, toolToCall, params, guardrail);
 
     if (!guardrail.allowed) {
       return {

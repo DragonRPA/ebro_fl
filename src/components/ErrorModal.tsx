@@ -102,7 +102,7 @@ function extractDdlStatements(message: string, ddlPatch: string): string[] {
   const stmts: string[] = [];
   const text = `${message}\n${ddlPatch}`;
 
-  // 💡 [지능형 누락 컬럼 동적 DDL 추론기] "Could not find the 'columnName' column of 'tableName'" 파싱
+  //  [지능형 누락 컬럼 동적 DDL 추론기] "Could not find the 'columnName' column of 'tableName'" 파싱
   const missingColMatch = text.match(/Could not find the '(\w+)' column of '(\w+)'/i) || text.match(/column ["']?(\w+)["']? of relation ["']?(\w+)["']? does not exist/i);
   if (missingColMatch) {
     const colName = missingColMatch[1];
@@ -116,7 +116,7 @@ function extractDdlStatements(message: string, ddlPatch: string): string[] {
     });
   }
 
-  // 💡 [지능형 누락 테이블 동적 DDL 추론기] "relation 'tableName' does not exist" 파싱
+  //  [지능형 누락 테이블 동적 DDL 추론기] "relation 'tableName' does not exist" 파싱
   const missingTableMatch = text.match(/relation ["']?(\w+)["']? does not exist/i);
   if (missingTableMatch) {
     const tableName = missingTableMatch[1];
@@ -132,9 +132,9 @@ function extractDdlStatements(message: string, ddlPatch: string): string[] {
   if (text.includes('deliveries_status_check') || text.includes('deliveries_reconciliationStatus_check') || text.includes('deliveries_dispatchCategory_check') || (text.includes('deliveries') && text.includes('check constraint'))) {
     const deliveryCheckDdl = [
       `ALTER TABLE "deliveries" DROP CONSTRAINT IF EXISTS "deliveries_status_check";`,
-      `ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_status_check" CHECK (status IN ('PENDING', 'REQUESTED', 'DISPATCHED', 'DELIVERED', 'COMPLETED', 'CANCELLED'));`,
+      `ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_status_check" CHECK (status IN);`,
       `ALTER TABLE "deliveries" DROP CONSTRAINT IF EXISTS "deliveries_reconciliationStatus_check";`,
-      `ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_reconciliationStatus_check" CHECK ("reconciliationStatus" IN ('PENDING', 'MATCHED', 'MISMATCH', 'RECONCILED', 'PAYMENT_REQUESTED', 'PAID', 'SETTLED', 'UNRECONCILED', 'NONE'));`,
+      `ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_reconciliationStatus_check" CHECK ("reconciliationStatus" IN);`,
       `ALTER TABLE "deliveries" DROP CONSTRAINT IF EXISTS "deliveries_dispatchCategory_check";`,
       `ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_dispatchCategory_check" CHECK ("dispatchCategory" IN ('출고', '입고', '반납', '정비', '이동', '교환'));`,
       `NOTIFY pgrst, 'reload schema';`
@@ -147,7 +147,7 @@ function extractDdlStatements(message: string, ddlPatch: string): string[] {
   if (text.includes('billings_status_check') || (text.includes('billings') && text.includes('check constraint'))) {
     const billingsCheckDdl = [
       `ALTER TABLE "billings" DROP CONSTRAINT IF EXISTS "billings_status_check";`,
-      `ALTER TABLE "billings" ADD CONSTRAINT "billings_status_check" CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'REQUESTED', 'REJECTED'));`,
+      `ALTER TABLE "billings" ADD CONSTRAINT "billings_status_check" CHECK (status IN);`,
       `NOTIFY pgrst, 'reload schema';`
     ];
     billingsCheckDdl.forEach(s => {
@@ -211,7 +211,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
   const [patchExecuted, setPatchExecuted] = useState(false);
   const [patchResultMsg, setPatchResultMsg] = useState('');
 
-  // 💡 모달 목적 자동 판별: 코드상 에러 vs 업무 안내/선결 처리 부재
+  //  모달 목적 자동 판별: 코드상 에러 vs 업무 안내/선결 처리 부재
   const effectivePurpose: ModalPurpose = useMemo(() => {
     return detectModalPurpose(message, title, type);
   }, [message, title, type]);
@@ -265,19 +265,19 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
 
     try {
       if (!supabase) {
-        setPatchResultMsg('⚠️ Supabase 데이터베이스 연결이 설정되지 않았습니다.');
+        setPatchResultMsg('Supabase 데이터베이스 연결이 설정되지 않았습니다.');
         return;
       }
 
       const { error } = await supabase.rpc('dev_exec_ddl', { statements: ddlStatements });
       if (error) {
-        setPatchResultMsg(`⚠️ DDL 패치 실행 실패: ${error.message}\n\n메뉴 [개발자 도구 (DB관리)] 의 [패치 자동 적용] 을 눌러 1회성 Helper 함수를 생성하거나 Supabase SQL Editor에서 실행해 주세요.`);
+        setPatchResultMsg(` DDL 패치 실행 실패: ${error.message}\n\n메뉴 [개발자 도구] 의 [패치 자동 적용] 을 눌러 1회성 Helper 함수를 생성하거나 Supabase SQL Editor에서 실행해 주세요.`);
       } else {
         setPatchExecuted(true);
-        setPatchResultMsg('🎉 [완료] DB 스키마 패치가 원격 DB에 직접 실행되고 스키마 캐시가 리로드되었습니다!\n방금 실패했던 작업을 다시 시도해 주십시오.');
+        setPatchResultMsg('[완료] DB 스키마 패치가 원격 DB에 직접 실행되고 스키마 캐시가 리로드되었습니다!\n방금 실패했던 작업을 다시 시도해 주십시오.');
       }
     } catch (err: any) {
-      setPatchResultMsg(`⚠️ 패치 실행 중 예외 발생: ${err?.message || err}`);
+      setPatchResultMsg(` 패치 실행 중 예외 발생: ${err?.message || err}`);
     } finally {
       setExecutingPatch(false);
     }
@@ -298,7 +298,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 🏛️ [유형 1] 업무 진행 안내 / 제약 펜딩 모달 (건조하고 명확한 비즈니스 가이드)
+  //  [유형 1] 업무 진행 안내 / 제약 펜딩 모달 (건조하고 명확한 비즈니스 가이드)
   // ─────────────────────────────────────────────────────────────
   if (!isSystemError) {
     return (
@@ -413,7 +413,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
               }}
             >
               확인
-            </button>
+ </button>
           </div>
         </div>
       </div>
@@ -421,7 +421,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 🚨 [유형 2] 시스템 / 코드상 에러 모달 (강렬한 경고 & 기술 디버깅 도메인)
+  //  [유형 2] 시스템 / 코드상 에러 모달 (강렬한 경고 & 기술 디버깅 도메인)
   // ─────────────────────────────────────────────────────────────
   return (
     <div 
@@ -493,7 +493,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                 color: '#ffffff'
               }}>
                 개발팀 제보 대상
-              </span>
+ </span>
             </div>
           </div>
           <button
@@ -519,7 +519,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
         <div style={{ padding: '18px' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-main)', margin: '0 0 10px', lineHeight: 1.5, fontWeight: 600 }}>
             시스템 내부 예외 또는 데이터베이스 오류가 감지되었습니다. 아래 <b>[오류 내용 복사]</b> 버튼을 눌러 원인을 개발팀에 제보해 주십시오:
-          </p>
+ </p>
           
           {/* 오류 텍스트 박스 (모노스페이스 다크 터미널 콘솔) */}
           <div style={{
@@ -543,11 +543,11 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                 <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} />
                 <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#94a3b8', marginLeft: '6px', fontWeight: 600 }}>
                   시스템 오류 상세 기록
-                </span>
+ </span>
               </div>
               <span style={{ fontSize: '10.5px', fontFamily: 'monospace', color: '#ef4444', fontWeight: 700 }}>
                 CRITICAL
-              </span>
+ </span>
             </div>
             <textarea
               readOnly
@@ -586,7 +586,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                 <ShieldOff size={15} color="#d97706" />
                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#d97706' }}>
                   RLS 쓰기 차단 감지 — 복구 Policy DDL
-                </span>
+ </span>
               </div>
               <textarea
                 readOnly
@@ -722,7 +722,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
             }}
           >
             확인 및 닫기
-          </button>
+ </button>
         </div>
       </div>
     </div>

@@ -29,7 +29,7 @@ export const UsersPermissions: React.FC = () => {
   const isSuperAdmin = currentUser?.id === 'u-1' || currentUser?.id === 'sys-admin';
   const canSave = hasPermission('permission', 'save');
 
-  // 🏢 현재 테넌트에 노출(활성화)된 메뉴 그룹 및 항목만 필터링 (숨김 페이지 및 개발자 전용 메뉴 배제)
+  //  현재 테넌트에 노출(활성화)된 메뉴 그룹 및 항목만 필터링 (숨김 페이지 및 개발자 전용 메뉴 배제)
   const visibleMenuCategories = useMemo<MenuCategoryGroup[]>(() => {
     const rawHidden = Array.isArray(currentTenant?.hiddenPages) ? currentTenant!.hiddenPages : [];
     const rawAllowed = Array.isArray(currentTenant?.allowedPages) ? currentTenant!.allowedPages : [];
@@ -54,7 +54,7 @@ export const UsersPermissions: React.FC = () => {
   // 상단 메인 탭 ('ROLES': 권한 명칭 정의 마스터 | 'USERS': 직원 권한 상속 배정)
   const [activeTab, setActiveTab] = useState<'ROLES' | 'USERS'>('ROLES');
 
-  // 🔔 인앱 토스트 알림
+  //  인앱 토스트 알림
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ type, text });
@@ -208,7 +208,7 @@ export const UsersPermissions: React.FC = () => {
     return '미배정';
   };
 
-  // 🏛️ 조직계층레벨 계산 (1: 최상위 본사/기연리프트, 2: 1차 사업부서, 3: 2차 하위부서/외국인, 999: 미배정)
+  //  조직계층레벨 계산 (1: 최상위 본사/기연리프트, 2: 1차 사업부서, 3: 2차 하위부서/외국인, 999: 미배정)
   const getDeptHierarchyLevel = (u: User): number => {
     const dName = getDeptName(u);
     if (dName === '미배정') return 999;
@@ -677,7 +677,7 @@ export const UsersPermissions: React.FC = () => {
       return true;
     });
 
-    // 🏛️ 정렬 기준:
+    //  정렬 기준:
     // 1순위: 조직계층레벨 오름차순 (1: 최상위/기연리프트 -> 2: 1차 사업부서 -> 3: 2차 하위부서/외국인 -> 999: 미배정)
     // 2순위: 부서명 오름차순 (가나다순)
     // 3순위: 성명 오름차순 (가나다순)
@@ -753,7 +753,7 @@ export const UsersPermissions: React.FC = () => {
 
   return (
     <div data-hs-observe="users_permissions" data-mid="permission-header" data-subview="permission" data-subview-title="Generated" style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* 🔔 인앱 토스트 */}
+      {/*  인앱 토스트 */}
       {toastMessage && (
         <div data-mid="permission-toast" style={{
           position: 'fixed',
@@ -798,10 +798,10 @@ export const UsersPermissions: React.FC = () => {
           <div>
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
               권한 관리
-            </h1>
+ </h1>
             <span style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
               권한 명칭 정의 및 직원 권한 자동 상속 스튜디오
-            </span>
+ </span>
           </div>
         </div>
 
@@ -834,7 +834,7 @@ export const UsersPermissions: React.FC = () => {
           >
             <Key size={15} />
             권한 명칭 관리 (역할 정의)
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setActiveTab('USERS')}
@@ -856,7 +856,7 @@ export const UsersPermissions: React.FC = () => {
           >
             <Users size={15} />
             직원 권한 상속 배정
-          </button>
+ </button>
         </div>
       </div>
 
@@ -881,11 +881,11 @@ export const UsersPermissions: React.FC = () => {
                 <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Plus size={15} color="var(--primary)" />
                   신규 권한 명칭 등록
-                </div>
+ </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                     권한 명칭 (자유입력)
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={newRoleName}
@@ -905,7 +905,7 @@ export const UsersPermissions: React.FC = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                     권한 설명 (선택)
-                  </label>
+ </label>
                   <input
                     type="text"
                     value={newRoleDesc}
@@ -938,7 +938,7 @@ export const UsersPermissions: React.FC = () => {
                   }}
                 >
                   권한 명칭 생성
-                </button>
+ </button>
               </form>
             )}
 
@@ -1051,7 +1051,7 @@ export const UsersPermissions: React.FC = () => {
                               }}
                             >
                               취소
-                            </button>
+ </button>
                             <button
                               type="button"
                               onClick={() => handleSaveEditRole(role)}
@@ -1068,7 +1068,7 @@ export const UsersPermissions: React.FC = () => {
                               }}
                             >
                               저장
-                            </button>
+ </button>
                           </div>
                         </div>
                       ) : (
@@ -1088,7 +1088,7 @@ export const UsersPermissions: React.FC = () => {
                                 whiteSpace: 'nowrap'
                               }}>
                                 {count}명 상속
-                              </span>
+ </span>
                               {canSave && (
                                 <button
                                   type="button"
@@ -1108,7 +1108,7 @@ export const UsersPermissions: React.FC = () => {
                                   }}
                                 >
                                   수정
-                                </button>
+ </button>
                               )}
                               {!role.isSystem && canSave && count === 0 && (
                                 <button data-hs-trigger="Delete"
@@ -1169,7 +1169,7 @@ export const UsersPermissions: React.FC = () => {
                 <Key size={16} color="var(--primary)" />
                 <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
                   [{selectedRole?.name}] 메뉴 권한 매트릭스
-                </h2>
+ </h2>
                 <span style={{
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -1179,7 +1179,7 @@ export const UsersPermissions: React.FC = () => {
                   color: '#4338ca'
                 }}>
                   상속 직원: {roleUserCountMap[selectedRoleId] || 0}명
-                </span>
+ </span>
                 {isRoleDirty && (
                   <span style={{
                     padding: '2px 6px',
@@ -1190,7 +1190,7 @@ export const UsersPermissions: React.FC = () => {
                     color: 'var(--danger)'
                   }}>
                     미저장 변경사항 있음
-                  </span>
+ </span>
                 )}
               </div>
 
@@ -1213,7 +1213,7 @@ export const UsersPermissions: React.FC = () => {
                     }}
                   >
                     전체 조회 ON
-                  </button>
+ </button>
                   <button data-hs-trigger="Save"
                     type="button"
                     onClick={() => handleAllMenusBulkToggle('save')}
@@ -1230,7 +1230,7 @@ export const UsersPermissions: React.FC = () => {
                     }}
                   >
                     전체 저장 ON
-                  </button>
+ </button>
                   <button
                     type="button"
                     onClick={() => handleAllMenusBulkToggle('off')}
@@ -1247,7 +1247,7 @@ export const UsersPermissions: React.FC = () => {
                     }}
                   >
                     전체 OFF
-                  </button>
+ </button>
                   <button data-hs-trigger="Save"
                     type="button"
                     data-mid='btn-save-permissions' onClick={handleSaveRolePermissions}
@@ -1301,7 +1301,7 @@ export const UsersPermissions: React.FC = () => {
                         <span>{grp.name}</span>
                         <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', fontWeight: 500 }}>
                           ({grp.items.length}개 메뉴)
-                        </span>
+ </span>
                       </div>
 
                       {canSave && (
@@ -1314,7 +1314,7 @@ export const UsersPermissions: React.FC = () => {
                               style={{ cursor: 'pointer' }}
                             />
                             조회 일괄
-                          </label>
+ </label>
                           <label style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary, #475569)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                             <input
                               type="checkbox"
@@ -1323,7 +1323,7 @@ export const UsersPermissions: React.FC = () => {
                               style={{ cursor: 'pointer' }}
                             />
                             저장 일괄
-                          </label>
+ </label>
                         </div>
                       )}
                     </div>
@@ -1388,7 +1388,7 @@ export const UsersPermissions: React.FC = () => {
                                     />
                                     <span style={{ color: perm.canView ? '#2563eb' : 'var(--text-muted, #94a3b8)', fontWeight: perm.canView ? 700 : 400 }}>
                                       조회
-                                    </span>
+ </span>
                                   </label>
                                 </td>
                                 <td style={{ padding: '8px 18px', width: '100px', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -1402,7 +1402,7 @@ export const UsersPermissions: React.FC = () => {
                                     />
                                     <span style={{ color: perm.canSave ? '#16a34a' : 'var(--text-muted, #94a3b8)', fontWeight: perm.canSave ? 700 : 400 }}>
                                       저장/수정
-                                    </span>
+ </span>
                                   </label>
                                 </td>
                               </tr>
@@ -1502,7 +1502,7 @@ export const UsersPermissions: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
                 총 <strong>{filteredUsers.length}</strong>명 / 상속 완료 <strong>{activeUsers.filter(u => u.customRoleId).length}</strong>명 / 차단버튼 허용 <strong style={{ color: '#dc2626' }}>{activeUsers.filter(u => canUserControlCustomerBlock(u, undefined, rolePermissions)).length}</strong>명 / 자동백업 지정 <strong style={{ color: 'var(--primary)' }}>{activeUsers.filter(u => u.autoBackupEnabled).length}</strong>명
-              </span>
+ </span>
               <button
                 type="button"
                 disabled={isRunningManualBackup}
@@ -1543,7 +1543,7 @@ export const UsersPermissions: React.FC = () => {
                 }}
               >
                 백업 폴더 열기
-              </button>
+ </button>
               <button
                 type="button"
                 onClick={handleExportExcel}
@@ -1564,7 +1564,7 @@ export const UsersPermissions: React.FC = () => {
               >
                 <Download size={13} color="#059669" />
                 엑셀 내보내기
-              </button>
+ </button>
             </div>
           </div>
 
@@ -1604,7 +1604,7 @@ export const UsersPermissions: React.FC = () => {
                   <tr>
                     <td colSpan={10} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                       조회된 임직원이 없습니다.
-                    </td>
+ </td>
                   </tr>
                 ) : (
                   sortedUsers.map((user, idx) => {
@@ -1680,7 +1680,7 @@ export const UsersPermissions: React.FC = () => {
                           {isDev ? (
                             <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: 'var(--warning-light)', color: 'var(--warning)' }}>
                               개발자
-                            </span>
+ </span>
                           ) : (
                             <select
                               value={user.role || 'USER'}
@@ -1709,7 +1709,7 @@ export const UsersPermissions: React.FC = () => {
                           {user.role === 'ADMIN' ? (
                             <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 700 }}>
                               전체 마스터 권한 (자동 승계)
-                            </span>
+ </span>
                           ) : (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <select
@@ -1748,7 +1748,7 @@ export const UsersPermissions: React.FC = () => {
                           </span>
                           <span style={{ marginLeft: '8px', color: 'var(--text-muted, #64748b)' }}>
                             ({summary.preview})
-                          </span>
+ </span>
                         </td>
 
                         {/* 미수채권/고객관리 거래처 차단 버튼 노출 통제 */}
@@ -1843,7 +1843,7 @@ export const UsersPermissions: React.FC = () => {
                                 title={`최근 백업 완료: ${user.lastAutoBackupAt.replace('T', ' ').slice(0, 19)}`}
                               >
                                 ({user.lastAutoBackupAt.slice(5, 10)} 완료)
-                              </span>
+ </span>
                             )}
                           </div>
                         </td>
@@ -1866,7 +1866,7 @@ export const UsersPermissions: React.FC = () => {
                             }}
                           >
                             상세
-                          </button>
+ </button>
                         </td>
                       </tr>
                     );
@@ -1914,29 +1914,29 @@ export const UsersPermissions: React.FC = () => {
               <div>
                 <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-main, #0f172a)' }}>
                   [{previewUser.name}] 임직원 상속 권한 명세
-                </h3>
+ </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
                   상속 권한: {customRoles.find(r => r.id === previewUser.customRoleId)?.name || '권한 미지정'} (소속: {getDeptName(previewUser)})
-                </span>
+ </span>
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewUser(null)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted, var(--border-color))' }}
               >
-                ✕
-              </button>
+                
+ </button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
               {previewUser.role === 'ADMIN' ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--success)', fontWeight: 700 }}>
                   최고 관리자 등급으로 전사 모든 메뉴에 대해 조회 및 저장 권한이 상시 허용되어 있습니다.
-                </div>
+ </div>
               ) : !previewUser.customRoleId ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--warning)' }}>
                   현재 상속된 권한 명칭이 없습니다. [직원 권한 상속 배정]에서 권한을 지정해 주십시오.
-                </div>
+ </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {visibleMenuCategories.map(grp => {
@@ -1951,7 +1951,7 @@ export const UsersPermissions: React.FC = () => {
                       <div key={grp.id} style={{ border: '1px solid var(--border-color, var(--border-color))', borderRadius: '6px', overflow: 'hidden' }}>
                         <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-secondary)', fontSize: '12px', fontWeight: 700, color: 'var(--text-main, #0f172a)' }}>
                           {grp.name} ({permittedItems.length}개)
-                        </div>
+ </div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
                           <tbody>
                             {permittedItems.map(item => {
@@ -1996,7 +1996,7 @@ export const UsersPermissions: React.FC = () => {
                 }}
               >
                 닫기
-              </button>
+ </button>
             </div>
           </div>
         </div>

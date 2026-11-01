@@ -290,10 +290,10 @@ contact: '',
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ fontWeight: '700', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={22} color="var(--primary)" /> 운송 거래처 관리
-        </h2>
+ </h2>
       </div>
 
-      {/* 📊 운송사 및 기사 등록 현황 요약 바 */}
+      {/*  운송사 및 기사 등록 현황 요약 바 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
         <div data-mid="stat-transport-company" style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>등록 운송사</span>
@@ -312,7 +312,7 @@ contact: '',
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Truck size={16} /> 운송 거래처 (물류사)
-            </h3>
+ </h3>
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               <button
                 className="btn-secondary"
@@ -320,11 +320,11 @@ contact: '',
                 style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
               >
                 <Download size={13} /> 운송사 엑셀
-              </button>
+ </button>
               {canSave && (
                 <button data-hs-trigger="Register" className="btn-primary" onClick={() => handleOpenCompanyModal()} style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                   <Plus size={14} /> 신규 등록
-                </button>
+ </button>
               )}
             </div>
           </div>
@@ -342,7 +342,7 @@ contact: '',
               }}
             >
               전체 기사 보기 ({transportDrivers.length}명)
-            </div>
+ </div>
 
             {transportCompanies.map(comp => (
               <div 
@@ -400,7 +400,7 @@ contact: '',
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Users size={16} /> 소속 운송 기사 및 차량 정보 (주민번호 / 주소 / 색상)
-            </h3>
+ </h3>
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               <button
                 className="btn-secondary"
@@ -408,11 +408,11 @@ contact: '',
                 style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
               >
                 <Download size={13} /> 기사 엑셀
-              </button>
+ </button>
               {canSave && (
                 <button data-hs-trigger="Register" className="btn-primary" onClick={() => handleOpenDriverModal()} style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                   <Plus size={14} /> 기사 신규 등록
-                </button>
+ </button>
               )}
             </div>
           </div>
@@ -437,7 +437,7 @@ contact: '',
                   <tr>
                     <td colSpan={9} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                       {transportDrivers.length === 0
-                        ? '📭 등록된 기사 정보가 없습니다.'
+                        ? '등록된 기사 정보가 없습니다.'
                         : selectedCompanyId
                           ? '선택한 운송사에 등록된 기사가 없습니다.'
                           : '조회 조건에 맞는 기사 정보가 없습니다.'}
@@ -503,7 +503,7 @@ contact: e.target.value })} placeholder="010-0000-0000" />
 
               {/* 입금 계좌 정보 */}
               <div style={{ padding: '12px', backgroundColor: 'var(--bg-active)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <label style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '8px', display: 'block' }}>🏦 지급 입금 계좌 정보 (계좌 연동)</label>
+                <label style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '8px', display: 'block' }}> 지급 입금 계좌 정보 (계좌 연동)</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
                   <div>
                     <label style={{ fontSize: '11px' }}>은행명</label>

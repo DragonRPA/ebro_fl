@@ -318,7 +318,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
   });
   const [showNavOptions, setShowNavOptions] = useState(false);
 
-  // 🌟 정밀 도로명 주소 다단계 역추적 (siteId -> siteName -> contract -> asset 계약 -> 고객사 현장)
+  //  정밀 도로명 주소 다단계 역추적 (siteId -> siteName -> contract -> asset 계약 -> 고객사 현장)
   const resolvedAddress = useMemo(() => {
     if (!ticket) return '';
     return resolveSiteDetailedAddress({
@@ -341,9 +341,9 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
     return (
       <div className="p-8 text-center text-slate-400">
         티켓을 찾을 수 없습니다.
-        <button onClick={onBack} className="block mt-4 text-blue-400 underline mx-auto">
+ <button onClick={onBack} className="block mt-4 text-blue-400 underline mx-auto">
           목록으로 돌아가기
-        </button>
+ </button>
       </div>
     );
   }
@@ -471,7 +471,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
         billableAmount: billableType === 'BILLABLE' ? Math.max(0, Number(billableAmount) || 0) : 0,
         beforeImage: beforeImages[0] || '',
         afterImage: afterImages[0] || '',
-        customerSignature: customerSignature || '', // 🟢 [누락 복구] 서명 데이터 무누락 DB 전달
+        customerSignature: customerSignature || '', //  [누락 복구] 서명 데이터 무누락 DB 전달
         customerConfirmName: customerConfirmName || ticket.reporterName || '현장확인자',
         partsUsed,
         inspectionItemCode,
@@ -501,7 +501,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
         >
           <ArrowLeft className="w-4 h-4" />
           목록으로
-        </button>
+ </button>
         <span className="text-xs font-mono text-slate-400 font-bold">
           티켓 #{ticket.ticketNo || ticket.id.slice(0, 8)}
         </span>
@@ -562,12 +562,12 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                   className="text-[10px] text-sky-400 hover:text-white px-1.5 py-0.5 rounded bg-sky-900/60 flex-shrink-0 ml-1 whitespace-nowrap"
                 >
                   복사
-                </button>
+ </button>
               </div>
             ) : (
               <div className="text-slate-500 text-[11px]">
                 (상세 도로명 주소 미등록)
-              </div>
+ </div>
             )}
           </div>
         </div>
@@ -628,8 +628,8 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                 }}
                 className={`py-2 px-1 rounded-lg border font-bold text-center ${selectedNavApp === 'TMAP' ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}
               >
-                🔴 T맵
-              </button>
+                 T맵
+ </button>
               <button
                 type="button"
                 onClick={() => {
@@ -640,8 +640,8 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                 }}
                 className={`py-2 px-1 rounded-lg border font-bold text-center ${selectedNavApp === 'KAKAO' ? 'bg-yellow-600 border-yellow-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}
               >
-                🟡 카카오
-              </button>
+                 카카오
+ </button>
               <button
                 type="button"
                 onClick={() => {
@@ -652,18 +652,18 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                 }}
                 className={`py-2 px-1 rounded-lg border font-bold text-center ${selectedNavApp === 'NAVER' ? 'bg-emerald-600 border-emerald-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}
               >
-                🟢 네이버
-              </button>
+                 네이버
+ </button>
             </div>
           </div>
         )}
 
-        {/* 🚐 현장 동선 단계 원클릭 기록 패널 (출발 ➔ 도착 ➔ 작업시작 ➔ 부품수급/재방문 ➔ 다음현장 이동 ➔ 퇴근) */}
+        {/*  현장 동선 단계 원클릭 기록 패널 (출발  도착  작업시작  부품수급/재방문  다음현장 이동  퇴근) */}
         <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-xs font-extrabold text-white whitespace-nowrap">
               동선 단계 기록
-            </span>
+ </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               {(ticket.revisitDate || routeSummary?.revisitScheduledFor) && (
                 <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/35 text-[11px] font-extrabold whitespace-nowrap">
@@ -742,7 +742,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             </button>
           </div>
 
-          {/* 📦 부품 수급 이동 (당사 주기장/타 차량 or 임차처) & 📅 당일 미완결 재방문 예약 */}
+          {/*  부품 수급 이동 (당사 주기장/타 차량 or 임차처) &  당일 미완결 재방문 예약 */}
           <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-800/80">
             <button
               type="button"
@@ -755,10 +755,10 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               }`}
             >
               {routeSummary?.partsSourcingAt
-                ? `📦 부품수급 (${formatTimeHm(routeSummary.partsSourcingAt)})`
+                ? ` 부품수급 (${formatTimeHm(routeSummary.partsSourcingAt)})`
                 : assetSourcingInfo?.ownerType === 'RENTED'
-                  ? `📦 부품수급 (임차처)`
-                  : '📦 부품수급 (주기장/차량)'}
+                  ? ` 부품수급 (임차처)`
+                  : '부품수급 (주기장/차량)'}
             </button>
 
             <button
@@ -776,8 +776,8 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               }`}
             >
               {ticket.revisitDate || routeSummary?.revisitScheduledFor
-                ? `📅 재방문 (${(ticket.revisitDate || routeSummary?.revisitScheduledFor || '').slice(5)})`
-                : '📅 재방문 스케줄 예약'}
+                ? ` 재방문 (${(ticket.revisitDate || routeSummary?.revisitScheduledFor || '').slice(5)})`
+                : '재방문 스케줄 예약'}
             </button>
           </div>
 
@@ -789,7 +789,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               className="py-2 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-bold active:scale-95 whitespace-nowrap"
             >
               주기장 복귀 기록
-            </button>
+ </button>
             <button
               type="button"
               disabled={!!routeStepLoading}
@@ -797,7 +797,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               className="py-2 px-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/40 text-[11px] font-extrabold active:scale-95 whitespace-nowrap"
             >
               금일 퇴근 기록
-            </button>
+ </button>
           </div>
 
           {/* 부품 수급 이동 인라인 시트 */}
@@ -806,7 +806,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-orange-300">
                   부품 수급 이동지 및 필요 부품 기록
-                </span>
+ </span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold">
                   {assetSourcingInfo.ownerLabel}
                 </span>
@@ -870,7 +870,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                               : 'bg-slate-950 text-slate-300 border-slate-700'
                           }`}
                         >
-                          🚐 {m.name}
+                           {m.name}
                         </button>
                       );
                     })}
@@ -881,7 +881,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                 type="text"
                 value={sourcingTargetName}
                 onChange={(e) => setSourcingTargetName(e.target.value)}
-                placeholder="수급 이동지 명칭 (예: 당사 주기장, 김기사 차량 접선, OO렌탈)"
+                placeholder="수급 이동지 명칭"
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white"
               />
 
@@ -978,7 +978,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                   className="py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold"
                 >
                   닫기
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmPartsSourcingInDetail}
@@ -995,7 +995,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             <div className="mt-1 p-3 rounded-xl bg-slate-900 border border-pink-500/45 flex flex-col gap-2">
               <div className="text-xs font-extrabold text-pink-300">
                 당일 미완결 — 타 일자 재방문 스케줄 빠른 등록
-              </div>
+ </div>
               <div className="grid grid-cols-2 gap-1.5">
                 {quickRevisitOptions.map((opt) => (
                   <button
@@ -1054,14 +1054,14 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                   className="py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold"
                 >
                   닫기
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmQuickRevisitInDetail}
                   className="py-2 rounded-lg bg-pink-600 text-white text-xs font-extrabold"
                 >
                   재방문 일정 확정
-                </button>
+ </button>
               </div>
             </div>
           )}
@@ -1070,7 +1070,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             <div className="mt-1 p-3 rounded-xl bg-slate-900 border border-purple-500/40 flex flex-col gap-2">
               <div className="text-xs font-bold text-purple-300">
                 다음 이동 대상 현장AS 선택
-              </div>
+ </div>
               <select
                 value={selectedNextTicketId}
                 onChange={(e) => setSelectedNextTicketId(e.target.value)}
@@ -1106,14 +1106,14 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                   className="py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold"
                 >
                   닫기
-                </button>
+ </button>
                 <button
                   type="button"
                   onClick={handleConfirmMoveNextInDetail}
                   className="py-2 rounded-lg bg-purple-600 text-white text-xs font-extrabold"
                 >
                   이동 기록 저장
-                </button>
+ </button>
               </div>
             </div>
           )}
@@ -1125,7 +1125,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
         <label className="text-sm font-bold text-white flex items-center gap-1.5">
           <Wrench className="w-4 h-4 text-blue-400" />
           현장 조치 내용 입력
-        </label>
+ </label>
 
         {/* 빠른 입력 태그 */}
         <div className="flex flex-wrap gap-1.5">
@@ -1191,7 +1191,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               }`}
             >
               수리 완료
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setResolutionType('REVISIT_NEEDED')}
@@ -1202,7 +1202,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               }`}
             >
               재방문 필요
-            </button>
+ </button>
             <button
               type="button"
               onClick={() => setResolutionType('GUIDED_END')}
@@ -1213,7 +1213,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               }`}
             >
               유선 안내
-            </button>
+ </button>
           </div>
         </div>
 
@@ -1325,7 +1325,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
                 {siteCandidateAssets.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.assetNo} — {a.modelName} [{a.ownerType === 'RENTED' ? '임차' : '자사'}]
-                  </option>
+ </option>
                 ))}
               </optgroup>
             )}
@@ -1359,7 +1359,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               return (
                 <option key={item.consumableId} value={item.consumableId}>
                   {item.modelName} (보유: {item.totalStockQty}개 / 가용: {remainQty}개)
-                </option>
+ </option>
               );
             })}
           </select>
@@ -1388,7 +1388,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               >
                 <div className="text-white font-medium">
                   {part.modelName} × {part.quantity}개
-                </div>
+ </div>
                 <button
                   type="button"
                   onClick={() => handleRemovePart(idx)}
@@ -1418,7 +1418,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
         />
       </div>
 
-      {/* 💰 유상/무상 수리 비용 청구 구분 */}
+      {/*  유상/무상 수리 비용 청구 구분 */}
       <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col gap-3 shadow-lg">
         <label className="text-xs font-bold text-slate-300">수리 비용 청구 구분</label>
         <div className="grid grid-cols-2 gap-2">
@@ -1432,7 +1432,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             }`}
           >
             무상 수리 (임대보증)
-          </button>
+ </button>
           <button
             type="button"
             onClick={() => setBillableType('BILLABLE')}
@@ -1443,7 +1443,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             }`}
           >
             유상 수리 (사용자과실)
-          </button>
+ </button>
         </div>
 
         {billableType === 'BILLABLE' && (
@@ -1501,7 +1501,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
               className="py-4 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-300 font-bold text-sm flex items-center justify-center transition-all whitespace-nowrap"
             >
               접수 취소
-            </button>
+ </button>
             <button
               type="button"
               disabled={isSubmitting}
@@ -1515,7 +1515,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
         ) : (
           <div className="w-full py-4 px-6 rounded-2xl bg-slate-800 text-slate-400 font-bold text-base flex items-center justify-center">
             다른 기사가 접수한 건입니다.
-          </div>
+ </div>
         )}
       </div>
     </div>

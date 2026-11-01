@@ -115,14 +115,14 @@ export function generateDefaultMenuSpecMarkdown(menuId: string): string {
 - **업무 카테고리**: ${modalDef.category}
 - **자동 감지 키워드**: ${modalDef.keywords.map(k => `\`${k}\``).join(', ')}
 
-### 🎯 업무 목적
+###  업무 목적
 ${modalDef.modalName}은 시스템 업무 흐름 중 특정 이벤트가 발생했을 때 독립된 팝업 창구로 진입하여, 필수 체크포인트를 검증하고 단일 완결 액션(승인, 등록, 저장 등)을 완결하는 전용 스튜디오입니다.
 
 ## 2. 화면 주요 컨트롤 및 입력/검증 필드
 ${buttonList}
 
 ## 3. 인공지능 에이전트 자율 연동 가이드
-- **작동 원칙**: 모달이 DOM 상에 활성화(\`detectActiveModalElement\`)된 상태에서만 조작이 가능합니다.
+- **작동 원칙**: 모달이 DOM 상에 활성화된 상태에서만 조작이 가능합니다.
 - **방어 차단**: 필수 입력값이 미충족되었거나 검증이 실패한 경우 최종 완결 버튼이 비활성화되거나 경고 모달이 표출됩니다.
 - **사후 상태 전이**: 완결 버튼 클릭 시 모달이 닫히며 상위 원장 및 이력 DB에 즉시 동기화 적재됩니다.
 `;
@@ -137,21 +137,21 @@ ${buttonList}
   // 주요 버튼 및 기능 목록
   const buttonsSection = manual.annotations.length > 0
     ? manual.annotations
-        .map((a, idx) => `- **[${a.seq || idx + 1}] \`${a.label}\`** (${a.type})\n  - **기능 설명**: ${a.description}\n  - **대상 셀렉터**: \`${a.selector}\`\n  - **안내 힌트**: ${a.positionHint || '자동'}`)
+        .map((a, idx) => `- **[${a.seq || idx + 1}] \`${a.label}\`** (${a.type})\n - **기능 설명**: ${a.description}\n - **대상 셀렉터**: \`${a.selector}\`\n - **안내 힌트**: ${a.positionHint || '자동'}`)
         .join('\n')
     : '- 등록된 주요 버튼 항목이 없습니다.';
 
   // 서브탭 목록
   const subTabsSection = manual.subTabs && manual.subTabs.length > 0
     ? manual.subTabs
-        .map(t => `### 📌 하위 탭: ${t.tabName} (\`${t.tabId}\`)\n- **탭 목적**: ${t.purpose}\n- **핵심 액션**: ${t.keyActions.map(a => `\`${a}\``).join(', ')}`)
+        .map(t => `### 하위 탭: ${t.tabName} (\`${t.tabId}\`)\n- **탭 목적**: ${t.purpose}\n- **핵심 액션**: ${t.keyActions.map(a => `\`${a}\``).join(', ')}`)
         .join('\n\n')
     : '- 하위 탭이 없는 단일 화면입니다.';
 
   // 모달 워크플로우
   const modalsSection = manual.modalWorkflows && manual.modalWorkflows.length > 0
     ? manual.modalWorkflows
-        .map(m => `### 🖼️ 연동 모달: ${m.modalName}\n- **트리거 버튼**: \`${m.triggerButton}\`\n- **핵심 입력/검토 필드**: ${m.keyFields.map(f => `\`${f}\``).join(', ')}\n- **최종 종단 액션**: \`${m.terminalAction}\`\n- **사후 상태 전이**: ${m.afterStateTransition}`)
+        .map(m => `### 연동 모달: ${m.modalName}\n- **트리거 버튼**: \`${m.triggerButton}\`\n- **핵심 입력/검토 필드**: ${m.keyFields.map(f => `\`${f}\``).join(', ')}\n- **최종 종단 액션**: \`${m.terminalAction}\`\n- **사후 상태 전이**: ${m.afterStateTransition}`)
         .join('\n\n')
     : '- 연동된 전용 모달 워크플로우가 없습니다.';
 
@@ -161,9 +161,9 @@ ${buttonList}
         .map((p: any, pIdx: number) => {
           const procId = p.processId || p.id || `proc_${pIdx + 1}`;
           const stepList = (p.steps || [])
-            .map((s: any, sIdx: number) => `  ${s.seq || sIdx + 1}. **${s.label || `단계 ${sIdx + 1}`}**: ${s.description || s.text || ''}`)
+            .map((s: any, sIdx: number) => ` ${s.seq || sIdx + 1}. **${s.label || `단계 ${sIdx + 1}`}**: ${s.description || s.text || ''}`)
             .join('\n');
-          return `### 🔄 단위업무: ${p.title} (\`${procId}\`)\n- **업무 목적**: ${p.description || p.title}\n- **수행 절차 (${p.steps?.length || 0}단계)**:\n${stepList}`;
+          return `### 단위업무: ${p.title} (\`${procId}\`)\n- **업무 목적**: ${p.description || p.title}\n- **수행 절차 (${p.steps?.length || 0}단계)**:\n${stepList}`;
         })
         .join('\n\n')
     : '- 등록된 별도 단위업무 절차형 프로세스가 없습니다.';
@@ -189,7 +189,7 @@ ${buttonList}
 ## 2. 업무 기능 목적
 > **"${manual.objective}"**
 
-### 📋 시작 전제 조건 및 범위 정보
+###  시작 전제 조건 및 범위 정보
 ${manual.scopeInfo}
 
 ## 3. 단위업무 절차
@@ -204,7 +204,7 @@ ${subTabsSection}
 ## 6. 연동 팝업 및 창구 기능
 ${modalsSection}
 
-## 7. 인지 및 조작 순서 (1-Way 동선)
+## 7. 인지 및 조작 순서
 ${seqSection}
 
 ## 8. 최종 완결 확정 결과
@@ -385,7 +385,7 @@ export async function saveMenuSpecMarkdown(menuId: string, markdown: string, upd
   return savedCentral;
 }
 
-// 🤖 MCP (Model Context Protocol) 및 브라우저 콘솔 자율 연동 헬퍼 글로벌 등록
+//  MCP (Model Context Protocol) 및 브라우저 콘솔 자율 연동 헬퍼 글로벌 등록
 if (typeof window !== 'undefined') {
   (window as any).__GET_MENU_SPEC_MARKDOWN__ = loadMenuSpecMarkdown;
   (window as any).__SAVE_MENU_SPEC_MARKDOWN__ = saveMenuSpecMarkdown;

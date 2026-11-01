@@ -13,7 +13,7 @@ export const PwaInstallBanner: React.FC = () => {
   useEffect(() => {
     // 1. 홈 화면 단독 앱 실행 여부 확인
     const isStandaloneMode = 
-      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('').matches ||
       (navigator as any).standalone === true;
     setIsStandalone(isStandaloneMode);
 
@@ -92,10 +92,10 @@ export const PwaInstallBanner: React.FC = () => {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: '700', fontSize: '13px', color: '#ffffff', lineHeight: 1.2 }}>
               홈 화면 바로가기 추가
-            </div>
+ </div>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               가용 재고 조회 화면 단독 실행
-            </div>
+ </div>
           </div>
         </div>
 
@@ -193,7 +193,7 @@ export const PwaInstallBanner: React.FC = () => {
 
             <p style={{ margin: 0, fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5 }}>
               브라우저 메뉴를 통해 홈 화면에 추가하시면 전체화면 단독 앱으로 사용하실 수 있습니다.
-            </p>
+ </p>
 
             {/* 단계별 가이드 박스 (Android vs iOS 맞춤 분기) */}
             <div style={{
@@ -223,10 +223,10 @@ export const PwaInstallBanner: React.FC = () => {
                       flexShrink: 0
                     }}>
                       1
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: 1.4 }}>
                       브라우저 우측 상단의 <strong style={{ color: '#60a5fa' }}><MoreVertical size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> 메뉴(점 세 개)</strong>를 터치합니다.
-                    </div>
+ </div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -244,10 +244,10 @@ export const PwaInstallBanner: React.FC = () => {
                       flexShrink: 0
                     }}>
                       2
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: 1.4 }}>
                       메뉴에서 <strong style={{ color: '#34d399' }}>[앱 설치]</strong> 또는 <strong style={{ color: '#34d399' }}>[홈 화면에 추가]</strong>를 선택합니다.
-                    </div>
+ </div>
                   </div>
                 </>
               ) : (
@@ -268,7 +268,7 @@ export const PwaInstallBanner: React.FC = () => {
                       flexShrink: 0
                     }}>
                       1
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: 1.4 }}>
                       {isIPad ? (
                         <>사파리 브라우저 <strong>상단 우측 툴바</strong>의 <strong style={{ color: '#60a5fa' }}><Share size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> 공유</strong> 아이콘을 터치합니다.</>
@@ -293,10 +293,10 @@ export const PwaInstallBanner: React.FC = () => {
                       flexShrink: 0
                     }}>
                       2
-                    </div>
+ </div>
                     <div style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: 1.4 }}>
                       메뉴를 스크롤하여 <strong style={{ color: '#34d399' }}><PlusSquare size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> 홈 화면에 추가</strong>를 선택합니다.
-                    </div>
+ </div>
                   </div>
                 </>
               )}
@@ -320,7 +320,7 @@ export const PwaInstallBanner: React.FC = () => {
               }}
             >
               확인 완료
-            </button>
+ </button>
           </div>
         </div>
       )}

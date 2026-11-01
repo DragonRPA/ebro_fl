@@ -44,7 +44,7 @@ export const AgenticAiLabPage: React.FC = () => {
     },
     {
       title: '오류 신고 등록 및 단계별 처리',
-      desc: '헌장 1.1/1.2 신고 등록(Ctrl+V 캡처), 접수 배정, 조치 완료 3단계 파이프라인',
+      desc: '헌장 1.1/1.2 신고 등록, 접수 배정, 조치 완료 3단계 파이프라인',
       prompt: '배차 목록 엑셀 내보내기 타임아웃 오류에 대한 신고를 등록하고 상태를 접수 완료로 처리해줘'
     }
   ];
@@ -85,7 +85,7 @@ export const AgenticAiLabPage: React.FC = () => {
     for (let i = 1; i <= 20; i++) {
       const sc = scenarios[(i - 1) % scenarios.length];
       const res = await runAgenticWorkflow(sc);
-      const logLine = `[WTT-AI-${String(i).padStart(2, '0')}] ${sc} ➔ 결과: ${res.status === 'SUCCESS' ? 'PASS' : 'BLOCKED'} (차액: ₩${res.metrics.conservationDiff}, 시간: ${res.metrics.aiSeconds}s)`;
+      const logLine = `[WTT-AI-${String(i).padStart(2, '0')}] ${sc} 결과: ${res.status === 'SUCCESS' ? 'PASS' : 'BLOCKED'} (차액: ₩${res.metrics.conservationDiff}, 시간: ${res.metrics.aiSeconds}s)`;
       logs.push(logLine);
       setStressLog([...logs]);
     }
@@ -105,7 +105,7 @@ export const AgenticAiLabPage: React.FC = () => {
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '3px' }}>
             AI 에이전트 자율 업무 수행 검증 및 전사 표준 헌장 가드레일 테스트베드
-          </div>
+ </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -139,7 +139,7 @@ export const AgenticAiLabPage: React.FC = () => {
         <div className="card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>
             시나리오 프리셋 선택
-          </div>
+ </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {PRESETS.map((p, idx) => (
               <button
@@ -171,7 +171,7 @@ export const AgenticAiLabPage: React.FC = () => {
         <div className="card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>
             자연어 프롬프트 지시
-          </div>
+ </div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -213,22 +213,22 @@ export const AgenticAiLabPage: React.FC = () => {
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>작업 소요 시간</span>
             <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Clock size={16} />
-              <span>{currentResult.metrics.manualMinutes}분 ➔ {currentResult.metrics.aiSeconds}초</span>
+              <span>{currentResult.metrics.manualMinutes}분 {currentResult.metrics.aiSeconds}초</span>
             </div>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
               {currentResult.metrics.timeSavedPercent}% 시간 단축
-            </span>
+ </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>마우스 클릭 및 입력 조작</span>
             <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <MousePointer size={16} />
-              <span>{currentResult.metrics.manualClicks}회 ➔ {currentResult.metrics.aiClicks}회</span>
+              <span>{currentResult.metrics.manualClicks}회 {currentResult.metrics.aiClicks}회</span>
             </div>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
               {currentResult.metrics.clicksSavedPercent}% 조작 감소
-            </span>
+ </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -239,7 +239,7 @@ export const AgenticAiLabPage: React.FC = () => {
             </div>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
               헌장 가드레일 자동 검증
-            </span>
+ </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -250,7 +250,7 @@ export const AgenticAiLabPage: React.FC = () => {
             </div>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
               수지 보존 법칙 100% 충족
-            </span>
+ </span>
           </div>
         </div>
       )}
@@ -304,7 +304,7 @@ export const AgenticAiLabPage: React.FC = () => {
                              step.type === 'GUARDRAIL_CHECK' ? '#d97706' :
                              step.type === 'OBSERVATION' ? '#059669' : '#10b981'
                     }}>
-                      [Step {step.stepNo}: {step.type}] {step.toolName ? `➔ ${step.toolName}` : ''}
+                      [Step {step.stepNo}: {step.type}] {step.toolName ? ` ${step.toolName}` : ''}
                     </span>
                     <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                       {step.timestamp.slice(11, 19)}
@@ -313,7 +313,7 @@ export const AgenticAiLabPage: React.FC = () => {
 
                   {step.thought && (
                     <div style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
-                      💭 {step.thought}
+                       {step.thought}
                     </div>
                   )}
 
@@ -325,7 +325,7 @@ export const AgenticAiLabPage: React.FC = () => {
 
                   {step.output && (
                     <div style={{ marginTop: '4px', color: 'var(--text-secondary)', fontSize: '11.5px' }}>
-                      👁️ {JSON.stringify(step.output)}
+                       {JSON.stringify(step.output)}
                     </div>
                   )}
                 </div>
@@ -334,7 +334,7 @@ export const AgenticAiLabPage: React.FC = () => {
           ) : (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', fontSize: '12.5px' }}>
               상단 [에이전틱 AI 실행] 버튼을 클릭하면 AI의 ReAct 추론 과정이 표시됩니다.
-            </div>
+ </div>
           )}
 
           {/* 20회 연속 스트레스 테스트 실행 로그 */}
@@ -342,7 +342,7 @@ export const AgenticAiLabPage: React.FC = () => {
             <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>
                 연속 스트레스 테스트 로그 ({stressLog.length} / 20)
-              </div>
+ </div>
               <div style={{
                 maxHeight: '140px',
                 overflowY: 'auto',
@@ -366,11 +366,11 @@ export const AgenticAiLabPage: React.FC = () => {
         <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Terminal size={16} color="var(--primary)" />
-            <span>AI 에이전트 도구 매니페스트 (MCP 규격)</span>
+            <span>AI 에이전트 도구 매니페스트</span>
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
             에이전트가 브라우저 DOM 대신 원자적으로 직접 호출할 수 있는 표준 API 목록입니다.
-          </div>
+ </div>
 
           <div style={{ maxHeight: '480px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {AGENTIC_TOOLS_MANIFEST.map((tool, idx) => (
@@ -396,7 +396,7 @@ export const AgenticAiLabPage: React.FC = () => {
                   {tool.description}
                 </div>
                 <div style={{ fontSize: '10.5px', color: 'var(--warning)', fontWeight: '600' }}>
-                  ⚖️ {tool.charterRule}
+                   {tool.charterRule}
                 </div>
               </div>
             ))}
