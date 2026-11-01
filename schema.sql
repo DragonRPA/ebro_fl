@@ -1587,6 +1587,26 @@ CREATE TABLE IF NOT EXISTS error_reports (
 -- ==============================================================================
 -- 🚜 지게차 옵션·부착물 단가 마스터 및 유통 출고 옵션 청구 확장 스키마
 -- ==============================================================================
+CREATE TABLE IF NOT EXISTS developer_authorized_devices (
+    id                        TEXT PRIMARY KEY,
+    "deviceId"                TEXT,
+    "developerId"             TEXT,
+    "developerName"           TEXT,
+    "machineName"             TEXT,
+    "macAddress"              TEXT,
+    "hardwareFingerprint"     TEXT,
+    platform                  TEXT,
+    status                    TEXT DEFAULT 'ACTIVE',
+    "isPrimary"               BOOLEAN DEFAULT FALSE,
+    "emergencyBreakGlassUsed" BOOLEAN DEFAULT FALSE,
+    note                      TEXT,
+    "registeredAt"            TEXT,
+    "lastVerifiedAt"          TEXT,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
 CREATE TABLE IF NOT EXISTS forklift_option_masters (
     id                    TEXT PRIMARY KEY,
     code                  TEXT NOT NULL UNIQUE,
@@ -1693,3 +1713,5 @@ BEGIN
         EXECUTE format('CREATE POLICY "allow_auth_all" ON %I FOR ALL TO authenticated USING (true) WITH CHECK (true);', tbl);
     END LOOP;
 END $$;
+
+NOTIFY pgrst, 'reload schema';

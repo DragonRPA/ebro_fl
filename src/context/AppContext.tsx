@@ -1075,267 +1075,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ─────────────────────────────────────────────────────────
   // 로컬 db 인메모리 스토어 → React state 즉시 동기화 (Supabase pull 없음 — 저장 후 즉각 화면 반영용)
   const refreshAllData = () => {
-    // 💡 헌장 1.2 & 5.2 준수: DB 상에 존재하는 물리적 중복 청구 상세 레코드 완벽 소탕 & 원격 DB(Supabase) 동기 삭제
-    const seen = new Set<string>();
-    const duplicateIds: string[] = [];
-    db.billingDetails.forEach(bd => {
-      const key = `${bd.billingId}_${bd.contractAssetId || ''}_${bd.itemName}_${bd.amount}_${bd.description || ''}`;
-      if (seen.has(key)) {
-        duplicateIds.push(bd.id);
-      } else {
-        seen.add(key);
-      }
-    });
-    if (duplicateIds.length > 0) {
-      duplicateIds.forEach(id => db.deleteRow('billingDetails', id));
-      // 원격 DB에서도 중복 행 물리 삭제 대기
-      db.awaitPendingWrites().catch(err => console.error("BillingDetails cleanup error:", err));
-    }
-
-    // 💡 헌장 1.2 & 5.2 준수: 계약/배차가 존재하지 않는 고아 출고검수의뢰 자동 소탕 & DB 동기 삭제
-    if (db.contracts.length > 0) {
-      const validContractIds = new Set(db.contracts.map(c => c.id));
-      const validDeliveryIds = new Set(db.deliveries.map(d => d.id));
-      const orphanInspections = db.outboundInspections.filter(
-        i => (!i.contractId || !validContractIds.has(i.contractId)) &&
-             (!i.deliveryId || !validDeliveryIds.has(i.deliveryId))
-      );
-      if (orphanInspections.length > 0) {
-        orphanInspections.forEach(i => db.deleteRow('outboundInspections', i.id));
-        db.awaitPendingWrites().catch(err => console.error("Orphan inspections cleanup error:", err));
-      }
-
-      // 💡 헌장 1.1 & 1.2 준수: 취소된 출고 요청(status === 'CANCELLED')에 묶여 잔류하던 검수/체결슬롯 자동 정리 및 자산 임대가능(AVAILABLE) 원복
-      const activeCaIdsFromActiveDeliveries = new Set<string>();
-      db.deliveries.forEach(d => {
-        if (d.status === 'CANCELLED') return;
-        if (!d.cargoItems) return;
-        try {
-          const parsed = JSON.parse(d.cargoItems);
-          if (Array.isArray(parsed)) {
-            parsed.forEach((ci: any) => {
-              if (Array.isArray(ci?.contractAssetIds)) {
-                ci.contractAssetIds.forEach((id: string) => {
-                  if (id) activeCaIdsFromActiveDeliveries.add(id);
-                });
-              }
-            });
-          }
-        } catch {}
-      });
-
-      const cancelledOutbounds = db.deliveries.filter(
-        d => d.status === 'CANCELLED' && (d.type === 'OUTBOUND' || d.type === 'EXCHANGE' || d.dispatchCategory === '출고' || d.dispatchCategory === '교환')
-      );
-      let cancelledCleanupTriggered = false;
-      const candidateRevertAssetIds = new Set<string>();
-      const nowCleanupIso = new Date().toISOString();
-
-      cancelledOutbounds.forEach(deliv => {
-        // 1) 취소된 배차에 직접 연결된 출고검수 레코드 제거
-        const linkedInsps = db.outboundInspections.filter(ins => ins.deliveryId === deliv.id);
-        linkedInsps.forEach(ins => {
-          if (ins.assetId) candidateRevertAssetIds.add(ins.assetId);
-          if (ins.contractAssetId && !activeCaIdsFromActiveDeliveries.has(ins.contractAssetId)) {
-            const caObj = db.contractAssets.find(c => c.id === ins.contractAssetId && (!deliv.contractId || c.contractId === deliv.contractId));
-            if (caObj) {
-              if (caObj.assetId) candidateRevertAssetIds.add(caObj.assetId);
-              db.deleteRow('contractAssets', caObj.id);
-            }
-          }
-          db.deleteRow('outboundInspections', ins.id);
-          cancelledCleanupTriggered = true;
-        });
-
-        // 2) 취소된 배차 cargoItems 내 잔류 contractAssetIds 정리
-        if (deliv.cargoItems) {
-          try {
-            const parsed = JSON.parse(deliv.cargoItems);
-            if (Array.isArray(parsed)) {
-              let hasResidualCaIds = false;
-              parsed.forEach((ci: any) => {
-                if (Array.isArray(ci?.contractAssetIds) && ci.contractAssetIds.length > 0) {
-                  hasResidualCaIds = true;
-                  ci.contractAssetIds.forEach((caId: string) => {
-                    if (!caId || activeCaIdsFromActiveDeliveries.has(caId)) return;
-                    const caObj = db.contractAssets.find(c => c.id === caId && (!deliv.contractId || c.contractId === deliv.contractId));
-                    if (caObj) {
-                      if (caObj.assetId) candidateRevertAssetIds.add(caObj.assetId);
-                      db.deleteRow('contractAssets', caObj.id);
-                      cancelledCleanupTriggered = true;
-                    }
-                  });
-                }
-              });
-              if (hasResidualCaIds) {
-                const cleanedCargo = parsed.map((ci: any) => ({ ...ci, contractAssetIds: [] }));
-                db.updateRow<Delivery>('deliveries', deliv.id, {
-                  cargoItems: JSON.stringify(cleanedCargo),
-                  updatedAt: nowCleanupIso
-                });
-                cancelledCleanupTriggered = true;
-              }
-            }
-          } catch {}
-        }
-      });
-
-      // 3) 취소 슬롯에서 해제된 장비(또는 활성 체결자산이 전혀 없는데 대여중/할당중으로 남은 장비 G14015, G14019 등)를 임대가능(AVAILABLE)으로 복원
-      ['ASSET-0000077', 'ASSET-0000081'].forEach(id => candidateRevertAssetIds.add(id));
-      candidateRevertAssetIds.forEach(assetId => {
-        const stillActiveCa = db.contractAssets.some(
-          ca => ca.assetId === assetId && ca.status !== 'RETURNED' && ca.status !== 'SOLD'
-        );
-        if (!stillActiveCa) {
-          const targetAsset = db.assets.find(a => a.id === assetId);
-          if (targetAsset && (targetAsset.status === 'RENTED' || targetAsset.status === 'ASSIGNED' || targetAsset.status === 'OUTBOUND_INSPECTION' || targetAsset.status === 'AWAITING_TRANSPORT')) {
-            db.updateRow<Asset>('assets', targetAsset.id, {
-              status: 'AVAILABLE',
-              currentCustomerId: null as any,
-              currentSiteId: null as any,
-              contractStart: null as any,
-              contractEnd: null as any,
-              updatedAt: nowCleanupIso
-            });
-            cancelledCleanupTriggered = true;
-          }
-        }
-      });
-
-      if (cancelledCleanupTriggered) {
-        db.awaitPendingWrites().catch(err => console.error("Cancelled outbound cleanup sync error:", err));
-      }
-
-      // 💡 [상차완료 ➔ 하차 예정일 자동 운송완료 및 계약/청구 개시일 동기화]
-      const nowLocal = new Date();
-      const todayLocalStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`;
-      let autoDeliverySyncTriggered = false;
-
-      db.deliveries.forEach(deliv => {
-        if (deliv.status === 'CANCELLED') return;
-        const isLoadedOrDelivered = Boolean(deliv.loadingCompletedAt) || deliv.status === 'DELIVERED' || (deliv.status as string) === 'COMPLETED';
-        if (!isLoadedOrDelivered) return;
-
-        const effUnload = (deliv.unloadingDate || deliv.loadingDate || deliv.scheduledDate || '').slice(0, 10);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(effUnload)) return;
-
-        // 1) 상차완료 상태에서 하차 예정일이 도래(오늘 이하)한 경우 자동으로 운송완료(DELIVERED) 전환
-        if (deliv.status === 'DISPATCHED' && deliv.loadingCompletedAt && effUnload <= todayLocalStr) {
-          db.updateRow<Delivery>('deliveries', deliv.id, {
-            status: 'DELIVERED',
-            unloadingCompletedAt: effUnload,
-            updatedAt: nowCleanupIso
-          });
-          autoDeliverySyncTriggered = true;
-        } else if (deliv.loadingCompletedAt && deliv.unloadingCompletedAt !== effUnload) {
-          db.updateRow<Delivery>('deliveries', deliv.id, {
-            unloadingCompletedAt: effUnload,
-            updatedAt: nowCleanupIso
-          });
-          autoDeliverySyncTriggered = true;
-        }
-
-        // 2) 출고/교환 배차의 경우 하차 예정일 = 운송 완료일 = 계약 개시일 = 청구 개시일 100% 일치 보장
-        const isOutboundLike =
-          deliv.type === 'OUTBOUND' ||
-          deliv.type === 'EXCHANGE' ||
-          deliv.dispatchCategory === '출고' ||
-          deliv.dispatchCategory === '교환';
-
-        if (isOutboundLike && deliv.contractId) {
-          const targetCaIds = new Set<string>();
-          if (deliv.cargoItems) {
-            try {
-              const parsed = typeof deliv.cargoItems === 'string' ? JSON.parse(deliv.cargoItems) : deliv.cargoItems;
-              if (Array.isArray(parsed)) {
-                parsed.forEach((ci: any) => {
-                  if (Array.isArray(ci?.contractAssetIds)) {
-                    ci.contractAssetIds.forEach((id: string) => {
-                      if (id) targetCaIds.add(id);
-                    });
-                  }
-                });
-              }
-            } catch {}
-          }
-          db.outboundInspections
-            .filter(ins => ins.deliveryId === deliv.id && ins.contractAssetId)
-            .forEach(ins => {
-              if (ins.contractAssetId) targetCaIds.add(ins.contractAssetId);
-            });
-
-          if (targetCaIds.size === 0) {
-            const siblingOutbounds = db.deliveries.filter(
-              d => d.contractId === deliv.contractId && d.status !== 'CANCELLED' && (d.type === 'OUTBOUND' || d.type === 'EXCHANGE')
-            );
-            if (siblingOutbounds.length === 1) {
-              db.contractAssets
-                .filter(ca => ca.contractId === deliv.contractId && ca.status !== 'RETURNED' && ca.status !== 'SOLD')
-                .forEach(ca => targetCaIds.add(ca.id));
-            }
-          }
-
-          targetCaIds.forEach(caId => {
-            const caObj = db.contractAssets.find(c => c.id === caId && c.contractId === deliv.contractId);
-            if (!caObj) return;
-            const loadStr = (deliv.loadingDate || deliv.scheduledDate || '').slice(0, 10);
-            const shouldSyncFirstStart =
-              !caObj.firstStartDate ||
-              caObj.firstStartDate === caObj.startDate ||
-              caObj.firstStartDate === loadStr;
-            if (caObj.startDate !== effUnload || caObj.status === 'AWAITING_TRANSPORT' || (shouldSyncFirstStart && caObj.firstStartDate !== effUnload)) {
-              db.updateRow<ContractAsset>('contractAssets', caObj.id, {
-                status: 'RENTED',
-                startDate: effUnload,
-                ...(shouldSyncFirstStart ? { firstStartDate: effUnload } : {})
-              });
-              autoDeliverySyncTriggered = true;
-            }
-            if (caObj.assetId) {
-              const assetObj = db.assets.find(a => a.id === caObj.assetId);
-              if (assetObj && (assetObj.status === 'RENTED' || assetObj.status === 'AWAITING_TRANSPORT') && assetObj.currentCustomerId && (assetObj.contractStart !== effUnload || assetObj.status !== 'RENTED')) {
-                db.updateRow<Asset>('assets', assetObj.id, {
-                  status: 'RENTED',
-                  contractStart: effUnload
-                });
-                autoDeliverySyncTriggered = true;
-              }
-            }
-          });
-
-          db.assetInOutLogs
-            .filter(l => l.deliveryId === deliv.id && l.type === 'OUTBOUND' && l.eventDate !== effUnload)
-            .forEach(l => {
-              db.updateRow<AssetInOutLog>('asset_inout_logs', l.id, {
-                eventDate: effUnload
-              });
-              autoDeliverySyncTriggered = true;
-            });
-
-          const parentContract = db.contracts.find(c => c.id === deliv.contractId);
-          if (parentContract) {
-            const activeCas = db.contractAssets.filter(
-              c => c.contractId === parentContract.id && c.status !== 'RETURNED' && c.status !== 'SOLD' && c.startDate
-            );
-            const earliestStart = activeCas.map(c => c.startDate).filter(Boolean).sort()[0] || effUnload;
-            const needStatusActive = parentContract.status !== 'COMPLETED' && parentContract.status !== 'ACTIVE' && parentContract.status !== 'EXTENDED';
-            if (parentContract.startDate !== earliestStart || needStatusActive) {
-              db.updateRow<Contract>('contracts', parentContract.id, {
-                startDate: earliestStart,
-                ...(needStatusActive ? { status: 'ACTIVE' } : {}),
-                updatedAt: nowCleanupIso
-              });
-              autoDeliverySyncTriggered = true;
-            }
-          }
-        }
-      });
-
-      if (autoDeliverySyncTriggered) {
-        db.awaitPendingWrites().catch(err => console.error("Auto delivery unloading sync error:", err));
-      }
-    }
-
     // 진짜 개발자 계정만 '개발자'로 정규화 (사장/부사장 등 최고관리자 성명 보존)
     db.users.forEach(u => {
       if (u.loginId === 'admin' || u.id === 'sys-admin') {
@@ -1455,10 +1194,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
-      const centralManuals = await fetchCentralEquipmentManuals('AWP');
+      const centralManuals = await fetchCentralEquipmentManuals('FL');
       if (centralManuals && centralManuals.length > 0) {
+        const mergedManuals = [...db.equipmentManuals];
         centralManuals.forEach(cm => {
-          const exists = db.equipmentManuals.find(m => m.id === cm.id);
+          const idx = mergedManuals.findIndex(m => m.id === cm.id);
           const mapped: EquipmentManual = {
             id: cm.id,
             modelName: cm.modelName || '공통',
@@ -1478,13 +1218,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             createdAt: (cm as any).created_at || (cm as any).createdAt || new Date().toISOString(),
             updatedAt: (cm as any).updated_at || (cm as any).updatedAt || new Date().toISOString()
           };
-          if (exists) {
-            db.updateRow('equipmentManuals', cm.id, mapped);
+          if (idx >= 0) {
+            mergedManuals[idx] = mapped;
           } else {
-            db.insertRow('equipmentManuals', mapped);
+            mergedManuals.push(mapped);
           }
         });
-        setEquipmentManuals([...db.equipmentManuals]);
+        db.equipmentManuals = mergedManuals;
+        setEquipmentManuals([...mergedManuals]);
       }
     } catch (err) {
       console.warn('[Central DB Sync] Failed to fetch central equipment manuals:', err);
@@ -1495,19 +1236,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 메뉴별 관련 테이블만 Supabase pull (메뉴 전환 시 호출 — 최신 데이터 보장)
   const MENU_TABLE_MAP: Record<string, string[]> = {
-    'dashboard':            ['deliveries', 'contracts', 'contractAssets', 'outboundInspections', 'repairs', 'customers', 'sites', 'vendors', 'contractHistory', 'billings', 'todos', 'assets', 'products', 'consumablePurchases', 'purchaseSettlements', 'leaveUsages', 'users', 'departments', 'permissions', 'customRoles', 'rolePermissions'],
-    'delivery':             ['deliveries', 'transportCompanies', 'transportDrivers', 'contracts', 'assets', 'sites', 'siteMasters', 'standardOptions', 'printStations', 'printQueue'],
+    'dashboard':            ['deliveries', 'repairs', 'customers', 'sites', 'vendors', 'billings', 'todos', 'assets', 'products', 'consumablePurchases', 'purchaseSettlements', 'leaveUsages', 'users', 'departments', 'permissions', 'customRoles', 'rolePermissions'],
+    'delivery':             ['deliveries', 'transportCompanies', 'transportDrivers', 'assets', 'sites'],
     'transport_master':     ['transportCompanies', 'transportDrivers'],
-    'field_as':             ['repairs', 'assets', 'products', 'users', 'consumables', 'mechanicConsumableStocks', 'customers', 'sites', 'siteMasters', 'contracts', 'contractAssets', 'vendors'],
-    'as_route_tracking':    ['repairs', 'assets', 'products', 'users', 'customers', 'sites', 'siteMasters', 'contracts', 'contractAssets', 'vendors', 'departments'],
-    'smart_as_request':     ['repairs', 'customers', 'sites', 'siteMasters', 'contracts', 'contractAssets', 'assets', 'products', 'vendors'],
+    'field_as':             ['repairs', 'assets', 'products', 'users', 'consumables', 'mechanicConsumableStocks', 'customers', 'sites', 'vendors'],
+    'as_route_tracking':    ['repairs', 'assets', 'products', 'users', 'customers', 'sites', 'vendors', 'departments'],
+    'smart_as_request':     ['repairs', 'customers', 'sites', 'assets', 'products', 'vendors'],
     'repair':               ['repairs', 'assets', 'consumables', 'repairConsumables', 'mechanicConsumableStocks', 'vendors'],
-    'contract':             ['contracts', 'contractAssets', 'contractHistory', 'customers', 'sites', 'siteMasters', 'standardOptions', 'assets', 'products', 'deliveries'],
-    'billing':              ['billings', 'billingDetails', 'payments', 'paymentDepositLinks', 'bankTransactions', 'contracts', 'customers'],
-    'customer':             ['customers', 'contacts', 'sites', 'siteMasters', 'standardOptions'],
+    'contract':             ['customers', 'sites', 'assets', 'products', 'deliveries'],
+    'billing':              ['billings', 'billingDetails', 'payments', 'paymentDepositLinks', 'bankTransactions', 'customers'],
+    'customer':             ['customers', 'contacts', 'sites'],
     'sales_journal':        ['salesJournals', 'customers', 'users', 'departments'],
-    'site_options':         ['siteMasters', 'sites', 'standardOptions', 'customers', 'contracts', 'assets'],
-    'available_inventory':  ['products', 'assets', 'contracts', 'contractAssets', 'deliveries', 'outboundInspections', 'customers', 'sites', 'contractHistory'],
+    'site_options':         ['sites', 'customers', 'assets'],
+    'available_inventory':  ['products', 'assets', 'deliveries', 'customers', 'sites'],
     'product':              ['products', 'assets'],
     'asset':                ['assets', 'products', 'vendors', 'assetInOutLogs'],
     'acquisition_disposal': ['assets', 'products', 'vendors', 'assetInOutLogs'],
@@ -1516,14 +1257,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     'consumable_purchase':  ['consumables', 'consumablePurchases', 'vendors'],
     'consumable_inout':     ['consumables', 'consumableLogs', 'consumablePurchases', 'assets', 'mechanicConsumableStocks'],
     'consumable_stock':     ['consumables', 'consumableLogs', 'mechanicConsumableStocks', 'stocktakingAudits', 'stocktakingAuditItems', 'collectedParts'],
-    'smart_dispatch':       ['deliveries', 'contracts', 'assets', 'sites', 'siteMasters', 'standardOptions', 'transportCompanies', 'transportDrivers', 'printStations', 'printQueue', 'assetInOutLogs'],
-    'smart_dispatch4':      ['customers', 'sites', 'siteMasters', 'standardOptions', 'contacts', 'contracts', 'contractAssets', 'contractHistory', 'deliveries', 'todos', 'outboundInspections', 'assets', 'products', 'assetInOutLogs'],
-    'voice_dispatch':       ['customers', 'sites', 'siteMasters', 'standardOptions', 'contacts', 'contracts', 'deliveries', 'assets', 'products'],
-    'smart_return':         ['deliveries', 'contracts', 'assets', 'sites', 'siteMasters', 'standardOptions', 'transportCompanies', 'transportDrivers', 'printStations', 'printQueue', 'assetInOutLogs'],
-    'asset_inout_history':  ['assetInOutLogs', 'assets', 'customers', 'sites', 'contracts', 'contractAssets', 'deliveries', 'outboundInspections'],
-    'daily_inout':          ['assetInOutLogs', 'assets', 'deliveries', 'contracts', 'contractAssets', 'outboundInspections', 'customers', 'sites'],
-    'dispatch_assign':      ['contracts', 'contractAssets', 'assets', 'outboundInspections', 'deliveries', 'customers', 'sites', 'siteMasters', 'standardOptions', 'contractHistory', 'assetInOutLogs'],
-    'outbound_inspections': ['outboundInspections', 'contracts', 'contractAssets', 'assets', 'customers', 'sites', 'siteMasters', 'standardOptions', 'deliveries', 'assetInOutLogs'],
+    'smart_dispatch':       ['deliveries', 'assets', 'sites', 'transportCompanies', 'transportDrivers', 'assetInOutLogs'],
+    'smart_dispatch4':      ['customers', 'sites', 'contacts', 'deliveries', 'todos', 'assets', 'products', 'assetInOutLogs'],
+    'voice_dispatch':       ['customers', 'sites', 'contacts', 'deliveries', 'assets', 'products'],
+    'smart_return':         ['deliveries', 'assets', 'sites', 'transportCompanies', 'transportDrivers', 'assetInOutLogs'],
+    'asset_inout_history':  ['assetInOutLogs', 'assets', 'customers', 'sites', 'deliveries'],
+    'daily_inout':          ['assetInOutLogs', 'assets', 'deliveries', 'customers', 'sites'],
+    'dispatch_assign':      ['assets', 'deliveries', 'customers', 'sites', 'assetInOutLogs'],
+    'outbound_inspections': ['assets', 'customers', 'sites', 'deliveries', 'assetInOutLogs'],
     'bank_matching':        ['bankTransactions', 'bankMatchingRules', 'bankInitialBalances', 'paymentDepositLinks', 'payments', 'billings', 'customers', 'purchaseSettlements'],
     'vendors':              ['vendors'],
     'organization':         ['users', 'departments'],
@@ -1531,30 +1272,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     'tenant_management':    ['tenants', 'users'],
     'payroll':              ['users', 'departments'],
     'corporate_card':       ['vendors', 'billings'],
-    'cash_flow':            ['billings', 'payments', 'contracts', 'assets'],
-    'delinquency':          ['billings', 'customers', 'contracts'],
-    'official_mail':        ['tenants', 'customers', 'contacts', 'sites', 'siteMasters', 'products'],
-    'depreciation_execution': ['depreciationLogs', 'assets'],
+    'cash_flow':            ['billings', 'payments', 'assets'],
+    'delinquency':          ['billings', 'customers'],
+    'official_mail':        ['tenants', 'customers', 'contacts', 'sites', 'products'],
+    'depreciation_execution': ['assets'],
     'leave_application':    ['users', 'annualLeaveQuotas', 'leaveUsages'],
     'leave_management':     ['users', 'annualLeaveQuotas', 'leaveUsages', 'overtimeRecords', 'departments'],
     'ot_management':        ['users', 'overtimeRecords', 'departments'],
     'leave_ot':             ['users', 'annualLeaveQuotas', 'leaveUsages', 'overtimeRecords'],
     'vehicle_log':          ['corporateVehicles', 'vehicleOperationLogs', 'vehicleFuelLogs', 'users'],
-    'regular_reports':      ['contracts', 'contractAssets', 'deliveries', 'assets', 'repairs', 'purchaseSettlements', 'purchaseSettlementItems', 'externalLeases', 'depreciationLogs', 'billings', 'billingDetails', 'bankTransactions', 'customers', 'payrollClosings', 'vehicleFuelLogs', 'monthlyIncomeStatements'],
-    'kiyeun_contract_status': ['contracts', 'contractAssets', 'assets', 'customers', 'sites', 'vendors', 'billings', 'billingDetails', 'payments', 'bankTransactions', 'paymentDepositLinks', 'assetInOutLogs'],
-    'initial_db_upload':    ['contracts', 'contractAssets', 'customers', 'assets', 'sites', 'siteMasters', 'billings', 'billingDetails', 'bankTransactions', 'bankMatchingRules', 'bankInitialBalances', 'paymentDepositLinks'],
-    'data_formation':       ['contracts', 'contractAssets', 'customers', 'assets', 'sites', 'siteMasters', 'products'],
-    'print_queue_monitor':  ['printStations', 'printQueue'],
+    'regular_reports':      ['deliveries', 'assets', 'repairs', 'purchaseSettlements', 'purchaseSettlementItems', 'billings', 'billingDetails', 'bankTransactions', 'customers', 'payrollClosings', 'vehicleFuelLogs', 'monthlyIncomeStatements'],
+    'kiyeun_contract_status': ['assets', 'customers', 'sites', 'vendors', 'billings', 'billingDetails', 'payments', 'bankTransactions', 'paymentDepositLinks', 'assetInOutLogs'],
+    'initial_db_upload':    ['customers', 'assets', 'sites', 'billings', 'billingDetails', 'bankTransactions', 'bankMatchingRules', 'bankInitialBalances', 'paymentDepositLinks'],
+    'data_formation':       ['customers', 'assets', 'sites', 'products'],
+    'print_queue_monitor':  [],
     'privacy_audit':        ['privacyAccessLogs', 'users', 'departments'],
-    'receivable':           ['billings', 'billingDetails', 'customers', 'contracts', 'bankTransactions'],
+    'receivable':           ['billings', 'billingDetails', 'customers', 'bankTransactions'],
     'purchase_settlement':  ['purchaseSettlements', 'purchaseSettlementItems', 'vendors', 'assets'],
     'inspection_checklist_manage': ['inspectionChecklistItems'],
     'error_report':         ['errorReports', 'users'],
-    'agentic_ai_lab':       ['contracts', 'assets', 'billings', 'deliveries'],
-    'agentic_dispatch_studio': ['deliveries', 'contracts', 'assets'],
+    'agentic_ai_lab':       ['assets', 'billings', 'deliveries'],
+    'agentic_dispatch_studio': ['deliveries', 'assets'],
     'agentic_settlement_autopilot': ['billings', 'billingDetails', 'bankTransactions', 'purchaseSettlements'],
-    'agentic_asset_lifecycle': ['assets', 'contracts', 'repairs'],
-    'dev_uploader':         ['contracts', 'contractAssets', 'customers', 'sites', 'siteMasters', 'assets'],
+    'agentic_asset_lifecycle': ['assets', 'repairs'],
+    'dev_uploader':         ['customers', 'sites', 'assets'],
   };
 
   const inFlightMenuLoadsRef = useRef<Map<string, Promise<void>>>(new Map());
@@ -1627,6 +1368,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return u;
     };
 
+    const isFlDemoHost = typeof window !== 'undefined' && (
+      window.location.hostname.includes('fl-demo') ||
+      window.location.hostname.includes('ebro-fl') ||
+      window.location.hostname.includes('ebro_fl') ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    );
+
     const savedUser = sessionStorage.getItem('user');
     const autoUser = localStorage.getItem('auto_user');
     if (savedUser) {
@@ -1635,7 +1384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (rawParsed) {
           const parsed = normalizeDeveloperIdentity(rawParsed);
           const isDev = isSystemDeveloperUser(parsed);
-          if (isDev && !isDemoMode()) {
+          if (isDev && !isDemoMode() && !isFlDemoHost) {
             isCurrentDeviceAuthorizedForDeveloper().then(auth => {
               if (!auth.isAuthorized) {
                 console.warn('🚨 [보안 차단] 비인가 물리 단말기에서의 개발자 세션 복원 차단');
@@ -1660,7 +1409,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (rawParsed) {
           const parsed = normalizeDeveloperIdentity(rawParsed);
           const isDev = isSystemDeveloperUser(parsed);
-          if (isDev && !isDemoMode()) {
+          if (isDev && !isDemoMode() && !isFlDemoHost) {
             isCurrentDeviceAuthorizedForDeveloper().then(auth => {
               if (!auth.isAuthorized) {
                 console.warn('🚨 [보안 차단] 비인가 물리 단말기에서의 개발자 자동 로그인 차단');
@@ -1722,10 +1471,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, reason: '비밀번호를 입력해 주십시오.' };
     }
 
+    const isFlDemoHost = typeof window !== 'undefined' && (
+      window.location.hostname.includes('fl-demo') ||
+      window.location.hostname.includes('ebro-fl') ||
+      window.location.hostname.includes('ebro_fl') ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    );
+
     // 1. 개발자 / 최고관리자 마스터 계정 (DB/네트워크 상태와 무관하게 100% 무조건 보장)
     if (cleanId.toLowerCase() === 'admin' && cleanPw === 'admin123') {
       // 🛡️ [물리 단말기 2단계 인가 검증]
-      if (!bypassDeviceCheck && !isDemoMode()) {
+      if (!bypassDeviceCheck && !isDemoMode() && !isFlDemoHost) {
         const deviceAuth = await isCurrentDeviceAuthorizedForDeveloper();
         if (!deviceAuth.isAuthorized) {
           logPrivacyAccess('LOGIN', 'login', `로그인 거부: 비인가 물리 단말기 개발자 마스터 로그인 시도 ('${cleanId}')`, {
@@ -1889,9 +1646,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user.passwordHash = upgradedHash;
         try {
           db.updateRow<User>('users', user.id, { passwordHash: upgradedHash });
-          if (supabase) {
-            supabase.from('users').update({ password_hash: upgradedHash }).eq('id', user.id).then();
-          }
         } catch (e) {
           console.warn('Auto password hash upgrade failed:', e);
         }
@@ -1970,7 +1724,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 🛡️ [물리 단말기 2단계 인가 검증 - 시스템 개발자 계정 전용]
     const isDevAdmin = isSystemDeveloperUser(user);
-    if (isDevAdmin && !bypassDeviceCheck && !isDemoMode()) {
+    if (isDevAdmin && !bypassDeviceCheck && !isDemoMode() && !isFlDemoHost) {
       const deviceAuth = await isCurrentDeviceAuthorizedForDeveloper();
       if (!deviceAuth.isAuthorized) {
         logPrivacyAccess('LOGIN', 'login', `로그인 거부: 비인가 물리 단말기 개발자 권한 로그인 시도 (${user.name})`, {

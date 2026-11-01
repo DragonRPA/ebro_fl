@@ -1,4 +1,4 @@
-﻿// src/services/centralDb.ts
+// src/services/centralDb.ts
 // 🌐 eBro Platform Central Database Service (ebro-platform-core)
 // Tier 1: Control Plane & Global Knowledge Base SSOT
 
@@ -295,7 +295,7 @@ export interface EquipmentManualItem {
 /**
  * 솔루션 업종에 맞는 공통 장비 매뉴얼 조회
  */
-export async function fetchCentralEquipmentManuals(solutionType: 'AWP' | 'IT' = 'AWP'): Promise<EquipmentManualItem[]> {
+export async function fetchCentralEquipmentManuals(solutionType: 'AWP' | 'IT' | 'FL' = 'FL'): Promise<EquipmentManualItem[]> {
   try {
     const { data, error } = await centralSupabase
       .from('equipment_manuals')
@@ -319,7 +319,7 @@ export async function fetchCentralEquipmentManuals(solutionType: 'AWP' | 'IT' = 
 // 3. 화면 UI 어노테이션 툴팁 지식 조회
 // ──────────────────────────────────────────────
 
-export async function fetchCentralManualAnnotations(solutionType: 'AWP' | 'IT' = 'AWP'): Promise<any[]> {
+export async function fetchCentralManualAnnotations(solutionType: 'AWP' | 'IT' | 'FL' = 'FL'): Promise<any[]> {
   try {
     const { data, error } = await centralSupabase
       .from('manual_annotations')

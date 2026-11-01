@@ -1118,7 +1118,7 @@ const App: React.FC = () => {
                   </h1>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '600', letterSpacing: '0.3px' }}>
-                  {isDemoMode() ? 'e-Bro AWP 고소작업대 ERP' : 'e-Bro ERP System'}
+                  지게차·호환부품 유통영업 관리 시스템
                 </p>
               </>
             )}
@@ -1535,18 +1535,18 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* 테스트 계정 안내 — 개발 환경에서만 표시 */}
-          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+          {/* 테스트 계정 안내 — 개발 및 데모 환경에서 표시 */}
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('fl-demo') || window.location.hostname.includes('ebro-fl')) && (
             <div style={{ marginTop: '16px', padding: '12px', border: '1px dashed #f59e0b', borderRadius: 'var(--radius-sm)', backgroundColor: 'rgba(251,191,36,0.07)', fontSize: '12px' }}>
-              <div style={{ fontWeight: '700', marginBottom: '6px', color: 'var(--warning)' }}>⚠️ [개발 전용] 테스트 계정 — 운영 환경에서는 표시 안됨</div>
+              <div style={{ fontWeight: '700', marginBottom: '6px', color: 'var(--warning)' }}>시연 및 테스트 계정 안내</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                <div>• 개발자: <strong>admin / admin123</strong></div>
-                <div>• 영업관리: <strong>manager / mgr123</strong></div>
-                <div>• 일반영업: <strong>user / user123</strong></div>
-                <div>• 정비현장: <strong>mechanic / mech123</strong></div>
+                <div style={{ cursor: 'pointer' }} onClick={() => { setLoginId('이수용'); setPassword('1111'); }}>• 대표이사: <strong>이수용 / 1111</strong></div>
+                <div style={{ cursor: 'pointer' }} onClick={() => { setLoginId('manager'); setPassword('mgr123'); }}>• 영업관리: <strong>manager / mgr123</strong></div>
+                <div style={{ cursor: 'pointer' }} onClick={() => { setLoginId('김동우'); setPassword('1111'); }}>• 유통영업: <strong>김동우 / 1111</strong></div>
+                <div style={{ cursor: 'pointer' }} onClick={() => { setLoginId('admin'); setPassword('admin123'); }}>• 개발자: <strong>admin / admin123</strong></div>
               </div>
               <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', fontSize: '11px', color: 'var(--warning)' }}>
-                • 임직원 로그인: <strong>사원명(예: 김동우, 이수용, 최수호)</strong> 또는 <strong>사번</strong> / 초기 비밀번호: <strong>1111</strong>
+                • 계정 항목을 클릭하면 아이디와 비밀번호가 자동 입력됩니다.
               </div>
             </div>
           )}

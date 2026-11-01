@@ -30,6 +30,20 @@ export const CENTRAL_TABLE_NAMES = new Set([
   'apk_releases'
 ]);
 
+// 🚫 eBro_FL(지게차 유통 전용 ERP)에서 제거된 레거시 렌탈/AWP 전용 테이블 (원격 DB 호출 원천 차단 및 로컬 인메모리만 허용)
+export const LOCAL_ONLY_REMOVED_TABLES = new Set([
+  'contracts',
+  'contract_assets',
+  'contract_history',
+  'outbound_inspections',
+  'depreciation_logs',
+  'external_leases',
+  'site_masters',
+  'standard_options',
+  'print_stations',
+  'print_queue'
+]);
+
 // 법인 표기어 및 공백 제거 정규화 파서
 export function normalizeCustomerName(name: string): string {
   if (!name) return '';
@@ -4787,20 +4801,20 @@ export const SEED_DEVELOPER_AUTHORIZED_DEVICES: DeveloperDeviceProfile[] = [
 ];
 
 export const ALL_DB_KEYS = [
-  'tenants', 'users', 'departments', 'permissions', 'customers', 'contacts', 'siteMasters', 'sites', 
+  'tenants', 'users', 'departments', 'permissions', 'customers', 'contacts', 'sites', 
   'products', 'assets', 'consumables', 'consumableLots', 'consumableLogs', 'consumablePurchases',
-  'contracts', 'contractAssets', 'contractHistory', 'deliveries', 
+  'deliveries', 
   'transportCompanies', 'transportDrivers', 'vendors',
   'billings', 'billingDetails', 'payments', 'paymentDepositLinks', 'repairs', 'repairConsumables', 'todos', 
   'bankTransactions', 'bankMatchingRules', 'bankInitialBalances', 'assetInOutLogs',
-  'cashFlowSnapshots', 'outboundInspections', 'depreciationLogs',
-  'purchaseSettlements', 'purchaseSettlementItems', 'settlementPaymentLogs', 'externalLeases',
+  'cashFlowSnapshots',
+  'purchaseSettlements', 'purchaseSettlementItems', 'settlementPaymentLogs',
   'annualLeaveQuotas', 'leaveUsages', 'overtimeRecords', 'payrollClosings', 'inspectionChecklistItems',
   'prepaidTransactions', 'delinquencyActionLogs', 'mechanicConsumableStocks', 'receivables', 'legalNoticeLogs', 'legalNoticeTemplates',
   'corporateVehicles', 'vehicleOperationLogs', 'vehicleFuelLogs',
   'approvalRules', 'ruleConsensus', 'approvalRequests', 'approvalSteps', 'delegationRecords',
-  'stocktakingAudits', 'stocktakingAuditItems', 'collectedParts', 'equipmentManuals', 'standardOptions',
-  'printStations', 'printQueue', 'customRoles', 'rolePermissions', 'privacyAccessLogs', 'errorReports',
+  'stocktakingAudits', 'stocktakingAuditItems', 'collectedParts', 'equipmentManuals',
+  'customRoles', 'rolePermissions', 'privacyAccessLogs', 'errorReports',
   'monthlyIncomeStatements', 'developerAuthorizedDevices', 'salesJournals'
 ];
 
@@ -6049,10 +6063,10 @@ class LocalDB {
 
   async awaitPendingWrites(): Promise<void> {
     if (!this.pendingWrites || this.pendingWrites.length === 0) return;
+    const writes = [...this.pendingWrites];
+    this.pendingWrites = [];
     try {
-      for (const p of this.pendingWrites) {
-        await p;
-      }
+      await Promise.all(writes);
     } catch (err: any) {
       console.error("Supabase pending write error:", err);
       const errMsg = err?.message || String(err);
@@ -6060,8 +6074,6 @@ class LocalDB {
         throw new Error(`원격 Supabase DB 통신 장애:\n\n인터넷 네트워크 연결 상태, 사내 방화벽 정책 또는 Supabase 서버 상태를 확인해 주세요.\n(로컬 데이터는 안전하게 보존되었습니다.)`);
       }
       throw err;
-    } finally {
-      this.pendingWrites = [];
     }
   }
 
@@ -6387,6 +6399,7 @@ class LocalDB {
    * 일시적 네트워크 순단(TypeError: Failed to fetch 등) 발생 시 최대 3회 지수 백오프 재시도를 수행합니다.
    */
   private async fetchAllRowsFromSupabase(tableName: string): Promise<any[]> {
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) return [];
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (!targetClient) return [];
     const PAGE_SIZE = 1000;
@@ -6440,6 +6453,10 @@ class LocalDB {
           await autoApplyAsRouteLogsDdl();
           return [];
         }
+        if (errMsg.includes('Could not find the table') || errMsg.includes('relation') || lastError?.code === 'PGRST205' || lastError?.code === '42P01') {
+          console.warn(`[db.ts] Skip missing or removed schema table ${tableName}:`, errMsg);
+          return [];
+        }
         console.error(`[db.ts] Supabase fetchAllRows failed for ${tableName} (range ${from}-${from + PAGE_SIZE - 1}):`, lastError);
         throw new Error(`[Supabase DB 조회 실패] ${tableName}\n\n사유: ${lastError.message || String(lastError)}`);
       }
@@ -6456,6 +6473,10 @@ class LocalDB {
 
   // 단일 테이블만 Supabase에서 pull (메뉴 전환 시 관련 테이블만 선택적 로딩용 — 중복 동시 호출 병합)
   async pullTableFromSupabase(key: string): Promise<any[] | null> {
+    const tableName = this.mapToSupabaseTable(key);
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) {
+      return ((this as any)[key] || []) as any[];
+    }
     const existing = this.inFlightTablePulls.get(key);
     if (existing) {
       return existing;
@@ -6463,7 +6484,6 @@ class LocalDB {
 
     const promise = (async () => {
       try {
-        const tableName = this.mapToSupabaseTable(key);
         const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
         if (!targetClient) return null;
         const data = await this.fetchAllRowsFromSupabase(tableName);
@@ -7514,6 +7534,9 @@ class LocalDB {
     this.set(tableKey, list);
 
     const tableName = this.mapToSupabaseTable(tableKey as string);
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) {
+      return newRow;
+    }
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (targetClient) {
       let payloadForSupabase = this.sanitizeSupabasePayload(newRow, tableName);
@@ -7637,6 +7660,7 @@ class LocalDB {
           }
           return data;
         });
+      promise.catch(() => {});
       this.pendingWrites.push(promise);
     }
 
@@ -7693,6 +7717,9 @@ class LocalDB {
     this.set(tableKey, list);
 
     const tableName = this.mapToSupabaseTable(tableKey as string);
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) {
+      return updated;
+    }
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (targetClient) {
       // 💡 [NULL 컬럼 갱신 보장]: updates에 명시적으로 전달된 null 필드를 sanitize 이전에 반영하여 화이트리스트 우회 오염 원천 차단
@@ -7810,6 +7837,7 @@ class LocalDB {
           }
           return data;
         });
+      promise.catch(() => {});
       this.pendingWrites.push(promise);
     }
 
@@ -7834,6 +7862,9 @@ class LocalDB {
     }
 
     const tableName = this.mapToSupabaseTable(tableKey as string);
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) {
+      return true;
+    }
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (targetClient) {
       const promise = targetClient
@@ -7856,6 +7887,7 @@ class LocalDB {
             throw customError;
           }
         });
+      promise.catch(() => {});
       this.pendingWrites.push(promise);
     }
 
@@ -7879,6 +7911,9 @@ class LocalDB {
     this.set(tableKey, list);
 
     const tableName = this.mapToSupabaseTable(tableKey as string);
+    if (LOCAL_ONLY_REMOVED_TABLES.has(tableName)) {
+      return;
+    }
     const targetClient = CENTRAL_TABLE_NAMES.has(tableName) ? centralSupabase : supabase;
     if (targetClient) {
       const sanitizedRows = rows.map(r => {
@@ -7911,6 +7946,7 @@ class LocalDB {
             throw new Error(`[Supabase DB 일괄 저장 실패] ${tableName}\n\n사유: ${msg}`);
           }
         });
+      promise.catch(() => {});
       this.pendingWrites.push(promise);
       await promise;
     }
