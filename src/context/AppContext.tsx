@@ -2129,6 +2129,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         normMenuId !== 'sales_journal' &&
         normMenuId !== 'available_inventory' &&
         normMenuId !== 'as_route_tracking' &&
+        normMenuId !== 'trade_parts_catalog' &&
+        normMenuId !== 'fl_doc_archive' &&
         !(normMenuId === 'kiyeun_contract_status' && (currentTenant.id === 'tenant-giyeonlift' || (currentTenant.tenantCode || '').toUpperCase().includes('GIYEON') || (currentTenant.tenantCode || '').toUpperCase().includes('GIYUEN'))) &&
         !normAllowedPages.includes(normMenuId)
       ) {

@@ -8,6 +8,7 @@ import {
 } from '../services/db';
 import { emailService, SentEmail } from '../services/email';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
+import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
@@ -786,7 +787,30 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     memo: '식품·제약·반도체 물류창고 납품 지게차 장착용',
     createdAt: '2026-06-15T09:00:00.000Z',
     updatedAt: '2026-09-15T09:00:00.000Z'
-  }
+  },
+  ...COMPATIBLE_PARTS_CATALOG.map(cp => ({
+    id: `prod-${cp.id}`,
+    skuCode: cp.sku,
+    name: cp.partName,
+    category: cp.category,
+    itemType: 'PART' as const,
+    manufacturer: cp.manufacturer,
+    modelName: cp.compatibleModels.join(', '),
+    originCountry: (cp.originCountry === '중국 직수입' ? '중국 수입' : '국내 매입') as '중국 수입' | '국내 매입',
+    defaultWarehouse: '부품창고',
+    spec: `${cp.specSummary} | 순정호환: ${cp.oemCrossRefCodes.slice(0, 2).join(', ')}`,
+    unit: cp.unitName,
+    standardCost: cp.landedCostKrw,
+    dealerPrice: cp.dealerPriceKrw,
+    standardPrice: cp.retailPriceKrw,
+    safetyStock: cp.moq * 2,
+    warrantyMonths: 6,
+    status: 'ACTIVE' as const,
+    cogsMethod: 'FIFO' as const,
+    memo: `${cp.tonnageRange} · ${cp.technicalNote}`,
+    createdAt: '2026-07-01T09:00:00.000Z',
+    updatedAt: '2026-10-25T09:00:00.000Z'
+  }))
 ];
 
 const DEFAULT_PURCHASES: TradePurchase[] = [
@@ -1452,7 +1476,24 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     remainingQty: 1,
     unitCost: 26800000,
     createdAt: '2026-10-10T11:20:00.000Z'
-  }
+  },
+  ...COMPATIBLE_PARTS_CATALOG.map(cp => ({
+    id: `LOT-${cp.id.toUpperCase()}`,
+    purchaseId: 'PO-202609-004',
+    productId: `prod-${cp.id}`,
+    serialNumber: `BATCH-${cp.sku}`,
+    warehouseName: '부품창고',
+    inboundDate: '2026-09-25',
+    foreignCurrency: cp.foreignCurrency,
+    foreignUnitPrice: cp.foreignUnitCost,
+    exchangeRate: cp.foreignCurrency === 'CNY' ? 195 : cp.foreignCurrency === 'USD' ? 1380 : 1,
+    incidentalCostPerUnit: 0,
+    lotStatus: 'IN_STOCK' as const,
+    initialQty: cp.stockQty,
+    remainingQty: cp.stockQty,
+    unitCost: cp.landedCostKrw,
+    createdAt: '2026-09-25T10:00:00.000Z'
+  }))
 ];
 
 const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
@@ -1780,7 +1821,7 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v3';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v4';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     const rawProducts = localStorage.getItem('ebro_trade_products');
