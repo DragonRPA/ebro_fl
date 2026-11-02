@@ -8,10 +8,10 @@ import {
   Truck, Wrench, Shield, ShoppingBag, CreditCard, LogOut, Sun, Moon, Menu, X, Zap, Settings, Database as DatabaseIcon,
   TrendingUp, Clock, AlertTriangle, Building2, ChevronDown, ChevronRight, ChevronLeft, Briefcase, Box, FolderKanban, ShieldAlert, Terminal, ArrowLeftRight, CheckSquare,
   Smartphone, Monitor, Car, FileText, Search, Printer, PackagePlus, Boxes, Calendar, Camera, BookOpen,
-  FileCheck, ShieldCheck, Bot, Download, Bell, ClipboardList, Brain
+  FileCheck, ShieldCheck, Bot, Download, Bell, ClipboardList, Brain, RefreshCw
 , CheckCircle, Settings as SettingsIcon, SlidersHorizontal, Mail, Mic, FileSpreadsheet } from 'lucide-react';
 const OfficialMailPage = React.lazy(() => import('./pages/OfficialMailPage').then(module => ({ default: module.OfficialMailPage })));
-import { getTenantAgentInstallerInfo, triggerTenantAgentDownload, AGENT_CERT_URL, syncTenantPolicyToAgent, startGlobalAgentHealthMonitor } from './services/agentService';
+import { getTenantAgentInstallerInfo, triggerTenantAgentDownload, AGENT_CERT_URL, syncTenantPolicyToAgent, startGlobalAgentHealthMonitor, EXPECTED_AGENT_VERSION, subscribeAgentStatus, triggerAgentSelfUpdate } from './services/agentService';
 
 import { JobAlertModal } from './components/JobAlertModal';
 import { PersistentJobAlertToast } from './components/PersistentJobAlertToast';
@@ -578,6 +578,45 @@ const App: React.FC = () => {
   }, [currentUser, activeTab, currentTenant]);
 
   const [installerDownloadMsg, setInstallerDownloadMsg] = useState<string | null>(null);
+  const [loginAgentOnline, setLoginAgentOnline] = useState<boolean>(false);
+  const [loginAgentVer, setLoginAgentVer] = useState<string>('');
+  const [latestServerAgentVer, setLatestServerAgentVer] = useState<string>(EXPECTED_AGENT_VERSION);
+  const [isLoginAgentUpdating, setIsLoginAgentUpdating] = useState<boolean>(false);
+
+  // 로그인 화면에서도 PC 에이전트 실행 버전 vs 최신 배포 버전 실시간 대조
+  useEffect(() => {
+    const unsub = subscribeAgentStatus((online, info) => {
+      setLoginAgentOnline(online);
+      setLoginAgentVer(online && info?.version ? info.version : '');
+    });
+    fetch(`/downloads/version.json?_cb=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(meta => {
+        if (meta && typeof meta.version === 'string' && meta.version.trim()) {
+          setLatestServerAgentVer(meta.version.trim());
+        }
+      })
+      .catch(() => {});
+    return () => { unsub(); };
+  }, []);
+
+  const handleLoginAgentQuickUpdate = async () => {
+    if (isLoginAgentUpdating) return;
+    setIsLoginAgentUpdating(true);
+    try {
+      const ok = await triggerAgentSelfUpdate(true);
+      if (ok) {
+        setInstallerDownloadMsg(`최신 버전 ${latestServerAgentVer} 자동 업데이트가 시작되었습니다. 약 3~5초 후 반영됩니다.`);
+      } else {
+        handleAgentInstallerDownload();
+      }
+    } catch {
+      handleAgentInstallerDownload();
+    } finally {
+      setTimeout(() => setIsLoginAgentUpdating(false), 3000);
+      setTimeout(() => setInstallerDownloadMsg(null), 5000);
+    }
+  };
 
   const handleAgentInstallerDownload = () => {
     const info = getTenantAgentInstallerInfo(currentTenant);
@@ -1367,6 +1406,121 @@ const App: React.FC = () => {
               </span>
             </div>
 
+            {/* 실시간 버전 비교 박스 (최신 배포 버전 vs 내 PC 실행 버전) */}
+            <div style={{
+              padding: '8px 10px',
+              borderRadius: '8px',
+              backgroundColor: loginAgentOnline
+                ? (loginAgentVer === latestServerAgentVer ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.1)')
+                : 'var(--bg-card)',
+              border: `1px solid ${
+                loginAgentOnline
+                  ? (loginAgentVer === latestServerAgentVer ? 'rgba(34, 197, 94, 0.35)' : 'rgba(245, 158, 11, 0.4)')
+                  : 'var(--border-color)'
+              }`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
+              fontSize: '11.5px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>최신 배포 버전</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 800, color: 'var(--primary)' }}>
+                  {latestServerAgentVer}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>내 PC 실행 버전</span>
+                <span style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 800,
+                  color: !loginAgentOnline
+                    ? '#64748b'
+                    : loginAgentVer === latestServerAgentVer
+                    ? '#16a34a'
+                    : '#d97706'
+                }}>
+                  {loginAgentOnline && loginAgentVer ? loginAgentVer : '미실행 / 미설치'}
+                </span>
+              </div>
+              <div style={{
+                marginTop: '2px',
+                paddingTop: '5px',
+                borderTop: '1px dashed var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                whiteSpace: 'nowrap'
+              }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>버전 대조 상태</span>
+                <span style={{
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  color: !loginAgentOnline
+                    ? '#64748b'
+                    : loginAgentVer === latestServerAgentVer
+                    ? '#15803d'
+                    : '#b45309'
+                }}>
+                  <span style={{
+                    width: '9px',
+                    height: '9px',
+                    borderRadius: '50%',
+                    display: 'inline-block',
+                    flexShrink: 0,
+                    backgroundColor: !loginAgentOnline
+                      ? '#94a3b8'
+                      : loginAgentVer === latestServerAgentVer
+                      ? '#22c55e'
+                      : '#f59e0b',
+                    boxShadow: !loginAgentOnline
+                      ? 'none'
+                      : loginAgentVer === latestServerAgentVer
+                      ? '0 0 4px rgba(34, 197, 94, 0.5)'
+                      : '0 0 4px rgba(245, 158, 11, 0.5)'
+                  }} />
+                  <span>
+                    {!loginAgentOnline
+                      ? '에이전트 미감지'
+                      : loginAgentVer === latestServerAgentVer
+                      ? '최신 버전 일치'
+                      : '버전 불일치'}
+                  </span>
+                </span>
+              </div>
+
+              {/* 실행 중이나 구버전일 때 즉시 원클릭 자동 업데이트 버튼 노출 */}
+              {loginAgentOnline && loginAgentVer && loginAgentVer !== latestServerAgentVer && (
+                <button
+                  type="button"
+                  onClick={handleLoginAgentQuickUpdate}
+                  disabled={isLoginAgentUpdating}
+                  style={{
+                    marginTop: '4px',
+                    width: '100%',
+                    padding: '7px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #f59e0b',
+                    backgroundColor: '#fef3c7',
+                    color: '#92400e',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    cursor: isLoginAgentUpdating ? 'wait' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <RefreshCw size={13} />
+                  <span>{isLoginAgentUpdating ? '자동 업데이트 진행 중...' : `최신 버전 (${latestServerAgentVer}) 업데이트`}</span>
+                </button>
+              )}
+            </div>
+
             <div>
               <button
                 type="button"
@@ -1392,41 +1546,9 @@ const App: React.FC = () => {
                 title="PC 백그라운드 에이전트 설치 패키지 다운로드"
               >
                 <Download size={15} color="#ffffff" style={{ flexShrink: 0 }} />
-                <span>eBro 통합 에이전트 설치</span>
+                <span>eBro 통합 에이전트 설치 ({latestServerAgentVer})</span>
               </button>
             </div>
-
-            {/*  크롬 웹스토어 웹 확장프로그램 연동 링크 (테넌트 설정에서 AI/웹 확장 기능이 활성화된 테넌트에만 노출) */}
-            {Boolean(currentTenant?.features?.agentAiEnabled) && (
-              <div style={{ marginTop: '2px' }}>
-                <a
-                  href="https://chromewebstore.google.com/detail/bjljgkmnehpfnocaflfdhioanigljfmb"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    boxSizing: 'border-box',
-                    transition: 'all 0.15s ease'
-                  }}
-                  title="Chrome 웹 스토어에서 eBro 웹 확장프로그램 설치 및 연동"
-                >
-                  <Bot size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
-                  <span>Chrome 웹 확장프로그램 설치</span>
-                </a>
-              </div>
-            )}
 
             {installerDownloadMsg && (
               <div style={{

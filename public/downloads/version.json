@@ -1,12 +1,12 @@
 {
-  "version": "v2.0.0.Build.29",
-  "buildTime": "2026-10-24T04:36:17.589Z",
-  "coreUrl": "https://raw.githubusercontent.com/DragonRPA/ebro_awp/main/public/downloads/engine.dat",
-  "downloadUrl": "https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0/eBroAgent_Setup.exe",
-  "installerUrl": "https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0/eBroAgent_Setup.exe",
+  "version": "v2.0.0.Build.32",
+  "buildTime": "2026-11-01T11:47:36.852Z",
+  "coreUrl": "https://ebro.run/downloads/engine.dat",
+  "downloadUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe",
+  "installerUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe",
   "certUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Root.cer",
-  "changelog": "계약서 장비번호 제조번호(SN) 제거, 점검자 기본값 김관주 고정, 안전점검결과서 제조사 자산정보 최우선 적용",
+  "changelog": "v2.0.0.Build.32: Windows UIA 하이브리드 접근성 엔진 + 테넌트·개인별 BYOK AI 모델/API 키 암호화 금고 + Jev 사전 판단 선택형 엔진 + 스마트 핫패치 업데이트 통합",
   "minCompatibleVersion": "v2.0.0.Build.1",
   "fileSize": "2.2MB (core) / 24MB (installer)",
-  "coreHash": "dc6adc8a89c5"
+  "coreHash": "99fa5b3f988d"
 }
