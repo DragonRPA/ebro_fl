@@ -61,7 +61,17 @@ async function migrate() {
     $$ LANGUAGE plpgsql SECURITY DEFINER;
   `);
 
-  console.log('🛡️ RLS 상태 점검 및 anon/authenticated/service_role 권한 부여 중...');
+  console.log('🛡️ 미사용 뷰(View) 정리 및 RLS 상태 점검 중...');
+  const viewsRes = await client.query(`
+    SELECT table_name 
+    FROM information_schema.views 
+    WHERE table_schema = 'public';
+  `);
+  for (const row of viewsRes.rows) {
+    console.log('🗑️ 미사용 뷰 삭제:', row.table_name);
+    await client.query('DROP VIEW IF EXISTS public."' + row.table_name + '" CASCADE;');
+  }
+
   const res = await client.query(`
     SELECT table_name 
     FROM information_schema.tables 
@@ -72,7 +82,11 @@ async function migrate() {
 
   for (const tbl of tables) {
     try {
-      await client.query('ALTER TABLE "' + tbl + '" DISABLE ROW LEVEL SECURITY;');
+      await client.query('ALTER TABLE "' + tbl + '" ENABLE ROW LEVEL SECURITY;');
+      await client.query('DROP POLICY IF EXISTS "allow_anon_all" ON "' + tbl + '";');
+      await client.query('DROP POLICY IF EXISTS "allow_auth_all" ON "' + tbl + '";');
+      await client.query('CREATE POLICY "allow_anon_all" ON "' + tbl + '" FOR ALL TO anon USING (true) WITH CHECK (true);');
+      await client.query('CREATE POLICY "allow_auth_all" ON "' + tbl + '" FOR ALL TO authenticated USING (true) WITH CHECK (true);');
       await client.query('GRANT ALL ON TABLE "' + tbl + '" TO anon, authenticated, service_role;');
     } catch (e) {
       console.warn('권한 부여 경고 (' + tbl + '):', e.message);

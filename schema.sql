@@ -11,6 +11,8 @@
 -- 불필요한 레거시 뷰 및 테이블 정리
 -- ------------------------------------------------------------------------------
 DROP VIEW IF EXISTS v_awp_shared_memories_compat CASCADE;
+DROP VIEW IF EXISTS public.asset_in_out_logs CASCADE;
+DROP VIEW IF EXISTS public.bank_account_initial_balances CASCADE;
 DROP TABLE IF EXISTS call_pipeline_logs CASCADE;
 DROP TABLE IF EXISTS call_uploads CASCADE;
 DROP TABLE IF EXISTS walkie_channels CASCADE;
