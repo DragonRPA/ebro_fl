@@ -7,16 +7,40 @@ const DB_CONFIG = process.env.DATABASE_URL ? {
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 } : {
-  host: 'aws-0-ap-southeast-2.pooler.supabase.com',
-  port: 5432,
-  user: 'postgres.mluhhrbcogvsalkchrdp',
+  host: 'aws-1-ap-southeast-1.pooler.supabase.com',
+  port: 6543,
+  user: 'postgres.lkohpffieaanwhohttbu',
   password: process.env.SUPABASE_DB_PASSWORD || '',
   database: 'postgres',
   ssl: { rejectUnauthorized: false }
 };
 
+function prefixSchemaSql(sql, prefix = 'fl_') {
+  let out = sql;
+  out = out.replace(
+    /\b(CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+)"?([a-zA-Z0-9_]+)"?/gi,
+    (_, pre, tbl) => {
+      const clean = tbl.startsWith(prefix) ? tbl : `${prefix}${tbl}`;
+      return `${pre}"${clean}"`;
+    }
+  );
+  out = out.replace(
+    /\b(REFERENCES\s+)"?([a-zA-Z0-9_]+)"?\s*\(/gi,
+    (_, pre, tbl) => {
+      const clean = tbl.startsWith(prefix) ? tbl : `${prefix}${tbl}`;
+      return `${pre}"${clean}"(`;
+    }
+  );
+  // Replace the trailing DO $$ block to only target fl_* and core_* tables
+  out = out.replace(
+    /WHERE\s+table_schema\s*=\s*'public'\s+AND\s+table_type\s*=\s*'BASE TABLE'/gi,
+    "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND (table_name LIKE 'fl_%' OR table_name LIKE 'core_%')"
+  );
+  return out;
+}
+
 async function migrate() {
-  console.log('=== ebro_fl Supabase PostgreSQL DDL 마이그레이션 시작 ===');
+  console.log('=== ebro_fl (dragonrpa-erp fl_* 프리픽스) Supabase PostgreSQL DDL 마이그레이션 시작 ===');
   const client = new Client(DB_CONFIG);
   await client.connect();
   console.log('✅ Supabase PostgreSQL 직접 연결 성공!');
@@ -24,61 +48,24 @@ async function migrate() {
   await client.query('SET search_path TO public, extensions;');
 
   const schemaPath = path.resolve(__dirname, '../schema.sql');
-  const sql = fs.readFileSync(schemaPath, 'utf8');
-  console.log('📖 schema.sql 로드 완료 (' + (sql.length / 1024).toFixed(1) + ' KB)');
+  const rawSql = fs.readFileSync(schemaPath, 'utf8');
+  const sql = prefixSchemaSql(rawSql, 'fl_');
+  console.log('📖 schema.sql (fl_ 프리픽스 변환) 로드 완료 (' + (sql.length / 1024).toFixed(1) + ' KB)');
 
   console.log('🚀 DDL 전체 스키마 실행 중...');
   console.time('DDL 실행 시간');
   await client.query(sql);
   console.timeEnd('DDL 실행 시간');
 
-  console.log('🛠️ dev_get_columns / dev_exec_ddl RPC 설치 중...');
-  await client.query(`
-    CREATE OR REPLACE FUNCTION dev_get_columns(p_table TEXT)
-    RETURNS TABLE(column_name TEXT) AS $$
-      SELECT column_name::TEXT FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = p_table
-      ORDER BY ordinal_position;
-    $$ LANGUAGE sql SECURITY DEFINER;
-
-    CREATE OR REPLACE FUNCTION dev_exec_ddl(statements TEXT[])
-    RETURNS JSONB AS $$
-    DECLARE
-      stmt TEXT;
-      results JSONB := '[]'::JSONB;
-    BEGIN
-      FOREACH stmt IN ARRAY statements LOOP
-        BEGIN
-          EXECUTE stmt;
-          results := results || jsonb_build_array(jsonb_build_object('sql', stmt, 'ok', true));
-        EXCEPTION WHEN OTHERS THEN
-          results := results || jsonb_build_array(jsonb_build_object('sql', stmt, 'ok', false, 'err', SQLERRM));
-        END;
-      END LOOP;
-      NOTIFY pgrst, 'reload schema';
-      RETURN results;
-    END;
-    $$ LANGUAGE plpgsql SECURITY DEFINER;
-  `);
-
-  console.log('🛡️ 미사용 뷰(View) 정리 및 RLS 상태 점검 중...');
-  const viewsRes = await client.query(`
-    SELECT table_name 
-    FROM information_schema.views 
-    WHERE table_schema = 'public';
-  `);
-  for (const row of viewsRes.rows) {
-    console.log('🗑️ 미사용 뷰 삭제:', row.table_name);
-    await client.query('DROP VIEW IF EXISTS public."' + row.table_name + '" CASCADE;');
-  }
-
+  console.log('🛡️ fl_* 및 core_* 테이블 RLS 상태 점검 및 권한 부여 중...');
   const res = await client.query(`
     SELECT table_name 
     FROM information_schema.tables 
-    WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
+    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      AND (table_name LIKE 'fl_%' OR table_name LIKE 'core_%');
   `);
   const tables = res.rows.map(r => r.table_name);
-  console.log('총 ' + tables.length + '개 테이블 생성 확인.');
+  console.log('총 ' + tables.length + '개 fl_*/core_* 테이블 확인.');
 
   for (const tbl of tables) {
     try {

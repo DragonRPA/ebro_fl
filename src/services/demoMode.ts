@@ -2,12 +2,12 @@
 // ebro_fl 데모 모드 감지, 설정 및 리셋 서비스
 
 import goldenData from './demo_golden_dataset.json';
-import { createClient } from '@supabase/supabase-js';
+import { createPrefixedSupabaseClient, DRAGONRPA_HUB_SUPABASE } from '../lib/supabasePrefixProxy';
 
 export const DEMO_SUPABASE_CONFIG = {
-  url: 'https://mluhhrbcogvsalkchrdp.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sdWhocmJjb2d2c2Fsa2NocmRwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MzM0MjM1MywiZXhwIjoyMTA4OTE4MzUzfQ.9DTI60YlVeKxPLvvGAZOq8cZF8onrU1NCrfBNB-Fvyo',
-  projectRef: 'mluhhrbcogvsalkchrdp'
+  url: DRAGONRPA_HUB_SUPABASE.url,
+  anonKey: DRAGONRPA_HUB_SUPABASE.anonKey,
+  projectRef: DRAGONRPA_HUB_SUPABASE.projectRef
 };
 
 export function clearLocalErpCache() {
@@ -101,7 +101,7 @@ export function exitDemoMode() {
 }
 
 export function getDemoSupabaseClient() {
-  return createClient(DEMO_SUPABASE_CONFIG.url, DEMO_SUPABASE_CONFIG.anonKey, {
+  return createPrefixedSupabaseClient(DEMO_SUPABASE_CONFIG.url, DEMO_SUPABASE_CONFIG.anonKey, 'fl_', {
     auth: { persistSession: false }
   });
 }

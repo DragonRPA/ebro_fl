@@ -8,15 +8,11 @@
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
--- 불필요한 레거시 뷰 및 테이블 정리
+-- 불필요한 레거시 뷰 정리
 -- ------------------------------------------------------------------------------
 DROP VIEW IF EXISTS v_awp_shared_memories_compat CASCADE;
 DROP VIEW IF EXISTS public.asset_in_out_logs CASCADE;
 DROP VIEW IF EXISTS public.bank_account_initial_balances CASCADE;
-DROP TABLE IF EXISTS call_pipeline_logs CASCADE;
-DROP TABLE IF EXISTS call_uploads CASCADE;
-DROP TABLE IF EXISTS walkie_channels CASCADE;
-DROP TABLE IF EXISTS apk_releases CASCADE;
 
 -- ==============================================================================
 -- 🏢 [도메인 0] 멀티테넌트 및 전사 기본 설정 (Tenants & Core Workplace)
@@ -491,10 +487,25 @@ CREATE TABLE IF NOT EXISTS trade_inventory_adjustments (
 -- 3-6. 대리점 및 최종고객 매출 수주·판매계약 원장 (trade_sales_orders)
 CREATE TABLE IF NOT EXISTS trade_sales_orders (
     id                        TEXT PRIMARY KEY,
+    "orderNo"                 TEXT,
     "customerId"              TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    "customerName"            TEXT,
+    "customerBizNo"           TEXT,
+    "customerType"            TEXT,
     "customerTier"            TEXT CHECK ("customerTier" IN ('DEALER', 'END_USER')) DEFAULT 'END_USER',
+    "salesRepName"            TEXT,
     "siteId"                  TEXT,
     "siteName"                TEXT,
+    "itemType"                TEXT,
+    "manufacturer"            TEXT,
+    "modelName"               TEXT,
+    "serialNumber"            TEXT,
+    "partId"                  TEXT,
+    "partNumber"              TEXT,
+    quantity                  INTEGER DEFAULT 1,
+    "unitSalesPrice"          DOUBLE PRECISION DEFAULT 0,
+    "unitCogs"                DOUBLE PRECISION DEFAULT 0,
+    "warehouseName"           TEXT,
     "billingMode"             TEXT DEFAULT 'STANDALONE',
     "targetBillingYm"         TEXT,
     "linkedReceivableId"      TEXT,
@@ -541,19 +552,40 @@ CREATE TABLE IF NOT EXISTS trade_sales_order_lines (
 -- 3-8. 지게차 화물탁송 및 부품 택배 출고·인수증 원장 (trade_outbounds)
 CREATE TABLE IF NOT EXISTS trade_outbounds (
     id                        TEXT PRIMARY KEY,
-    "orderId"                 TEXT NOT NULL REFERENCES trade_sales_orders(id) ON DELETE CASCADE,
+    "orderId"                 TEXT REFERENCES trade_sales_orders(id) ON DELETE CASCADE,
+    "outboundNo"              TEXT,
+    "salesOrderId"            TEXT,
+    "orderNo"                 TEXT,
+    "requestDate"             TEXT,
+    "scheduledDate"           TEXT,
+    "completedDate"           TEXT,
+    "customerId"              TEXT,
+    "customerName"            TEXT,
+    "itemType"                TEXT,
+    "manufacturer"            TEXT,
+    "modelName"               TEXT,
+    "serialNumber"            TEXT,
+    "partNumber"              TEXT,
+    quantity                  INTEGER DEFAULT 1,
+    "warehouseName"           TEXT,
     status                    TEXT CHECK (status IN ('REQUESTED', 'ALLOCATED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED')) NOT NULL DEFAULT 'REQUESTED',
     "deliveryType"            TEXT CHECK ("deliveryType" IN ('COURIER', 'DIRECT', 'BUNDLE_WITH_RENTAL')) DEFAULT 'DIRECT',
+    "transportType"           TEXT,
     "courierName"             TEXT,
     "trackingNumber"          TEXT,
     "shippingCost"            DOUBLE PRECISION DEFAULT 0,
+    "freightCost"             DOUBLE PRECISION DEFAULT 0,
     "paidBy"                  TEXT CHECK ("paidBy" IN ('OURS', 'CUSTOMER')) DEFAULT 'OURS',
+    "freightPaidBy"           TEXT,
     "driverName"              TEXT,
     "driverContact"           TEXT,
+    "driverPhone"             TEXT,
     "vehicleNo"               TEXT,
     "destinationAddress"      TEXT,
     "receiverName"            TEXT,
     "receiverPhone"           TEXT,
+    "inspectorName"           TEXT,
+    "inspectionNote"          TEXT,
     "proofUrl"                TEXT,
     "proofType"               TEXT CHECK ("proofType" IN ('SIGNATURE', 'PHOTO')),
     "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
@@ -571,14 +603,19 @@ CREATE TABLE IF NOT EXISTS trade_outbounds (
 -- 3-8-2. 지게차 옵션·부착물·장비보호 단가 마스터 (forklift_option_masters)
 CREATE TABLE IF NOT EXISTS forklift_option_masters (
     id                        TEXT PRIMARY KEY,
-    "optionCode"              TEXT NOT NULL,
+    code                      TEXT UNIQUE,
+    "optionCode"              TEXT,
     "optionGroup"             TEXT NOT NULL,
     "optionGroupLabel"        TEXT NOT NULL,
-    "domainType"              TEXT CHECK ("domainType" IN ('PAID', 'PROTECTION', 'ATTACHMENT', 'SPEC')) NOT NULL DEFAULT 'PAID',
+    "domainType"              TEXT NOT NULL DEFAULT 'PAID',
     "domainTypeLabel"         TEXT NOT NULL DEFAULT '유상옵션',
     name                      TEXT NOT NULL,
+    spec                      TEXT,
+    "subType"                 TEXT,
     "subVariant"              TEXT,
     "specDetail"              TEXT,
+    "applicableModels"        JSONB DEFAULT '[]'::jsonb,
+    "applicableCapacity"      TEXT,
     "applicableTonnage"       TEXT,
     unit                      TEXT DEFAULT '식',
     "costPrice"               DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -588,8 +625,9 @@ CREATE TABLE IF NOT EXISTS forklift_option_masters (
     "installLeadHours"        DOUBLE PRECISION DEFAULT 0,
     "isActive"                BOOLEAN NOT NULL DEFAULT TRUE,
     "sortOrder"               INTEGER NOT NULL DEFAULT 1,
+    description               TEXT,
     memo                      TEXT,
-    "createdAt"               TEXT NOT NULL,
+    "createdAt"               TEXT,
     "updatedAt"               TEXT,
     "tenant_id"               TEXT NOT NULL DEFAULT 'fl-demo'
 );
@@ -1597,93 +1635,6 @@ CREATE TABLE IF NOT EXISTS developer_authorized_devices (
     "tenant_id"               TEXT DEFAULT 'fl-demo'
 );
 
-CREATE TABLE IF NOT EXISTS forklift_option_masters (
-    id                    TEXT PRIMARY KEY,
-    code                  TEXT NOT NULL UNIQUE,
-    "optionGroup"         TEXT NOT NULL,
-    "optionGroupLabel"    TEXT NOT NULL,
-    "domainType"          TEXT NOT NULL,
-    name                  TEXT NOT NULL,
-    spec                  TEXT NOT NULL,
-    "subType"             TEXT,
-    "applicableModels"    JSONB DEFAULT '[]'::jsonb,
-    "applicableCapacity"  TEXT,
-    "unitPrice"           DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "dealerPrice"         DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "costPrice"           DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "installLeadHours"    DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "isFreeDefault"       BOOLEAN NOT NULL DEFAULT FALSE,
-    "isActive"            BOOLEAN NOT NULL DEFAULT TRUE,
-    description           TEXT,
-    "updatedAt"           TEXT,
-    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
-);
-
-CREATE TABLE IF NOT EXISTS trade_sales_orders (
-    id                    TEXT PRIMARY KEY,
-    "orderNo"             TEXT NOT NULL,
-    "orderDate"           TEXT NOT NULL,
-    "customerId"          TEXT NOT NULL,
-    "customerName"        TEXT NOT NULL,
-    "customerBizNo"       TEXT,
-    "customerType"        TEXT,
-    "salesRepName"        TEXT,
-    "itemType"            TEXT,
-    "manufacturer"        TEXT,
-    "modelName"           TEXT,
-    "serialNumber"        TEXT,
-    "partId"              TEXT,
-    "partNumber"          TEXT,
-    quantity              INTEGER DEFAULT 1,
-    "unitSalesPrice"      DOUBLE PRECISION DEFAULT 0,
-    "totalSalesAmount"    DOUBLE PRECISION DEFAULT 0,
-    "unitCogs"            DOUBLE PRECISION DEFAULT 0,
-    "totalCogsAmount"     DOUBLE PRECISION DEFAULT 0,
-    "appliedOptions"      JSONB DEFAULT '[]'::jsonb,
-    "optionSupplyAmount"  DOUBLE PRECISION DEFAULT 0,
-    "optionCostAmount"    DOUBLE PRECISION DEFAULT 0,
-    "deliveryDate"        TEXT,
-    "deliveryLocation"    TEXT,
-    "warehouseName"       TEXT,
-    status                TEXT DEFAULT 'CONFIRMED',
-    memo                  TEXT,
-    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
-);
-
-CREATE TABLE IF NOT EXISTS trade_outbounds (
-    id                    TEXT PRIMARY KEY,
-    "outboundNo"          TEXT NOT NULL,
-    "salesOrderId"        TEXT,
-    "orderNo"             TEXT,
-    "requestDate"         TEXT,
-    "scheduledDate"       TEXT,
-    "completedDate"       TEXT,
-    "customerId"          TEXT,
-    "customerName"        TEXT,
-    "destinationAddress"  TEXT,
-    "receiverName"        TEXT,
-    "receiverPhone"       TEXT,
-    "itemType"            TEXT,
-    "manufacturer"        TEXT,
-    "modelName"           TEXT,
-    "serialNumber"        TEXT,
-    "partNumber"          TEXT,
-    quantity              INTEGER DEFAULT 1,
-    "warehouseName"       TEXT,
-    "appliedOptions"      JSONB DEFAULT '[]'::jsonb,
-    "optionBillingAmount" DOUBLE PRECISION DEFAULT 0,
-    "transportType"       TEXT,
-    "driverName"          TEXT,
-    "driverPhone"         TEXT,
-    "vehicleNo"           TEXT,
-    "freightCost"         DOUBLE PRECISION DEFAULT 0,
-    "freightPaidBy"       TEXT,
-    "inspectorName"       TEXT,
-    "inspectionNote"      TEXT,
-    status                TEXT DEFAULT 'REQUESTED',
-    "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
-);
-
 CREATE TABLE IF NOT EXISTS contracts (
     id                        TEXT PRIMARY KEY,
     "contractNo"              TEXT,
@@ -1814,6 +1765,328 @@ CREATE TABLE IF NOT EXISTS print_queue (
     "createdAt"               TEXT,
     "updatedAt"               TEXT,
     "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS depreciation_logs (
+    id                        TEXT PRIMARY KEY,
+    "depreciationYm"          TEXT,
+    "executedAt"              TEXT,
+    "executedBy"              TEXT,
+    "targetAssetCount"        INTEGER DEFAULT 0,
+    "totalDepreciationAmount" DOUBLE PRECISION DEFAULT 0,
+    note                      TEXT,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS as_route_logs (
+    id                        TEXT PRIMARY KEY,
+    "workDate"                TEXT,
+    "mechanicId"              TEXT,
+    "mechanicName"            TEXT,
+    "eventType"               TEXT,
+    "eventLabel"              TEXT,
+    "repairId"                TEXT,
+    "ticketNo"                TEXT,
+    "customerId"              TEXT,
+    "customerName"            TEXT,
+    "siteId"                  TEXT,
+    "siteName"                TEXT,
+    "siteAddress"             TEXT,
+    "assetId"                 TEXT,
+    "assetNo"                 TEXT,
+    "modelName"               TEXT,
+    "nextRepairId"            TEXT,
+    "nextSiteName"            TEXT,
+    "sourcingType"            TEXT,
+    "sourcingTargetName"      TEXT,
+    "partName"                TEXT,
+    "revisitDate"             TEXT,
+    "durationMinutes"         INTEGER,
+    memo                      TEXT,
+    "recordedAt"              TEXT,
+    "createdAt"               TEXT,
+    "updatedAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS system_settings (
+    key                       TEXT PRIMARY KEY,
+    value                     JSONB DEFAULT '{}'::jsonb,
+    "updated_at"              TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS approval_rules (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    event_code                TEXT,
+    event_name                TEXT,
+    description               TEXT,
+    is_enabled                BOOLEAN DEFAULT TRUE,
+    required_tier             INTEGER DEFAULT 0,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    updated_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS approval_requests (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    rule_id                   UUID,
+    originator_id             TEXT,
+    target_record_id          TEXT,
+    target_table              TEXT,
+    status                    TEXT DEFAULT 'PENDING',
+    current_step              INTEGER DEFAULT 1,
+    escalated_tier            INTEGER,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    updated_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    event_code                TEXT,
+    payload                   JSONB,
+    requester_id              TEXT,
+    requester_name            TEXT,
+    target_record_summary     TEXT,
+    target_record_type        TEXT
+);
+
+CREATE TABLE IF NOT EXISTS approval_steps (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id                UUID,
+    step_index                INTEGER,
+    step_type                 TEXT,
+    approver_id               TEXT,
+    status                    TEXT DEFAULT 'PENDING',
+    tier_level                INTEGER,
+    comment                   TEXT,
+    acted_at                  TIMESTAMPTZ,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    approver_name             TEXT,
+    approver_tier             BIGINT,
+    step_order                BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS approval_tier_configs (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    category                  TEXT,
+    title                     TEXT,
+    tier_level                INTEGER DEFAULT 0,
+    description               TEXT,
+    seq_order                 INTEGER DEFAULT 0,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    updated_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS rule_consensus (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rule_id                   UUID,
+    trigger_after_tier        INTEGER,
+    target_dept_id            TEXT,
+    consensus_tier            INTEGER,
+    execution_type            TEXT DEFAULT 'PARALLEL',
+    seq_order                 INTEGER DEFAULT 1,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS delegation_records (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    delegator_id              TEXT,
+    delegate_id               TEXT,
+    valid_from                DATE,
+    valid_until               DATE,
+    reason                    TEXT,
+    created_at                TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS system_manuals (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    menu_id                   TEXT,
+    solution_type             TEXT DEFAULT 'ALL',
+    manual_url                TEXT,
+    title                     TEXT,
+    description               TEXT,
+    created_at                TEXT DEFAULT (CURRENT_TIMESTAMP)::text,
+    updated_at                TEXT DEFAULT (CURRENT_TIMESTAMP)::text
+);
+
+CREATE TABLE IF NOT EXISTS manual_annotations (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id                 TEXT DEFAULT 'default',
+    page_id                   TEXT,
+    page_title                TEXT,
+    version                   INTEGER DEFAULT 1,
+    annotations               JSONB DEFAULT '{}'::jsonb,
+    solution_type             TEXT DEFAULT 'ALL',
+    updated_by                TEXT,
+    updated_at                TEXT,
+    created_at                TEXT DEFAULT (CURRENT_TIMESTAMP)::text
+);
+
+CREATE TABLE IF NOT EXISTS user_work_status (
+    id                        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                   TEXT,
+    is_working                BOOLEAN DEFAULT FALSE,
+    work_started_at           TEXT,
+    updated_at                TEXT DEFAULT (CURRENT_TIMESTAMP)::text
+);
+
+CREATE TABLE IF NOT EXISTS label_templates (
+    id                        TEXT PRIMARY KEY,
+    schema_id                 TEXT,
+    target_table              TEXT,
+    name                      TEXT,
+    paper                     JSONB,
+    elements                  JSONB,
+    target_printer_id         TEXT,
+    target_printer_name       TEXT,
+    is_default                BOOLEAN,
+    is_locked                 BOOLEAN,
+    tenant_id                 TEXT,
+    created_at                TIMESTAMPTZ,
+    updated_at                TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS hindsight_experiences (
+    id                        TEXT PRIMARY KEY DEFAULT ('exp_'::text || gen_random_uuid()),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    domain                    TEXT DEFAULT 'GENERAL',
+    action_name               TEXT,
+    menu_path                 TEXT,
+    user_id                   TEXT,
+    user_name                 TEXT,
+    trigger_element           JSONB,
+    interaction_history       JSONB DEFAULT '[]'::jsonb,
+    final_query               JSONB DEFAULT '{}'::jsonb,
+    raw_sql                   TEXT,
+    pii_masked                BOOLEAN DEFAULT TRUE,
+    metadata                  JSONB DEFAULT '{}'::jsonb,
+    created_at                TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS hindsight_mental_models (
+    id                        TEXT PRIMARY KEY DEFAULT ('mm_'::text || gen_random_uuid()),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    domain                    TEXT,
+    model_key                 TEXT,
+    title                     TEXT,
+    standing_query            TEXT,
+    content_markdown          TEXT,
+    structured_data           JSONB DEFAULT '{}'::jsonb,
+    revision                  INTEGER DEFAULT 1,
+    last_synthesized_at       TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS hindsight_observations (
+    id                        TEXT PRIMARY KEY DEFAULT ('obs_'::text || gen_random_uuid()),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    domain                    TEXT,
+    cluster_key               TEXT,
+    belief_title              TEXT,
+    belief_statement          TEXT,
+    proof_count               INTEGER DEFAULT 1,
+    confidence                DOUBLE PRECISION DEFAULT 0.5,
+    supporting_quotes         JSONB DEFAULT '[]'::jsonb,
+    contradictions            JSONB DEFAULT '[]'::jsonb,
+    first_observed_at         TIMESTAMPTZ DEFAULT now(),
+    last_refined_at           TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS hindsight_world_facts (
+    id                        TEXT PRIMARY KEY DEFAULT ('wf_'::text || gen_random_uuid()),
+    tenant_id                 TEXT DEFAULT 'fl-demo',
+    domain                    TEXT,
+    fact_key                  TEXT,
+    fact_title                TEXT,
+    fact_content              TEXT,
+    source_reference          TEXT,
+    is_immutable              BOOLEAN DEFAULT TRUE,
+    metadata                  JSONB DEFAULT '{}'::jsonb,
+    created_at                TIMESTAMPTZ DEFAULT now(),
+    updated_at                TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS draft_dispatch_orders (
+    id                        TEXT PRIMARY KEY,
+    owner_id                  TEXT,
+    source_call_ids           JSONB DEFAULT '[]'::jsonb,
+    context                   JSONB DEFAULT '[]'::jsonb,
+    customer_name             JSONB DEFAULT '{}'::jsonb,
+    site_name                 JSONB DEFAULT '{}'::jsonb,
+    equipments                JSONB DEFAULT '[]'::jsonb,
+    loading_date              JSONB DEFAULT '{}'::jsonb,
+    loading_time              JSONB DEFAULT '{}'::jsonb,
+    contact_person            JSONB DEFAULT '{}'::jsonb,
+    contact_phone             TEXT,
+    note                      TEXT,
+    is_new_customer           BOOLEAN DEFAULT FALSE,
+    customer_registered       BOOLEAN DEFAULT FALSE,
+    status                    TEXT DEFAULT 'DRAFT',
+    urgency                   TEXT DEFAULT 'MEDIUM',
+    created_at                TEXT,
+    submitted_at              TEXT,
+    tenant_id                 TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS call_uploads (
+    id                        TEXT PRIMARY KEY,
+    uploader_id               TEXT,
+    uploader_phone            TEXT,
+    caller_phone              TEXT,
+    call_direction            TEXT,
+    call_ended_at             TEXT,
+    duration_seconds          INTEGER,
+    storage_path              TEXT,
+    file_name                 TEXT,
+    call_context              JSONB DEFAULT '[]'::jsonb,
+    summary_text              TEXT,
+    status                    TEXT DEFAULT 'UPLOADED',
+    retry_count               INTEGER DEFAULT 0,
+    error_message             TEXT,
+    draft_id                  TEXT,
+    customer_id               TEXT,
+    created_at                TEXT,
+    processed_at              TEXT,
+    public_url                TEXT,
+    tenant_id                 TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS call_pipeline_logs (
+    id                        TEXT PRIMARY KEY,
+    call_upload_id            TEXT,
+    draft_id                  TEXT,
+    event_type                TEXT,
+    level                     TEXT DEFAULT 'INFO',
+    message                   TEXT,
+    payload                   JSONB DEFAULT '{}'::jsonb,
+    created_at                TEXT,
+    tenant_id                 TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS walkie_channels (
+    id                        TEXT PRIMARY KEY,
+    name                      TEXT,
+    code                      TEXT,
+    description               TEXT,
+    created_by_id             TEXT,
+    created_by_name           TEXT,
+    member_ids                JSONB DEFAULT '[]'::jsonb,
+    created_at                TEXT,
+    is_default                BOOLEAN DEFAULT FALSE,
+    tenant_id                 TEXT DEFAULT 'fl-demo'
+);
+
+CREATE TABLE IF NOT EXISTS apk_releases (
+    id                        TEXT PRIMARY KEY,
+    version                   TEXT,
+    storage_path              TEXT,
+    file_size                 BIGINT,
+    release_note              TEXT,
+    is_latest                 BOOLEAN DEFAULT FALSE,
+    created_at                TEXT,
+    download_url              TEXT,
+    tenant_id                 TEXT DEFAULT 'fl-demo'
 );
 
 -- ==============================================================================

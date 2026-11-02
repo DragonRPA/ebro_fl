@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { createClient } from '@supabase/supabase-js';
 import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
+import { createPrefixedSupabaseClient } from '../lib/supabasePrefixProxy';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import {
   InventoryAssetClass,
@@ -41,11 +41,11 @@ import {
 } from '../utils/cryptoVault';
 
 const isDemo = isDemoMode();
-const supabaseUrl = isDemo ? DEMO_SUPABASE_CONFIG.url : import.meta.env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = isDemo ? DEMO_SUPABASE_CONFIG.anonKey : import.meta.env?.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = isDemo ? DEMO_SUPABASE_CONFIG.url : (import.meta.env?.VITE_SUPABASE_URL || DEMO_SUPABASE_CONFIG.url);
+const supabaseAnonKey = isDemo ? DEMO_SUPABASE_CONFIG.anonKey : (import.meta.env?.VITE_SUPABASE_ANON_KEY || DEMO_SUPABASE_CONFIG.anonKey);
 
 export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createPrefixedSupabaseClient(supabaseUrl, supabaseAnonKey, 'fl_')
   : null;
 
 //  중앙 플랫폼 DB(ebro-platform-core) 직통 라우팅 대상 테이블 목록
@@ -55,7 +55,8 @@ export const CENTRAL_TABLE_NAMES = new Set([
   'system_manuals',
   'manual_annotations',
   'legal_notice_templates',
-  'apk_releases'
+  'apk_releases',
+  'developer_authorized_devices'
 ]);
 
 //  로컬 전용 격리 테이블 목록 (렌탈·유통 통합 운용으로 전 테이블 원격 DB 연동 활성화)
@@ -394,8 +395,12 @@ export const TENANTS_DDL_STATEMENTS: string[] = [
 
 /**  tenants 테이블 신규 컬럼 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
 export async function autoApplyTenantsDdl(): Promise<boolean> {
-  if (!supabase) return false;
+  if (!supabase && !centralSupabase) return false;
   try {
+    if (centralSupabase) {
+      await centralSupabase.rpc('dev_exec_ddl', { statements: TENANTS_DDL_STATEMENTS }).catch(() => {});
+    }
+    if (!supabase) return true;
     const { data, error } = await supabase.rpc('dev_exec_ddl', { statements: TENANTS_DDL_STATEMENTS });
     if (!error) {
       console.log('[autoApplyTenantsDdl] tenants DDL 실행 및 PostgREST 스키마 캐시 갱신 성공:', data);
@@ -415,7 +420,6 @@ export const ASSETS_DDL_STATEMENTS: string[] = [
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "assetNature" TEXT DEFAULT 'PHYSICAL';`,
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "antiEntrapmentOwnership" TEXT;`,
   `ALTER TABLE "assets" DROP CONSTRAINT IF EXISTS "assets_status_check";`,
-  `ALTER TABLE "assets" ADD CONSTRAINT "assets_status_check" CHECK (status IN);`,
   `UPDATE "assets" SET "yard" = '용인' WHERE "yard" IS NULL OR "yard" = '';`,
   `NOTIFY pgrst, 'reload schema';`
 ];
@@ -473,9 +477,6 @@ export const AS_ROUTE_LOGS_DDL_STATEMENTS: string[] = [
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "sourcingTargetName" TEXT;`,
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "partName" TEXT;`,
   `ALTER TABLE "as_route_logs" ADD COLUMN IF NOT EXISTS "revisitDate" TEXT;`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_work_date ON "as_route_logs";`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_mechanic ON "as_route_logs";`,
-  `CREATE INDEX IF NOT EXISTS idx_as_route_logs_repair ON "as_route_logs";`,
   `ALTER TABLE "as_route_logs" ENABLE ROW LEVEL SECURITY;`,
   `DROP POLICY IF EXISTS "allow_all_as_route_logs" ON "as_route_logs";`,
   `CREATE POLICY "allow_all_as_route_logs" ON "as_route_logs" FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);`,
@@ -5974,7 +5975,10 @@ class LocalDB {
       bankTransactions: 'bank_transactions',
       bankMatchingRules: 'bank_matching_rules',
       bankInitialBalances: 'bank_initial_balances',
+      bankAccountInitialBalances: 'bank_initial_balances',
+      bank_account_initial_balances: 'bank_initial_balances',
       assetInOutLogs: 'asset_inout_logs',
+      asset_in_out_logs: 'asset_inout_logs',
       vendors: 'vendors',
       cashFlowSnapshots: 'cash_flow_snapshots',
       outboundInspections: 'outbound_inspections',
@@ -7358,6 +7362,7 @@ class LocalDB {
       contract_history: 'contractHistory',
       contractHistories: 'contractHistory',
       asset_inout_logs: 'assetInOutLogs',
+      asset_in_out_logs: 'assetInOutLogs',
       outbound_inspections: 'outboundInspections',
       billing_details: 'billingDetails',
       transport_companies: 'transportCompanies',
@@ -7365,6 +7370,8 @@ class LocalDB {
       bank_transactions: 'bankTransactions',
       bank_matching_rules: 'bankMatchingRules',
       bank_initial_balances: 'bankInitialBalances',
+      bank_account_initial_balances: 'bankInitialBalances',
+      bankAccountInitialBalances: 'bankInitialBalances',
       payment_deposit_links: 'paymentDepositLinks',
       repair_consumables: 'repairConsumables',
       consumable_logs: 'consumableLogs',
