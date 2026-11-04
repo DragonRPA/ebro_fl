@@ -1786,6 +1786,21 @@ CREATE TABLE IF NOT EXISTS contracts (
     "optionBillingMode"       TEXT DEFAULT 'MONTHLY_ADDED',
     "optionMonthlyTotal"      DOUBLE PRECISION DEFAULT 0,
     "optionOneTimeTotal"      DOUBLE PRECISION DEFAULT 0,
+    "tradeSupplyAmount"       DOUBLE PRECISION DEFAULT 0,
+    "tradeTotalAmount"        DOUBLE PRECISION DEFAULT 0,
+    "tradeCostAmount"         DOUBLE PRECISION DEFAULT 0,
+    "costTypeLabel"           TEXT DEFAULT '렌탈원가',
+    "contractMonths"          INTEGER DEFAULT 12,
+    "monthlyRevenueAmount"    DOUBLE PRECISION DEFAULT 0,
+    "monthlyCostAmount"       DOUBLE PRECISION DEFAULT 0,
+    "equipmentCostAmount"     DOUBLE PRECISION DEFAULT 0,
+    "optionCostAmount"        DOUBLE PRECISION DEFAULT 0,
+    "maintenanceCostAmount"   DOUBLE PRECISION DEFAULT 0,
+    "revenueAmount"           DOUBLE PRECISION DEFAULT 0,
+    "costAmount"              DOUBLE PRECISION DEFAULT 0,
+    "profitAmount"            DOUBLE PRECISION DEFAULT 0,
+    "marginRate"              DOUBLE PRECISION DEFAULT 0,
+    "specialTerms"            TEXT,
     "approvalStatus"          TEXT,
     "packageSentAt"           TEXT,
     "lastBilledYm"            TEXT,
@@ -1797,10 +1812,27 @@ CREATE TABLE IF NOT EXISTS contracts (
     "tenant_id"               TEXT DEFAULT 'fl-demo'
 );
 
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeTotalAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "costTypeLabel" TEXT DEFAULT '렌탈원가';
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "contractMonths" INTEGER DEFAULT 12;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "monthlyRevenueAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "monthlyCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "equipmentCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "optionCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "maintenanceCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "revenueAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "costAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "profitAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "marginRate" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "specialTerms" TEXT;
+
 CREATE TABLE IF NOT EXISTS contract_assets (
     id                        TEXT PRIMARY KEY,
     "contractId"              TEXT,
     "assetId"                 TEXT,
+    "modelName"               TEXT,
     "expectedModel"           TEXT,
     "monthlyRentalFee"        DOUBLE PRECISION DEFAULT 0,
     "dailyRentalFee"          DOUBLE PRECISION DEFAULT 0,

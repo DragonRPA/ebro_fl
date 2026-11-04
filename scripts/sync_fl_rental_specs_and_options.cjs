@@ -93,9 +93,25 @@ async function main() {
       ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb,
       ADD COLUMN IF NOT EXISTS "optionBillingMode" TEXT DEFAULT 'MONTHLY_ADDED',
       ADD COLUMN IF NOT EXISTS "optionMonthlyTotal" DOUBLE PRECISION DEFAULT 0,
-      ADD COLUMN IF NOT EXISTS "optionOneTimeTotal" DOUBLE PRECISION DEFAULT 0;
+      ADD COLUMN IF NOT EXISTS "optionOneTimeTotal" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "tradeSupplyAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "tradeTotalAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "tradeCostAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "costTypeLabel" TEXT DEFAULT '렌탈원가',
+      ADD COLUMN IF NOT EXISTS "contractMonths" INTEGER DEFAULT 12,
+      ADD COLUMN IF NOT EXISTS "monthlyRevenueAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "monthlyCostAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "equipmentCostAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "optionCostAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "maintenanceCostAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "revenueAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "costAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "profitAmount" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "marginRate" DOUBLE PRECISION DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS "specialTerms" TEXT;
 
     ALTER TABLE IF EXISTS "fl_contract_assets"
+      ADD COLUMN IF NOT EXISTS "modelName" TEXT,
       ADD COLUMN IF NOT EXISTS "mastType" TEXT,
       ADD COLUMN IF NOT EXISTS "mastModelCode" TEXT,
       ADD COLUMN IF NOT EXISTS "standardLiftHeightMm" INTEGER,
@@ -310,6 +326,180 @@ async function main() {
       END;
   `);
   console.log(`✅ Verified all ${fallbackAssetsRes.rowCount} rental assets in fl_assets have 100% VDI 2198 & installable option coverage`);
+
+  // 1) fl_forklift_option_masters 19종 동기화
+  for (const o of stdOptions) {
+    const fomId = o.id.replace('STD-', '');
+    await client.query(`
+      INSERT INTO "fl_forklift_option_masters" (
+        id, "optionCode", "optionGroup", "optionGroupLabel", "domainType", "domainTypeLabel",
+        name, "subVariant", "specDetail", "applicableTonnage", unit,
+        "costPrice", "dealerPrice", "unitPrice", "isFreeDefault", "installLeadHours",
+        "isActive", "sortOrder", memo, "createdAt", "updatedAt"
+      ) VALUES (
+        $1, $2, 'SIDESHIFT', $3, $4, $5,
+        $6, $7, $7, '전 톤수 공용', $8,
+        $9, $10, $11, FALSE, 2,
+        TRUE, $12, $7, '2026-01-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        "optionCode" = EXCLUDED."optionCode",
+        name = EXCLUDED.name,
+        "costPrice" = EXCLUDED."costPrice",
+        "dealerPrice" = EXCLUDED."dealerPrice",
+        "unitPrice" = EXCLUDED."unitPrice",
+        "sortOrder" = EXCLUDED."sortOrder",
+        "isActive" = TRUE;
+    `, [
+      fomId,
+      o.optionCode,
+      o.category === 'ATTACHMENT' ? '사이드시프트·부착물' : '안전옵션·설치형',
+      o.category,
+      o.category === 'ATTACHMENT' ? '부착물' : '유상옵션',
+      o.name,
+      o.description,
+      o.unit,
+      Math.round(o.defaultPrice * 0.65),
+      Math.round(o.defaultPrice * 0.85),
+      o.defaultPrice,
+      o.sortOrder
+    ]);
+  }
+  console.log(`✅ Upserted ${stdOptions.length} rows into fl_forklift_option_masters`);
+
+  // 2) fl_contract_assets 누락된 CAST-FL-002 (2대 체결계약 보강) 업서트
+  await client.query(`
+    INSERT INTO "fl_contract_assets" (
+      id, "contractId", "assetId", "modelName", "expectedModel", "mastType", "mastModelCode",
+      "standardLiftHeightMm", "batteryVoltageCapacity", "forkDimensionsMm",
+      "installedOptions", "optionMonthlyFee", "optionOneTimeFee",
+      "monthlyRentalFee", "dailyRentalFee", "startDate", "endDate", status, "createdAt"
+    ) VALUES (
+      'CAST-FL-002', 'CTR-R2607-001', 'AST-FL-002', 'CPD25-GB2Li', 'CPD25-GB2Li', '3단 풀프리 마스트 · 컨테이너 인입형', 'TF450',
+      4500, '80V / 271Ah 리튬인산철', '40 × 122 × 1,070',
+      '사이드시프트 · 후방카메라 · 3방향 레드라인', 105000, 0,
+      850000, 28330, '2026-07-01', '2027-06-30', 'RENTED', '2026-07-01T09:00:00.000Z'
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      "contractId" = EXCLUDED."contractId",
+      "assetId" = EXCLUDED."assetId",
+      "monthlyRentalFee" = EXCLUDED."monthlyRentalFee",
+      "optionMonthlyFee" = EXCLUDED."optionMonthlyFee";
+  `);
+
+  // 3) 모든 fl_contracts (RENTAL + TRADE) 원가(렌탈원가 / 유통원가)·매출·매출총이익·이익률(%) 정밀 집계 업데이트
+  const allContractsRes = await client.query(`SELECT * FROM "fl_contracts" ORDER BY id ASC`);
+  const allContractAssetsRes = await client.query(`SELECT * FROM "fl_contract_assets"`);
+  const allAssetsRes = await client.query(`SELECT * FROM "fl_assets"`);
+  const allTradeOrdersRes = await client.query(`SELECT * FROM "fl_trade_sales_orders"`);
+  const allRepairsRes = await client.query(`SELECT * FROM "fl_repairs"`);
+
+  const cAssetsAll = allContractAssetsRes.rows;
+  const rAssetsAll = allAssetsRes.rows;
+  const tOrdersAll = allTradeOrdersRes.rows;
+  const repairsAll = allRepairsRes.rows;
+
+  const tradeFallbackCogs = {
+    'CTR-T2609-101': 17670000,
+    'CTR-T2610-102': 19450000,
+    'CTR-T2610-103': 29530000,
+    'CTR-T2610-104': 3765000,
+    'CTR-T2610-105': 3616000
+  };
+
+  let updatedRentalCtr = 0;
+  let updatedTradeCtr = 0;
+
+  for (const c of allContractsRes.rows) {
+    const isTrade = c.contractType === 'TRADE';
+    if (isTrade) {
+      const matchedOrder = tOrdersAll.find(
+        so => (c.tradeOrderId && so.id === c.tradeOrderId) || so.contractId === c.id || so.contractNo === c.contractNo
+      );
+      const rev = Number(c.tradeSupplyAmount || matchedOrder?.totalSalesAmount || c.totalAmount || 0);
+      const optCost = Number(matchedOrder?.optionCostAmount || 0);
+      const equipCost = Number(matchedOrder?.totalCogsAmount || tradeFallbackCogs[c.id] || Math.round(rev * 0.74));
+      const totalCost = equipCost + optCost;
+      const profit = rev - totalCost;
+      const margin = rev > 0 ? Number(((profit / rev) * 100).toFixed(1)) : 0;
+
+      await client.query(`
+        UPDATE "fl_contracts"
+        SET
+          "costTypeLabel" = '유통원가',
+          "contractMonths" = 1,
+          "monthlyRevenueAmount" = $2,
+          "monthlyCostAmount" = $3,
+          "equipmentCostAmount" = $4,
+          "optionCostAmount" = $5,
+          "maintenanceCostAmount" = 0,
+          "tradeSupplyAmount" = $2,
+          "tradeTotalAmount" = $6,
+          "tradeCostAmount" = $3,
+          "totalAmount" = $2,
+          "revenueAmount" = $2,
+          "costAmount" = $3,
+          "profitAmount" = $7,
+          "marginRate" = $8
+        WHERE id = $1
+      `, [c.id, rev, totalCost, equipCost, optCost, Math.round(rev * 1.1), profit, margin]);
+      updatedTradeCtr++;
+    } else {
+      const startMs = c.startDate ? new Date(c.startDate).getTime() : NaN;
+      const endMs = c.endDate ? new Date(c.endDate).getTime() : NaN;
+      const months = (!isNaN(startMs) && !isNaN(endMs) && endMs >= startMs)
+        ? Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24 * 30.4375)))
+        : 12;
+      const cAssets = cAssetsAll.filter(ca => ca.contractId === c.id);
+      const baseMonthlyRental = cAssets.reduce((s, ca) => s + Number(ca.monthlyRentalFee || 0), 0);
+      const optMonthly = c.optionBillingMode === 'MONTHLY_ADDED' ? Number(c.optionMonthlyTotal || 0) : 0;
+      const optOneTime = c.optionBillingMode === 'ONE_TIME_BILLING' ? Number(c.optionOneTimeTotal || 0) : 0;
+      const monthlyRev = (baseMonthlyRental + optMonthly) || Number(c.totalAmount || 850000);
+      const rev = monthlyRev * months + optOneTime;
+
+      const equipMonthlyCost = cAssets.reduce((s, ca) => {
+        const aObj = rAssetsAll.find(a => a.id === ca.assetId || a.assetNo === ca.assetId);
+        const acq = Number(aObj?.acquisitionPrice || aObj?.purchasePrice || 20500000);
+        return s + Math.round((acq * 0.9) / 60);
+      }, 0) || Math.round(monthlyRev * 0.36);
+      const equipCost = equipMonthlyCost * months;
+
+      const appliedOpts = Array.isArray(c.appliedOptions) ? c.appliedOptions : [];
+      const rawOptCost = appliedOpts.reduce((s, o) => s + Number(o.costPrice || Math.round(Number(o.unitPrice || 0) * 0.65)) * Number(o.qty || o.quantity || 1), 0);
+      const optCost = c.optionBillingMode === 'ONE_TIME_BILLING' ? rawOptCost : Math.round(rawOptCost * Math.min(1, months / 36));
+
+      const actualRepairCost = repairsAll
+        .filter(r => r.contractId === c.id && !r.billableToCustomer)
+        .reduce((s, r) => s + Number(r.totalCost || r.costTotal || 0), 0);
+      const maintCost = Math.max(1, cAssets.length) * 45000 * months + actualRepairCost;
+
+      const totalCost = equipCost + optCost + maintCost;
+      const monthlyCost = Math.round(totalCost / Math.max(1, months));
+      const profit = rev - totalCost;
+      const margin = rev > 0 ? Number(((profit / rev) * 100).toFixed(1)) : 0;
+
+      await client.query(`
+        UPDATE "fl_contracts"
+        SET
+          "costTypeLabel" = '렌탈원가',
+          "contractMonths" = $2,
+          "monthlyRevenueAmount" = $3,
+          "monthlyCostAmount" = $4,
+          "equipmentCostAmount" = $5,
+          "optionCostAmount" = $6,
+          "maintenanceCostAmount" = $7,
+          "tradeCostAmount" = 0,
+          "totalAmount" = $8,
+          "revenueAmount" = $8,
+          "costAmount" = $9,
+          "profitAmount" = $10,
+          "marginRate" = $11
+        WHERE id = $1
+      `, [c.id, months, monthlyRev, monthlyCost, equipCost, optCost, maintCost, rev, totalCost, profit, margin]);
+      updatedRentalCtr++;
+    }
+  }
+  console.log(`✅ Updated cost/revenue/profit/margin for ${updatedRentalCtr} RENTAL contracts (렌탈원가) and ${updatedTradeCtr} TRADE contracts (유통원가)`);
 
   await client.query("NOTIFY pgrst, 'reload schema';");
   console.log('🏁 PostgreSQL rental FL specs & installable options sync complete!');

@@ -115,13 +115,20 @@ export const TABLE_COLUMNS: Record<string, string[]> = {
     'id', 'contractNo', 'customerId', 'salespersonId', 'contactId', 'siteId', 'billingDay', 'status', 'driveFolderId', 'startDate', 'endDate',
     'createdAt', 'updatedAt', 'successorContractId', 'predecessorContractId', 'predecessorContractNo', 'predecessorCustomerId', 'predecessorCustomerName',
     'lateInterestRate', 'paymentDueDay', 'lastBillingDate', 'lastBilledPeriodStart', 'lastBilledPeriodEnd', 'lastBilledYm', 'billingCount',
-    'tenant_id', 'contractType', 'statementClosingDay', 'customerName', 'salespersonName', 'saleTerms', 'paymentDueMonthOffset', 'freightBillingStandard'
+    'tenant_id', 'contractType', 'contractUnitRule', 'outboundId', 'outboundSeq', 'tradeOrderId', 'tradeItemSummary', 'tradeItemsSummary', 'tradeInventoryClasses',
+    'tradeSupplyAmount', 'tradeTotalAmount', 'tradeCostAmount', 'totalAmount',
+    'costTypeLabel', 'contractMonths', 'monthlyRevenueAmount', 'monthlyCostAmount', 'equipmentCostAmount', 'optionCostAmount', 'maintenanceCostAmount',
+    'revenueAmount', 'costAmount', 'profitAmount', 'marginRate', 'specialTerms',
+    'installedOptionsSummary', 'appliedOptions', 'optionBillingMode', 'optionMonthlyTotal', 'optionOneTimeTotal',
+    'statementClosingDay', 'customerName', 'salespersonName', 'saleTerms', 'paymentDueMonthOffset', 'freightBillingStandard'
   ],
   contract_history: [
     'id', 'contractId', 'changeType', 'changeDate', 'description', 'createdAt', 'updatedAt', 'prevEndDate', 'newEndDate', 'tenant_id'
   ],
   contract_assets: [
-    'id', 'contractId', 'assetId', 'expectedModel', 'monthlyRentalFee', 'dailyRentalFee', 'startDate', 'endDate', 'createdAt', 'updatedAt',
+    'id', 'contractId', 'assetId', 'modelName', 'expectedModel', 'mastType', 'mastModelCode', 'standardLiftHeightMm', 'batteryVoltageCapacity', 'forkDimensionsMm',
+    'installedOptions', 'optionMonthlyFee', 'optionOneTimeFee',
+    'monthlyRentalFee', 'dailyRentalFee', 'startDate', 'endDate', 'createdAt', 'updatedAt',
     'status', 'actualReturnDate', 'tenant_id', 'salePrice', 'contractStart', 'contractEnd', 'currentCustomerId', 'currentSiteId',
     'firstStartDate', 'predecessorContractId', 'predecessorContractAssetId', 'inRegisteredAt'
   ],
@@ -519,7 +526,18 @@ const ALL_TABLES = [
   'walkie_channels',
   'call_uploads',
   'call_pipeline_logs',
-  'draft_dispatch_orders'
+  'draft_dispatch_orders',
+  'forklift_option_masters',
+  'consumable_lots',
+  'trade_products',
+  'trade_purchases',
+  'trade_purchase_items',
+  'trade_inventory_lots',
+  'trade_sales_orders',
+  'trade_sales_order_lines',
+  'trade_outbounds',
+  'trade_billings',
+  'trade_returns'
 ];
 
 export async function exportFullDatabaseBackup(): Promise<{ backupData: Record<string, any[]>; timestamp: string; filename: string }> {
@@ -657,7 +675,18 @@ export async function restoreFullDatabaseBackup(
     'walkie_channels',
     'draft_dispatch_orders',
     'call_uploads',
-    'call_pipeline_logs'
+    'call_pipeline_logs',
+    'forklift_option_masters',
+    'consumable_lots',
+    'trade_products',
+    'trade_purchases',
+    'trade_purchase_items',
+    'trade_inventory_lots',
+    'trade_sales_orders',
+    'trade_sales_order_lines',
+    'trade_outbounds',
+    'trade_billings',
+    'trade_returns'
   ];
 
   let totalRestored = 0;

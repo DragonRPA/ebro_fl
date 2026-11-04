@@ -12,7 +12,8 @@ import {
   MUJIN_CONSUMABLES,
   MUJIN_CONSUMABLE_LOTS,
   MUJIN_CONSUMABLE_LOGS,
-  MUJIN_TRADE_CONTRACTS
+  MUJIN_TRADE_CONTRACTS,
+  MUJIN_TRADE_SALES_ORDERS
 } from './mujinGlobalInitialData';
 
 export type InventoryAssetClass = 'ASSET' | 'PRODUCT' | 'PART' | 'CONSUMABLE';
@@ -629,7 +630,7 @@ export const SEED_FL_CONSUMABLE_LOGS: any[] = [
 // 4. 계약 구분자 적용: 렌탈 계약(고객 현장별 계약) vs 유통 계약(출고 건별 계약)
 // ============================================================
 
-export const SEED_FL_CONTRACTS = [...MUJIN_TRADE_CONTRACTS,
+const RAW_SEED_FL_CONTRACTS = [...MUJIN_TRADE_CONTRACTS,
   // [A] 렌탈 계약 (contractType: 'RENTAL') - 고객의 현장별로 1개 계약 체결
   {
     id: 'CTR-R2607-001',
@@ -1058,3 +1059,164 @@ export const SEED_FL_REPAIRS = [
     updatedAt: '2026-10-20T14:00:00.000Z'
   }
 ];
+
+const TRADE_STANDARD_COGS_MAP: Record<string, number> = {
+  'CTR-T2609-101': 17670000,
+  'CTR-T2610-102': 19450000,
+  'CTR-T2610-103': 29530000,
+  'CTR-T2610-104': 3765000,
+  'CTR-T2610-105': 3616000
+};
+
+export function enrichContractWithCostAndMargin(
+  rawContract: any,
+  contractAssetsList: any[] = SEED_FL_CONTRACT_ASSETS,
+  assetsList: any[] = SEED_FL_RENTAL_ASSETS,
+  salesOrdersList: any[] = MUJIN_TRADE_SALES_ORDERS,
+  repairsList: any[] = SEED_FL_REPAIRS
+) {
+  const cType: 'RENTAL' | 'TRADE' = rawContract.contractType === 'TRADE' ? 'TRADE' : 'RENTAL';
+
+  if (cType === 'TRADE') {
+    const matchedOrder = (salesOrdersList || []).find(
+      (so: any) =>
+        (rawContract.tradeOrderId && so.id === rawContract.tradeOrderId) ||
+        so.contractId === rawContract.id ||
+        so.contractNo === rawContract.contractNo
+    );
+
+    const baseSupplyRevenue = Number(
+      rawContract.revenueAmount ||
+      rawContract.tradeSupplyAmount ||
+      matchedOrder?.totalSalesAmount ||
+      rawContract.totalAmount ||
+      0
+    );
+    const optionCost = Number(
+      rawContract.optionCostAmount ??
+      matchedOrder?.optionCostAmount ??
+      (Array.isArray(rawContract.appliedOptions)
+        ? rawContract.appliedOptions.reduce((sum: number, o: any) => sum + Number(o.costPrice || 0) * Number(o.qty || 1), 0)
+        : 0)
+    );
+    const matchedOrderCogs = Number(matchedOrder?.totalCogsAmount || 0);
+    const fallbackCogs =
+      TRADE_STANDARD_COGS_MAP[rawContract.id] ||
+      Math.round(baseSupplyRevenue * 0.74);
+
+    const equipCogs = Number(
+      rawContract.equipmentCostAmount ||
+      rawContract.tradeCostAmount ||
+      (matchedOrderCogs > 0 ? matchedOrderCogs : fallbackCogs)
+    );
+    const totalCost = Number(rawContract.costAmount || (equipCogs + optionCost));
+    const grossProfit = baseSupplyRevenue - totalCost;
+    const marginRate = baseSupplyRevenue > 0 ? Number(((grossProfit / baseSupplyRevenue) * 100).toFixed(1)) : 0;
+
+    return {
+      ...rawContract,
+      contractType: 'TRADE' as const,
+      costTypeLabel: '유통원가' as const,
+      contractMonths: 1,
+      monthlyRevenueAmount: baseSupplyRevenue,
+      monthlyCostAmount: totalCost,
+      equipmentCostAmount: equipCogs,
+      optionCostAmount: optionCost,
+      maintenanceCostAmount: 0,
+      tradeSupplyAmount: baseSupplyRevenue,
+      tradeTotalAmount: Number(rawContract.tradeTotalAmount || Math.round(baseSupplyRevenue * 1.1)),
+      tradeCostAmount: totalCost,
+      totalAmount: baseSupplyRevenue,
+      revenueAmount: baseSupplyRevenue,
+      costAmount: totalCost,
+      profitAmount: grossProfit,
+      marginRate
+    };
+  }
+
+  // RENTAL 계약 (렌탈원가 기준)
+  const startMs = rawContract.startDate ? new Date(rawContract.startDate).getTime() : NaN;
+  const endMs = rawContract.endDate ? new Date(rawContract.endDate).getTime() : NaN;
+  const calcMonths =
+    !isNaN(startMs) && !isNaN(endMs) && endMs >= startMs
+      ? Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24 * 30.4375)))
+      : 12;
+  const contractMonths = Number(rawContract.contractMonths || calcMonths || 12);
+
+  const cAssets = (contractAssetsList || []).filter((ca: any) => ca.contractId === rawContract.id);
+  const baseMonthlyRental = cAssets.reduce((sum: number, ca: any) => sum + Number(ca.monthlyRentalFee || 0), 0);
+  const optMonthly =
+    rawContract.optionBillingMode === 'MONTHLY_ADDED'
+      ? Number(rawContract.optionMonthlyTotal || 0)
+      : 0;
+  const optOneTime =
+    rawContract.optionBillingMode === 'ONE_TIME_BILLING'
+      ? Number(rawContract.optionOneTimeTotal || 0)
+      : 0;
+
+  const monthlyRevenueAmount = Number(
+    rawContract.monthlyRevenueAmount || (baseMonthlyRental + optMonthly) || Number(rawContract.totalAmount || 850000)
+  );
+  const revenueAmount = Number(
+    rawContract.revenueAmount || (monthlyRevenueAmount * contractMonths + optOneTime)
+  );
+
+  // 1) 장비 감가·임차 원가 (자사보유 60개월 정액감가 잔존가치 10% / 전대임차 월임차료)
+  const equipmentMonthlyCost = cAssets.reduce((sum: number, ca: any) => {
+    const assetObj = (assetsList || []).find((a: any) => a.id === ca.assetId || a.assetNo === ca.assetId);
+    if (assetObj && (assetObj.ownerType === 'RENTED' || assetObj.ownership === 'SUBLEASED') && Number(assetObj.monthlyRentFee) > 0) {
+      return sum + Number(assetObj.monthlyRentFee);
+    }
+    const acqPrice = Number(assetObj?.acquisitionPrice || assetObj?.purchasePrice || 20500000);
+    const monthlyDep = Math.round((acqPrice * 0.9) / 60);
+    return sum + monthlyDep;
+  }, 0) || Math.round(monthlyRevenueAmount * 0.36);
+
+  const equipmentCostAmount = Number(rawContract.equipmentCostAmount ?? (equipmentMonthlyCost * contractMonths));
+
+  // 2) 설치형옵션 원가 (일시청구 시 시공원가 100%, 월합산 시 36개월 내구연한 안분 상각원가)
+  const rawOptCostTotal = Array.isArray(rawContract.appliedOptions)
+    ? rawContract.appliedOptions.reduce((sum: number, o: any) => sum + Number(o.costPrice || 0) * Number(o.qty || o.quantity || 1), 0)
+    : 0;
+  const computedOptionCost =
+    rawContract.optionBillingMode === 'ONE_TIME_BILLING'
+      ? rawOptCostTotal
+      : Math.round(rawOptCostTotal * Math.min(1, contractMonths / 36));
+  const optionCostAmount = Number(rawContract.optionCostAmount ?? computedOptionCost);
+
+  // 3) 정기점검·정비 배부원가 (대당 월 45,000원 정기점검 충당원가 + 계약 귀속 비유상 수리비)
+  const actualRepairCost = (repairsList || [])
+    .filter((r: any) => r.contractId === rawContract.id && !r.billableToCustomer)
+    .reduce((sum: number, r: any) => sum + Number(r.totalCost || r.costTotal || 0), 0);
+  const assetCount = Math.max(1, cAssets.length);
+  const maintenanceCostAmount = Number(
+    rawContract.maintenanceCostAmount ?? (assetCount * 45000 * contractMonths + actualRepairCost)
+  );
+
+  const costAmount = Number(rawContract.costAmount || (equipmentCostAmount + optionCostAmount + maintenanceCostAmount));
+  const monthlyCostAmount = Number(rawContract.monthlyCostAmount || Math.round(costAmount / Math.max(1, contractMonths)));
+  const profitAmount = revenueAmount - costAmount;
+  const marginRate = revenueAmount > 0 ? Number(((profitAmount / revenueAmount) * 100).toFixed(1)) : 0;
+
+  return {
+    ...rawContract,
+    contractType: 'RENTAL' as const,
+    costTypeLabel: '렌탈원가' as const,
+    contractMonths,
+    monthlyRevenueAmount,
+    monthlyCostAmount,
+    equipmentCostAmount,
+    optionCostAmount,
+    maintenanceCostAmount,
+    tradeCostAmount: 0,
+    totalAmount: revenueAmount,
+    revenueAmount,
+    costAmount,
+    profitAmount,
+    marginRate
+  };
+}
+
+export const SEED_FL_CONTRACTS = RAW_SEED_FL_CONTRACTS.map(c =>
+  enrichContractWithCostAndMargin(c, SEED_FL_CONTRACT_ASSETS, SEED_FL_RENTAL_ASSETS, MUJIN_TRADE_SALES_ORDERS, SEED_FL_REPAIRS)
+);

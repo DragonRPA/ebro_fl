@@ -10,6 +10,8 @@
     "build:agent": "node agent/encrypt_core.cjs",
     "lint": "oxlint",
     "preview": "vite preview",
+    "db:backup": "node scripts/backup_fl_golden_snapshot.cjs",
+    "db:restore": "node scripts/restore_fl_golden_snapshot.cjs",
     "devops:central-migrate": "node scripts/devops/migrate_data_to_central.cjs",
     "devops:tenants-inspect": "node scripts/devops/sync_tenant_schemas.cjs"
   },

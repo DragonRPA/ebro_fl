@@ -33,6 +33,7 @@ export interface TradeContextType {
   outbounds: TradeOutbound[];
   billings: TradeBilling[];
   returns: TradeReturn[];
+  restoreGoldenTradeData: () => Promise<void>;
 
   // Option Masters CRUD (지게차 옵션·부착물 단가 마스터)
   addOptionMaster: (opt: Omit<ForkliftOptionMaster, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ForkliftOptionMaster>;
@@ -4969,6 +4970,35 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await db.awaitPendingWrites();
   };
 
+  const restoreGoldenTradeData = async () => {
+    const cleanProducts = DEFAULT_PRODUCTS.map(enrichTradeProductWithArchive);
+    setProducts(cleanProducts);
+    setOptionMasters([...DEFAULT_FORKLIFT_OPTION_MASTERS]);
+    setPurchases([...DEFAULT_PURCHASES]);
+    setPurchaseItems([...DEFAULT_PURCHASE_ITEMS]);
+    setInventoryLots([...DEFAULT_LOTS]);
+    setInventoryAdjustments([]);
+    setSalesOrders([...DEFAULT_SALES_ORDERS]);
+    setSalesOrderLines([...DEFAULT_SALES_ORDER_LINES]);
+    setOutbounds([...DEFAULT_OUTBOUNDS]);
+    setBillings([...DEFAULT_BILLINGS]);
+    setReturns([]);
+    try {
+      localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));
+      localStorage.setItem('ebro_trade_products', JSON.stringify(cleanProducts));
+      localStorage.setItem('ebro_trade_purchases', JSON.stringify(DEFAULT_PURCHASES));
+      localStorage.setItem('ebro_trade_purchase_items', JSON.stringify(DEFAULT_PURCHASE_ITEMS));
+      localStorage.setItem('ebro_trade_inventory', JSON.stringify(DEFAULT_LOTS));
+      localStorage.setItem('ebro_trade_adjustments', JSON.stringify([]));
+      localStorage.setItem('ebro_trade_orders', JSON.stringify(DEFAULT_SALES_ORDERS));
+      localStorage.setItem('ebro_trade_lines', JSON.stringify(DEFAULT_SALES_ORDER_LINES));
+      localStorage.setItem('ebro_trade_outbounds', JSON.stringify(DEFAULT_OUTBOUNDS));
+      localStorage.setItem('ebro_trade_billings', JSON.stringify(DEFAULT_BILLINGS));
+      localStorage.setItem('ebro_trade_returns', JSON.stringify([]));
+    } catch (e) {}
+    await db.awaitPendingWrites();
+  };
+
   return (
     <TradeContext.Provider
       value={{
@@ -4983,6 +5013,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         outbounds,
         billings,
         returns,
+        restoreGoldenTradeData,
         addOptionMaster,
         updateOptionMaster,
         deleteOptionMaster,

@@ -21,12 +21,15 @@ import {
   SEED_FL_CONSUMABLE_LOGS,
   SEED_FL_CONTRACTS,
   SEED_FL_CONTRACT_ASSETS,
-  SEED_FL_REPAIRS
+  SEED_FL_REPAIRS,
+  enrichContractWithCostAndMargin
 } from '../data/flUnifiedSeedData';
 export {
   INVENTORY_ASSET_CLASS_META,
   INVENTORY_USAGE_PURPOSE_META,
-  CONTRACT_CATEGORY_META
+  CONTRACT_CATEGORY_META,
+  enrichContractWithCostAndMargin,
+  enrichContractWithCostAndMargin as calculateContractProfitability
 };
 export type {
   InventoryAssetClass,
@@ -2104,6 +2107,7 @@ export interface ContractAsset {
   id: string;
   contractId: string;
   assetId?: string;
+  modelName?: string;
   expectedModel?: string;
   status?: 'RENTED' | 'RETURNED' | 'ASSIGNED' | 'OUTBOUND_INSPECTION' | 'AWAITING_TRANSPORT' | 'SOLD' | string;
   actualReturnDate?: string;
@@ -2165,7 +2169,21 @@ export interface Contract {
   tradeInventoryClasses?: InventoryAssetClass[]; // 출고된 유형자산·재고 분류 목록
   tradeSupplyAmount?: number; // 유통 계약 공급가액
   tradeTotalAmount?: number; // 유통 계약 합계금액 (부가세 포함)
+  tradeCostAmount?: number; // 유통 계약 원가 (LOT 입고원가 + 옵션원가)
   totalAmount?: number; // 계약 금액 호환
+  //  계약 유형별 원가(유통원가 / 렌탈원가)·매출·매출총이익·이익률(%) 집계 필드
+  costTypeLabel?: '유통원가' | '렌탈원가';
+  contractMonths?: number;
+  monthlyRevenueAmount?: number;
+  monthlyCostAmount?: number;
+  equipmentCostAmount?: number;
+  optionCostAmount?: number;
+  maintenanceCostAmount?: number;
+  revenueAmount?: number;
+  costAmount?: number;
+  profitAmount?: number;
+  marginRate?: number;
+  specialTerms?: string;
   //  지게차 렌탈 설치형옵션(19종) 계약 구성 필드
   installedOptionsSummary?: string;
   appliedOptions?: any[];
@@ -6126,17 +6144,28 @@ class LocalDB {
 
   get contracts() { 
     const raw = this.get<Contract>('contracts', SEED_CONTRACTS);
+    const cAssets = this.get<ContractAsset>('contractAssets', SEED_CONTRACT_ASSETS);
+    const rAssets = this.get<Asset>('assets', SEED_ASSETS);
+    const rRepairs = this.get<Repair>('repairs', SEED_REPAIRS);
     return raw.map(c => {
       if (!c) return c;
-      const dueMonthOffset = c.paymentDueMonthOffset !== undefined && c.paymentDueMonthOffset !== null ? c.paymentDueMonthOffset : 1;
-      const dueDay = c.paymentDueDay || 25;
-      return {
-        ...c,
-        contractNo: c.contractNo || c.id,
-        totalAmount: Number(c.totalAmount || 0),
-        paymentDueMonthOffset: dueMonthOffset,
-        paymentDueDay: dueDay
-      };
+      const seedMatch = SEED_CONTRACTS.find(sc => sc.id === c.id || (sc.contractNo && sc.contractNo === c.contractNo));
+      const merged = seedMatch ? { ...seedMatch, ...c } : c;
+      const dueMonthOffset = merged.paymentDueMonthOffset !== undefined && merged.paymentDueMonthOffset !== null ? merged.paymentDueMonthOffset : 1;
+      const dueDay = merged.paymentDueDay || 25;
+      const enriched = enrichContractWithCostAndMargin(
+        {
+          ...merged,
+          contractNo: merged.contractNo || merged.id,
+          paymentDueMonthOffset: dueMonthOffset,
+          paymentDueDay: dueDay
+        },
+        cAssets,
+        rAssets,
+        undefined,
+        rRepairs
+      );
+      return enriched;
     });
   }
   set contracts(val: Contract[]) { this.set('contracts', val); }
@@ -8513,6 +8542,44 @@ class LocalDB {
     if (clearErrors.length > 0) {
       throw new Error(`[Supabase DB 전체 테이블 초기화 실패]\n\n${clearErrors.join('\n')}`);
     }
+  }
+
+  // 테스트 과정 데이터 훼손 시 준비된 골든 기준 데이터로 즉시 원클릭 복원
+  async restoreGoldenBaselineData(): Promise<{ restoredContracts: number; restoredAssets: number; restoredCustomers: number }> {
+    this.inMemoryCache.clear();
+    this.set('products', [...SEED_PRODUCTS]);
+    this.set('assets', [...SEED_ASSETS]);
+    this.set('customers', [...SEED_CUSTOMERS]);
+    this.set('sites', [...SEED_SITES]);
+    this.set('contacts', [...SEED_CONTACTS]);
+    this.set('vendors', [...SEED_VENDORS]);
+    this.set('standardOptions', [...SEED_STANDARD_OPTIONS]);
+    this.set('contracts', [...SEED_CONTRACTS]);
+    this.set('contractAssets', [...SEED_CONTRACT_ASSETS]);
+    this.set('consumables', [...SEED_CONSUMABLES]);
+    this.set('consumableLots', [...(SEED_FL_CONSUMABLE_LOTS as any[])]);
+    this.set('consumableLogs', [...SEED_CONSUMABLE_LOGS]);
+    this.set('repairs', [...SEED_REPAIRS]);
+
+    if (supabase) {
+      await this.upsertRows('standardOptions', SEED_STANDARD_OPTIONS as any[]);
+      await this.upsertRows('products', SEED_PRODUCTS as any[]);
+      await this.upsertRows('assets', SEED_ASSETS as any[]);
+      await this.upsertRows('customers', SEED_CUSTOMERS as any[]);
+      await this.upsertRows('sites', SEED_SITES as any[]);
+      await this.upsertRows('contacts', SEED_CONTACTS as any[]);
+      await this.upsertRows('vendors', SEED_VENDORS as any[]);
+      await this.upsertRows('contracts', SEED_CONTRACTS as any[]);
+      await this.upsertRows('contractAssets', SEED_CONTRACT_ASSETS as any[]);
+      await this.upsertRows('repairs', SEED_REPAIRS as any[]);
+      await this.awaitPendingWrites();
+    }
+
+    return {
+      restoredContracts: SEED_CONTRACTS.length,
+      restoredAssets: SEED_ASSETS.length,
+      restoredCustomers: SEED_CUSTOMERS.length
+    };
   }
 
 

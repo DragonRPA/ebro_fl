@@ -10,7 +10,8 @@ import {
   Building2, ArrowLeftRight, Receipt, FolderOpen, AlertCircle, ExternalLink, Copy, AlertTriangle, FileText,
   Truck, CheckCircle2, Network, Package, ShieldCheck
 } from 'lucide-react';
-import { Contract, db, Customer, CustomerContact, CustomerSite, ContractAsset, ContractHistory, Delivery, Asset, OutboundInspection, Receivable, Billing, TradeSalesOrder, TradeProduct, normalizeEndDate, formatContractEndDate, isIndefiniteEndDate, PAYMENT_DUE_MONTH_OPTIONS, formatPaymentDueCondition, isCustomerRestricted, isCustomerTotalBlocked, ApprovalPayload, isVirtualAsset } from '../services/db';
+import { Contract, db, Customer, CustomerContact, CustomerSite, ContractAsset, ContractHistory, Delivery, Asset, OutboundInspection, Receivable, Billing, TradeSalesOrder, TradeProduct, normalizeEndDate, formatContractEndDate, isIndefiniteEndDate, PAYMENT_DUE_MONTH_OPTIONS, formatPaymentDueCondition, isCustomerRestricted, isCustomerTotalBlocked, ApprovalPayload, isVirtualAsset, calculateContractProfitability } from '../services/db';
+import { exportFullDatabaseBackup } from '../services/migrationEngine';
 import { splitMasterAwareOptions } from '../types/siteOption';
 import { exportToExcel } from '../services/excel';
 import { ContractDocumentBundleModal } from '../components/ContractDocumentBundleModal';
@@ -38,8 +39,62 @@ export const Contracts: React.FC = () => {
     outbounds: tradeOutbounds,
     getProductStock: getTradeProductStock,
     createSalesOrder: createTradeSalesOrder,
-    deleteSalesOrder: deleteTradeSalesOrder
+    deleteSalesOrder: deleteTradeSalesOrder,
+    restoreGoldenTradeData
   } = useTrade();
+
+  const [isBackingUpData, setIsBackingUpData] = useState(false);
+  const [isRestoringData, setIsRestoringData] = useState(false);
+
+  const handleDownloadFullBackup = async () => {
+    setIsBackingUpData(true);
+    try {
+      const { backupData, filename } = await exportFullDatabaseBackup();
+      const snapshotPayload = {
+        meta: {
+          project: 'ebro_FL',
+          createdAt: new Date().toISOString()
+        },
+        tables: backupData,
+        tradeLocalStorage: {
+          ebro_fl_option_masters: localStorage.getItem('ebro_fl_option_masters'),
+          ebro_trade_products: localStorage.getItem('ebro_trade_products'),
+          ebro_trade_orders: localStorage.getItem('ebro_trade_orders'),
+          ebro_trade_lines: localStorage.getItem('ebro_trade_lines'),
+          ebro_trade_outbounds: localStorage.getItem('ebro_trade_outbounds'),
+          ebro_trade_billings: localStorage.getItem('ebro_trade_billings')
+        }
+      };
+      const blob = new Blob([JSON.stringify(snapshotPayload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('전체 데이터베이스 골든 백업 파일 다운로드가 완료되었습니다.');
+    } catch (err: any) {
+      showErrorModal(`백업 파일 생성 실패: ${err?.message || String(err)}`);
+    } finally {
+      setIsBackingUpData(false);
+    }
+  };
+
+  const handleRestoreGoldenBaseline = async () => {
+    setIsRestoringData(true);
+    try {
+      const res = await db.restoreGoldenBaselineData();
+      await restoreGoldenTradeData();
+      refreshAllData();
+      showToast(`기준 골든 데이터 복원 완료 · 계약 ${res.restoredContracts}건, 렌탈자산 ${res.restoredAssets}대, 거래처 ${res.restoredCustomers}개사 복구됨`);
+    } catch (err: any) {
+      showErrorModal(`기준 데이터 복원 실패: ${err?.message || String(err)}`);
+    } finally {
+      setIsRestoringData(false);
+    }
+  };
 
   const canUseContractTradeOutbound = useSpecialFeature('btn:contracts:trade_outbound');
   const isTenantTradeOutboundEnabled = currentTenant?.allowContractTradeOutbound !== false && currentTenant?.features?.allowContractTradeOutbound !== false;
@@ -2914,7 +2969,19 @@ export const Contracts: React.FC = () => {
     setBasket([]);
   };
 
-  // 계약 KPI 통계 및 상태 칩 건수 (렌탈 계약·유통 계약·매각 계약 정밀 분리 - 단일 패스 O(N))
+  // 개별 계약 건별 원가(유통원가 / 렌탈원가)·매출·이익·이익률(%) O(N) 맵
+  const contractProfitMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof calculateContractProfitability>>();
+    for (const c of contracts) {
+      if (!c) continue;
+      const cas = contractAssetsByContractMap.get(c.id) || [];
+      const metrics = calculateContractProfitability(c, cas, assets, tradeSalesOrders, repairs);
+      map.set(c.id, metrics);
+    }
+    return map;
+  }, [contracts, contractAssetsByContractMap, assets, tradeSalesOrders, repairs]);
+
+  // 계약 KPI 통계 및 상태 칩 건수 (렌탈 계약·유통 계약·매각 계약 정밀 분리 + 원가유형별 이익률 집계)
   const contractKpiStats = useMemo(() => {
     let rentalCount = 0;
     let tradeCount = 0;
@@ -2927,6 +2994,14 @@ export const Contracts: React.FC = () => {
     let totalRentSum = 0;
     let totalTradeSum = 0;
 
+    let rentalRevenueSum = 0;
+    let rentalCostSum = 0;
+    let rentalProfitSum = 0;
+
+    let tradeRevenueSum = 0;
+    let tradeCostSum = 0;
+    let tradeProfitSum = 0;
+
     let allActiveCount = 0;
     let allD3Count = 0;
     let allZeroFeeCount = 0;
@@ -2938,6 +3013,7 @@ export const Contracts: React.FC = () => {
       const isActive = c.status === 'ACTIVE' || c.status === 'EXTENDED' || c.status === 'SHORTENED';
       const isD3 = c.status !== 'COMPLETED' && getDDayText(c.endDate).isWarning;
       const cas = contractAssetsByContractMap.get(c.id) || [];
+      const prof = contractProfitMap.get(c.id);
       let hasZero = false;
       let contractRentSum = 0;
       for (const ca of cas) {
@@ -2954,7 +3030,12 @@ export const Contracts: React.FC = () => {
         saleCount++;
       } else if (isTrade) {
         tradeCount++;
-        totalTradeSum += (c.totalAmount || 0);
+        const rev = Number(prof?.revenueAmount ?? c.totalAmount ?? 0);
+        const cost = Number(prof?.costAmount ?? c.costAmount ?? 0);
+        totalTradeSum += rev;
+        tradeRevenueSum += rev;
+        tradeCostSum += cost;
+        tradeProfitSum += (rev - cost);
       } else {
         rentalCount++;
         if (isActive) activeCount++;
@@ -2963,8 +3044,21 @@ export const Contracts: React.FC = () => {
         if (c.status === 'SUCCEEDED') succeededCount++;
         if (c.status === 'COMPLETED') completedCount++;
         totalRentSum += contractRentSum;
+        const rev = Number(prof?.revenueAmount ?? (contractRentSum * 12));
+        const cost = Number(prof?.costAmount ?? 0);
+        rentalRevenueSum += rev;
+        rentalCostSum += cost;
+        rentalProfitSum += (rev - cost);
       }
     }
+
+    const totalRevenueSum = rentalRevenueSum + tradeRevenueSum;
+    const totalCostSum = rentalCostSum + tradeCostSum;
+    const totalProfitSum = rentalProfitSum + tradeProfitSum;
+
+    const rentalMarginRate = rentalRevenueSum > 0 ? Number(((rentalProfitSum / rentalRevenueSum) * 100).toFixed(1)) : 0;
+    const tradeMarginRate = tradeRevenueSum > 0 ? Number(((tradeProfitSum / tradeRevenueSum) * 100).toFixed(1)) : 0;
+    const totalMarginRate = totalRevenueSum > 0 ? Number(((totalProfitSum / totalRevenueSum) * 100).toFixed(1)) : 0;
 
     return {
       totalCount: contracts.length,
@@ -2978,13 +3072,25 @@ export const Contracts: React.FC = () => {
       completedCount,
       totalRentSum,
       totalTradeSum,
+      rentalRevenueSum,
+      rentalCostSum,
+      rentalProfitSum,
+      rentalMarginRate,
+      tradeRevenueSum,
+      tradeCostSum,
+      tradeProfitSum,
+      tradeMarginRate,
+      totalRevenueSum,
+      totalCostSum,
+      totalProfitSum,
+      totalMarginRate,
       totalAssetsCount: contractAssets.length,
       allActiveCount,
       allD3Count,
       allZeroFeeCount,
       allCompletedCount
     };
-  }, [contracts, contractAssets.length, contractAssetsByContractMap]);
+  }, [contracts, contractAssets.length, contractAssetsByContractMap, contractProfitMap]);
 
   return (
     <div data-uia="contract-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0, overflow: 'hidden', fontSize: '13px' }}>
@@ -3048,14 +3154,34 @@ export const Contracts: React.FC = () => {
           )}
 
           {viewMode === 'LIST' && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={isBackingUpData}
+                onClick={handleDownloadFullBackup}
+                style={{ padding: '7px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700 }}
+              >
+                <Download size={13} />
+                <span>{isBackingUpData ? '백업 생성중...' : '현재 데이터 백업'}</span>
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={isRestoringData}
+                onClick={handleRestoreGoldenBaseline}
+                style={{ padding: '7px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700, borderColor: 'rgba(16, 185, 129, 0.5)', color: '#10b981' }}
+              >
+                <Repeat size={13} />
+                <span>{isRestoringData ? '기준 데이터 복원중...' : '기준 데이터 복원'}</span>
+              </button>
               <button
                 className={activeTab === 'ALL_LIST' ? 'btn-primary' : 'btn-secondary'}
                 onClick={() => setActiveTab('ALL_LIST')}
                 style={{ padding: '7px 14px', fontSize: '12px' }}
               >
                 계약 목록 ({filteredContracts.length})
- </button>
+              </button>
               <button
                 data-uia="btn-new-contract"
                 className={activeTab === 'CREATE' ? 'btn-primary' : 'btn-secondary'}
@@ -3063,7 +3189,7 @@ export const Contracts: React.FC = () => {
                 style={{ padding: '7px 14px', fontSize: '12px' }}
               >
                 신규 계약 등록
- </button>
+              </button>
             </div>
           )}
         </div>
@@ -3098,6 +3224,53 @@ export const Contracts: React.FC = () => {
           <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>월 렌탈료 합계</span>
             <strong style={{ fontSize: '14px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}</strong>
+          </div>
+        </div>
+      )}
+
+      {/* 계약 유형별(렌탈원가 vs 유통원가) 매출·원가·이익률 비교 요약 바 */}
+      {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
+        <div data-mid="contract-profitability-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px', flexShrink: 0 }}>
+          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.14)', color: 'var(--primary)' }}>렌탈원가 기준</span>
+              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>렌탈 계약 {contractKpiStats.rentalCount}건</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
+              <span>매출 <strong>₩{contractKpiStats.rentalRevenueSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>렌탈원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.rentalCostSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.rentalProfitSum.toLocaleString()} · {contractKpiStats.rentalMarginRate.toFixed(1)}%</strong></span>
+            </div>
+          </div>
+
+          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(2, 132, 199, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(2, 132, 199, 0.16)', color: '#38bdf8' }}>유통원가 기준</span>
+              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>유통 계약 {contractKpiStats.tradeCount}건</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
+              <span>매출 <strong>₩{contractKpiStats.tradeRevenueSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>유통원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.tradeCostSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.tradeProfitSum.toLocaleString()} · {contractKpiStats.tradeMarginRate.toFixed(1)}%</strong></span>
+            </div>
+          </div>
+
+          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.14)', color: '#10b981' }}>전사 합산</span>
+              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>전체 {contractKpiStats.totalCount}건 수익성</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
+              <span>총매출 <strong>₩{contractKpiStats.totalRevenueSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>총원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.totalCostSum.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--text-muted)' }}>|</span>
+              <span>총이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.totalProfitSum.toLocaleString()} · {contractKpiStats.totalMarginRate.toFixed(1)}%</strong></span>
+            </div>
           </div>
         </div>
       )}
@@ -3482,7 +3655,9 @@ export const Contracts: React.FC = () => {
                     <SortableTh label="현장명" sortKey="site" currentSort={sortConfig} onSort={handleSort} />
                     {showOutboundProgressCol && <th style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>출고 진행 현황</th>}
                     <SortableTh label="체결 자산" sortKey="assets" currentSort={sortConfig} onSort={handleSort} />
-                    <SortableTh label="월 렌탈료" sortKey="rentalFee" currentSort={sortConfig} onSort={handleSort} align="right" />
+                    <SortableTh label="계약매출액" sortKey="rentalFee" currentSort={sortConfig} onSort={handleSort} align="right" />
+                    <th style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>원가유형·원가</th>
+                    <th style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>매출총이익·이익률</th>
                     <SortableTh label="최초개시일" sortKey="initialDate" currentSort={sortConfig} onSort={handleSort} align="center" />
                     {showPeriodCol && <SortableTh label="계약 기간" sortKey="period" currentSort={sortConfig} onSort={handleSort} />}
                     {showLastBilledCol && <SortableTh label="최근 청구 기간" sortKey="billingPeriod" currentSort={sortConfig} onSort={handleSort} />}
@@ -3612,20 +3787,94 @@ export const Contracts: React.FC = () => {
                               </div>
                             )}
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            {c.contractType === 'TRADE' ? (
-                              <span style={{ color: '#38bdf8', fontWeight: 700 }}>
-                                출고공급가 ₩{(c.totalAmount || 0).toLocaleString()}원
-                              </span>
-                            ) : c.contractType === 'SALE' ? (
-                              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                                매각가 ₩{cas.reduce((s, ca) => s + (ca.salePrice || 0), 0).toLocaleString()}원
- </span>
-                            ) : hasZeroFee ? (
-                              <span style={{ color: 'var(--danger)', fontWeight: 700 }}>0원 (미입력)</span>
-                            ) : (
-                              <span>{totalFee.toLocaleString()}원</span>
-                            )}
+                          <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                            {(() => {
+                              const prof = contractProfitMap.get(c.id);
+                              if (c.contractType === 'TRADE') {
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px' }}>
+                                    <strong style={{ color: '#38bdf8', fontFamily: 'monospace' }}>
+                                      ₩{(prof?.revenueAmount ?? c.totalAmount ?? 0).toLocaleString()}원
+                                    </strong>
+                                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>유통 공급가액</span>
+                                  </div>
+                                );
+                              }
+                              if (c.contractType === 'SALE') {
+                                return (
+                                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                                    매각가 ₩{cas.reduce((s, ca) => s + (ca.salePrice || 0), 0).toLocaleString()}원
+                                  </span>
+                                );
+                              }
+                              if (hasZeroFee) {
+                                return <span style={{ color: 'var(--danger)', fontWeight: 700 }}>0원 · 미입력</span>;
+                              }
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px' }}>
+                                  <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                                    ₩{(prof?.revenueAmount ?? totalFee * 12).toLocaleString()}원
+                                  </strong>
+                                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                                    월 ₩{(prof?.monthlyRevenueAmount ?? totalFee).toLocaleString()} × {prof?.contractMonths ?? 12}개월
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                            {(() => {
+                              const prof = contractProfitMap.get(c.id);
+                              const isTrade = c.contractType === 'TRADE';
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{
+                                      fontSize: '10px',
+                                      fontWeight: 800,
+                                      padding: '1px 5px',
+                                      borderRadius: '4px',
+                                      backgroundColor: isTrade ? 'rgba(2, 132, 199, 0.14)' : 'rgba(59, 130, 246, 0.14)',
+                                      color: isTrade ? '#38bdf8' : 'var(--primary)'
+                                    }}>
+                                      {prof?.costTypeLabel || (isTrade ? '유통원가' : '렌탈원가')}
+                                    </span>
+                                    <strong style={{ color: '#f59e0b', fontFamily: 'monospace' }}>
+                                      ₩{(prof?.costAmount ?? 0).toLocaleString()}원
+                                    </strong>
+                                  </div>
+                                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                                    {isTrade
+                                      ? `본품 ₩${(prof?.equipmentCostAmount ?? 0).toLocaleString()}${Number(prof?.optionCostAmount) > 0 ? ` + 옵션 ₩${(prof?.optionCostAmount ?? 0).toLocaleString()}` : ''}`
+                                      : `장비감가 ₩${(prof?.equipmentCostAmount ?? 0).toLocaleString()} + 옵션·정비 ₩${((prof?.optionCostAmount ?? 0) + (prof?.maintenanceCostAmount ?? 0)).toLocaleString()}`}
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                            {(() => {
+                              const prof = contractProfitMap.get(c.id);
+                              const profit = Number(prof?.profitAmount ?? 0);
+                              const margin = Number(prof?.marginRate ?? 0);
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1px' }}>
+                                  <strong style={{ color: profit >= 0 ? '#10b981' : 'var(--danger)', fontFamily: 'monospace' }}>
+                                    ₩{profit.toLocaleString()}원
+                                  </strong>
+                                  <span style={{
+                                    fontSize: '10.5px',
+                                    fontWeight: 800,
+                                    padding: '0px 5px',
+                                    borderRadius: '4px',
+                                    backgroundColor: margin >= 25 ? 'rgba(16, 185, 129, 0.14)' : 'rgba(245, 158, 11, 0.14)',
+                                    color: margin >= 25 ? '#10b981' : '#f59e0b'
+                                  }}>
+                                    이익률 {margin.toFixed(1)}%
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
                             {getInitialContractDate(c)}
@@ -3735,12 +3984,23 @@ export const Contracts: React.FC = () => {
               fontSize: '11.5px',
               borderRadius: '0 0 6px 6px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                <span>전사 체결계약: <strong style={{ color: 'var(--primary)' }}>{contractKpiStats.totalCount}건</strong> (진행 {contractKpiStats.activeCount} / 승계 {contractKpiStats.succeededCount} / 종결 {contractKpiStats.completedCount})</span>
-                <span>|</span>
-                <span>체결 투입자산: <strong style={{ color: 'var(--primary)' }}>{contractKpiStats.totalAssetsCount}대</strong></span>
-                <span>|</span>
-                <span>월 렌탈료 총액: <strong style={{ color: 'var(--primary)' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}원</strong></span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <span>전사 체결계약: <strong style={{ color: 'var(--primary)' }}>{contractKpiStats.totalCount}건</strong> · 렌탈 {contractKpiStats.rentalCount}건 / 유통 {contractKpiStats.tradeCount}건</span>
+                  <span>|</span>
+                  <span>체결 투입자산: <strong style={{ color: 'var(--primary)' }}>{contractKpiStats.totalAssetsCount}대</strong></span>
+                  <span>|</span>
+                  <span>월 렌탈료 총액: <strong style={{ color: 'var(--primary)' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}원</strong></span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontFamily: 'monospace' }}>
+                  <span>총매출액 <strong style={{ color: 'var(--primary)' }}>₩{contractKpiStats.totalRevenueSum.toLocaleString()}</strong></span>
+                  <span>=</span>
+                  <span>총원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.totalCostSum.toLocaleString()}</strong> [렌탈원가 ₩{contractKpiStats.rentalCostSum.toLocaleString()} + 유통원가 ₩{contractKpiStats.tradeCostSum.toLocaleString()}]</span>
+                  <span>+</span>
+                  <span>매출총이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.totalProfitSum.toLocaleString()} · 이익률 {contractKpiStats.totalMarginRate.toFixed(1)}%</strong></span>
+                  <span>|</span>
+                  <strong style={{ color: '#10b981' }}>대차 차액 ₩{(contractKpiStats.totalRevenueSum - contractKpiStats.totalCostSum - contractKpiStats.totalProfitSum).toLocaleString()}</strong>
+                </div>
               </div>
             </div>
 
@@ -4721,6 +4981,84 @@ export const Contracts: React.FC = () => {
                 );
               })()}
 
+              {/* 계약 유형별 원가(렌탈원가 / 유통원가)·매출·이익률 산출 명세 */}
+              {(() => {
+                const prof = contractProfitMap.get(activeContract.id) || calculateContractProfitability(activeContract, activeContractAssets, assets, tradeSalesOrders, repairs);
+                const isTrade = activeContract.contractType === 'TRADE';
+                return (
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                      <strong style={{ fontSize: '12.5px', color: isTrade ? '#0284c7' : 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Receipt size={14} />
+                        <span>계약 유형별 원가·매출·이익률 산출 명세</span>
+                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: isTrade ? '#e0f2fe' : 'rgba(59, 130, 246, 0.14)', color: isTrade ? '#0369a1' : 'var(--primary)', fontWeight: 800 }}>
+                          {prof.costTypeLabel || (isTrade ? '유통원가' : '렌탈원가')} 적용
+                        </span>
+                      </strong>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        계약매출 ₩{prof.revenueAmount.toLocaleString()} - {prof.costTypeLabel} ₩{prof.costAmount.toLocaleString()} = 매출총이익 ₩{prof.profitAmount.toLocaleString()} · 이익률 {prof.marginRate.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                      <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>계약 매출액</div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                          ₩{prof.revenueAmount.toLocaleString()}원
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {isTrade ? '출고 공급가액 기준' : `월 ₩${prof.monthlyRevenueAmount.toLocaleString()} × ${prof.contractMonths}개월`}
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          {isTrade ? '제품·부품·소모품 매입원가' : '장비 감가·임차 원가'}
+                        </div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#f59e0b', fontFamily: 'monospace', marginTop: '2px' }}>
+                          ₩{prof.equipmentCostAmount.toLocaleString()}원
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {isTrade ? 'LOT 입고단가 기반 출고원가' : `자사 60개월 정액감가 · ${prof.contractMonths}개월`}
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          {isTrade ? '설치형옵션 시공원가' : '설치형옵션·정비 배부원가'}
+                        </div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#f59e0b', fontFamily: 'monospace', marginTop: '2px' }}>
+                          ₩{(prof.optionCostAmount + prof.maintenanceCostAmount).toLocaleString()}원
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          옵션 ₩{prof.optionCostAmount.toLocaleString()} / 정비 ₩{prof.maintenanceCostAmount.toLocaleString()}
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700 }}>{prof.costTypeLabel} 합계</div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#f59e0b', fontFamily: 'monospace', marginTop: '2px' }}>
+                          ₩{prof.costAmount.toLocaleString()}원
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {isTrade ? '유통 출고 총원가' : `월 환산 원가 ₩${prof.monthlyCostAmount.toLocaleString()}`}
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+                        <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>매출총이익 · 이익률</div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#10b981', fontFamily: 'monospace', marginTop: '2px' }}>
+                          ₩{prof.profitAmount.toLocaleString()}원 · {prof.marginRate.toFixed(1)}%
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          매출대비 원가율 {(100 - prof.marginRate).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/*  체결 유상옵션 및 1회성/월단위 청구 금액 명세 (출고 배차 연동 및 단가 수정) */}
               {(() => {
                 const contractDeliveries = (deliveries || []).filter(
@@ -5074,6 +5412,7 @@ export const Contracts: React.FC = () => {
                   </div>
                 );
               })()}
+
             </div>
           </div>
 
