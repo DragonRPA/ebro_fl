@@ -1542,7 +1542,7 @@ export const MobileInspectionList: React.FC<MobileInspectionListProps> = ({
                                     type="button"
                                     disabled={isSubmitting}
                                     onClick={() => handleExecuteSwapAsset(oin, cand)}
-                                    className="px-2 py-2 rounded-lg border bg-slate-900 border-slate-800 text-slate-100 active:bg-blue-950 active:border-blue-500 flex flex-col items-center justify-center gap-0.5 transition-colors"
+                                    className="px-2 py-2 rounded-lg border bg-slate-900 border-slate-800 text-white active:bg-blue-950 active:border-blue-500 flex flex-col items-center justify-center gap-0.5 transition-colors"
                                   >
                                     <span className="text-xs font-mono font-black whitespace-nowrap">
                                       {cand.assetNo}

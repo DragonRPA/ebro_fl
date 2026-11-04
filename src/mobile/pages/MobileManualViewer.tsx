@@ -215,7 +215,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
               onClick={() => setSearchTerm(isActive ? '' : chip.term)}
               className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
                 isActive
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
                   : 'bg-slate-900/80 border border-slate-800 text-slate-300 hover:border-slate-700'
               }`}
             >
@@ -429,7 +429,7 @@ export const MobileManualViewer: React.FC<MobileManualViewerProps> = ({
                       key={sym}
                       className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
                         searchTerm && sym.toLowerCase().includes(searchTerm.toLowerCase())
-                          ? 'bg-amber-500 text-slate-950 border-amber-400'
+                          ? 'bg-amber-600 text-white border-amber-400'
                           : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                       }`}
                     >

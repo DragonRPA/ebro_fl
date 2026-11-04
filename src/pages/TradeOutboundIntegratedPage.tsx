@@ -11,77 +11,38 @@ export const TradeOutboundIntegratedPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
       <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Zap size={18} color="#2563eb" />
+          <Zap size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            출고관리-유통 · 유통계약 출고처리, 납품문서 전달 및 배송이력·비용 관리
+            유통 출고 관리
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div className="segmented-tab-group">
           <button
             type="button"
             onClick={() => setSubTab('OUTBOUND_DOCS')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'OUTBOUND_DOCS' ? 'var(--primary)' : 'transparent',
-              color: subTab === 'OUTBOUND_DOCS' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'OUTBOUND_DOCS' ? 'active' : ''}`}
           >
             <Zap size={14} />
-            <span>유통계약 출고처리 · 납품문서 전달</span>
+            <span>출고처리·납품문서</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('DELIVERY_COST')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'DELIVERY_COST' ? '#059669' : 'transparent',
-              color: subTab === 'DELIVERY_COST' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'DELIVERY_COST' ? 'active' : ''}`}
           >
             <Truck size={14} />
-            <span>배송 이력 · 운송비용 입력</span>
+            <span>배송이력·운송비용</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('RETURNS')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'RETURNS' ? '#d97706' : 'transparent',
-              color: subTab === 'RETURNS' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'RETURNS' ? 'active' : ''}`}
           >
             <ArrowLeftRight size={14} />
-            <span>환입 · 반품 처리</span>
+            <span>환입·반품 처리</span>
           </button>
         </div>
       </div>

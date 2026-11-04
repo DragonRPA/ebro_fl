@@ -1150,7 +1150,7 @@ export const DelinquencyPage: React.FC = () => {
 
       {/* 상단 5대 핵심 경영 통제 지표 카드 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
-        <div className="card" style={{ padding: '14px', borderLeft: '4px solid var(--danger)' }}>
+        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>연체 총액</span>
             <DollarSign size={15} color="var(--danger)" />
@@ -1161,7 +1161,7 @@ export const DelinquencyPage: React.FC = () => {
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>연체 고객 {calculatedDelinquencies.length}개사</span>
         </div>
 
-        <div className="card" style={{ padding: '14px', borderLeft: '4px solid #dc2626' }}>
+        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>고위험 연체</span>
             <ShieldAlert size={15} color="#dc2626" />
@@ -1172,7 +1172,7 @@ export const DelinquencyPage: React.FC = () => {
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>60일 초과 또는 약속 2회 위반</span>
         </div>
 
-        <div className="card" style={{ padding: '14px', borderLeft: '4px solid var(--primary)' }}>
+        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>수금지시 진행</span>
             <Send size={15} color="var(--primary)" />
@@ -1183,7 +1183,7 @@ export const DelinquencyPage: React.FC = () => {
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>영업 담당자 연동</span>
         </div>
 
-        <div className="card" style={{ padding: '14px', borderLeft: neglectedDirectiveCount > 0 ? '4px solid #b91c1c' : '4px solid var(--border-color)' }}>
+        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-secondary)', fontWeight: 700 }}>
               지시 미이행 (3일 초과)
@@ -1196,7 +1196,7 @@ export const DelinquencyPage: React.FC = () => {
           <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>독촉 지시 후 조치 미등록</span>
         </div>
 
-        <div className="card" style={{ padding: '14px', borderLeft: '4px solid #d97706' }}>
+        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>약속 위반</span>
             <ThumbsDown size={15} color="#d97706" />

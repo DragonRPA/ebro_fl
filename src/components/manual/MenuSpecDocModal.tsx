@@ -102,9 +102,9 @@ function renderMarkdownToHtml(md: string): React.ReactNode[] {
     if (line.startsWith('> ')) {
       elements.push(
         <blockquote key={idx} style={{
-          borderLeft: '4px solid var(--primary)', padding: '8px 12px',
+          border: '1px solid var(--border-color)', padding: '8px 12px',
           margin: '10px 0', backgroundColor: 'rgba(59,130,246,0.06)',
-          borderRadius: '0 8px 8px 0', fontSize: '13px', fontStyle: 'italic',
+          borderRadius: '6px', fontSize: '13px', fontStyle: 'italic',
           color: 'var(--text-secondary)'
         }}>
           {line.replace(/^>\s*/, '')}

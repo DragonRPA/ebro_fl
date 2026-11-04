@@ -11,77 +11,38 @@ export const ConsumableManagePage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
       <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Boxes size={18} color="#2563eb" />
+          <Boxes size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            소모품관리-렌탈 · 소모품 재고 조회, 구매, 입고 및 사용(소모) 통합 관리
+            소모품 관리
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div className="segmented-tab-group">
           <button
             type="button"
             onClick={() => setSubTab('STOCK')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'STOCK' ? 'var(--primary)' : 'transparent',
-              color: subTab === 'STOCK' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'STOCK' ? 'active' : ''}`}
           >
             <Boxes size={14} />
-            <span>소모품 재고 조회 · 입고 · 사용</span>
+            <span>재고 조회·사용</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('PURCHASE')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'PURCHASE' ? '#059669' : 'transparent',
-              color: subTab === 'PURCHASE' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'PURCHASE' ? 'active' : ''}`}
           >
             <ShoppingBag size={14} />
-            <span>소모품 구매 · 입고 관리</span>
+            <span>구매·입고 관리</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('INOUT_USAGE')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'INOUT_USAGE' ? '#d97706' : 'transparent',
-              color: subTab === 'INOUT_USAGE' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'INOUT_USAGE' ? 'active' : ''}`}
           >
             <ArrowLeftRight size={14} />
-            <span>소모품 입고 · 사용(소모) 대장</span>
+            <span>입고·소모 대장</span>
           </button>
         </div>
       </div>

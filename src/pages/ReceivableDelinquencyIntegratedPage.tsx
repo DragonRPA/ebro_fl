@@ -11,77 +11,38 @@ export const ReceivableDelinquencyIntegratedPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
       <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CreditCard size={18} color="#2563eb" />
+          <CreditCard size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            수납/연체관리 · 청구에 대한 수납관리 및 납기일 기준 연체관리
+            수납·연체관리
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div className="segmented-tab-group">
           <button
             type="button"
             onClick={() => setSubTab('RECEIVABLES')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'RECEIVABLES' ? 'var(--primary)' : 'transparent',
-              color: subTab === 'RECEIVABLES' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'RECEIVABLES' ? 'active' : ''}`}
           >
             <CreditCard size={14} />
-            <span>청구 수납관리 · 미수금 대장</span>
+            <span>수납·미수금 대장</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('DELINQUENCY')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'DELINQUENCY' ? '#dc2626' : 'transparent',
-              color: subTab === 'DELINQUENCY' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'DELINQUENCY' ? 'active' : ''}`}
           >
             <AlertTriangle size={14} />
-            <span>납기일 기준 연체관리</span>
+            <span>연체 관리</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('BANK_MATCHING')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'BANK_MATCHING' ? '#059669' : 'transparent',
-              color: subTab === 'BANK_MATCHING' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'BANK_MATCHING' ? 'active' : ''}`}
           >
             <Building2 size={14} />
-            <span>통장 입금 1:1 대사</span>
+            <span>통장 입금 대사</span>
           </button>
         </div>
       </div>

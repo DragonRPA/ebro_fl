@@ -1514,7 +1514,7 @@ ${contactFooterLine}`
                     width: `${progressPercent}%`,
                     height: '100%',
                     backgroundColor: 'var(--primary)',
-                    transition: 'width 0.2s ease-in-out'
+                    transition: 'opacity 0.2s ease-in-out'
                   }}
                 />
               </div>

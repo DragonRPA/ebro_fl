@@ -478,7 +478,7 @@ export const ManualAuthorPanel: React.FC = () => {
           zIndex: 9995,
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
-          transition: isDragging ? 'none' : 'width 0.2s',
+          transition: isDragging ? 'none' : 'opacity 0.2s',
           userSelect: isDragging ? 'none' : 'auto',
         }}
       >

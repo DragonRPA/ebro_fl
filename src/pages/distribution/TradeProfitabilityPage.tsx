@@ -713,173 +713,209 @@ export const TradeProfitabilityPage: React.FC = () => {
     : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '12px' }}>
-      {/* Top Header & Pipeline Bar */}
-      <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <div>
-          <h2 data-mid="trade_profitability-header" style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
-            <TrendingUp size={20} color="var(--primary)" />
-            <span>영업실적 및 보고서</span>
-          </h2>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
+      {/* Top View Selector & Pipeline Bar */}
+      <div className="card" style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div className="segmented-tab-group">
+          <button
+            onClick={() => setViewMode('CONTRACT_TYPE')}
+            className={`segmented-tab-item ${viewMode === 'CONTRACT_TYPE' ? 'active' : ''}`}
+          >
+            계약유형별 원가·이익률 ({filteredContractProfitRows.length})
+          </button>
+          <button
+            onClick={() => setViewMode('MONTHLY')}
+            className={`segmented-tab-item ${viewMode === 'MONTHLY' ? 'active' : ''}`}
+          >
+            월별·연도별 매입·매출
+          </button>
+          <button
+            onClick={() => setViewMode('PRODUCT')}
+            className={`segmented-tab-item ${viewMode === 'PRODUCT' ? 'active' : ''}`}
+          >
+            제조사·모델별 매출
+          </button>
+          <button
+            onClick={() => setViewMode('CUSTOMER')}
+            className={`segmented-tab-item ${viewMode === 'CUSTOMER' ? 'active' : ''}`}
+          >
+            거래처별 매출
+          </button>
+          <button
+            onClick={() => setViewMode('ORDER')}
+            className={`segmented-tab-item ${viewMode === 'ORDER' ? 'active' : ''}`}
+          >
+            건별·제조번호별 이익
+          </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="segmented-tab-group">
-            <button
-              onClick={() => setViewMode('CONTRACT_TYPE')}
-              className={`segmented-tab-item ${viewMode === 'CONTRACT_TYPE' ? 'active' : ''}`}
-            >
-              계약유형별 원가·이익률 집계
-            </button>
-            <button
-              onClick={() => setViewMode('MONTHLY')}
-              className={`segmented-tab-item ${viewMode === 'MONTHLY' ? 'active' : ''}`}
-            >
-              월별·연도별 매입·매출실적
-            </button>
-            <button
-              onClick={() => setViewMode('PRODUCT')}
-              className={`segmented-tab-item ${viewMode === 'PRODUCT' ? 'active' : ''}`}
-            >
-              제조사·모델별 매출현황
-            </button>
-            <button
-              onClick={() => setViewMode('CUSTOMER')}
-              className={`segmented-tab-item ${viewMode === 'CUSTOMER' ? 'active' : ''}`}
-            >
-              거래처별 매출현황
-            </button>
-            <button
-              onClick={() => setViewMode('ORDER')}
-              className={`segmented-tab-item ${viewMode === 'ORDER' ? 'active' : ''}`}
-            >
-              건별·차대별 매출이익
-            </button>
-          </div>
-
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={handleRestoreBaselineData}
             disabled={isRestoringBaseline}
+            className="btn btn-secondary"
             style={{
-              padding: '7px 12px',
-              backgroundColor: 'var(--bg-card)',
-              color: '#10b981',
-              border: '1px solid rgba(16, 185, 129, 0.5)',
-              borderRadius: '6px',
-              fontSize: '12.5px',
+              padding: '6px 11px',
+              fontSize: '12px',
               fontWeight: 700,
-              cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
+              gap: '5px',
+              whiteSpace: 'nowrap'
             }}
           >
-            <RotateCcw size={14} color="#10b981" />
+            <RotateCcw size={13} color="var(--success-color)" />
             <span>{isRestoringBaseline ? '복원중...' : '기준 데이터 복원'}</span>
           </button>
 
           <button
             onClick={() => setIsReportModalOpen(true)}
+            className="btn btn-primary"
             style={{
-              padding: '7px 12px',
-              backgroundColor: 'var(--primary)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '12.5px',
+              padding: '6px 11px',
+              fontSize: '12px',
               fontWeight: 700,
-              cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
+              gap: '5px',
+              whiteSpace: 'nowrap'
             }}
           >
-            <Printer size={14} />
-            보고서 출력
- </button>
+            <Printer size={13} />
+            <span>보고서 출력</span>
+          </button>
 
           <button
             onClick={handleExcelDownload}
+            className="btn btn-secondary"
             style={{
-              padding: '7px 12px',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-main)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '6px',
-              fontSize: '12.5px',
+              padding: '6px 11px',
+              fontSize: '12px',
               fontWeight: 700,
-              cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
+              gap: '5px',
+              whiteSpace: 'nowrap'
             }}
           >
-            <Download size={14} color="#16a34a" />
-            현황자료 엑셀 다운로드
- </button>
+            <Download size={13} color="var(--success-color)" />
+            <span>엑셀 내보내기</span>
+          </button>
         </div>
       </div>
 
-      {/* KPI Strip */}
-      <div data-mid="trade_profitability-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))', gap: '10px' }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>누적 매입·수입 총액</div>
-          <div style={{ fontSize: '19px', fontWeight: 800, color: '#1d4ed8', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalPurchaseAmt.toLocaleString()}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-            해외수입 도착원가 + 국내매입 합계
- </div>
-        </div>
+      {/* Unified KPI Strip (No Cards in Cards) */}
+      {viewMode === 'CONTRACT_TYPE' ? (
+        <div data-mid="trade_profitability-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '10px' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈 계약 ({contractTypeSummary.rentalCount}건)</span>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary-color)' }}>이익률 {contractTypeSummary.rentalMarginRate.toFixed(1)}%</span>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              매출 ₩{contractTypeSummary.rentalRev.toLocaleString()}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              렌탈원가 ₩{contractTypeSummary.rentalCost.toLocaleString()} · 이익 ₩{contractTypeSummary.rentalProfit.toLocaleString()}
+            </div>
+          </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>지게차 총 판매대수</div>
-          <div style={{ fontSize: '19px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', whiteSpace: 'nowrap' }}>{totals.totalForkliftUnits.toLocaleString()}대</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-            총 수주 {filteredOrderRows.length}건 기준
- </div>
-        </div>
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통 계약 ({contractTypeSummary.tradeCount}건)</span>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary-color)' }}>이익률 {contractTypeSummary.tradeMarginRate.toFixed(1)}%</span>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              매출 ₩{contractTypeSummary.tradeRev.toLocaleString()}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              유통원가 ₩{contractTypeSummary.tradeCost.toLocaleString()} · 이익 ₩{contractTypeSummary.tradeProfit.toLocaleString()}
+            </div>
+          </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출실적</div>
-          <div style={{ fontSize: '19px', fontWeight: 800, color: 'var(--primary)', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalRev.toLocaleString()}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-            매출원가 ₩{totals.totalCogs.toLocaleString()}
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>통합 계약 매출·원가 ({contractTypeSummary.totalCount}건)</div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              총매출 ₩{contractTypeSummary.totalRev.toLocaleString()}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              총원가 ₩{contractTypeSummary.totalCost.toLocaleString()}
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>통합 매출총이익</span>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success-color)' }}>평균 {contractTypeSummary.totalMarginRate.toFixed(1)}%</span>
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--success-color)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              ₩{contractTypeSummary.totalProfit.toLocaleString()}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              대차 차액 ₩{contractTypeSummary.conservationDiff.toLocaleString()}
+            </div>
           </div>
         </div>
+      ) : (
+        <div data-mid="trade_profitability-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))', gap: '10px' }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>누적 매입·수입 총액</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalPurchaseAmt.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>해외수입 도착원가 + 국내매입</div>
+          </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출총이익</div>
-          <div style={{ fontSize: '19px', fontWeight: 800, color: '#16a34a', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.grossMargin.toLocaleString()}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-            매출액 - 도착원가 기준 매출원가
- </div>
-        </div>
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>지게차 판매대수</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px', whiteSpace: 'nowrap' }}>{totals.totalForkliftUnits.toLocaleString()}대</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>수주 {filteredOrderRows.length}건 기준</div>
+          </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>평균 매출총이익률</div>
-          <div style={{ fontSize: '19px', fontWeight: 800, color: '#2563eb', marginTop: '2px', whiteSpace: 'nowrap' }}>{totals.marginPct.toFixed(1)}%</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-            순마진 ₩{totals.netMargin.toLocaleString()}
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>총 매출실적</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.totalRev.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>매출원가 ₩{totals.totalCogs.toLocaleString()}</div>
+          </div>
+
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>총 매출총이익</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--success-color)', marginTop: '2px', whiteSpace: 'nowrap' }}>₩{totals.grossMargin.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>매출액 - 매출원가</div>
+          </div>
+
+          <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>평균 매출총이익률</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '2px', whiteSpace: 'nowrap' }}>{totals.marginPct.toFixed(1)}%</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>순마진 ₩{totals.netMargin.toLocaleString()}</div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filter Bar */}
       <div style={{
         backgroundColor: 'var(--bg-card)',
-        padding: '12px 14px',
-        borderRadius: '8px',
+        padding: '10px 14px',
+        borderRadius: '6px',
         border: '1px solid var(--border-color)',
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '12px',
+        gap: '10px',
         alignItems: 'flex-end'
       }}>
+        {viewMode === 'CONTRACT_TYPE' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '140px' }}>
+            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>계약 유형 구분</label>
+            <select
+              value={contractTypeFilter}
+              onChange={e => setContractTypeFilter(e.target.value as 'ALL' | 'RENTAL' | 'TRADE')}
+              style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+            >
+              <option value="ALL">전체 계약 ({contractProfitRows.length}건)</option>
+              <option value="RENTAL">렌탈 계약 · 렌탈원가</option>
+              <option value="TRADE">유통 계약 · 유통원가</option>
+            </select>
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '110px' }}>
           <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>기준 연도</label>
           <select
@@ -927,25 +963,27 @@ export const TradeProfitabilityPage: React.FC = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
-          <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>제조사 · 모델 선택</label>
-          <select
-            value={productFilter}
-            onChange={e => setProductFilter(e.target.value)}
-            style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-          >
-            <option value="ALL">전체 제조사·모델</option>
-            {products.map(p => (
-              <option key={p.id} value={p.id}>[{p.manufacturer || p.skuCode}] {p.name}</option>
-            ))}
-          </select>
-        </div>
+        {viewMode !== 'CONTRACT_TYPE' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '160px' }}>
+            <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>제조사 · 모델 선택</label>
+            <select
+              value={productFilter}
+              onChange={e => setProductFilter(e.target.value)}
+              style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+            >
+              <option value="ALL">전체 제조사·모델</option>
+              {products.map(p => (
+                <option key={p.id} value={p.id}>[{p.manufacturer || p.skuCode}] {p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '160px' }}>
           <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>검색어</label>
           <input
             type="text"
-            placeholder="주문번호, 거래처명, 모델명, 차대번호..."
+            placeholder="계약번호, 거래처명, 모델명, 제조번호..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{ padding: '6px 10px', fontSize: '12.5px', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
@@ -954,15 +992,11 @@ export const TradeProfitabilityPage: React.FC = () => {
 
         <button
           onClick={resetFilters}
+          className="btn btn-secondary"
           style={{
             padding: '6px 12px',
-            backgroundColor: 'var(--bg-secondary)',
-            color: 'var(--text-secondary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '6px',
             fontSize: '12px',
             fontWeight: 700,
-            cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
@@ -972,176 +1006,77 @@ export const TradeProfitabilityPage: React.FC = () => {
         >
           <RotateCcw size={13} />
           초기화
- </button>
+        </button>
       </div>
 
       {/* Main Analytical Grid */}
-      <div style={{ flex: 1, overflow: 'auto', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+      <div style={{ flex: 1, overflow: 'auto', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
         {/* TAB 0: 계약유형별(렌탈원가 vs 유통원가) 매출·원가·이익률 집계 */}
         {viewMode === 'CONTRACT_TYPE' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px' }}>
-            {/* 계약유형 스코핑 칩 & 비교 요약 카드 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('ALL')}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: contractTypeFilter === 'ALL' ? 800 : 600,
-                    border: contractTypeFilter === 'ALL' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                    backgroundColor: contractTypeFilter === 'ALL' ? 'var(--primary)' : 'var(--bg-app)',
-                    color: contractTypeFilter === 'ALL' ? '#fff' : 'var(--text-secondary)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  전체 계약 ({contractProfitRows.length}건)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('RENTAL')}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: contractTypeFilter === 'RENTAL' ? 800 : 600,
-                    border: contractTypeFilter === 'RENTAL' ? '1px solid #2563eb' : '1px solid var(--border-color)',
-                    backgroundColor: contractTypeFilter === 'RENTAL' ? '#2563eb' : 'var(--bg-app)',
-                    color: contractTypeFilter === 'RENTAL' ? '#fff' : 'var(--text-secondary)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  렌탈 계약 · 렌탈원가 기준 ({contractProfitRows.filter(r => r.contractType === 'RENTAL').length}건)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('TRADE')}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: contractTypeFilter === 'TRADE' ? 800 : 600,
-                    border: contractTypeFilter === 'TRADE' ? '1px solid #0284c7' : '1px solid var(--border-color)',
-                    backgroundColor: contractTypeFilter === 'TRADE' ? '#0284c7' : 'var(--bg-app)',
-                    color: contractTypeFilter === 'TRADE' ? '#fff' : 'var(--text-secondary)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  유통 계약 · 유통원가 기준 ({contractProfitRows.filter(r => r.contractType === 'TRADE').length}건)
-                </button>
-              </div>
-
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                렌탈원가: 장비60개월감가 + 설치형옵션상각 + 정기점검배부 | 유통원가: LOT입고원가 + 설치형옵션시공원가
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
-              <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid rgba(37, 99, 235, 0.35)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#2563eb' }}>렌탈 계약 · 렌탈원가 집계 ({contractTypeSummary.rentalCount}건)</span>
-                  <strong style={{ fontSize: '13px', color: '#16a34a' }}>이익률 {contractTypeSummary.rentalMarginRate.toFixed(1)}%</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'monospace' }}>
-                  <span>매출 <strong>₩{contractTypeSummary.rentalRev.toLocaleString()}</strong></span>
-                  <span>렌탈원가 <strong style={{ color: '#d97706' }}>₩{contractTypeSummary.rentalCost.toLocaleString()}</strong></span>
-                  <span>이익 <strong style={{ color: '#16a34a' }}>₩{contractTypeSummary.rentalProfit.toLocaleString()}</strong></span>
-                </div>
-              </div>
-
-              <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid rgba(2, 132, 199, 0.35)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#0284c7' }}>유통 계약 · 유통원가 집계 ({contractTypeSummary.tradeCount}건)</span>
-                  <strong style={{ fontSize: '13px', color: '#16a34a' }}>이익률 {contractTypeSummary.tradeMarginRate.toFixed(1)}%</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'monospace' }}>
-                  <span>매출 <strong>₩{contractTypeSummary.tradeRev.toLocaleString()}</strong></span>
-                  <span>유통원가 <strong style={{ color: '#d97706' }}>₩{contractTypeSummary.tradeCost.toLocaleString()}</strong></span>
-                  <span>이익 <strong style={{ color: '#16a34a' }}>₩{contractTypeSummary.tradeProfit.toLocaleString()}</strong></span>
-                </div>
-              </div>
-
-              <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-app)', border: '1px solid rgba(22, 163, 74, 0.35)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#16a34a' }}>전사 통합 합산 ({contractTypeSummary.totalCount}건)</span>
-                  <strong style={{ fontSize: '13px', color: '#16a34a' }}>평균 이익률 {contractTypeSummary.totalMarginRate.toFixed(1)}%</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'monospace' }}>
-                  <span>총매출 <strong>₩{contractTypeSummary.totalRev.toLocaleString()}</strong></span>
-                  <span>총원가 <strong style={{ color: '#d97706' }}>₩{contractTypeSummary.totalCost.toLocaleString()}</strong></span>
-                  <span>총이익 <strong style={{ color: '#16a34a' }}>₩{contractTypeSummary.totalProfit.toLocaleString()}</strong></span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-                    <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>계약번호</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약유형 · 원가구분</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처 / 현장</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>체결자산 · 출고품목 및 옵션</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>계약매출액</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>장비감가 · 본품매입원가</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>설치형옵션 · 정비원가</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>원가 합계</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출총이익</th>
-                    <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>이익률</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredContractProfitRows.map(r => (
-                    <tr key={r.contract.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px' }}>
-                      <td style={{ padding: '7px 10px', fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace' }}>
-                        <div>{r.contractNo}</div>
-                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 500 }}>{r.startDate}</div>
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'center' }}>
-                        <span style={{
-                          padding: '2px 7px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          backgroundColor: r.contractType === 'TRADE' ? 'rgba(2, 132, 199, 0.14)' : 'rgba(37, 99, 235, 0.14)',
-                          color: r.contractType === 'TRADE' ? '#0284c7' : '#2563eb'
-                        }}>
-                          {r.contractTypeBadge} · {r.costTypeLabel}
-                        </span>
-                      </td>
-                      <td style={{ padding: '7px 10px' }}>
-                        <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{r.customerName}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.siteName}</div>
-                      </td>
-                      <td style={{ padding: '7px 10px', maxWidth: '340px', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }} title={r.itemAndOptionSummary}>
-                        {r.itemAndOptionSummary}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
-                        ₩{r.revenueAmount.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                        ₩{r.equipmentCostAmount.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                        ₩{(r.optionCostAmount + r.maintenanceCostAmount).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: '#d97706', fontFamily: 'monospace' }}>
-                        ₩{r.costAmount.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: r.profitAmount >= 0 ? '#16a34a' : '#dc2626', fontFamily: 'monospace' }}>
-                        ₩{r.profitAmount.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: '#2563eb', fontFamily: 'monospace' }}>
-                        {r.marginRate.toFixed(1)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--bg-hover)', borderBottom: '2px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 5 }}>
+                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>계약번호</th>
+                <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--text-secondary)' }}>계약유형 · 원가구분</th>
+                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>거래처 / 현장</th>
+                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)' }}>체결자산 · 출고품목 및 옵션</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>계약매출액</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>장비감가 · 본품매입원가</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>설치형옵션 · 정비원가</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>원가 합계</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>매출총이익</th>
+                <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-secondary)' }}>이익률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContractProfitRows.map(r => (
+                <tr key={r.contract.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px' }}>
+                  <td style={{ padding: '7px 10px', fontWeight: 800, color: 'var(--primary-color)', fontFamily: 'var(--font-mono)' }}>
+                    <div>{r.contractNo}</div>
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 500 }}>{r.startDate}</div>
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                    <span style={{
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      backgroundColor: 'var(--bg-hover)',
+                      color: r.contractType === 'TRADE' ? 'var(--primary-color)' : 'var(--success-color)',
+                      border: '1px solid var(--border-color)'
+                    }}>
+                      {r.contractTypeBadge} · {r.costTypeLabel}
+                    </span>
+                  </td>
+                  <td style={{ padding: '7px 10px' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{r.customerName}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.siteName}</div>
+                  </td>
+                  <td style={{ padding: '7px 10px', maxWidth: '340px', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }} title={r.itemAndOptionSummary}>
+                    {r.itemAndOptionSummary}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'var(--font-mono)' }}>
+                    ₩{r.revenueAmount.toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                    ₩{r.equipmentCostAmount.toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                    ₩{(r.optionCostAmount + r.maintenanceCostAmount).toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: 'var(--warning-color)', fontFamily: 'var(--font-mono)' }}>
+                    ₩{r.costAmount.toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: r.profitAmount >= 0 ? 'var(--success-color)' : 'var(--danger-color)', fontFamily: 'var(--font-mono)' }}>
+                    ₩{r.profitAmount.toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 800, color: 'var(--primary-color)', fontFamily: 'var(--font-mono)' }}>
+                    {r.marginRate.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
 
         {/* TAB 1: 월별·연도별 매입 및 매출실적 / 판매대수 / 매출총이익 */}

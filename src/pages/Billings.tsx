@@ -3549,7 +3549,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
                   {/* 특수 거래명세서 적용 건 알림 배너 */}
                   {activeBilling.hasCustomStatement && (
-                    <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderLeft: '4px solid var(--primary)', borderRadius: '6px' }}>
+                    <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 'bold', backgroundColor: 'var(--primary)', color: '#ffffff', borderRadius: '4px' }}>
@@ -3576,7 +3576,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
                   {/* 반려/취소 사유 알림 */}
                   {activeBilling.status === 'REJECTED' && (
-                    <div style={{ padding: '10px 12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderLeft: '4px solid var(--danger)', borderRadius: '4px' }}>
+                    <div style={{ padding: '10px 12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '4px' }}>
                       <strong style={{ color: 'var(--danger)', fontSize: '13px', display: 'block', marginBottom: '2px' }}>[취소/이의제기 사유]</strong>
                       <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{activeBilling.rejectReason || '사유 미기재'}</span>
                     </div>
@@ -4678,7 +4678,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                   <div style={{
                     padding: '12px 14px',
                     backgroundColor: 'var(--bg-app)',
-                    borderLeft: '4px solid var(--primary)',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
                     fontSize: '12px',
                     color: 'var(--text-secondary)',
@@ -5610,7 +5610,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
 
             {/* ② KPI 요약 카드 그리드 */}
             <div data-mid="waiver-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid #dc2626' }}>
+              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>총 영업 면제 손실액</div>
                 <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--danger)' }}>
                   ₩{totalWaivedAmount.toLocaleString()}원
@@ -5620,7 +5620,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
  </div>
               </div>
 
-              <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid #2563eb' }}>
+              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>현장 AS 비용 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
                   ₩{fieldAsAmount.toLocaleString()}원
@@ -5630,7 +5630,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
  </div>
               </div>
 
-              <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid var(--primary)' }}>
+              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>반납 입고 정비비 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
                   ₩{inboundAmount.toLocaleString()}원
@@ -5640,7 +5640,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
  </div>
               </div>
 
-              <div className="card" style={{ margin: 0, padding: '14px', borderLeft: '4px solid #ea580c' }}>
+              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>고객부담 운송료 면제</div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: '#ea580c' }}>
                   ₩{deliveryAmount.toLocaleString()}원

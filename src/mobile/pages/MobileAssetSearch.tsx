@@ -863,7 +863,7 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
 
         return (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="bg-slate-900 border-t-2 border-slate-600 rounded-t-3xl p-5 max-w-lg w-full max-h-[82vh] flex flex-col gap-4 shadow-2xl overflow-hidden">
+            <div className="bg-slate-900 border border-slate-600 rounded-t-3xl p-5 max-w-lg w-full max-h-[82vh] flex flex-col gap-4 shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between pb-3 border-b border-slate-700">
                 <div>
                   <div className="flex items-center gap-2">

@@ -566,7 +566,7 @@ export async function sendRepairClaimPdfEmail(
       </p>
       ${
         params.customMessage
-          ? `<div style="background:#f8fafc;border-left:4px solid #2563eb;padding:12px 16px;margin:14px 0;white-space:pre-line;">${params.customMessage}</div>`
+          ? `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:4px;padding:12px 16px;margin:14px 0;white-space:pre-line;">${params.customMessage}</div>`
           : ''
       }
       <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">

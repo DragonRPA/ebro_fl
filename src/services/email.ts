@@ -100,6 +100,14 @@ class RealGmailService {
     rawCc?: string,
     fromName?: string
   ): Promise<SentEmail> {
+    // [세금계산서 팝빌 테스트 기간 이메일 발송 원천 차단 게이트]
+    const combinedText = `${subject || ''} ${body || ''} ${attachments.map(a => a.filename || '').join(' ')}`;
+    const isTaxInvoiceMail = /세금계산서|전자세금계산서|팝빌|popbill|tax\s*invoice/i.test(combinedText);
+    const isTaxEmailBlocked = import.meta.env.VITE_TAX_INVOICE_EMAIL_BLOCKED !== 'false';
+    if (isTaxInvoiceMail && isTaxEmailBlocked) {
+      throw new Error('세금계산서 팝빌 테스트 기간에는 이메일 발송이 시스템 보안 정책에 의해 전면 차단되어 있습니다.');
+    }
+
     const toList = extractValidEmails(rawTo);
     const toLowerSet = new Set(toList.map(e => e.toLowerCase()));
     const ccList = extractValidEmails(rawCc).filter(e => !toLowerSet.has(e.toLowerCase()));

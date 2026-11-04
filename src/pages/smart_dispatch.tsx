@@ -1685,12 +1685,12 @@ ${activeSpecs.map((s, idx) => ` ${idx + 1}. [적용] ${s.label}`).join('\n') || 
               <div style={{
                 width: `${progressPercent}%`, height: '100%',
                 backgroundColor: isProcessCompleted ? 'var(--success)' : 'var(--primary)',
-                transition: 'width 0.2s ease'
+                transition: 'opacity 0.2s ease'
               }}></div>
             </div>
 
             {/* 현재 진행 단계 가이드 메인 박스 */}
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '14px', borderRadius: '10px', fontSize: '13.5px', fontWeight: '700', color: '#f1f5f9', borderLeft: isProcessCompleted ? '4px solid #10b981' : '4px solid #3b82f6', marginBottom: '16px' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '14px', borderRadius: '10px', fontSize: '13.5px', fontWeight: '700', color: '#f1f5f9', border: isProcessCompleted ? '1px solid #10b981' : '1px solid #3b82f6', marginBottom: '16px' }}>
               {currentStepText}
             </div>
 

@@ -3198,79 +3198,35 @@ export const Contracts: React.FC = () => {
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* 뷰 1: 계약 목록 (viewMode === 'LIST') */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
-            {/* 계약 운용 KPI 바 */}
+            {/* 계약 운용 및 수익성 통합 KPI 바 */}
       {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
-        <div data-subview="contract" data-subview-title="계약 관리" data-mid="contract-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '6px', flexShrink: 0 }}>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 계약건수</span>
-            <strong style={{ fontSize: '14px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>{contractKpiStats.totalCount}건</strong>
-          </div>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>진행/연장중</span>
-            <strong style={{ fontSize: '14px', color: 'var(--success)', whiteSpace: 'nowrap' }}>{contractKpiStats.activeCount}건</strong>
-          </div>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>만료 임박</span>
-            <strong style={{ fontSize: '14px', color: contractKpiStats.d3Count > 0 ? 'var(--danger)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{contractKpiStats.d3Count}건</strong>
-          </div>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>단가 0원 주의</span>
-            <strong style={{ fontSize: '14px', color: contractKpiStats.zeroFeeCount > 0 ? '#b45309' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{contractKpiStats.zeroFeeCount}건</strong>
-          </div>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>체결 투입자산</span>
-            <strong style={{ fontSize: '14px', color: '#0070C0', whiteSpace: 'nowrap' }}>{contractKpiStats.totalAssetsCount}대</strong>
-          </div>
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>월 렌탈료 합계</span>
-            <strong style={{ fontSize: '14px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}</strong>
-          </div>
-        </div>
-      )}
-
-      {/* 계약 유형별(렌탈원가 vs 유통원가) 매출·원가·이익률 비교 요약 바 */}
-      {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
-        <div data-mid="contract-profitability-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px', flexShrink: 0 }}>
-          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.14)', color: 'var(--primary)' }}>렌탈원가 기준</span>
-              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>렌탈 계약 {contractKpiStats.rentalCount}건</strong>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
-              <span>매출 <strong>₩{contractKpiStats.rentalRevenueSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>렌탈원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.rentalCostSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.rentalProfitSum.toLocaleString()} · {contractKpiStats.rentalMarginRate.toFixed(1)}%</strong></span>
-            </div>
+        <div data-subview="contract" data-subview-title="계약 관리" data-mid="contract-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', flexShrink: 0 }}>
+          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>계약 현황 ({contractKpiStats.totalCount}건)</span>
+            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              진행 <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.activeCount}</strong> · 만료임박 <strong style={{ color: contractKpiStats.d3Count > 0 ? 'var(--danger-color)' : 'var(--text-muted)' }}>{contractKpiStats.d3Count}</strong> · 투입 <strong style={{ color: 'var(--primary-color)' }}>{contractKpiStats.totalAssetsCount}대</strong>
+            </span>
           </div>
 
-          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(2, 132, 199, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(2, 132, 199, 0.16)', color: '#38bdf8' }}>유통원가 기준</span>
-              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>유통 계약 {contractKpiStats.tradeCount}건</strong>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
-              <span>매출 <strong>₩{contractKpiStats.tradeRevenueSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>유통원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.tradeCostSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.tradeProfitSum.toLocaleString()} · {contractKpiStats.tradeMarginRate.toFixed(1)}%</strong></span>
-            </div>
+          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈원가 ({contractKpiStats.rentalCount}건)</span>
+            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              매출 <strong>₩{contractKpiStats.rentalRevenueSum.toLocaleString()}</strong> · 원가 <strong style={{ color: 'var(--warning-color)' }}>₩{contractKpiStats.rentalCostSum.toLocaleString()}</strong> · <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.rentalMarginRate.toFixed(1)}%</strong>
+            </span>
           </div>
 
-          <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.14)', color: '#10b981' }}>전사 합산</span>
-              <strong style={{ fontSize: '12px', color: 'var(--text-primary)' }}>전체 {contractKpiStats.totalCount}건 수익성</strong>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11.5px', fontFamily: 'monospace' }}>
-              <span>총매출 <strong>₩{contractKpiStats.totalRevenueSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>총원가 <strong style={{ color: '#f59e0b' }}>₩{contractKpiStats.totalCostSum.toLocaleString()}</strong></span>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <span>총이익 <strong style={{ color: '#10b981' }}>₩{contractKpiStats.totalProfitSum.toLocaleString()} · {contractKpiStats.totalMarginRate.toFixed(1)}%</strong></span>
-            </div>
+          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통원가 ({contractKpiStats.tradeCount}건)</span>
+            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              매출 <strong>₩{contractKpiStats.tradeRevenueSum.toLocaleString()}</strong> · 원가 <strong style={{ color: 'var(--warning-color)' }}>₩{contractKpiStats.tradeCostSum.toLocaleString()}</strong> · <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.tradeMarginRate.toFixed(1)}%</strong>
+            </span>
+          </div>
+
+          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>통합 수익성</span>
+            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+              총이익 <strong style={{ color: 'var(--success-color)' }}>₩{contractKpiStats.totalProfitSum.toLocaleString()}</strong> · 평균 <strong style={{ color: 'var(--primary-color)' }}>{contractKpiStats.totalMarginRate.toFixed(1)}%</strong>
+            </span>
           </div>
         </div>
       )}
@@ -3281,87 +3237,43 @@ export const Contracts: React.FC = () => {
           {/* 필터 패널 */}
           <div className="card" data-mid="contract-filter-panel" style={{ padding: '12px 14px', margin: 0, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
             
-            {/* 0행: 계약 종류 구분자 탭 (전체 / 렌탈 계약·현장별 계약 / 유통 계약·출고 건별 계약 / 매각 계약) */}
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => setContractTypeFilter('ALL')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: contractTypeFilter === 'ALL' ? 700 : 500,
-                  border: contractTypeFilter === 'ALL' ? '1px solid var(--border-focus, #3b82f6)' : '1px solid var(--border-color)',
-                  backgroundColor: contractTypeFilter === 'ALL' ? 'var(--bg-card)' : 'var(--bg-app)',
-                  color: contractTypeFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                전체 계약 ({contractKpiStats.totalCount}건)
-              </button>
-              <button
-                type="button"
-                onClick={() => setContractTypeFilter('RENTAL')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: contractTypeFilter === 'RENTAL' ? 700 : 500,
-                  border: contractTypeFilter === 'RENTAL' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                  backgroundColor: contractTypeFilter === 'RENTAL' ? 'var(--primary)' : 'var(--bg-app)',
-                  color: contractTypeFilter === 'RENTAL' ? '#fff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                렌탈 계약 · 고객 현장별 계약 ({contractKpiStats.rentalCount}건)
-              </button>
-              <button
-                type="button"
-                onClick={() => setContractTypeFilter('TRADE')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: contractTypeFilter === 'TRADE' ? 700 : 500,
-                  border: contractTypeFilter === 'TRADE' ? '1px solid #0284c7' : '1px solid var(--border-color)',
-                  backgroundColor: contractTypeFilter === 'TRADE' ? '#0284c7' : 'var(--bg-app)',
-                  color: contractTypeFilter === 'TRADE' ? '#fff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                유통 계약 · 출고 건별 계약 ({contractKpiStats.tradeCount}건)
-              </button>
-              {contractKpiStats.saleCount > 0 && (
+            {/* 0행: 계약 종류 구분자 탭 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="segmented-tab-group">
                 <button
                   type="button"
-                  onClick={() => setContractTypeFilter('SALE')}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: contractTypeFilter === 'SALE' ? 700 : 500,
-                    border: contractTypeFilter === 'SALE' ? '1px solid #475569' : '1px solid var(--border-color)',
-                    backgroundColor: contractTypeFilter === 'SALE' ? '#475569' : 'var(--bg-app)',
-                    color: contractTypeFilter === 'SALE' ? '#fff' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    whiteSpace: 'nowrap'
-                  }}
+                  onClick={() => setContractTypeFilter('ALL')}
+                  className={`segmented-tab-item ${contractTypeFilter === 'ALL' ? 'active' : ''}`}
                 >
-                  매각 계약 ({contractKpiStats.saleCount}건)
+                  전체 계약 ({contractKpiStats.totalCount}건)
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setContractTypeFilter('RENTAL')}
+                  className={`segmented-tab-item ${contractTypeFilter === 'RENTAL' ? 'active' : ''}`}
+                >
+                  렌탈 계약 · 현장별 ({contractKpiStats.rentalCount}건)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContractTypeFilter('TRADE')}
+                  className={`segmented-tab-item ${contractTypeFilter === 'TRADE' ? 'active' : ''}`}
+                >
+                  유통 계약 · 출고건별 ({contractKpiStats.tradeCount}건)
+                </button>
+                {contractKpiStats.saleCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setContractTypeFilter('SALE')}
+                    className={`segmented-tab-item ${contractTypeFilter === 'SALE' ? 'active' : ''}`}
+                  >
+                    매각 계약 ({contractKpiStats.saleCount}건)
+                  </button>
+                )}
+              </div>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                월 렌탈료 합계: <strong style={{ color: 'var(--primary-color)' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}</strong>
+              </span>
             </div>
 
             {/* 1행: 검색어 & 표준 횡배치 버튼군 (조회 -> 엑셀 다운로드) */}
@@ -5545,13 +5457,9 @@ export const Contracts: React.FC = () => {
                       key={item.id}
                       style={{
                         padding: '10px 12px',
-                        borderLeft: `3px solid ${
-                          item.category === 'CONTRACT' ? 'var(--primary)' :
-                          item.category === 'INSPECTION' ? '#166534' :
-                          item.category === 'TRUCK' ? '#2563eb' : '#c2410c'
-                        }`,
+                        border: '1px solid var(--border-color)',
                         backgroundColor: 'var(--bg-app)',
-                        borderRadius: '0 4px 4px 0',
+                        borderRadius: '6px',
                         fontSize: '12px'
                       }}
                     >

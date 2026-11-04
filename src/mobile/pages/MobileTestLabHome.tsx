@@ -223,7 +223,7 @@ export const MobileTestLabHome: React.FC<MobileTestLabHomeProps> = ({
 
       {/* 실시간 알림 토스트 */}
       {toastMessage && (
-        <div className="fixed top-16 left-4 right-4 z-50 p-3 bg-pink-600/95 text-white font-black text-xs rounded-xl shadow-2xl border border-pink-400 flex items-center gap-2 animate-bounce">
+        <div className="fixed top-16 left-4 right-4 z-50 p-3 bg-pink-600/95 text-white font-black text-xs rounded-xl shadow-2xl border border-pink-400 flex items-center gap-2">
           <Sparkles className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{toastMessage}</span>
         </div>

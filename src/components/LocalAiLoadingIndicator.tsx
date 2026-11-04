@@ -43,7 +43,7 @@ export const LocalAiLoadingIndicator: React.FC<LocalAiLoadingIndicatorProps> = (
       <div style={{ width: '100%', height: '6px', backgroundColor: '#d1fae5', borderRadius: '4px', overflow: 'hidden' }}>
         <div style={{
           height: '100%', width: `${progress}%`, backgroundColor: '#10b981',
-          transition: 'width 1s linear'
+          transition: 'opacity 0.2s linear'
         }} />
       </div>
       

@@ -97,7 +97,7 @@ export const MirrorSyncProgressToast: React.FC = () => {
               width: `${state.percent}%`,
               height: '100%',
               background: 'var(--primary)',
-              transition: 'width 0.2s ease'
+              transition: 'opacity 0.2s ease'
             }}
           />
         </div>

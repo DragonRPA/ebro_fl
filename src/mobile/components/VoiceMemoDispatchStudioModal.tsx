@@ -1,4 +1,4 @@
-﻿// src/mobile/components/VoiceMemoDispatchStudioModal.tsx
+// src/mobile/components/VoiceMemoDispatchStudioModal.tsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Mic, MicOff, Volume2, VolumeX, X, CheckCircle2, AlertCircle,
@@ -445,12 +445,12 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           {/* 파형 시각화 바 */}
           {isListening ? (
             <div className="flex items-center gap-1 h-5">
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.1s] h-3" />
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.2s] h-5" />
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.3s] h-4" />
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.15s] h-6" />
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.25s] h-4" />
-              <span className="w-1 bg-rose-400 rounded-full animate-bounce [animation-delay:0.35s] h-2" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-3" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-5" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-4" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-6" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-4" />
+              <span className="w-1 bg-rose-400 rounded-full animate-pulse h-2" />
             </div>
           ) : (
             <div className="text-xs font-bold text-slate-300">
@@ -508,7 +508,7 @@ export const VoiceMemoDispatchStudioModal: React.FC<VoiceMemoDispatchStudioModal
           {slotsStatus.isAllComplete ? (
             <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-between text-xs text-emerald-200 mt-1 shadow-md">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 animate-bounce" />
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span className="font-bold">5대 필수 항목 100% 완성! 즉시 접수 가능</span>
               </div>
               <span className="text-[10px] text-emerald-300 font-mono">준비 완료</span>

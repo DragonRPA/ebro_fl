@@ -439,7 +439,8 @@ export const LegalNoticeStudioModal: React.FC<LegalNoticeStudioModalProps> = ({
                   marginBottom: '12px',
                   backgroundColor: 'var(--bg-app)',
                   padding: '6px 8px',
-                  borderLeft: '4px solid #0f172a'
+                  border: '1px solid #0f172a',
+                  borderRadius: '4px'
                 }}
               >
                 제 목: {title}

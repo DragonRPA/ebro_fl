@@ -299,7 +299,7 @@ export const AssetInboundStaging: React.FC = () => {
                 height: '100%', 
                 backgroundColor: 'var(--primary)', 
                 width: `${Math.max(5, (progressState.current / Math.max(1, progressState.total)) * 100)}%`,
-                transition: 'width 0.3s ease'
+                transition: 'opacity 0.2s ease'
               }} />
             </div>
             
@@ -315,8 +315,8 @@ export const AssetInboundStaging: React.FC = () => {
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           backgroundColor: toastMessage.type === 'error' ? '#fee2e2' : 'var(--bg-card)',
           color: toastMessage.type === 'error' ? '#ef4444' : 'var(--text-primary)',
-          padding: '6px 12px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          borderLeft: `4px solid ${toastMessage.type === 'error' ? '#ef4444' : 'var(--primary)'}`
+          padding: '6px 12px', borderRadius: '8px',
+          border: `1px solid ${toastMessage.type === 'error' ? '#ef4444' : 'var(--primary)'}`
         }}>
           {toastMessage.text}
         </div>

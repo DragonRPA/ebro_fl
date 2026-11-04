@@ -11,74 +11,35 @@ export const SalesPerformanceReportPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
       <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <TrendingUp size={18} color="#2563eb" />
+          <TrendingUp size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            실적관리 · 사전 정의된 영업실적 및 경영 보고자료 생산
+            실적관리
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div className="segmented-tab-group">
           <button
             type="button"
             onClick={() => setSubTab('PROFITABILITY')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'PROFITABILITY' ? 'var(--primary)' : 'transparent',
-              color: subTab === 'PROFITABILITY' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'PROFITABILITY' ? 'active' : ''}`}
           >
             <TrendingUp size={14} />
-            <span>영업실적 · 매출총이익 보고서</span>
+            <span>매출·원가·이익률 분석</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('PREDEFINED_REPORTS')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'PREDEFINED_REPORTS' ? '#059669' : 'transparent',
-              color: subTab === 'PREDEFINED_REPORTS' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'PREDEFINED_REPORTS' ? 'active' : ''}`}
           >
             <FileSpreadsheet size={14} />
-            <span>사전 정의 정기 보고자료 생산</span>
+            <span>정기 보고자료</span>
           </button>
 
           <button
             type="button"
             onClick={() => setSubTab('SALES_JOURNAL')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              backgroundColor: subTab === 'SALES_JOURNAL' ? '#d97706' : 'transparent',
-              color: subTab === 'SALES_JOURNAL' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap'
-            }}
+            className={`segmented-tab-item ${subTab === 'SALES_JOURNAL' ? 'active' : ''}`}
           >
             <BookOpen size={14} />
             <span>영업활동 일지</span>

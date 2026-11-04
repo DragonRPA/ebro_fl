@@ -603,7 +603,7 @@ export const MobileAsDetail: React.FC<MobileAsDetailProps> = ({ ticketId, onBack
             type="button"
             onClick={handleCall}
             disabled={!ticket.reporterContact}
-            className="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md"
+            className="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md"
           >
             <Phone className="w-4 h-4 flex-shrink-0" />
             <span>담당자 통화</span>

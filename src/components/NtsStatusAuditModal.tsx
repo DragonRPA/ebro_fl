@@ -677,7 +677,7 @@ export const NtsStatusAuditModal: React.FC<NtsStatusAuditModalProps> = ({
                 height: '100%',
                 backgroundColor: 'var(--primary)',
                 width: `${Math.round((scanProgress.processed / (scanProgress.total || 1)) * 100)}%`,
-                transition: 'width 0.25s ease'
+                transition: 'opacity 0.2s ease'
               }} />
             </div>
           </div>

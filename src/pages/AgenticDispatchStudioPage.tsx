@@ -121,7 +121,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
 
       {/* 편의성 비교 HUD (인간 vs AI) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }} data-uia="hud-dispatch-metrics">
-        <div className="card" style={{ padding: '12px 16px', borderLeft: '4px solid var(--primary)' }}>
+        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>배차 수립 소요시간</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
             <span style={{ fontSize: '18px', fontWeight: '900', color: '#10b981' }}>1.8초</span>
@@ -130,7 +130,7 @@ export const AgenticDispatchStudioPage: React.FC = () => {
           <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', marginTop: '2px' }}>99.2% 시간 단축</div>
         </div>
 
-        <div className="card" style={{ padding: '12px 16px', borderLeft: '4px solid var(--primary)' }}>
+        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>필요 조작 클릭 수</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
             <span style={{ fontSize: '18px', fontWeight: '900', color: 'var(--primary)' }}>1회</span>
@@ -139,13 +139,13 @@ export const AgenticDispatchStudioPage: React.FC = () => {
           <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>96.4% 조작 절감</div>
         </div>
 
-        <div className="card" style={{ padding: '12px 16px', borderLeft: '4px solid #f59e0b' }}>
+        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>헌장 2.3 교환 배차 단일화</div>
           <div data-mid="kpi-exchange-compliance" style={{ fontSize: '18px', fontWeight: '900', color: '#f59e0b', marginTop: '4px' }}>100% 준수</div>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>왕복할인 ₩60,000 자동 차감</div>
         </div>
 
-        <div className="card" style={{ padding: '12px 16px', borderLeft: '4px solid #10b981' }}>
+        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>헌장 1.3 자산상태 비조작</div>
           <div style={{ fontSize: '18px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>보존 완료</div>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>출고 승인 시 대여중 전환 보장</div>

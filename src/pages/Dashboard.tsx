@@ -307,7 +307,6 @@ export const Dashboard: React.FC = () => {
             borderRadius: '12px',
             padding: '18px 22px',
             border: '1.5px solid #4f46e5',
-            borderLeft: '5px solid #4f46e5',
           }}
         >
           <summary style={{ cursor: 'pointer', listStyle: 'none', outline: 'none' }}>
@@ -630,7 +629,7 @@ export const Dashboard: React.FC = () => {
       {activeTasks.length > 0 && (
         <details data-mid="dashboard-todo-feed" open style={{
           backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '20px 24px',
-          borderLeft: '5px solid var(--primary)', border: '1px solid var(--border-color)', borderLeftWidth: '5px'
+          border: '1px solid var(--border-color)'
         }}>
           <summary style={{ cursor: 'pointer', listStyle: 'none', outline: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>

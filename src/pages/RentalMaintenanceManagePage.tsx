@@ -23,7 +23,7 @@ export const RentalMaintenanceManagePage: React.FC = () => {
     const reqQty = Math.max(1, Math.floor(Number(usedQty) || 1));
 
     if (invItem && reqQty > invItem.repairStockQty) {
-      setToastMsg(`렌탈 정비용 가용 부품재고(${invItem.repairStockQty}개)가 부족하여 차감이 차단되었습니다. (유통 판매용 재고 ${invItem.saleStockQty}개는 침범 불가)`);
+      setToastMsg(`렌탈 정비용 가용 부품재고(${invItem.repairStockQty}개)가 부족하여 차감이 차단되었습니다.`);
       setTimeout(() => setToastMsg(null), 3500);
       return;
     }
@@ -61,23 +61,23 @@ export const RentalMaintenanceManagePage: React.FC = () => {
     savePartUsageHistory([newRecord, ...currentHistory]);
 
     setShowQuickPartLinkForm(false);
-    setToastMsg(`자산 [${ast.assetNo}] 정비이력 등록 완료 · 부품관리-렌탈 재고 차감(${part.partName} ${reqQty}개) 및 자산 부품사용이력 기록이 연동되었습니다.`);
+    setToastMsg(`자산 [${ast.assetNo}] 정비이력 등록 완료 · 부품재고 차감(${part.partName} ${reqQty}개) 연동 완료`);
     setTimeout(() => setToastMsg(null), 3500);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
       {toastMsg && (
-        <div style={{ padding: '10px 16px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', color: '#166534', fontSize: '12.5px', fontWeight: 700 }}>
+        <div style={{ padding: '10px 16px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--primary-color)', color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: 700 }}>
           {toastMsg}
         </div>
       )}
 
       <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Wrench size={18} color="#2563eb" />
+          <Wrench size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            정비관리-렌탈 · 렌탈자산 정비이력 입력 및 조회 (부품재고 자동 차감 · 자산이력 연동)
+            렌탈 정비 관리
           </span>
         </div>
 
@@ -89,7 +89,7 @@ export const RentalMaintenanceManagePage: React.FC = () => {
             style={{ padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Plus size={14} />
-            <span>부품재고 연동 정비이력 입력</span>
+            <span>부품 연동 정비이력 입력</span>
           </button>
 
           <button
@@ -99,16 +99,16 @@ export const RentalMaintenanceManagePage: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             <Boxes size={14} />
-            <span>부품관리-렌탈 재고·사용원장 보기</span>
+            <span>부품 재고·사용원장</span>
             <ArrowRight size={13} />
           </button>
         </div>
       </div>
 
       {showQuickPartLinkForm && (
-        <div className="card" style={{ padding: '14px 16px', border: '1.5px solid #2563eb', backgroundColor: 'rgba(37, 99, 235, 0.03)' }}>
-          <div style={{ fontSize: '13.5px', fontWeight: 800, marginBottom: '10px', color: '#1e40af' }}>
-            렌탈자산 정비이력 입력 (부품관리-렌탈 정비용 재고 차감 및 자산이력 동시 기록)
+        <div className="card" style={{ padding: '14px 16px', border: '1px solid var(--primary-color)', backgroundColor: 'var(--bg-card)' }}>
+          <div style={{ fontSize: '13.5px', fontWeight: 800, marginBottom: '10px', color: 'var(--primary-color)' }}>
+            렌탈자산 정비이력 입력
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1.6fr 0.7fr 2fr auto', gap: '10px', alignItems: 'end' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -121,7 +121,7 @@ export const RentalMaintenanceManagePage: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '11.5px', fontWeight: 700 }}>사용 부품 선택 (렌탈정비용 재고 연동)</label>
+              <label style={{ fontSize: '11.5px', fontWeight: 700 }}>사용 부품 선택</label>
               <select value={selectedPartSku} onChange={e => setSelectedPartSku(e.target.value)} style={{ padding: '7px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px' }}>
                 {COMPATIBLE_PARTS_CATALOG.slice(0, 12).map(p => (
                   <option key={p.sku} value={p.sku}>[{p.sku}] {p.partName}</option>
@@ -142,7 +142,7 @@ export const RentalMaintenanceManagePage: React.FC = () => {
             <div style={{ display: 'flex', gap: '6px' }}>
               <button type="button" onClick={handleSavePartLinkedRepair} className="btn btn-primary" style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <CheckCircle2 size={14} />
-                <span>정비이력 및 부품차감 확정</span>
+                <span>정비이력 확정</span>
               </button>
               <button type="button" onClick={() => setShowQuickPartLinkForm(false)} className="btn btn-secondary" style={{ padding: '7px 10px', fontSize: '12px' }}>닫기</button>
             </div>

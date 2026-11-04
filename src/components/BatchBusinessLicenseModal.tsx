@@ -615,7 +615,7 @@ export const BatchBusinessLicenseModal: React.FC<BatchBusinessLicenseModalProps>
                 height: '100%',
                 width: `${currentProgress.percent}%`,
                 backgroundColor: isProcessing ? '#0284c7' : '#10b981',
-                transition: 'width 0.3s ease'
+                transition: 'opacity 0.2s ease'
               }}
             />
           </div>

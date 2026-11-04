@@ -1967,7 +1967,7 @@ export const InspectionChecklistManage: React.FC = () => {
                       height: '100%',
                       backgroundColor: 'var(--primary)',
                       width: `${(indexingProgress.current / indexingProgress.total) * 100}%`,
-                      transition: 'width 0.3s'
+                      transition: 'opacity 0.2s'
                     }}
                   />
                 </div>
@@ -2213,9 +2213,9 @@ export const InspectionChecklistManage: React.FC = () => {
                       <div
                         style={{
                           backgroundColor: 'var(--bg-app)',
-                          borderLeft: '3px solid var(--primary)',
+                          border: '1px solid var(--border-color)',
                           padding: '6px 10px',
-                          borderRadius: '0 4px 4px 0',
+                          borderRadius: '4px',
                           fontSize: '11.5px',
                           color: 'var(--text-main)',
                           lineHeight: '1.45'

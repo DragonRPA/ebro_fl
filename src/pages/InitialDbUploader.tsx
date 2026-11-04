@@ -3251,7 +3251,7 @@ export const InitialDbUploader: React.FC = () => {
                           width: `${(progressInfo.step / progressInfo.total) * 100}%`,
                           height: '100%',
                           backgroundColor: 'var(--success)',
-                          transition: 'width 0.3s ease'
+                          transition: 'opacity 0.2s ease'
                         }}
                       />
                     </div>
@@ -3518,7 +3518,7 @@ export const InitialDbUploader: React.FC = () => {
                     width: `${Math.round((restoreProgress.step / Math.max(1, restoreProgress.total)) * 100)}%`,
                     height: '100%',
                     backgroundColor: '#059669',
-                    transition: 'width 0.2s ease'
+                    transition: 'opacity 0.2s ease'
                   }}
                 />
               </div>

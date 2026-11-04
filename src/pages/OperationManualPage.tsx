@@ -728,7 +728,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
       </div>
 
       {/* ── 1. 최종 업무 목표 (Terminal Objective - Gutenberg 질문 1) ── */}
-      <div style={{ backgroundColor: 'var(--bg-card)', padding: '14px 18px', borderRadius: '8px', borderLeft: '4px solid var(--primary)', border: '1px solid var(--border-color)' }}>
+      <div style={{ backgroundColor: 'var(--bg-card)', padding: '14px 18px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
           <span style={{ fontSize: '13px', fontWeight: 900, color: '#1E40AF' }}>최종 업무 목표</span>
         </div>
@@ -1018,7 +1018,7 @@ const ManualDetailCard: React.FC<{ item: MenuManualDetail }> = ({ item }) => {
       )}
 
       {/* ── 4. 최종 확정 및 대차대조 결과 (Audit Result - Gutenberg 질문 4) ── */}
-      <div style={{ backgroundColor: 'rgba(4, 120, 87, 0.08)', padding: '12px 16px', borderRadius: '8px', borderLeft: '4px solid var(--success)', border: '1px solid var(--border-color)' }}>
+      <div style={{ backgroundColor: 'rgba(4, 120, 87, 0.08)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
           <span style={{ fontSize: '13px', fontWeight: 900, color: '#065F46' }}>최종 감사 및 확정 결과</span>
         </div>

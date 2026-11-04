@@ -1168,7 +1168,7 @@ export const SmartDispatch2: React.FC = () => {
               {isProcessCompleted ? '출고 지시 완료' : '출고 파이프라인 진행 중...'}
             </h3>
             <div style={{ marginBottom: '16px', height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', backgroundColor: 'var(--success)', borderRadius: '3px', width: `${progressPercent}%`, transition: 'width 0.4s ease' }} />
+              <div style={{ height: '100%', backgroundColor: 'var(--success)', borderRadius: '3px', width: `${progressPercent}%`, transition: 'opacity 0.2s ease' }} />
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', fontWeight: 600 }}>{currentStepText}</div>
             <div style={{

@@ -1054,7 +1054,7 @@ export const MobileVehicleStock: React.FC = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
                         isSelected 
-                          ? 'bg-amber-500 text-slate-950 shadow' 
+                          ? 'bg-amber-600 text-white shadow' 
                           : 'bg-slate-800 text-slate-300 border border-slate-700'
                       }`}>
                         {m.name.slice(0, 2)}
@@ -1081,7 +1081,7 @@ export const MobileVehicleStock: React.FC = () => {
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {isSelected ? (
-                        <div className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow">
+                        <div className="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center shadow">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                       ) : (

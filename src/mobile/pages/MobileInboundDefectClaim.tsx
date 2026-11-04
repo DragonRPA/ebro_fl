@@ -1814,7 +1814,7 @@ export const MobileInboundDefectClaim: React.FC<MobileInboundDefectClaimProps> =
                     type="button"
                     disabled={isProcessingPdf}
                     onClick={handleShareKakaoOrMobile}
-                    className="py-2.5 px-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black flex items-center justify-center gap-1 shadow-sm whitespace-nowrap active:scale-95"
+                    className="py-2.5 px-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black flex items-center justify-center gap-1 shadow-sm whitespace-nowrap active:scale-95"
                   >
                     <Share2 className="w-3.5 h-3.5 shrink-0" />
                     <span>카톡·문자 전달</span>

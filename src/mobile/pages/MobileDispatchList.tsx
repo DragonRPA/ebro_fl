@@ -2504,7 +2504,7 @@ export const MobileDispatchList: React.FC = () => {
                   await copyToClipboard(kakaoModalData.text);
                   showToast('복사 완료');
                 }}
-                className="flex-1 py-3 rounded-xl bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center gap-1 whitespace-nowrap"
+                className="flex-1 py-3 rounded-xl bg-amber-600 text-white text-xs font-black flex items-center justify-center gap-1 whitespace-nowrap"
               >
                 <Copy className="w-4 h-4" />
                 전문 다시 복사

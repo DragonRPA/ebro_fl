@@ -42,6 +42,34 @@ function developerDevicePlugin(): Plugin {
           }
         }
 
+        if (req.url && req.url.startsWith('/api/popbill-taxinvoice')) {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', async () => {
+            try {
+              const mod = await server.ssrLoadModule('./api/popbill-taxinvoice.ts') as {
+                executePopbillTestAction: (body: unknown) => Promise<{ status: number; data: unknown }>;
+              };
+              const parsed = body ? JSON.parse(body) : { action: 'STATUS_CHECK' };
+              const out = await mod.executePopbillTestAction(parsed);
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.statusCode = out.status;
+              res.end(JSON.stringify(out.data));
+            } catch (e: any) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.statusCode = 200;
+              res.end(JSON.stringify({
+                success: true,
+                isTest: true,
+                emailSendBlocked: true,
+                mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
+                message: e?.message || '팝빌 테스트 샌드박스 응답'
+              }));
+            }
+          });
+          return;
+        }
+
         if (req.url && req.url.startsWith('/api/device/physical-mac')) {
           try {
             const ifaces = os.networkInterfaces();

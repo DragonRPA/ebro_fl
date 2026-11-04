@@ -280,7 +280,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               onClick={() => setStockStatusFilter('ALL')}
               className={`px-3 py-1.5 rounded-xl font-bold transition-all flex-shrink-0 ${
                 stockStatusFilter === 'ALL'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
                   : 'bg-slate-900 text-slate-400 border border-slate-800'
               }`}
             >
@@ -291,7 +291,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
               onClick={() => setStockStatusFilter('IN_STOCK')}
               className={`px-3 py-1.5 rounded-xl font-bold transition-all flex-shrink-0 ${
                 stockStatusFilter === 'IN_STOCK'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
                   : 'bg-slate-900 text-slate-400 border border-slate-800'
               }`}
             >

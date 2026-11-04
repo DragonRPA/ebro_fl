@@ -880,7 +880,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
               onClick={handleToggleUnknownAsset}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold border whitespace-nowrap flex items-center gap-1 flex-shrink-0 active:scale-95 transition-all ${
                 isUnknownAsset
-                  ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
+                  ? 'bg-amber-600 text-white border-amber-400 shadow-sm'
                   : 'bg-slate-900 text-amber-300 border-amber-500/40 hover:bg-slate-800'
               }`}
             >
@@ -966,7 +966,7 @@ export const MobileAsCreate: React.FC<MobileAsCreateProps> = ({
                       onClick={() => setModelName(active ? '' : presetModel)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono border whitespace-nowrap flex-shrink-0 transition-colors ${
                         active
-                          ? 'bg-amber-500 text-slate-950 border-amber-400 font-black'
+                          ? 'bg-amber-600 text-white border-amber-400 font-black'
                           : 'bg-slate-950 text-slate-300 border-slate-700 hover:bg-slate-800'
                       }`}
                     >

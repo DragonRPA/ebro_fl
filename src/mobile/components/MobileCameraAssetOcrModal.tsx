@@ -754,7 +754,7 @@ export const MobileCameraAssetOcrModal: React.FC<MobileCameraAssetOcrModalProps>
             type="button"
             disabled={!cameraReady || isAnalyzing}
             onClick={() => captureAndAnalyzeCurrentFrame(true)}
-            className="py-3 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg whitespace-nowrap"
+            className="py-3 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-800 disabled:opacity-50 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg whitespace-nowrap"
           >
             <Camera className="w-4 h-4" />
             <span>{isAnalyzing ? '판독 중...' : '현재 화면 즉시 판독'}</span>

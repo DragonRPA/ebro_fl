@@ -452,7 +452,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
     <div className="flex flex-col gap-3 pb-24 text-slate-100 min-h-screen">
       {/* ── 토스트 메시지 ── */}
       {successToast && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 animate-bounce">
+        <div className="fixed top-16 left-4 right-4 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-lg shadow-xl flex items-center gap-2">
           <CheckCircle2 size={16} />
           <span>{successToast}</span>
         </div>
@@ -482,7 +482,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
           onClick={() => setActiveTab('FUEL_LOG')}
           className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all ${
             activeTab === 'FUEL_LOG'
-              ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
+              ? 'bg-amber-600 text-white shadow-md font-extrabold'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -726,7 +726,7 @@ export const MobileVehicleLog: React.FC<MobileVehicleLogProps> = ({ onBack }) =>
           <button
             type="submit"
             disabled={isSubmittingFuel}
-            className="mt-2 w-full h-[52px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+            className="mt-2 w-full h-[52px] bg-amber-600 hover:bg-amber-500 text-white font-black text-base rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
           >
             <Fuel size={20} />
             <span>{isSubmittingFuel ? '저장 처리중...' : '주유 영수증 및 기록 저장 완료'}</span>

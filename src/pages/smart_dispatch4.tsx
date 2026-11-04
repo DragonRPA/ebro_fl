@@ -6238,7 +6238,7 @@ export const SmartDispatch4: React.FC = () => {
                       <span className="font-black whitespace-nowrap text-xs truncate">{rule.label}</span>
                     </div>
                     <span className={`text-[11px] font-black px-2 py-0.5 rounded ml-1 flex-shrink-0 ${
-                      isValid ? 'text-white bg-emerald-600' : isWarn ? 'text-slate-950 bg-amber-400' : 'text-white bg-rose-600 shadow-sm'
+                      isValid ? 'text-white bg-emerald-600' : isWarn ? 'text-white bg-amber-600' : 'text-white bg-rose-600 shadow-sm'
                     }`}>
                       {isValid ? '완료' : isWarn ? '확인' : '누락'}
                     </span>
@@ -6375,7 +6375,7 @@ export const SmartDispatch4: React.FC = () => {
                 <span className="flex items-center gap-1.5">
                   <span>신청 장비 제원</span>
                   {totalAvailShortage > 0 ? (
-                    <span className="text-[11px] font-black text-slate-950 bg-amber-400 px-2 py-0.5 rounded font-mono shadow-sm">
+                    <span className="text-[11px] font-black text-white bg-amber-600 px-2 py-0.5 rounded font-mono shadow-sm">
                       (임차 {totalAvailShortage}대 필요)
  </span>
                   ) : equipments.length > 0 ? (
@@ -6402,7 +6402,7 @@ export const SmartDispatch4: React.FC = () => {
                         <div className="col-span-2 font-black text-white truncate">{eq.modelName}</div>
                         <div className="col-span-1 text-center">
                           {shortage > 0 ? (
-                            <span className="text-[11px] font-black px-2 py-0.5 rounded bg-amber-500 text-slate-950 whitespace-nowrap shadow-sm">
+                            <span className="text-[11px] font-black px-2 py-0.5 rounded bg-amber-600 text-white whitespace-nowrap shadow-sm">
                               {avail === 0 ? '전량 임차' : `임차 ${shortage}대`}
                             </span>
                           ) : (
@@ -6793,7 +6793,7 @@ export const SmartDispatch4: React.FC = () => {
                           {selectedUpload.summaryText.length}자
  </span>
                       </div>
-                      <div className="text-xs text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-blue-900/40 max-h-28 overflow-y-auto leading-relaxed whitespace-pre-wrap font-sans dispatch4-scrollbar selection:bg-blue-600">
+                      <div className="text-xs text-white bg-slate-950 p-2.5 rounded-lg border border-blue-900/40 max-h-28 overflow-y-auto leading-relaxed whitespace-pre-wrap font-sans dispatch4-scrollbar">
                         {selectedUpload.summaryText}
                       </div>
                     </div>
@@ -7037,7 +7037,7 @@ export const SmartDispatch4: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-200 max-h-24 overflow-y-auto leading-relaxed whitespace-pre-wrap font-sans dispatch4-scrollbar selection:bg-emerald-600">
+                        <div className="text-xs text-white max-h-24 overflow-y-auto leading-relaxed whitespace-pre-wrap font-sans dispatch4-scrollbar">
                           {rawText}
                         </div>
                       </div>

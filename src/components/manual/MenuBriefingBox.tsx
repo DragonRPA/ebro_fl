@@ -576,7 +576,6 @@ export const MenuBriefingBox: React.FC<MenuBriefingBoxProps> = ({
               <div style={{
                 backgroundColor: 'var(--bg-app)',
                 border: '1px solid var(--border-color)',
-                borderLeft: '4px solid var(--primary)',
                 padding: '8px 10px',
                 borderRadius: '6px',
                 fontSize: '12px',

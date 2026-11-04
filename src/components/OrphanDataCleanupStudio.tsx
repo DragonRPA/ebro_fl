@@ -820,7 +820,7 @@ export const OrphanDataCleanupStudio: React.FC = () => {
                 height: '100%',
                 backgroundColor: 'var(--primary)',
                 width: `${deleteProgress.total ? (deleteProgress.current / deleteProgress.total) * 100 : 0}%`,
-                transition: 'width 0.2s ease'
+                transition: 'opacity 0.2s ease'
               }}
             />
           </div>

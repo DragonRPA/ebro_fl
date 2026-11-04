@@ -95,7 +95,7 @@ const DEFAULT_CONTRACT_TEMPLATE = `<!DOCTYPE html>
     th, td { border: 1px solid #cbd5e1; padding: 7px 10px; font-size: 12px; }
     th { background-color: #f1f5f9; font-weight: 700; color: #0f172a; text-align: center; }
     .party-table td.label { background-color: #f8fafc; font-weight: 700; width: 18%; text-align: center; }
-    .section-title { font-size: 14px; font-weight: 700; margin: 16px 0 8px 0; color: #0f172a; border-left: 4px solid #2563eb; padding-left: 8px; }
+    .section-title { font-size: 14px; font-weight: 700; margin: 16px 0 8px 0; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .terms-box { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 4px; font-size: 11.5px; line-height: 1.6; white-space: pre-wrap; }

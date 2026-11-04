@@ -1325,7 +1325,7 @@ export const AssetAssignment: React.FC = () => {
                         height: '100%', 
                         width: `${progress}%`, 
                         backgroundColor: progress === 100 ? 'var(--success)' : 'var(--primary)',
-                        transition: 'width 0.3s ease'
+                        transition: 'opacity 0.2s ease'
                       }}></div>
                     </div>
                   </div>

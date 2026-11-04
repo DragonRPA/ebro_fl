@@ -51,6 +51,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: '수신자(to), 제목(subject), 본문(body)은 필수 항목입니다.' });
   }
 
+  // 🛡️ [세금계산서 팝빌 테스트 기간 이메일 발송 원천 차단 게이트]
+  const combinedMailContext = `${subject || ''} ${body || ''} ${html || ''}`;
+  const isTaxInvoiceRelated = /세금계산서|전자세금계산서|팝빌|popbill|tax\s*invoice/i.test(combinedMailContext);
+  if (isTaxInvoiceRelated && process.env.POPBILL_TAX_EMAIL_BLOCKED !== 'false') {
+    return res.status(403).json({
+      success: false,
+      blocked: true,
+      error: '세금계산서 팝빌 테스트 기간 동안에는 이메일 발송이 전면 차단되어 있습니다.'
+    });
+  }
+
   const effectiveEmail = (googleEmail && !googleEmail.includes('•') ? googleEmail : (process.env.GMAIL_ACCOUNT_EMAIL || process.env.GOOGLE_EMAIL || '')).trim();
   const effectivePassword = (gmailAppPassword && !gmailAppPassword.includes('•') ? gmailAppPassword : (process.env.GMAIL_APP_PASSWORD || process.env.GOOGLE_APP_PASSWORD || '')).replace(/\s+/g, '').trim();
 
