@@ -41,6 +41,8 @@ export const SYSTEM_MENU_CONFIG: MenuGroupConfig[] = [
     id: 'grp_sales',
     name: '영업관리',
     items: [
+      { id: 'sales_performance', name: '실적관리-유통' },
+      { id: 'sales_performance_rental', name: '실적관리-렌탈' },
       { id: 'sales_journal', name: '영업일지' },
       { id: 'customer', name: '고객 관리' },
       { id: 'site_options', name: '현장별 옵션 관리' },
@@ -283,7 +285,14 @@ export const CANONICAL_MENU_ALIASES: Record<string, string> = {
   'kiyeun-contract-status': 'kiyeun_contract_status',
   'kiyeuncontractstatus': 'kiyeun_contract_status',
   '계약현황': 'kiyeun_contract_status',
-  '계약현황(기연전용)': 'kiyeun_contract_status'
+  '계약현황(기연전용)': 'kiyeun_contract_status',
+  'sales_performance': 'sales_performance',
+  'sales-performance': 'sales_performance',
+  '실적관리': 'sales_performance',
+  '실적관리-유통': 'sales_performance',
+  'sales_performance_rental': 'sales_performance_rental',
+  'sales-performance-rental': 'sales_performance_rental',
+  '실적관리-렌탈': 'sales_performance_rental'
 };
 
 export function normalizeMenuId(menuId: string): string {

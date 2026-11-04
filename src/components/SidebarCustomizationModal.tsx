@@ -32,6 +32,7 @@ interface SidebarCustomizationModalProps {
   onMoveDown: (menuList: { id: string }[], index: number) => void;
   onMoveGroupUp?: (groupList: { id: string }[], index: number) => void;
   onMoveGroupDown?: (groupList: { id: string }[], index: number) => void;
+  onApplyBusinessModePreset?: (mode: 'TRADE' | 'RENTAL' | 'HYBRID') => void;
   onReset: () => void;
 }
 
@@ -46,6 +47,7 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
   onMoveDown,
   onMoveGroupUp,
   onMoveGroupDown,
+  onApplyBusinessModePreset,
   onReset
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>(groups[0]?.id || '');
@@ -121,6 +123,77 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
           </button>
         </div>
 
+        {/* 테넌트 영업형태별 메뉴 일괄 구성 프리셋 바 */}
+        {onApplyBusinessModePreset && (
+          <div style={{
+            padding: '10px 24px',
+            borderBottom: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-secondary)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+              테넌트 영업형태별 메뉴 구성 (향후 업무 확장 시 1클릭 전환 지원)
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => onApplyBusinessModePreset('TRADE')}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  borderRadius: '6px',
+                  border: '1px solid #0284c7',
+                  backgroundColor: '#f0f9ff',
+                  color: '#0369a1',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                유통영업 전용 (무진글로벌 표준 · 렌탈 제외)
+              </button>
+              <button
+                type="button"
+                onClick={() => onApplyBusinessModePreset('RENTAL')}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  borderRadius: '6px',
+                  border: '1px solid #059669',
+                  backgroundColor: '#ecfdf5',
+                  color: '#047857',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                렌탈영업 전용 (임대업 테넌트 표준)
+              </button>
+              <button
+                type="button"
+                onClick={() => onApplyBusinessModePreset('HYBRID')}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  borderRadius: '6px',
+                  border: '1px solid var(--primary)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--primary)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                복합영업 (유통·렌탈·정비 전체 확장)
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 모달 본문 (좌측 그룹 선택 탭 + 우측 메뉴 상세 설정 그리드) */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* 1. 좌측 그룹 탭 목록 */}
@@ -156,7 +229,7 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
                     borderRadius: '8px',
                     backgroundColor: isSelected ? 'var(--primary)' : 'transparent',
                     padding: '2px 4px 2px 2px',
-                    transition: 'all 0.15s ease'
+                    transition: 'background-color 0.15s ease'
                   }}
                 >
                   <button
@@ -296,7 +369,7 @@ export const SidebarCustomizationModal: React.FC<SidebarCustomizationModalProps>
                     justifyContent: 'space-between',
                     gap: '12px',
                     opacity: isVisible ? 1 : 0.5,
-                    transition: 'all 0.15s ease',
+                    transition: 'opacity 0.15s ease',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
                   }}
                 >

@@ -315,6 +315,7 @@ export interface Tenant {
   tenantCode: string;                  // 테넌트 영문 코드 (예: 'GIYEUN')
   subdomain?: string;                  // 전용 서브도메인 (예: 'giyeun' -> giyeun.ebro.run)
   solutionType?: SolutionType;         // 솔루션 업종 분류 (AWP: 고소작업대, IT: IT 인프라/장비, MULTI: 복합 사업군)
+  businessMode?: 'TRADE' | 'RENTAL' | 'HYBRID'; // 영업형태 구분 (TRADE: 유통전용, RENTAL: 렌탈전용, HYBRID: 유통+렌탈 복합영업)
   targetRepo?: string;                 // 연동 깃허브 레포지토리 (예: 'DragonRPA/ebro_awp', 'DragonRPA/ebro_it')
   features?: TenantFeatures;           // 활성화된 모듈 및 라이선스 플러그인
   subscription?: TenantSubscription;   //  구독 요금제 및 만료 라이선스 정보
@@ -8897,6 +8898,22 @@ export interface TradePurchaseItem {
   memo?: string;
 }
 
+export interface SerialWarrantyAsLog {
+  id: string;
+  serviceDate: string;
+  warrantyType?: 'FREE_WARRANTY' | 'PAID_AS';
+  serviceType?: 'WARRANTY_FREE' | 'PAID_AS' | 'PERIODIC_CHECK';
+  symptom: string;
+  actionTaken?: string;
+  actionDetail?: string;
+  partsUsed?: string;
+  costAmount: number;
+  technicianName?: string;
+  engineerName?: string;
+  customerName?: string;
+  status?: 'IN_PROGRESS' | 'COMPLETED';
+}
+
 export interface TradeInventoryLot {
   id: string;
   purchaseId: string;
@@ -8913,6 +8930,7 @@ export interface TradeInventoryLot {
   soldDate?: string;
   soldCustomerName?: string;
   warrantyEndDate?: string;
+  warrantyAsLogs?: SerialWarrantyAsLog[];
   initialQty: number;
   remainingQty: number;
   unitCost: number;

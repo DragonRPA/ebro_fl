@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { TrendingUp, FileSpreadsheet, BookOpen } from 'lucide-react';
+import { TrendingUp, BookOpen } from 'lucide-react';
 import { TradeProfitabilityPage } from './distribution/TradeProfitabilityPage';
-import { RegularReportsPage } from './RegularReportsPage';
 import { SalesJournalPage } from './SalesJournalPage';
 
 export const SalesPerformanceReportPage: React.FC = () => {
-  const [subTab, setSubTab] = useState<'PROFITABILITY' | 'PREDEFINED_REPORTS' | 'SALES_JOURNAL'>('PROFITABILITY');
+  const [subTab, setSubTab] = useState<'PROFITABILITY' | 'SALES_JOURNAL'>('PROFITABILITY');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
@@ -13,7 +12,7 @@ export const SalesPerformanceReportPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <TrendingUp size={17} color="var(--primary-color)" />
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            실적관리
+            실적관리-유통
           </span>
         </div>
 
@@ -24,16 +23,7 @@ export const SalesPerformanceReportPage: React.FC = () => {
             className={`segmented-tab-item ${subTab === 'PROFITABILITY' ? 'active' : ''}`}
           >
             <TrendingUp size={14} />
-            <span>매출·원가·이익률 분석</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSubTab('PREDEFINED_REPORTS')}
-            className={`segmented-tab-item ${subTab === 'PREDEFINED_REPORTS' ? 'active' : ''}`}
-          >
-            <FileSpreadsheet size={14} />
-            <span>정기 보고자료</span>
+            <span>유통 매입·매출·이익률 집계</span>
           </button>
 
           <button
@@ -49,7 +39,6 @@ export const SalesPerformanceReportPage: React.FC = () => {
 
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {subTab === 'PROFITABILITY' && <TradeProfitabilityPage />}
-        {subTab === 'PREDEFINED_REPORTS' && <RegularReportsPage />}
         {subTab === 'SALES_JOURNAL' && <SalesJournalPage />}
       </div>
     </div>

@@ -146,6 +146,7 @@ const ConsumableManagePage = React.lazy(() => import('./pages/ConsumableManagePa
 const PatrolMaintenancePage = React.lazy(() => import('./pages/PatrolMaintenancePage').then(module => ({ default: module.PatrolMaintenancePage })));
 const CustomerVendorManagePage = React.lazy(() => import('./pages/CustomerVendorManagePage').then(module => ({ default: module.CustomerVendorManagePage })));
 const SalesPerformanceReportPage = React.lazy(() => import('./pages/SalesPerformanceReportPage').then(module => ({ default: module.SalesPerformanceReportPage })));
+const RentalSalesPerformancePage = React.lazy(() => import('./pages/RentalSalesPerformancePage').then(module => ({ default: module.RentalSalesPerformancePage })));
 const BillingManageIntegratedPage = React.lazy(() => import('./pages/BillingManageIntegratedPage').then(module => ({ default: module.BillingManageIntegratedPage })));
 const TradeOutboundIntegratedPage = React.lazy(() => import('./pages/TradeOutboundIntegratedPage').then(module => ({ default: module.TradeOutboundIntegratedPage })));
 const RentalMaintenanceManagePage = React.lazy(() => import('./pages/RentalMaintenanceManagePage').then(module => ({ default: module.RentalMaintenanceManagePage })));
@@ -728,7 +729,8 @@ const App: React.FC = () => {
         name: '영업관리',
         icon: <TrendingUp size={18} />,
         items: [
-          { id: 'sales_performance', name: '실적관리', icon: <TrendingUp size={16} />, component: <SalesPerformanceReportPage /> },
+          { id: 'sales_performance', name: '실적관리-유통', icon: <TrendingUp size={16} />, component: <SalesPerformanceReportPage /> },
+          { id: 'sales_performance_rental', name: '실적관리-렌탈', icon: <TrendingUp size={16} />, component: <RentalSalesPerformancePage /> },
           { id: 'customer', name: '고객관리', icon: <Users size={16} />, component: <CustomerVendorManagePage /> },
           { id: 'trade_contracts', name: '계약관리-유통', icon: <ShoppingBag size={16} />, component: <TradeContractsPage /> },
           { id: 'contract', name: '계약관리-렌탈', icon: <UserCheck size={16} />, component: <Contracts /> },
@@ -926,8 +928,17 @@ const App: React.FC = () => {
     }
   };
 
-  // ──  좌측 메뉴 패널 개인화 상태 및 훅 ──
+  // ── 좌측 메뉴 패널 개인화 상태 및 훅 ──
   const [showSidebarCustomModal, setShowSidebarCustomModal] = useState(false);
+  const [activeBusinessMode, setActiveBusinessMode] = useState<'TRADE' | 'RENTAL' | 'HYBRID'>(() => {
+    try {
+      const saved = localStorage.getItem('erp_fl_tenant_business_mode');
+      if (saved === 'TRADE' || saved === 'RENTAL' || saved === 'HYBRID') return saved;
+    } catch {
+      // ignore
+    }
+    return 'HYBRID';
+  });
   const {
     preferences: menuPreferences,
     toggleVisibility: toggleMenuVisibility,
@@ -937,8 +948,32 @@ const App: React.FC = () => {
     moveGroupUp: moveMenuGroupUp,
     moveGroupDown: moveMenuGroupDown,
     resetToDefault: resetMenuPreferences,
+    applyBusinessModePreset,
     getColorPreset
   } = useMenuPreferences(currentUser?.id || currentUser?.loginId);
+
+  const handleSelectBusinessMode = useCallback((mode: 'TRADE' | 'RENTAL' | 'HYBRID') => {
+    setActiveBusinessMode(mode);
+    applyBusinessModePreset(mode);
+    if (mode === 'TRADE') {
+      const rentalOnlySet = new Set([
+        'sales_performance_rental', 'contract', 'public_construction_permits', 'asset',
+        'rent_assets', 'rental_inbound', 'rental_outbound', 'parts_manage_rental',
+        'consumable_manage_rental', 'inspection_checklist_manage', 'repairs', 'patrol_maintenance'
+      ]);
+      if (rentalOnlySet.has(activeTab)) {
+        setActiveTab('sales_performance');
+      }
+    } else if (mode === 'RENTAL') {
+      const tradeOnlySet = new Set([
+        'sales_performance', 'trade_contracts', 'exchange_rate', 'trade_products',
+        'trade_purchases', 'trade_outbounds'
+      ]);
+      if (tradeOnlySet.has(activeTab)) {
+        setActiveTab('sales_performance_rental');
+      }
+    }
+  }, [applyBusinessModePreset, activeTab, setActiveTab]);
 
   const menuPrefs = useMemo(() => {
     return menuPreferences?.items || {};
@@ -1060,6 +1095,7 @@ const App: React.FC = () => {
       if (found) return found.component;
     }
     if (tabId === 'dashboard' || tabId === 'sales_performance' || tabId === 'trade_profitability') return <SalesPerformanceReportPage />;
+    if (tabId === 'sales_performance_rental') return <RentalSalesPerformancePage />;
     if (tabId === 'manual_dictionary') return <ManualDictionaryPage />;
     if (tabId === 'consumable' || tabId === 'consumables' || tabId === 'consumable_manage_rental') return <ConsumableManagePage />;
     if (tabId === 'parts_manage_rental' || tabId === 'trade_parts_catalog') return <PartsManagePage />;
@@ -2398,6 +2434,57 @@ const App: React.FC = () => {
             overscrollBehavior: 'contain'
           }}
         >
+          {/* 테넌트 영업형태별 메뉴 분리·통합 모드 전환 스위치 (유통전용 / 렌탈전용 / 복합영업) */}
+          <div style={{
+            padding: '8px',
+            marginBottom: '6px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '5px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                테넌트 영업형태 메뉴구성
+              </span>
+              <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+                {activeBusinessMode === 'TRADE' ? '무진글로벌 유통표준' : activeBusinessMode === 'RENTAL' ? '임대업 렌탈표준' : '유통·렌탈 복합표준'}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+              {([
+                { id: 'TRADE' as const, label: '유통전용' },
+                { id: 'RENTAL' as const, label: '렌탈전용' },
+                { id: 'HYBRID' as const, label: '복합영업' }
+              ]).map(m => {
+                const isSelected = activeBusinessMode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleSelectBusinessMode(m.id)}
+                    style={{
+                      padding: '5px 4px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      borderRadius: '4px',
+                      border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                      backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-app)',
+                      color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* 최상단 독립 ERP 대시보드 버튼 */}
           {hasPermission('dashboard', 'view') && (
             <button
@@ -2649,7 +2736,7 @@ const App: React.FC = () => {
         <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
       )}
 
-      {/*  좌측 메뉴 패널 개인화 설정 모달 */}
+      {/* 좌측 메뉴 패널 개인화 설정 모달 */}
       <SidebarCustomizationModal
         isOpen={showSidebarCustomModal}
         onClose={() => setShowSidebarCustomModal(false)}
@@ -2661,7 +2748,14 @@ const App: React.FC = () => {
         onMoveDown={(list, idx) => moveMenuItemDown(list, idx)}
         onMoveGroupUp={(groupList, idx) => moveMenuGroupUp(groupList, idx)}
         onMoveGroupDown={(groupList, idx) => moveMenuGroupDown(groupList, idx)}
-        onReset={resetMenuPreferences}
+        onApplyBusinessModePreset={handleSelectBusinessMode}
+        onReset={() => {
+          setActiveBusinessMode('HYBRID');
+          try {
+            localStorage.setItem('erp_fl_tenant_business_mode', 'HYBRID');
+          } catch {}
+          resetMenuPreferences();
+        }}
       />
 
       {/*  주기장/공장 현장용 고정 팝업 토스트 (확인 버튼 클릭 시까지 상주) */}

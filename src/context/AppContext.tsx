@@ -1894,7 +1894,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const flStandardMenus = new Set([
-        'dashboard', 'sales_performance', 'trade_profitability', 'customer', 'trade_contracts',
+        'dashboard', 'sales_performance', 'sales_performance_rental', 'trade_profitability', 'customer', 'trade_contracts',
         'contract', 'exchange_rate', 'fl_doc_archive', 'public_construction_permits',
         'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
         'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',
@@ -1938,7 +1938,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 5. eBro FL 7대 표준 메뉴그룹(24개 하위메뉴) 기본 권한 허용
     const flDefaultOpenMenus = new Set([
-      'sales_performance', 'trade_profitability', 'customer', 'trade_contracts',
+      'sales_performance', 'sales_performance_rental', 'trade_profitability', 'customer', 'trade_contracts',
       'contract', 'exchange_rate', 'fl_doc_archive', 'public_construction_permits',
       'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
       'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',

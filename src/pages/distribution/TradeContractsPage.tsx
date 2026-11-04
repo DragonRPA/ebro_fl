@@ -1926,7 +1926,7 @@ export const TradeContractsPage: React.FC = () => {
   <style>
     body { font-family: 'Malgun Gothic', sans-serif; padding: 32px; color: #0f172a; }
     h1 { font-size: 22px; margin: 0 0 6px 0; }
-    h2 { font-size: 15px; margin: 22px 0 8px 0; border-left: 4px solid #2563eb; padding-left: 8px; }
+    h2 { font-size: 15px; margin: 22px 0 8px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
   </style>
 </head>

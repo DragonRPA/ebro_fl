@@ -245,6 +245,81 @@ export function useMenuPreferences(userId?: string) {
     }
   }, [storageKey, userId]);
 
+  // 10. 테넌트 영업형태별 메뉴 일괄 프리셋 적용 (TRADE: 유통전용 / RENTAL: 렌탈전용 / HYBRID: 복합영업)
+  const applyBusinessModePreset = useCallback((mode: 'TRADE' | 'RENTAL' | 'HYBRID') => {
+    const rentalOnlyIds = [
+      'sales_performance_rental',
+      'contract',
+      'public_construction_permits',
+      'asset',
+      'rent_assets',
+      'rental_inbound',
+      'rental_outbound',
+      'parts_manage_rental',
+      'consumable_manage_rental',
+      'inspection_checklist_manage',
+      'repairs',
+      'patrol_maintenance'
+    ];
+    const tradeOnlyIds = [
+      'sales_performance',
+      'trade_contracts',
+      'exchange_rate',
+      'trade_products',
+      'trade_purchases',
+      'trade_outbounds'
+    ];
+    const commonIds = [
+      'customer',
+      'fl_doc_archive',
+      'billing',
+      'tax_invoice_manage',
+      'receivable_delinquency',
+      'product',
+      'trade_option_masters',
+      'permission',
+      'operations_manual',
+      'tenant_management'
+    ];
+
+    setPreferences(prev => {
+      const baseItems = { ...(prev?.items || {}) };
+      commonIds.forEach((id, idx) => {
+        baseItems[id] = { ...(baseItems[id] || { id, order: idx }), id, visible: true };
+      });
+      tradeOnlyIds.forEach((id, idx) => {
+        baseItems[id] = {
+          ...(baseItems[id] || { id, order: idx }),
+          id,
+          visible: mode === 'TRADE' || mode === 'HYBRID'
+        };
+      });
+      rentalOnlyIds.forEach((id, idx) => {
+        baseItems[id] = {
+          ...(baseItems[id] || { id, order: idx }),
+          id,
+          visible: mode === 'RENTAL' || mode === 'HYBRID'
+        };
+      });
+
+      const newPrefs: UserMenuPreferences = {
+        userId: prev?.userId || userId || 'anonymous',
+        items: baseItems,
+        groupOrder: prev?.groupOrder,
+        updatedAt: new Date().toISOString()
+      };
+      if (storageKey) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(newPrefs));
+        } catch (e) {}
+      }
+      try {
+        localStorage.setItem('erp_fl_tenant_business_mode', mode);
+      } catch (e) {}
+      return newPrefs;
+    });
+  }, [storageKey, userId]);
+
   // 색상 프리셋 도우미
   const getColorPreset = useCallback((colorId?: string): MenuColorPreset => {
     if (!colorId) return MENU_COLOR_PRESETS[0];
@@ -261,6 +336,7 @@ export function useMenuPreferences(userId?: string) {
     moveGroupUp,
     moveGroupDown,
     resetToDefault,
+    applyBusinessModePreset,
     getColorPreset
   };
 }
