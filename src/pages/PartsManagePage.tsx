@@ -408,6 +408,81 @@ export const PartsManagePage: React.FC = () => {
     exportToExcel(excelRows, `무진글로벌_부품재고리스트_경과월역산_${targetYm}`, 'Data');
   };
 
+  // 선제적 부품 운영 진단 (12개월 이상 장기체화 부품 특가 프로모션 & 안전재고 미달 자동 발주서)
+  const proactivePartsInsight = useMemo(() => {
+    const active = backcalculatedParts.filter(p => p.isReceivedAsOfTarget && p.calcStockQty > 0);
+    const longAgingParts = active.filter(p => p.calcAgingBucket >= 12);
+    const longAgingAmount = longAgingParts.reduce((s, p) => s + p.calcStockBalanceAmount, 0);
+    const lowStockParts = backcalculatedParts.filter(p => p.isReceivedAsOfTarget && p.calcStockQty <= p.minStockQty);
+    const lowStockOrderAmount = lowStockParts.reduce((s, p) => {
+      const recQty = Math.max(2, p.minStockQty * 2 - p.calcStockQty);
+      return s + recQty * p.purchaseUnitCost;
+    }, 0);
+    return {
+      longAgingParts,
+      longAgingAmount,
+      lowStockParts,
+      lowStockOrderAmount
+    };
+  }, [backcalculatedParts]);
+
+  const handleExportDealerPromoExcel = () => {
+    const targetList = proactivePartsInsight.longAgingParts.length > 0
+      ? proactivePartsInsight.longAgingParts
+      : filteredParts.filter(p => p.calcStockQty > 0);
+    const rows = targetList.map((p, idx) => {
+      const discountRate = p.calcAgingBucket >= 24 ? 0.2 : p.calcAgingBucket >= 18 ? 0.15 : 0.1;
+      const baseDealerPrice = p.saleUnitPrice || Math.round(p.purchaseUnitCost * 1.25);
+      const promoDealerPrice = Math.round((baseDealerPrice * (1 - discountRate)) / 100) * 100;
+      return {
+        순번: idx + 1,
+        기준년월: targetYm,
+        경과월수: p.calcAgingBucket >= 24 ? '24개월이상' : `${p.calcAgingBucket}개월`,
+        품번: p.skuCode,
+        부품명: p.partName,
+        카테고리: p.category,
+        호환모델: p.compatibleModels,
+        현재고수량: p.calcStockQty,
+        재고장부금액: p.calcStockBalanceAmount,
+        정상대리점공급가: baseDealerPrice,
+        권장특가할인율: `${Math.round(discountRate * 100)}%`,
+        대리점특가프로모션단가: promoDealerPrice,
+        전량소진시_회수예상액: promoDealerPrice * p.calcStockQty,
+        권장판촉대상: '전국 협력 대리점 및 자체 유상정비 패키지 소진'
+      };
+    });
+    exportToExcel(rows, `장기체화부품_대리점특가프로모션표_${targetYm}`, '대리점특가프로모션');
+    showToast(`12개월 이상 장기체화 부품 ${rows.length}종의 대리점 특가 프로모션 단가표가 엑셀로 추출되었습니다.`);
+  };
+
+  const handleExportAutoReorderExcel = () => {
+    const targetList = proactivePartsInsight.lowStockParts;
+    if (targetList.length === 0) {
+      showToast('현재 안전재고 기준에 미달한 발주 필요 부품이 없습니다.');
+      return;
+    }
+    const rows = targetList.map((p, idx) => {
+      const recOrderQty = Math.max(2, p.minStockQty * 2 - p.calcStockQty);
+      return {
+        순번: idx + 1,
+        품번: p.skuCode,
+        부품명: p.partName,
+        제조사공급처: p.brand || 'HANGCHA',
+        카테고리: p.category,
+        호환모델: p.compatibleModels,
+        현재가용재고: p.calcStockQty,
+        안전재고기준: p.minStockQty,
+        부족수량: Math.max(0, p.minStockQty - p.calcStockQty),
+        권장발주수량: recOrderQty,
+        기준매입단가: p.purchaseUnitCost,
+        예상발주금액: recOrderQty * p.purchaseUnitCost,
+        보관장소: p.location || '주기장'
+      };
+    });
+    exportToExcel(rows, `안전재고미달_자동발주권고서_${targetYm}`, '안전재고자동발주서');
+    showToast(`안전재고 미달 부품 ${rows.length}종의 자동 발주 권고서가 엑셀로 추출되었습니다.`);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%' }}>
       {toastMsg && (
@@ -576,7 +651,7 @@ export const PartsManagePage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 {selectedAgingBucket !== 'ALL' && (
                   <button
                     type="button"
@@ -589,12 +664,72 @@ export const PartsManagePage: React.FC = () => {
                 )}
                 <button
                   type="button"
+                  onClick={handleExportDealerPromoExcel}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    backgroundColor: '#ea580c',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Download size={13} /> 장기재고 대리점 특가표 추출 · {proactivePartsInsight.longAgingParts.length}종
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportAutoReorderExcel}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    backgroundColor: '#1d4ed8',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Download size={13} /> 안전재고 미달 발주서 추출 · {proactivePartsInsight.lowStockParts.length}종
+                </button>
+                <button
+                  type="button"
                   onClick={handleExportAgingExcel}
                   className="btn-excel-download"
                   style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
                 >
                   <Download size={13} /> 39컬럼 경과월 재고잔액 엑셀 내보내기
                 </button>
+              </div>
+            </div>
+
+            {/* 선제적 부품 운영 진단 요약 바 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '8px' }}>
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#9a3412', whiteSpace: 'nowrap' }}>
+                  12개월 이상 장기체화 부품: {proactivePartsInsight.longAgingParts.length}종 · 재고잔액 ₩{proactivePartsInsight.longAgingAmount.toLocaleString('ko-KR')}
+                </span>
+                <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#c2410c', whiteSpace: 'nowrap' }}>
+                  권장조치: 10% ~ 20% 대리점 특가 프로모션 및 자체 정비 우선 소진
+                </span>
+              </div>
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#1e40af', whiteSpace: 'nowrap' }}>
+                  안전재고 미달 발주필요 부품: {proactivePartsInsight.lowStockParts.length}종 · 권장 발주예상액 ₩{proactivePartsInsight.lowStockOrderAmount.toLocaleString('ko-KR')}
+                </span>
+                <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#1d4ed8', whiteSpace: 'nowrap' }}>
+                  권장조치: 안전재고 2배수 기준 사전 수입·매입 발주 진행
+                </span>
               </div>
             </div>
 

@@ -118,6 +118,14 @@ export const TradeContractsPage: React.FC = () => {
   const [formAutoIssueBilling, setFormAutoIssueBilling] = useState<boolean>(true);
   const [selectedNewOptionId, setSelectedNewOptionId] = useState<string>('FOM-MJ-01');
 
+  // 판매·렌탈 비교견적 및 손익분기 시뮬레이터 모달 상태
+  const [isQuoteSimOpen, setIsQuoteSimOpen] = useState<boolean>(false);
+  const [simCustomerId, setSimCustomerId] = useState<string>(customerOptions[0]?.id || 'DEALER-001');
+  const [simTier, setSimTier] = useState<'DEALER' | 'END_USER'>('END_USER');
+  const [simProductId, setSimProductId] = useState<string>(products[0]?.id || 'PRD-MJ-01');
+  const [simQty, setSimQty] = useState<number>(1);
+  const [simOptionIds, setSimOptionIds] = useState<string[]>(['FOM-MJ-02', 'FOM-MJ-12']);
+
   const filteredModalCustomerOptions = useMemo(() => {
     const q = modalCustomerSearch.trim();
     if (!q) return customerOptions;
@@ -842,7 +850,32 @@ export const TradeContractsPage: React.FC = () => {
             style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
             <Layers size={14} /> 수주 상세 등록
- </button>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const firstProd = inStockProducts[0] || products[0];
+              if (firstProd) setSimProductId(firstProd.id);
+              setIsQuoteSimOpen(true);
+            }}
+            style={{
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: 800,
+              borderRadius: '4px',
+              border: '1px solid #7c3aed',
+              backgroundColor: '#f5f3ff',
+              color: '#5b21b6',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer'
+            }}
+          >
+            <Wrench size={13} /> 판매·렌탈 비교견적
+          </button>
 
           <button
             type="button"
@@ -1818,6 +1851,384 @@ export const TradeContractsPage: React.FC = () => {
           orderId={modalOrderId}
         />
       )}
+
+      {/* 7. 판매·렌탈 비교견적 및 손익분기 시뮬레이터 모달 */}
+      {isQuoteSimOpen && (() => {
+        const simProd = products.find(p => p.id === simProductId) || products[0];
+        const simCust = customerOptions.find(c => c.id === simCustomerId) || customerOptions[0];
+        const unitSalePrice = simProd ? getRecommendedUnitPrice(simProd.id, simTier) : 0;
+        const unitCostPrice = simProd ? (getProductStock(simProd.id).avgUnitCost || simProd.standardCost || 0) : 0;
+        const selectedOptMasters = optionMasters.filter(m => simOptionIds.includes(m.id));
+        const optUnitSupply = selectedOptMasters.reduce(
+          (s, m) => s + (simTier === 'DEALER' ? (m.dealerPrice || m.unitPrice) : m.unitPrice),
+          0
+        );
+        const optUnitCost = selectedOptMasters.reduce((s, m) => s + m.costPrice, 0);
+
+        const totalProdSupply = unitSalePrice * simQty;
+        const totalOptSupply = optUnitSupply * simQty;
+        const totalSaleSupply = totalProdSupply + totalOptSupply;
+        const totalSaleVat = Math.round(totalSaleSupply * 0.1);
+        const totalAcqCost = (unitCostPrice + optUnitCost) * simQty;
+        const expectedSaleProfit = totalSaleSupply - totalAcqCost;
+        const expectedSaleMargin = totalSaleSupply > 0 ? Math.round((expectedSaleProfit / totalSaleSupply) * 1000) / 10 : 0;
+
+        // 12 / 24 / 36개월 렌탈 비교 테이블 산출 (취득원가 + 옵션원가 기반)
+        const rentalPlans = [
+          { months: 12, rateFactor: 0.048, residualRatio: 0.68, label: '12개월 단기·중기 렌탈' },
+          { months: 24, rateFactor: 0.039, residualRatio: 0.52, label: '24개월 표준 렌탈' },
+          { months: 36, rateFactor: 0.033, residualRatio: 0.38, label: '36개월 장기 약정 렌탈' }
+        ].map(plan => {
+          const monthlyFeePerUnit = Math.round((unitSalePrice + optUnitSupply) * plan.rateFactor / 1000) * 1000;
+          const monthlyFeeTotal = monthlyFeePerUnit * simQty;
+          const totalRentalRevenue = monthlyFeeTotal * plan.months;
+          const estimatedResidualValue = Math.round(totalAcqCost * plan.residualRatio);
+          const bepMonths = monthlyFeeTotal > 0 ? Math.ceil((totalAcqCost / monthlyFeeTotal) * 10) / 10 : 0;
+          const totalLifecycleGain = totalRentalRevenue + estimatedResidualValue - totalAcqCost;
+          return {
+            ...plan,
+            monthlyFeePerUnit,
+            monthlyFeeTotal,
+            totalRentalRevenue,
+            estimatedResidualValue,
+            bepMonths,
+            totalLifecycleGain
+          };
+        });
+
+        const handlePrintComparisonQuote = () => {
+          const w = window.open('', '_blank', 'width=940,height=920');
+          if (!w) return;
+          const optRowsHtml = selectedOptMasters.length === 0
+            ? '<tr><td colspan="4" style="padding:8px;text-align:center;color:#64748b;">선택된 출고 설치옵션 없음</td></tr>'
+            : selectedOptMasters.map((m, idx) => {
+                const up = simTier === 'DEALER' ? (m.dealerPrice || m.unitPrice) : m.unitPrice;
+                return `<tr>
+                  <td style="padding:7px 10px;border:1px solid #cbd5e1;text-align:center;">${idx + 1}</td>
+                  <td style="padding:7px 10px;border:1px solid #cbd5e1;font-weight:700;">${m.name}</td>
+                  <td style="padding:7px 10px;border:1px solid #cbd5e1;">${m.subVariant || m.optionGroupLabel || '-'}</td>
+                  <td style="padding:7px 10px;border:1px solid #cbd5e1;text-align:right;font-weight:700;">₩${(up * simQty).toLocaleString()}</td>
+                </tr>`;
+              }).join('');
+
+          const rentalRowsHtml = rentalPlans.map(rp => `<tr>
+            <td style="padding:8px 10px;border:1px solid #cbd5e1;font-weight:700;">${rp.label}</td>
+            <td style="padding:8px 10px;border:1px solid #cbd5e1;text-align:right;font-weight:800;color:#1d4ed8;">월 ₩${rp.monthlyFeeTotal.toLocaleString()}</td>
+            <td style="padding:8px 10px;border:1px solid #cbd5e1;text-align:right;">₩${rp.totalRentalRevenue.toLocaleString()}</td>
+            <td style="padding:8px 10px;border:1px solid #cbd5e1;text-align:center;">완제품 + 선택옵션 ${selectedOptMasters.length}종 포함</td>
+          </tr>`).join('');
+
+          w.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>지게차 구매·렌탈 통합 비교견적서</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; padding: 32px; color: #0f172a; }
+    h1 { font-size: 22px; margin: 0 0 6px 0; }
+    h2 { font-size: 15px; margin: 22px 0 8px 0; border-left: 4px solid #2563eb; padding-left: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>지게차 완제품 · 출고설치옵션 구매 및 렌탈 비교견적서</h1>
+  <div style="font-size:13px;color:#475569;margin-bottom:16px;">
+    수신: <strong>${simCust?.name || '고객사'}</strong> 귀하 | 견적구분: ${simTier === 'DEALER' ? '대리점 공급견적' : '최종고객 표준견적'} | 발행일: ${new Date().toISOString().split('T')[0]}
+  </div>
+  <h2>1. 지게차 완제품 사양 및 공급가</h2>
+  <table>
+    <tr style="background:#f1f5f9;">
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:left;">모델명 · 품명</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:center;">정격하중 · 인상고</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:center;">수량</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:right;">완제품 공급가액</th>
+    </tr>
+    <tr>
+      <td style="padding:8px;border:1px solid #cbd5e1;font-weight:700;">[${simProd?.skuCode || ''}] ${simProd?.name || ''}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1;text-align:center;">${simProd?.ratedCapacityKg || 2500}kg / ${simProd?.standardLiftHeightMm || 3000}mm</td>
+      <td style="padding:8px;border:1px solid #cbd5e1;text-align:center;">${simQty}대</td>
+      <td style="padding:8px;border:1px solid #cbd5e1;text-align:right;font-weight:800;">₩${totalProdSupply.toLocaleString()}</td>
+    </tr>
+  </table>
+  <h2>2. 출고 설치옵션 구성 명세</h2>
+  <table>
+    <tr style="background:#f1f5f9;">
+      <th style="padding:7px;border:1px solid #cbd5e1;width:50px;">순번</th>
+      <th style="padding:7px;border:1px solid #cbd5e1;text-align:left;">출고 설치옵션명</th>
+      <th style="padding:7px;border:1px solid #cbd5e1;text-align:left;">세부 사양</th>
+      <th style="padding:7px;border:1px solid #cbd5e1;text-align:right;">옵션 공급가액</th>
+    </tr>
+    ${optRowsHtml}
+  </table>
+  <h2>3. 일시불 구매 견적 합계</h2>
+  <table>
+    <tr style="background:#eff6ff;">
+      <td style="padding:10px;border:1px solid #93c5fd;font-weight:700;">총 공급가액: ₩${totalSaleSupply.toLocaleString()}</td>
+      <td style="padding:10px;border:1px solid #93c5fd;font-weight:700;">부가세: ₩${totalSaleVat.toLocaleString()}</td>
+      <td style="padding:10px;border:1px solid #93c5fd;font-weight:900;color:#1d4ed8;text-align:right;">부가세 포함 합계: ₩${(totalSaleSupply + totalSaleVat).toLocaleString()}</td>
+    </tr>
+  </table>
+  <h2>4. 기간별 렌탈 전환 비교 견적</h2>
+  <table>
+    <tr style="background:#f1f5f9;">
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:left;">약정 기간</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:right;">월 렌탈료 공급가</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:right;">약정기간 총 렌탈료</th>
+      <th style="padding:8px;border:1px solid #cbd5e1;text-align:center;">포함 조건</th>
+    </tr>
+    ${rentalRowsHtml}
+  </table>
+  <script>window.onload = function(){ window.print(); };</script>
+</body>
+</html>`);
+          w.document.close();
+        };
+
+        const handleConvertSimToContract = () => {
+          if (!simProd) return;
+          const today = new Date().toISOString().split('T')[0];
+          setEditingOrder(null);
+          setFormCustomerId(simCustomerId);
+          setFormCustomerTier(simTier);
+          setFormOrderDate(today);
+          setFormDeliveryDate(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
+          setFormDeliveryLocation((simCust as any)?.address || '고객사 지정 현장');
+          setFormReceiverName((simCust as any)?.representative || '인수담당자');
+          setFormReceiverPhone((simCust as any)?.repContact || '010-0000-0000');
+          setFormLines([
+            {
+              key: `line-${Date.now()}`,
+              productId: simProd.id,
+              qty: simQty,
+              unitPrice: unitSalePrice,
+              serialNumbersText: '',
+              memo: '비교견적 시뮬레이터 전환 수주'
+            }
+          ]);
+          setFormAppliedOptions(
+            selectedOptMasters.map(master => {
+              const recPrice = simTier === 'DEALER' ? (master.dealerPrice || master.unitPrice) : master.unitPrice;
+              const isFree = Boolean(master.isFreeDefault);
+              return {
+                optionId: master.id,
+                optionCode: master.optionCode || master.id,
+                optionGroup: master.optionGroup || 'SIDESHIFT',
+                optionGroupLabel: master.optionGroupLabel || '출고장착옵션',
+                domainTypeLabel: master.domainTypeLabel || '유상옵션',
+                name: master.name,
+                subVariant: master.subVariant || '',
+                specDetail: master.specDetail || master.subVariant || '',
+                qty: simQty,
+                unitPrice: recPrice,
+                costPrice: master.costPrice,
+                supplyAmount: isFree ? 0 : simQty * recPrice,
+                isFreeApplied: isFree
+              };
+            })
+          );
+          setFormAutoIssueBilling(true);
+          setIsQuoteSimOpen(false);
+          setIsOrderModalOpen(true);
+        };
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1250 }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', width: '940px', maxWidth: '96vw', maxHeight: '92vh', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
+                  지게차 완제품 · 출고설치옵션 구매 및 렌탈 비교견적 시뮬레이터
+                </h3>
+                <button type="button" onClick={() => setIsQuoteSimOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 2fr 0.6fr', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>대상 거래처</label>
+                    <select
+                      value={simCustomerId}
+                      onChange={e => setSimCustomerId(e.target.value)}
+                      style={{ padding: '7px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
+                    >
+                      {customerOptions.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>적용 단가 기준</label>
+                    <select
+                      value={simTier}
+                      onChange={e => setSimTier(e.target.value as 'DEALER' | 'END_USER')}
+                      style={{ padding: '7px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
+                    >
+                      <option value="DEALER">대리점 공급가</option>
+                      <option value="END_USER">최종고객 판매가</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>지게차 완제품 모델 선택</label>
+                    <select
+                      value={simProductId}
+                      onChange={e => setSimProductId(e.target.value)}
+                      style={{ padding: '7px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
+                    >
+                      {products.filter(p => p.unit === '대' || p.itemType === 'EQUIPMENT').map(p => (
+                        <option key={p.id} value={p.id}>
+                          [{p.skuCode}] {p.name} — 대리점 ₩{Number(p.dealerPrice || p.standardPrice).toLocaleString()} / 고객 ₩{Number(p.standardPrice).toLocaleString()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>수량</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={simQty}
+                      onChange={e => setSimQty(Math.max(1, Number(e.target.value) || 1))}
+                      style={{ padding: '7px 10px', fontSize: '12.5px', textAlign: 'right', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 800 }}
+                    />
+                  </div>
+                </div>
+
+                {/* 19종 출고 설치옵션 선택 바 */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px', backgroundColor: 'var(--bg-app)' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                    출고 설치옵션 선택 · 클릭하여 견적에 추가 또는 해제 ({selectedOptMasters.length}종 선택됨)
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                    {(optionMasters.some(om => om.id.startsWith('FOM-MJ-'))
+                      ? optionMasters.filter(om => om.id.startsWith('FOM-MJ-'))
+                      : optionMasters
+                    ).map((om, idx) => {
+                      const active = simOptionIds.includes(om.id);
+                      const price = simTier === 'DEALER' ? (om.dealerPrice || om.unitPrice) : om.unitPrice;
+                      return (
+                        <button
+                          key={om.id}
+                          type="button"
+                          onClick={() =>
+                            setSimOptionIds(prev =>
+                              prev.includes(om.id) ? prev.filter(id => id !== om.id) : [...prev, om.id]
+                            )
+                          }
+                          style={{
+                            padding: '4px 9px',
+                            fontSize: '11px',
+                            fontWeight: active ? 800 : 600,
+                            borderRadius: '4px',
+                            border: active ? '1px solid #7c3aed' : '1px solid var(--border-color)',
+                            backgroundColor: active ? '#ede9fe' : 'var(--bg-card)',
+                            color: active ? '#5b21b6' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {idx + 1}. {om.name} +₩{price.toLocaleString()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 일시불 유통 매매 손익 요약 카드 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700 }}>완제품 + 옵션 총 취득원가</div>
+                    <div style={{ fontSize: '17px', fontWeight: 900, color: 'var(--text-main)', marginTop: '4px' }}>₩{totalAcqCost.toLocaleString()}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>장착옵션 원가 ₩{(optUnitCost * simQty).toLocaleString()} 포함</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', backgroundColor: '#eff6ff' }}>
+                    <div style={{ fontSize: '11px', color: '#1e40af', fontWeight: 700 }}>일시불 판매 총 공급가액</div>
+                    <div style={{ fontSize: '17px', fontWeight: 900, color: '#1d4ed8', marginTop: '4px' }}>₩{totalSaleSupply.toLocaleString()}</div>
+                    <div style={{ fontSize: '11px', color: '#3b82f6', marginTop: '2px' }}>장착옵션 공급가 +₩{totalOptSupply.toLocaleString()} 포함</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #a7f3d0', backgroundColor: '#ecfdf5' }}>
+                    <div style={{ fontSize: '11px', color: '#065f46', fontWeight: 700 }}>일시불 판매 매출이익 · 마진율</div>
+                    <div style={{ fontSize: '17px', fontWeight: 900, color: '#059669', marginTop: '4px' }}>₩{expectedSaleProfit.toLocaleString()}</div>
+                    <div style={{ fontSize: '11px', color: '#047857', marginTop: '2px' }}>매출이익률 {expectedSaleMargin}%</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid #ddd6fe', backgroundColor: '#f5f3ff' }}>
+                    <div style={{ fontSize: '11px', color: '#5b21b6', fontWeight: 700 }}>부가세 포함 일시불 청구총액</div>
+                    <div style={{ fontSize: '17px', fontWeight: 900, color: '#6d28d9', marginTop: '4px' }}>₩{(totalSaleSupply + totalSaleVat).toLocaleString()}</div>
+                    <div style={{ fontSize: '11px', color: '#7c3aed', marginTop: '2px' }}>부가세 ₩{totalSaleVat.toLocaleString()} 별도합산</div>
+                  </div>
+                </div>
+
+                {/* 기간별 렌탈 전환 비교 및 손익분기 테이블 */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', fontSize: '12.5px', fontWeight: 800 }}>
+                    렌탈 전환 시 약정기간별 월 렌탈료 · 원가회수 손익분기 비교
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '8px 10px', textAlign: 'left' }}>렌탈 약정 구분</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right' }}>대당 월 렌탈료</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right' }}>총 월 렌탈료</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right' }}>약정기간 총 렌탈수익</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'center' }}>원가회수 손익분기</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right' }}>만기 잔존가치 포함 기대수익</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rentalPlans.map(rp => (
+                        <tr key={rp.months} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 700 }}>{rp.label}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700 }}>₩{rp.monthlyFeePerUnit.toLocaleString()}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 800, color: '#1d4ed8' }}>월 ₩{rp.monthlyFeeTotal.toLocaleString()}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700 }}>₩{rp.totalRentalRevenue.toLocaleString()}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 800, color: '#b45309' }}>{rp.bepMonths}개월차 회수</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>+₩{rp.totalLifecycleGain.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 우하단 터미널 액션 바 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    선택 구성: {simProd?.name} {simQty}대 + 출고 설치옵션 {selectedOptMasters.length}종
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsQuoteSimOpen(false)}
+                      className="btn-secondary"
+                      style={{ padding: '8px 14px', fontSize: '12.5px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                      닫기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePrintComparisonQuote}
+                      className="btn-secondary"
+                      style={{ padding: '8px 14px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer', border: '1px solid #2563eb', color: '#1d4ed8' }}
+                    >
+                      비교견적서 인쇄
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConvertSimToContract}
+                      className="btn-primary"
+                      style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                      이 조건으로 유통계약 등록
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

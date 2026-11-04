@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
-import { TradeProduct, TradeInventoryLot } from '../../services/db';
+import { TradeProduct, TradeInventoryLot, SerialWarrantyAsLog } from '../../services/db';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
 import { FL_TECHNICAL_ARCHIVE, FlModelTechnicalSpec } from '../../data/flTechnicalArchive';
@@ -204,6 +204,58 @@ export const TradeProductsPage: React.FC = () => {
   const [adjustSerialNumber, setAdjustSerialNumber] = useState<string>('');
   const [adjustInboundDate, setAdjustInboundDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [adjustReason, setAdjustReason] = useState('정기 재고실사 수량 보정');
+
+  // 차대번호별 입출고 및 보증·사후정비 이력 모달 상태
+  const [selectedSerialLotId, setSelectedSerialLotId] = useState<string | null>(null);
+  const [serialAsLogsMap, setSerialAsLogsMap] = useState<Record<string, SerialWarrantyAsLog[]>>(() => {
+    try {
+      const saved = localStorage.getItem('erp_fl_serial_warranty_as_logs_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return {};
+  });
+  const [asFormDate, setAsFormDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [asFormServiceType, setAsFormServiceType] = useState<'WARRANTY_FREE' | 'PAID_AS' | 'PERIODIC_CHECK'>('WARRANTY_FREE');
+  const [asFormSymptom, setAsFormSymptom] = useState<string>('');
+  const [asFormActionDetail, setAsFormActionDetail] = useState<string>('');
+  const [asFormPartsUsed, setAsFormPartsUsed] = useState<string>('');
+  const [asFormCostAmount, setAsFormCostAmount] = useState<number>(0);
+  const [asFormEngineerName, setAsFormEngineerName] = useState<string>('기술지원팀');
+
+  const handleAddSerialAsLog = (e: React.FormEvent, serialNumber: string, lot: TradeInventoryLot) => {
+    e.preventDefault();
+    if (!asFormSymptom.trim() || !asFormActionDetail.trim()) {
+      showErrorModal('고장증상·점검내용과 조치내역을 모두 입력해 주세요.');
+      return;
+    }
+    const newLog: SerialWarrantyAsLog = {
+      id: `SAS-${Date.now()}`,
+      serviceDate: asFormDate,
+      serviceType: asFormServiceType,
+      symptom: asFormSymptom.trim(),
+      actionDetail: asFormActionDetail.trim(),
+      partsUsed: asFormPartsUsed.trim() || '-',
+      costAmount: asFormServiceType === 'WARRANTY_FREE' ? 0 : Math.max(0, Number(asFormCostAmount) || 0),
+      engineerName: asFormEngineerName.trim() || '기술지원팀',
+      customerName: lot.soldCustomerName || '보유재고 자체점검'
+    };
+    const existing = serialAsLogsMap[serialNumber] || lot.warrantyAsLogs || [];
+    const nextList = [newLog, ...existing];
+    const nextMap = { ...serialAsLogsMap, [serialNumber]: nextList };
+    setSerialAsLogsMap(nextMap);
+    try {
+      localStorage.setItem('erp_fl_serial_warranty_as_logs_v1', JSON.stringify(nextMap));
+    } catch {
+      // ignore
+    }
+    setAsFormSymptom('');
+    setAsFormActionDetail('');
+    setAsFormPartsUsed('');
+    setAsFormCostAmount(0);
+    showToast(`[${serialNumber}] 보증·정비 이력이 등록되었습니다.`);
+  };
 
   // 제조사 목록 추출
   const manufacturerOptions = useMemo(() => {
@@ -708,9 +760,30 @@ export const TradeProductsPage: React.FC = () => {
     searchTerm
   ]);
 
-  // Aging 요약 집계 (현재고 보유중 기준)
+  // Aging 요약 집계 (현재고 보유중 기준) 및 선제적 사후관리·장기재고 진단
   const agingSummary = useMemo(() => {
     const active = enrichedLots.filter(r => !r.isSold);
+    const over90Lots = active.filter(r => r.agingDays > 90);
+    const over90Value = over90Lots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0);
+    const monthlyHoldingCost = Math.round((over90Value * 0.06) / 12);
+
+    const nowMs = Date.now();
+    const soldLots = enrichedLots.filter(r => r.isSold);
+    let initialInspectionCount = 0;
+    let warrantyExpiringCount = 0;
+    let paidCareCount = 0;
+
+    soldLots.forEach(r => {
+      const soldMs = r.soldDate && r.soldDate !== '-' ? new Date(r.soldDate).getTime() : NaN;
+      const warMs = r.warrantyEndDate && r.warrantyEndDate !== '-' ? new Date(r.warrantyEndDate).getTime() : NaN;
+      const daysSinceSold = !isNaN(soldMs) ? Math.floor((nowMs - soldMs) / 86400000) : 45;
+      const daysToWarrantyEnd = !isNaN(warMs) ? Math.floor((warMs - nowMs) / 86400000) : 75;
+
+      if (daysSinceSold >= 0 && daysSinceSold <= 100) initialInspectionCount += 1;
+      if (daysToWarrantyEnd >= 0 && daysToWarrantyEnd <= 120) warrantyExpiringCount += 1;
+      if (daysToWarrantyEnd < 0 || daysSinceSold > 100) paidCareCount += 1;
+    });
+
     const counts = {
       ALL: active.length,
       UNDER_30: active.filter(r => r.agingInfo.bucket === 'UNDER_30').length,
@@ -720,12 +793,88 @@ export const TradeProductsPage: React.FC = () => {
       OVER_180: active.filter(r => r.agingInfo.bucket === 'OVER_180').length
     };
     const values = {
-      OVER_90_VALUE: active
-        .filter(r => r.agingDays > 90)
-        .reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0)
+      OVER_90_VALUE: over90Value,
+      MONTHLY_HOLDING_COST: monthlyHoldingCost,
+      OVER_90_COUNT: over90Lots.length,
+      SOLD_TOTAL: soldLots.length,
+      INITIAL_INSPECTION_COUNT: initialInspectionCount,
+      WARRANTY_EXPIRING_COUNT: warrantyExpiringCount,
+      PAID_CARE_COUNT: paidCareCount
     };
-    return { counts, values };
+    return { counts, values, over90Lots, soldLots };
   }, [enrichedLots]);
+
+  const handleExportLongAgingPromo = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const targetRows = agingSummary.over90Lots.length > 0 ? agingSummary.over90Lots : enrichedLots.filter(r => !r.isSold);
+    const rows = targetRows.map((r, idx) => {
+      const unitCost = r.landedUnitCost || 0;
+      const stdPrice = r.prod?.standardPrice || Math.round(unitCost * 1.25);
+      const promoDiscountRate = r.agingDays >= 180 ? 0.12 : 0.07;
+      const promoPrice = Math.round((stdPrice * (1 - promoDiscountRate)) / 10000) * 10000;
+      const estMonthlyRent36 = Math.round((stdPrice * 0.033) / 1000) * 1000;
+      const bepMonths = estMonthlyRent36 > 0 ? Number((unitCost / estMonthlyRent36).toFixed(1)) : 0;
+      return {
+        순번: idx + 1,
+        차대및로트번호: r.serialNumber,
+        제조사: r.manufacturer,
+        모델명: r.modelName,
+        품명: r.productName,
+        보관창고: r.warehouseName,
+        입고일자: r.inboundDate,
+        보유경과일수: `${r.agingDays}일`,
+        입고도착원가: unitCost,
+        월체화자본비용_연6퍼센트기준: Math.round((unitCost * 0.06) / 12),
+        정상판매단가: stdPrice,
+        권장특가할인율: `${Math.round(promoDiscountRate * 100)}%`,
+        특가프로모션권장가: promoPrice,
+        렌탈전환시_36개월월렌탈료: estMonthlyRent36,
+        렌탈전환시_원가회수개월수: `${bepMonths}개월`,
+        권장전환조치: r.agingDays >= 180 ? '즉시 렌탈자산 전환 또는 대리점 특가공급' : '대리점 프로모션 판촉 또는 단기렌탈 투입'
+      };
+    });
+    exportToExcel(rows, `장기체화완제품_렌탈전환_특가프로모션진단_${todayStr}`, '장기재고전환진단');
+    showToast('장기보유 완제품 렌탈전환 및 특가 프로모션 진단표가 엑셀로 추출되었습니다.');
+  };
+
+  const handleExportAftercareRadar = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const nowMs = Date.now();
+    const rows = agingSummary.soldLots.map((r, idx) => {
+      const soldMs = r.soldDate && r.soldDate !== '-' ? new Date(r.soldDate).getTime() : NaN;
+      const warMs = r.warrantyEndDate && r.warrantyEndDate !== '-' ? new Date(r.warrantyEndDate).getTime() : NaN;
+      const daysSinceSold = !isNaN(soldMs) ? Math.floor((nowMs - soldMs) / 86400000) : 45;
+      const daysToWarrantyEnd = !isNaN(warMs) ? Math.floor((warMs - nowMs) / 86400000) : 75;
+      let careStage = '정기 순회점검 대상';
+      let recommendedAction = '소모품 패키지 및 순정부품 정기교체 안내';
+      if (daysSinceSold >= 0 && daysSinceSold <= 100) {
+        careStage = '초도 90일 무상점검 도래';
+        recommendedAction = '초도 무상점검 방문일정 안내 및 초기 오일·필터류 점검';
+      } else if (daysToWarrantyEnd >= 0 && daysToWarrantyEnd <= 120) {
+        careStage = '무상보증 만료 임박';
+        recommendedAction = '보증만료 전 사전점검 안내 및 유상 유지보수·부품할인 계약 제안';
+      } else if (daysToWarrantyEnd < 0) {
+        careStage = '유상정비·순정부품 전환 완료';
+        recommendedAction = '호환 소모품·배터리·타이어 정기 교체 프로모션 안내';
+      }
+      return {
+        순번: idx + 1,
+        차대번호: r.serialNumber,
+        제조사: r.manufacturer,
+        모델명: r.modelName,
+        품명: r.productName,
+        출고거래처: r.soldCustomerName,
+        출고일자: r.soldDate,
+        출고후경과일수: `${daysSinceSold}일`,
+        무상보증만료일: r.warrantyEndDate,
+        보증잔여일수: `${daysToWarrantyEnd}일`,
+        사후관리단계: careStage,
+        선제영업권장조치: recommendedAction
+      };
+    });
+    exportToExcel(rows, `출고장비_보증만료_정기점검_사후관리명단_${todayStr}`, '출고장비사후관리');
+    showToast('출고완료 장비 보증·정기점검 사후관리 대상 명단이 엑셀로 추출되었습니다.');
+  };
 
   // 창고별 집계 (탭 3)
   const warehouseSummary = useMemo(() => {
@@ -1175,6 +1324,145 @@ export const TradeProductsPage: React.FC = () => {
               </div>
             );
           })}
+          {/* 선제적 차대번호 사후관리 · 장기재고 전환 진단 바 */}
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+              gap: '10px'
+            }}
+          >
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#fff7ed',
+                border: '1px solid #fed7aa',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                flexWrap: 'wrap'
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#9a3412', whiteSpace: 'nowrap' }}>
+                  90일 초과 장기보유 완제품 자본 묶임 · 렌탈전환 진단
+                </div>
+                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#7c2d12', whiteSpace: 'nowrap' }}>
+                  대상 {agingSummary.values.OVER_90_COUNT}건 · 묶인 원가 ₩{agingSummary.values.OVER_90_VALUE.toLocaleString()} · 월 자본기회비용 ₩{agingSummary.values.MONTHLY_HOLDING_COST.toLocaleString()}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLotStatusFilter('IN_STOCK');
+                    setAgingBucketFilter('DAYS_91_180');
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    backgroundColor: '#ffffff',
+                    color: '#9a3412',
+                    border: '1px solid #fdba74',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  장기보유 대상 조회
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportLongAgingPromo}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    backgroundColor: '#ea580c',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Download size={12} /> 렌탈전환·특가진단표 추출
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                flexWrap: 'wrap'
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#1e40af', whiteSpace: 'nowrap' }}>
+                  출고장비 무상보증 · 정기점검 · 유상부품 전환 레이더
+                </div>
+                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#1e3a8a', whiteSpace: 'nowrap' }}>
+                  출고 {agingSummary.values.SOLD_TOTAL}건 중 초도점검 {agingSummary.values.INITIAL_INSPECTION_COUNT}건 · 보증만료임박 {agingSummary.values.WARRANTY_EXPIRING_COUNT}건 · 유상부품제안 {agingSummary.values.PAID_CARE_COUNT}건
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLotStatusFilter('SOLD');
+                    setAgingBucketFilter('ALL');
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    backgroundColor: '#ffffff',
+                    color: '#1d4ed8',
+                    border: '1px solid #93c5fd',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  출고장비만 조회
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportAftercareRadar}
+                  style={{
+                    padding: '5px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    backgroundColor: '#1d4ed8',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Download size={12} /> 보증·점검 도래명단 추출
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       ) : activeViewTab === 'WAREHOUSE_PARTS' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
@@ -1455,6 +1743,7 @@ export const TradeProductsPage: React.FC = () => {
             >
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>관리 / 보증·수리</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>입출고 상태</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>차대·로트번호</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>구분</th>
@@ -1469,19 +1758,42 @@ export const TradeProductsPage: React.FC = () => {
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>최종 도착원가</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>현재고</th>
                   <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고일 / 출고거래처</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>보증만료일</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>보증만료일 / 수리건수</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLots.length === 0 ? (
                   <tr>
-                    <td colSpan={15} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={16} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       조건에 해당하는 차대번호 및 로트 내역이 없습니다.
- </td>
+                    </td>
                   </tr>
                 ) : (
-                  filteredLots.map(r => (
+                  filteredLots.map(r => {
+                    const asLogs = serialAsLogsMap[r.serialNumber] || r.lot.warrantyAsLogs || [];
+                    return (
                     <tr key={r.lot.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px', backgroundColor: r.isSold ? 'var(--bg-app)' : 'transparent' }}>
+                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSerialLotId(r.lot.id)}
+                          style={{
+                            padding: '4px 9px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            borderRadius: '4px',
+                            border: '1px solid var(--primary)',
+                            backgroundColor: 'var(--bg-card)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <ShieldCheck size={11} /> 이력·보증수리 {asLogs.length > 0 ? `[${asLogs.length}]` : ''}
+                        </button>
+                      </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span
                           style={{
@@ -1537,7 +1849,7 @@ export const TradeProductsPage: React.FC = () => {
                       <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
                         <span style={{ fontWeight: 700, color: r.purchaseTypeLabel === '해외수입' ? '#0284c7' : '#059669', marginRight: '5px' }}>
                           [{r.purchaseTypeLabel}]
- </span>
+                        </span>
                         {r.vendorName}
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
@@ -1558,18 +1870,19 @@ export const TradeProductsPage: React.FC = () => {
                         {r.isSold ? `${r.soldDate} · ${r.soldCustomerName}` : '미출고'}
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center', fontFamily: 'monospace', color: r.warrantyEndDate !== '-' ? '#0369a1' : 'var(--text-muted)' }}>
-                        {r.warrantyEndDate}
+                        {r.warrantyEndDate} {asLogs.length > 0 ? `· 수리 ${asLogs.length}건` : ''}
                       </td>
                     </tr>
-                  ))
+                  );
+                  })
                 )}
               </tbody>
               {filteredLots.length > 0 && (
                 <tfoot>
                   <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-                    <td colSpan={11} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
+                    <td colSpan={12} style={{ padding: '10px 12px', textAlign: 'left', color: 'var(--text-main)' }}>
                       조회 합계 ({filteredLots.length}건 로트 / 현재고 보유 {filteredLots.filter(l => !l.isSold).length}건)
- </td>
+                    </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
                       현재고 원가합계 ₩{filteredLots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0).toLocaleString()}
                     </td>
@@ -2703,19 +3016,215 @@ export const TradeProductsPage: React.FC = () => {
                   style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   취소
- </button>
+                </button>
                 <button
                   type="submit"
                   className="btn-primary"
                   style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer' }}
                 >
                   재고 조정 확정
- </button>
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* 7. 차대번호별 입출고·수입원가 및 보증·사후정비 이력 모달 */}
+      {selectedSerialLotId && (() => {
+        const targetRow = enrichedLots.find(r => r.lot.id === selectedSerialLotId);
+        if (!targetRow) return null;
+        const asLogs = serialAsLogsMap[targetRow.serialNumber] || targetRow.lot.warrantyAsLogs || [];
+        return (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1280 }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', width: '920px', maxWidth: '96vw', maxHeight: '88vh', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 25px 35px -5px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--primary)' }}>
+                    차대·로트번호 {targetRow.serialNumber} · {targetRow.manufacturer} · {targetRow.modelName}
+                  </div>
+                  <h3 style={{ margin: '2px 0 0 0', fontSize: '15.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    {targetRow.productName} — 차대번호별 입출고·원가 및 보증·수리이력 대장
+                  </h3>
+                </div>
+                <button type="button" onClick={() => setSelectedSerialLotId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* 1. 차대번호별 입출고 및 수입원가·보증 현황 요약 */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-secondary)', fontWeight: 800, fontSize: '12px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)' }}>
+                    1. 차대번호별 입고원가 및 출고·무상보증 현황
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ width: '16%', padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>입출고 상태</th>
+                        <td style={{ width: '34%', padding: '8px 12px', fontWeight: 800, color: targetRow.isSold ? '#475569' : '#166534' }}>
+                          {targetRow.isSold ? '출고완료' : `현재고보유 · ${targetRow.agingDays}일 경과`}
+                        </td>
+                        <th style={{ width: '16%', padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>보관창고 / 입고일</th>
+                        <td style={{ width: '34%', padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {targetRow.warehouseName} / {targetRow.inboundDate}
+                        </td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>매입구분 / 매입처</th>
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                          [{targetRow.purchaseTypeLabel}] {targetRow.vendorName}
+                        </td>
+                        <th style={{ padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>외화단가 · 환율 · 부대비용</th>
+                        <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {targetRow.currency === 'KRW'
+                            ? `국내매입 ₩${targetRow.foreignUnitPrice.toLocaleString()}`
+                            : `${targetRow.currency} ${targetRow.foreignUnitPrice.toLocaleString()} × 환율 ${targetRow.exchangeRate} + 부대비용 ₩${targetRow.incidentalCostPerUnit.toLocaleString()}`}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>최종 입고도착원가</th>
+                        <td style={{ padding: '8px 12px', fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace' }}>
+                          ₩{targetRow.landedUnitCost.toLocaleString()}
+                        </td>
+                        <th style={{ padding: '8px 12px', backgroundColor: 'var(--bg-secondary)', textAlign: 'left', color: 'var(--text-secondary)' }}>출고처 / 무상보증만료일</th>
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {targetRow.isSold ? `${targetRow.soldCustomerName} · 출고 ${targetRow.soldDate} · 만료 ${targetRow.warrantyEndDate}` : `미출고 · 출고 후 ${targetRow.prod?.warrantyMonths || 12}개월 무상보증 적용`}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 2. 차대번호별 보증·사후정비 신규 등록 폼 */}
+                <form
+                  onSubmit={e => handleAddSerialAsLog(e, targetRow.serialNumber, targetRow.lot)}
+                  style={{ padding: '14px 16px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+                >
+                  <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    2. 차대번호별 보증·수리 및 정기점검 이력 등록
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '130px 150px 1fr 1fr 120px 110px auto', gap: '8px', alignItems: 'end' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>처리일자</label>
+                      <input
+                        type="date"
+                        value={asFormDate}
+                        onChange={e => setAsFormDate(e.target.value)}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>보증·수리 구분</label>
+                      <select
+                        value={asFormServiceType}
+                        onChange={e => setAsFormServiceType(e.target.value as any)}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      >
+                        <option value="WARRANTY_FREE">무상보증수리</option>
+                        <option value="PAID_AS">유상정비수리</option>
+                        <option value="PERIODIC_CHECK">정기예방점검</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>증상 및 점검내용</label>
+                      <input
+                        type="text"
+                        placeholder="예: 유압호스 미세누유 점검"
+                        value={asFormSymptom}
+                        onChange={e => setAsFormSymptom(e.target.value)}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>조치내역 및 교체부품</label>
+                      <input
+                        type="text"
+                        placeholder="예: 오링 무상교체 및 작동유 보충"
+                        value={asFormActionDetail}
+                        onChange={e => setAsFormActionDetail(e.target.value)}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>수리비용</label>
+                      <input
+                        type="number"
+                        min={0}
+                        disabled={asFormServiceType === 'WARRANTY_FREE'}
+                        value={asFormServiceType === 'WARRANTY_FREE' ? 0 : asFormCostAmount}
+                        onChange={e => setAsFormCostAmount(Number(e.target.value))}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: asFormServiceType === 'WARRANTY_FREE' ? 'var(--bg-secondary)' : 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>담당기사</label>
+                      <input
+                        type="text"
+                        value={asFormEngineerName}
+                        onChange={e => setAsFormEngineerName(e.target.value)}
+                        style={{ padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)' }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      style={{ padding: '6px 14px', fontSize: '12px', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      이력 등록
+                    </button>
+                  </div>
+                </form>
+
+                {/* 3. 차대번호별 보증·수리 누적 이력 테이블 */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-secondary)', fontWeight: 800, fontSize: '12px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>3. 차대번호별 보증 및 사후정비 누적 이력 ({asLogs.length}건)</span>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--text-muted)' }}>처리일자</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--text-muted)' }}>구분</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--text-muted)' }}>고객사</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--text-muted)' }}>증상 및 점검내용</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--text-muted)' }}>조치내역</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--text-muted)' }}>담당기사</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', color: 'var(--text-muted)' }}>수리비용</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {asLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            등록된 보증·사후정비 이력이 없습니다. 상단 폼에서 차대번호별 점검 및 수리 이력을 등록할 수 있습니다.
+                          </td>
+                        </tr>
+                      ) : (
+                        asLogs.map(log => (
+                          <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', fontFamily: 'monospace' }}>{log.serviceDate}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700, color: log.serviceType === 'WARRANTY_FREE' ? '#059669' : log.serviceType === 'PAID_AS' ? '#dc2626' : '#0284c7' }}>
+                              {log.serviceType === 'WARRANTY_FREE' ? '무상보증수리' : log.serviceType === 'PAID_AS' ? '유상정비수리' : '정기예방점검'}
+                            </td>
+                            <td style={{ padding: '8px 10px', fontWeight: 600 }}>{log.customerName || '-'}</td>
+                            <td style={{ padding: '8px 10px' }}>{log.symptom}</td>
+                            <td style={{ padding: '8px 10px', fontWeight: 600 }}>{log.actionDetail}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{log.engineerName || '-'}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace' }}>
+                              {log.costAmount > 0 ? `₩${log.costAmount.toLocaleString()}` : '무상 ₩0'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
