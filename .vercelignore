@@ -13,3 +13,6 @@ public/downloads/eBroAgent.exe
 public/downloads/*.zip
 *.log
 *.md
+
+api/gemini-stt.ts
+api/developer-device.ts
