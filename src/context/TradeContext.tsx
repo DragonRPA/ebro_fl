@@ -12,6 +12,12 @@ import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
 import { DEFAULT_FORKLIFT_OPTION_MASTERS } from '../data/forkliftOptionMastersData';
 import { SEED_FL_CONSUMABLES } from '../data/flUnifiedSeedData';
+import {
+  MUJIN_TRADE_PRODUCTS,
+  MUJIN_TRADE_PURCHASES,
+  MUJIN_TRADE_PURCHASE_ITEMS,
+  MUJIN_TRADE_LOTS
+} from '../data/mujinGlobalInitialData';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
@@ -308,6 +314,7 @@ export interface TradeContextType {
 }
 
 const DEFAULT_PRODUCTS: TradeProduct[] = [
+  ...MUJIN_TRADE_PRODUCTS,
   {
     id: 'p1',
     skuCode: 'FL-EPL1531',
@@ -853,15 +860,15 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     skuCode: csm.skuCode || csm.id,
     name: csm.name,
     category: csm.category || '지게차 소모품',
-    itemType: 'CONSUMABLE' as const,
-    inventoryAssetClass: 'CONSUMABLE' as const,
+    itemType: (csm.inventoryAssetClass === 'PART' ? 'PART' : 'CONSUMABLE') as 'PART' | 'CONSUMABLE',
+    inventoryAssetClass: (csm.inventoryAssetClass || 'CONSUMABLE') as 'PART' | 'CONSUMABLE',
     usagePurpose: csm.usagePurpose,
     saleStockQty: csm.saleStockQty,
     repairStockQty: csm.repairStockQty,
-    manufacturer: '공식인증 소모품',
+    manufacturer: csm.supplier || '공식인증 소모품',
     modelName: csm.modelName || csm.applicableModels || csm.name,
-    originCountry: '국내 매입',
-    defaultWarehouse: '소모품창고',
+    originCountry: (csm.id.startsWith('CSM-MJ-') ? '중국 수입' : '국내 매입') as '중국 수입' | '국내 매입',
+    defaultWarehouse: csm.location || '소모품창고',
     spec: csm.spec || `${csm.modelSpec || ''} | 호환: ${csm.applicableModels || '전 차종'}`,
     unit: csm.unit,
     standardCost: Number(csm.unitPrice || 0),
@@ -872,12 +879,13 @@ const DEFAULT_PRODUCTS: TradeProduct[] = [
     status: 'ACTIVE' as const,
     cogsMethod: 'FIFO' as const,
     memo: csm.note || csm.memo || '',
-    createdAt: '2026-07-10T09:00:00.000Z',
-    updatedAt: '2026-10-25T09:00:00.000Z'
+    createdAt: csm.createdAt || '2026-07-10T09:00:00.000Z',
+    updatedAt: csm.updatedAt || '2026-10-25T09:00:00.000Z'
   }))
 ];
 
 const DEFAULT_PURCHASES: TradePurchase[] = [
+  ...MUJIN_TRADE_PURCHASES,
   {
     id: 'PO-202604-001',
     vendorId: 'VND-FL-001',
@@ -1009,6 +1017,7 @@ const DEFAULT_PURCHASES: TradePurchase[] = [
 ];
 
 const DEFAULT_PURCHASE_ITEMS: TradePurchaseItem[] = [
+  ...MUJIN_TRADE_PURCHASE_ITEMS,
   {
     id: 'PI-001',
     purchaseId: 'PO-202604-001',
@@ -1161,6 +1170,7 @@ const DEFAULT_PURCHASE_ITEMS: TradePurchaseItem[] = [
 ];
 
 const DEFAULT_LOTS: TradeInventoryLot[] = [
+  ...MUJIN_TRADE_LOTS,
   // 180일 이상 장기체화 재고 (2026-04-10 입고 -> 약 204일 경과)
   {
     id: 'LOT-SN-001',
@@ -1558,23 +1568,27 @@ const DEFAULT_LOTS: TradeInventoryLot[] = [
     unitCost: cp.landedCostKrw,
     createdAt: '2026-09-25T10:00:00.000Z'
   })),
-  ...SEED_FL_CONSUMABLES.map((csm, idx) => ({
-    id: `LOT-CSM-00${idx + 1}`,
-    purchaseId: 'PO-202610-005',
-    productId: csm.id,
-    serialNumber: `LOT-${csm.id}-2610`,
-    warehouseName: '소모품창고',
-    inboundDate: '2026-10-15',
-    foreignCurrency: 'KRW' as const,
-    foreignUnitPrice: csm.unitPrice,
-    exchangeRate: 1,
-    incidentalCostPerUnit: 0,
-    lotStatus: 'IN_STOCK' as const,
-    initialQty: csm.currentStock,
-    remainingQty: csm.currentStock,
-    unitCost: csm.unitPrice,
-    createdAt: '2026-10-15T15:30:00.000Z'
-  }))
+  ...SEED_FL_CONSUMABLES.map((csm, idx) => {
+    const inbDate = (csm.createdAt || '2026-10-15').slice(0, 10);
+    return {
+      id: `LOT-CSM-${String(idx + 1).padStart(3, '0')}`,
+      purchaseId: 'PO-202610-005',
+      productId: csm.id,
+      serialNumber: `${csm.skuCode || csm.id}-${inbDate.replace(/-/g, '')}`,
+      warehouseName: csm.location || '소모품창고',
+      inboundDate: inbDate,
+      foreignCurrency: 'KRW' as const,
+      foreignUnitPrice: csm.unitPrice,
+      exchangeRate: 1,
+      incidentalCostPerUnit: 0,
+      lotStatus: 'IN_STOCK' as const,
+      initialQty: csm.currentStock,
+      remainingQty: csm.currentStock,
+      unitCost: csm.unitPrice,
+      memo: csm.note || csm.spec || '',
+      createdAt: csm.createdAt || '2026-10-15T15:30:00.000Z'
+    };
+  })
 ];
 
 const SEED_OPTIONS_SO101: AppliedForkliftOption[] = [
@@ -2399,7 +2413,7 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v8_clean';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v9_mujin';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));

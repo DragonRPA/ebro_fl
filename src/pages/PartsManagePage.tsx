@@ -3,6 +3,7 @@ import { Wrench, Boxes, History, Plus, Search, ArrowRight, FileSpreadsheet } fro
 import { useApp } from '../context/AppContext';
 import { COMPATIBLE_PARTS_CATALOG } from '../data/compatiblePartsCatalogData';
 import { SEED_FL_RENTAL_ASSETS } from '../data/flUnifiedSeedData';
+import { MUJIN_PARTS_INVENTORY } from '../data/mujinGlobalInitialData';
 import { CompatiblePartsCatalogOrderPage } from './distribution/CompatiblePartsCatalogOrderPage';
 
 export interface PartInventoryItem {
@@ -38,25 +39,28 @@ export interface AssetPartUsageHistoryRecord {
   repairSummary: string;
 }
 
-const INITIAL_PARTS_INVENTORY: PartInventoryItem[] = COMPATIBLE_PARTS_CATALOG.slice(0, 12).map((item, idx) => {
-  const saleQty = (idx % 4 + 2) * 3;
-  const repairQty = (idx % 3 + 2) * 2;
-  return {
-    id: item.id || `PRT-FL-${idx + 1}`,
-    skuCode: item.sku,
-    partName: item.partName,
-    category: item.category,
-    compatibleModels: item.compatibleModels.join(', '),
-    spec: item.specSummary,
-    totalQty: saleQty + repairQty,
-    saleStockQty: saleQty,
-    repairStockQty: repairQty,
-    minStockQty: 4,
-    purchaseUnitCost: item.dealerPriceKrw || Math.round(item.retailPriceKrw * 0.72),
-    saleUnitPrice: item.retailPriceKrw,
-    location: `부품창고 B-${String(idx + 1).padStart(2, '0')}`
-  };
-});
+const INITIAL_PARTS_INVENTORY: PartInventoryItem[] = [
+  ...MUJIN_PARTS_INVENTORY,
+  ...COMPATIBLE_PARTS_CATALOG.slice(0, 12).map((item, idx) => {
+    const saleQty = (idx % 4 + 2) * 3;
+    const repairQty = (idx % 3 + 2) * 2;
+    return {
+      id: item.id || `PRT-FL-${idx + 1}`,
+      skuCode: item.sku,
+      partName: item.partName,
+      category: item.category,
+      compatibleModels: item.compatibleModels.join(', '),
+      spec: item.specSummary,
+      totalQty: saleQty + repairQty,
+      saleStockQty: saleQty,
+      repairStockQty: repairQty,
+      minStockQty: 4,
+      purchaseUnitCost: item.dealerPriceKrw || Math.round(item.retailPriceKrw * 0.72),
+      saleUnitPrice: item.retailPriceKrw,
+      location: `부품창고 B-${String(idx + 1).padStart(2, '0')}`
+    };
+  })
+];
 
 export const INITIAL_ASSET_PART_USAGE_HISTORY: AssetPartUsageHistoryRecord[] = [
   {
@@ -111,7 +115,7 @@ export const INITIAL_ASSET_PART_USAGE_HISTORY: AssetPartUsageHistoryRecord[] = [
 
 export function loadPartsInventory(): PartInventoryItem[] {
   try {
-    const saved = localStorage.getItem('ebro_fl_parts_inv_v1');
+    const saved = localStorage.getItem('ebro_fl_parts_inv_v2_mujin');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -122,7 +126,7 @@ export function loadPartsInventory(): PartInventoryItem[] {
 
 export function savePartsInventory(items: PartInventoryItem[]): void {
   try {
-    localStorage.setItem('ebro_fl_parts_inv_v1', JSON.stringify(items));
+    localStorage.setItem('ebro_fl_parts_inv_v2_mujin', JSON.stringify(items));
     window.dispatchEvent(new CustomEvent('ebro:parts_updated'));
   } catch {}
 }
@@ -156,8 +160,8 @@ export const PartsManagePage: React.FC = () => {
 
   React.useEffect(() => {
     try {
-      if (!localStorage.getItem('ebro_fl_parts_inv_v1')) {
-        localStorage.setItem('ebro_fl_parts_inv_v1', JSON.stringify(parts));
+      if (!localStorage.getItem('ebro_fl_parts_inv_v2_mujin')) {
+        localStorage.setItem('ebro_fl_parts_inv_v2_mujin', JSON.stringify(parts));
       }
       if (!localStorage.getItem('ebro_fl_parts_usage_v1')) {
         localStorage.setItem('ebro_fl_parts_usage_v1', JSON.stringify(usageHistory));

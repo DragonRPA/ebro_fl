@@ -3,6 +3,7 @@ import { isDemoMode, DEMO_SUPABASE_CONFIG } from './demoMode';
 import { centralSupabase } from './centralDb';
 import { createPrefixedSupabaseClient } from '../lib/supabasePrefixProxy';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
+import { MUJIN_STANDARD_OPTIONS } from '../data/mujinGlobalInitialData';
 import {
   InventoryAssetClass,
   InventoryUsagePurpose,
@@ -3594,10 +3595,22 @@ export const SEED_TENANTS: Tenant[] = [
     mainYardAddress: '경기도 평택시 포승읍 평택항만길 100',
     bankAccounts: [
       {
-        bankName: '우리은행',
+        bankName: '우리은행(코오롱타워)',
         accountNumber: '1002-123-777777',
-        accountHolder: '주식회사 이브로지게차렌탈',
+        accountHolder: '주식회사 무진글로벌 · 이브로지게차',
         isDefault: true
+      },
+      {
+        bankName: '하나은행(과천 지점)',
+        accountNumber: '281-910008-88804',
+        accountHolder: '주식회사 무진글로벌 · 이브로지게차',
+        isDefault: false
+      },
+      {
+        bankName: '농협은행(과천지시부)',
+        accountNumber: '301-0254-9988-11',
+        accountHolder: '주식회사 무진글로벌 · 이브로지게차',
+        isDefault: false
       }
     ],
     logoUrl: '/favicon.svg',
@@ -4185,8 +4198,9 @@ export const SEED_EQUIPMENT_MANUALS: EquipmentManual[] = [
 ];
 
 export const SEED_BANK_INITIAL_BALANCES: BankAccountInitialBalance[] = [
-  { id: 'bank-init-우리은행', bankName: '우리은행', accountNumber: 'XXXX-XX-XXXXXXX01', initialBalance: 0, updatedAt: new Date().toISOString() },
-  { id: 'bank-init-신한은행', bankName: '신한은행', accountNumber: 'XXX-XXXXXXXXX-XX', initialBalance: 0, updatedAt: new Date().toISOString() }
+  { id: 'bank-init-우리은행', bankName: '우리은행(코오롱타워)', accountNumber: '1002-123-777777', initialBalance: 0, updatedAt: new Date().toISOString() },
+  { id: 'bank-init-하나은행', bankName: '하나은행(과천 지점)', accountNumber: '281-910008-88804', initialBalance: 0, updatedAt: new Date().toISOString() },
+  { id: 'bank-init-농협은행', bankName: '농협은행(과천지시부)', accountNumber: '301-0254-9988-11', initialBalance: 0, updatedAt: new Date().toISOString() }
 ];
 
 export const SEED_CORPORATE_VEHICLES: CorporateVehicle[] = [
@@ -4724,7 +4738,7 @@ class LocalDB {
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
     try {
-      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261101_virtual5_clean';
+      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_initial_v1';
       if (localStorage.getItem(STORAGE_VERSION_KEY) !== '1') {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -5506,7 +5520,7 @@ class LocalDB {
   set inspectionChecklistItems(val: InspectionChecklistItem[]) { this.set('inspectionChecklistItems', val); }
 
   get standardOptions() {
-    const list = this.get<StandardOption>('standardOptions', []);
+    const list = this.get<StandardOption>('standardOptions', MUJIN_STANDARD_OPTIONS as any[]);
     let changed = false;
     const filtered = list
       .filter(o => {
@@ -5523,6 +5537,10 @@ class LocalDB {
         }
         return o;
       });
+    if (filtered.length === 0) {
+      this.set('standardOptions', MUJIN_STANDARD_OPTIONS as any[]);
+      return MUJIN_STANDARD_OPTIONS as any[];
+    }
     if (changed) {
       this.set('standardOptions', filtered);
     }

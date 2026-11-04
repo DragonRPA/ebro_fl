@@ -3,6 +3,15 @@
 
 import { FL_TECHNICAL_ARCHIVE } from './flTechnicalArchive';
 import { COMPATIBLE_PARTS_CATALOG } from './compatiblePartsCatalogData';
+import {
+  MUJIN_CUSTOMERS,
+  MUJIN_SITES,
+  MUJIN_CONTACTS,
+  MUJIN_VENDORS,
+  MUJIN_RENTAL_ASSETS,
+  MUJIN_CONSUMABLES,
+  MUJIN_CONSUMABLE_LOTS
+} from './mujinGlobalInitialData';
 
 export type InventoryAssetClass = 'ASSET' | 'PRODUCT' | 'PART' | 'CONSUMABLE';
 export type InventoryUsagePurpose = 'RENTAL_ONLY' | 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE';
@@ -150,7 +159,8 @@ export const SEED_FL_CUSTOMERS: any[] = [
     memo: '영남권 지게차 완제품·호환부품·소모품 전문 유통 대리점',
     createdAt: '2026-03-01T09:00:00.000Z',
     updatedAt: '2026-10-15T09:00:00.000Z'
-  }
+  },
+  ...MUJIN_CUSTOMERS
 ];
 
 export const SEED_FL_SITES = [
@@ -374,7 +384,8 @@ export const SEED_FL_SITES = [
     isActive: true,
     createdAt: '2026-03-01T10:00:00.000Z',
     updatedAt: '2026-10-15T09:00:00.000Z'
-  }
+  },
+  ...MUJIN_SITES
 ];
 
 export const SEED_FL_CONTACTS = [
@@ -465,7 +476,8 @@ export const SEED_FL_CONTACTS = [
     email: '77.victor.lee@gmail.com',
     isActive: true,
     createdAt: '2026-03-01T10:00:00.000Z'
-  }
+  },
+  ...MUJIN_CONTACTS
 ];
 
 export const SEED_FL_VENDORS = [
@@ -520,7 +532,8 @@ export const SEED_FL_VENDORS = [
     address: '경기도 평택시 포승읍 산단로 45',
     memo: '경기남부권 렌탈자산 유압·미션·전장 외주수리 협력공장',
     createdAt: '2026-01-05T09:00:00.000Z'
-  }
+  },
+  ...MUJIN_VENDORS
 ];
 
 // ============================================================
@@ -893,7 +906,8 @@ export const SEED_FL_RENTAL_ASSETS = [
     note: '자산 · 렌탈용 | 주기장 대기 임대가능 자산',
     createdAt: '2026-05-01T09:00:00.000Z',
     updatedAt: '2026-10-20T09:00:00.000Z'
-  }
+  },
+  ...MUJIN_RENTAL_ASSETS
 ];
 
 // ============================================================
@@ -1050,20 +1064,24 @@ export const SEED_FL_CONSUMABLES: any[] = [
     note: '소모품 · 렌탈자산 정비용 주력 및 대리점 요청 시 유통 판매',
     createdAt: '2026-03-05T09:00:00.000Z',
     updatedAt: '2026-10-20T09:00:00.000Z'
-  }
+  },
+  ...MUJIN_CONSUMABLES
 ];
 
-export const SEED_FL_CONSUMABLE_LOTS = SEED_FL_CONSUMABLES.map((c, idx) => ({
-  id: `CLOT-FL-00${idx + 1}`,
-  consumableId: c.id,
-  purchaseId: `CPRC-FL-00${idx + 1}`,
-  vendorId: c.vendorId,
-  receivedDate: '2026-09-15',
-  initialQty: c.currentStock,
-  remainingQty: c.currentStock,
-  unitPrice: c.unitPrice,
-  createdAt: '2026-09-15T10:00:00.000Z'
-}));
+export const SEED_FL_CONSUMABLE_LOTS = [
+  ...SEED_FL_CONSUMABLES.slice(0, 6).map((c, idx) => ({
+    id: `CLOT-FL-00${idx + 1}`,
+    consumableId: c.id,
+    purchaseId: `CPRC-FL-00${idx + 1}`,
+    vendorId: c.vendorId,
+    receivedDate: '2026-09-15',
+    initialQty: c.currentStock,
+    remainingQty: c.currentStock,
+    unitPrice: c.unitPrice,
+    createdAt: '2026-09-15T10:00:00.000Z'
+  })),
+  ...MUJIN_CONSUMABLE_LOTS
+];
 
 // ============================================================
 // 4. 계약 구분자 적용: 렌탈 계약(고객 현장별 계약) vs 유통 계약(출고 건별 계약)

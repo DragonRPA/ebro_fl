@@ -1,4 +1,5 @@
 import { ForkliftOptionMaster, ForkliftOptionGroupType } from '../services/db';
+import { MUJIN_OPTION_MASTERS } from './mujinGlobalInitialData';
 
 export const FORKLIFT_OPTION_GROUPS: {
   id: ForkliftOptionGroupType;
@@ -17,6 +18,7 @@ export const FORKLIFT_OPTION_GROUPS: {
 ];
 
 export const DEFAULT_FORKLIFT_OPTION_MASTERS: ForkliftOptionMaster[] = [
+  ...MUJIN_OPTION_MASTERS,
   // 1. 백레스트 변경 (2종)
   {
     id: 'FL-OPT-001',

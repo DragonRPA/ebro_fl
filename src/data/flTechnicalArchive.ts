@@ -66,9 +66,12 @@ export interface FlModelTechnicalSpec {
   documents: FlArchivedDocument[];
 }
 
+import { MUJIN_TECHNICAL_ARCHIVE_ADDITIONS } from './mujinGlobalInitialData';
+
 const R2_BASE = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_doc';
 
 export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
+  ...MUJIN_TECHNICAL_ARCHIVE_ADDITIONS,
   {
     id: 'FL-SPEC-HELI-CPD25-GB2LI',
     manufacturerCode: 'HELI',
