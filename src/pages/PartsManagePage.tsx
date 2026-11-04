@@ -34,6 +34,9 @@ export interface PartInventoryItem {
   serialNo?: string;
   imageFile?: string;
   imageUrl?: string;
+  imageFileName?: string;
+  imageSource?: string;
+  imageStatus?: string;
   createdDate?: string;
 }
 
@@ -97,7 +100,7 @@ const INITIAL_PARTS_INVENTORY: PartInventoryItem[] = [
 
 export const INITIAL_ASSET_PART_USAGE_HISTORY: AssetPartUsageHistoryRecord[] = [];
 
-const PARTS_STORAGE_KEY = 'ebro_fl_parts_inv_v3_mujin_273';
+const PARTS_STORAGE_KEY = 'ebro_fl_parts_inv_v4_mujin_r2_images';
 const PARTS_USAGE_STORAGE_KEY = 'ebro_fl_parts_usage_v2_mujin';
 
 export function loadPartsInventory(): PartInventoryItem[] {
@@ -150,6 +153,7 @@ export const PartsManagePage: React.FC = () => {
   const [selectedAgingBucket, setSelectedAgingBucket] = useState<number | 'ALL'>('ALL');
   const [assetFilter, setAssetFilter] = useState<string>('ALL');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [previewPartImage, setPreviewPartImage] = useState<PartInventoryItem | null>(null);
 
   React.useEffect(() => {
     try {
@@ -762,6 +766,7 @@ export const PartsManagePage: React.FC = () => {
                 <thead>
                   <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '2px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
                     <th style={{ padding: '9px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>순번</th>
+                    <th style={{ padding: '9px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>부품 이미지</th>
                     <th style={{ padding: '9px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>부품 품번</th>
                     <th style={{ padding: '9px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>부품명</th>
                     <th style={{ padding: '9px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>공급업체</th>
@@ -786,6 +791,46 @@ export const PartsManagePage: React.FC = () => {
                     return (
                       <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', height: '39px' }}>
                         <td style={{ padding: '6px 10px', textAlign: 'center', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                        <td style={{ padding: '4px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {p.imageUrl ? (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewPartImage(p)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid #cbd5e1',
+                                backgroundColor: '#ffffff',
+                                cursor: 'pointer'
+                              }}
+                              title={`${p.skuCode} · ${p.partName} 원본 사진 보기`}
+                            >
+                              <img
+                                src={p.imageUrl}
+                                alt={p.partName}
+                                loading="lazy"
+                                style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '3px' }}
+                              />
+                              <span style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1' }}>원본보기</span>
+                            </button>
+                          ) : (
+                            <span
+                              style={{
+                                padding: '2px 7px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: '#f1f5f9',
+                                color: '#64748b'
+                              }}
+                            >
+                              이미지 획득 불가
+                            </span>
+                          )}
+                        </td>
                         <td style={{ padding: '6px 10px', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>{p.skuCode}</td>
                         <td style={{ padding: '6px 10px', fontWeight: 800, whiteSpace: 'nowrap' }}>{p.partName}</td>
                         <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700, color: '#1e40af', whiteSpace: 'nowrap' }}>{brandLabel}</td>
@@ -905,6 +950,86 @@ export const PartsManagePage: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {previewPartImage && (
+        <div
+          onClick={() => setPreviewPartImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1300
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: '10px',
+              border: '1px solid var(--border-color)',
+              width: '540px',
+              maxWidth: '94vw',
+              padding: '18px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  [{previewPartImage.skuCode}] {previewPartImage.partName}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  {previewPartImage.brand} · {previewPartImage.category} · {previewPartImage.compatibleModels}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewPartImage(null)}
+                className="btn btn-secondary"
+                style={{ padding: '4px 10px', fontSize: '12px', fontWeight: 700 }}
+              >
+                닫기
+              </button>
+            </div>
+
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '300px'
+              }}
+            >
+              <img
+                src={previewPartImage.imageUrl}
+                alt={previewPartImage.partName}
+                style={{ maxWidth: '100%', maxHeight: '380px', objectFit: 'contain' }}
+              />
+            </div>
+
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+              <span>파일명: {previewPartImage.imageFileName || previewPartImage.imageFile}</span>
+              <a
+                href={previewPartImage.imageUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}
+              >
+                새 창에서 원본 열기 ↗
+              </a>
+            </div>
           </div>
         </div>
       )}

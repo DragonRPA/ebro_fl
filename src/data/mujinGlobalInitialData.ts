@@ -88652,8 +88652,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-002",
@@ -88685,7 +88688,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-220006-000_Washer.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-a2a300-220006-000-7318-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-220006-000_Washer.jpg",
+    "imageFileName": "A2A300-220006-000_Washer.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-a2a300-220006-000-7318-en-G.jpg"
   },
   {
     "id": "PRT-MJ-003",
@@ -88717,7 +88723,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF250-220019-G00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-xf250-220019-g00-5766-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF250-220019-G00_Bearing.jpg",
+    "imageFileName": "XF250-220019-G00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-xf250-220019-g00-5766-en-G.jpg"
   },
   {
     "id": "PRT-MJ-004",
@@ -88749,7 +88758,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220012-000_Adjusting shim.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/adjusting-shim-n163-220012-000-5284-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220012-000_Adjusting%20shim.jpg",
+    "imageFileName": "N163-220012-000_Adjusting shim.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/adjusting-shim-n163-220012-000-5284-en-G.jpg"
   },
   {
     "id": "PRT-MJ-005",
@@ -88781,7 +88793,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220029-000_BushⅡ.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/sleeve-ii-n163-220029-000-6610-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220029-000_Bush%E2%85%A1.jpg",
+    "imageFileName": "N163-220029-000_BushⅡ.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/sleeve-ii-n163-220029-000-6610-en-G.jpg"
   },
   {
     "id": "PRT-MJ-006",
@@ -88813,7 +88828,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G013871-060009008-01_Oil seal FB60×90×8.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-fb60-90-8-gb13871-92-5311-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G013871-060009008-01_Oil%20seal%20FB60%C3%9790%C3%978.jpg",
+    "imageFileName": "G013871-060009008-01_Oil seal FB60×90×8.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-fb60-90-8-gb13871-92-5311-en-G.jpg"
   },
   {
     "id": "PRT-MJ-007",
@@ -88845,7 +88863,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0322103-03_322103DC Bearing 2.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-322103dc-gb-t297-94-6925-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0322103-03_322103DC%20Bearing%202.jpg",
+    "imageFileName": "GT00297-0322103-03_322103DC Bearing 2.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-322103dc-gb-t297-94-6925-en-G.jpg"
   },
   {
     "id": "PRT-MJ-008",
@@ -88877,7 +88898,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03100126_100W auxiliary power supply.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/100w-auxiliary-power-supply-wl03100126-13535-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03100126_100W%20auxiliary%20power%20supply.jpg",
+    "imageFileName": "WL03100126_100W auxiliary power supply.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/100w-auxiliary-power-supply-wl03100126-13535-en-G.jpg"
   },
   {
     "id": "PRT-MJ-009",
@@ -88909,7 +88933,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/ZH02010003_Main control board.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/main-control-board-sp020100235-5608-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/ZH02010003_Main%20control%20board.jpg",
+    "imageFileName": "ZH02010003_Main control board.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/main-control-board-sp020100235-5608-en-G.jpg"
   },
   {
     "id": "PRT-MJ-010",
@@ -88941,7 +88968,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03100124_50W auxiliary power supply.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/50w-auxiliary-power-supply-wl03100124-13536-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03100124_50W%20auxiliary%20power%20supply.jpg",
+    "imageFileName": "WL03100124_50W auxiliary power supply.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/50w-auxiliary-power-supply-wl03100124-13536-en-G.jpg"
   },
   {
     "id": "PRT-MJ-011",
@@ -88973,7 +89003,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL02210008_touch screen.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/touch-screen-wl02210008-5448-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL02210008_touch%20screen.jpg",
+    "imageFileName": "WL02210008_touch screen.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/touch-screen-wl02210008-5448-en-G.jpg"
   },
   {
     "id": "PRT-MJ-012",
@@ -89005,7 +89038,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03060030_Emergency Stop Switch.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/emergency-stop-switch-wl03060030-5214-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03060030_Emergency%20Stop%20Switch.jpg",
+    "imageFileName": "WL03060030_Emergency Stop Switch.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/emergency-stop-switch-wl03060030-5214-en-G.jpg"
   },
   {
     "id": "PRT-MJ-013",
@@ -89037,7 +89073,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03080034_Transformer.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/transformer-wl03080034-14824-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03080034_Transformer.jpg",
+    "imageFileName": "WL03080034_Transformer.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/transformer-wl03080034-14824-en-G.jpg"
   },
   {
     "id": "PRT-MJ-014",
@@ -89068,8 +89107,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-015",
@@ -89101,7 +89143,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03010001_DC contactor 200A 24V.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/dc-contactor-200a-24v-wl03010001-7593-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03010001_DC%20contactor%20200A%2024V.jpg",
+    "imageFileName": "WL03010001_DC contactor 200A 24V.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/dc-contactor-200a-24v-wl03010001-7593-en-G.jpg"
   },
   {
     "id": "PRT-MJ-016",
@@ -89133,7 +89178,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL03030052_Fan 120_120 24V.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/fan-120-120-24v-wl03030052-9934-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL03030052_Fan%20120_120%2024V.jpg",
+    "imageFileName": "WL03030052_Fan 120_120 24V.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/fan-120-120-24v-wl03030052-9934-en-G.jpg"
   },
   {
     "id": "PRT-MJ-017",
@@ -89164,8 +89212,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-018",
@@ -89197,7 +89248,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/WL04050017_250A charging gun.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/125a-charging-gun-wl04050017-7594-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/WL04050017_250A%20charging%20gun.jpg",
+    "imageFileName": "WL04050017_250A charging gun.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/125a-charging-gun-wl04050017-7594-en-G.jpg"
   },
   {
     "id": "PRT-MJ-019",
@@ -89229,7 +89283,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G9877P1-140010512-01_Oil seal FB60×90×8.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-g9877p1-140010512-01-6111-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G9877P1-140010512-01_Oil%20seal%20FB60%C3%9790%C3%978.jpg",
+    "imageFileName": "G9877P1-140010512-01_Oil seal FB60×90×8.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-g9877p1-140010512-01-6111-en-G.jpg"
   },
   {
     "id": "PRT-MJ-020",
@@ -89261,7 +89318,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0033117-00_Bearing 33117.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-33117-gt00297-0033117-00-16554-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0033117-00_Bearing%2033117.jpg",
+    "imageFileName": "GT00297-0033117-00_Bearing 33117.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-33117-gt00297-0033117-00-16554-en-G.jpg"
   },
   {
     "id": "PRT-MJ-021",
@@ -89293,7 +89353,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-110100-G00_Bearing 7815.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-7815-n163-110100-g00-8129-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-110100-G00_Bearing%207815.jpg",
+    "imageFileName": "N163-110100-G00_Bearing 7815.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-7815-n163-110100-g00-8129-en-G.jpg"
   },
   {
     "id": "PRT-MJ-022",
@@ -89325,7 +89388,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-110009-000_Lock nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/lock-nut-n163-110009-000-6704-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-110009-000_Lock%20nut.jpg",
+    "imageFileName": "N163-110009-000_Lock nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/lock-nut-n163-110009-000-6704-en-G.jpg"
   },
   {
     "id": "PRT-MJ-023",
@@ -89357,7 +89423,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-110011-000_Locking shim.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/locking-shim-n163-110011-000-5930-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-110011-000_Locking%20shim.jpg",
+    "imageFileName": "N163-110011-000_Locking shim.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/locking-shim-n163-110011-000-5930-en-G.jpg"
   },
   {
     "id": "PRT-MJ-024",
@@ -89389,7 +89458,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G000093-000006-00_Washer 6.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-6-g000093-000006-00-15591-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G000093-000006-00_Washer%206.jpg",
+    "imageFileName": "G000093-000006-00_Washer 6.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-6-g000093-000006-00-15591-en-G.jpg"
   },
   {
     "id": "PRT-MJ-025",
@@ -89421,7 +89493,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N120-110006-000_Hub stud.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hub-bolt-n120-110006-000-16628-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N120-110006-000_Hub%20stud.jpg",
+    "imageFileName": "N120-110006-000_Hub stud.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hub-bolt-n120-110006-000-16628-en-G.jpg"
   },
   {
     "id": "PRT-MJ-026",
@@ -89453,7 +89528,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-110018-000_Gasket.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/gasket-n163-110018-000-6049-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-110018-000_Gasket.jpg",
+    "imageFileName": "N163-110018-000_Gasket.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/gasket-n163-110018-000-6049-en-G.jpg"
   },
   {
     "id": "PRT-MJ-027",
@@ -89485,7 +89563,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-110015-000_Hub nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/wheel-hub-nut-n163-110015-000-6467-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-110015-000_Hub%20nut.jpg",
+    "imageFileName": "N163-110015-000_Hub nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/wheel-hub-nut-n163-110015-000-6467-en-G.jpg"
   },
   {
     "id": "PRT-MJ-028",
@@ -89517,7 +89598,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/HG40692-048006212-00_Oil seal PD48×62×12.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-pd48-62-12-hg4-692-67-hg40692-048006212-00-8432-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/HG40692-048006212-00_Oil%20seal%20PD48%C3%9762%C3%9712.jpg",
+    "imageFileName": "HG40692-048006212-00_Oil seal PD48×62×12.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-pd48-62-12-hg4-692-67-hg40692-048006212-00-8432-en-G.jpg"
   },
   {
     "id": "PRT-MJ-029",
@@ -89548,8 +89632,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-030",
@@ -89580,8 +89667,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-031",
@@ -89613,7 +89703,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR250-111100-000_Brake cylinder assy,LH.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/brake-wheel-assy-l-xr250-111100-000-7652-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR250-111100-000_Brake%20cylinder%20assy%2CLH.jpg",
+    "imageFileName": "XR250-111100-000_Brake cylinder assy,LH.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/brake-wheel-assy-l-xr250-111100-000-7652-en-G.jpg"
   },
   {
     "id": "PRT-MJ-032",
@@ -89645,7 +89738,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR250-112100-000_Brake cylinder assy,RH.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/wheel-cylinder-rh-xr250-112100-000-7653-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR250-112100-000_Brake%20cylinder%20assy%2CRH.jpg",
+    "imageFileName": "XR250-112100-000_Brake cylinder assy,RH.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/wheel-cylinder-rh-xr250-112100-000-7653-en-G.jpg"
   },
   {
     "id": "PRT-MJ-033",
@@ -89677,7 +89773,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR310-112100-000_Brake cable assy,RH.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/cable-control-rh-xr310-112100-000-14451-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR310-112100-000_Brake%20cable%20assy%2CRH.jpg",
+    "imageFileName": "XR310-112100-000_Brake cable assy,RH.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/cable-control-rh-xr310-112100-000-14451-en-G.jpg"
   },
   {
     "id": "PRT-MJ-034",
@@ -89709,7 +89808,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR310-111020-000_Brake cable assy,LH.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/l-h-brake-cable-xr310-111020-000-14444-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR310-111020-000_Brake%20cable%20assy%2CLH.jpg",
+    "imageFileName": "XR310-111020-000_Brake cable assy,LH.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/l-h-brake-cable-xr310-111020-000-14444-en-G.jpg"
   },
   {
     "id": "PRT-MJ-035",
@@ -89740,8 +89842,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-036",
@@ -89772,8 +89877,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-037",
@@ -89804,8 +89912,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-038",
@@ -89836,8 +89947,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-039",
@@ -89868,8 +89982,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-040",
@@ -89900,8 +90017,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-041",
@@ -89932,8 +90052,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-042",
@@ -89964,8 +90087,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-043",
@@ -89996,8 +90122,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-044",
@@ -90028,8 +90157,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-045",
@@ -90060,8 +90192,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-046",
@@ -90092,8 +90227,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-047",
@@ -90125,7 +90263,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/APZ452-212000-000_Steering gear.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hydraulic-steering-gear-apz452-212000-000-7575-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/APZ452-212000-000_Steering%20gear.jpg",
+    "imageFileName": "APZ452-212000-000_Steering gear.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hydraulic-steering-gear-apz452-212000-000-7575-en-G.jpg"
   },
   {
     "id": "PRT-MJ-048",
@@ -90157,7 +90298,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF250-220014-000_Bushing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bush-xf250-220014-000-6734-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF250-220014-000_Bushing.jpg",
+    "imageFileName": "XF250-220014-000_Bushing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bush-xf250-220014-000-6734-en-G.jpg"
   },
   {
     "id": "PRT-MJ-049",
@@ -90189,7 +90333,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-222000-000_Pin shaft.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pin-shaft-a2a300-222000-000-14394-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-222000-000_Pin%20shaft.jpg",
+    "imageFileName": "A2A300-222000-000_Pin shaft.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pin-shaft-a2a300-222000-000-14394-en-G.jpg"
   },
   {
     "id": "PRT-MJ-050",
@@ -90221,7 +90368,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G009163-2000000-03_GE20ES-2RS Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-ge20es-2rs-gb9163-90-5330-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G009163-2000000-03_GE20ES-2RS%20Bearing.jpg",
+    "imageFileName": "G009163-2000000-03_GE20ES-2RS Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-ge20es-2rs-gb9163-90-5330-en-G.jpg"
   },
   {
     "id": "PRT-MJ-051",
@@ -90253,7 +90403,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G0893P2-000035-00_Retainer ring.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/snap-ring-35-gb893-2-86-5332-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G0893P2-000035-00_Retainer%20ring.jpg",
+    "imageFileName": "G0893P2-000035-00_Retainer ring.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/snap-ring-35-gb893-2-86-5332-en-G.jpg"
   },
   {
     "id": "PRT-MJ-052",
@@ -90285,7 +90438,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220001-001_Pin.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/king-pin-2007-09-n163-220001-001-6936-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220001-001_Pin.jpg",
+    "imageFileName": "N163-220001-001_Pin.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/king-pin-2007-09-n163-220001-001-6936-en-G.jpg"
   },
   {
     "id": "PRT-MJ-053",
@@ -90317,7 +90473,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220023-002_Cover plate.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/cover-n163-220023-002-9781-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220023-002_Cover%20plate.jpg",
+    "imageFileName": "N163-220023-002_Cover plate.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/cover-n163-220023-002-9781-en-G.jpg"
   },
   {
     "id": "PRT-MJ-054",
@@ -90349,7 +90508,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220026-001_Plate.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/plate-n163-220026-001-9782-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220026-001_Plate.jpg",
+    "imageFileName": "N163-220026-001_Plate.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/plate-n163-220026-001-9782-en-G.jpg"
   },
   {
     "id": "PRT-MJ-055",
@@ -90381,7 +90543,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220021-000_Oil seal.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-n163-220021-000-6616-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220021-000_Oil%20seal.jpg",
+    "imageFileName": "N163-220021-000_Oil seal.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-n163-220021-000-6616-en-G.jpg"
   },
   {
     "id": "PRT-MJ-056",
@@ -90413,7 +90578,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/JT07918-0304030-00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/needle-bearing-k304030-jb-t7918-95-5313-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/JT07918-0304030-00_Bearing.jpg",
+    "imageFileName": "JT07918-0304030-00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/needle-bearing-k304030-jb-t7918-95-5313-en-G.jpg"
   },
   {
     "id": "PRT-MJ-057",
@@ -90445,7 +90613,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220028-000_BushⅠ.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/sleeve-i-n163-220028-000-6611-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220028-000_Bush%E2%85%A0.jpg",
+    "imageFileName": "N163-220028-000_BushⅠ.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/sleeve-i-n163-220028-000-6611-en-G.jpg"
   },
   {
     "id": "PRT-MJ-058",
@@ -90477,7 +90648,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220011-000_Bolt.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bolt-n163-220011-000-7529-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220011-000_Bolt.jpg",
+    "imageFileName": "N163-220011-000_Bolt.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bolt-n163-220011-000-7529-en-G.jpg"
   },
   {
     "id": "PRT-MJ-059",
@@ -90509,7 +90683,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF250-220015-000_Nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-xf250-220015-000-7484-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF250-220015-000_Nut.jpg",
+    "imageFileName": "XF250-220015-000_Nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-xf250-220015-000-7484-en-G.jpg"
   },
   {
     "id": "PRT-MJ-060",
@@ -90541,7 +90718,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0302083-03_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-32208-3dc-gb-t297-94-6927-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0302083-03_Bearing.jpg",
+    "imageFileName": "GT00297-0302083-03_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-32208-3dc-gb-t297-94-6927-en-G.jpg"
   },
   {
     "id": "PRT-MJ-061",
@@ -90573,7 +90753,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220016-000_Lock nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/lock-nut-n163-220016-000-6737-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220016-000_Lock%20nut.jpg",
+    "imageFileName": "N163-220016-000_Lock nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/lock-nut-n163-220016-000-6737-en-G.jpg"
   },
   {
     "id": "PRT-MJ-062",
@@ -90605,7 +90788,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220017-000_Washer.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-n163-220017-000-8247-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220017-000_Washer.jpg",
+    "imageFileName": "N163-220017-000_Washer.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-n163-220017-000-8247-en-G.jpg"
   },
   {
     "id": "PRT-MJ-063",
@@ -90637,7 +90823,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220014-000_Gasket.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/gasket-n163-220014-000-6186-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220014-000_Gasket.jpg",
+    "imageFileName": "N163-220014-000_Gasket.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/gasket-n163-220014-000-6186-en-G.jpg"
   },
   {
     "id": "PRT-MJ-064",
@@ -90669,7 +90858,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-220015-000_End cover.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/end-cover-n163-220015-000-10304-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-220015-000_End%20cover.jpg",
+    "imageFileName": "N163-220015-000_End cover.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/end-cover-n163-220015-000-10304-en-G.jpg"
   },
   {
     "id": "PRT-MJ-065",
@@ -90701,7 +90893,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-223000-000_Steering cylinder repa.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/steering-cylinder-a2a300-223000-000-7669-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-223000-000_Steering%20cylinder%20repa.jpg",
+    "imageFileName": "A2A300-223000-000_Steering cylinder repa.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/steering-cylinder-a2a300-223000-000-7669-en-G.jpg"
   },
   {
     "id": "PRT-MJ-066",
@@ -90732,8 +90927,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-067",
@@ -90765,7 +90963,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/R960-020035-001_Hoisting label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/lift-nameplate-r960-020035-001-18552-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/R960-020035-001_Hoisting%20label.jpg",
+    "imageFileName": "R960-020035-001_Hoisting label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/lift-nameplate-r960-020035-001-18552-en-G.jpg"
   },
   {
     "id": "PRT-MJ-068",
@@ -90797,7 +90998,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/NC9321-020008-000_Gantry warning label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/warning-label-nc9321-020008-000-10516-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/NC9321-020008-000_Gantry%20warning%20label.jpg",
+    "imageFileName": "NC9321-020008-000_Gantry warning label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/warning-label-nc9321-020008-000-10516-en-G.jpg"
   },
   {
     "id": "PRT-MJ-069",
@@ -90829,7 +91033,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR310-020037-000_Typeface label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hangcha-label-xr310-020037-000-7579-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR310-020037-000_Typeface%20label.jpg",
+    "imageFileName": "XR310-020037-000_Typeface label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hangcha-label-xr310-020037-000-7579-en-G.jpg"
   },
   {
     "id": "PRT-MJ-070",
@@ -90861,7 +91068,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR260-020003-000_Tonnage Label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-ton-sticker-xr260-020003-000-16699-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR260-020003-000_Tonnage%20Label.jpg",
+    "imageFileName": "XR260-020003-000_Tonnage Label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-ton-sticker-xr260-020003-000-16699-en-G.jpg"
   },
   {
     "id": "PRT-MJ-071",
@@ -90893,7 +91103,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR260-020004-000_Tonnage Label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-ton-sticker-xr260-020004-000-16700-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR260-020004-000_Tonnage%20Label.jpg",
+    "imageFileName": "XR260-020004-000_Tonnage Label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-ton-sticker-xr260-020004-000-16700-en-G.jpg"
   },
   {
     "id": "PRT-MJ-072",
@@ -90925,7 +91138,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR210-020003-000_Left Tonnage Label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-left-xr210-020003-000-14110-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR210-020003-000_Left%20Tonnage%20Label.jpg",
+    "imageFileName": "XR210-020003-000_Left Tonnage Label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-left-xr210-020003-000-14110-en-G.jpg"
   },
   {
     "id": "PRT-MJ-073",
@@ -90957,7 +91173,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR210-020004-000_Right Tonnage Label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-right-xr210-020004-000-14111-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR210-020004-000_Right%20Tonnage%20Label.jpg",
+    "imageFileName": "XR210-020004-000_Right Tonnage Label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-right-xr210-020004-000-14111-en-G.jpg"
   },
   {
     "id": "PRT-MJ-074",
@@ -90989,7 +91208,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/TB200-010013-000_Typeface label 1.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/typeface-label-tb200-010013-000-black-word-16229-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/TB200-010013-000_Typeface%20label%201.jpg",
+    "imageFileName": "TB200-010013-000_Typeface label 1.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/typeface-label-tb200-010013-000-black-word-16229-en-G.jpg"
   },
   {
     "id": "PRT-MJ-075",
@@ -91021,7 +91243,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF250-020014-001_Hood opening label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hood-open-nameplate-xf250-020014-001-16698-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF250-020014-001_Hood%20opening%20label.jpg",
+    "imageFileName": "XF250-020014-001_Hood opening label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hood-open-nameplate-xf250-020014-001-16698-en-G.jpg"
   },
   {
     "id": "PRT-MJ-076",
@@ -91053,7 +91278,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/R960-020022-001_Hand brake label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hand-brake-label-r960-020022-001-17104-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/R960-020022-001_Hand%20brake%20label.jpg",
+    "imageFileName": "R960-020022-001_Hand brake label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hand-brake-label-r960-020022-001-17104-en-G.jpg"
   },
   {
     "id": "PRT-MJ-077",
@@ -91085,7 +91313,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/AMB155-010006-000_Typeface label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/logo-decal-amb155-010006-000-14706-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/AMB155-010006-000_Typeface%20label.jpg",
+    "imageFileName": "AMB155-010006-000_Typeface label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/logo-decal-amb155-010006-000-14706-en-G.jpg"
   },
   {
     "id": "PRT-MJ-078",
@@ -91117,7 +91348,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-524000-000_Oil storage cup.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-storage-cup-xeipy300-524000-000-7673-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-524000-000_Oil%20storage%20cup.jpg",
+    "imageFileName": "XEIPY300-524000-000_Oil storage cup.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-storage-cup-xeipy300-524000-000-7673-en-G.jpg"
   },
   {
     "id": "PRT-MJ-079",
@@ -91149,7 +91383,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/JP300-525001-W00_Master brake cylinder.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/brake-master-pump-jp300-525001-w00-6215-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/JP300-525001-W00_Master%20brake%20cylinder.jpg",
+    "imageFileName": "JP300-525001-W00_Master brake cylinder.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/brake-master-pump-jp300-525001-w00-6215-en-G.jpg"
   },
   {
     "id": "PRT-MJ-080",
@@ -91181,7 +91418,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-512000-000_Right brake oil pipe.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-brake-oil-pipe-xeipy300-512000-000-14481-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-512000-000_Right%20brake%20oil%20pipe.jpg",
+    "imageFileName": "XEIPY300-512000-000_Right brake oil pipe.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-brake-oil-pipe-xeipy300-512000-000-14481-en-G.jpg"
   },
   {
     "id": "PRT-MJ-081",
@@ -91213,7 +91453,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-511000-000_Left brake oil pipe.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-brake-oil-pipe-xeipy300-511000-000-14401-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-511000-000_Left%20brake%20oil%20pipe.jpg",
+    "imageFileName": "XEIPY300-511000-000_Left brake oil pipe.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-brake-oil-pipe-xeipy300-511000-000-14401-en-G.jpg"
   },
   {
     "id": "PRT-MJ-082",
@@ -91244,8 +91487,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-083",
@@ -91277,7 +91523,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/JP300-614000-000_Inlet oil filter.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/filter-jp300-614000-000-6374-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/JP300-614000-000_Inlet%20oil%20filter.jpg",
+    "imageFileName": "JP300-614000-000_Inlet oil filter.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/filter-jp300-614000-000-6374-en-G.jpg"
   },
   {
     "id": "PRT-MJ-084",
@@ -91309,7 +91558,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/JP300-616000-000_Return oil filter.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/suction-filter-jp300-616000-000-11022-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/JP300-616000-000_Return%20oil%20filter.jpg",
+    "imageFileName": "JP300-616000-000_Return oil filter.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/suction-filter-jp300-616000-000-11022-en-G.jpg"
   },
   {
     "id": "PRT-MJ-085",
@@ -91341,7 +91593,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-613000-001_Pump motor.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pump-motor-xeipy300-613000-001-16257-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-613000-001_Pump%20motor.jpg",
+    "imageFileName": "XEIPY300-613000-001_Pump motor.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pump-motor-xeipy300-613000-001-16257-en-G.jpg"
   },
   {
     "id": "PRT-MJ-086",
@@ -91373,7 +91628,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-611000-001_Oil pump motor reduc.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-pump-motor-reducer-xeipy300-611000-001-9410-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-611000-001_Oil%20pump%20motor%20reduc.jpg",
+    "imageFileName": "XEIPY300-611000-001_Oil pump motor reduc.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-pump-motor-reducer-xeipy300-611000-001-9410-en-G.jpg"
   },
   {
     "id": "PRT-MJ-087",
@@ -91405,7 +91663,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-614000-000_Gear pump.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/gear-pump-xeipy300-614000-000-10057-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-614000-000_Gear%20pump.jpg",
+    "imageFileName": "XEIPY300-614000-000_Gear pump.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/gear-pump-xeipy300-614000-000-10057-en-G.jpg"
   },
   {
     "id": "PRT-MJ-088",
@@ -91437,7 +91698,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/AP251-640001-000_Micro switch assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/micro-switch-ap251-640001-000-6244-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/AP251-640001-000_Micro%20switch%20assy.jpg",
+    "imageFileName": "AP251-640001-000_Micro switch assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/micro-switch-ap251-640001-000-6244-en-G.jpg"
   },
   {
     "id": "PRT-MJ-089",
@@ -91469,7 +91733,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-700001-000_Electronic accelerator.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/electronic-accelerator-pedal-a2a300-700001-000-21057-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-700001-000_Electronic%20accelerator.jpg",
+    "imageFileName": "A2A300-700001-000_Electronic accelerator.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/electronic-accelerator-pedal-a2a300-700001-000-21057-en-G.jpg"
   },
   {
     "id": "PRT-MJ-090",
@@ -91501,7 +91768,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A30M300-000006-000_Axle bush.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/axle-bush-a30m300-000006-000-7731-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A30M300-000006-000_Axle%20bush.jpg",
+    "imageFileName": "A30M300-000006-000_Axle bush.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/axle-bush-a30m300-000006-000-7731-en-G.jpg"
   },
   {
     "id": "PRT-MJ-091",
@@ -91533,7 +91803,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/NC9717-700600-000_Brake light switch.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/brake-lamp-switch-nc9717-700600-000-6489-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/NC9717-700600-000_Brake%20light%20switch.jpg",
+    "imageFileName": "NC9717-700600-000_Brake light switch.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/brake-lamp-switch-nc9717-700600-000-6489-en-G.jpg"
   },
   {
     "id": "PRT-MJ-092",
@@ -91565,7 +91838,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY301-705000-000_Fan assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/fan-assy-xeipy301-705000-000-9414-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY301-705000-000_Fan%20assy.jpg",
+    "imageFileName": "XEIPY301-705000-000_Fan assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/fan-assy-xeipy301-705000-000-9414-en-G.jpg"
   },
   {
     "id": "PRT-MJ-093",
@@ -91597,7 +91873,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/AP251-707000-002_Hand brake switch assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hand-brake-switch-assy-ap251-707000-002-6600-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/AP251-707000-002_Hand%20brake%20switch%20assy.jpg",
+    "imageFileName": "AP251-707000-002_Hand brake switch assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hand-brake-switch-assy-ap251-707000-002-6600-en-G.jpg"
   },
   {
     "id": "PRT-MJ-094",
@@ -91629,7 +91908,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30M300-303100-G00_Cross roller.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/cross-roller-d-114-xr30m300-303100-g00-6140-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30M300-303100-G00_Cross%20roller.jpg",
+    "imageFileName": "XR30M300-303100-G00_Cross roller.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/cross-roller-d-114-xr30m300-303100-g00-6140-en-G.jpg"
   },
   {
     "id": "PRT-MJ-095",
@@ -91661,7 +91943,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30M300-303100-G00_Cross roller.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/cross-roller-d-114-xr30m300-303100-g00-6140-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30M300-303100-G00_Cross%20roller.jpg",
+    "imageFileName": "XR30M300-303100-G00_Cross roller.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/cross-roller-d-114-xr30m300-303100-g00-6140-en-G.jpg"
   },
   {
     "id": "PRT-MJ-096",
@@ -91693,7 +91978,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/X25M300-302100-G00_Cross roller.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/side-roller-x25m300-302100-g00-8013-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/X25M300-302100-G00_Cross%20roller.jpg",
+    "imageFileName": "X25M300-302100-G00_Cross roller.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/side-roller-x25m300-302100-g00-8013-en-G.jpg"
   },
   {
     "id": "PRT-MJ-097",
@@ -91725,7 +92013,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G000093-000012-00_Washer 12.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G000093-000012-00_Washer%2012.jpg",
+    "imageFileName": "G000093-000012-00_Washer 12.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
   },
   {
     "id": "PRT-MJ-098",
@@ -91757,7 +92048,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30M300-007002-000_Cross roller.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/ajusting-shim-xr30m300-007002-000-16901-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30M300-007002-000_Cross%20roller.jpg",
+    "imageFileName": "XR30M300-007002-000_Cross roller.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/ajusting-shim-xr30m300-007002-000-16901-en-G.jpg"
   },
   {
     "id": "PRT-MJ-099",
@@ -91789,7 +92083,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30N450-003000-001_Sprocket seat.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/chain-seat-xr30n450-003000-001-18076-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30N450-003000-001_Sprocket%20seat.jpg",
+    "imageFileName": "XR30N450-003000-001_Sprocket seat.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/chain-seat-xr30n450-003000-001-18076-en-G.jpg"
   },
   {
     "id": "PRT-MJ-100",
@@ -91821,7 +92118,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/780408-G00_Sprocket 2.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/chain-wheel-780408-g00-15525-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/780408-G00_Sprocket%202.jpg",
+    "imageFileName": "780408-G00_Sprocket 2.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/chain-wheel-780408-g00-15525-en-G.jpg"
   },
   {
     "id": "PRT-MJ-101",
@@ -91853,7 +92153,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N30M300-001000-000_Pin shaft.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pin-shaft-n30m300-001000-000-7727-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N30M300-001000-000_Pin%20shaft.jpg",
+    "imageFileName": "N30M300-001000-000_Pin shaft.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pin-shaft-n30m300-001000-000-7727-en-G.jpg"
   },
   {
     "id": "PRT-MJ-102",
@@ -91885,7 +92188,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/RC25N450-8-000-kit_Short lifting cylinde.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc25n450-8-000-kit-4843-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/RC25N450-8-000-kit_Short%20lifting%20cylinde.jpg",
+    "imageFileName": "RC25N450-8-000-kit_Short lifting cylinde.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc25n450-8-000-kit-4843-en-G.jpg"
   },
   {
     "id": "PRT-MJ-103",
@@ -91917,7 +92223,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/RC25N450-802000-W00_Safety valve.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/safety-valve-rc25n450-802000-w00-6573-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/RC25N450-802000-W00_Safety%20valve.jpg",
+    "imageFileName": "RC25N450-802000-W00_Safety valve.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/safety-valve-rc25n450-802000-w00-6573-en-G.jpg"
   },
   {
     "id": "PRT-MJ-104",
@@ -91949,7 +92258,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N30M300-600002-000_Spherical bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-n30m300-600002-000-8079-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N30M300-600002-000_Spherical%20bearing.jpg",
+    "imageFileName": "N30M300-600002-000_Spherical bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-n30m300-600002-000-8079-en-G.jpg"
   },
   {
     "id": "PRT-MJ-105",
@@ -91981,7 +92293,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A30N450-6-000-kit_Tilt cylinder-KIT.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tilt-cylinder-kit-a2a30n450-6-000-kit-14981-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A30N450-6-000-kit_Tilt%20cylinder-KIT.jpg",
+    "imageFileName": "A2A30N450-6-000-kit_Tilt cylinder-KIT.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tilt-cylinder-kit-a2a30n450-6-000-kit-14981-en-G.jpg"
   },
   {
     "id": "PRT-MJ-106",
@@ -92013,7 +92328,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/SF-1-3545-G00_Composite bushing 3545.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/combination-bush-3545-sf-1-3545-g00-6861-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/SF-1-3545-G00_Composite%20bushing%203545.jpg",
+    "imageFileName": "SF-1-3545-G00_Composite bushing 3545.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/combination-bush-3545-sf-1-3545-g00-6861-en-G.jpg"
   },
   {
     "id": "PRT-MJ-107",
@@ -92045,7 +92363,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A30N450-600000-000_Tilt cylinder.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tilting-cylinder-a2a30n450-600000-000-17677-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A30N450-600000-000_Tilt%20cylinder.jpg",
+    "imageFileName": "A2A30N450-600000-000_Tilt cylinder.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tilting-cylinder-a2a30n450-600000-000-17677-en-G.jpg"
   },
   {
     "id": "PRT-MJ-108",
@@ -92076,8 +92397,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-109",
@@ -92108,8 +92432,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-110",
@@ -92140,8 +92467,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-111",
@@ -92172,8 +92502,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-112",
@@ -92204,8 +92537,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-113",
@@ -92236,8 +92572,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-114",
@@ -92268,8 +92607,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-115",
@@ -92300,8 +92642,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-116",
@@ -92332,8 +92677,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-117",
@@ -92364,8 +92712,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-118",
@@ -92396,8 +92747,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-119",
@@ -92429,7 +92783,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30M300-305000-000 _ Complex rolle assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/complex-rolle-assy-xr30m300-305000-000-6344-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30M300-305000-000%20_%20Complex%20rolle%20assy.jpg",
+    "imageFileName": "XR30M300-305000-000 _ Complex rolle assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/complex-rolle-assy-xr30m300-305000-000-6344-en-G.jpg"
   },
   {
     "id": "PRT-MJ-120",
@@ -92461,7 +92818,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30M300-007000-000 _ Complex rolle assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/complex-rolle-assy-xr30m300-007000-000-7911-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30M300-007000-000%20_%20Complex%20rolle%20assy.jpg",
+    "imageFileName": "XR30M300-007000-000 _ Complex rolle assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/complex-rolle-assy-xr30m300-007000-000-7911-en-G.jpg"
   },
   {
     "id": "PRT-MJ-121",
@@ -92493,7 +92853,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G250-440400-G00 Lever lock.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/lever-lock-g250-440400-g00-5869-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G250-440400-G00%20Lever%20lock.jpg",
+    "imageFileName": "G250-440400-G00 Lever lock.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/lever-lock-g250-440400-g00-5869-en-G.jpg"
   },
   {
     "id": "PRT-MJ-122",
@@ -92524,8 +92887,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-123",
@@ -92557,7 +92923,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/CBD15_18-WS-31102013_Axle.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/axle-cbd15-18-ws-31102013-16180-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/CBD15_18-WS-31102013_Axle.jpg",
+    "imageFileName": "CBD15_18-WS-31102013_Axle.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/axle-cbd15-18-ws-31102013-16180-en-G.jpg"
   },
   {
     "id": "PRT-MJ-124",
@@ -92589,7 +92958,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/CBD15_18-WS-31102129_Drive wheel.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/drive-wheel-cbd15-18-ws-31102147-31102003-31102129-31102090-14626-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/CBD15_18-WS-31102129_Drive%20wheel.jpg",
+    "imageFileName": "CBD15_18-WS-31102129_Drive wheel.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/drive-wheel-cbd15-18-ws-31102147-31102003-31102129-31102090-14626-en-G.jpg"
   },
   {
     "id": "PRT-MJ-125",
@@ -92621,7 +92993,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/Enpower BC_handset.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/handset-enpower-bc-b0072717-5894-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/Enpower%20BC_handset.jpg",
+    "imageFileName": "Enpower BC_handset.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/handset-enpower-bc-b0072717-5894-en-G.jpg"
   },
   {
     "id": "PRT-MJ-126",
@@ -92652,8 +93027,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-127",
@@ -92685,7 +93063,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/9.400.00003-00_ZLG-USBCAN-E-MINI.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/catl-usbcan-e-mini-9-400-00003-00-20595-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/9.400.00003-00_ZLG-USBCAN-E-MINI.jpg",
+    "imageFileName": "9.400.00003-00_ZLG-USBCAN-E-MINI.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/catl-usbcan-e-mini-9-400-00003-00-20595-en-G.jpg"
   },
   {
     "id": "PRT-MJ-128",
@@ -92717,7 +93098,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF250-000001-500_Hydro-cylinder sheath.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hydro-cylinder-sheath-xf250-000001-500-5657-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF250-000001-500_Hydro-cylinder%20sheath.jpg",
+    "imageFileName": "XF250-000001-500_Hydro-cylinder sheath.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hydro-cylinder-sheath-xf250-000001-500-5657-en-G.jpg"
   },
   {
     "id": "PRT-MJ-129",
@@ -92748,8 +93132,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-130",
@@ -92780,8 +93167,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-131",
@@ -92813,7 +93203,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF150-420002-000_hydro cylinder sheath.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hydro-cylinder-sheath-xf150-420002-000-12154-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF150-420002-000_hydro%20cylinder%20sheath.jpg",
+    "imageFileName": "XF150-420002-000_hydro cylinder sheath.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hydro-cylinder-sheath-xf150-420002-000-12154-en-G.jpg"
   },
   {
     "id": "PRT-MJ-132",
@@ -92845,7 +93238,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/CBD20-WS-30102029_double PU wheel.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pu-double-loading-wheel-cbd15-18-ws-30102029-7458-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/CBD20-WS-30102029_double%20PU%20wheel.jpg",
+    "imageFileName": "CBD20-WS-30102029_double PU wheel.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pu-double-loading-wheel-cbd15-18-ws-30102029-7458-en-G.jpg"
   },
   {
     "id": "PRT-MJ-133",
@@ -92877,7 +93273,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/20501001_Bearing 6204-2RS.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-6204-2rs-cbd15-18-ws-20501001-11852-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/20501001_Bearing%206204-2RS.jpg",
+    "imageFileName": "20501001_Bearing 6204-2RS.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-6204-2rs-cbd15-18-ws-20501001-11852-en-G.jpg"
   },
   {
     "id": "PRT-MJ-134",
@@ -92908,8 +93307,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-135",
@@ -92941,7 +93343,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-610100-W00_FASTERNER.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/fasterner-n163-610100-w00-6570-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-610100-W00_FASTERNER.jpg",
+    "imageFileName": "N163-610100-W00_FASTERNER.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/fasterner-n163-610100-w00-6570-en-G.jpg"
   },
   {
     "id": "PRT-MJ-136",
@@ -92972,8 +93377,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-137",
@@ -93005,7 +93413,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/Q676-108-G00_Clamp.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/clamp-q676-108-g00-13228-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/Q676-108-G00_Clamp.jpg",
+    "imageFileName": "Q676-108-G00_Clamp.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/clamp-q676-108-g00-13228-en-G.jpg"
   },
   {
     "id": "PRT-MJ-138",
@@ -93036,8 +93447,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-139",
@@ -93068,8 +93482,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-140",
@@ -93101,7 +93518,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-221001_2-000_Steering rim assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-assy-black-n163-221001-2-000-17739-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-221001_2-000_Steering%20rim%20assy.jpg",
+    "imageFileName": "N163-221001_2-000_Steering rim assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-assy-black-n163-221001-2-000-17739-en-G.jpg"
   },
   {
     "id": "PRT-MJ-141",
@@ -93133,7 +93553,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD150-231000-000_Rim assembly.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/rim-assembly-silver-xipd150-231000-000-8726-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD150-231000-000_Rim%20assembly.jpg",
+    "imageFileName": "XIPD150-231000-000_Rim assembly.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/rim-assembly-silver-xipd150-231000-000-8726-en-G.jpg"
   },
   {
     "id": "PRT-MJ-142",
@@ -93164,8 +93587,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-143",
@@ -93196,8 +93622,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-144",
@@ -93228,8 +93657,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-145",
@@ -93261,7 +93693,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000075",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR210-020004-000_Right Tonnage Label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-right-xr210-020004-000-14111-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR210-020004-000_Right%20Tonnage%20Label.jpg",
+    "imageFileName": "XR210-020004-000_Right Tonnage Label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tonnage-label-right-xr210-020004-000-14111-en-G.jpg"
   },
   {
     "id": "PRT-MJ-146",
@@ -93293,7 +93728,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000067",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-700001-000_Electronic accelerator.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/electronic-accelerator-pedal-a2a300-700001-000-21057-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-700001-000_Electronic%20accelerator.jpg",
+    "imageFileName": "A2A300-700001-000_Electronic accelerator.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/electronic-accelerator-pedal-a2a300-700001-000-21057-en-G.jpg"
   },
   {
     "id": "PRT-MJ-147",
@@ -93325,7 +93763,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000068",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD350-700020-000_Combination switch as.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/combination-switch-xipd350-700020-000-5572-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD350-700020-000_Combination%20switch%20as.jpg",
+    "imageFileName": "XIPD350-700020-000_Combination switch as.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/combination-switch-xipd350-700020-000-5572-en-G.jpg"
   },
   {
     "id": "PRT-MJ-148",
@@ -93357,7 +93798,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250429000024,25",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-610100-W00_FASTERNER.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/fasterner-n163-610100-w00-6570-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-610100-W00_FASTERNER.jpg",
+    "imageFileName": "N163-610100-W00_FASTERNER.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/fasterner-n163-610100-w00-6570-en-G.jpg"
   },
   {
     "id": "PRT-MJ-149",
@@ -93388,8 +93832,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "250425000064",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-150",
@@ -93420,8 +93867,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "250425000065",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-151",
@@ -93453,7 +93903,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000066",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY300-706000-900_Battery power cable.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/battery-power-cable-xeipy300-706000-900-19158-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY300-706000-900_Battery%20power%20cable.jpg",
+    "imageFileName": "XEIPY300-706000-900_Battery power cable.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/battery-power-cable-xeipy300-706000-900-19158-en-G.jpg"
   },
   {
     "id": "PRT-MJ-152",
@@ -93485,7 +93938,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000069",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XEIPY150-433000-000_Hood right-sidepanel.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hood-right-side-panel-assy-xeipy150-433000-000-17425-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XEIPY150-433000-000_Hood%20right-sidepanel.jpg",
+    "imageFileName": "XEIPY150-433000-000_Hood right-sidepanel.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hood-right-side-panel-assy-xeipy150-433000-000-17425-en-G.jpg"
   },
   {
     "id": "PRT-MJ-153",
@@ -93517,7 +93973,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000070",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR160-020004-000_Right Tonnage label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-tonnage-label-xr160-020004-000-15689-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR160-020004-000_Right%20Tonnage%20label.jpg",
+    "imageFileName": "XR160-020004-000_Right Tonnage label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-tonnage-label-xr160-020004-000-15689-en-G.jpg"
   },
   {
     "id": "PRT-MJ-154",
@@ -93548,8 +94007,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "250425000071",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-155",
@@ -93581,7 +94043,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000072",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XCIPY300-010005-000_Charging label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/charging-label-xcipy300-010005-000-19729-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XCIPY300-010005-000_Charging%20label.jpg",
+    "imageFileName": "XCIPY300-010005-000_Charging label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/charging-label-xcipy300-010005-000-19729-en-G.jpg"
   },
   {
     "id": "PRT-MJ-156",
@@ -93612,8 +94077,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "250425000073",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-157",
@@ -93645,7 +94113,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "250425000074",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XCIPY300-431000-000_Hood panel,rightside.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/hood-panel-right-side-xcipy300-431000-000-15103-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XCIPY300-431000-000_Hood%20panel%2Crightside.jpg",
+    "imageFileName": "XCIPY300-431000-000_Hood panel,rightside.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/hood-panel-right-side-xcipy300-431000-000-15103-en-G.jpg"
   },
   {
     "id": "PRT-MJ-158",
@@ -93677,7 +94148,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/TB200-010013-000_Typeface label 1.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/typeface-label-tb200-010013-000-black-word-16229-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/TB200-010013-000_Typeface%20label%201.jpg",
+    "imageFileName": "TB200-010013-000_Typeface label 1.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/typeface-label-tb200-010013-000-black-word-16229-en-G.jpg"
   },
   {
     "id": "PRT-MJ-159",
@@ -93709,7 +94183,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/NC9321-531000-000_Parking brake.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/parking-hand-brake-nc9321-531000-000-6062-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/NC9321-531000-000_Parking%20brake.jpg",
+    "imageFileName": "NC9321-531000-000_Parking brake.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/parking-hand-brake-nc9321-531000-000-6062-en-G.jpg"
   },
   {
     "id": "PRT-MJ-160",
@@ -93741,7 +94218,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G000093-000012-00_Washer 12.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G000093-000012-00_Washer%2012.jpg",
+    "imageFileName": "G000093-000012-00_Washer 12.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
   },
   {
     "id": "PRT-MJ-161",
@@ -93773,7 +94253,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G000093-000012-00_Washer 12.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G000093-000012-00_Washer%2012.jpg",
+    "imageFileName": "G000093-000012-00_Washer 12.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-12-gb93-87-g000093-000012-00-7956-en-G.jpg"
   },
   {
     "id": "PRT-MJ-162",
@@ -93805,7 +94288,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G250-440400-G00 Lever lock.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/lever-lock-g250-440400-g00-5869-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G250-440400-G00%20Lever%20lock.jpg",
+    "imageFileName": "G250-440400-G00 Lever lock.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/lever-lock-g250-440400-g00-5869-en-G.jpg"
   },
   {
     "id": "PRT-MJ-163",
@@ -93836,8 +94322,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "부품이미지/3E-211003-000_BOLT· CPD10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bolt-3e-211003-000-12991-en-G.jpg"
+    "imageFile": "부품이미지/3E-211003-000_BOLT·CPD10.jpg",
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/3E-211003-000_BOLT%28CPD10%29.jpg",
+    "imageFileName": "3E-211003-000_BOLT·CPD10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bolt-3e-211003-000-12991-en-G.jpg"
   },
   {
     "id": "PRT-MJ-164",
@@ -93868,8 +94357,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "부품이미지/3E-211003-000_BOLT· CPD10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bolt-3e-211003-000-12991-en-G.jpg"
+    "imageFile": "부품이미지/3E-211003-000_BOLT·CPD10.jpg",
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/3E-211003-000_BOLT%28CPD10%29.jpg",
+    "imageFileName": "3E-211003-000_BOLT·CPD10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bolt-3e-211003-000-12991-en-G.jpg"
   },
   {
     "id": "PRT-MJ-165",
@@ -93901,7 +94393,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/CBD20-WS-30102029_double PU wheel.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pu-double-loading-wheel-cbd15-18-ws-30102029-7458-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/CBD20-WS-30102029_double%20PU%20wheel.jpg",
+    "imageFileName": "CBD20-WS-30102029_double PU wheel.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pu-double-loading-wheel-cbd15-18-ws-30102029-7458-en-G.jpg"
   },
   {
     "id": "PRT-MJ-166",
@@ -93933,7 +94428,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/20501001_Bearing 6204-2RS.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-6204-2rs-cbd15-18-ws-20501001-11852-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/20501001_Bearing%206204-2RS.jpg",
+    "imageFileName": "20501001_Bearing 6204-2RS.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-6204-2rs-cbd15-18-ws-20501001-11852-en-G.jpg"
   },
   {
     "id": "PRT-MJ-167",
@@ -93965,7 +94463,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-221001_2-000_Steering rim assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-assy-black-n163-221001-2-000-17739-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-221001_2-000_Steering%20rim%20assy.jpg",
+    "imageFileName": "N163-221001_2-000_Steering rim assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-assy-black-n163-221001-2-000-17739-en-G.jpg"
   },
   {
     "id": "PRT-MJ-168",
@@ -93997,7 +94498,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G006171-000012-02_Nut M12x1.5.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-m12-1-5-gb6171-86-g006171-000012-02-7961-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G006171-000012-02_Nut%20M12x1.5.jpg",
+    "imageFileName": "G006171-000012-02_Nut M12x1.5.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-m12-1-5-gb6171-86-g006171-000012-02-7961-en-G.jpg"
   },
   {
     "id": "PRT-MJ-169",
@@ -94029,7 +94533,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G006171-000012-02_Nut M12x1.5.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-m12-1-5-gb6171-86-g006171-000012-02-7961-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G006171-000012-02_Nut%20M12x1.5.jpg",
+    "imageFileName": "G006171-000012-02_Nut M12x1.5.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-m12-1-5-gb6171-86-g006171-000012-02-7961-en-G.jpg"
   },
   {
     "id": "PRT-MJ-170",
@@ -94060,8 +94567,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-171",
@@ -94092,8 +94602,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-172",
@@ -94125,7 +94638,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR160-020004-000_Right Tonnage label.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-tonnage-label-xr160-020004-000-15689-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR160-020004-000_Right%20Tonnage%20label.jpg",
+    "imageFileName": "XR160-020004-000_Right Tonnage label.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-tonnage-label-xr160-020004-000-15689-en-G.jpg"
   },
   {
     "id": "PRT-MJ-173",
@@ -94157,7 +94673,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N120-113100-000_RIM.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/front-wheel-rim-black-n120-113100-000-17738-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N120-113100-000_RIM.jpg",
+    "imageFileName": "N120-113100-000_RIM.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/front-wheel-rim-black-n120-113100-000-17738-en-G.jpg"
   },
   {
     "id": "PRT-MJ-174",
@@ -94189,7 +94708,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD350-430001-000_GAS SPRING.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/air-spring-xipd350-430001-000-7539-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD350-430001-000_GAS%20SPRING.jpg",
+    "imageFileName": "XIPD350-430001-000_GAS SPRING.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/air-spring-xipd350-430001-000-7539-en-G.jpg"
   },
   {
     "id": "PRT-MJ-175",
@@ -94221,7 +94743,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR160-020003-000_LEFT TONNAGE LABEL.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-tonnage-label-xr160-020003-000-15688-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR160-020003-000_LEFT%20TONNAGE%20LABEL.jpg",
+    "imageFileName": "XR160-020003-000_LEFT TONNAGE LABEL.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-tonnage-label-xr160-020003-000-15688-en-G.jpg"
   },
   {
     "id": "PRT-MJ-176",
@@ -94253,7 +94778,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N163-113100-000_RIM ASSY.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/rim-assy-black-n163-113100-000-8683-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N163-113100-000_RIM%20ASSY.jpg",
+    "imageFileName": "N163-113100-000_RIM ASSY.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/rim-assy-black-n163-113100-000-8683-en-G.jpg"
   },
   {
     "id": "PRT-MJ-177",
@@ -94285,7 +94813,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/11393679-00_ACCESSORY, ELECTRIC FORKLIFT.jpg",
-    "imageUrl": "https://image.made-in-china.com/2f0j00JpNkEdsykRui/Byd-Electric-Forklift-Spare-Parts-Steering-Cylinder-Repair-Kit-11393679-00-Transverse-Cylinder-Repair-Kit-Che-AC01400-Steering-Cylinder-Repair-Kit.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/11393679-00_ACCESSORY%2C%20ELECTRIC%20FORKLIFT.jpg",
+    "imageFileName": "11393679-00_ACCESSORY, ELECTRIC FORKLIFT.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://image.made-in-china.com/2f0j00JpNkEdsykRui/Byd-Electric-Forklift-Spare-Parts-Steering-Cylinder-Repair-Kit-11393679-00-Transverse-Cylinder-Repair-Kit-Che-AC01400-Steering-Cylinder-Repair-Kit.jpg"
   },
   {
     "id": "PRT-MJ-178",
@@ -94316,8 +94847,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-179",
@@ -94348,8 +94882,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "부품이미지/N030-221001_2-000_Wheel rim· CPD10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-black-n030-221001-2-000-14232-en-G.jpg"
+    "imageFile": "부품이미지/N030-221001_2-000_Wheel rim·CPD10.jpg",
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-221001_2-000_Wheel%20rim%28CPD10%29.jpg",
+    "imageFileName": "N030-221001_2-000_Wheel rim·CPD10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/wheel-rim-black-n030-221001-2-000-14232-en-G.jpg"
   },
   {
     "id": "PRT-MJ-180",
@@ -94380,8 +94917,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "부품이미지/N030-221003-000_BOLT· CPD10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bolt-n030-221003-000-13359-en-G.jpg"
+    "imageFile": "부품이미지/N030-221003-000_BOLT·CPD10.jpg",
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-221003-000_BOLT%28CPD10%29.jpg",
+    "imageFileName": "N030-221003-000_BOLT·CPD10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bolt-n030-221003-000-13359-en-G.jpg"
   },
   {
     "id": "PRT-MJ-181",
@@ -94412,8 +94952,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "부품이미지/G000093-000010-00_Washer10· CPD10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-10-gb93-87-6472-en-G.jpg"
+    "imageFile": "부품이미지/G000093-000010-00_Washer10·CPD10.jpg",
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G000093-000010-00_Washer10%28CPD10%29.jpg",
+    "imageFileName": "G000093-000010-00_Washer10·CPD10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-10-gb93-87-6472-en-G.jpg"
   },
   {
     "id": "PRT-MJ-182",
@@ -94444,8 +94987,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-183",
@@ -94477,7 +95023,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-220003-000_Right steering knuckle.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-steering-knuckle-a2a300-220003-000-7670-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-220003-000_Right%20steering%20knuckle.jpg",
+    "imageFileName": "A2A300-220003-000_Right steering knuckle.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-steering-knuckle-a2a300-220003-000-7670-en-G.jpg"
   },
   {
     "id": "PRT-MJ-184",
@@ -94509,7 +95058,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A300-220002-000_Left steering knuckle.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-steering-knuckle-a2a300-220002-000-16488-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A300-220002-000_Left%20steering%20knuckle.jpg",
+    "imageFileName": "A2A300-220002-000_Left steering knuckle.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-steering-knuckle-a2a300-220002-000-16488-en-G.jpg"
   },
   {
     "id": "PRT-MJ-185",
@@ -94541,7 +95093,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD350-700300-000_Key switch assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/key-switch-assy-xipd350-700300-000-6756-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD350-700300-000_Key%20switch%20assy.jpg",
+    "imageFileName": "XIPD350-700300-000_Key switch assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/key-switch-assy-xipd350-700300-000-6756-en-G.jpg"
   },
   {
     "id": "PRT-MJ-186",
@@ -94573,7 +95128,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/31102007_Nut cap.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-cap-cbd15-18-ws-31102007-11918-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/31102007_Nut%20cap.jpg",
+    "imageFileName": "31102007_Nut cap.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-cap-cbd15-18-ws-31102007-11918-en-G.jpg"
   },
   {
     "id": "PRT-MJ-187",
@@ -94605,7 +95163,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/10301002_Emergency stop Switch.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/emergency-stop-switch-cbd15-18-ws-10301002-12591-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/10301002_Emergency%20stop%20Switch.jpg",
+    "imageFileName": "10301002_Emergency stop Switch.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/emergency-stop-switch-cbd15-18-ws-10301002-12591-en-G.jpg"
   },
   {
     "id": "PRT-MJ-188",
@@ -94637,7 +95198,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/31101012_Potentiometer assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/accelerator-assy-cbd15-18-ws-31101012-12804-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/31101012_Potentiometer%20assy.jpg",
+    "imageFileName": "31101012_Potentiometer assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/accelerator-assy-cbd15-18-ws-31101012-12804-en-G.jpg"
   },
   {
     "id": "PRT-MJ-189",
@@ -94668,8 +95232,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-190",
@@ -94700,8 +95267,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-191",
@@ -94732,8 +95302,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-192",
@@ -94764,8 +95337,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-193",
@@ -94797,7 +95373,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/10301007_HANDSET.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/handset-10301007-10032-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/10301007_HANDSET.jpg",
+    "imageFileName": "10301007_HANDSET.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/handset-10301007-10032-en-G.jpg"
   },
   {
     "id": "PRT-MJ-194",
@@ -94829,7 +95408,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/1313K-4401_CURTIS TESTER.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/curtis-tester-1313k-4401-6210-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/1313K-4401_CURTIS%20TESTER.jpg",
+    "imageFileName": "1313K-4401_CURTIS TESTER.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/curtis-tester-1313k-4401-6210-en-G.jpg"
   },
   {
     "id": "PRT-MJ-195",
@@ -94860,8 +95442,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-196",
@@ -94892,8 +95477,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-197",
@@ -94924,8 +95512,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-198",
@@ -94957,7 +95548,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF150-220013-000_Nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-xf150-220013-000-7478-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF150-220013-000_Nut.jpg",
+    "imageFileName": "XF150-220013-000_Nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-xf150-220013-000-7478-en-G.jpg"
   },
   {
     "id": "PRT-MJ-199",
@@ -94989,7 +95583,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XE250-220007-000_angle sensor cover plat.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/cover-xe250-220007-000-12526-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XE250-220007-000_angle%20sensor%20cover%20plat.jpg",
+    "imageFileName": "XE250-220007-000_angle sensor cover plat.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/cover-xe250-220007-000-12526-en-G.jpg"
   },
   {
     "id": "PRT-MJ-200",
@@ -95021,7 +95618,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XE250-220200-000_PIN.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/r-h-king-pin-xe250-220200-000-10544-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XE250-220200-000_PIN.jpg",
+    "imageFileName": "XE250-220200-000_PIN.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/r-h-king-pin-xe250-220200-000-10544-en-G.jpg"
   },
   {
     "id": "PRT-MJ-201",
@@ -95053,7 +95653,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD150-220200-000_Angle sensor assembly.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/sensing-sensor-xipd150-220200-000-8137-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD150-220200-000_Angle%20sensor%20assembly.jpg",
+    "imageFileName": "XIPD150-220200-000_Angle sensor assembly.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/sensing-sensor-xipd150-220200-000-8137-en-G.jpg"
   },
   {
     "id": "PRT-MJ-202",
@@ -95085,7 +95688,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XIPD150-220100-000_R.H KING Pin.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/r-h-king-pin-xipd150-220100-000-8038-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XIPD150-220100-000_R.H%20KING%20Pin.jpg",
+    "imageFileName": "XIPD150-220100-000_R.H KING Pin.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/r-h-king-pin-xipd150-220100-000-8038-en-G.jpg"
   },
   {
     "id": "PRT-MJ-203",
@@ -95117,7 +95723,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N030-220002-000_Pin.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pin-king-n030-220002-000-7863-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-220002-000_Pin.jpg",
+    "imageFileName": "N030-220002-000_Pin.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pin-king-n030-220002-000-7863-en-G.jpg"
   },
   {
     "id": "PRT-MJ-204",
@@ -95149,7 +95758,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N030-220001-000_Oil seal.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-n030-220001-000-7864-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-220001-000_Oil%20seal.jpg",
+    "imageFileName": "N030-220001-000_Oil seal.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-n030-220001-000-7864-en-G.jpg"
   },
   {
     "id": "PRT-MJ-205",
@@ -95181,7 +95793,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/JT07918-0253230-00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-k253230-jb-t7915-95-jt07918-0253230-00-7970-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/JT07918-0253230-00_Bearing.jpg",
+    "imageFileName": "JT07918-0253230-00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-k253230-jb-t7915-95-jt07918-0253230-00-7970-en-G.jpg"
   },
   {
     "id": "PRT-MJ-206",
@@ -95213,7 +95828,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/R840-220005-000_Oil seal.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-ring-r840-220005-000-7801-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/R840-220005-000_Oil%20seal.jpg",
+    "imageFileName": "R840-220005-000_Oil seal.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-ring-r840-220005-000-7801-en-G.jpg"
   },
   {
     "id": "PRT-MJ-207",
@@ -95245,7 +95863,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/R840-220003-000_Bush 1.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/sleeve-r840-220003-000-7692-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/R840-220003-000_Bush%201.jpg",
+    "imageFileName": "R840-220003-000_Bush 1.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/sleeve-r840-220003-000-7692-en-G.jpg"
   },
   {
     "id": "PRT-MJ-208",
@@ -95277,7 +95898,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N030-220003-000_Boot.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/dust-proof-bush-n030-220003-000-10202-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-220003-000_Boot.jpg",
+    "imageFileName": "N030-220003-000_Boot.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/dust-proof-bush-n030-220003-000-10202-en-G.jpg"
   },
   {
     "id": "PRT-MJ-209",
@@ -95309,7 +95933,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT04663-0081205-00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-81205-gb4663-94-gt04663-0081205-00-8208-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT04663-0081205-00_Bearing.jpg",
+    "imageFileName": "GT04663-0081205-00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-81205-gb4663-94-gt04663-0081205-00-8208-en-G.jpg"
   },
   {
     "id": "PRT-MJ-210",
@@ -95341,7 +95968,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/11451017-00_PULLEY, OIL PIPE.jpg",
-    "imageUrl": "https://ns2.greentechmhe.com/css/asset/image/20250626165751_IMG_20250617_162641-removebg-preview.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/11451017-00_PULLEY%2C%20OIL%20PIPE.jpg",
+    "imageFileName": "11451017-00_PULLEY, OIL PIPE.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://ns2.greentechmhe.com/css/asset/image/20250626165751_IMG_20250617_162641-removebg-preview.jpg"
   },
   {
     "id": "PRT-MJ-211",
@@ -95373,7 +96003,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/11413822-00_CHA-HB03130_REPAIR KIT-70-S1.jpg",
-    "imageUrl": "https://www.hefeiconshiteforklift.com/pic/big/450_0.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/11413822-00_CHA-HB03130_REPAIR%20KIT-70-S1.jpg",
+    "imageFileName": "11413822-00_CHA-HB03130_REPAIR KIT-70-S1.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hefeiconshiteforklift.com/pic/big/450_0.jpg"
   },
   {
     "id": "PRT-MJ-212",
@@ -95405,7 +96038,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GB97.1-85_Washer 5.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-5-gb97-1-85-g0097p1-000005-00-8520-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GB97.1-85_Washer%205.jpg",
+    "imageFileName": "GB97.1-85_Washer 5.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-5-gb97-1-85-g0097p1-000005-00-8520-en-G.jpg"
   },
   {
     "id": "PRT-MJ-213",
@@ -95437,7 +96073,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G009163-1500000-03_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-ge15es-2rs-g009163-1500000-03-6159-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G009163-1500000-03_Bearing.jpg",
+    "imageFileName": "G009163-1500000-03_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-ge15es-2rs-g009163-1500000-03-6159-en-G.jpg"
   },
   {
     "id": "PRT-MJ-214",
@@ -95469,7 +96108,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G0893P2-000028-00_Circlip28.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/circlip-28-g0893p2-000028-00-7663-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G0893P2-000028-00_Circlip28.jpg",
+    "imageFileName": "G0893P2-000028-00_Circlip28.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/circlip-28-g0893p2-000028-00-7663-en-G.jpg"
   },
   {
     "id": "PRT-MJ-215",
@@ -95501,7 +96143,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N030-220007-000_tie rod bar.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/tie-rod-bar-n030-220007-000-7690-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-220007-000_tie%20rod%20bar.jpg",
+    "imageFileName": "N030-220007-000_tie rod bar.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/tie-rod-bar-n030-220007-000-7690-en-G.jpg"
   },
   {
     "id": "PRT-MJ-216",
@@ -95533,7 +96178,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/X1000-220100-500_Steering cylinder cover.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/steering-cylinder-cover-x1000-220100-500-16509-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/X1000-220100-500_Steering%20cylinder%20cover.jpg",
+    "imageFileName": "X1000-220100-500_Steering cylinder cover.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/steering-cylinder-cover-x1000-220100-500-16509-en-G.jpg"
   },
   {
     "id": "PRT-MJ-217",
@@ -95565,7 +96213,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/LH-1223087-100_CHAIN.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/chain-lh-1223087-100-14992-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/LH-1223087-100_CHAIN.jpg",
+    "imageFileName": "LH-1223087-100_CHAIN.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/chain-lh-1223087-100-14992-en-G.jpg"
   },
   {
     "id": "PRT-MJ-218",
@@ -95597,7 +96248,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR310-770000-000_Rear lamps assy.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/rear-lamps-assy-xr310-770000-000-16832-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR310-770000-000_Rear%20lamps%20assy.jpg",
+    "imageFileName": "XR310-770000-000_Rear lamps assy.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/rear-lamps-assy-xr310-770000-000-16832-en-G.jpg"
   },
   {
     "id": "PRT-MJ-219",
@@ -95628,8 +96282,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-220",
@@ -95661,7 +96318,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/R45M300-000002-000_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-r45m300-000002-000-9790-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/R45M300-000002-000_Bearing.jpg",
+    "imageFileName": "R45M300-000002-000_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-r45m300-000002-000-9790-en-G.jpg"
   },
   {
     "id": "PRT-MJ-221",
@@ -95692,8 +96352,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-222",
@@ -95725,7 +96388,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GB93-87_Washer 8.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-8-g000093-000008-00-gb93-87-7977-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GB93-87_Washer%208.jpg",
+    "imageFileName": "GB93-87_Washer 8.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-8-g000093-000008-00-gb93-87-7977-en-G.jpg"
   },
   {
     "id": "PRT-MJ-223",
@@ -95757,7 +96423,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GB97.1-85_Washer 8.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-8-gb97-1-85-g0097p1-000008-00-7954-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GB97.1-85_Washer%208.jpg",
+    "imageFileName": "GB97.1-85_Washer 8.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-8-gb97-1-85-g0097p1-000008-00-7954-en-G.jpg"
   },
   {
     "id": "PRT-MJ-224",
@@ -95789,7 +96458,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT070P1-008020-01_Screw M8X20.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/screw-m8-20-gt070p1-008020-01-18611-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT070P1-008020-01_Screw%20M8X20.jpg",
+    "imageFileName": "GT070P1-008020-01_Screw M8X20.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/screw-m8-20-gt070p1-008020-01-18611-en-G.jpg"
   },
   {
     "id": "PRT-MJ-225",
@@ -95821,7 +96493,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G0097P1-000010-00_Washer 10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-10-g0097p1-000010-00-gb97-1-85-7973-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G0097P1-000010-00_Washer%2010.jpg",
+    "imageFileName": "G0097P1-000010-00_Washer 10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-10-g0097p1-000010-00-gb97-1-85-7973-en-G.jpg"
   },
   {
     "id": "PRT-MJ-226",
@@ -95853,7 +96528,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT070P1-005010-00_Screw M5X10.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/screw-m5-10-gt070p1-005010-00-12063-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT070P1-005010-00_Screw%20M5X10.jpg",
+    "imageFileName": "GT070P1-005010-00_Screw M5X10.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/screw-m5-10-gt070p1-005010-00-12063-en-G.jpg"
   },
   {
     "id": "PRT-MJ-227",
@@ -95885,7 +96563,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GB93-87_Washer 5.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/washer-5-gb93-87-g000093-000005-00-13808-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GB93-87_Washer%205.jpg",
+    "imageFileName": "GB93-87_Washer 5.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/washer-5-gb93-87-g000093-000005-00-13808-en-G.jpg"
   },
   {
     "id": "PRT-MJ-228",
@@ -95917,7 +96598,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XRF469-220004-000_Right steering knuckle.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-steering-knuckle-xrf469-220004-000-12102-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XRF469-220004-000_Right%20steering%20knuckle.jpg",
+    "imageFileName": "XRF469-220004-000_Right steering knuckle.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-steering-knuckle-xrf469-220004-000-12102-en-G.jpg"
   },
   {
     "id": "PRT-MJ-229",
@@ -95949,7 +96633,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0032308-00_Bearing 32308.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-32308-gb-t297-94-gt00297-0032308-00-12031-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0032308-00_Bearing%2032308.jpg",
+    "imageFileName": "GT00297-0032308-00_Bearing 32308.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-32308-gb-t297-94-gt00297-0032308-00-12031-en-G.jpg"
   },
   {
     "id": "PRT-MJ-230",
@@ -95981,7 +96668,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0032213-00_BRG ASSY-DRIVE WHEEL.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-32213-7513e-gb-t297-94-gt00297-0032213-00-12791-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0032213-00_BRG%20ASSY-DRIVE%20WHEEL.jpg",
+    "imageFileName": "GT00297-0032213-00_BRG ASSY-DRIVE WHEEL.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-32213-7513e-gb-t297-94-gt00297-0032213-00-12791-en-G.jpg"
   },
   {
     "id": "PRT-MJ-231",
@@ -96013,7 +96703,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/HG40692-090012512-00_Oilseal PD90X125X12.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-pd90-125-12-hg4-692-61-g00-hg40692-090012512-00-11458-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/HG40692-090012512-00_Oilseal%20PD90X125X12.jpg",
+    "imageFileName": "HG40692-090012512-00_Oilseal PD90X125X12.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-pd90-125-12-hg4-692-61-g00-hg40692-090012512-00-11458-en-G.jpg"
   },
   {
     "id": "PRT-MJ-232",
@@ -96044,8 +96737,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-233",
@@ -96076,8 +96772,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-234",
@@ -96108,8 +96807,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HANGCHA",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-235",
@@ -96141,7 +96843,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XR30V450-820001-003_Pulley.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pulley-xr30v450-820001-003-18714-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XR30V450-820001-003_Pulley.jpg",
+    "imageFileName": "XR30V450-820001-003_Pulley.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pulley-xr30v450-820001-003-18714-en-G.jpg"
   },
   {
     "id": "PRT-MJ-236",
@@ -96172,8 +96877,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-237",
@@ -96204,8 +96912,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-238",
@@ -96236,8 +96947,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-239",
@@ -96268,8 +96982,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-240",
@@ -96300,8 +97017,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-241",
@@ -96333,7 +97053,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/RC25N450-8-000-kit_Short lifting cylinde.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc25n450-8-000-kit-4843-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/RC25N450-8-000-kit_Short%20lifting%20cylinde.jpg",
+    "imageFileName": "RC25N450-8-000-kit_Short lifting cylinde.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc25n450-8-000-kit-4843-en-G.jpg"
   },
   {
     "id": "PRT-MJ-242",
@@ -96365,7 +97088,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/N030-220010-000_Bolt.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bolt-n030-220010-000-7811-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/N030-220010-000_Bolt.jpg",
+    "imageFileName": "N030-220010-000_Bolt.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bolt-n030-220010-000-7811-en-G.jpg"
   },
   {
     "id": "PRT-MJ-243",
@@ -96397,7 +97123,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/XF150-220013-000_Nut.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/nut-xf150-220013-000-7478-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/XF150-220013-000_Nut.jpg",
+    "imageFileName": "XF150-220013-000_Nut.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/nut-xf150-220013-000-7478-en-G.jpg"
   },
   {
     "id": "PRT-MJ-244",
@@ -96428,8 +97157,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-245",
@@ -96461,7 +97193,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/10301185_Charger 48V2A.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/charger-48v-2a-100-240v-10301185-19849-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/10301185_Charger%2048V2A.jpg",
+    "imageFileName": "10301185_Charger 48V2A.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/charger-48v-2a-100-240v-10301185-19849-en-G.jpg"
   },
   {
     "id": "PRT-MJ-246",
@@ -96492,8 +97227,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-247",
@@ -96525,7 +97263,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/DQ2204-010000-004_Sprocket seat.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/relay-300a12v-dq2204-010000-004-15313-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/DQ2204-010000-004_Sprocket%20seat.jpg",
+    "imageFileName": "DQ2204-010000-004_Sprocket seat.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/relay-300a12v-dq2204-010000-004-15313-en-G.jpg"
   },
   {
     "id": "PRT-MJ-248",
@@ -96556,8 +97297,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-249",
@@ -96588,8 +97332,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-250",
@@ -96620,8 +97367,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-251",
@@ -96652,8 +97402,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-252",
@@ -96684,8 +97437,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · HELI",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-253",
@@ -96717,7 +97473,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/AH25D450-5-000-KIT_Left lifting cyl kit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-ah25d450-5-000-kit-14977-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/AH25D450-5-000-KIT_Left%20lifting%20cyl%20kit.jpg",
+    "imageFileName": "AH25D450-5-000-KIT_Left lifting cyl kit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-ah25d450-5-000-kit-14977-en-G.jpg"
   },
   {
     "id": "PRT-MJ-254",
@@ -96749,7 +97508,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/X30N450-5-000-KIT_Letf lifting cyl kit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-x30n450-5-000-kit-14975-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/X30N450-5-000-KIT_Letf%20lifting%20cyl%20kit.jpg",
+    "imageFileName": "X30N450-5-000-KIT_Letf lifting cyl kit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-x30n450-5-000-kit-14975-en-G.jpg"
   },
   {
     "id": "PRT-MJ-255",
@@ -96781,7 +97543,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/RTE35N450-5-000-KIT_Left lifting cyl kit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-rte35n450-5-000-kit-14978-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/RTE35N450-5-000-KIT_Left%20lifting%20cyl%20kit.jpg",
+    "imageFileName": "RTE35N450-5-000-KIT_Left lifting cyl kit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/left-lifting-cylinder-repair-kit-rte35n450-5-000-kit-14978-en-G.jpg"
   },
   {
     "id": "PRT-MJ-256",
@@ -96813,7 +97578,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A25N450-4-000-KIT_Right lifting cylkit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a25n450-4-000-kit-14979-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A25N450-4-000-KIT_Right%20lifting%20cylkit.jpg",
+    "imageFileName": "A2A25N450-4-000-KIT_Right lifting cylkit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a25n450-4-000-kit-14979-en-G.jpg"
   },
   {
     "id": "PRT-MJ-257",
@@ -96845,7 +97613,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A30N450-4-000-KIT_Right lifting cylkit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a30n450-4-000-kit-14976-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A30N450-4-000-KIT_Right%20lifting%20cylkit.jpg",
+    "imageFileName": "A2A30N450-4-000-KIT_Right lifting cylkit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a30n450-4-000-kit-14976-en-G.jpg"
   },
   {
     "id": "PRT-MJ-258",
@@ -96877,7 +97648,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A35N450-4-000-KIT_Right lifting cylkit.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a35n450-4-000-kit-14980-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A35N450-4-000-KIT_Right%20lifting%20cylkit.jpg",
+    "imageFileName": "A2A35N450-4-000-KIT_Right lifting cylkit.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/right-lifting-cylinder-repair-kit-a2a35n450-4-000-kit-14980-en-G.jpg"
   },
   {
     "id": "PRT-MJ-259",
@@ -96909,7 +97683,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/RC30N450-8-000-KIT_seal kit for frontcyl.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc30n450-8-000-kit-4842-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/RC30N450-8-000-KIT_seal%20kit%20for%20frontcyl.jpg",
+    "imageFileName": "RC30N450-8-000-KIT_seal kit for frontcyl.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-rc30n450-8-000-kit-4842-en-G.jpg"
   },
   {
     "id": "PRT-MJ-260",
@@ -96941,7 +97718,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/X35N450-8-000-KIT_seal kit for front cyl.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-x35n450-8-000-kit-4841-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/X35N450-8-000-KIT_seal%20kit%20for%20front%20cyl.jpg",
+    "imageFileName": "X35N450-8-000-KIT_seal kit for front cyl.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-front-cyl-x35n450-8-000-kit-4841-en-G.jpg"
   },
   {
     "id": "PRT-MJ-261",
@@ -96973,7 +97753,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/A2A35M300-4-000-KIT_Seal kit for liftcyl.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-lifting-cyl-a2a35m300-4-000-kit-20775-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/A2A35M300-4-000-KIT_Seal%20kit%20for%20liftcyl.jpg",
+    "imageFileName": "A2A35M300-4-000-KIT_Seal kit for liftcyl.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/seal-kit-for-lifting-cyl-a2a35m300-4-000-kit-20775-en-G.jpg"
   },
   {
     "id": "PRT-MJ-262",
@@ -97004,8 +97787,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-263",
@@ -97036,8 +97822,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-264",
@@ -97069,7 +97858,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/G013871-060009008-01_Oil seal FB60×90×8.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-fb60-90-8-gb13871-92-5311-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/G013871-060009008-01_Oil%20seal%20FB60%C3%9790%C3%978.jpg",
+    "imageFileName": "G013871-060009008-01_Oil seal FB60×90×8.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/oil-seal-fb60-90-8-gb13871-92-5311-en-G.jpg"
   },
   {
     "id": "PRT-MJ-265",
@@ -97101,7 +97893,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0030208-00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-30208-gb-t297-94-gt00297-0030208-00-8822-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0030208-00_Bearing.jpg",
+    "imageFileName": "GT00297-0030208-00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-30208-gb-t297-94-gt00297-0030208-00-8822-en-G.jpg"
   },
   {
     "id": "PRT-MJ-266",
@@ -97133,7 +97928,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/GT00297-0030305-00_Bearing.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/bearing-30305-gb-t297-94-gt00297-0030305-00-8821-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/GT00297-0030305-00_Bearing.jpg",
+    "imageFileName": "GT00297-0030305-00_Bearing.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/bearing-30305-gb-t297-94-gt00297-0030305-00-8821-en-G.jpg"
   },
   {
     "id": "PRT-MJ-267",
@@ -97165,7 +97963,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/107003002001_PCB.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/pcb-107003002001-17975-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/107003002001_PCB.jpg",
+    "imageFileName": "107003002001_PCB.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/pcb-107003002001-17975-en-G.jpg"
   },
   {
     "id": "PRT-MJ-268",
@@ -97197,7 +97998,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/102003001_CONTACTOR.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/contactor-102003001-17976-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/102003001_CONTACTOR.jpg",
+    "imageFileName": "102003001_CONTACTOR.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/contactor-102003001-17976-en-G.jpg"
   },
   {
     "id": "PRT-MJ-269",
@@ -97229,7 +98033,10 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "serialNo": "",
     "createdDate": "2026-05-13",
     "imageFile": "부품이미지/102005001_SWITCHING POWER SUPPLY 380V12V.jpg",
-    "imageUrl": "https://www.hangchaparts.com/userdata/artikelen/switching-power-supply-380v-to-12v5a-102005001-13309-en-G.jpg"
+    "imageUrl": "https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_parts/102005001_SWITCHING%20POWER%20SUPPLY%20380V12V.jpg",
+    "imageFileName": "102005001_SWITCHING POWER SUPPLY 380V12V.jpg",
+    "imageStatus": "이미지 확보 완료",
+    "imageSource": "https://www.hangchaparts.com/userdata/artikelen/switching-power-supply-380v-to-12v5a-102005001-13309-en-G.jpg"
   },
   {
     "id": "PRT-MJ-270",
@@ -97260,8 +98067,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-271",
@@ -97292,8 +98102,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-272",
@@ -97324,8 +98137,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   },
   {
     "id": "PRT-MJ-273",
@@ -97356,8 +98172,11 @@ export const MUJIN_PARTS_INVENTORY: any[] = [
     "location": "주기장 · BYD",
     "serialNo": "",
     "createdDate": "2026-05-13",
-    "imageFile": "",
-    "imageUrl": ""
+    "imageFile": "이미지 획득 불가",
+    "imageUrl": "",
+    "imageFileName": "이미지 획득 불가",
+    "imageStatus": "이미지 획득 불가",
+    "imageSource": "이미지 획득 불가"
   }
 ];
 
