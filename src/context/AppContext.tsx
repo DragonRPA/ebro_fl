@@ -349,7 +349,24 @@ interface AppContextType {
   }) => Promise<AsRouteLog>;
   
   // Contract Mutators
-  createContract: (contractData: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'contractNo'>, assetsList: { assetId?: string; expectedModel?: string; monthlyRentalFee: number; dailyRentalFee: number }[]) => Promise<Contract>;
+  createContract: (
+    contractData: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'contractNo'>,
+    assetsList: {
+      assetId?: string;
+      expectedModel?: string;
+      monthlyRentalFee: number;
+      dailyRentalFee: number;
+      mastType?: string;
+      mastModelCode?: string;
+      standardLiftHeightMm?: number;
+      batteryVoltageCapacity?: string;
+      forkDimensionsMm?: string;
+      installedOptions?: string[];
+      appliedOptions?: ContractAsset['appliedOptions'];
+      optionMonthlyFee?: number;
+      optionOneTimeFee?: number;
+    }[]
+  ) => Promise<Contract>;
   rescindContract: (params: { contractId: string; reason: string; freightOption: 'NONE' | 'CUSTOMER' | 'OURS'; customerFreightAmount?: number }) => Promise<void>;
   extendContract: (contractId: string, newEndDate: string, description: string) => Promise<void> | void;
   shortenContract: (contractId: string, newEndDate: string, description: string) => Promise<void> | void;
@@ -8141,7 +8158,24 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       }
     }
   };
-  const createContract = async (contractData: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'contractNo'>, assetsList: { assetId?: string; expectedModel?: string; monthlyRentalFee: number; dailyRentalFee: number }[]) => {
+  const createContract = async (
+    contractData: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'contractNo'>,
+    assetsList: {
+      assetId?: string;
+      expectedModel?: string;
+      monthlyRentalFee: number;
+      dailyRentalFee: number;
+      mastType?: string;
+      mastModelCode?: string;
+      standardLiftHeightMm?: number;
+      batteryVoltageCapacity?: string;
+      forkDimensionsMm?: string;
+      installedOptions?: string[];
+      appliedOptions?: ContractAsset['appliedOptions'];
+      optionMonthlyFee?: number;
+      optionOneTimeFee?: number;
+    }[]
+  ) => {
     const customer = db.customers.find(c => c.id === contractData.customerId);
     if (customer && customer.transactionStatus === 'BLOCKED') {
       showErrorModal('해당 고객사는 [거래불가] 상태로 설정되어 있어 신규 계약 등록이 불가능합니다.', '계약 등록 제한');
@@ -8177,11 +8211,31 @@ ${currentTenant?.corporateName || tenantCorp} 배상
     }
 
     const nowIso = new Date().toISOString();
-    const createdCargoMap = new Map<string, { modelName: string; count: number; contractAssetIds: string[]; monthlyRentalFee: number; dailyRentalFee: number }>();
+    const contractOptList = contractData.appliedOptions || [];
+    const contractOptNames = contractOptList.map(o => o.name);
+    const createdCargoMap = new Map<string, {
+      modelName: string;
+      count: number;
+      contractAssetIds: string[];
+      monthlyRentalFee: number;
+      dailyRentalFee: number;
+      paidOptions?: string;
+      paidOptionPrices?: Record<string, number>;
+      paidOptionUnits?: Record<string, string>;
+      paidOptionQtys?: Record<string, number>;
+    }>();
     const createdInspIdsForDelivery: string[] = [];
 
     assetsList.forEach(item => {
-      const resolvedModel = item.expectedModel || (item.assetId ? db.assets.find(a => a.id === item.assetId)?.modelName : undefined) || '미지정';
+      const targetAsset = item.assetId ? db.assets.find(a => a.id === item.assetId) : undefined;
+      const resolvedModel = item.expectedModel || targetAsset?.modelName || '미지정';
+      const itemAppliedOptions = item.appliedOptions && item.appliedOptions.length > 0
+        ? item.appliedOptions
+        : (contractOptList.length > 0 ? contractOptList : targetAsset?.appliedOptions);
+      const itemInstalledOptions = item.installedOptions && item.installedOptions.length > 0
+        ? item.installedOptions
+        : (itemAppliedOptions ? itemAppliedOptions.map(o => o.name) : targetAsset?.installedOptions);
+
       const insertedCA = db.insertRow<ContractAsset>('contractAssets', {
         contractId: contract.id,
         assetId: item.assetId || undefined,
@@ -8192,16 +8246,42 @@ ${currentTenant?.corporateName || tenantCorp} 배상
         startDate: contractData.startDate,
         firstStartDate: contractData.startDate,
         endDate: contractData.endDate,
+        mastType: item.mastType || targetAsset?.mastType,
+        mastModelCode: item.mastModelCode || targetAsset?.mastModelCode,
+        standardLiftHeightMm: item.standardLiftHeightMm ?? targetAsset?.standardLiftHeightMm,
+        batteryVoltageCapacity: item.batteryVoltageCapacity || targetAsset?.batteryVoltageCapacity,
+        forkDimensionsMm: item.forkDimensionsMm || targetAsset?.forkDimensionsMm,
+        installedOptions: itemInstalledOptions,
+        appliedOptions: itemAppliedOptions,
+        optionMonthlyFee: item.optionMonthlyFee ?? contractData.optionMonthlyTotal,
+        optionOneTimeFee: item.optionOneTimeFee ?? contractData.optionOneTimeTotal,
         createdAt: nowIso
       });
 
       if (insertedCA?.id) {
-        const grp = createdCargoMap.get(resolvedModel) || {
+        const paidOptionPrices: Record<string, number> = {};
+        const paidOptionUnits: Record<string, string> = {};
+        const paidOptionQtys: Record<string, number> = {};
+        (itemAppliedOptions || []).forEach(opt => {
+          const isOneTime = contractData.optionBillingMode === 'ONE_TIME_BILLING';
+          paidOptionPrices[opt.name] = opt.isFreeService ? 0 : (isOneTime ? (opt.unitPrice || 0) : (opt.monthlyFee ?? opt.unitPrice ?? 0));
+          paidOptionUnits[opt.name] = isOneTime ? '대' : '월';
+          paidOptionQtys[opt.name] = opt.quantity || 1;
+        });
+
+        const itemOptArr = Array.isArray(itemInstalledOptions)
+          ? itemInstalledOptions
+          : String(itemInstalledOptions || '').split(/[·,]/).map(s => s.trim()).filter(Boolean);
+        const grp: any = createdCargoMap.get(resolvedModel) || {
           modelName: resolvedModel,
           count: 0,
-          contractAssetIds: [],
+          contractAssetIds: [] as string[],
           monthlyRentalFee: Number(item.monthlyRentalFee) || 0,
-          dailyRentalFee: Number(item.dailyRentalFee) || 0
+          dailyRentalFee: Number(item.dailyRentalFee) || 0,
+          paidOptions: (itemOptArr.length > 0) ? itemOptArr.join(', ') : (contractOptNames.length > 0 ? contractOptNames.join(', ') : undefined),
+          paidOptionPrices: Object.keys(paidOptionPrices).length > 0 ? paidOptionPrices : undefined,
+          paidOptionUnits: Object.keys(paidOptionUnits).length > 0 ? paidOptionUnits : undefined,
+          paidOptionQtys: Object.keys(paidOptionQtys).length > 0 ? paidOptionQtys : undefined,
         };
         grp.count += 1;
         grp.contractAssetIds.push(insertedCA.id);
@@ -8218,6 +8298,13 @@ ${currentTenant?.corporateName || tenantCorp} 배상
           contractEnd: contractData.endDate,
           monthlyRentalFee: item.monthlyRentalFee,
           dailyRentalFee: item.dailyRentalFee,
+          mastType: item.mastType || targetAsset?.mastType,
+          mastModelCode: item.mastModelCode || targetAsset?.mastModelCode,
+          standardLiftHeightMm: item.standardLiftHeightMm ?? targetAsset?.standardLiftHeightMm,
+          batteryVoltageCapacity: item.batteryVoltageCapacity || targetAsset?.batteryVoltageCapacity,
+          forkDimensionsMm: item.forkDimensionsMm || targetAsset?.forkDimensionsMm,
+          installedOptions: itemInstalledOptions,
+          appliedOptions: itemAppliedOptions,
           updatedAt: nowIso
         });
         //  고아 레코드 방지: assetId가 있는 슬롯 생성 시 출고검수 의뢰 자동 연동 생성
@@ -8233,14 +8320,36 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       }
     });
 
+    const optionDescSuffix = contractData.installedOptionsSummary
+      ? ` (설치형옵션: ${contractData.installedOptionsSummary})`
+      : '';
     db.insertRow<ContractHistory>('contractHistory', {
       contractId: contract.id,
       changeType: 'REGISTER',
       changeDate: new Date().toISOString().split('T')[0],
       newEndDate: contractData.endDate,
-      description: '계약 신규 등록',
+      description: `계약 신규 등록${optionDescSuffix}`,
       createdAt: new Date().toISOString()
     });
+
+    // 1회성 유상청구비용 방식의 설치형옵션이 있는 경우 당월 청구 합산용 Receivable 자동 생성
+    if (contractData.optionBillingMode === 'ONE_TIME_BILLING' && (contractData.optionOneTimeTotal || 0) > 0) {
+      const todayDate = new Date().toISOString().split('T')[0];
+      const optSummary = contractData.installedOptionsSummary || contractOptNames.join(', ') || '설치형옵션';
+      db.insertRow<Receivable>('receivables', {
+        customerId: contractData.customerId,
+        contractId: contract.id,
+        type: 'OTHER',
+        occurredDate: contractData.startDate || todayDate,
+        totalAmount: Number(contractData.optionOneTimeTotal) || 0,
+        billedAmount: 0,
+        status: 'PENDING',
+        displayName: `[설치형옵션 유상청구비용] ${optSummary}`,
+        internalDescription: `[설치형옵션:${contract.contractNo}] ${optSummary} 1회성 유상청구비용 ₩${Number(contractData.optionOneTimeTotal).toLocaleString()}원`,
+        createdAt: nowIso,
+        updatedAt: nowIso
+      });
+    }
 
     const today = new Date().toISOString().split('T')[0];
     const targetStart = contractData.startDate || today;
@@ -8259,8 +8368,8 @@ ${currentTenant?.corporateName || tenantCorp} 배상
       unloadingTimeSlot: '오전',
       deliveryCost: 0,
       isCostSettled: false,
-      memo: appendDispatchStaffTag('신규 계약 체결에 따른 출고 의뢰'),
-      closingMemo: '출고 파이프라인 자동 지시건',
+      memo: appendDispatchStaffTag(`신규 계약 체결에 따른 출고 요청${optionDescSuffix}`),
+      closingMemo: contractOptNames.length > 0 ? `유상옵션: ${contractOptNames.join(', ')} | 출고 파이프라인 자동 지시건` : '출고 파이프라인 자동 지시건',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });

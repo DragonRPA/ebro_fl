@@ -10,6 +10,7 @@ import { decryptSecret } from '../utils/cryptoVault';
 import { createHangulMatcher } from '../utils/hangulSearch';
 import { getCanonicalModelKey } from '../utils/modelUtils';
 import { PRESET_PRODUCT_SPECS } from '../data/presetProductSpecs';
+import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 
 const extractCertDateFromText = (raw?: string | null): string => {
   if (!raw) return '';
@@ -566,6 +567,106 @@ export const Products: React.FC = () => {
   const ef = (field: keyof Product) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const val = e.target.type === 'number' ? (e.target.value === '' ? undefined : Number(e.target.value)) : e.target.value;
     setEditForm(prev => ({ ...prev, [field]: val }));
+  };
+
+  // 공식 카탈로그 VDI 2198 제원 프리셋 자동 적용 핸들러
+  const applyCatalogPresetToProductForm = (archiveModelName: string) => {
+    const arch: any = FL_TECHNICAL_ARCHIVE.find(x => x.modelName === archiveModelName);
+    if (!arch) return;
+    const capKg = arch.ratedCapacityKg || 2500;
+    const stdLiftMm = arch.standardLiftHeightMm || 3000;
+    const maxLiftMm = arch.maxOptionLiftHeightMm || 4700;
+    const swKg = arch.serviceWeightKg || 3800;
+    setEditForm(prev => ({
+      ...prev,
+      modelName: prev.modelName || arch.modelName,
+      shortName: prev.shortName || arch.shortName,
+      feet: Math.round(capKg / 100),
+      manufacturer: arch.manufacturerName || arch.manufacturer,
+      seriesName: arch.seriesName,
+      equipmentClass: arch.equipmentClass,
+      powerType: arch.powerType,
+      powerSource: arch.powerSource || arch.powerType,
+      operatorType: arch.operatorType,
+      ratedCapacityKg: capKg,
+      loadCenterMm: arch.loadCenterMm,
+      loadDistanceXMm: arch.loadDistanceXMm,
+      wheelbaseMm: arch.wheelbaseMm,
+      serviceWeightKg: swKg,
+      axleLoadingLadenKg: arch.axleLoadingLadenKg,
+      axleLoadingUnladenKg: arch.axleLoadingUnladenKg,
+      tireType: arch.tireType,
+      tireSpecFrontRear: arch.tireSpecFrontRear,
+      wheelCountFrontRear: arch.wheelCountFrontRear,
+      treadFrontRearMm: arch.treadFrontRearMm,
+      mastType: arch.mastType,
+      mastStageCount: arch.mastStageCount,
+      mastTiltDeg: arch.mastTiltDeg,
+      mastLoweredH1Mm: arch.mastLoweredH1Mm,
+      freeLiftHeightMm: arch.freeLiftHeightMm,
+      standardLiftHeightMm: stdLiftMm,
+      maxOptionLiftHeightMm: maxLiftMm,
+      mastExtendedH4Mm: arch.mastExtendedH4Mm,
+      overheadGuardHeightMm: arch.overheadGuardHeightMm,
+      seatHeightH7Mm: arch.seatHeightH7Mm,
+      couplingHeightH10Mm: arch.couplingHeightH10Mm,
+      overallLengthWithForkL1Mm: arch.overallLengthWithForkL1Mm,
+      overallLengthMm: arch.overallLengthMm,
+      overallWidthMm: arch.overallWidthMm,
+      overallWidthDualB2Mm: arch.overallWidthDualB2Mm,
+      forkDimensionsMm: arch.forkDimensionsMm,
+      forkCarriageClass: arch.forkCarriageClass,
+      forkCarriageWidthB3Mm: arch.forkCarriageWidthB3Mm,
+      forkSpreadMinMaxB5Mm: arch.forkSpreadMinMaxB5Mm,
+      groundClearanceMastM1Mm: arch.groundClearanceMastM1Mm,
+      groundClearanceCenterM2Mm: arch.groundClearanceCenterM2Mm,
+      aisleWidth1000x1200Mm: arch.aisleWidth1000x1200Mm,
+      aisleWidth800x1200Mm: arch.aisleWidth800x1200Mm,
+      turningRadiusMm: arch.turningRadiusMm,
+      internalTurningRadiusB13Mm: arch.internalTurningRadiusB13Mm,
+      travelSpeedKmh: arch.travelSpeedKmh,
+      liftingSpeedMms: arch.liftingSpeedMms,
+      loweringSpeedMms: arch.loweringSpeedMms,
+      drawbarPullN: arch.drawbarPullN,
+      maxDrawbarPullN: arch.maxDrawbarPullN,
+      gradeabilityPercent: arch.gradeabilityPercent,
+      maxGradeabilityPercent: arch.maxGradeabilityPercent,
+      accelerationTime10mSec: arch.accelerationTime10mSec,
+      serviceBrake: arch.serviceBrake,
+      parkingBrake: arch.parkingBrake,
+      brakeType: arch.brakeType,
+      driveMotorKw: arch.driveMotorKw,
+      liftMotorKw: arch.liftMotorKw,
+      motorOrEngineDetail: arch.motorOrEngineDetail,
+      batteryVoltageCapacity: arch.batteryVoltageCapacity,
+      batteryWeightKg: arch.batteryWeightKg,
+      powerSpecDetail: arch.powerSpecDetail,
+      chargerOrFuelDetail: arch.chargerOrFuelDetail,
+      driveControlType: arch.driveControlType,
+      controllerMaker: arch.controllerMaker,
+      operatingPressureMpa: arch.operatingPressureMpa,
+      oilFlowLmin: arch.oilFlowLmin,
+      soundLevelDb: arch.soundLevelDb,
+      hydraulicTankLiter: arch.hydraulicTankLiter,
+      waterproofRating: arch.waterproofRating,
+      warrantyMonths: arch.warrantyMonths,
+      warrantyTerms: arch.warrantyTerms,
+      workingHeight: `${(maxLiftMm / 1000).toFixed(2)} M`,
+      platformHeight: `${(stdLiftMm / 1000).toFixed(2)} M`,
+      weight: `${swKg.toLocaleString()} kg`,
+      capacityPreExt: `${capKg.toLocaleString()} kg`,
+      machineDimensions: `${((arch.overallLengthMm || 2500) / 1000).toFixed(2)} x ${((arch.overallWidthMm || 1180) / 1000).toFixed(2)} x ${((arch.overheadGuardHeightMm || 2150) / 1000).toFixed(2)} M`,
+      platformDimensions: arch.forkDimensionsMm,
+      speed: `${arch.travelSpeedKmh} km/h`,
+      gradeability: arch.gradeabilityPercent ? `${arch.gradeabilityPercent}%` : undefined,
+      spec: `${arch.seriesName} | 정격하중 ${capKg.toLocaleString()}kg | ${arch.powerSpecDetail} | ${arch.motorOrEngineDetail}`,
+      vdiSpecs: arch.vdiSpecs,
+      mastSpecs: arch.mastSpecs,
+      batteryOptions: arch.batteryOptions,
+      standardEquipments: arch.standardEquipments,
+      optionalEquipments: arch.optionalEquipments,
+    }));
+    showToast(`공식 카탈로그 [${arch.modelName}] VDI 2198 전 항목 제원이 자동 입력되었습니다.`);
   };
 
   return (
@@ -1199,11 +1300,49 @@ export const Products: React.FC = () => {
                 </div>
                 {isEditing ? (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div style={{ gridColumn: 'span 2', padding: '8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', border: '1px dashed var(--primary)' }}>
+                      <label style={{ ...labelStyle, color: 'var(--primary)' }}>공식 카탈로그 VDI 2198 모델 제원 프리셋 자동 적용</label>
+                      <select
+                        style={inputStyle}
+                        defaultValue=""
+                        onChange={e => { if (e.target.value) applyCatalogPresetToProductForm(e.target.value); }}
+                      >
+                        <option value="">-- 카탈로그 표준 모델 선택 시 VDI 2198 · 마스트 · 배터리 제원 일괄 자동 채움 --</option>
+                        {FL_TECHNICAL_ARCHIVE.map((arch: any) => (
+                          <option key={arch.modelName} value={arch.modelName}>
+                            [{arch.manufacturerName || arch.manufacturer}] {arch.modelName} · {arch.seriesName} · 정격 {arch.ratedCapacityKg?.toLocaleString()}kg
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div><label style={labelStyle}>모델명 *</label><input style={inputStyle} value={editForm.modelName || ''} onChange={ef('modelName')} /></div>
                     <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: CPD25, D30S" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
                     <div><label style={labelStyle}>톤급 코드 *</label><input type="number" style={inputStyle} value={editForm.feet ?? ''} onChange={ef('feet')} /></div>
                     <div><label style={labelStyle}>제조사</label><input style={inputStyle} value={editForm.manufacturer || ''} onChange={ef('manufacturer')} /></div>
+                    <div><label style={labelStyle}>시리즈명</label><input style={inputStyle} value={editForm.seriesName || ''} onChange={ef('seriesName')} /></div>
                     <div><label style={labelStyle}>동력 방식</label><input style={inputStyle} value={editForm.powerSource || ''} onChange={ef('powerSource')} /></div>
+                    <div><label style={labelStyle}>정격 하중 kg · 1.5</label><input type="number" style={inputStyle} value={editForm.ratedCapacityKg ?? ''} onChange={ef('ratedCapacityKg')} /></div>
+                    <div><label style={labelStyle}>하중 중심 mm · 1.6</label><input type="number" style={inputStyle} value={editForm.loadCenterMm ?? ''} onChange={ef('loadCenterMm')} /></div>
+                    <div><label style={labelStyle}>하중 거리 x mm · 1.8</label><input type="number" style={inputStyle} value={editForm.loadDistanceXMm ?? ''} onChange={ef('loadDistanceXMm')} /></div>
+                    <div><label style={labelStyle}>축거 y mm · 1.9</label><input type="number" style={inputStyle} value={editForm.wheelbaseMm ?? ''} onChange={ef('wheelbaseMm')} /></div>
+                    <div><label style={labelStyle}>장비 자중 kg · 2.1</label><input type="number" style={inputStyle} value={editForm.serviceWeightKg ?? ''} onChange={ef('serviceWeightKg')} /></div>
+                    <div><label style={labelStyle}>타이어 규격 전·후 · 3.2</label><input style={inputStyle} value={editForm.tireSpecFrontRear || ''} onChange={ef('tireSpecFrontRear')} /></div>
+                    <div><label style={labelStyle}>마스트 전고 h1 mm · 4.2</label><input type="number" style={inputStyle} value={editForm.mastLoweredH1Mm ?? ''} onChange={ef('mastLoweredH1Mm')} /></div>
+                    <div><label style={labelStyle}>자유인상고 h2 mm · 4.3</label><input type="number" style={inputStyle} value={editForm.freeLiftHeightMm ?? ''} onChange={ef('freeLiftHeightMm')} /></div>
+                    <div><label style={labelStyle}>표준 인상고 h3 mm · 4.4</label><input type="number" style={inputStyle} value={editForm.standardLiftHeightMm ?? ''} onChange={ef('standardLiftHeightMm')} /></div>
+                    <div><label style={labelStyle}>최대 옵션 인상고 mm</label><input type="number" style={inputStyle} value={editForm.maxOptionLiftHeightMm ?? ''} onChange={ef('maxOptionLiftHeightMm')} /></div>
+                    <div><label style={labelStyle}>마스트 최대높이 h4 mm · 4.5</label><input type="number" style={inputStyle} value={editForm.mastExtendedH4Mm ?? ''} onChange={ef('mastExtendedH4Mm')} /></div>
+                    <div><label style={labelStyle}>헤드가드 높이 h6 mm · 4.7</label><input type="number" style={inputStyle} value={editForm.overheadGuardHeightMm ?? ''} onChange={ef('overheadGuardHeightMm')} /></div>
+                    <div><label style={labelStyle}>전장 포크포함 l1 mm · 4.19</label><input type="number" style={inputStyle} value={editForm.overallLengthWithForkL1Mm ?? ''} onChange={ef('overallLengthWithForkL1Mm')} /></div>
+                    <div><label style={labelStyle}>포크 규격 s·e·l · 4.22</label><input style={inputStyle} value={editForm.forkDimensionsMm || editForm.platformDimensions || ''} onChange={ef('forkDimensionsMm')} /></div>
+                    <div><label style={labelStyle}>캐리지 등급 · 4.23</label><input style={inputStyle} value={editForm.forkCarriageClass || ''} onChange={ef('forkCarriageClass')} /></div>
+                    <div><label style={labelStyle}>최소 회전반경 Wa mm · 4.35</label><input type="number" style={inputStyle} value={editForm.turningRadiusMm ?? ''} onChange={ef('turningRadiusMm')} /></div>
+                    <div><label style={labelStyle}>주행 속도 · 5.1</label><input style={inputStyle} value={editForm.travelSpeedKmh || editForm.speed || ''} onChange={ef('travelSpeedKmh')} /></div>
+                    <div><label style={labelStyle}>인상 속도 · 5.2</label><input style={inputStyle} value={editForm.liftingSpeedMms || ''} onChange={ef('liftingSpeedMms')} /></div>
+                    <div><label style={labelStyle}>주행·인양 모터 kW · 6.1/6.2</label><input style={inputStyle} value={editForm.motorOrEngineDetail || ''} onChange={ef('motorOrEngineDetail')} /></div>
+                    <div><label style={labelStyle}>배터리 전압·용량 · 6.4</label><input style={inputStyle} value={editForm.batteryVoltageCapacity || ''} onChange={ef('batteryVoltageCapacity')} /></div>
+                    <div><label style={labelStyle}>배터리 중량 kg · 6.5</label><input style={inputStyle} value={editForm.batteryWeightKg || ''} onChange={ef('batteryWeightKg')} /></div>
+                    <div><label style={labelStyle}>작동 압력 MPa · 10.1</label><input style={inputStyle} value={editForm.operatingPressureMpa || ''} onChange={ef('operatingPressureMpa')} /></div>
                     <div>
                       <label style={labelStyle}>사용 상태</label>
                       <select
@@ -1215,14 +1354,6 @@ export const Products: React.FC = () => {
                         <option value="false">미사용</option>
                       </select>
                     </div>
-                    <div><label style={labelStyle}>최대 인상고</label><input style={inputStyle} value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
-                    <div><label style={labelStyle}>표준 인상고</label><input style={inputStyle} value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
-                    <div><label style={labelStyle}>장비 자중</label><input style={inputStyle} value={editForm.weight || ''} onChange={ef('weight')} /></div>
-                    <div><label style={labelStyle}>정격 하중</label><input style={inputStyle} value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
-                    <div><label style={labelStyle}>차체 치수</label><input style={inputStyle} value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
-                    <div><label style={labelStyle}>포크 규격</label><input style={inputStyle} value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
-                    <div><label style={labelStyle}>주행 속도</label><input style={inputStyle} value={editForm.speed || ''} onChange={ef('speed')} /></div>
-                    <div><label style={labelStyle}>등판 능력</label><input style={inputStyle} value={editForm.gradeability || ''} onChange={ef('gradeability')} /></div>
                     <div><label style={labelStyle}>안전인증일</label><input type="date" style={inputStyle} value={editForm.safetyCertDate || ''} onChange={ef('safetyCertDate')} /></div>
                     <div><label style={labelStyle}>A/S 접수처</label><input style={inputStyle} value={editForm.asContact || ''} onChange={ef('asContact')} /></div>
                     <div style={{ gridColumn: 'span 2' }}>
@@ -1302,30 +1433,35 @@ export const Products: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+              <div style={{ gridColumn: 'span 2', padding: '8px', backgroundColor: 'var(--bg-app)', borderRadius: '4px', border: '1px dashed var(--primary)' }}>
+                <label style={{ ...labelStyle, color: 'var(--primary)' }}>공식 카탈로그 VDI 2198 모델 제원 프리셋 자동 적용</label>
+                <select
+                  style={inputStyle}
+                  defaultValue=""
+                  onChange={e => { if (e.target.value) applyCatalogPresetToProductForm(e.target.value); }}
+                >
+                  <option value="">-- 카탈로그 표준 모델 선택 시 VDI 2198 · 마스트 · 배터리 제원 일괄 자동 채움 --</option>
+                  {FL_TECHNICAL_ARCHIVE.map((arch: any) => (
+                    <option key={arch.modelName} value={arch.modelName}>
+                      [{arch.manufacturerName || arch.manufacturer}] {arch.modelName} · {arch.seriesName} · 정격 {arch.ratedCapacityKg?.toLocaleString()}kg
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div><label style={labelStyle}>모델명 *</label><input style={inputStyle} placeholder="예: CPD25-GB2Li" value={editForm.modelName || ''} onChange={ef('modelName')} required /></div>
               <div><label style={labelStyle}>축약 모델명</label><input style={inputStyle} placeholder="예: CPD25" value={editForm.shortName || ''} onChange={ef('shortName')} /></div>
               <div><label style={labelStyle}>톤급 코드 *</label><input type="number" style={inputStyle} placeholder="예: 25" value={editForm.feet ?? ''} onChange={ef('feet')} required /></div>
               <div><label style={labelStyle}>제조사</label><input style={inputStyle} placeholder="예: 안후이 헬리" value={editForm.manufacturer || ''} onChange={ef('manufacturer')} /></div>
+              <div><label style={labelStyle}>시리즈명</label><input style={inputStyle} placeholder="예: G2 리튬 전동 시리즈" value={editForm.seriesName || ''} onChange={ef('seriesName')} /></div>
               <div><label style={labelStyle}>동력 방식</label><input style={inputStyle} placeholder="예: 리튬인산철 전동" value={editForm.powerSource || ''} onChange={ef('powerSource')} /></div>
-              <div>
-                <label style={labelStyle}>사용 상태</label>
-                <select
-                  style={inputStyle}
-                  value={editForm.isActive !== false ? 'true' : 'false'}
-                  onChange={e => setEditForm(prev => ({ ...prev, isActive: e.target.value === 'true' }))}
-                >
-                  <option value="true">사용</option>
-                  <option value="false">미사용</option>
-                </select>
-              </div>
-              <div><label style={labelStyle}>최대 인상고</label><input style={inputStyle} placeholder="예: 4.70 M" value={editForm.workingHeight || ''} onChange={ef('workingHeight')} /></div>
-              <div><label style={labelStyle}>표준 인상고</label><input style={inputStyle} placeholder="예: 3.00 M" value={editForm.platformHeight || ''} onChange={ef('platformHeight')} /></div>
-              <div><label style={labelStyle}>장비 자중</label><input style={inputStyle} placeholder="예: 3,980 kg" value={editForm.weight || ''} onChange={ef('weight')} /></div>
-              <div><label style={labelStyle}>정격 하중</label><input style={inputStyle} placeholder="예: 2,500 kg" value={editForm.capacityPreExt || ''} onChange={ef('capacityPreExt')} /></div>
-              <div><label style={labelStyle}>차체 치수</label><input style={inputStyle} placeholder="예: 2.49 x 1.18 x 2.14 M" value={editForm.machineDimensions || ''} onChange={ef('machineDimensions')} /></div>
-              <div><label style={labelStyle}>포크 규격</label><input style={inputStyle} placeholder="예: 40 × 122 × 1,070 mm" value={editForm.platformDimensions || ''} onChange={ef('platformDimensions')} /></div>
-              <div><label style={labelStyle}>주행 속도</label><input style={inputStyle} placeholder="예: 18.0 km/h" value={editForm.speed || ''} onChange={ef('speed')} /></div>
-              <div><label style={labelStyle}>등판 능력</label><input style={inputStyle} placeholder="예: 20%" value={editForm.gradeability || ''} onChange={ef('gradeability')} /></div>
+              <div><label style={labelStyle}>정격 하중 kg · 1.5</label><input type="number" style={inputStyle} placeholder="예: 2500" value={editForm.ratedCapacityKg ?? ''} onChange={ef('ratedCapacityKg')} /></div>
+              <div><label style={labelStyle}>하중 중심 mm · 1.6</label><input type="number" style={inputStyle} placeholder="예: 500" value={editForm.loadCenterMm ?? ''} onChange={ef('loadCenterMm')} /></div>
+              <div><label style={labelStyle}>표준 인상고 h3 mm · 4.4</label><input type="number" style={inputStyle} placeholder="예: 3000" value={editForm.standardLiftHeightMm ?? ''} onChange={ef('standardLiftHeightMm')} /></div>
+              <div><label style={labelStyle}>최대 인상고 mm</label><input type="number" style={inputStyle} placeholder="예: 6000" value={editForm.maxOptionLiftHeightMm ?? ''} onChange={ef('maxOptionLiftHeightMm')} /></div>
+              <div><label style={labelStyle}>장비 자중 kg · 2.1</label><input type="number" style={inputStyle} placeholder="예: 3980" value={editForm.serviceWeightKg ?? ''} onChange={ef('serviceWeightKg')} /></div>
+              <div><label style={labelStyle}>포크 규격 s·e·l · 4.22</label><input style={inputStyle} placeholder="예: 40 × 122 × 1,070 mm" value={editForm.forkDimensionsMm || editForm.platformDimensions || ''} onChange={ef('forkDimensionsMm')} /></div>
+              <div><label style={labelStyle}>배터리 전압·용량 · 6.4</label><input style={inputStyle} placeholder="예: 80V / 271Ah" value={editForm.batteryVoltageCapacity || ''} onChange={ef('batteryVoltageCapacity')} /></div>
+              <div><label style={labelStyle}>주행·인양 모터 · 6.1/6.2</label><input style={inputStyle} placeholder="예: 주행 15.0kW / 인양 15.0kW" value={editForm.motorOrEngineDetail || ''} onChange={ef('motorOrEngineDetail')} /></div>
               <div><label style={labelStyle}>안전인증일</label><input type="date" style={inputStyle} value={editForm.safetyCertDate || ''} onChange={ef('safetyCertDate')} /></div>
               <div><label style={labelStyle}>A/S 접수처</label><input style={inputStyle} value={editForm.asContact || '031-334-5296'} onChange={ef('asContact')} /></div>
               <div style={{ gridColumn: 'span 2' }}>
@@ -1482,19 +1618,71 @@ export const Products: React.FC = () => {
                     {selectedProduct.mastSpecs.map((m: any, idx: number) => (
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '4px 6px', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{m.mastType}</td>
-                        <td style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{m.mastModelCode || '-'}</td>
+                        <td style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{m.mastModelCode || m.mastModel || '-'}</td>
                         <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{m.liftHeightH3Mm?.toLocaleString()} mm</td>
                         <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.loweredHeightH1Mm?.toLocaleString()} mm</td>
-                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.extendedHeightH4Mm} mm</td>
-                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.freeLiftH2Mm} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.extendedHeightH4Mm || m.extendedHeightWithBackrestH4Mm || '-'} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.freeLiftH2Mm || m.freeLiftWithBackrestH2Mm || '-'} mm</td>
                         <td style={{ padding: '4px 6px', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>{m.tiltAngleDeg}°</td>
                         <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>
-                          {m.ratedCapSingleKg?.toLocaleString()} {m.ratedCapDualKg ? `/ ${m.ratedCapDualKg.toLocaleString()}` : ''} kg
+                          {(m.ratedCapSingleKg || m.ratedCapacitySingleTireKg || '-')} {(m.ratedCapDualKg || m.ratedCapacityDualTireKg) ? `/ ${m.ratedCapDualKg || m.ratedCapacityDualTireKg}` : ''}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {Array.isArray(selectedProduct.batteryOptions) && selectedProduct.batteryOptions.length > 0 && (
+              <div style={{ marginTop: '14px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}>
+                  ■ 배터리 · 동력원 선택 사양표 ({selectedProduct.batteryOptions.length}종)
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', border: '1px solid var(--border-color)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '5px 6px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>배터리 코드</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>전지 분류</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>전압 · 용량</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>배터리 중량</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'left' }}>적용 충전기</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedProduct.batteryOptions.map((b: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '4px 6px', fontWeight: 700, borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{b.optionCode || b.batteryModel || '-'}</td>
+                        <td style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)' }}>{b.batteryType || '리튬인산철'}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{b.voltageCapacity || `${b.voltageV || ''}V / ${b.capacityAh || ''}Ah`}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{b.weightKg} kg</td>
+                        <td style={{ padding: '4px 6px' }}>{b.chargerSpec || b.chargerOptions || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {((Array.isArray(selectedProduct.standardEquipments) && selectedProduct.standardEquipments.length > 0) ||
+              (Array.isArray(selectedProduct.optionalEquipments) && selectedProduct.optionalEquipments.length > 0)) && (
+              <div style={{ marginTop: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '11px' }}>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '6px', color: 'var(--text-main)' }}>■ 기본 출고 사양</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {(selectedProduct.standardEquipments || []).map((eq: string, idx: number) => (
+                      <span key={idx} className="badge badge-secondary" style={{ fontSize: '10.5px' }}>{eq}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '6px', color: 'var(--primary)' }}>■ 선택 장착 옵션 사양</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {(selectedProduct.optionalEquipments || []).map((eq: string, idx: number) => (
+                      <span key={idx} className="badge badge-primary" style={{ fontSize: '10.5px' }}>{eq}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 

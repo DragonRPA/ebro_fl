@@ -17,6 +17,8 @@ import { ContractDocumentBundleModal } from '../components/ContractDocumentBundl
 import { MonthlySafetyChecklistModal } from '../components/MonthlySafetyChecklistModal';
 import { matchHangul, createHangulMatcher, sortCustomersByName, compareCustomerNames } from '../utils/hangulSearch';
 import { useApproval } from '../hooks/useApproval';
+import { MUJIN_OPTION_MASTERS } from '../data/mujinGlobalInitialData';
+import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 
 export const Contracts: React.FC = () => {
   const {
@@ -178,12 +180,53 @@ export const Contracts: React.FC = () => {
   const [newSiteContactEmail, setNewSiteContactEmail] = useState('');
   
   // 등록 중 자산 바스켓 (헌장 2.1: 영업 담당자는 모델 규격 의뢰가 기본 표준)
-  const [basket, setBasket] = useState<{ assetId?: string; expectedModel?: string; monthlyRentalFee: number; dailyRentalFee: number }[]>([]);
+  const [basket, setBasket] = useState<{
+    assetId?: string;
+    expectedModel?: string;
+    monthlyRentalFee: number;
+    dailyRentalFee: number;
+    mastType?: string;
+    mastModelCode?: string;
+    standardLiftHeightMm?: number;
+    batteryVoltageCapacity?: string;
+    forkDimensionsMm?: string;
+  }[]>([]);
   const [basketAssetMethod, setBasketAssetMethod] = useState<'ASSET' | 'MODEL'>('MODEL');
   const [selectedAssetToAdd, setSelectedAssetToAdd] = useState('');
   const [selectedModelToAdd, setSelectedModelToAdd] = useState('');
   const [customMonthly, setCustomMonthly] = useState(0);
   const [customDaily, setCustomDaily] = useState(0);
+  const [basketMastCode, setBasketMastCode] = useState('');
+  const [basketForkSpec, setBasketForkSpec] = useState('');
+  const [basketBatterySpec, setBasketBatterySpec] = useState('');
+
+  // 지게차 렌탈 신규 계약 설치형옵션 (19종 마스터 연동) 상태
+  const [contractSelectedOptions, setContractSelectedOptions] = useState<{
+    optionId: string;
+    optionCode?: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unitPrice: number;
+    monthlyFee: number;
+    isFreeService: boolean;
+  }[]>([]);
+  const [contractOptionBillingMode, setContractOptionBillingMode] = useState<'MONTHLY_ADDED' | 'ONE_TIME_BILLING'>('MONTHLY_ADDED');
+
+  // 계약 상세 내 설치형옵션 구성·수정 모달 상태
+  const [showContractOptionModal, setShowContractOptionModal] = useState(false);
+  const [editingContractOptions, setEditingContractOptions] = useState<{
+    optionId: string;
+    optionCode?: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unitPrice: number;
+    monthlyFee: number;
+    isFreeService: boolean;
+  }[]>([]);
+  const [editingContractOptionBillingMode, setEditingContractOptionBillingMode] = useState<'MONTHLY_ADDED' | 'ONE_TIME_BILLING'>('MONTHLY_ADDED');
+  const [isSavingContractOptions, setIsSavingContractOptions] = useState(false);
 
   // ---  모달 팝업 상태들 ---
   // 0) 체결자산 상세 모달
@@ -2398,7 +2441,24 @@ export const Contracts: React.FC = () => {
     if (basketAssetMethod === 'ASSET') {
       if (!selectedAssetToAdd) return;
       if (basket.some(b => b.assetId === selectedAssetToAdd)) return;
-      setBasket([...basket, { assetId: selectedAssetToAdd, monthlyRentalFee: customMonthly, dailyRentalFee: customDaily }]);
+      const selAsset = assets.find(a => a.id === selectedAssetToAdd);
+      const norm = (selAsset?.modelName || '').replace(/[\s\-_]/g, '').toUpperCase();
+      const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) => (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm || (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm);
+      const matchedMast: any = arch?.mastSpecs?.find((m: any) => (m.mastModelCode || m.mastModel) === basketMastCode) || arch?.mastSpecs?.[0];
+      setBasket([
+        ...basket,
+        {
+          assetId: selectedAssetToAdd,
+          expectedModel: selAsset?.modelName,
+          monthlyRentalFee: customMonthly || selAsset?.monthlyRentalFee || 650000,
+          dailyRentalFee: customDaily || selAsset?.dailyRentalFee || Math.round((customMonthly || selAsset?.monthlyRentalFee || 650000) / 30),
+          mastType: matchedMast?.mastType || selAsset?.mastType || arch?.mastType,
+          mastModelCode: matchedMast?.mastModelCode || matchedMast?.mastModel || selAsset?.mastModelCode || basketMastCode || undefined,
+          standardLiftHeightMm: matchedMast?.liftHeightH3Mm || selAsset?.standardLiftHeightMm || arch?.standardLiftHeightMm,
+          batteryVoltageCapacity: basketBatterySpec || selAsset?.batteryVoltageCapacity || arch?.batteryVoltageCapacity,
+          forkDimensionsMm: basketForkSpec || selAsset?.forkDimensionsMm || arch?.forkDimensionsMm,
+        }
+      ]);
       setSelectedAssetToAdd('');
     } else {
       if (!selectedModelToAdd) return;
@@ -2408,9 +2468,153 @@ export const Contracts: React.FC = () => {
         (p.shortName && p.shortName === selectedModelToAdd)
       );
       const normalizedModel = matchedProduct ? matchedProduct.modelName : selectedModelToAdd;
-      if (basket.some(b => b.expectedModel === normalizedModel)) return;
-      setBasket([...basket, { expectedModel: normalizedModel, monthlyRentalFee: customMonthly, dailyRentalFee: customDaily }]);
+      const norm = normalizedModel.replace(/[\s\-_]/g, '').toUpperCase();
+      const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) => (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm || (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm);
+      const matchedMast: any = (matchedProduct?.mastSpecs || arch?.mastSpecs || []).find((m: any) => (m.mastModelCode || m.mastModel) === basketMastCode) || (matchedProduct?.mastSpecs || arch?.mastSpecs || [])[0];
+      setBasket([
+        ...basket,
+        {
+          expectedModel: normalizedModel,
+          monthlyRentalFee: customMonthly || 650000,
+          dailyRentalFee: customDaily || Math.round((customMonthly || 650000) / 30),
+          mastType: matchedMast?.mastType || matchedProduct?.mastType || arch?.mastType,
+          mastModelCode: matchedMast?.mastModelCode || matchedMast?.mastModel || basketMastCode || undefined,
+          standardLiftHeightMm: matchedMast?.liftHeightH3Mm || matchedProduct?.standardLiftHeightMm || arch?.standardLiftHeightMm,
+          batteryVoltageCapacity: basketBatterySpec || matchedProduct?.batteryVoltageCapacity || arch?.batteryVoltageCapacity,
+          forkDimensionsMm: basketForkSpec || matchedProduct?.forkDimensionsMm || arch?.forkDimensionsMm,
+        }
+      ]);
       setSelectedModelToAdd('');
+    }
+  };
+
+  // 신규 렌탈 계약 등록 화면에서 설치형옵션 (19종) 토글 핸들러
+  const toggleCreateContractOption = (optMaster: typeof MUJIN_OPTION_MASTERS[number]) => {
+    setContractSelectedOptions(prev => {
+      const exists = prev.some(o => o.optionId === optMaster.id || o.optionCode === optMaster.optionCode);
+      if (exists) {
+        return prev.filter(o => o.optionId !== optMaster.id && o.optionCode !== optMaster.optionCode);
+      }
+      return [
+        ...prev,
+        {
+          optionId: optMaster.id,
+          optionCode: optMaster.optionCode,
+          name: optMaster.optionName,
+          category: optMaster.category,
+          quantity: 1,
+          unitPrice: optMaster.defaultFee,
+          monthlyFee: optMaster.monthlyFee,
+          isFreeService: false,
+        }
+      ];
+    });
+  };
+
+  // 계약 상세 내 설치형옵션 구성·수정 모달 오픈 및 저장 핸들러
+  const handleOpenContractOptionModal = () => {
+    if (!activeContract) return;
+    const existingOpts: any[] = activeContract.appliedOptions && activeContract.appliedOptions.length > 0
+      ? activeContract.appliedOptions
+      : (activeContractAssets[0]?.appliedOptions || []);
+    setEditingContractOptions(
+      existingOpts.map((o: any) => ({
+        optionId: o.optionId || o.optionCode || o.name,
+        optionCode: o.optionCode,
+        name: o.name,
+        category: o.category || '일반옵션',
+        quantity: o.quantity || 1,
+        unitPrice: o.unitPrice || 0,
+        monthlyFee: o.monthlyFee || 0,
+        isFreeService: Boolean(o.isFreeService),
+      }))
+    );
+    setEditingContractOptionBillingMode(activeContract.optionBillingMode || 'MONTHLY_ADDED');
+    setShowContractOptionModal(true);
+  };
+
+  const handleSaveContractOptionModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeContract || isSavingContractOptions) return;
+    setIsSavingContractOptions(true);
+    try {
+      const nowIso = new Date().toISOString();
+      const optNames = editingContractOptions.map(o => o.name);
+      const optSummary = optNames.join(', ');
+      const prevMonthlyTotal = activeContract.optionMonthlyTotal || 0;
+      const newMonthlyTotal = editingContractOptionBillingMode === 'MONTHLY_ADDED'
+        ? editingContractOptions.reduce((sum, o) => sum + (o.isFreeService ? 0 : (o.monthlyFee || 0) * (o.quantity || 1)), 0)
+        : 0;
+      const newOneTimeTotal = editingContractOptionBillingMode === 'ONE_TIME_BILLING'
+        ? editingContractOptions.reduce((sum, o) => sum + (o.isFreeService ? 0 : (o.unitPrice || 0) * (o.quantity || 1)), 0)
+        : 0;
+
+      db.updateRow<Contract>('contracts', activeContract.id, {
+        installedOptionsSummary: optSummary,
+        appliedOptions: editingContractOptions,
+        optionBillingMode: editingContractOptionBillingMode,
+        optionMonthlyTotal: newMonthlyTotal,
+        optionOneTimeTotal: newOneTimeTotal,
+        updatedAt: nowIso
+      });
+
+      const activeCAs = contractAssets.filter(ca => ca.contractId === activeContract.id && ca.status !== 'RETURNED');
+      const diffMonthlyPerAsset = activeCAs.length > 0 ? Math.round((newMonthlyTotal - prevMonthlyTotal) / activeCAs.length) : 0;
+
+      activeCAs.forEach(ca => {
+        const updatedMonthly = Math.max(0, (ca.monthlyRentalFee || 0) + diffMonthlyPerAsset);
+        const updatedDaily = Math.round(updatedMonthly / 30);
+        db.updateRow<ContractAsset>('contractAssets', ca.id, {
+          installedOptions: optNames,
+          appliedOptions: editingContractOptions,
+          optionMonthlyFee: newMonthlyTotal,
+          optionOneTimeFee: newOneTimeTotal,
+          monthlyRentalFee: updatedMonthly,
+          dailyRentalFee: updatedDaily,
+        });
+        if (ca.assetId) {
+          db.updateRow<Asset>('assets', ca.assetId, {
+            installedOptions: optNames,
+            appliedOptions: editingContractOptions,
+            monthlyRentalFee: updatedMonthly,
+            dailyRentalFee: updatedDaily,
+            updatedAt: nowIso
+          });
+        }
+      });
+
+      if (editingContractOptionBillingMode === 'ONE_TIME_BILLING' && newOneTimeTotal > 0) {
+        db.insertRow<Receivable>('receivables', {
+          customerId: activeContract.customerId,
+          contractId: activeContract.id,
+          type: 'OTHER',
+          occurredDate: todayStr,
+          totalAmount: newOneTimeTotal,
+          billedAmount: 0,
+          status: 'PENDING',
+          displayName: `[설치형옵션 유상청구비용] ${optSummary}`,
+          internalDescription: `[설치형옵션:${activeContract.contractNo}] ${optSummary} 1회성 유상청구비용 ₩${newOneTimeTotal.toLocaleString()}원`,
+          createdAt: nowIso,
+          updatedAt: nowIso
+        });
+      }
+
+      db.insertRow<ContractHistory>('contractHistory', {
+        contractId: activeContract.id,
+        changeType: 'FEE_CHANGE',
+        changeDate: todayStr,
+        description: `지게차 설치형옵션 구성 변경: ${optSummary || '없음'} (${editingContractOptionBillingMode === 'MONTHLY_ADDED' ? `월 가산액 +₩${newMonthlyTotal.toLocaleString()}원` : `1회성 유상청구비용 ₩${newOneTimeTotal.toLocaleString()}원`})`,
+        createdAt: nowIso
+      });
+
+      await db.awaitPendingWrites();
+      refreshAllData();
+      setShowContractOptionModal(false);
+      showToast(`계약 [${activeContract.contractNo}] 설치형옵션 구성(${editingContractOptions.length}건)이 반영되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(`설치형옵션 저장 실패: ${err?.message || err}`);
+    } finally {
+      setIsSavingContractOptions(false);
     }
   };
 
@@ -2446,12 +2650,31 @@ export const Contracts: React.FC = () => {
       return;
     }
 
-    // Basket 자산들의 임대료 음수/NaN 정규화 방어
-    const cleanedBasket = basket.map(item => ({
-      ...item,
-      monthlyRentalFee: Math.max(0, isNaN(Number(item.monthlyRentalFee)) ? 0 : Number(item.monthlyRentalFee)),
-      dailyRentalFee: Math.max(0, isNaN(Number(item.dailyRentalFee)) ? 0 : Number(item.dailyRentalFee))
-    }));
+    // 설치형옵션 (19종 마스터 연동) 월 가산액 / 1회성 유상청구액 계산
+    const optMonthlySum = contractOptionBillingMode === 'MONTHLY_ADDED'
+      ? contractSelectedOptions.reduce((sum, o) => sum + (o.isFreeService ? 0 : (o.monthlyFee || 0) * (o.quantity || 1)), 0)
+      : 0;
+    const optOneTimeSum = contractOptionBillingMode === 'ONE_TIME_BILLING'
+      ? contractSelectedOptions.reduce((sum, o) => sum + (o.isFreeService ? 0 : (o.unitPrice || 0) * (o.quantity || 1)), 0)
+      : 0;
+    const optNames = contractSelectedOptions.map(o => o.name);
+    const optSummaryText = optNames.join(', ');
+
+    // Basket 자산들의 임대료 음수/NaN 정규화 방어 및 설치형옵션 가산액 반영
+    const cleanedBasket = basket.map(item => {
+      const baseMonthly = Math.max(0, isNaN(Number(item.monthlyRentalFee)) ? 0 : Number(item.monthlyRentalFee));
+      const finalMonthly = baseMonthly + optMonthlySum;
+      const finalDaily = Math.max(0, optMonthlySum > 0 ? Math.round(finalMonthly / 30) : (isNaN(Number(item.dailyRentalFee)) ? 0 : Number(item.dailyRentalFee)));
+      return {
+        ...item,
+        monthlyRentalFee: finalMonthly,
+        dailyRentalFee: finalDaily,
+        installedOptions: optNames.length > 0 ? optNames : undefined,
+        appliedOptions: contractSelectedOptions.length > 0 ? contractSelectedOptions : undefined,
+        optionMonthlyFee: optMonthlySum,
+        optionOneTimeFee: optOneTimeSum,
+      };
+    });
 
     const cleanBillingDay = Math.min(31, Math.max(1, Number(billingDay) || 31));
     const cleanStatementClosingDay = Math.min(31, Math.max(1, Number(statementClosingDay) || 31));
@@ -2546,7 +2769,12 @@ export const Contracts: React.FC = () => {
         statementClosingDay: cleanStatementClosingDay,
         paymentDueDay: cleanPaymentDueDay,
         lateInterestRate: 0,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        installedOptionsSummary: optSummaryText || undefined,
+        appliedOptions: contractSelectedOptions.length > 0 ? contractSelectedOptions : undefined,
+        optionBillingMode: contractOptionBillingMode,
+        optionMonthlyTotal: optMonthlySum,
+        optionOneTimeTotal: optOneTimeSum,
       }, cleanedBasket);
 
       const { rule: signRule } = await fetchRuleForEvent('CONTRACT_SIGN');
@@ -4194,6 +4422,15 @@ export const Contracts: React.FC = () => {
                     )}
                     {activeContract.status !== 'COMPLETED' && (
                       <>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={handleOpenContractOptionModal}
+                          style={{ padding: '5px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#7c3aed', borderColor: '#7c3aed' }}
+                          title="해당 지게차 렌탈 계약에 설치형옵션 19종을 구성·수정하고 렌탈료 또는 1회성 유상청구비용으로 반영합니다."
+                        >
+                          <Wrench size={13} /> + 설치형옵션 구성 · 수정
+                        </button>
                         <button 
                           className="btn-secondary" 
                           onClick={() => {
@@ -4279,6 +4516,27 @@ export const Contracts: React.FC = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                               <strong style={{ color: 'var(--primary)' }}>{asset?.assetNo || '미지정'}</strong>
                               <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{asset?.modelName || ca.expectedModel}</span>
+                              {((ca.mastType || asset?.mastType) || (ca.forkDimensionsMm || asset?.forkDimensionsMm) || (ca.batteryVoltageCapacity || asset?.batteryVoltageCapacity)) && (
+                                <span style={{ fontSize: '10px', color: '#059669', fontWeight: 600 }}>
+                                  {(ca.mastModelCode || ca.mastType || asset?.mastModelCode || asset?.mastType || '표준마스트')} · 인상고 {(ca.standardLiftHeightMm || asset?.standardLiftHeightMm || 3000)}mm · 포크 {(ca.forkDimensionsMm || asset?.forkDimensionsMm || '-')}
+                                </span>
+                              )}
+                              {(() => {
+                                const rawOpts = ca.installedOptions || asset?.installedOptions;
+                                const optArr: string[] = Array.isArray(rawOpts)
+                                  ? rawOpts
+                                  : String(rawOpts || '').split(/[·,]/).map(s => s.trim()).filter(Boolean);
+                                if (optArr.length === 0) return null;
+                                return (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '2px' }}>
+                                    {optArr.map((optName: string, oIdx: number) => (
+                                      <span key={oIdx} style={{ padding: '1px 5px', borderRadius: '3px', backgroundColor: 'rgba(124, 58, 237, 0.12)', color: '#7c3aed', fontSize: '9.5px', fontWeight: 700 }}>
+                                        {optName}
+                                      </span>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
@@ -4390,6 +4648,78 @@ export const Contracts: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* 지게차 렌탈 체결 설치형옵션 구성 내역 (19종 마스터 연동) */}
+              {(() => {
+                const contractOpts = (activeContract.appliedOptions && activeContract.appliedOptions.length > 0)
+                  ? activeContract.appliedOptions
+                  : (activeContractAssets.find(ca => ca.appliedOptions && ca.appliedOptions.length > 0)?.appliedOptions || []);
+                const billingMode = activeContract.optionBillingMode || 'MONTHLY_ADDED';
+                const monthlyOptTotal = activeContract.optionMonthlyTotal ?? contractOpts.reduce((s, o) => s + (o.isFreeService ? 0 : (o.monthlyFee || 0) * (o.quantity || 1)), 0);
+                const oneTimeOptTotal = activeContract.optionOneTimeTotal ?? contractOpts.reduce((s, o) => s + (o.isFreeService ? 0 : (o.unitPrice || 0) * (o.quantity || 1)), 0);
+
+                return (
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                      <strong style={{ fontSize: '12.5px', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>지게차 렌탈 설치형옵션 구성 내역</span>
+                        <span className="badge" style={{ backgroundColor: '#7c3aed', color: '#fff', fontSize: '10px' }}>
+                          {contractOpts.length}종 장착
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          ({billingMode === 'MONTHLY_ADDED' ? `월 렌탈료 가산 방식 · 월 +₩${monthlyOptTotal.toLocaleString()}원` : `1회성 유상청구비용 당월 청구 합산 방식 · ₩${oneTimeOptTotal.toLocaleString()}원`})
+                        </span>
+                      </strong>
+                      {canSave && canModifyContract(activeContract) && activeContract.status !== 'COMPLETED' && (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={handleOpenContractOptionModal}
+                          style={{ padding: '2px 8px', fontSize: '11px', color: '#7c3aed', borderColor: '#7c3aed' }}
+                        >
+                          <Edit3 size={11} /> 설치형옵션 구성 수정
+                        </button>
+                      )}
+                    </div>
+
+                    {contractOpts.length === 0 ? (
+                      <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', fontSize: '12px' }}>
+                        체결된 지게차 설치형옵션이 없습니다. 상단 [+ 설치형옵션 구성 · 수정] 버튼으로 사이드쉬프트, 포크포지셔너, 힌지드버켓 등 19종 옵션을 즉시 구성할 수 있습니다.
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '6px' }}>
+                        {contractOpts.map((opt, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              padding: '7px 10px',
+                              borderRadius: '6px',
+                              backgroundColor: 'var(--bg-app)',
+                              border: '1px solid rgba(124, 58, 237, 0.3)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '11.5px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span style={{ padding: '1px 5px', borderRadius: '3px', backgroundColor: '#7c3aed', color: '#fff', fontSize: '9.5px', fontWeight: 700 }}>
+                                  {opt.category || '설치형옵션'}
+                                </span>
+                                <strong>{opt.name}</strong>
+                              </div>
+                              <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                                수량 {opt.quantity || 1}식 · {opt.isFreeService ? '무상 서비스 제공' : (billingMode === 'MONTHLY_ADDED' ? `월 +₩${((opt.monthlyFee || 0) * (opt.quantity || 1)).toLocaleString()}원` : `1회성 ₩${((opt.unitPrice || 0) * (opt.quantity || 1)).toLocaleString()}원`)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/*  체결 유상옵션 및 1회성/월단위 청구 금액 명세 (출고 배차 연동 및 단가 수정) */}
               {(() => {
@@ -6082,14 +6412,19 @@ export const Contracts: React.FC = () => {
             </div>
           </div>
 
-          {/* 자산 바스켓 */}
+          {/* 자산 바스켓 (임대용 FL 완제품 VDI 2198 마스트·배터리·포크 스펙 선택 연동) */}
           <div data-mid="create-contract-basket-picker" style={{ padding: '14px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-            <h4 style={{ fontWeight: 600, marginBottom: '10px' }}>체결 자산 선택</h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+              <h4 style={{ fontWeight: 600, margin: 0 }}>1. 체결 지게차 완제품 및 VDI 2198 스펙 선택</h4>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                모델 또는 실물 자산 선택 시 마스트 단수·인상고, 포크 규격, 배터리 용량 스펙이 계약 및 자산 원장에 자동 연동됩니다.
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '10px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 600 }}>선택 방식</label>
                 <select value={basketAssetMethod} onChange={e => setBasketAssetMethod(e.target.value as any)} style={{ padding: '7px' }}>
-                  <option value="MODEL">제품 모델명 선택 (권장)</option>
+                  <option value="MODEL">제품 모델명 선택 · 권장</option>
                   <option value="ASSET">자산 관리번호 선택</option>
                 </select>
               </div>
@@ -6097,27 +6432,119 @@ export const Contracts: React.FC = () => {
               {basketAssetMethod === 'ASSET' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>자산 관리번호</label>
-                  <select value={selectedAssetToAdd} onChange={e => setSelectedAssetToAdd(e.target.value)} style={{ padding: '7px', minWidth: '180px' }}>
+                  <select
+                    value={selectedAssetToAdd}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setSelectedAssetToAdd(val);
+                      const a = assets.find(x => x.id === val);
+                      if (a) {
+                        if (a.monthlyRentalFee) {
+                          setCustomMonthly(a.monthlyRentalFee);
+                          setCustomDaily(a.dailyRentalFee || Math.round(a.monthlyRentalFee / 30));
+                        }
+                        setBasketMastCode(a.mastModelCode || '');
+                        setBasketForkSpec(a.forkDimensionsMm || '');
+                        setBasketBatterySpec(a.batteryVoltageCapacity || '');
+                      }
+                    }}
+                    style={{ padding: '7px', minWidth: '210px' }}
+                  >
                     <option value="">-- 임대가능 자산 선택 --</option>
                     {availableAssets.map(a => (
-                      <option key={a.id} value={a.id}>{a.assetNo} ({a.modelName})</option>
+                      <option key={a.id} value={a.id}>
+                        {a.assetNo} ({a.modelName} · {a.mastType || '표준2단'} {a.standardLiftHeightMm || 3000}mm)
+                      </option>
                     ))}
                   </select>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>제품 모델</label>
-                  <select value={selectedModelToAdd} onChange={e => setSelectedModelToAdd(e.target.value)} style={{ padding: '7px', minWidth: '180px' }}>
+                  <select
+                    value={selectedModelToAdd}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setSelectedModelToAdd(val);
+                      const p = products.find(x => x.modelName === val || x.shortName === val);
+                      const norm = val.replace(/[\s\-_]/g, '').toUpperCase();
+                      const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) => (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm || (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm);
+                      const firstMast: any = (p?.mastSpecs || arch?.mastSpecs || [])[0];
+                      setBasketMastCode(firstMast?.mastModelCode || firstMast?.mastModel || '');
+                      setBasketForkSpec(p?.forkDimensionsMm || arch?.forkDimensionsMm || '');
+                      setBasketBatterySpec(p?.batteryVoltageCapacity || arch?.batteryVoltageCapacity || '');
+                    }}
+                    style={{ padding: '7px', minWidth: '210px' }}
+                  >
                     <option value="">-- 제품 모델 선택 --</option>
                     {products.map(p => (
-                      <option key={p.id} value={p.modelName}>{p.modelName}{p.shortName ? ` / ${p.shortName}` : ''} ({p.feet}피트)</option>
+                      <option key={p.id} value={p.modelName}>
+                        {p.modelName}{p.shortName ? ` / ${p.shortName}` : ''} · 정격 {p.ratedCapacityKg || (Number(p.feet || 25) * 100)}kg
+                      </option>
                     ))}
                   </select>
                 </div>
               )}
 
+              {/* 선택된 모델/자산의 카탈로그 마스트·포크·배터리 구성 선택기 */}
+              {(() => {
+                const activeModelName = basketAssetMethod === 'ASSET'
+                  ? assets.find(a => a.id === selectedAssetToAdd)?.modelName
+                  : selectedModelToAdd;
+                if (!activeModelName) return null;
+                const norm = activeModelName.replace(/[\s\-_]/g, '').toUpperCase();
+                const prod = products.find(p => p.modelName === activeModelName || p.shortName === activeModelName);
+                const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) => (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm || (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm);
+                const mastList = prod?.mastSpecs || arch?.mastSpecs || [];
+                const batList = prod?.batteryOptions || arch?.batteryOptions || [];
+                return (
+                  <>
+                    {mastList.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}>마스트 단수·인상고</label>
+                        <select value={basketMastCode} onChange={e => setBasketMastCode(e.target.value)} style={{ padding: '7px', minWidth: '175px' }}>
+                          {mastList.map((m: any, idx: number) => {
+                            const code = m.mastModelCode || m.mastModel;
+                            return (
+                              <option key={idx} value={code}>
+                                {m.mastType} [{code}] · {m.liftHeightH3Mm}mm
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+                    {batList.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}>배터리 전압·용량</label>
+                        <select value={basketBatterySpec} onChange={e => setBasketBatterySpec(e.target.value)} style={{ padding: '7px', minWidth: '150px' }}>
+                          {batList.map((b: any, idx: number) => {
+                            const val = b.voltageCapacity || `${b.voltageV}V / ${b.capacityAh}Ah`;
+                            return (
+                              <option key={idx} value={val}>
+                                {b.batteryType || '리튬'} {val}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: 600 }}>포크 규격</label>
+                      <input
+                        type="text"
+                        value={basketForkSpec}
+                        onChange={e => setBasketForkSpec(e.target.value)}
+                        placeholder="예: 40 × 122 × 1,070 mm"
+                        style={{ width: '155px', padding: '6px' }}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600 }}>월 렌탈료</label>
+                <label style={{ fontSize: '12px', fontWeight: 600 }}>기본 월 렌탈료</label>
                 <input type="number" value={customMonthly} onChange={e => {
                   const val = Number(e.target.value) || 0;
                   setCustomMonthly(val);
@@ -6135,14 +6562,195 @@ export const Contracts: React.FC = () => {
                 basket.map((b, idx) => {
                   const ast = assets.find(a => a.id === b.assetId);
                   return (
-                    <div key={idx} style={{ padding: '4px 10px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--primary)', borderRadius: '4px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <strong>{ast?.assetNo || b.expectedModel}</strong> (월 {b.monthlyRentalFee.toLocaleString()}원)
- <button type="button" onClick={() => handleRemoveFromBasket(b.assetId || b.expectedModel)} style={{ border: 'none', background: 'none', color: 'red', cursor: 'pointer' }}></button>
+                    <div key={idx} style={{ padding: '6px 10px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--primary)', borderRadius: '4px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div>
+                        <strong>{ast?.assetNo || b.expectedModel}</strong> (기본 월 {b.monthlyRentalFee.toLocaleString()}원)
+                        {(b.mastType || b.forkDimensionsMm || b.batteryVoltageCapacity) && (
+                          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {b.mastType || '표준마스트'} {b.standardLiftHeightMm ? `${b.standardLiftHeightMm}mm` : ''} · 포크 {b.forkDimensionsMm || '-'} · {b.batteryVoltageCapacity || '-'}
+                          </div>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => handleRemoveFromBasket(b.assetId || b.expectedModel)} style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontWeight: 700, fontSize: '11px' }}>삭제</button>
                     </div>
                   );
                 })
               )}
             </div>
+          </div>
+
+          {/* 2. 지게차 렌탈 영업 설치형옵션 구성 패널 (19종 마스터 연동) */}
+          <div data-mid="create-contract-option-picker" style={{ padding: '14px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <h4 style={{ fontWeight: 700, margin: 0, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Wrench size={15} /> 2. 지게차 렌탈 설치형옵션 구성 · 총 19종 마스터 연동
+                </h4>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  어태치먼트 · 마스트/포크 · 타이어 · 캐빈 · 안전장치 등 설치형옵션을 선택하여 월 렌탈료 가산 또는 1회성 유상청구비용으로 렌탈계약을 형성합니다.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setContractOptionBillingMode('MONTHLY_ADDED')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: contractOptionBillingMode === 'MONTHLY_ADDED' ? 700 : 500,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    border: contractOptionBillingMode === 'MONTHLY_ADDED' ? '1px solid #7c3aed' : '1px solid var(--border-color)',
+                    backgroundColor: contractOptionBillingMode === 'MONTHLY_ADDED' ? '#7c3aed' : 'var(--bg-card)',
+                    color: contractOptionBillingMode === 'MONTHLY_ADDED' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  월 렌탈료 가산 방식
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContractOptionBillingMode('ONE_TIME_BILLING')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '11.5px',
+                    fontWeight: contractOptionBillingMode === 'ONE_TIME_BILLING' ? 700 : 500,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    border: contractOptionBillingMode === 'ONE_TIME_BILLING' ? '1px solid #0284c7' : '1px solid var(--border-color)',
+                    backgroundColor: contractOptionBillingMode === 'ONE_TIME_BILLING' ? '#0284c7' : 'var(--bg-card)',
+                    color: contractOptionBillingMode === 'ONE_TIME_BILLING' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  1회성 유상청구비용 당월 청구 합산
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(235px, 1fr))', gap: '6px', maxHeight: '220px', overflowY: 'auto', padding: '4px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              {MUJIN_OPTION_MASTERS.map(opt => {
+                const selectedObj = contractSelectedOptions.find(o => o.optionId === opt.id || o.optionCode === opt.optionCode);
+                const isChecked = Boolean(selectedObj);
+                return (
+                  <label
+                    key={opt.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                      padding: '6px 8px',
+                      borderRadius: '4px',
+                      border: `1px solid ${isChecked ? '#7c3aed' : 'var(--border-color)'}`,
+                      backgroundColor: isChecked ? 'rgba(124, 58, 237, 0.08)' : 'var(--bg-app)',
+                      cursor: 'pointer',
+                      fontSize: '11.5px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleCreateContractOption(opt)}
+                      />
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '9.5px', color: '#7c3aed', fontWeight: 700, marginRight: '4px' }}>[{opt.category}]</span>
+                        <strong style={{ color: 'var(--text-main)' }}>{opt.optionName}</strong>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: contractOptionBillingMode === 'MONTHLY_ADDED' ? '#7c3aed' : '#0284c7', flexShrink: 0 }}>
+                      {contractOptionBillingMode === 'MONTHLY_ADDED'
+                        ? `+월 ${(opt.monthlyFee / 10000).toFixed(0)}만`
+                        : `1회 ${(opt.defaultFee / 10000).toFixed(0)}만`}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {contractSelectedOptions.length > 0 && (
+              <div style={{ marginTop: '10px', padding: '10px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid rgba(124, 58, 237, 0.35)' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', color: 'var(--text-main)' }}>
+                  선택된 설치형옵션 상세 단가 · 수량 조정 ({contractSelectedOptions.length}건)
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {contractSelectedOptions.map((sel, idx) => (
+                    <div key={sel.optionId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', fontSize: '12px', flexWrap: 'wrap', padding: '4px 8px', backgroundColor: 'var(--bg-app)', borderRadius: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="badge" style={{ backgroundColor: '#7c3aed', color: '#fff', fontSize: '10px' }}>{sel.category}</span>
+                        <strong>{sel.name}</strong>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          수량:
+                          <input
+                            type="number"
+                            min={1}
+                            value={sel.quantity}
+                            onChange={e => {
+                              const q = Math.max(1, Number(e.target.value) || 1);
+                              setContractSelectedOptions(prev => prev.map((x, i) => i === idx ? { ...x, quantity: q } : x));
+                            }}
+                            style={{ width: '52px', padding: '3px 6px', textAlign: 'right' }}
+                          />
+                        </label>
+                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {contractOptionBillingMode === 'MONTHLY_ADDED' ? '월 가산단가:' : '1회 청구단가:'}
+                          <input
+                            type="number"
+                            min={0}
+                            step={5000}
+                            value={contractOptionBillingMode === 'MONTHLY_ADDED' ? sel.monthlyFee : sel.unitPrice}
+                            disabled={sel.isFreeService}
+                            onChange={e => {
+                              const val = Math.max(0, Number(e.target.value) || 0);
+                              setContractSelectedOptions(prev => prev.map((x, i) => i === idx
+                                ? (contractOptionBillingMode === 'MONTHLY_ADDED' ? { ...x, monthlyFee: val } : { ...x, unitPrice: val })
+                                : x
+                              ));
+                            }}
+                            style={{ width: '95px', padding: '3px 6px', textAlign: 'right', fontWeight: 700 }}
+                          />원
+                        </label>
+                        <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: 'var(--success)', fontWeight: 600 }}>
+                          <input
+                            type="checkbox"
+                            checked={sel.isFreeService}
+                            onChange={e => {
+                              const checked = e.target.checked;
+                              setContractSelectedOptions(prev => prev.map((x, i) => i === idx ? { ...x, isFreeService: checked } : x));
+                            }}
+                          />
+                          무상 서비스
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 설치형옵션 합산 요약 바 */}
+                {(() => {
+                  const baseRentSum = basket.reduce((s, b) => s + (Number(b.monthlyRentalFee) || 0), 0);
+                  const optMonthly = contractOptionBillingMode === 'MONTHLY_ADDED'
+                    ? contractSelectedOptions.reduce((s, o) => s + (o.isFreeService ? 0 : (o.monthlyFee || 0) * (o.quantity || 1)), 0)
+                    : 0;
+                  const optOneTime = contractOptionBillingMode === 'ONE_TIME_BILLING'
+                    ? contractSelectedOptions.reduce((s, o) => s + (o.isFreeService ? 0 : (o.unitPrice || 0) * (o.quantity || 1)), 0)
+                    : 0;
+                  const totalFinalMonthly = baseRentSum + optMonthly * Math.max(1, basket.length);
+                  return (
+                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', fontWeight: 700 }}>
+                      <span>
+                        기본 월 렌탈료 ₩{baseRentSum.toLocaleString()}원 + 설치형옵션 월 가산액 ₩{(optMonthly * Math.max(1, basket.length)).toLocaleString()}원
+                      </span>
+                      <span style={{ color: '#7c3aed', fontSize: '13.5px' }}>
+                        최종 약정 월 렌탈료 합계: ₩{totalFinalMonthly.toLocaleString()}원
+                        {optOneTime > 0 ? ` | 1회성 유상청구비용: ₩${optOneTime.toLocaleString()}원` : ''}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -7191,6 +7799,211 @@ export const Contracts: React.FC = () => {
                 style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)', fontWeight: 700 }}
               >
                 {isSubmittingRescind ? '처리중...' : (isRuleEnabled('CONTRACT_TERMINATE') ? '상신' : '계약의 해제 확정')}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* 모달 10: 지게차 렌탈 계약 설치형옵션 구성 · 수정 모달 (19종 마스터 연동) */}
+      {showContractOptionModal && activeContract && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            zIndex: 3250,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={() => setShowContractOptionModal(false)}
+        >
+          <form
+            onSubmit={handleSaveContractOptionModal}
+            className="card"
+            style={{
+              width: '100%',
+              maxWidth: '760px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              backgroundColor: 'var(--bg-card)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              <h3 className="card-title" style={{ margin: 0, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Wrench size={18} /> [{activeContract.contractNo}] 지게차 렌탈 설치형옵션 구성 · 수정
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowContractOptionModal(false)}
+                style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '12px', cursor: 'pointer', fontWeight: 700 }}
+              >
+                닫기
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                설치형옵션 청구 반영 방식 선택
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingContractOptionBillingMode('MONTHLY_ADDED')}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: editingContractOptionBillingMode === 'MONTHLY_ADDED' ? 700 : 500,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    border: editingContractOptionBillingMode === 'MONTHLY_ADDED' ? '1px solid #7c3aed' : '1px solid var(--border-color)',
+                    backgroundColor: editingContractOptionBillingMode === 'MONTHLY_ADDED' ? '#7c3aed' : 'var(--bg-app)',
+                    color: editingContractOptionBillingMode === 'MONTHLY_ADDED' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  월 렌탈료 가산 방식
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingContractOptionBillingMode('ONE_TIME_BILLING')}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: editingContractOptionBillingMode === 'ONE_TIME_BILLING' ? 700 : 500,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    border: editingContractOptionBillingMode === 'ONE_TIME_BILLING' ? '1px solid #0284c7' : '1px solid var(--border-color)',
+                    backgroundColor: editingContractOptionBillingMode === 'ONE_TIME_BILLING' ? '#0284c7' : 'var(--bg-app)',
+                    color: editingContractOptionBillingMode === 'ONE_TIME_BILLING' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  1회성 유상청구비용 당월 청구 합산
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '6px', maxHeight: '240px', overflowY: 'auto', padding: '6px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              {MUJIN_OPTION_MASTERS.map(opt => {
+                const isChecked = editingContractOptions.some(o => o.optionId === opt.id || o.optionCode === opt.optionCode || o.name === opt.optionName);
+                return (
+                  <label
+                    key={opt.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                      padding: '6px 8px',
+                      borderRadius: '4px',
+                      border: `1px solid ${isChecked ? '#7c3aed' : 'var(--border-color)'}`,
+                      backgroundColor: isChecked ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-card)',
+                      cursor: 'pointer',
+                      fontSize: '11.5px'
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          setEditingContractOptions(prev => {
+                            if (isChecked) {
+                              return prev.filter(o => o.optionId !== opt.id && o.optionCode !== opt.optionCode && o.name !== opt.optionName);
+                            }
+                            return [
+                              ...prev,
+                              {
+                                optionId: opt.id,
+                                optionCode: opt.optionCode,
+                                name: opt.optionName,
+                                category: opt.category,
+                                quantity: 1,
+                                unitPrice: opt.defaultFee,
+                                monthlyFee: opt.monthlyFee,
+                                isFreeService: false,
+                              }
+                            ];
+                          });
+                        }}
+                      />
+                      <strong>{opt.optionName}</strong>
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 700, flexShrink: 0 }}>
+                      {editingContractOptionBillingMode === 'MONTHLY_ADDED'
+                        ? `월 ${(opt.monthlyFee / 10000).toFixed(0)}만`
+                        : `1회 ${(opt.defaultFee / 10000).toFixed(0)}만`}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {editingContractOptions.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                {editingContractOptions.map((sel, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                    <strong>[{sel.category}] {sel.name}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label style={{ fontSize: '11px' }}>
+                        수량:
+                        <input
+                          type="number"
+                          min={1}
+                          value={sel.quantity}
+                          onChange={e => {
+                            const q = Math.max(1, Number(e.target.value) || 1);
+                            setEditingContractOptions(prev => prev.map((x, i) => i === idx ? { ...x, quantity: q } : x));
+                          }}
+                          style={{ width: '50px', marginLeft: '4px', padding: '2px 5px', textAlign: 'right' }}
+                        />
+                      </label>
+                      <label style={{ fontSize: '11px' }}>
+                        단가:
+                        <input
+                          type="number"
+                          min={0}
+                          step={5000}
+                          disabled={sel.isFreeService}
+                          value={editingContractOptionBillingMode === 'MONTHLY_ADDED' ? sel.monthlyFee : sel.unitPrice}
+                          onChange={e => {
+                            const val = Math.max(0, Number(e.target.value) || 0);
+                            setEditingContractOptions(prev => prev.map((x, i) => i === idx
+                              ? (editingContractOptionBillingMode === 'MONTHLY_ADDED' ? { ...x, monthlyFee: val } : { ...x, unitPrice: val })
+                              : x
+                            ));
+                          }}
+                          style={{ width: '90px', marginLeft: '4px', padding: '2px 5px', textAlign: 'right', fontWeight: 700 }}
+                        />원
+                      </label>
+                      <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', color: 'var(--success)', fontWeight: 600 }}>
+                        <input
+                          type="checkbox"
+                          checked={sel.isFreeService}
+                          onChange={e => {
+                            const checked = e.target.checked;
+                            setEditingContractOptions(prev => prev.map((x, i) => i === idx ? { ...x, isFreeService: checked } : x));
+                          }}
+                        />
+                        무상
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+              <button type="button" className="btn-secondary" onClick={() => setShowContractOptionModal(false)}>취소</button>
+              <button type="submit" className="btn-primary" disabled={isSavingContractOptions} style={{ backgroundColor: '#7c3aed', borderColor: '#7c3aed', fontWeight: 700 }}>
+                {isSavingContractOptions ? '저장중...' : '설치형옵션 구성 저장'}
               </button>
             </div>
           </form>

@@ -25,6 +25,20 @@ function prefixSchemaSql(sql, prefix = 'fl_') {
     }
   );
   out = out.replace(
+    /\b(ALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?)"?([a-zA-Z0-9_]+)"?/gi,
+    (_, pre, tbl) => {
+      const clean = (tbl.startsWith(prefix) || tbl.startsWith('core_')) ? tbl : `${prefix}${tbl}`;
+      return `${pre}"${clean}"`;
+    }
+  );
+  out = out.replace(
+    /\b(CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+[a-zA-Z0-9_]+\s+ON\s+)"?([a-zA-Z0-9_]+)"?/gi,
+    (_, pre, tbl) => {
+      const clean = (tbl.startsWith(prefix) || tbl.startsWith('core_')) ? tbl : `${prefix}${tbl}`;
+      return `${pre}"${clean}"`;
+    }
+  );
+  out = out.replace(
     /\b(REFERENCES\s+)"?([a-zA-Z0-9_]+)"?\s*\(/gi,
     (_, pre, tbl) => {
       const clean = tbl.startsWith(prefix) ? tbl : `${prefix}${tbl}`;

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Download, Eye, Layers, Edit2, Save, X, Wrench, RefreshCw, PlusCircle, ShoppingBag, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Download, Eye, Layers, Edit2, Save, X, Wrench, RefreshCw, PlusCircle, ShoppingBag, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import { exportToExcel } from '../services/excel';
 import { Asset, calculateAssetDepreciation, AssetInOutLog, Repair, isVirtualAsset } from '../services/db';
 import { ASSET_STATUS_SSOT, getAssetStatusLabel, getAssetStatusBadgeClass } from '../config/asset_status_config';
@@ -8,6 +8,8 @@ import { canViewFinancials } from '../utils/privacyMasking';
 import { SortableTh } from '../components/SortableTh';
 import { useSortableData } from '../hooks/useSortableData';
 import { createHangulMatcher } from '../utils/hangulSearch';
+import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
+import { MUJIN_OPTION_MASTERS } from '../data/mujinGlobalInitialData';
 
 export const Assets: React.FC = () => {
   const { 
@@ -45,6 +47,7 @@ export const Assets: React.FC = () => {
   const [editForm, setEditForm] = useState<Partial<Asset>>({});
   const [showHistoryToggle, setShowHistoryToggle] = useState(false);
   const [isSavingAsset, setIsSavingAsset] = useState(false);
+  const [showAssetSpecModal, setShowAssetSpecModal] = useState(false);
 
   // ──  [초고속 O(1) 룩업 인덱싱 해시맵: 헌장 1.1] ──
   const customerMap = useMemo(() => new Map((customers || []).map(c => [c.id, c.name])), [customers]);
@@ -752,6 +755,134 @@ export const Assets: React.FC = () => {
         }
       }
       return next;
+    });
+  };
+
+  // 모델 카탈로그 VDI 2198 제원을 임대 자산에 즉시 상속 적용하는 핸들러
+  const applyModelSpecToAssetForm = (modelName?: string) => {
+    const targetModel = modelName || editForm.modelName || selectedAsset?.modelName || '';
+    const norm = targetModel.replace(/[\s\-_]/g, '').toUpperCase();
+    const prod = productByModelMap.get(targetModel) || productByModelMap.get(norm);
+    const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) =>
+      (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm ||
+      (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm
+    );
+    const src: any = prod || arch;
+    if (!src) {
+      showToast('해당 모델명의 카탈로그 제원을 찾을 수 없습니다.', 'error');
+      return;
+    }
+    const defaultMast = Array.isArray(src.mastSpecs) && src.mastSpecs.length > 0 ? src.mastSpecs[0] : null;
+    const defaultBat = Array.isArray(src.batteryOptions) && src.batteryOptions.length > 0 ? src.batteryOptions[0] : null;
+    setEditForm(prev => ({
+      ...prev,
+      manufacturer: src.manufacturer || src.manufacturerName || prev.manufacturer,
+      seriesName: src.seriesName || prev.seriesName,
+      equipmentClass: src.equipmentClass || prev.equipmentClass,
+      powerType: src.powerType || prev.powerType,
+      powerSource: src.powerSource || src.powerType || prev.powerSource,
+      operatorType: src.operatorType || prev.operatorType,
+      ratedCapacityKg: src.ratedCapacityKg ?? prev.ratedCapacityKg,
+      loadCenterMm: src.loadCenterMm ?? prev.loadCenterMm,
+      loadDistanceXMm: src.loadDistanceXMm ?? prev.loadDistanceXMm,
+      wheelbaseMm: src.wheelbaseMm ?? prev.wheelbaseMm,
+      serviceWeightKg: src.serviceWeightKg ?? prev.serviceWeightKg,
+      axleLoadingLadenKg: src.axleLoadingLadenKg || prev.axleLoadingLadenKg,
+      axleLoadingUnladenKg: src.axleLoadingUnladenKg || prev.axleLoadingUnladenKg,
+      tireType: src.tireType || prev.tireType,
+      tireSpecFrontRear: src.tireSpecFrontRear || prev.tireSpecFrontRear,
+      wheelCountFrontRear: src.wheelCountFrontRear || prev.wheelCountFrontRear,
+      treadFrontRearMm: src.treadFrontRearMm || prev.treadFrontRearMm,
+      mastType: defaultMast?.mastType || src.mastType || prev.mastType,
+      mastModelCode: defaultMast?.mastModelCode || defaultMast?.mastModel || src.mastModelCode || prev.mastModelCode,
+      mastStageCount: src.mastStageCount ?? prev.mastStageCount,
+      mastTiltDeg: defaultMast?.tiltAngleDeg || src.mastTiltDeg || prev.mastTiltDeg,
+      mastLoweredH1Mm: defaultMast?.loweredHeightH1Mm ?? src.mastLoweredH1Mm ?? prev.mastLoweredH1Mm,
+      freeLiftHeightMm: Number(String(defaultMast?.freeLiftH2Mm || defaultMast?.freeLiftWithBackrestH2Mm || src.freeLiftHeightMm || prev.freeLiftHeightMm || 150).replace(/[^0-9]/g, '')) || 150,
+      standardLiftHeightMm: defaultMast?.liftHeightH3Mm ?? src.standardLiftHeightMm ?? prev.standardLiftHeightMm,
+      maxOptionLiftHeightMm: src.maxOptionLiftHeightMm ?? prev.maxOptionLiftHeightMm,
+      mastExtendedH4Mm: Number(String(defaultMast?.extendedHeightH4Mm || defaultMast?.extendedHeightWithBackrestH4Mm || src.mastExtendedH4Mm || prev.mastExtendedH4Mm || 4000).replace(/[^0-9]/g, '')) || 4000,
+      overheadGuardHeightMm: src.overheadGuardHeightMm ?? prev.overheadGuardHeightMm,
+      seatHeightH7Mm: src.seatHeightH7Mm ?? prev.seatHeightH7Mm,
+      couplingHeightH10Mm: src.couplingHeightH10Mm || prev.couplingHeightH10Mm,
+      overallLengthWithForkL1Mm: src.overallLengthWithForkL1Mm ?? prev.overallLengthWithForkL1Mm,
+      overallLengthMm: src.overallLengthMm ?? prev.overallLengthMm,
+      overallWidthMm: src.overallWidthMm ?? prev.overallWidthMm,
+      overallWidthDualB2Mm: src.overallWidthDualB2Mm ?? prev.overallWidthDualB2Mm,
+      forkDimensionsMm: src.forkDimensionsMm || prev.forkDimensionsMm,
+      forkCarriageClass: src.forkCarriageClass || prev.forkCarriageClass,
+      forkCarriageWidthB3Mm: src.forkCarriageWidthB3Mm ?? prev.forkCarriageWidthB3Mm,
+      forkSpreadMinMaxB5Mm: src.forkSpreadMinMaxB5Mm || prev.forkSpreadMinMaxB5Mm,
+      groundClearanceMastM1Mm: src.groundClearanceMastM1Mm ?? prev.groundClearanceMastM1Mm,
+      groundClearanceCenterM2Mm: src.groundClearanceCenterM2Mm ?? prev.groundClearanceCenterM2Mm,
+      aisleWidth1000x1200Mm: src.aisleWidth1000x1200Mm ?? prev.aisleWidth1000x1200Mm,
+      aisleWidth800x1200Mm: src.aisleWidth800x1200Mm ?? prev.aisleWidth800x1200Mm,
+      turningRadiusMm: src.turningRadiusMm ?? prev.turningRadiusMm,
+      internalTurningRadiusB13Mm: src.internalTurningRadiusB13Mm ?? prev.internalTurningRadiusB13Mm,
+      travelSpeedKmh: src.travelSpeedKmh || prev.travelSpeedKmh,
+      liftingSpeedMms: src.liftingSpeedMms || prev.liftingSpeedMms,
+      loweringSpeedMms: src.loweringSpeedMms || prev.loweringSpeedMms,
+      drawbarPullN: src.drawbarPullN || prev.drawbarPullN,
+      maxDrawbarPullN: src.maxDrawbarPullN || prev.maxDrawbarPullN,
+      gradeabilityPercent: src.gradeabilityPercent || prev.gradeabilityPercent,
+      maxGradeabilityPercent: src.maxGradeabilityPercent || prev.maxGradeabilityPercent,
+      accelerationTime10mSec: src.accelerationTime10mSec || prev.accelerationTime10mSec,
+      serviceBrake: src.serviceBrake || prev.serviceBrake,
+      parkingBrake: src.parkingBrake || prev.parkingBrake,
+      brakeType: src.brakeType || prev.brakeType,
+      driveMotorKw: src.driveMotorKw ?? prev.driveMotorKw,
+      liftMotorKw: src.liftMotorKw ?? prev.liftMotorKw,
+      motorOrEngineDetail: src.motorOrEngineDetail || prev.motorOrEngineDetail,
+      batteryVoltageCapacity: defaultBat ? (defaultBat.voltageCapacity || `${defaultBat.voltageV}V / ${defaultBat.capacityAh}Ah`) : (src.batteryVoltageCapacity || prev.batteryVoltageCapacity),
+      batteryWeightKg: defaultBat ? String(defaultBat.weightKg) : (src.batteryWeightKg || prev.batteryWeightKg),
+      powerSpecDetail: src.powerSpecDetail || prev.powerSpecDetail,
+      chargerOrFuelDetail: defaultBat?.chargerSpec || defaultBat?.chargerOptions || src.chargerOrFuelDetail || prev.chargerOrFuelDetail,
+      driveControlType: src.driveControlType || prev.driveControlType,
+      controllerMaker: src.controllerMaker || prev.controllerMaker,
+      operatingPressureMpa: src.operatingPressureMpa ?? prev.operatingPressureMpa,
+      oilFlowLmin: src.oilFlowLmin || prev.oilFlowLmin,
+      soundLevelDb: src.soundLevelDb ?? prev.soundLevelDb,
+      hydraulicTankLiter: src.hydraulicTankLiter ?? prev.hydraulicTankLiter,
+      waterproofRating: src.waterproofRating || prev.waterproofRating,
+      warrantyMonths: src.warrantyMonths ?? prev.warrantyMonths,
+      warrantyTerms: src.warrantyTerms || prev.warrantyTerms,
+      vdiSpecs: src.vdiSpecs || prev.vdiSpecs,
+      mastSpecs: src.mastSpecs || prev.mastSpecs,
+      batteryOptions: src.batteryOptions || prev.batteryOptions,
+      standardEquipments: src.standardEquipments || prev.standardEquipments,
+      optionalEquipments: src.optionalEquipments || prev.optionalEquipments,
+    }));
+    showToast(`모델 [${targetModel}] VDI 2198 완제품 제원이 임대 자산에 상속 적용되었습니다.`);
+  };
+
+  // 임대 자산에 장착된 설치형옵션 (19종) 토글 핸들러
+  const toggleAssetInstalledOption = (optMaster: typeof MUJIN_OPTION_MASTERS[number]) => {
+    setEditForm(prev => {
+      const currentApplied = Array.isArray(prev.appliedOptions) ? [...prev.appliedOptions] : [];
+      const existsIdx = currentApplied.findIndex(o => o.optionCode === optMaster.optionCode || o.name === optMaster.optionName);
+      let nextApplied;
+      if (existsIdx >= 0) {
+        nextApplied = currentApplied.filter((_, idx) => idx !== existsIdx);
+      } else {
+        nextApplied = [
+          ...currentApplied,
+          {
+            optionId: optMaster.id,
+            optionCode: optMaster.optionCode,
+            name: optMaster.optionName,
+            category: optMaster.category,
+            quantity: 1,
+            unitPrice: optMaster.defaultFee,
+            monthlyFee: optMaster.monthlyFee,
+            isFreeService: false,
+          }
+        ];
+      }
+      return {
+        ...prev,
+        appliedOptions: nextApplied,
+        installedOptions: nextApplied.map(o => o.name),
+      };
     });
   };
 
@@ -1705,6 +1836,226 @@ export const Assets: React.FC = () => {
                 )}
               </div>
 
+              {/* 1-2. 지게차 완제품 VDI 2198 상세 제원 및 마스트·배터리·설치형옵션 구성 */}
+              <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                    1-2. 지게차 완제품 VDI 2198 제원 및 설치형옵션 구성
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {isEditing ? (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => applyModelSpecToAssetForm(editForm.modelName)}
+                        style={{ padding: '2px 8px', fontSize: '10.5px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                      >
+                        모델 카탈로그 제원 자동 상속
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => setShowAssetSpecModal(true)}
+                        style={{ padding: '2px 8px', fontSize: '10.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <FileText size={11} /> 완제품 제원표 보기
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* 마스트 및 배터리 카탈로그 프리셋 선택기 */}
+                    {(() => {
+                      const norm = (editForm.modelName || selectedAsset.modelName || '').replace(/[\s\-_]/g, '').toUpperCase();
+                      const prod = productByModelMap.get(editForm.modelName || '') || productByModelMap.get(norm);
+                      const arch: any = FL_TECHNICAL_ARCHIVE.find((x: any) => (x.modelName || x.modelCode || '').replace(/[\s\-_]/g, '').toUpperCase() === norm || (x.shortName || '').replace(/[\s\-_]/g, '').toUpperCase() === norm);
+                      const mastList = editForm.mastSpecs || prod?.mastSpecs || arch?.mastSpecs || [];
+                      const batList = editForm.batteryOptions || prod?.batteryOptions || arch?.batteryOptions || [];
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '6px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>
+                          <div>
+                            <label style={{ ...labelStyle, color: 'var(--primary)' }}>카탈로그 마스트 단수·높이 선택</label>
+                            <select
+                              style={inputStyle}
+                              value={editForm.mastModelCode || ''}
+                              onChange={e => {
+                                const m = mastList.find((x: any) => (x.mastModelCode || x.mastModel) === e.target.value);
+                                if (m) {
+                                  setEditForm(prev => ({
+                                    ...prev,
+                                    mastType: m.mastType,
+                                    mastModelCode: m.mastModelCode || m.mastModel,
+                                    standardLiftHeightMm: m.liftHeightH3Mm,
+                                    mastLoweredH1Mm: m.loweredHeightH1Mm,
+                                    freeLiftHeightMm: Number(String(m.freeLiftH2Mm || m.freeLiftWithBackrestH2Mm || 150).replace(/[^0-9]/g, '')) || 150,
+                                    mastExtendedH4Mm: Number(String(m.extendedHeightH4Mm || m.extendedHeightWithBackrestH4Mm || 4000).replace(/[^0-9]/g, '')) || 4000,
+                                    mastTiltDeg: m.tiltAngleDeg,
+                                  }));
+                                }
+                              }}
+                            >
+                              <option value="">-- 장착 마스트 규격 직접 입력 또는 선택 --</option>
+                              {mastList.map((m: any, idx: number) => {
+                                const code = m.mastModelCode || m.mastModel;
+                                return (
+                                  <option key={idx} value={code}>
+                                    {m.mastType} [{code}] · 인상고 {m.liftHeightH3Mm}mm / 전고 {m.loweredHeightH1Mm}mm
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ ...labelStyle, color: 'var(--primary)' }}>카탈로그 배터리·전원 사양 선택</label>
+                            <select
+                              style={inputStyle}
+                              defaultValue=""
+                              onChange={e => {
+                                const b = batList.find((x: any) => (x.optionCode || x.batteryModel) === e.target.value);
+                                if (b) {
+                                  setEditForm(prev => ({
+                                    ...prev,
+                                    batteryVoltageCapacity: b.voltageCapacity || `${b.voltageV}V / ${b.capacityAh}Ah`,
+                                    batteryWeightKg: String(b.weightKg),
+                                    chargerOrFuelDetail: b.chargerSpec || b.chargerOptions,
+                                  }));
+                                }
+                              }}
+                            >
+                              <option value="">-- 장착 배터리 사양 직접 입력 또는 선택 --</option>
+                              {batList.map((b: any, idx: number) => {
+                                const code = b.optionCode || b.batteryModel;
+                                return (
+                                  <option key={idx} value={code}>
+                                    [{code}] {b.batteryType || '리튬'} {b.voltageCapacity || `${b.voltageV}V/${b.capacityAh}Ah`} · {b.weightKg}kg
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div><label style={labelStyle}>정격하중 kg · 1.5</label><input type="number" style={inputStyle} value={editForm.ratedCapacityKg ?? ''} onChange={ef('ratedCapacityKg')} /></div>
+                      <div><label style={labelStyle}>하중중심 mm · 1.6</label><input type="number" style={inputStyle} value={editForm.loadCenterMm ?? ''} onChange={ef('loadCenterMm')} /></div>
+                      <div><label style={labelStyle}>장착 마스트 구분 · 4.1</label><input style={inputStyle} placeholder="예: 2단 표준 마스트 / 3단 풀프리 TF" value={editForm.mastType || ''} onChange={ef('mastType')} /></div>
+                      <div><label style={labelStyle}>마스트 모델코드</label><input style={inputStyle} placeholder="예: M300 / ZM470" value={editForm.mastModelCode || ''} onChange={ef('mastModelCode')} /></div>
+                      <div><label style={labelStyle}>장착 인상고 h3 mm · 4.4</label><input type="number" style={inputStyle} value={editForm.standardLiftHeightMm ?? ''} onChange={ef('standardLiftHeightMm')} /></div>
+                      <div><label style={labelStyle}>마스트 전고 h1 mm · 4.2</label><input type="number" style={inputStyle} value={editForm.mastLoweredH1Mm ?? ''} onChange={ef('mastLoweredH1Mm')} /></div>
+                      <div><label style={labelStyle}>자유인상고 h2 mm · 4.3</label><input type="number" style={inputStyle} value={editForm.freeLiftHeightMm ?? ''} onChange={ef('freeLiftHeightMm')} /></div>
+                      <div><label style={labelStyle}>최대 신장높이 h4 mm · 4.5</label><input type="number" style={inputStyle} value={editForm.mastExtendedH4Mm ?? ''} onChange={ef('mastExtendedH4Mm')} /></div>
+                      <div><label style={labelStyle}>장착 포크 규격 s·e·l · 4.22</label><input style={inputStyle} placeholder="예: 40 × 122 × 1,070 mm" value={editForm.forkDimensionsMm || ''} onChange={ef('forkDimensionsMm')} /></div>
+                      <div><label style={labelStyle}>캐리지 등급 · 4.23</label><input style={inputStyle} placeholder="예: ISO 2328 2A" value={editForm.forkCarriageClass || ''} onChange={ef('forkCarriageClass')} /></div>
+                      <div><label style={labelStyle}>장착 배터리 전압·용량 · 6.4</label><input style={inputStyle} placeholder="예: 80V / 271Ah" value={editForm.batteryVoltageCapacity || ''} onChange={ef('batteryVoltageCapacity')} /></div>
+                      <div><label style={labelStyle}>배터리 중량 kg · 6.5</label><input style={inputStyle} placeholder="예: 215" value={editForm.batteryWeightKg || ''} onChange={ef('batteryWeightKg')} /></div>
+                      <div><label style={labelStyle}>장비 자중 kg · 2.1</label><input type="number" style={inputStyle} value={editForm.serviceWeightKg ?? ''} onChange={ef('serviceWeightKg')} /></div>
+                      <div><label style={labelStyle}>타이어 규격 전·후 · 3.2</label><input style={inputStyle} value={editForm.tireSpecFrontRear || ''} onChange={ef('tireSpecFrontRear')} /></div>
+                    </div>
+
+                    {/* 임대 자산 장착 설치형옵션 (19종 마스터 연동) */}
+                    <div style={{ marginTop: '4px', padding: '8px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '11.5px', color: 'var(--primary)', marginBottom: '6px' }}>
+                        ■ 임대 장비 장착 설치형옵션 선택 · 총 19종 마스터 연동
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', maxHeight: '190px', overflowY: 'auto' }}>
+                        {MUJIN_OPTION_MASTERS.map(opt => {
+                          const checked = (editForm.appliedOptions || []).some(o => o.optionCode === opt.optionCode || o.name === opt.optionName) ||
+                            (editForm.installedOptions || []).includes(opt.optionName);
+                          return (
+                            <label
+                              key={opt.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '4px',
+                                padding: '4px 6px',
+                                borderRadius: '4px',
+                                border: `1px solid ${checked ? 'var(--primary)' : 'var(--border-color)'}`,
+                                backgroundColor: checked ? 'rgba(37, 99, 235, 0.08)' : 'var(--bg-app)',
+                                cursor: 'pointer',
+                                fontSize: '11px'
+                              }}
+                            >
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleAssetInstalledOption(opt)}
+                                />
+                                <span style={{ fontWeight: checked ? 700 : 500 }}>{opt.optionName}</span>
+                              </span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '10px', flexShrink: 0 }}>
+                                월 {(opt.monthlyFee / 10000).toFixed(0)}만
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11.5px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>시리즈 · 동력:</span> <strong>{selectedAsset.seriesName || selectedAsset.powerSource || '-'}</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>정격하중 · 중심:</span> <strong style={{ color: 'var(--primary)' }}>{selectedAsset.ratedCapacityKg ? `${selectedAsset.ratedCapacityKg.toLocaleString()} kg` : '-'} / {selectedAsset.loadCenterMm || 500} mm</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>장착 마스트:</span> <strong>{selectedAsset.mastType || '-'} {selectedAsset.mastModelCode ? `[${selectedAsset.mastModelCode}]` : ''}</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>장착 인상고 h3:</span> <strong>{selectedAsset.standardLiftHeightMm ? `${selectedAsset.standardLiftHeightMm.toLocaleString()} mm` : '-'}</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>전고 h1 / 최대 h4:</span> {selectedAsset.mastLoweredH1Mm || '-'} / {selectedAsset.mastExtendedH4Mm || '-'} mm</div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>자유인상고 h2:</span> {selectedAsset.freeLiftHeightMm ? `${selectedAsset.freeLiftHeightMm} mm` : '-'}</div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>장착 포크 규격:</span> <strong>{selectedAsset.forkDimensionsMm || '-'}</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>캐리지 · 회전반경:</span> {selectedAsset.forkCarriageClass || '-'} / {selectedAsset.turningRadiusMm ? `${selectedAsset.turningRadiusMm} mm` : '-'}</div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>장착 배터리:</span> <strong style={{ color: '#059669' }}>{selectedAsset.batteryVoltageCapacity || selectedAsset.powerSpecDetail || '-'}</strong></div>
+                      <div><span style={{ color: 'var(--text-secondary)' }}>장비 자중 · 타이어:</span> {selectedAsset.serviceWeightKg ? `${selectedAsset.serviceWeightKg.toLocaleString()} kg` : '-'} / {selectedAsset.tireType || '-'}</div>
+                    </div>
+
+                    {/* 장착된 설치형옵션 배지 노출 */}
+                    {(() => {
+                      const instList = Array.isArray(selectedAsset.installedOptions)
+                        ? selectedAsset.installedOptions
+                        : String(selectedAsset.installedOptions || '').split(/[·,]/).map(s => s.trim()).filter(Boolean);
+                      const count = selectedAsset.appliedOptions?.length || instList.length;
+                      return (
+                        <div style={{ padding: '8px', borderRadius: '4px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '5px', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>장착 설치형옵션 구성 ({count}건)</span>
+                            {selectedAsset.appliedOptions && selectedAsset.appliedOptions.length > 0 && (
+                              <span style={{ color: 'var(--primary)' }}>
+                                월 옵션가 합계: +₩{selectedAsset.appliedOptions.reduce((acc, o) => acc + (o.isFreeService ? 0 : (o.monthlyFee || 0) * (o.quantity || 1)), 0).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                          {(selectedAsset.appliedOptions && selectedAsset.appliedOptions.length > 0) ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {selectedAsset.appliedOptions.map((opt, idx) => (
+                                <span key={idx} className="badge badge-primary" style={{ fontSize: '10.5px', padding: '2px 7px' }}>
+                                  {opt.name} {opt.monthlyFee ? `· 월 ₩${opt.monthlyFee.toLocaleString()}` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          ) : instList.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {instList.map((optName: string, idx: number) => (
+                                <span key={idx} className="badge badge-primary" style={{ fontSize: '10.5px', padding: '2px 7px' }}>
+                                  {optName}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>장착된 설치형옵션이 없습니다.</div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+
               {/* 2. 현재 운용 / 임대 현황 */}
               <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>2. 현재 운용 / 임대 현황</div>
@@ -1879,6 +2230,134 @@ export const Assets: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* ⑦ 임대용 FL 완제품 VDI 2198 제원표 모달 */}
+      {showAssetSpecModal && selectedAsset && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1150,
+          padding: '20px'
+        }}>
+          <div className="card" style={{
+            width: '100%', maxWidth: '860px', maxHeight: '90vh', overflowY: 'auto',
+            backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', padding: '20px', borderRadius: '8px', boxShadow: 'var(--shadow-lg)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+                [{selectedAsset.assetNo} · {selectedAsset.modelName}] 임대용 지게차 완제품 VDI 2198 제원표
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAssetSpecModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px', textAlign: 'center' }}>
+              <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 700 }}>정격하중 · 하중중심</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--primary)', marginTop: '3px' }}>
+                  {(selectedAsset.ratedCapacityKg || 2500).toLocaleString()} kg / {selectedAsset.loadCenterMm || 500} mm
+                </div>
+              </div>
+              <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 700 }}>장착 마스트 · 인상고</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', marginTop: '3px' }}>
+                  {selectedAsset.mastModelCode || selectedAsset.mastType || '표준 2단'} · {(selectedAsset.standardLiftHeightMm || 3000).toLocaleString()} mm
+                </div>
+              </div>
+              <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 700 }}>장착 배터리 · 전원</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#059669', marginTop: '3px' }}>
+                  {selectedAsset.batteryVoltageCapacity || selectedAsset.powerSource || '-'}
+                </div>
+              </div>
+              <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 700 }}>장착 포크 · 자중</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', marginTop: '3px' }}>
+                  {selectedAsset.forkDimensionsMm || '-'} / {(selectedAsset.serviceWeightKg || 0).toLocaleString()} kg
+                </div>
+              </div>
+            </div>
+
+            {/* 설치형옵션 장착 현황 */}
+            <div style={{ marginBottom: '14px', padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', color: 'var(--primary)' }}>
+                ■ 해당 임대 장비에 장착된 설치형옵션 내역 ({selectedAsset.appliedOptions?.length || selectedAsset.installedOptions?.length || 0}건)
+              </div>
+              {(selectedAsset.appliedOptions && selectedAsset.appliedOptions.length > 0) ? (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', border: '1px solid var(--border-color)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>옵션코드</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>분류</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>설치형옵션명</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>월 렌탈 가산단가</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'right' }}>1회성 유상청구단가</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedAsset.appliedOptions.map((opt, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '4px 8px', fontWeight: 700, color: 'var(--primary)', borderRight: '1px solid var(--border-color)' }}>{opt.optionCode || '-'}</td>
+                        <td style={{ padding: '4px 8px', borderRight: '1px solid var(--border-color)' }}>{opt.category || '-'}</td>
+                        <td style={{ padding: '4px 8px', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{opt.name}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>₩{(opt.monthlyFee || 0).toLocaleString()}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'right' }}>₩{(opt.unitPrice || 0).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>장착된 설치형옵션이 없습니다.</div>
+              )}
+            </div>
+
+            {Array.isArray(selectedAsset.vdiSpecs) && selectedAsset.vdiSpecs.length > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', color: 'var(--text-main)' }}>
+                  ■ VDI 2198 / ISO 5053 국제표준 전 항목 제원표 (총 {selectedAsset.vdiSpecs.length}개 항목)
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', border: '1px solid var(--border-color)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', width: '56px', borderRight: '1px solid var(--border-color)' }}>코드</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', width: '74px', borderRight: '1px solid var(--border-color)' }}>분류</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>제원 항목명</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'center', width: '64px', borderRight: '1px solid var(--border-color)' }}>단위</th>
+                      <th style={{ padding: '4px 8px', textAlign: 'right', width: '180px' }}>장비 사양값</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedAsset.vdiSpecs.map((row: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '4px 8px', fontWeight: 700, borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{row.code}</td>
+                        <td style={{ padding: '4px 8px', borderRight: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{row.section}</td>
+                        <td style={{ padding: '4px 8px', borderRight: '1px solid var(--border-color)' }}>{row.labelKo}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'center', borderRight: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>{row.unit || '-'}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700 }}>{row.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowAssetSpecModal(false)}
+                style={{ padding: '5px 14px', fontSize: '12px' }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

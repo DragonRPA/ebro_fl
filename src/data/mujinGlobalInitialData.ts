@@ -7,198 +7,350 @@
 // 5. 공식 카탈로그 PDF 4종 (항차 XE 1.5~3.8톤 / 4.0~5.0톤 / 6.0~10.0톤 / 헬리 K3 2.0~3.8톤)
 
 export const MUJIN_OPTION_MASTERS: any[] = [
-  { id: 'FOM-MJ-01', code: 'MJ-OPT-01', optionCode: 'MJ-OPT-01', name: '풀캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '강화유리 밀폐형 풀캐빈 (와이퍼·실내등·열선 포함)', specDetail: '4면 안전강화유리 스틸 풀캐빈 · 좌우 도어 키잠금 및 전면 와이퍼·워셔액 일체 시공', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 1250000, dealerPrice: 1550000, unitPrice: 1850000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 6.0, isActive: true, sortOrder: 1, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-02', code: 'MJ-OPT-02', optionCode: 'MJ-OPT-02', name: '반캐빈 · C형캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '전면·천장·후면 C형 반캐빈 (전면 와이퍼 포함)', specDetail: '전면·상부·후면 3면 강화유리 C형 캐빈 · 우천 작업 보호 및 승하차 개방성 확보', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 680000, dealerPrice: 880000, unitPrice: 1050000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 2, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-03', code: 'MJ-OPT-03', optionCode: 'MJ-OPT-03', name: '천장캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '헤드가드 상부 강화유리·폴리카보네이트 루프 캐빈', specDetail: '오버헤드가드 상부 빗물·낙하물 차단 투명 루프 실드 장착', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 220000, dealerPrice: 300000, unitPrice: 380000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 3, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-04', code: 'MJ-OPT-04', optionCode: 'MJ-OPT-04', name: '에어컨', category: '캐빈·공조', optionGroup: 'AIRCON', optionGroupLabel: '에어컨·공조설치', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '전동/디젤 전용 루프탑·매립형 고효율 무시동 에어컨', specDetail: 'DC 전동컴프레서 일체형 고효율 냉방 에어컨 시공', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 880000, dealerPrice: 1150000, unitPrice: 1380000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 4, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-05', code: 'MJ-OPT-05', optionCode: 'MJ-OPT-05', name: '히터', category: '캐빈·공조', optionGroup: 'AIRCON', optionGroupLabel: '에어컨·공조설치', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '운전석 PTC 전동히터 / 온수식 난방 히터', specDetail: '동절기 캐빈 실내 난방 및 전면 유리 성에 제거용 고성능 히터', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 280000, dealerPrice: 380000, unitPrice: 480000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 2.0, isActive: true, sortOrder: 5, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-06', code: 'MJ-OPT-06', optionCode: 'MJ-OPT-06', name: '3방향 레드라인', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '좌·우·후방 3방향 LED 적색 안전경계 라인빔', specDetail: '장비 좌·우·후방 바닥에 고휘도 적색 안전경계선 투사 (보행자 접근 방지)', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 95000, dealerPrice: 150000, unitPrice: 200000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.0, isActive: true, sortOrder: 6, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-07', code: 'MJ-OPT-07', optionCode: 'MJ-OPT-07', name: '블루라이트', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '전·후방 진행방향 바닥 투사형 LED 블루스팟 안전램프', specDetail: '전·후진 시 바닥 5m 전방 청색 스팟 투사로 사각지대 교차로 충돌 예방', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 55000, dealerPrice: 90000, unitPrice: 120000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.8, isActive: true, sortOrder: 7, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-08', code: 'MJ-OPT-08', optionCode: 'MJ-OPT-08', name: 'LED라이트 추가', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '고휘도 LED 작업등 (전방·후방·마스트 야간조명 보강)', specDetail: '야간 및 실내 물류창고 고단 적재 시야 확보용 고휘도 방수 LED 작업등 추가', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 60000, dealerPrice: 95000, unitPrice: 130000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.8, isActive: true, sortOrder: 8, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-09', code: 'MJ-OPT-09', optionCode: 'MJ-OPT-09', name: '후방카메라', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '7인치 AHD 고화질 모니터 + 적외선 방수 후방카메라', specDetail: 'IP68 방수 적외선 나이트비전 후방카메라 및 운전석 7인치 컬러 모니터 장착', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 140000, dealerPrice: 210000, unitPrice: 270000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 9, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-10', code: 'MJ-OPT-10', optionCode: 'MJ-OPT-10', name: '후방감지기', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '초음파 후방 장애물 감지센서 + 거리표시 디지털 경보기', specDetail: '카운터웨이트 매립형 초음파 센서 및 운전석 LED 거리 표시·단계별 부저 경보', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 90000, dealerPrice: 140000, unitPrice: 185000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.2, isActive: true, sortOrder: 10, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-11', code: 'MJ-OPT-11', optionCode: 'MJ-OPT-11', name: 'AI카메라(4채널)', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '전·후·좌·우 4채널 AI 인체감지 카메라 + 음성경보 모니터', specDetail: '딥러닝 기반 360도 4채널 작업자 인체 인식 및 접근 시 실시간 음성·사이렌 경보', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 580000, dealerPrice: 780000, unitPrice: 950000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 11, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-12', code: 'MJ-OPT-12', optionCode: 'MJ-OPT-12', name: '사이드시프트', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압식 좌·우 정밀 이동 사이드시프트 (실린더·호스킷 일체)', specDetail: 'ISO 캐리지 규격 복동 유압실린더 + 3스풀 밸브 + 마스트 오버롤 고압호스 배관 일체', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 520000, dealerPrice: 680000, unitPrice: 850000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.0, isActive: true, sortOrder: 12, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-13', code: 'MJ-OPT-13', optionCode: 'MJ-OPT-13', name: '포크포지셔너(편개식)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압 편개식 자동발 포크간격 조절장치', specDetail: '단측 유압 실린더 제어식 포크 간격 자동 조절 어태치먼트 시공', applicableTonnage: '2.0톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 720000, dealerPrice: 950000, unitPrice: 1180000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 13, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-14', code: 'MJ-OPT-14', optionCode: 'MJ-OPT-14', name: '포크포지셔너(양개식)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압 양개식 좌·우 동시 자동발 포크포지셔너', specDetail: '좌·우 양측 복동 실린더를 통한 포크 간격 동시 벌림·좁힘 유압 어태치먼트', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 880000, dealerPrice: 1150000, unitPrice: 1420000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.0, isActive: true, sortOrder: 14, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-15', code: 'MJ-OPT-15', optionCode: 'MJ-OPT-15', name: '포크포지셔너(복합형)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '사이드시프트 + 양개식 자동발 포크포지셔너 복합 일체형', specDetail: '4스풀 유압 제어 기반 좌·우 시프트 및 양개식 포크 간격 자동조절 일체형 부착물', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 1150000, dealerPrice: 1480000, unitPrice: 1780000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 15, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-16', code: 'MJ-OPT-16', optionCode: 'MJ-OPT-16', name: '포크알람센서', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '포크 끝단 레이저/초음파 파레트 진입·충돌 경보 센서', specDetail: '고단 파레트 포크 삽입 깊이 및 전면 화물 충돌 감지 알람 센서 장착', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 210000, dealerPrice: 310000, unitPrice: 390000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 16, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-17', code: 'MJ-OPT-17', optionCode: 'MJ-OPT-17', name: '포크 덧발', category: '포크·덧발', optionGroup: 'FORK_EXTENSION', optionGroupLabel: '덧발·길이별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '고장력강 장척 화물용 포크 덧발 · 1,500~2,100mm 고정핀 포함', specDetail: 'SM490 고장력 후판 절곡 용접 구조 장척 파레트용 포크 연장 덧발 1조(2개)', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '조', costPrice: 180000, dealerPrice: 260000, unitPrice: 330000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.5, isActive: true, sortOrder: 17, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-18', code: 'MJ-OPT-18', optionCode: 'MJ-OPT-18', name: '블랙박스', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '지게차 전용 2채널 방진·방수 상시녹화 블랙박스', specDetail: '전·후방 FHD 2채널 산업장비 전용 충격·진동 보강 상시녹화 블랙박스', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 160000, dealerPrice: 240000, unitPrice: 310000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 18, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
-  { id: 'FOM-MJ-19', code: 'MJ-OPT-19', optionCode: 'MJ-OPT-19', name: '로드스테빌라이저', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '상부 유압식 화물 흔들림·낙하 방지 로드스테빌라이저 클램프', specDetail: '파레트 적재 화물 상부를 유압 패드로 가압 고정하여 주행 중 낙하를 방지하는 어태치먼트', applicableTonnage: '2.0톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 950000, dealerPrice: 1280000, unitPrice: 1580000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 19, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' }
+  { id: 'FOM-MJ-01', code: 'MJ-OPT-01', optionCode: 'MJ-OPT-01', name: '풀캐빈', optionName: '풀캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '강화유리 밀폐형 풀캐빈 (와이퍼·실내등·열선 포함)', specDetail: '4면 안전강화유리 스틸 풀캐빈 · 좌우 도어 키잠금 및 전면 와이퍼·워셔액 일체 시공', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 1250000, dealerPrice: 1550000, unitPrice: 1850000, defaultFee: 1850000, monthlyFee: 150000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 6.0, isActive: true, sortOrder: 1, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-02', code: 'MJ-OPT-02', optionCode: 'MJ-OPT-02', name: '반캐빈 · C형캐빈', optionName: '반캐빈 · C형캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '전면·천장·후면 C형 반캐빈 (전면 와이퍼 포함)', specDetail: '전면·상부·후면 3면 강화유리 C형 캐빈 · 우천 작업 보호 및 승하차 개방성 확보', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 680000, dealerPrice: 880000, unitPrice: 1050000, defaultFee: 1050000, monthlyFee: 90000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 2, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-03', code: 'MJ-OPT-03', optionCode: 'MJ-OPT-03', name: '천장캐빈', optionName: '천장캐빈', category: '캐빈·공조', optionGroup: 'CABIN_DOOR', optionGroupLabel: '캐빈·문열림구조별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '헤드가드 상부 강화유리·폴리카보네이트 루프 캐빈', specDetail: '오버헤드가드 상부 빗물·낙하물 차단 투명 루프 실드 장착', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 220000, dealerPrice: 300000, unitPrice: 380000, defaultFee: 380000, monthlyFee: 35000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 3, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-04', code: 'MJ-OPT-04', optionCode: 'MJ-OPT-04', name: '에어컨', optionName: '에어컨', category: '캐빈·공조', optionGroup: 'AIRCON', optionGroupLabel: '에어컨·공조설치', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '전동/디젤 전용 루프탑·매립형 고효율 무시동 에어컨', specDetail: 'DC 전동컴프레서 일체형 고효율 냉방 에어컨 시공', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 880000, dealerPrice: 1150000, unitPrice: 1380000, defaultFee: 1380000, monthlyFee: 120000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 4, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-05', code: 'MJ-OPT-05', optionCode: 'MJ-OPT-05', name: '히터', optionName: '히터', category: '캐빈·공조', optionGroup: 'AIRCON', optionGroupLabel: '에어컨·공조설치', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '운전석 PTC 전동히터 / 온수식 난방 히터', specDetail: '동절기 캐빈 실내 난방 및 전면 유리 성에 제거용 고성능 히터', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 280000, dealerPrice: 380000, unitPrice: 480000, defaultFee: 480000, monthlyFee: 45000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 2.0, isActive: true, sortOrder: 5, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-06', code: 'MJ-OPT-06', optionCode: 'MJ-OPT-06', name: '3방향 레드라인', optionName: '3방향 레드라인', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '좌·우·후방 3방향 LED 적색 안전경계 라인빔', specDetail: '장비 좌·우·후방 바닥에 고휘도 적색 안전경계선 투사 (보행자 접근 방지)', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 95000, dealerPrice: 150000, unitPrice: 200000, defaultFee: 200000, monthlyFee: 25000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.0, isActive: true, sortOrder: 6, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-07', code: 'MJ-OPT-07', optionCode: 'MJ-OPT-07', name: '블루라이트', optionName: '블루라이트', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '전·후방 진행방향 바닥 투사형 LED 블루스팟 안전램프', specDetail: '전·후진 시 바닥 5m 전방 청색 스팟 투사로 사각지대 교차로 충돌 예방', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 55000, dealerPrice: 90000, unitPrice: 120000, defaultFee: 120000, monthlyFee: 15000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.8, isActive: true, sortOrder: 7, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-08', code: 'MJ-OPT-08', optionCode: 'MJ-OPT-08', name: 'LED라이트 추가', optionName: 'LED라이트 추가', category: '안전·조명', optionGroup: 'BEACON_LIGHT', optionGroupLabel: '경광등·안전조명', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '고휘도 LED 작업등 (전방·후방·마스트 야간조명 보강)', specDetail: '야간 및 실내 물류창고 고단 적재 시야 확보용 고휘도 방수 LED 작업등 추가', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 60000, dealerPrice: 95000, unitPrice: 130000, defaultFee: 130000, monthlyFee: 15000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.8, isActive: true, sortOrder: 8, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-09', code: 'MJ-OPT-09', optionCode: 'MJ-OPT-09', name: '후방카메라', optionName: '후방카메라', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '7인치 AHD 고화질 모니터 + 적외선 방수 후방카메라', specDetail: 'IP68 방수 적외선 나이트비전 후방카메라 및 운전석 7인치 컬러 모니터 장착', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 140000, dealerPrice: 210000, unitPrice: 270000, defaultFee: 270000, monthlyFee: 30000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 9, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-10', code: 'MJ-OPT-10', optionCode: 'MJ-OPT-10', name: '후방감지기', optionName: '후방감지기', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '초음파 후방 장애물 감지센서 + 거리표시 디지털 경보기', specDetail: '카운터웨이트 매립형 초음파 센서 및 운전석 LED 거리 표시·단계별 부저 경보', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 90000, dealerPrice: 140000, unitPrice: 185000, defaultFee: 185000, monthlyFee: 20000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.2, isActive: true, sortOrder: 10, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-11', code: 'MJ-OPT-11', optionCode: 'MJ-OPT-11', name: 'AI카메라(4채널)', optionName: 'AI카메라(4채널)', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '전·후·좌·우 4채널 AI 인체감지 카메라 + 음성경보 모니터', specDetail: '딥러닝 기반 360도 4채널 작업자 인체 인식 및 접근 시 실시간 음성·사이렌 경보', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 580000, dealerPrice: 780000, unitPrice: 950000, defaultFee: 950000, monthlyFee: 85000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 11, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-12', code: 'MJ-OPT-12', optionCode: 'MJ-OPT-12', name: '사이드시프트', optionName: '사이드시프트', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압식 좌·우 정밀 이동 사이드시프트 (실린더·호스킷 일체)', specDetail: 'ISO 캐리지 규격 복동 유압실린더 + 3스풀 밸브 + 마스트 오버롤 고압호스 배관 일체', applicableTonnage: '1.5톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 520000, dealerPrice: 680000, unitPrice: 850000, defaultFee: 850000, monthlyFee: 75000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.0, isActive: true, sortOrder: 12, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-13', code: 'MJ-OPT-13', optionCode: 'MJ-OPT-13', name: '포크포지셔너(편개식)', optionName: '포크포지셔너(편개식)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압 편개식 자동발 포크간격 조절장치', specDetail: '단측 유압 실린더 제어식 포크 간격 자동 조절 어태치먼트 시공', applicableTonnage: '2.0톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 720000, dealerPrice: 950000, unitPrice: 1180000, defaultFee: 1180000, monthlyFee: 100000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 3.5, isActive: true, sortOrder: 13, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-14', code: 'MJ-OPT-14', optionCode: 'MJ-OPT-14', name: '포크포지셔너(양개식)', optionName: '포크포지셔너(양개식)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '유압 양개식 좌·우 동시 자동발 포크포지셔너', specDetail: '좌·우 양측 복동 실린더를 통한 포크 간격 동시 벌림·좁힘 유압 어태치먼트', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 880000, dealerPrice: 1150000, unitPrice: 1420000, defaultFee: 1420000, monthlyFee: 120000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.0, isActive: true, sortOrder: 14, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-15', code: 'MJ-OPT-15', optionCode: 'MJ-OPT-15', name: '포크포지셔너(복합형)', optionName: '포크포지셔너(복합형)', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '사이드시프트 + 양개식 자동발 포크포지셔너 복합 일체형', specDetail: '4스풀 유압 제어 기반 좌·우 시프트 및 양개식 포크 간격 자동조절 일체형 부착물', applicableTonnage: '2.0톤 ~ 10.0톤 전 기종', unit: '식', costPrice: 1150000, dealerPrice: 1480000, unitPrice: 1780000, defaultFee: 1780000, monthlyFee: 150000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 15, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-16', code: 'MJ-OPT-16', optionCode: 'MJ-OPT-16', name: '포크알람센서', optionName: '포크알람센서', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'SPEC', domainTypeLabel: '현장요구사양', subVariant: '포크 끝단 레이저/초음파 파레트 진입·충돌 경보 센서', specDetail: '고단 파레트 포크 삽입 깊이 및 전면 화물 충돌 감지 알람 센서 장착', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 210000, dealerPrice: 310000, unitPrice: 390000, defaultFee: 390000, monthlyFee: 35000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 16, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-17', code: 'MJ-OPT-17', optionCode: 'MJ-OPT-17', name: '포크 덧발', optionName: '포크 덧발', category: '포크·덧발', optionGroup: 'FORK_EXTENSION', optionGroupLabel: '덧발·길이별', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '고장력강 장척 화물용 포크 덧발 · 1,500~2,100mm 고정핀 포함', specDetail: 'SM490 고장력 후판 절곡 용접 구조 장척 파레트용 포크 연장 덧발 1조(2개)', applicableTonnage: '1.5톤 ~ 10.0톤 전 기종', unit: '조', costPrice: 180000, dealerPrice: 260000, unitPrice: 330000, defaultFee: 330000, monthlyFee: 30000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 0.5, isActive: true, sortOrder: 17, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-18', code: 'MJ-OPT-18', optionCode: 'MJ-OPT-18', name: '블랙박스', optionName: '블랙박스', category: '카메라·센서', optionGroup: 'REAR_SENSOR', optionGroupLabel: '후방감지센서·카메라', domainType: 'PAID', domainTypeLabel: '유상옵션', subVariant: '지게차 전용 2채널 방진·방수 상시녹화 블랙박스', specDetail: '전·후방 FHD 2채널 산업장비 전용 충격·진동 보강 상시녹화 블랙박스', applicableTonnage: '전 기종 공용', unit: '식', costPrice: 160000, dealerPrice: 240000, unitPrice: 310000, defaultFee: 310000, monthlyFee: 30000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 1.5, isActive: true, sortOrder: 18, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' },
+  { id: 'FOM-MJ-19', code: 'MJ-OPT-19', optionCode: 'MJ-OPT-19', name: '로드스테빌라이저', optionName: '로드스테빌라이저', category: '어태치먼트', optionGroup: 'SIDESHIFT', optionGroupLabel: '사이드시프트·부착물', domainType: 'ATTACHMENT', domainTypeLabel: '부착물', subVariant: '상부 유압식 화물 흔들림·낙하 방지 로드스테빌라이저 클램프', specDetail: '파레트 적재 화물 상부를 유압 패드로 가압 고정하여 주행 중 낙하를 방지하는 어태치먼트', applicableTonnage: '2.0톤 ~ 5.0톤 전 기종', unit: '식', costPrice: 950000, dealerPrice: 1280000, unitPrice: 1580000, defaultFee: 1580000, monthlyFee: 135000, isDefaultFree: false, isFreeDefault: false, installLeadHours: 4.5, isActive: true, sortOrder: 19, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-11-04T00:00:00.000Z' }
 ];
 
 export const MUJIN_STANDARD_OPTIONS: any[] = [
   {
     "id": "STD-FOM-MJ-01",
+    "optionCode": "MJ-OPT-01",
     "category": "PAID",
     "name": "풀캐빈",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 카운터밸런스"
     ],
-    "defaultFee": 2350000
+    "defaultPrice": 1850000,
+    "defaultFee": 1850000,
+    "monthlyFee": 150000,
+    "unit": "식",
+    "description": "강화유리 밀폐형 풀캐빈 · 좌우 도어 키잠금 및 전면 와이퍼 일체 시공",
+    "sortOrder": 1,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-02",
+    "optionCode": "MJ-OPT-02",
     "category": "PAID",
-    "name": "반캐빈· C형캐빈",
+    "name": "반캐빈 · C형캐빈",
     "applicableModels": [
       "1.5톤 ~ 7.0톤 카운터밸런스"
     ],
-    "defaultFee": 480000
+    "defaultPrice": 1050000,
+    "defaultFee": 1050000,
+    "monthlyFee": 90000,
+    "unit": "식",
+    "description": "전면·상부·후면 3면 강화유리 C형 캐빈 · 우천 작업 보호",
+    "sortOrder": 2,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-03",
+    "optionCode": "MJ-OPT-03",
     "category": "PAID",
     "name": "천장캐빈",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 280000
+    "defaultPrice": 380000,
+    "defaultFee": 380000,
+    "monthlyFee": 35000,
+    "unit": "식",
+    "description": "오버헤드가드 상부 빗물·낙하물 차단 투명 루프 실드 장착",
+    "sortOrder": 3,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-04",
+    "optionCode": "MJ-OPT-04",
     "category": "PAID",
     "name": "에어컨",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 캐빈 장착 기종"
     ],
-    "defaultFee": 1850000
+    "defaultPrice": 1380000,
+    "defaultFee": 1380000,
+    "monthlyFee": 120000,
+    "unit": "식",
+    "description": "전동/디젤 전용 루프탑·매립형 고효율 냉방 에어컨 시공",
+    "sortOrder": 4,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-05",
+    "optionCode": "MJ-OPT-05",
     "category": "PAID",
     "name": "히터",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 450000
+    "defaultPrice": 480000,
+    "defaultFee": 480000,
+    "monthlyFee": 45000,
+    "unit": "식",
+    "description": "동절기 캐빈 실내 난방 및 전면 유리 성에 제거용 고성능 히터",
+    "sortOrder": 5,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-06",
+    "optionCode": "MJ-OPT-06",
     "category": "PAID",
     "name": "3방향 레드라인",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 220000
+    "defaultPrice": 200000,
+    "defaultFee": 200000,
+    "monthlyFee": 25000,
+    "unit": "식",
+    "description": "좌·우·후방 바닥 고휘도 적색 안전경계 라인빔 투사",
+    "sortOrder": 6,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-07",
+    "optionCode": "MJ-OPT-07",
     "category": "PAID",
     "name": "블루라이트",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 90000
+    "defaultPrice": 120000,
+    "defaultFee": 120000,
+    "monthlyFee": 15000,
+    "unit": "식",
+    "description": "전·후진 시 바닥 5m 전방 청색 스팟 투사 안전램프",
+    "sortOrder": 7,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-08",
+    "optionCode": "MJ-OPT-08",
     "category": "PAID",
     "name": "LED라이트 추가",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 110000
+    "defaultPrice": 130000,
+    "defaultFee": 130000,
+    "monthlyFee": 15000,
+    "unit": "식",
+    "description": "야간 및 실내 물류창고 고단 적재 시야 확보용 고휘도 방수 LED 작업등",
+    "sortOrder": 8,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-09",
+    "optionCode": "MJ-OPT-09",
     "category": "PAID",
     "name": "후방카메라",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 280000
+    "defaultPrice": 270000,
+    "defaultFee": 270000,
+    "monthlyFee": 30000,
+    "unit": "식",
+    "description": "7인치 고화질 모니터 + 적외선 방수 후방카메라 일체 장착",
+    "sortOrder": 9,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-10",
+    "optionCode": "MJ-OPT-10",
     "category": "PAID",
     "name": "후방감지기",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 180000
+    "defaultPrice": 185000,
+    "defaultFee": 185000,
+    "monthlyFee": 20000,
+    "unit": "식",
+    "description": "초음파 후방 장애물 감지센서 + 거리표시 디지털 경보기",
+    "sortOrder": 10,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-11",
+    "optionCode": "MJ-OPT-11",
     "category": "PAID",
     "name": "AI카메라(4채널)",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 전 기종"
     ],
-    "defaultFee": 890000
+    "defaultPrice": 950000,
+    "defaultFee": 950000,
+    "monthlyFee": 85000,
+    "unit": "식",
+    "description": "전·후·좌·우 4채널 AI 인체감지 카메라 + 실시간 음성·사이렌 경보",
+    "sortOrder": 11,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-12",
+    "optionCode": "MJ-OPT-12",
     "category": "ATTACHMENT",
     "name": "사이드시프트",
     "applicableModels": [
       "1.5톤 ~ 7.0톤 카운터밸런스"
     ],
-    "defaultFee": 820000
+    "defaultPrice": 850000,
+    "defaultFee": 850000,
+    "monthlyFee": 75000,
+    "unit": "식",
+    "description": "유압식 좌·우 정밀 이동 사이드시프트 · 3스풀 밸브 및 마스트 호스킷 일체",
+    "sortOrder": 12,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-13",
+    "optionCode": "MJ-OPT-13",
     "category": "ATTACHMENT",
     "name": "포크포지셔너(편개식)",
     "applicableModels": [
       "1.5톤 ~ 5.0톤 카운터밸런스"
     ],
-    "defaultFee": 1200000
+    "defaultPrice": 1180000,
+    "defaultFee": 1180000,
+    "monthlyFee": 100000,
+    "unit": "식",
+    "description": "단측 유압 실린더 제어식 포크 간격 자동 조절 어태치먼트",
+    "sortOrder": 13,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-14",
+    "optionCode": "MJ-OPT-14",
     "category": "ATTACHMENT",
     "name": "포크포지셔너(양개식)",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 카운터밸런스"
     ],
-    "defaultFee": 1350000
+    "defaultPrice": 1420000,
+    "defaultFee": 1420000,
+    "monthlyFee": 120000,
+    "unit": "식",
+    "description": "좌·우 양측 복동 실린더를 통한 포크 간격 동시 벌림·좁힘 유압 어태치먼트",
+    "sortOrder": 14,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-15",
+    "optionCode": "MJ-OPT-15",
     "category": "ATTACHMENT",
     "name": "포크포지셔너(복합형)",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 카운터밸런스"
     ],
-    "defaultFee": 1850000
+    "defaultPrice": 1780000,
+    "defaultFee": 1780000,
+    "monthlyFee": 150000,
+    "unit": "식",
+    "description": "사이드시프트 + 양개식 자동발 포크포지셔너 4스풀 복합 일체형 어태치먼트",
+    "sortOrder": 15,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-16",
+    "optionCode": "MJ-OPT-16",
     "category": "PAID",
     "name": "포크알람센서",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 320000
+    "defaultPrice": 390000,
+    "defaultFee": 390000,
+    "monthlyFee": 35000,
+    "unit": "식",
+    "description": "포크 끝단 레이저/초음파 파레트 진입 깊이 및 충돌 경보 센서",
+    "sortOrder": 16,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-17",
+    "optionCode": "MJ-OPT-17",
     "category": "ATTACHMENT",
     "name": "포크 덧발",
     "applicableModels": [
       "1.5톤 ~ 10.0톤 카운터밸런스"
     ],
-    "defaultFee": 300000
+    "defaultPrice": 330000,
+    "defaultFee": 330000,
+    "monthlyFee": 30000,
+    "unit": "조",
+    "description": "고장력강 장척 화물용 포크 연장 덧발 1,500~2,100mm 고정핀 포함",
+    "sortOrder": 17,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-18",
+    "optionCode": "MJ-OPT-18",
     "category": "PAID",
     "name": "블랙박스",
     "applicableModels": [
       "전 기종 공용"
     ],
-    "defaultFee": 240000
+    "defaultPrice": 310000,
+    "defaultFee": 310000,
+    "monthlyFee": 30000,
+    "unit": "식",
+    "description": "전·후방 FHD 2채널 방진·방수 상시녹화 블랙박스",
+    "sortOrder": 18,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   },
   {
     "id": "STD-FOM-MJ-19",
+    "optionCode": "MJ-OPT-19",
     "category": "ATTACHMENT",
     "name": "로드스테빌라이저",
     "applicableModels": [
       "1.5톤 ~ 5.0톤 카운터밸런스"
     ],
-    "defaultFee": 2450000
+    "defaultPrice": 1580000,
+    "defaultFee": 1580000,
+    "monthlyFee": 135000,
+    "unit": "식",
+    "description": "상부 유압식 화물 흔들림·낙하 방지 로드스테빌라이저 가압 클램프",
+    "sortOrder": 19,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
   }
 ];
 

@@ -416,11 +416,103 @@ export async function autoApplyTenantsDdl(): Promise<boolean> {
   }
 }
 
-/**  assets 테이블 신규 컬럼(yard, assetNature), 상태 CHECK 제약조건 확장 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
+/**  assets 테이블 신규 컬럼(yard, assetNature, VDI 2198 제원 및 설치형옵션), 상태 CHECK 제약조건 확장 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
 export const ASSETS_DDL_STATEMENTS: string[] = [
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "yard" TEXT DEFAULT '용인';`,
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "assetNature" TEXT DEFAULT 'PHYSICAL';`,
   `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "antiEntrapmentOwnership" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "monthlyRentalFee" DOUBLE PRECISION DEFAULT 0;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "dailyRentalFee" DOUBLE PRECISION DEFAULT 0;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "seriesName" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "equipmentClass" TEXT DEFAULT '전동 좌승식 카운터밸런스';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "powerType" TEXT DEFAULT '리튬인산철 전동';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "powerSource" TEXT DEFAULT '리튬인산철 전동';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "operatorType" TEXT DEFAULT '좌승식';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "ratedCapacityKg" INTEGER DEFAULT 2500;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "loadCenterMm" INTEGER DEFAULT 500;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "loadDistanceXMm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "wheelbaseMm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "serviceWeightKg" INTEGER DEFAULT 3980;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "axleLoadingLadenKg" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "axleLoadingUnladenKg" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "tireType" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "tireSpecFrontRear" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "wheelCountFrontRear" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "treadFrontRearMm" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastType" TEXT DEFAULT '표준 2단 마스트';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastModelCode" TEXT DEFAULT 'M300';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastStageCount" INTEGER DEFAULT 2;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastTiltDeg" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastLoweredH1Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "freeLiftHeightMm" INTEGER DEFAULT 150;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "standardLiftHeightMm" INTEGER DEFAULT 3000;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "maxOptionLiftHeightMm" INTEGER DEFAULT 4700;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastExtendedH4Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "overheadGuardHeightMm" INTEGER DEFAULT 2140;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "seatHeightH7Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "couplingHeightH10Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "overallLengthWithForkL1Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "overallLengthMm" INTEGER DEFAULT 2485;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "overallWidthMm" INTEGER DEFAULT 1180;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "overallWidthDualB2Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "forkDimensionsMm" TEXT DEFAULT '40 × 122 × 1,070';`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "forkCarriageClass" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "forkCarriageWidthB3Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "forkSpreadMinMaxB5Mm" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "groundClearanceMastM1Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "groundClearanceCenterM2Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "aisleWidth1000x1200Mm" INTEGER DEFAULT 3845;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "aisleWidth800x1200Mm" NUMERIC;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "turningRadiusMm" INTEGER DEFAULT 2120;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "internalTurningRadiusB13Mm" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "travelSpeedKmh" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "liftingSpeedMms" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "loweringSpeedMms" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "drawbarPullN" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "maxDrawbarPullN" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "gradeabilityPercent" DOUBLE PRECISION DEFAULT 20;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "maxGradeabilityPercent" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "accelerationTime10mSec" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "serviceBrake" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "parkingBrake" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "brakeType" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "driveMotorKw" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "liftMotorKw" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "motorOrEngineDetail" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "batteryVoltageCapacity" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "batteryWeightKg" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "powerSpecDetail" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "chargerOrFuelDetail" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "driveControlType" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "controllerMaker" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "operatingPressureMpa" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "oilFlowLmin" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "soundLevelDb" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "hydraulicTankLiter" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "waterproofRating" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "warrantyMonths" INTEGER DEFAULT 24;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "warrantyTerms" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "vdiSpecs" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "mastSpecs" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "batteryOptions" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "standardEquipments" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "optionalEquipments" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "installedOptions" TEXT;`,
+  `ALTER TABLE "assets" ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "contracts" ADD COLUMN IF NOT EXISTS "installedOptionsSummary" TEXT;`,
+  `ALTER TABLE "contracts" ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "contracts" ADD COLUMN IF NOT EXISTS "optionBillingMode" TEXT DEFAULT 'MONTHLY_ADDED';`,
+  `ALTER TABLE "contracts" ADD COLUMN IF NOT EXISTS "optionMonthlyTotal" DOUBLE PRECISION DEFAULT 0;`,
+  `ALTER TABLE "contracts" ADD COLUMN IF NOT EXISTS "optionOneTimeTotal" DOUBLE PRECISION DEFAULT 0;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "mastType" TEXT;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "mastModelCode" TEXT;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "standardLiftHeightMm" INTEGER;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "batteryVoltageCapacity" TEXT;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "forkDimensionsMm" TEXT;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "installedOptions" TEXT;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "optionMonthlyFee" DOUBLE PRECISION DEFAULT 0;`,
+  `ALTER TABLE "contract_assets" ADD COLUMN IF NOT EXISTS "optionOneTimeFee" DOUBLE PRECISION DEFAULT 0;`,
   `ALTER TABLE "assets" DROP CONSTRAINT IF EXISTS "assets_status_check";`,
   `UPDATE "assets" SET "yard" = '용인' WHERE "yard" IS NULL OR "yard" = '';`,
   `NOTIFY pgrst, 'reload schema';`
@@ -1055,11 +1147,15 @@ export const STANDARD_SPECS: SpecItem[] = [];
 //  전사 표준 옵션 마스터 인터페이스 (유상옵션 / 무상옵션 / 부착물 / 요구사양)
 export interface StandardOption {
   id: string;
+  optionCode?: string;
   category: 'PAID' | 'PROTECTION' | 'ATTACHMENT' | 'SPEC';
   name: string;
   defaultPrice?: number;
-  unit?: string; // 예: '월', '건', '대'
+  defaultFee?: number;
+  monthlyFee?: number;
+  unit?: string; // 예: '월', '건', '대', '식', '조'
   description?: string;
+  applicableModels?: string[];
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -1434,6 +1530,7 @@ export interface Product {
   equipmentClass?: string;       // 차종 구분
   powerSource?: string;          // 동력 방식
   powerType?: string;            // 동력 방식 표준
+  operatorType?: string;         // 운전 방식 (좌승식/입승식/보행식)
   ratedCapacityKg?: number;      // 정격 적재하중 · kg
   loadCenterMm?: number;         // 하중중심거리 · mm
   loadDistanceXMm?: number;      // 전륜축~포크면 거리 x · mm
@@ -1441,9 +1538,13 @@ export interface Product {
   serviceWeightKg?: number;      // 장비 자중 · kg
   axleLoadingLadenKg?: string;   // 적재 시 축중 전/후 · kg
   axleLoadingUnladenKg?: string; // 공차 시 축중 전/후 · kg
+  tireType?: string;             // 타이어 종류 (통타이어/공기압/폴리우레탄)
   tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
   wheelCountFrontRear?: string;  // 차륜수 전/후
   treadFrontRearMm?: string;     // 윤거 전/후 b10/b11 · mm
+  mastType?: string;             // 마스트 형식
+  mastModelCode?: string;        // 마스트 모델 코드
+  mastStageCount?: number;       // 마스트 단수
   mastTiltDeg?: string;          // 마스트 경사각 전/후 α/β · °
   mastLoweredH1Mm?: number;      // 마스트 전고 h1 · mm
   freeLiftHeightMm?: number;     // 자유 인상높이 h2 · mm
@@ -1584,6 +1685,84 @@ export interface Asset {
   status: 'AVAILABLE' | 'ASSIGNED' | 'OUTBOUND_INSPECTION' | 'AWAITING_TRANSPORT' | 'RENTED' | 'REPAIRING' | 'RENTED_RETURNED' | 'SOLD' | 'LOST' | 'DISPOSED';
   
   maintenanceScore?: number; // 정비 소요 점수 (0이 최상 상태)
+
+  //  [지게차 완제품 VDI 2198 / ISO 5053 국제표준 제원 및 개별 장착 구성 (유통 완제품과 1:1 동일 스키마)]
+  seriesName?: string;
+  equipmentClass?: string;
+  powerSource?: string;
+  powerType?: string;
+  operatorType?: string;
+  ratedCapacityKg?: number;
+  loadCenterMm?: number;
+  loadDistanceXMm?: number;
+  wheelbaseMm?: number;
+  serviceWeightKg?: number;
+  axleLoadingLadenKg?: string;
+  axleLoadingUnladenKg?: string;
+  tireType?: string;
+  tireSpecFrontRear?: string;
+  wheelCountFrontRear?: string;
+  treadFrontRearMm?: string;
+  mastType?: string;             // 개별 장비 장착 마스트 구분 (예: '표준 2단 마스트', '3단 풀프리 마스트')
+  mastModelCode?: string;        // 마스트 모델 코드 (예: 'M300', 'TF450', 'TF470')
+  mastStageCount?: number;       // 마스트 단수 (2 또는 3)
+  mastTiltDeg?: string;
+  mastLoweredH1Mm?: number;
+  freeLiftHeightMm?: number;
+  standardLiftHeightMm?: number;
+  maxOptionLiftHeightMm?: number;
+  mastExtendedH4Mm?: number;
+  overheadGuardHeightMm?: number;
+  seatHeightH7Mm?: number;
+  couplingHeightH10Mm?: number;
+  overallLengthWithForkL1Mm?: number;
+  overallLengthMm?: number;
+  overallWidthMm?: number;
+  overallWidthDualB2Mm?: number;
+  forkDimensionsMm?: string;
+  forkCarriageClass?: string;
+  forkCarriageWidthB3Mm?: number;
+  forkSpreadMinMaxB5Mm?: string;
+  groundClearanceMastM1Mm?: number;
+  groundClearanceCenterM2Mm?: number;
+  aisleWidth1000x1200Mm?: number;
+  aisleWidth800x1200Mm?: number;
+  turningRadiusMm?: number;
+  internalTurningRadiusB13Mm?: string;
+  travelSpeedKmh?: string;
+  liftingSpeedMms?: string;
+  loweringSpeedMms?: string;
+  drawbarPullN?: string;
+  maxDrawbarPullN?: string;
+  gradeabilityPercent?: number;
+  maxGradeabilityPercent?: string;
+  accelerationTime10mSec?: string;
+  serviceBrake?: string;
+  parkingBrake?: string;
+  brakeType?: string;
+  driveMotorKw?: string;
+  liftMotorKw?: string;
+  motorOrEngineDetail?: string;
+  batteryVoltageCapacity?: string;
+  batteryWeightKg?: string;
+  powerSpecDetail?: string;
+  chargerOrFuelDetail?: string;
+  driveControlType?: string;
+  controllerMaker?: string;
+  operatingPressureMpa?: string;
+  oilFlowLmin?: string;
+  soundLevelDb?: string;
+  hydraulicTankLiter?: string;
+  waterproofRating?: string;
+  warrantyMonths?: number;
+  warrantyTerms?: string;
+  vdiSpecs?: any[];
+  mastSpecs?: any[];
+  batteryOptions?: any[];
+  standardEquipments?: string[];
+  optionalEquipments?: string[];
+  installedOptions?: any;                   // 장착된 설치형옵션 요약 (문자열 또는 배열)
+  appliedOptions?: any[];                   // 장착된 설치형옵션 19종 상세 배열
 
   // 현재 계약 상태 (타 메뉴 비즈니스 연동 시 변경됨)
   currentCustomerId?: string;
@@ -1932,6 +2111,16 @@ export interface ContractAsset {
   monthlyRentalFee: number;
   dailyRentalFee: number;
   salePrice?: number; //  자산 매각 계약 시 매각 공급가액
+  //  지게차 완제품 VDI 2198 구성 및 체결 설치형옵션
+  mastType?: string;
+  mastModelCode?: string;
+  standardLiftHeightMm?: number;
+  batteryVoltageCapacity?: string;
+  forkDimensionsMm?: string;
+  installedOptions?: any;
+  appliedOptions?: any[];
+  optionMonthlyFee?: number;
+  optionOneTimeFee?: number;
   startDate: string;
   endDate: string;
   firstStartDate?: string; //  최초개시일 (현장 최초 투입일)
@@ -1977,6 +2166,12 @@ export interface Contract {
   tradeSupplyAmount?: number; // 유통 계약 공급가액
   tradeTotalAmount?: number; // 유통 계약 합계금액 (부가세 포함)
   totalAmount?: number; // 계약 금액 호환
+  //  지게차 렌탈 설치형옵션(19종) 계약 구성 필드
+  installedOptionsSummary?: string;
+  appliedOptions?: any[];
+  optionBillingMode?: 'MONTHLY_ADDED' | 'ONE_TIME_BILLING';
+  optionMonthlyTotal?: number;
+  optionOneTimeTotal?: number;
   saleTerms?: SaleContractTerms; //  자산 매각 계약 전용 상세 조건
   customerId: string;
   customerName?: string;
@@ -5644,25 +5839,114 @@ class LocalDB {
 
   get assets() {
     const raw = this.get<Asset>('assets', SEED_ASSETS);
+    const prods = this.products || [];
     return raw.map(a => {
       if (!a) return a;
       const aAny = a as any;
+      const cleanModel = String(a.modelName || '').trim().toUpperCase();
+      const matchedProd = prods.find(p => p && String(p.modelName || '').trim().toUpperCase() === cleanModel);
+      const matchedArch = FL_TECHNICAL_ARCHIVE.find(arc =>
+        arc.modelName.toUpperCase() === cleanModel ||
+        arc.modelName.toUpperCase().startsWith(cleanModel) ||
+        cleanModel.startsWith(arc.modelName.split('-')[0].toUpperCase())
+      );
+      const seedAsset = SEED_ASSETS.find(sa => sa.id === a.id || sa.assetNo === a.assetNo);
+      const baseSpec: any = {
+        ...(matchedArch || {}),
+        ...(matchedProd || {}),
+        ...(seedAsset || {}),
+        ...a
+      };
       return {
+        ...baseSpec,
         ...a,
         assetNo: a.assetNo || aAny.assetNumber || a.id,
-        serialNo: a.serialNo || aAny.serialNumber || '',
-        manufactureYear: String(a.manufactureYear || aAny.manufacturingYear || '2026'),
+        serialNo: a.serialNo || aAny.serialNumber || seedAsset?.serialNo || '',
+        manufactureYear: String(a.manufactureYear || aAny.manufacturingYear || seedAsset?.manufactureYear || '2026'),
         ownerType: a.ownerType || (aAny.ownership === 'SUBLEASED' ? 'RENTED' : 'OWNED'),
-        acquisitionPrice: Number(a.acquisitionPrice || aAny.purchasePrice || 20500000),
-        acquisitionDate: a.acquisitionDate || '2026-05-10',
-        monthlyRentalFee: Number(aAny.monthlyRentalFee || 750000),
-        dailyRentalFee: Number(aAny.dailyRentalFee || 45000),
+        acquisitionPrice: Number(a.acquisitionPrice || aAny.purchasePrice || seedAsset?.acquisitionPrice || 20500000),
+        acquisitionDate: a.acquisitionDate || seedAsset?.acquisitionDate || '2026-05-10',
+        monthlyRentalFee: Number(aAny.monthlyRentalFee || seedAsset?.monthlyRentalFee || 750000),
+        dailyRentalFee: Number(aAny.dailyRentalFee || seedAsset?.dailyRentalFee || 45000),
         monthlyRentFee: Number(a.monthlyRentFee || 0),
         dailyRentFee: Number(a.dailyRentFee || 0),
         cumRentalFee: Number(a.cumRentalFee || 0),
         cumRepairCost: Number(a.cumRepairCost || aAny.cumulativeRepairCost || 0),
         DefectScore: Number(a.DefectScore ?? aAny.repairScore ?? aAny.maintenanceScore ?? 0),
-        yard: (!a.yard || String(a.yard).trim() === '') ? '용인' : a.yard
+        yard: (!a.yard || String(a.yard).trim() === '') ? '용인' : a.yard,
+        // 지게차 완제품 VDI 2198 제원 및 마스트·배터리·설치형옵션 상속/보존
+        seriesName: a.seriesName || baseSpec.seriesName || '',
+        equipmentClass: a.equipmentClass || baseSpec.equipmentClass || '전동 좌승식 카운터밸런스',
+        powerType: a.powerType || a.powerSource || baseSpec.powerType || baseSpec.powerSource || '리튬인산철 전동',
+        powerSource: a.powerSource || a.powerType || baseSpec.powerSource || baseSpec.powerType || '리튬인산철 전동',
+        operatorType: a.operatorType || baseSpec.operatorType || '좌승식',
+        ratedCapacityKg: Number(a.ratedCapacityKg ?? baseSpec.ratedCapacityKg ?? 2500),
+        loadCenterMm: Number(a.loadCenterMm ?? baseSpec.loadCenterMm ?? 500),
+        loadDistanceXMm: Number(a.loadDistanceXMm ?? baseSpec.loadDistanceXMm ?? 465),
+        wheelbaseMm: Number(a.wheelbaseMm ?? baseSpec.wheelbaseMm ?? 1650),
+        serviceWeightKg: Number(a.serviceWeightKg ?? baseSpec.serviceWeightKg ?? 3860),
+        axleLoadingLadenKg: a.axleLoadingLadenKg || baseSpec.axleLoadingLadenKg || '',
+        axleLoadingUnladenKg: a.axleLoadingUnladenKg || baseSpec.axleLoadingUnladenKg || '',
+        tireSpecFrontRear: a.tireSpecFrontRear || baseSpec.tireSpecFrontRear || '전륜 7.00-12 / 후륜 6.00-9 솔리드',
+        wheelCountFrontRear: a.wheelCountFrontRear || baseSpec.wheelCountFrontRear || '2x / 2',
+        treadFrontRearMm: a.treadFrontRearMm || baseSpec.treadFrontRearMm || '965 / 975',
+        mastType: a.mastType || baseSpec.mastType || '표준 2단 마스트',
+        mastModelCode: a.mastModelCode || baseSpec.mastModelCode || 'M300',
+        mastStageCount: Number(a.mastStageCount ?? baseSpec.mastStageCount ?? 2),
+        mastTiltDeg: a.mastTiltDeg || baseSpec.mastTiltDeg || '6 / 12',
+        mastLoweredH1Mm: Number(a.mastLoweredH1Mm ?? baseSpec.mastLoweredH1Mm ?? 1995),
+        freeLiftHeightMm: Number(a.freeLiftHeightMm ?? baseSpec.freeLiftHeightMm ?? 160),
+        standardLiftHeightMm: Number(a.standardLiftHeightMm ?? baseSpec.standardLiftHeightMm ?? 3000),
+        maxOptionLiftHeightMm: Number(a.maxOptionLiftHeightMm ?? baseSpec.maxOptionLiftHeightMm ?? 6000),
+        mastExtendedH4Mm: Number(a.mastExtendedH4Mm ?? baseSpec.mastExtendedH4Mm ?? 4045),
+        overheadGuardHeightMm: Number(a.overheadGuardHeightMm ?? baseSpec.overheadGuardHeightMm ?? 2165),
+        seatHeightH7Mm: Number(a.seatHeightH7Mm ?? baseSpec.seatHeightH7Mm ?? 1110),
+        couplingHeightH10Mm: Number(a.couplingHeightH10Mm ?? baseSpec.couplingHeightH10Mm ?? 500),
+        overallLengthWithForkL1Mm: Number(a.overallLengthWithForkL1Mm ?? baseSpec.overallLengthWithForkL1Mm ?? 3570),
+        overallLengthMm: Number(a.overallLengthMm ?? baseSpec.overallLengthMm ?? 2500),
+        overallWidthMm: Number(a.overallWidthMm ?? baseSpec.overallWidthMm ?? 1176),
+        overallWidthDualB2Mm: Number(a.overallWidthDualB2Mm ?? baseSpec.overallWidthDualB2Mm ?? 1597),
+        forkDimensionsMm: a.forkDimensionsMm || baseSpec.forkDimensionsMm || '40 × 122 × 1,070',
+        forkCarriageClass: a.forkCarriageClass || baseSpec.forkCarriageClass || 'ISO2328 2A',
+        forkCarriageWidthB3Mm: Number(a.forkCarriageWidthB3Mm ?? baseSpec.forkCarriageWidthB3Mm ?? 1040),
+        forkSpreadMinMaxB5Mm: a.forkSpreadMinMaxB5Mm || baseSpec.forkSpreadMinMaxB5Mm || '240 / 1040',
+        groundClearanceMastM1Mm: Number(a.groundClearanceMastM1Mm ?? baseSpec.groundClearanceMastM1Mm ?? 115),
+        groundClearanceCenterM2Mm: Number(a.groundClearanceCenterM2Mm ?? baseSpec.groundClearanceCenterM2Mm ?? 130),
+        aisleWidth1000x1200Mm: Number(a.aisleWidth1000x1200Mm ?? baseSpec.aisleWidth1000x1200Mm ?? 3845),
+        aisleWidth800x1200Mm: Number(a.aisleWidth800x1200Mm ?? baseSpec.aisleWidth800x1200Mm ?? 4045),
+        turningRadiusMm: Number(a.turningRadiusMm ?? baseSpec.turningRadiusMm ?? 2120),
+        travelSpeedKmh: a.travelSpeedKmh || baseSpec.travelSpeedKmh || '15.0 / 16.0',
+        liftingSpeedMms: a.liftingSpeedMms || baseSpec.liftingSpeedMms || '330 / 450',
+        loweringSpeedMms: a.loweringSpeedMms || baseSpec.loweringSpeedMms || '450 / 500',
+        maxDrawbarPullN: a.maxDrawbarPullN || baseSpec.maxDrawbarPullN || '14000 / 14500',
+        gradeabilityPercent: Number(a.gradeabilityPercent ?? baseSpec.gradeabilityPercent ?? 20),
+        maxGradeabilityPercent: a.maxGradeabilityPercent || baseSpec.maxGradeabilityPercent || '18 / 20',
+        serviceBrake: a.serviceBrake || baseSpec.serviceBrake || '유압 기계식',
+        parkingBrake: a.parkingBrake || baseSpec.parkingBrake || '기계식',
+        brakeType: a.brakeType || baseSpec.brakeType || '유압 기계식 + 회생제동',
+        driveMotorKw: a.driveMotorKw || baseSpec.driveMotorKw || '11',
+        liftMotorKw: a.liftMotorKw || baseSpec.liftMotorKw || '15',
+        motorOrEngineDetail: a.motorOrEngineDetail || baseSpec.motorOrEngineDetail || '',
+        batteryVoltageCapacity: a.batteryVoltageCapacity || baseSpec.batteryVoltageCapacity || '80V / 230Ah',
+        batteryWeightKg: a.batteryWeightKg || baseSpec.batteryWeightKg || '210',
+        powerSpecDetail: a.powerSpecDetail || baseSpec.powerSpecDetail || '',
+        chargerOrFuelDetail: a.chargerOrFuelDetail || baseSpec.chargerOrFuelDetail || '',
+        driveControlType: a.driveControlType || baseSpec.driveControlType || '영구자석 동기식 교류 제어',
+        controllerMaker: a.controllerMaker || baseSpec.controllerMaker || '인파워 / 커티스',
+        operatingPressureMpa: a.operatingPressureMpa || baseSpec.operatingPressureMpa || '18.5',
+        oilFlowLmin: a.oilFlowLmin || baseSpec.oilFlowLmin || '65',
+        soundLevelDb: a.soundLevelDb || baseSpec.soundLevelDb || '70',
+        hydraulicTankLiter: a.hydraulicTankLiter || baseSpec.hydraulicTankLiter || '35',
+        waterproofRating: a.waterproofRating || baseSpec.waterproofRating || 'IPX4 전천후 방수',
+        warrantyMonths: Number(a.warrantyMonths ?? baseSpec.warrantyMonths ?? 24),
+        warrantyTerms: a.warrantyTerms || baseSpec.warrantyTerms || '',
+        vdiSpecs: (Array.isArray(a.vdiSpecs) && a.vdiSpecs.length > 0) ? a.vdiSpecs : (baseSpec.vdiSpecs || []),
+        mastSpecs: (Array.isArray(a.mastSpecs) && a.mastSpecs.length > 0) ? a.mastSpecs : (baseSpec.mastSpecs || []),
+        batteryOptions: (Array.isArray(a.batteryOptions) && a.batteryOptions.length > 0) ? a.batteryOptions : (baseSpec.batteryOptions || []),
+        standardEquipments: (Array.isArray(a.standardEquipments) && a.standardEquipments.length > 0) ? a.standardEquipments : (baseSpec.standardEquipments || []),
+        optionalEquipments: (Array.isArray(a.optionalEquipments) && a.optionalEquipments.length > 0) ? a.optionalEquipments : (baseSpec.optionalEquipments || []),
+        installedOptions: a.installedOptions !== undefined ? a.installedOptions : (baseSpec.installedOptions || '사이드시프트 · 후방카메라 · 블루라이트'),
+        appliedOptions: Array.isArray(a.appliedOptions) ? a.appliedOptions : (baseSpec.appliedOptions || [])
       };
     });
   }
@@ -5681,7 +5965,21 @@ class LocalDB {
   get standardOptions() {
     const list = this.get<StandardOption>('standardOptions', MUJIN_STANDARD_OPTIONS as any[]);
     let changed = false;
-    const filtered = list
+    const byId = new Map<string, StandardOption>();
+    // 19종 지게차 설치형옵션 기본 마스터 보장
+    (MUJIN_STANDARD_OPTIONS || []).forEach((m: any, idx: number) => {
+      byId.set(m.id, {
+        ...m,
+        defaultPrice: Number(m.defaultPrice ?? m.defaultFee ?? 0),
+        defaultFee: Number(m.defaultFee ?? m.defaultPrice ?? 0),
+        monthlyFee: Number(m.monthlyFee ?? Math.round(Number(m.defaultPrice ?? m.defaultFee ?? 0) / 12 / 1000) * 1000),
+        unit: m.unit || '식',
+        isActive: m.isActive !== false,
+        sortOrder: Number(m.sortOrder ?? (idx + 1)),
+        createdAt: m.createdAt || '2026-01-01T00:00:00.000Z'
+      });
+    });
+    list
       .filter(o => {
         if (!o || /^opt_(paid|prot|att)_/.test(String(o.id || ''))) {
           changed = true;
@@ -5689,21 +5987,29 @@ class LocalDB {
         }
         return true;
       })
-      .map(o => {
-        if (o.name && o.name.includes(',')) {
-          changed = true;
-          return { ...o, name: o.name.replace(/\s*,\s*/g, '·') };
-        }
-        return o;
+      .forEach((o, idx) => {
+        const cleanName = o.name && o.name.includes(',') ? o.name.replace(/\s*,\s*/g, '·') : o.name;
+        if (cleanName !== o.name) changed = true;
+        const seedMatch = byId.get(o.id);
+        const rawPrice = Number((o as any).defaultPrice ?? (o as any).defaultFee ?? seedMatch?.defaultPrice ?? 0);
+        byId.set(o.id, {
+          ...(seedMatch || {}),
+          ...o,
+          name: cleanName,
+          defaultPrice: rawPrice,
+          defaultFee: Number((o as any).defaultFee ?? rawPrice),
+          monthlyFee: Number((o as any).monthlyFee ?? seedMatch?.monthlyFee ?? Math.round(rawPrice / 12 / 1000) * 1000),
+          unit: o.unit || seedMatch?.unit || '식',
+          isActive: o.isActive !== false,
+          sortOrder: Number(o.sortOrder ?? seedMatch?.sortOrder ?? (idx + 1)),
+          createdAt: o.createdAt || seedMatch?.createdAt || '2026-01-01T00:00:00.000Z'
+        });
       });
-    if (filtered.length === 0) {
-      this.set('standardOptions', MUJIN_STANDARD_OPTIONS as any[]);
-      return MUJIN_STANDARD_OPTIONS as any[];
+    const merged = Array.from(byId.values()).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    if (changed || list.length < merged.length) {
+      this.set('standardOptions', merged);
     }
-    if (changed) {
-      this.set('standardOptions', filtered);
-    }
-    return filtered;
+    return merged;
   }
   set standardOptions(val: StandardOption[]) { this.set('standardOptions', val); }
 
@@ -8587,13 +8893,17 @@ export interface AppliedForkliftOption {
   optionGroupLabel: string;
   domainTypeLabel: '유상옵션' | '무상옵션' | '부착물' | '현장요구사양';
   name: string;
+  category?: string;
   subVariant: string;
   specDetail: string;
   qty: number;
+  quantity?: number;
   costPrice: number;
   unitPrice: number;
+  monthlyFee?: number;
   supplyAmount: number;
   isFreeApplied: boolean;
+  isFreeService?: boolean;
   note?: string;
 }
 
