@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import {
   FileSpreadsheet, Plus, Download, Search, RefreshCw,
-  CheckCircle2, Clock, FileText, Edit2, Trash2, Check, X, Layers
+  CheckCircle2, Clock, FileText, Edit2, Trash2, Check, X, Layers, Wrench, Receipt
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
-import { TradeSalesOrder } from '../../services/db';
+import { TradeSalesOrder, AppliedForkliftOption } from '../../services/db';
 import { SEED_FL_CUSTOMERS } from '../../data/flUnifiedSeedData';
 import { TradeContractBundleModal } from '../../components/TradeContractBundleModal';
 import { exportToExcel } from '../../services/excel';
@@ -25,9 +25,12 @@ export const TradeContractsPage: React.FC = () => {
   const { customers, currentUser, showErrorModal } = useApp();
   const {
     products,
+    optionMasters,
     inventoryLots,
     salesOrders,
     salesOrderLines,
+    outbounds,
+    billings,
     getCustomerName,
     getCustomerById,
     getProductStock,
@@ -35,7 +38,8 @@ export const TradeContractsPage: React.FC = () => {
     updateSalesOrder,
     acceptSalesOrder,
     cancelSalesOrder,
-    deleteSalesOrder
+    deleteSalesOrder,
+    issueBilling
   } = useTrade();
 
   // Toast state
@@ -110,6 +114,9 @@ export const TradeContractsPage: React.FC = () => {
   const [formSpecialTerms, setFormSpecialTerms] = useState<string>('1. 보증기간 차대번호 기준 12~24개월\n2. 물품 인수 검수 기한 3영업일');
   const [formMemo, setFormMemo] = useState<string>('');
   const [formLines, setFormLines] = useState<DraftOrderLine[]>([]);
+  const [formAppliedOptions, setFormAppliedOptions] = useState<AppliedForkliftOption[]>([]);
+  const [formAutoIssueBilling, setFormAutoIssueBilling] = useState<boolean>(true);
+  const [selectedNewOptionId, setSelectedNewOptionId] = useState<string>('FOM-MJ-01');
 
   const filteredModalCustomerOptions = useMemo(() => {
     const q = modalCustomerSearch.trim();
@@ -205,6 +212,9 @@ export const TradeContractsPage: React.FC = () => {
         memo: ''
       }
     ]);
+    setFormAppliedOptions([]);
+    setFormAutoIssueBilling(true);
+    setSelectedNewOptionId(optionMasters[0]?.id || 'FOM-MJ-01');
     setIsOrderModalOpen(true);
   };
 
@@ -238,6 +248,9 @@ export const TradeContractsPage: React.FC = () => {
         memo: l.memo || ''
       }))
     );
+    setFormAppliedOptions(order.appliedOptions || []);
+    setFormAutoIssueBilling(billings.some(b => b.orderId === order.id));
+    setSelectedNewOptionId(optionMasters[0]?.id || 'FOM-MJ-01');
     setIsOrderModalOpen(true);
   };
 
@@ -248,6 +261,18 @@ export const TradeContractsPage: React.FC = () => {
         ...l,
         unitPrice: getRecommendedUnitPrice(l.productId, nextTier)
       }))
+    );
+    setFormAppliedOptions(prev =>
+      prev.map(opt => {
+        const master = optionMasters.find(m => m.id === opt.optionId);
+        if (!master) return opt;
+        const nextPrice = nextTier === 'DEALER' ? (master.dealerPrice || master.unitPrice) : master.unitPrice;
+        return {
+          ...opt,
+          unitPrice: nextPrice,
+          supplyAmount: opt.isFreeApplied ? 0 : opt.qty * nextPrice
+        };
+      })
     );
   };
 
@@ -264,12 +289,75 @@ export const TradeContractsPage: React.FC = () => {
           unitPrice: getRecommendedUnitPrice(l.productId, nextTier)
         }))
       );
+      setFormAppliedOptions(prev =>
+        prev.map(opt => {
+          const master = optionMasters.find(m => m.id === opt.optionId);
+          if (!master) return opt;
+          const nextPrice = nextTier === 'DEALER' ? (master.dealerPrice || master.unitPrice) : master.unitPrice;
+          return {
+            ...opt,
+            unitPrice: nextPrice,
+            supplyAmount: opt.isFreeApplied ? 0 : opt.qty * nextPrice
+          };
+        })
+      );
       if (cust) {
         setFormDeliveryLocation((cust as any).address || '');
         setFormReceiverName((cust as any).representative || '');
         setFormReceiverPhone((cust as any).repContact || '');
       }
     }
+  };
+
+  const buildAppliedOptionItem = (master: any, qty: number): AppliedForkliftOption => {
+    const recPrice = formCustomerTier === 'DEALER' ? (master.dealerPrice || master.unitPrice) : master.unitPrice;
+    const isFree = Boolean(master.isDefaultFree || master.isFreeDefault);
+    return {
+      optionId: master.id,
+      optionCode: master.optionCode || master.code || master.id,
+      optionGroup: master.optionGroup || 'SIDESHIFT',
+      optionGroupLabel: master.optionGroupLabel || master.category || '출고장착옵션',
+      domainTypeLabel: master.domainTypeLabel || '유상옵션',
+      name: master.name,
+      subVariant: master.subVariant || master.category || '',
+      specDetail: master.specDetail || master.subVariant || '',
+      qty,
+      unitPrice: recPrice,
+      costPrice: master.costPrice,
+      supplyAmount: isFree ? 0 : qty * recPrice,
+      isFreeApplied: isFree
+    };
+  };
+
+  const handleToggleOptionInModal = (optionId: string) => {
+    const exists = formAppliedOptions.some(o => o.optionId === optionId);
+    if (exists) {
+      setFormAppliedOptions(prev => prev.filter(o => o.optionId !== optionId));
+      return;
+    }
+    const master = optionMasters.find(m => m.id === optionId);
+    if (!master) return;
+    const totalForkliftQty = Math.max(1, formLines.reduce((s, l) => s + l.qty, 0));
+    setFormAppliedOptions(prev => [...prev, buildAppliedOptionItem(master, totalForkliftQty)]);
+  };
+
+  const handleAddSelectedOptionInModal = () => {
+    if (!selectedNewOptionId) return;
+    const master = optionMasters.find(m => m.id === selectedNewOptionId);
+    if (!master) return;
+    const exists = formAppliedOptions.find(o => o.optionId === master.id);
+    if (exists) {
+      setFormAppliedOptions(prev =>
+        prev.map(o =>
+          o.optionId === master.id
+            ? { ...o, qty: o.qty + 1, supplyAmount: o.isFreeApplied ? 0 : (o.qty + 1) * o.unitPrice }
+            : o
+        )
+      );
+      return;
+    }
+    const totalForkliftQty = Math.max(1, formLines.reduce((s, l) => s + l.qty, 0));
+    setFormAppliedOptions(prev => [...prev, buildAppliedOptionItem(master, totalForkliftQty)]);
   };
 
   const handleAddDraftLine = () => {
@@ -332,7 +420,8 @@ export const TradeContractsPage: React.FC = () => {
             receiverPhone: formReceiverPhone,
             paymentTerms: formPaymentTerms,
             specialTerms: formSpecialTerms,
-            memo: formMemo
+            memo: formMemo,
+            appliedOptions: formAppliedOptions
           },
           formLines.map(l => ({
             id: l.id,
@@ -346,7 +435,12 @@ export const TradeContractsPage: React.FC = () => {
             memo: l.memo
           }))
         );
-        showToast(`수주 [${editingOrder.id}] 판매단가 및 매출이익 내역이 수정되었습니다.`);
+        if (formAutoIssueBilling && !billings.some(b => b.orderId === editingOrder.id)) {
+          await issueBilling(editingOrder.customerId, (editingOrder.orderDate || formOrderDate).slice(0, 7), { orderId: editingOrder.id });
+        }
+        showToast(
+          `수주 [${editingOrder.id}] (장착옵션 ${formAppliedOptions.length}종 포함) 수정${formAutoIssueBilling ? ' 및 청구 연동' : ''} 완료되었습니다.`
+        );
       } else {
         const created = await createSalesOrder(
           formCustomerId,
@@ -371,14 +465,36 @@ export const TradeContractsPage: React.FC = () => {
             specialTerms: formSpecialTerms,
             salespersonName: currentUser?.name || '유통영업팀',
             memo: formMemo,
-            status: 'CONFIRMED'
+            status: 'CONFIRMED',
+            appliedOptions: formAppliedOptions
           }
         );
-        showToast(`신규 수주 계약 [${created.id}] 체결 및 출고 파이프라인이 생성되었습니다.`);
+        if (formAutoIssueBilling) {
+          await issueBilling(created.customerId, (created.orderDate || formOrderDate).slice(0, 7), { orderId: created.id });
+        }
+        showToast(
+          `신규 유통계약 [${created.id}] (장착옵션 ${formAppliedOptions.length}종) 체결 및 출고${formAutoIssueBilling ? ' · 청구' : ''} 생성이 완료되었습니다.`
+        );
       }
       setIsOrderModalOpen(false);
     } catch (err: any) {
       showErrorModal(err.message || '수주 저장 실패');
+    }
+  };
+
+  const handleQuickIssueBillingForOrder = async (order: TradeSalesOrder) => {
+    try {
+      const existing = billings.find(b => b.orderId === order.id);
+      if (existing) {
+        showToast(`이미 청구 [${existing.id}] (₩${existing.totalAmount.toLocaleString()})가 생성되어 있습니다.`);
+        return;
+      }
+      const createdBilling = await issueBilling(order.customerId, (order.orderDate || new Date().toISOString()).slice(0, 7), { orderId: order.id });
+      showToast(
+        `유통계약 [${order.id}] 기반 청구 [${createdBilling.id}] (공급가 ₩${(createdBilling.supplyAmount || 0).toLocaleString()}, 장착옵션 포함) 생성이 완료되었습니다.`
+      );
+    } catch (err: any) {
+      showErrorModal(err.message || '청구 생성 실패');
     }
   };
 
@@ -546,12 +662,19 @@ export const TradeContractsPage: React.FC = () => {
     orderStatusFilter !== 'ALL' ||
     statusFilter !== 'ALL';
 
-  const draftSupplyTotal = formLines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
-  const draftEstimatedCogsTotal = formLines.reduce((s, l) => {
+  const draftProductSupplyTotal = formLines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+  const draftProductCogsTotal = formLines.reduce((s, l) => {
     const prod = products.find(p => p.id === l.productId);
     const estCost = prod ? (getProductStock(prod.id).avgUnitCost || prod.standardCost || 0) : 0;
     return s + l.qty * estCost;
   }, 0);
+  const draftOptionSupplyTotal = formAppliedOptions.reduce(
+    (s, op) => s + (op.isFreeApplied ? 0 : op.qty * op.unitPrice),
+    0
+  );
+  const draftOptionCostTotal = formAppliedOptions.reduce((s, op) => s + op.qty * op.costPrice, 0);
+  const draftSupplyTotal = draftProductSupplyTotal + draftOptionSupplyTotal;
+  const draftEstimatedCogsTotal = draftProductCogsTotal + draftOptionCostTotal;
   const draftEstimatedProfit = draftSupplyTotal - draftEstimatedCogsTotal;
   const draftVatTotal = Math.round(draftSupplyTotal * 0.1);
 
@@ -966,6 +1089,29 @@ export const TradeContractsPage: React.FC = () => {
                             >
                               <Edit2 size={11} /> 수정
  </button>
+                          )}
+
+                          {o.status !== 'CANCELLED' && (
+                            <button
+                              type="button"
+                              onClick={() => handleQuickIssueBillingForOrder(o)}
+                              title="완제품 + 장착옵션 합산 거래명세서 · 청구 생성"
+                              style={{
+                                padding: '4px 7px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                borderRadius: '4px',
+                                border: billings.some(b => b.orderId === o.id) ? '1px solid #86efac' : '1px solid #c4b5fd',
+                                backgroundColor: billings.some(b => b.orderId === o.id) ? '#dcfce7' : '#f5f3ff',
+                                color: billings.some(b => b.orderId === o.id) ? '#166534' : '#6d28d9',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '2px'
+                              }}
+                            >
+                              <Receipt size={11} /> {billings.some(b => b.orderId === o.id) ? '청구완료' : '청구생성'}
+                            </button>
                           )}
 
                           {o.status !== 'DELIVERED' && o.status !== 'CANCELLED' && (
@@ -1436,12 +1582,177 @@ export const TradeContractsPage: React.FC = () => {
                   </tbody>
                 </table>
 
-                <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '20px', fontSize: '12.5px' }}>
-                  <div>예상 매입원가: <strong>₩{draftEstimatedCogsTotal.toLocaleString()}</strong></div>
-                  <div>판매 공급가액: <strong>₩{draftSupplyTotal.toLocaleString()}</strong></div>
+                <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '16px', fontSize: '12px', flexWrap: 'wrap' }}>
+                  <div>완제품 공급가: <strong>₩{draftProductSupplyTotal.toLocaleString()}</strong></div>
+                  <div style={{ color: '#6d28d9' }}>출고설치옵션 공급가: <strong>+₩{draftOptionSupplyTotal.toLocaleString()}</strong> (원가 ₩{draftOptionCostTotal.toLocaleString()})</div>
+                  <div>총 매입원가: <strong>₩{draftEstimatedCogsTotal.toLocaleString()}</strong></div>
+                  <div>총 공급가액: <strong>₩{draftSupplyTotal.toLocaleString()}</strong></div>
                   <div style={{ color: '#059669', fontWeight: 800 }}>예상 매출이익: ₩{draftEstimatedProfit.toLocaleString()}</div>
                   <div style={{ color: 'var(--primary)', fontWeight: 800 }}>부가세 포함 총액: ₩{(draftSupplyTotal + draftVatTotal).toLocaleString()}</div>
                 </div>
+              </div>
+
+              {/* 출고 설치옵션 선택·장착 섹션 (지게차_출고_설치옵션.txt 19종 SSOT) */}
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Wrench size={14} color="#6d28d9" />
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)' }}>
+                      출고 설치옵션 장착 ({formAppliedOptions.length}종 선택 · 지게차_출고_설치옵션 19종 마스터 연동)
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <select
+                      value={selectedNewOptionId}
+                      onChange={e => setSelectedNewOptionId(e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 600 }}
+                    >
+                      {optionMasters.map((om, idx) => (
+                        <option key={om.id} value={om.id}>
+                          {idx + 1}) {om.name} — {formCustomerTier === 'DEALER' ? `대리점가 ₩${(om.dealerPrice || om.unitPrice).toLocaleString()}` : `고객가 ₩${om.unitPrice.toLocaleString()}`} (원가 ₩{om.costPrice.toLocaleString()})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddSelectedOptionInModal}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                    >
+                      <Plus size={12} /> 옵션 추가
+                    </button>
+                  </div>
+                </div>
+
+                {/* 19종 옵션 빠른 토글 칩 바 */}
+                <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-app)', borderBottom: formAppliedOptions.length > 0 ? '1px solid var(--border-color)' : 'none', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                  {(optionMasters.some(om => om.id.startsWith('FOM-MJ-'))
+                    ? optionMasters.filter(om => om.id.startsWith('FOM-MJ-'))
+                    : optionMasters
+                  ).map((om, idx) => {
+                    const isSelected = formAppliedOptions.some(o => o.optionId === om.id);
+                    return (
+                      <button
+                        key={om.id}
+                        type="button"
+                        onClick={() => handleToggleOptionInModal(om.id)}
+                        style={{
+                          padding: '3px 8px',
+                          fontSize: '11px',
+                          fontWeight: isSelected ? 800 : 600,
+                          borderRadius: '4px',
+                          border: isSelected ? '1px solid #7c3aed' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? '#ede9fe' : 'var(--bg-card)',
+                          color: isSelected ? '#5b21b6' : 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {idx + 1}) {om.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {formAppliedOptions.length > 0 && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>출고 설치옵션명</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left', width: '150px' }}>세부사양</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', width: '70px' }}>수량</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', width: '110px' }}>장착원가</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', width: '120px' }}>청구단가</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'center', width: '80px' }}>무상여부</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', width: '110px' }}>옵션공급가</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'center', width: '45px' }}>삭제</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formAppliedOptions.map(opt => {
+                        const optSupply = opt.isFreeApplied ? 0 : opt.qty * opt.unitPrice;
+                        return (
+                          <tr key={opt.optionId} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '6px 10px', fontWeight: 700, color: 'var(--text-main)' }}>
+                              [{opt.optionCode}] {opt.name}
+                            </td>
+                            <td style={{ padding: '6px 10px', color: 'var(--text-secondary)', fontSize: '11px' }}>
+                              {opt.subVariant || opt.optionGroupLabel}
+                            </td>
+                            <td style={{ padding: '6px 10px' }}>
+                              <input
+                                type="number"
+                                min={1}
+                                value={opt.qty}
+                                onChange={e => {
+                                  const q = Math.max(1, Number(e.target.value));
+                                  setFormAppliedOptions(prev =>
+                                    prev.map(o =>
+                                      o.optionId === opt.optionId
+                                        ? { ...o, qty: q, supplyAmount: o.isFreeApplied ? 0 : q * o.unitPrice }
+                                        : o
+                                    )
+                                  );
+                                }}
+                                style={{ width: '100%', padding: '4px 6px', fontSize: '12px', textAlign: 'right', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px 10px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                              ₩{(opt.qty * opt.costPrice).toLocaleString()}
+                            </td>
+                            <td style={{ padding: '6px 10px' }}>
+                              <input
+                                type="number"
+                                min={0}
+                                disabled={opt.isFreeApplied}
+                                value={opt.isFreeApplied ? 0 : opt.unitPrice}
+                                onChange={e => {
+                                  const p = Math.max(0, Number(e.target.value));
+                                  setFormAppliedOptions(prev =>
+                                    prev.map(o =>
+                                      o.optionId === opt.optionId
+                                        ? { ...o, unitPrice: p, supplyAmount: o.isFreeApplied ? 0 : o.qty * p }
+                                        : o
+                                    )
+                                  );
+                                }}
+                                style={{ width: '100%', padding: '4px 6px', fontSize: '12px', textAlign: 'right', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', fontWeight: 700 }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={opt.isFreeApplied}
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setFormAppliedOptions(prev =>
+                                    prev.map(o =>
+                                      o.optionId === opt.optionId
+                                        ? { ...o, isFreeApplied: checked, supplyAmount: checked ? 0 : o.qty * o.unitPrice }
+                                        : o
+                                    )
+                                  );
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 800, color: '#6d28d9' }}>
+                              ₩{optSupply.toLocaleString()}
+                            </td>
+                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => setFormAppliedOptions(prev => prev.filter(o => o.optionId !== opt.optionId))}
+                                style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer' }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -1466,22 +1777,33 @@ export const TradeContractsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsOrderModalOpen(false)}
-                  className="btn-secondary"
-                  style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  취소
- </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  {editingOrder ? '수주 수정 저장' : '수주 체결 확정'}
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={formAutoIssueBilling}
+                    onChange={e => setFormAutoIssueBilling(e.target.checked)}
+                  />
+                  <span>유통계약 체결 시 완제품 + 출고 설치옵션 합산 청구(거래명세서) 자동 생성 연결</span>
+                </label>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsOrderModalOpen(false)}
+                    className="btn-secondary"
+                    style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    {editingOrder ? '수주 수정 저장' : '수주 체결 확정'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

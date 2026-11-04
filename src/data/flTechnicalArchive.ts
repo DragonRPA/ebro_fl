@@ -27,6 +27,38 @@ export interface FlCompatiblePartSpec {
   LinkedSkuCode?: string;
 }
 
+export interface FlVdiSpecItem {
+  code: string;
+  category: string;
+  itemKo: string;
+  itemEn: string;
+  unit: string;
+  value: string;
+}
+
+export interface FlMastSpecRow {
+  mastType: string;
+  mastModel: string;
+  liftHeightH3Mm: number;
+  loweredHeightH1Mm: number;
+  extendedHeightWithBackrestH4Mm: number;
+  freeLiftWithBackrestH2Mm: number;
+  tiltAngleDeg: string;
+  loadCapacity500MmSingleKg: number;
+  loadCapacity500MmDualKg?: number;
+  loadCapacity600MmSingleKg?: number;
+}
+
+export interface FlBatteryOptionRow {
+  cellBrand: string;
+  batteryModel: string;
+  voltageCapacity: string;
+  weightKg?: string;
+  applicableModels: string;
+  status: '표준' | '옵션';
+  chargerOptions?: string;
+}
+
 export interface FlModelTechnicalSpec {
   id: string;
   manufacturerCode: 'HELI' | 'BYD' | 'HANGCHA' | 'EP' | 'HYUNDAI' | 'DOOSAN' | 'CLARK' | 'TOYOTA';
@@ -39,24 +71,61 @@ export interface FlModelTechnicalSpec {
   powerType: '리튬인산철 전동' | '납산배터리 전동' | '디젤 내연기관';
   ratedCapacityKg: number;
   loadCenterMm: number;
+  loadDistanceXMm?: number;
+  wheelbaseMm?: number;
+  serviceWeightKg: number;
+  axleLoadingLadenKg?: string;
+  axleLoadingUnladenKg?: string;
+  tireSpecFrontRear: string;
+  wheelCountFrontRear?: string;
+  treadFrontRearMm?: string;
+  mastTiltDeg?: string;
+  mastLoweredH1Mm?: number;
+  freeLiftHeightMm: number;
   standardLiftHeightMm: number;
   maxOptionLiftHeightMm: number;
-  freeLiftHeightMm: number;
-  forkDimensionsMm: string;
+  mastExtendedH4Mm?: number;
+  overheadGuardHeightMm: number;
+  seatHeightH7Mm?: number;
+  couplingHeightH10Mm?: number;
+  overallLengthWithForkL1Mm?: number;
   overallLengthMm: number;
   overallWidthMm: number;
-  overheadGuardHeightMm: number;
-  turningRadiusMm: number;
+  overallWidthDualB2Mm?: number;
+  forkDimensionsMm: string;
+  forkCarriageClass?: string;
+  forkCarriageWidthB3Mm?: number;
+  forkSpreadMinMaxB5Mm?: string;
+  groundClearanceMastM1Mm?: number;
+  groundClearanceCenterM2Mm?: number;
   aisleWidth1000x1200Mm: number;
+  aisleWidth800x1200Mm?: number;
+  turningRadiusMm: number;
+  internalTurningRadiusB13Mm?: string;
   travelSpeedKmh: string;
   liftingSpeedMms: string;
+  loweringSpeedMms?: string;
+  drawbarPullN?: string;
+  maxDrawbarPullN?: string;
   gradeabilityPercent: number;
-  serviceWeightKg: number;
-  powerSpecDetail: string;
-  motorOrEngineDetail: string;
-  chargerOrFuelDetail: string;
-  tireSpecFrontRear: string;
+  maxGradeabilityPercent?: string;
+  accelerationTime10mSec?: string;
+  serviceBrake?: string;
+  parkingBrake?: string;
   brakeType: string;
+  driveMotorKw?: string;
+  liftMotorKw?: string;
+  motorOrEngineDetail: string;
+  batteryVoltageCapacity?: string;
+  batteryWeightKg?: string;
+  powerSpecDetail: string;
+  chargerOrFuelDetail: string;
+  driveControlType?: string;
+  controllerMaker?: string;
+  operatingPressureMpa?: string;
+  oilFlowLmin?: string;
+  soundLevelDb?: string;
+  hydraulicTankLiter?: string;
   waterproofRating: string;
   warrantyTerms: string;
   safetyFeatures: string[];
@@ -64,6 +133,11 @@ export interface FlModelTechnicalSpec {
   periodicMaintenance: string[];
   compatibleParts: FlCompatiblePartSpec[];
   documents: FlArchivedDocument[];
+  vdiSpecs?: FlVdiSpecItem[];
+  mastSpecs?: FlMastSpecRow[];
+  batteryOptions?: FlBatteryOptionRow[];
+  standardEquipments?: string[];
+  optionalEquipments?: string[];
 }
 
 import { MUJIN_TECHNICAL_ARCHIVE_ADDITIONS } from './mujinGlobalInitialData';

@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { 
   Boxes, Truck, Archive, CheckSquare, Plus, Search, Download, 
   CheckCircle2, XCircle, ArrowRightLeft, ArrowUpRight, ArrowDownLeft, 
-  Edit, Trash2, X, AlertTriangle, ShieldCheck, FileCheck
+  Edit, Trash2, X, AlertTriangle, ShieldCheck, FileCheck, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { exportToExcel } from '../services/excel';
 import { SortableTh } from '../components/SortableTh';
@@ -108,6 +108,10 @@ export const ConsumableStockPage: React.FC = () => {
 
   // --- [1] 주기장 재고 상태 ---
   const [stockSearch, setStockSearch] = useState('');
+  const [targetYm, setTargetYm] = useState('2026-04');
+  const [selectedAgingBucket, setSelectedAgingBucket] = useState<number | 'ALL'>('ALL');
+  const [brandFilter, setBrandFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [masterEditingId, setMasterEditingId] = useState<string | null>(null);
   const [masterModelName, setMasterModelName] = useState('');
@@ -240,20 +244,146 @@ export const ConsumableStockPage: React.FC = () => {
     return map;
   }, [mechanics]);
 
-  // 재고 통계 요약 (유통 판매용 재고 / 렌탈자산 정비용 재고 구분 집계)
+  const shiftTargetYm = (delta: number) => {
+    setTargetYm(prev => {
+      const [yStr, mStr] = (prev || '2026-04').split('-');
+      let y = parseInt(yStr, 10) || 2026;
+      let m = (parseInt(mStr, 10) || 4) + delta;
+      while (m > 12) { m -= 12; y += 1; }
+      while (m < 1) { m += 12; y -= 1; }
+      return `${y}-${String(m).padStart(2, '0')}`;
+    });
+  };
+
+  // 기준년월(targetYm) 이하의 출고·조정 차감 수량 맵 (수불 원장 기반 역산)
+  const netDeductedByConsumableMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const log of (consumableLogs || [])) {
+      if (!log || !log.consumableId) continue;
+      const aYm = (log.actionDate || '').slice(0, 7);
+      if (!aYm || aYm > targetYm) continue;
+      if (log.type === 'OUTBOUND') {
+        map.set(log.consumableId, (map.get(log.consumableId) || 0) + (log.quantity || 0));
+      } else if (log.type === 'ADJUST') {
+        map.set(log.consumableId, (map.get(log.consumableId) || 0) - (log.quantity || 0));
+      }
+    }
+    return map;
+  }, [consumableLogs, targetYm]);
+
+  // 입고연월로부터 1개월 단위 경과월수 및 재고잔량·재고잔액 동적 재집계(역산)
+  const backcalculatedConsumables = useMemo(() => {
+    const [tyStr, tmStr] = (targetYm || '2026-04').split('-');
+    const ty = parseInt(tyStr, 10) || 2026;
+    const tm = parseInt(tmStr, 10) || 4;
+
+    return consumables.map(c => {
+      const inboundDate = c.inboundDate || (c.createdAt ? c.createdAt.slice(0, 10) : '2026-04-01');
+      const inboundYm = (c.inboundYm || inboundDate.slice(0, 7)).replace('.', '-');
+      const [iyStr, imStr] = inboundYm.split('-');
+      const iy = parseInt(iyStr, 10) || 2026;
+      const im = parseInt(imStr, 10) || 4;
+      const elapsedMonths = (ty - iy) * 12 + (tm - im);
+
+      if (elapsedMonths < 0) {
+        return {
+          ...c,
+          inboundDate,
+          inboundYm,
+          calcElapsedMonths: elapsedMonths,
+          calcAgingBucket: -1,
+          calcStockQty: 0,
+          calcStockBalanceAmount: 0,
+          calcSaleStockQty: 0,
+          calcRepairStockQty: 0,
+          isReceivedAsOfTarget: false
+        };
+      }
+
+      const bucket = Math.min(24, elapsedMonths);
+      const initQty = c.initialQty ?? c.stockQty ?? 0;
+      const initAmt = c.initialAmount ?? c.stockBalanceAmount ?? (initQty * (c.unitPrice || 0));
+      const deducted = netDeductedByConsumableMap.get(c.id) || 0;
+      const extraAdded = Math.max(0, (c.stockQty || 0) - initQty);
+      const calcQty = Math.max(0, initQty + extraAdded - deducted);
+
+      // 원단위 정밀 재고잔액 역산 (수량 변동이 없을 시 원본 총금액 100% 보존 -> 합계 64,889,155원 일치)
+      let calcAmt = 0;
+      if (calcQty === (c.stockQty || 0) && c.stockBalanceAmount !== undefined && extraAdded === 0) {
+        calcAmt = c.stockBalanceAmount;
+      } else if (calcQty === initQty && extraAdded === 0) {
+        calcAmt = initAmt;
+      } else if (initQty > 0) {
+        const exactUnit = c.exactUnitCost ?? (initAmt / initQty);
+        calcAmt = Math.round(calcQty * exactUnit);
+      } else {
+        calcAmt = calcQty * (c.unitPrice || 0);
+      }
+
+      const saleRatio = (c.stockQty || 0) > 0 && c.saleStockQty !== undefined ? c.saleStockQty / c.stockQty : 0.6;
+      const calcSale = calcQty === (c.stockQty || 0) && c.saleStockQty !== undefined ? c.saleStockQty : Math.round(calcQty * saleRatio);
+      const calcRepair = Math.max(0, calcQty - calcSale);
+
+      return {
+        ...c,
+        inboundDate,
+        inboundYm,
+        calcElapsedMonths: elapsedMonths,
+        calcAgingBucket: bucket,
+        calcStockQty: calcQty,
+        calcStockBalanceAmount: calcAmt,
+        calcSaleStockQty: calcSale,
+        calcRepairStockQty: calcRepair,
+        isReceivedAsOfTarget: true
+      };
+    });
+  }, [consumables, targetYm, netDeductedByConsumableMap]);
+
+  // 0개월 ~ 23개월, 24개월이상 총 25개 경과월 버킷별 집계 매트릭스
+  const agingBucketsSummary = useMemo(() => {
+    const buckets = Array.from({ length: 25 }, (_, i) => ({
+      bucket: i,
+      label: i === 24 ? '24개월이상' : `${i}개월`,
+      itemCount: 0,
+      stockQty: 0,
+      stockAmount: 0
+    }));
+    let activeKinds = 0;
+    for (const bc of backcalculatedConsumables) {
+      if (!bc.isReceivedAsOfTarget || bc.calcStockQty <= 0) continue;
+      activeKinds += 1;
+      const b = bc.calcAgingBucket;
+      if (b >= 0 && b <= 24) {
+        buckets[b].itemCount += 1;
+        buckets[b].stockQty += bc.calcStockQty;
+        buckets[b].stockAmount += bc.calcStockBalanceAmount;
+      }
+    }
+    return { buckets, activeKinds };
+  }, [backcalculatedConsumables]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of consumables) {
+      if (c.category) set.add(c.category);
+    }
+    return Array.from(set);
+  }, [consumables]);
+
+  // 재고 통계 요약 (기준년월 역산 및 유통 판매용 / 렌탈자산 정비용 구분 집계)
   const stockSummary = useMemo(() => {
+    let hqTotalKinds = 0;
     let hqTotalQty = 0;
     let hqSaleQty = 0;
     let hqRepairQty = 0;
     let hqTotalValue = 0;
-    for (const c of consumables) {
-      const qty = c.stockQty || 0;
-      const saleQ = c.saleStockQty ?? (c.usagePurpose === 'RENTAL_REPAIR' ? 0 : Math.floor(qty * 0.6));
-      const repQ = c.repairStockQty ?? Math.max(0, qty - saleQ);
-      hqTotalQty += qty;
-      hqSaleQty += saleQ;
-      hqRepairQty += repQ;
-      hqTotalValue += qty * (c.unitPrice || 0);
+    for (const bc of backcalculatedConsumables) {
+      if (!bc.isReceivedAsOfTarget) continue;
+      hqTotalKinds += 1;
+      hqTotalQty += bc.calcStockQty;
+      hqSaleQty += bc.calcSaleStockQty;
+      hqRepairQty += bc.calcRepairStockQty;
+      hqTotalValue += bc.calcStockBalanceAmount;
     }
 
     let vehicleTotalQty = 0;
@@ -266,7 +396,7 @@ export const ConsumableStockPage: React.FC = () => {
     }
 
     return {
-      hqTotalKinds: consumables.length,
+      hqTotalKinds,
       hqTotalQty,
       hqSaleQty,
       hqRepairQty,
@@ -276,7 +406,7 @@ export const ConsumableStockPage: React.FC = () => {
       grandTotalQty: hqTotalQty + vehicleTotalQty,
       grandTotalValue: hqTotalValue + vehicleTotalValue
     };
-  }, [consumables, mechanicConsumableStocks, consumableMap]);
+  }, [backcalculatedConsumables, mechanicConsumableStocks, consumableMap]);
 
   // 고품 관리 요약 및 배지 카운트
   const collectedPartsSummary = useMemo(() => {
@@ -325,15 +455,19 @@ export const ConsumableStockPage: React.FC = () => {
   // --- 정렬용 Enriched Data ---
   const enrichedStock = useMemo(() => {
     const matcher = stockSearch ? createHangulMatcher(stockSearch) : null;
-    return consumables.filter(c => {
-      return !matcher || matcher.testAny([c.modelName, c.supplier]);
+    return backcalculatedConsumables.filter(c => {
+      if (!c.isReceivedAsOfTarget) return false;
+      if (brandFilter !== 'ALL' && (c.brand || 'HANGCHA') !== brandFilter) return false;
+      if (categoryFilter !== 'ALL' && c.category !== categoryFilter) return false;
+      if (selectedAgingBucket !== 'ALL' && c.calcAgingBucket !== selectedAgingBucket) return false;
+      return !matcher || matcher.testAny([c.modelName, c.skuCode || '', c.category || '', c.compatibleModels || '', c.supplier]);
     }).map(c => {
       const totalVehicleQty = vehicleQtyByConsumableMap.get(c.id) || 0;
-      const grandQty = (c.stockQty || 0) + totalVehicleQty;
-      const hqValue = (c.stockQty || 0) * (c.unitPrice || 0);
-      return { ...c, totalVehicleQty, grandQty, hqValue };
+      const grandQty = (c.calcStockQty || 0) + totalVehicleQty;
+      const hqValue = c.calcStockBalanceAmount ?? ((c.calcStockQty || 0) * (c.unitPrice || 0));
+      return { ...c, stockQty: c.calcStockQty, totalVehicleQty, grandQty, hqValue };
     });
-  }, [consumables, stockSearch, vehicleQtyByConsumableMap]);
+  }, [backcalculatedConsumables, brandFilter, categoryFilter, selectedAgingBucket, stockSearch, vehicleQtyByConsumableMap]);
 
   const { items: sortedStock, requestSort: requestSortStock, sortConfig: sortConfigStock } = useSortableData(enrichedStock);
 
@@ -371,25 +505,39 @@ export const ConsumableStockPage: React.FC = () => {
 
   // --- 엑셀 다운로드 핸들러 ---
   const handleExportStock = () => {
-    const excelData = consumables.map((c, idx) => {
-      const totalVehicleQty = vehicleQtyByConsumableMap.get(c.id) || 0;
-
-      return {
+    const excelData = sortedStock.map((c, idx) => {
+      const totalVehicleQty = c.totalVehicleQty || 0;
+      const hqVal = c.hqValue || 0;
+      const vehVal = totalVehicleQty * (c.unitPrice || 0);
+      const rowObj: Record<string, any> = {
         '순번': idx + 1,
-        '소모품 품목명': c.modelName,
+        '기준년월': targetYm.replace('-', '.'),
+        '최초입고일': c.inboundDate || '2026-04-01',
+        '입고연월': c.inboundYm || '2026-04',
+        '경과월수': c.calcAgingBucket,
+        '품번': c.skuCode || c.id,
+        '부품 품목명': c.modelName,
+        '제품종류': c.category || '-',
+        '호환모델': c.compatibleModels || c.applicableModels || '-',
+        '공급업체': c.brand || c.supplier || '-',
         '주기장 재고': c.stockQty,
         '차량 이동 재고': totalVehicleQty,
         '전사 총 재고': c.stockQty + totalVehicleQty,
         '단위': c.unit || '개',
-        '단가': `${(c.unitPrice || 0).toLocaleString()}원`,
-        '주기장 재고평가액': `${((c.stockQty || 0) * (c.unitPrice || 0)).toLocaleString()}원`,
-        '차량 재고평가액': `${(totalVehicleQty * (c.unitPrice || 0)).toLocaleString()}원`,
-        '총 재고평가액': `${(((c.stockQty || 0) + totalVehicleQty) * (c.unitPrice || 0)).toLocaleString()}원`,
-        '최근 구입처': c.supplier || '-'
+        '단가': c.unitPrice || 0,
+        '주기장 재고잔액': hqVal,
+        '차량 재고평가액': vehVal,
+        '총 재고잔액': hqVal + vehVal
       };
+      for (let m = 0; m < 24; m++) {
+        rowObj[`${m}개월금액`] = c.calcAgingBucket === m ? hqVal : 0;
+      }
+      rowObj['24개월이상금액'] = c.calcAgingBucket === 24 ? hqVal : 0;
+      rowObj['시리얼번호'] = c.serialNo || '';
+      return rowObj;
     });
 
-    exportToExcel(excelData, `소모품_주기장재고대장_${new Date().toISOString().split('T')[0]}`, '주기장재고');
+    exportToExcel(excelData, `무진글로벌_부품재고대장_경과월역산_${targetYm}`, '주기장재고');
   };
 
   const handleExportVehicleStock = () => {
@@ -724,33 +872,147 @@ export const ConsumableStockPage: React.FC = () => {
           {/* 상단 통계 카드 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>총 관리 소모품 수</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>기준년월 관리 품목수</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)' }}>
                 {stockSummary.hqTotalKinds}종
               </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: 700 }}>유통 판매용 소모품 재고</div>
+              <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: 700 }}>유통 판매용 부품 재고</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#0284c7' }}>
                 {stockSummary.hqSaleQty.toLocaleString()}개
               </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>렌탈자산 정비용 소모품 재고</div>
+              <div style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>렌탈자산 정비용 부품 재고</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#b45309' }}>
                 {stockSummary.hqRepairQty.toLocaleString()}개
               </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 총보유 수량</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 총보유 재고수량</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
                 {stockSummary.hqTotalQty.toLocaleString()}개
               </div>
             </div>
             <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>전사 총 재고 평가액</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>기준년월 총 재고잔액</div>
               <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#7c3aed' }}>
                 ₩{stockSummary.grandTotalValue.toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          {/* 입고연월 기준 1개월 단위 경과월수별 재고잔량 · 재고잔액 역산 매트릭스 바 */}
+          <div className="card" style={{ margin: 0, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                  입고연월 기준 1개월 단위 경과별 재고잔량 · 재고잔액 재집계
+                </span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'var(--bg-app)', padding: '3px 6px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <button
+                    type="button"
+                    onClick={() => shiftTargetYm(-1)}
+                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', fontWeight: 800, fontSize: '12px', color: 'var(--text-primary)' }}
+                  >
+                    <ChevronLeft size={14} /> 1개월 전
+                  </button>
+                  <input
+                    type="month"
+                    value={targetYm}
+                    onChange={e => setTargetYm(e.target.value || '2026-04')}
+                    style={{ padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '12.5px', fontWeight: 800 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => shiftTargetYm(1)}
+                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', fontWeight: 800, fontSize: '12px', color: 'var(--text-primary)' }}
+                  >
+                    1개월 후 <ChevronRight size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTargetYm('2026-04');
+                      setSelectedAgingBucket('ALL');
+                    }}
+                    className="btn-secondary"
+                    style={{ padding: '3px 8px', fontSize: '11.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    기준월 2026-04 복원
+                  </button>
+                </div>
+              </div>
+              {selectedAgingBucket !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedAgingBucket('ALL')}
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  경과월 필터 해제
+                </button>
+              )}
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: '6px', minWidth: 'max-content', paddingBottom: '2px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAgingBucket('ALL')}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    border: selectedAgingBucket === 'ALL' ? '2px solid #2563eb' : '1px solid var(--border-color)',
+                    backgroundColor: selectedAgingBucket === 'ALL' ? '#eff6ff' : 'var(--bg-app)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    minWidth: '115px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#1e40af' }}>전체 경과월 합계</div>
+                  <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
+                    {agingBucketsSummary.activeKinds}종 · {stockSummary.hqTotalQty.toLocaleString('ko-KR')}개
+                  </div>
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#2563eb' }}>
+                    ₩{stockSummary.hqTotalValue.toLocaleString('ko-KR')}
+                  </div>
+                </button>
+
+                {agingBucketsSummary.buckets.map(b => {
+                  const hasData = b.itemCount > 0;
+                  const isSelected = selectedAgingBucket === b.bucket;
+                  return (
+                    <button
+                      key={b.bucket}
+                      type="button"
+                      onClick={() => setSelectedAgingBucket(isSelected ? 'ALL' : b.bucket)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: isSelected ? '2px solid #2563eb' : '1px solid var(--border-color)',
+                        backgroundColor: isSelected ? '#eff6ff' : hasData ? '#ffffff' : 'var(--bg-app)',
+                        opacity: hasData ? 1 : 0.55,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        minWidth: '96px',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <div style={{ fontSize: '11px', fontWeight: 800, color: b.bucket >= 12 ? '#b45309' : '#0f766e' }}>
+                        {b.label} 경과
+                      </div>
+                      <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
+                        {b.itemCount}종 · {b.stockQty.toLocaleString('ko-KR')}개
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: hasData ? '#1e40af' : 'var(--text-muted)' }}>
+                        ₩{b.stockAmount.toLocaleString('ko-KR')}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -758,13 +1020,33 @@ export const ConsumableStockPage: React.FC = () => {
           {/* 검색 및 액션 바 */}
           <div className="card" style={{ margin: 0, padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <select
+                  value={brandFilter}
+                  onChange={e => setBrandFilter(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                >
+                  <option value="ALL">전체 브랜드</option>
+                  <option value="HANGCHA">항차</option>
+                  <option value="HELI">헬리</option>
+                  <option value="BYD">비와이디</option>
+                </select>
+                <select
+                  value={categoryFilter}
+                  onChange={e => setCategoryFilter(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                >
+                  <option value="ALL">전체 제품종류</option>
+                  {categoryOptions.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={stockSearch}
                   onChange={e => setStockSearch(e.target.value)}
-                  placeholder="품목명, 공급처 검색..."
-                  style={{ padding: '6px 10px', fontSize: '12.5px', width: '220px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                  placeholder="품번, 품목명, 제품종류, 공급처 검색..."
+                  style={{ padding: '6px 10px', fontSize: '12.5px', width: '240px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
                 />
               </div>
 
@@ -783,7 +1065,7 @@ export const ConsumableStockPage: React.FC = () => {
                   className="btn-excel-download"
                   onClick={handleExportStock}
                 >
-                  <Download size={13} /> 주기장 재고 엑셀
+                  <Download size={13} /> 경과월 재고잔액 엑셀
  </button>
               </div>
             </div>
@@ -791,23 +1073,25 @@ export const ConsumableStockPage: React.FC = () => {
 
           {/* 품목 마스터 목록 테이블 */}
           <div className="card" style={{ margin: 0 }}>
-            <div className="table-container" style={{ border: 'none', boxShadow: 'none', maxHeight: 'calc(100vh - 340px)', overflowY: 'auto', overflowX: 'auto' }}>
+            <div className="table-container" style={{ border: 'none', boxShadow: 'none', maxHeight: 'calc(100vh - 380px)', overflowY: 'auto', overflowX: 'auto' }}>
               <table>
                 <thead>
                   <tr>
-                    <th>순번</th>
-                    <SortableTh label="소모품명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <th style={{ textAlign: 'center' }}>유형자산 분류 · 용도 구분</th>
-                    <th style={{ textAlign: 'center', color: '#0284c7' }}>유통 판매용 재고</th>
-                    <th style={{ textAlign: 'center', color: '#b45309' }}>렌탈자산 정비용 재고</th>
-                    <SortableTh label="주기장 총재고" sortKey="stockQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
+                    <th style={{ whiteSpace: 'nowrap' }}>순번</th>
+                    <SortableTh label="품번" sortKey="skuCode" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="부품 · 소모품명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="제품종류 · 계통" sortKey="category" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="최초입고일" sortKey="inboundDate" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
+                    <SortableTh label="경과월수" sortKey="calcAgingBucket" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
+                    <th style={{ textAlign: 'center', color: '#0284c7', whiteSpace: 'nowrap' }}>유통 판매용 재고</th>
+                    <th style={{ textAlign: 'center', color: '#b45309', whiteSpace: 'nowrap' }}>렌탈자산 정비용 재고</th>
+                    <SortableTh label="주기장 재고수량" sortKey="stockQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="차량 재고" sortKey="totalVehicleQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="전사 총수량" sortKey="grandQty" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
-                    <SortableTh label="단위" sortKey="unit" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <SortableTh label="매입단가 / 판매단가" sortKey="unitPrice" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <SortableTh label="주기장 평가액" sortKey="hqValue" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="재고잔액" sortKey="hqValue" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <SortableTh label="공급처" sortKey="supplier" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <th style={{ textAlign: 'center' }}>관리</th>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>관리</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -817,8 +1101,8 @@ export const ConsumableStockPage: React.FC = () => {
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={13} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
-                            등록된 소모품 품목이 없습니다.
+                          <td colSpan={15} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
+                            등록된 품목이 없습니다.
                           </td>
                         </tr>
                       );
@@ -828,43 +1112,55 @@ export const ConsumableStockPage: React.FC = () => {
                       const totalVehicleQty = c.totalVehicleQty;
                       const grandQty = c.grandQty;
                       const hqValue = c.hqValue;
-                      const saleStock = c.saleStockQty ?? (c.usagePurpose === 'RENTAL_REPAIR' ? 0 : Math.floor((c.stockQty || 0) * 0.6));
-                      const repairStock = c.repairStockQty ?? Math.max(0, (c.stockQty || 0) - saleStock);
-                      const usageLabel =
-                        c.usagePurpose === 'RENTAL_REPAIR'
-                          ? '렌탈자산 정비전용'
-                          : c.usagePurpose === 'TRADE_SALE'
-                          ? '유통 판매전용'
-                          : '유통 판매 · 렌탈자산 정비 겸용';
+                      const saleStock = c.calcSaleStockQty ?? c.saleStockQty ?? 0;
+                      const repairStock = c.calcRepairStockQty ?? c.repairStockQty ?? 0;
+                      const agingLabel = c.calcAgingBucket === 24 ? '24개월이상' : `${c.calcAgingBucket}개월`;
 
                       return (
                         <tr key={c.id}>
-                          <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{idx + 1}</td>
-                          <td><strong style={{ color: 'var(--primary)' }}>{c.modelName}</strong></td>
-                          <td style={{ textAlign: 'center' }}>
-                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: c.usagePurpose === 'RENTAL_REPAIR' ? '#fef3c7' : '#ccfbf1', color: c.usagePurpose === 'RENTAL_REPAIR' ? '#b45309' : '#0f766e' }}>
-                              소모품 · {usageLabel}
+                          <td style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>{c.skuCode || c.id}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}><strong style={{ color: 'var(--primary)' }}>{c.modelName}</strong></td>
+                          <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: '#ccfbf1', color: '#0f766e' }}>
+                              {c.category || '부품'}
                             </span>
                           </td>
-                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#0284c7' }}>
+                          <td style={{ textAlign: 'center', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {c.inboundDate || '2026-04-01'}
+                          </td>
+                          <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <span
+                              style={{
+                                padding: '2px 7px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                backgroundColor: c.calcAgingBucket >= 12 ? '#fef3c7' : '#dcfce7',
+                                color: c.calcAgingBucket >= 12 ? '#b45309' : '#166534'
+                              }}
+                            >
+                              {agingLabel}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#0284c7', whiteSpace: 'nowrap' }}>
                             {saleStock}
                           </td>
-                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#b45309' }}>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#b45309', whiteSpace: 'nowrap' }}>
                             {repairStock}
                           </td>
-                          <td style={{ textAlign: 'center', fontWeight: 700, color: c.stockQty > 0 ? '#059669' : '#dc2626' }}>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: c.stockQty > 0 ? '#059669' : '#dc2626', whiteSpace: 'nowrap' }}>
                             {c.stockQty}
                           </td>
-                          <td style={{ textAlign: 'center', fontWeight: 600 }}>{totalVehicleQty}</td>
-                          <td style={{ textAlign: 'center', fontWeight: 800, color: 'var(--primary)' }}>{grandQty}</td>
-                          <td style={{ fontSize: '12px' }}>{c.unit || '개'}</td>
-                          <td style={{ fontSize: '12px' }}>
+                          <td style={{ textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap' }}>{totalVehicleQty}</td>
+                          <td style={{ textAlign: 'center', fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap' }}>{grandQty}</td>
+                          <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                             {(c.unitPrice || 0).toLocaleString()}원
                             {c.saleUnitPrice ? <span style={{ color: '#0284c7', marginLeft: '6px', fontWeight: 700 }}>/ 판매 {c.saleUnitPrice.toLocaleString()}원</span> : null}
                           </td>
-                          <td style={{ fontWeight: 600 }}>{hqValue.toLocaleString()}원</td>
-                          <td style={{ fontSize: '12px' }}>{c.supplier || '-'}</td>
-                          <td style={{ textAlign: 'center' }}>
+                          <td style={{ fontWeight: 800, color: '#7c3aed', whiteSpace: 'nowrap' }}>₩{hqValue.toLocaleString()}</td>
+                          <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{c.supplier || '-'}</td>
+                          <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                             {canSave && (
                               <div style={{ display: 'inline-flex', gap: '4px' }}>
                                 <button

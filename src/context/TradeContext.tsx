@@ -16,7 +16,7 @@ import {
   MUJIN_TRADE_PRODUCTS,
   MUJIN_TRADE_PURCHASES,
   MUJIN_TRADE_PURCHASE_ITEMS,
-  MUJIN_TRADE_LOTS
+  MUJIN_TRADE_LOTS, MUJIN_TRADE_SALES_ORDERS, MUJIN_TRADE_SALES_ORDER_LINES, MUJIN_TRADE_OUTBOUNDS, MUJIN_TRADE_BILLINGS
 } from '../data/mujinGlobalInitialData';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
@@ -1831,10 +1831,10 @@ const SEED_OPTIONS_SO103: AppliedForkliftOption[] = [
   }
 ];
 
-const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
+const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [...MUJIN_TRADE_SALES_ORDERS,
   {
     id: 'SO-202609-101',
-    customerId: 'CUST-FL-005',
+    customerId: 'CUST-MJ-005',
     customerTier: 'DEALER',
     contractId: 'CTR-T2609-101',
     contractNo: 'CTR-T2609-101',
@@ -1842,7 +1842,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     contractUnitRule: 'PER_OUTBOUND',
     outboundSeq: 1,
     outboundId: 'TOUT-202609-101',
-    siteId: 'SITE-FL-008',
+    siteId: 'SITE-MJ-005',
     siteName: '동남건기 김해 골든루트 부품전시장',
     orderDate: '2026-09-12',
     deliveryDate: '2026-09-14',
@@ -1865,7 +1865,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   },
   {
     id: 'SO-202610-102',
-    customerId: 'CUST-FL-004',
+    customerId: 'CUST-MJ-004',
     customerTier: 'END_USER',
     contractId: 'CTR-T2610-102',
     contractNo: 'CTR-T2610-102',
@@ -1873,7 +1873,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     contractUnitRule: 'PER_OUTBOUND',
     outboundSeq: 1,
     outboundId: 'TOUT-202610-102',
-    siteId: 'SITE-FL-007',
+    siteId: 'SITE-MJ-004',
     siteName: '대한콜드체인 용인 기흥 허브창고',
     orderDate: '2026-10-08',
     deliveryDate: '2026-10-10',
@@ -1896,7 +1896,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   },
   {
     id: 'SO-202610-103',
-    customerId: 'CUST-FL-002',
+    customerId: 'CUST-MJ-002',
     customerTier: 'END_USER',
     contractId: 'CTR-T2610-103',
     contractNo: 'CTR-T2610-103',
@@ -1904,7 +1904,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     contractUnitRule: 'PER_OUTBOUND',
     outboundSeq: 1,
     outboundId: 'TOUT-202610-103',
-    siteId: 'SITE-FL-003',
+    siteId: 'SITE-MJ-002',
     siteName: '태양중공업 당진 제1철강야드',
     orderDate: '2026-10-18',
     deliveryDate: '2026-10-20',
@@ -1927,7 +1927,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   },
   {
     id: 'SO-202610-104',
-    customerId: 'CUST-FL-001',
+    customerId: 'CUST-MJ-001',
     customerTier: 'END_USER',
     contractId: 'CTR-T2610-104',
     contractNo: 'CTR-T2610-104',
@@ -1935,7 +1935,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     contractUnitRule: 'PER_OUTBOUND',
     outboundSeq: 1,
     outboundId: 'TOUT-202610-104',
-    siteId: 'SITE-FL-001',
+    siteId: 'SITE-MJ-001',
     siteName: '한빛 평택 포승 제1물류센터',
     orderDate: '2026-10-22',
     deliveryDate: '2026-10-24',
@@ -1955,7 +1955,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   },
   {
     id: 'SO-202610-105',
-    customerId: 'CUST-FL-003',
+    customerId: 'CUST-MJ-003',
     customerTier: 'END_USER',
     contractId: 'CTR-T2610-105',
     contractNo: 'CTR-T2610-105',
@@ -1963,7 +1963,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
     contractUnitRule: 'PER_OUTBOUND',
     outboundSeq: 1,
     outboundId: 'TOUT-202610-105',
-    siteId: 'SITE-FL-005',
+    siteId: 'SITE-MJ-003',
     siteName: '서해글로벌 화성 우정 조립1공장',
     orderDate: '2026-10-26',
     deliveryDate: '2026-10-28',
@@ -1983,7 +1983,7 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
   }
 ];
 
-const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
+const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [...MUJIN_TRADE_SALES_ORDER_LINES,
   {
     id: 'SOL-101-1',
     orderId: 'SO-202609-101',
@@ -2091,23 +2091,23 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
   {
     id: 'SOL-104-2',
     orderId: 'SO-202610-104',
-    productId: 'CSM-FL-001',
+    productId: 'CSM-MJ-001',
     qty: 4,
     unitPrice: 68000,
     unitCogs: 48000,
-    warehouseName: '소모품창고',
-    memo: '소모품 유통 판매용 · 유압작동유 VG46 4통',
+    warehouseName: '주기장',
+    memo: '부품 유통 판매용 · 스로틀 레버 4개',
     createdAt: '2026-10-22T09:30:00.000Z'
   },
   {
     id: 'SOL-104-3',
     orderId: 'SO-202610-104',
-    productId: 'CSM-FL-002',
+    productId: 'CSM-MJ-002',
     qty: 1,
     unitPrice: 124000,
     unitCogs: 80000,
-    warehouseName: '소모품창고',
-    memo: '소모품 유통 판매용 · 마스트 체인 전용 윤활 그리스 1박스',
+    warehouseName: '주기장',
+    memo: '부품 유통 판매용 · 커티스 스로틀 1개',
     createdAt: '2026-10-22T09:30:00.000Z'
   },
   {
@@ -2135,17 +2135,17 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
   {
     id: 'SOL-105-3',
     orderId: 'SO-202610-105',
-    productId: 'CSM-FL-003',
+    productId: 'CSM-MJ-003',
     qty: 5,
     unitPrice: 15000,
     unitCogs: 8000,
-    warehouseName: '소모품창고',
-    memo: '소모품 유통 판매용 · 전동지게차 배터리 증류수 20L 5통',
+    warehouseName: '주기장',
+    memo: '부품 유통 판매용 · 메인 전장 하네스 5개',
     createdAt: '2026-10-26T10:00:00.000Z'
   }
 ];
 
-const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
+const DEFAULT_OUTBOUNDS: TradeOutbound[] = [...MUJIN_TRADE_OUTBOUNDS,
   {
     id: 'TOUT-202609-101',
     orderId: 'SO-202609-101',
@@ -2275,12 +2275,12 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
   }
 ];
 
-const DEFAULT_BILLINGS: TradeBilling[] = [
+const DEFAULT_BILLINGS: TradeBilling[] = [...MUJIN_TRADE_BILLINGS,
   {
     id: 'TBIL-202609-101',
     orderId: 'SO-202609-101',
     orderIds: ['SO-202609-101'],
-    customerId: 'CUST-FL-005',
+    customerId: 'CUST-MJ-005',
     billingMonth: '2026-09',
     billingDate: '2026-09-25',
     supplyAmount: 22390000,
@@ -2299,7 +2299,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     id: 'TBIL-202610-102',
     orderId: 'SO-202610-102',
     orderIds: ['SO-202610-102'],
-    customerId: 'CUST-FL-004',
+    customerId: 'CUST-MJ-004',
     billingMonth: '2026-10',
     billingDate: '2026-10-12',
     supplyAmount: 24380000,
@@ -2317,7 +2317,7 @@ const DEFAULT_BILLINGS: TradeBilling[] = [
     id: 'TBIL-202610-104',
     orderId: 'SO-202610-104',
     orderIds: ['SO-202610-104'],
-    customerId: 'CUST-FL-001',
+    customerId: 'CUST-MJ-001',
     billingMonth: '2026-10',
     billingDate: '2026-10-25',
     supplyAmount: 4096000,
@@ -2407,13 +2407,55 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
     brakeType: product.brakeType ?? defaultMatch?.brakeType ?? archiveMatch?.brakeType,
     waterproofRating: product.waterproofRating ?? defaultMatch?.waterproofRating ?? archiveMatch?.waterproofRating,
     warrantyTerms: product.warrantyTerms ?? defaultMatch?.warrantyTerms ?? archiveMatch?.warrantyTerms,
+    loadDistanceXMm: product.loadDistanceXMm ?? defaultMatch?.loadDistanceXMm ?? archiveMatch?.loadDistanceXMm,
+    wheelbaseMm: product.wheelbaseMm ?? defaultMatch?.wheelbaseMm ?? archiveMatch?.wheelbaseMm,
+    axleLoadingLadenKg: product.axleLoadingLadenKg ?? defaultMatch?.axleLoadingLadenKg ?? archiveMatch?.axleLoadingLadenKg,
+    axleLoadingUnladenKg: product.axleLoadingUnladenKg ?? defaultMatch?.axleLoadingUnladenKg ?? archiveMatch?.axleLoadingUnladenKg,
+    wheelCountFrontRear: product.wheelCountFrontRear ?? defaultMatch?.wheelCountFrontRear ?? archiveMatch?.wheelCountFrontRear,
+    treadFrontRearMm: product.treadFrontRearMm ?? defaultMatch?.treadFrontRearMm ?? archiveMatch?.treadFrontRearMm,
+    mastTiltDeg: product.mastTiltDeg ?? defaultMatch?.mastTiltDeg ?? archiveMatch?.mastTiltDeg,
+    mastLoweredH1Mm: product.mastLoweredH1Mm ?? defaultMatch?.mastLoweredH1Mm ?? archiveMatch?.mastLoweredH1Mm,
+    mastExtendedH4Mm: product.mastExtendedH4Mm ?? defaultMatch?.mastExtendedH4Mm ?? archiveMatch?.mastExtendedH4Mm,
+    seatHeightH7Mm: product.seatHeightH7Mm ?? defaultMatch?.seatHeightH7Mm ?? archiveMatch?.seatHeightH7Mm,
+    couplingHeightH10Mm: product.couplingHeightH10Mm ?? defaultMatch?.couplingHeightH10Mm ?? archiveMatch?.couplingHeightH10Mm,
+    overallLengthWithForkL1Mm: product.overallLengthWithForkL1Mm ?? defaultMatch?.overallLengthWithForkL1Mm ?? archiveMatch?.overallLengthWithForkL1Mm,
+    overallWidthDualB2Mm: product.overallWidthDualB2Mm ?? defaultMatch?.overallWidthDualB2Mm ?? archiveMatch?.overallWidthDualB2Mm,
+    forkCarriageClass: product.forkCarriageClass ?? defaultMatch?.forkCarriageClass ?? archiveMatch?.forkCarriageClass,
+    forkCarriageWidthB3Mm: product.forkCarriageWidthB3Mm ?? defaultMatch?.forkCarriageWidthB3Mm ?? archiveMatch?.forkCarriageWidthB3Mm,
+    forkSpreadMinMaxB5Mm: product.forkSpreadMinMaxB5Mm ?? defaultMatch?.forkSpreadMinMaxB5Mm ?? archiveMatch?.forkSpreadMinMaxB5Mm,
+    groundClearanceMastM1Mm: product.groundClearanceMastM1Mm ?? defaultMatch?.groundClearanceMastM1Mm ?? archiveMatch?.groundClearanceMastM1Mm,
+    groundClearanceCenterM2Mm: product.groundClearanceCenterM2Mm ?? defaultMatch?.groundClearanceCenterM2Mm ?? archiveMatch?.groundClearanceCenterM2Mm,
+    aisleWidth800x1200Mm: product.aisleWidth800x1200Mm ?? defaultMatch?.aisleWidth800x1200Mm ?? archiveMatch?.aisleWidth800x1200Mm,
+    internalTurningRadiusB13Mm: product.internalTurningRadiusB13Mm ?? defaultMatch?.internalTurningRadiusB13Mm ?? archiveMatch?.internalTurningRadiusB13Mm,
+    loweringSpeedMms: product.loweringSpeedMms ?? defaultMatch?.loweringSpeedMms ?? archiveMatch?.loweringSpeedMms,
+    drawbarPullN: product.drawbarPullN ?? defaultMatch?.drawbarPullN ?? archiveMatch?.drawbarPullN,
+    maxDrawbarPullN: product.maxDrawbarPullN ?? defaultMatch?.maxDrawbarPullN ?? archiveMatch?.maxDrawbarPullN,
+    maxGradeabilityPercent: product.maxGradeabilityPercent ?? defaultMatch?.maxGradeabilityPercent ?? archiveMatch?.maxGradeabilityPercent,
+    accelerationTime10mSec: product.accelerationTime10mSec ?? defaultMatch?.accelerationTime10mSec ?? archiveMatch?.accelerationTime10mSec,
+    serviceBrake: product.serviceBrake ?? defaultMatch?.serviceBrake ?? archiveMatch?.serviceBrake,
+    parkingBrake: product.parkingBrake ?? defaultMatch?.parkingBrake ?? archiveMatch?.parkingBrake,
+    driveMotorKw: product.driveMotorKw ?? defaultMatch?.driveMotorKw ?? archiveMatch?.driveMotorKw,
+    liftMotorKw: product.liftMotorKw ?? defaultMatch?.liftMotorKw ?? archiveMatch?.liftMotorKw,
+    batteryVoltageCapacity: product.batteryVoltageCapacity ?? defaultMatch?.batteryVoltageCapacity ?? archiveMatch?.batteryVoltageCapacity,
+    batteryWeightKg: product.batteryWeightKg ?? defaultMatch?.batteryWeightKg ?? archiveMatch?.batteryWeightKg,
+    driveControlType: product.driveControlType ?? defaultMatch?.driveControlType ?? archiveMatch?.driveControlType,
+    controllerMaker: product.controllerMaker ?? defaultMatch?.controllerMaker ?? archiveMatch?.controllerMaker,
+    operatingPressureMpa: product.operatingPressureMpa ?? defaultMatch?.operatingPressureMpa ?? archiveMatch?.operatingPressureMpa,
+    oilFlowLmin: product.oilFlowLmin ?? defaultMatch?.oilFlowLmin ?? archiveMatch?.oilFlowLmin,
+    soundLevelDb: product.soundLevelDb ?? defaultMatch?.soundLevelDb ?? archiveMatch?.soundLevelDb,
+    hydraulicTankLiter: product.hydraulicTankLiter ?? defaultMatch?.hydraulicTankLiter ?? archiveMatch?.hydraulicTankLiter,
+    vdiSpecs: product.vdiSpecs ?? defaultMatch?.vdiSpecs ?? archiveMatch?.vdiSpecs,
+    mastSpecs: product.mastSpecs ?? defaultMatch?.mastSpecs ?? archiveMatch?.mastSpecs,
+    batteryOptions: product.batteryOptions ?? defaultMatch?.batteryOptions ?? archiveMatch?.batteryOptions,
+    standardEquipments: product.standardEquipments ?? defaultMatch?.standardEquipments ?? archiveMatch?.standardEquipments,
+    optionalEquipments: product.optionalEquipments ?? defaultMatch?.optionalEquipments ?? archiveMatch?.optionalEquipments,
     specSheetUrl: product.specSheetUrl ?? defaultMatch?.specSheetUrl ?? specDoc?.r2Url,
     manualUrl: product.manualUrl ?? defaultMatch?.manualUrl ?? manualDoc?.r2Url,
   };
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v10_mujin_specs';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v14_full_42_pdf_vdi';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));
@@ -2586,11 +2628,11 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!customerId) return '미지정 고객사';
       const found = getCustomerById(customerId);
       if (found) return found.name;
-      if (customerId === 'CUST-FL-001') return '한빛물류센터 주식회사';
-      if (customerId === 'CUST-FL-002' || customerId === 'CUST-003') return '태양중공업 주식회사';
-      if (customerId === 'CUST-FL-003') return '주식회사 서해글로벌모터스';
-      if (customerId === 'CUST-FL-004' || customerId === 'CUST-002') return '대한콜드체인 주식회사';
-      if (customerId === 'CUST-FL-005' || customerId === 'CUST-001') return '동남건기부품상사';
+      if (customerId === 'CUST-MJ-001') return '한빛물류센터 주식회사';
+      if (customerId === 'CUST-MJ-002' || customerId === 'CUST-003') return '태양중공업 주식회사';
+      if (customerId === 'CUST-MJ-003') return '주식회사 서해글로벌모터스';
+      if (customerId === 'CUST-MJ-004' || customerId === 'CUST-002') return '대한콜드체인 주식회사';
+      if (customerId === 'CUST-MJ-005' || customerId === 'CUST-001') return '동남건기부품상사';
       return customerId;
     },
     [getCustomerById]
@@ -3522,8 +3564,14 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ) => {
     const now = new Date().toISOString();
     const targetOrder = salesOrders.find(o => o.id === id);
-    const currentOptSupply = updates.optionSupplyAmount ?? targetOrder?.optionSupplyAmount ?? 0;
-    const currentOptCost = updates.optionCostAmount ?? targetOrder?.optionCostAmount ?? 0;
+    const hasOptionsUpdate = updates.appliedOptions !== undefined;
+    const nextAppliedOptions = updates.appliedOptions ?? targetOrder?.appliedOptions ?? [];
+    const currentOptSupply = hasOptionsUpdate
+      ? nextAppliedOptions.reduce((s, op) => s + (op.isFreeApplied ? 0 : op.qty * op.unitPrice), 0)
+      : updates.optionSupplyAmount ?? targetOrder?.optionSupplyAmount ?? 0;
+    const currentOptCost = hasOptionsUpdate
+      ? nextAppliedOptions.reduce((s, op) => s + op.qty * op.costPrice, 0)
+      : updates.optionCostAmount ?? targetOrder?.optionCostAmount ?? 0;
     let computedSalesAmount: number | undefined = updates.totalSalesAmount;
     let computedCogsAmount: number | undefined = updates.totalCogsAmount;
 
@@ -3553,6 +3601,10 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return [...prev.filter(l => l.orderId !== id), ...nextLines];
       });
+    } else if (hasOptionsUpdate && targetOrder) {
+      const existingLines = salesOrderLines.filter(l => l.orderId === id);
+      computedSalesAmount = existingLines.reduce((s, l) => s + l.qty * l.unitPrice, 0) + currentOptSupply;
+      computedCogsAmount = existingLines.reduce((s, l) => s + l.qty * l.unitCogs, 0) + currentOptCost;
     }
 
     setSalesOrders(prev =>
@@ -3561,6 +3613,9 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? {
               ...o,
               ...updates,
+              appliedOptions: hasOptionsUpdate ? nextAppliedOptions : o.appliedOptions,
+              optionSupplyAmount: currentOptSupply,
+              optionCostAmount: currentOptCost,
               totalSalesAmount: computedSalesAmount ?? o.totalSalesAmount,
               totalCogsAmount: computedCogsAmount ?? o.totalCogsAmount,
               updatedAt: now
@@ -3569,7 +3624,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
     );
 
-    if (updates.deliveryLocation || updates.receiverName || updates.receiverPhone) {
+    if (updates.deliveryLocation || updates.receiverName || updates.receiverPhone || hasOptionsUpdate) {
       setOutbounds(prev =>
         prev.map(ob =>
           ob.orderId === id
@@ -3578,10 +3633,30 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 destinationAddress: updates.deliveryLocation || ob.destinationAddress,
                 receiverName: updates.receiverName || ob.receiverName,
                 receiverPhone: updates.receiverPhone || ob.receiverPhone,
+                appliedOptions: hasOptionsUpdate ? nextAppliedOptions : ob.appliedOptions,
+                optionBillingAmount: hasOptionsUpdate ? currentOptSupply : ob.optionBillingAmount,
                 updatedAt: now
               }
             : ob
         )
+      );
+    }
+
+    if (computedSalesAmount !== undefined) {
+      setBillings(prev =>
+        prev.map(bl => {
+          if (bl.orderId !== id) return bl;
+          const nextSupply = computedSalesAmount!;
+          const nextVat = Math.round(nextSupply * 0.1);
+          const nextTotal = nextSupply + nextVat;
+          return {
+            ...bl,
+            supplyAmount: nextSupply,
+            vatAmount: nextVat,
+            totalAmount: nextTotal,
+            updatedAt: now
+          };
+        })
       );
     }
 

@@ -1251,6 +1251,22 @@ export const Products: React.FC = () => {
                     <div style={{ gridColumn: 'span 2' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>배터리·엔진 및 상세 제원:</span> {selectedProduct.powerSpecDetail || selectedProduct.spec || '-'}
                     </div>
+                    {selectedProduct.wheelbaseMm && (
+                      <>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>축거 y / 하중거리 x:</span> {selectedProduct.wheelbaseMm} / {selectedProduct.loadDistanceXMm || '-'} mm</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>적재 / 공차 축중:</span> {selectedProduct.axleLoadingLadenKg || '-'} / {selectedProduct.axleLoadingUnladenKg || '-'} kg</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>마스트 h1 / h2 / h4:</span> {selectedProduct.mastLoweredH1Mm || '-'} / {selectedProduct.freeLiftHeightMm || '-'} / {selectedProduct.mastExtendedH4Mm || '-'} mm</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>전장 포크포함 l1:</span> {selectedProduct.overallLengthWithForkL1Mm || '-'} mm</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>캐리지 등급 / 폭:</span> {selectedProduct.forkCarriageClass || '-'} / {selectedProduct.forkCarriageWidthB3Mm || '-'} mm</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>지상고 m1 / m2:</span> {selectedProduct.groundClearanceMastM1Mm || '-'} / {selectedProduct.groundClearanceCenterM2Mm || '-'} mm</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>인상 / 하강속도:</span> {selectedProduct.liftingSpeedMms || '-'} / {selectedProduct.loweringSpeedMms || '-'}</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>최대 견인력:</span> {selectedProduct.maxDrawbarPullN || '-'} N</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>주행 / 인양모터:</span> {selectedProduct.driveMotorKw || '-'} / {selectedProduct.liftMotorKw || '-'} kW</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>배터리 사양 / 중량:</span> {selectedProduct.batteryVoltageCapacity || '-'} / {selectedProduct.batteryWeightKg || '-'} kg</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>작동압력 / 유량:</span> {selectedProduct.operatingPressureMpa || '-'} MPa / {selectedProduct.oilFlowLmin || '-'} l/min</div>
+                        <div><span style={{ color: 'var(--text-secondary)' }}>소음도 / 유압탱크:</span> {selectedProduct.soundLevelDb || '-'} dB / {selectedProduct.hydraulicTankLiter || '-'} L</div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1334,7 +1350,7 @@ export const Products: React.FC = () => {
           padding: '20px'
         }}>
           <div className="card" style={{
-            width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto',
+            width: '100%', maxWidth: '860px', maxHeight: '90vh', overflowY: 'auto',
             backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', padding: '20px', borderRadius: '8px', boxShadow: 'var(--shadow-lg)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
@@ -1413,6 +1429,74 @@ export const Products: React.FC = () => {
                 </tr>
               </tbody>
             </table>
+
+            {Array.isArray(selectedProduct.vdiSpecs) && selectedProduct.vdiSpecs.length > 0 && (
+              <div style={{ marginTop: '14px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}>
+                  ■ VDI 2198 / ISO 5053 국제표준 전 항목 제원표 (1.1 ~ 10.7 · 총 {selectedProduct.vdiSpecs.length}개 항목)
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', border: '1px solid var(--border-color)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '5px 8px', textAlign: 'left', width: '56px', borderRight: '1px solid var(--border-color)' }}>코드</th>
+                      <th style={{ padding: '5px 8px', textAlign: 'left', width: '74px', borderRight: '1px solid var(--border-color)' }}>분류</th>
+                      <th style={{ padding: '5px 8px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>제원 항목명</th>
+                      <th style={{ padding: '5px 8px', textAlign: 'center', width: '64px', borderRight: '1px solid var(--border-color)' }}>단위</th>
+                      <th style={{ padding: '5px 8px', textAlign: 'right', width: '180px' }}>모델 사양값</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedProduct.vdiSpecs.map((row: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '4px 8px', fontWeight: 700, borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{row.code}</td>
+                        <td style={{ padding: '4px 8px', borderRight: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{row.section}</td>
+                        <td style={{ padding: '4px 8px', borderRight: '1px solid var(--border-color)' }}>{row.labelKo}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'center', borderRight: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>{row.unit || '-'}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700 }}>{row.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {Array.isArray(selectedProduct.mastSpecs) && selectedProduct.mastSpecs.length > 0 && (
+              <div style={{ marginTop: '14px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '6px', color: 'var(--text-primary)' }}>
+                  ■ 마스트 단수·인상높이별 상세 제원표 ({selectedProduct.mastSpecs.length}단 구성)
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', border: '1px solid var(--border-color)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-app)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '5px 6px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>마스트 구분</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>마스트 코드</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>인상고 h3</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>전고 h1</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>최대높이 h4</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>자유인상 h2</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>경사각</th>
+                      <th style={{ padding: '5px 6px', textAlign: 'right' }}>정격하중 단륜/복륜</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedProduct.mastSpecs.map((m: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '4px 6px', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{m.mastType}</td>
+                        <td style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', color: 'var(--primary)' }}>{m.mastModelCode || '-'}</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, borderRight: '1px solid var(--border-color)' }}>{m.liftHeightH3Mm?.toLocaleString()} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.loweredHeightH1Mm?.toLocaleString()} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.extendedHeightH4Mm} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid var(--border-color)' }}>{m.freeLiftH2Mm} mm</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>{m.tiltAngleDeg}°</td>
+                        <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>
+                          {m.ratedCapSingleKg?.toLocaleString()} {m.ratedCapDualKg ? `/ ${m.ratedCapDualKg.toLocaleString()}` : ''} kg
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
               <button

@@ -113,8 +113,8 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
     email: recipientEmail
   };
 
-  // 계약 품목 빌드
-  const contractItems: TradeContractItem[] = lines.map((l, idx) => {
+  // 계약 품목 빌드 (완제품 + 출고 설치옵션 통합)
+  const productContractItems: TradeContractItem[] = lines.map((l, idx) => {
     const prod = products.find(p => p.id === l.productId);
     const supply = Math.round(l.qty * l.unitPrice);
     const vat = Math.round(supply * 0.1);
@@ -131,6 +131,26 @@ export const TradeContractBundleModal: React.FC<Props> = ({ isOpen, onClose, ord
       note: '정상품'
     };
   });
+
+  const optionContractItems: TradeContractItem[] = (order.appliedOptions || []).map((opt, idx) => {
+    const effUnitPrice = opt.isFreeApplied ? 0 : opt.unitPrice;
+    const supply = Math.round(opt.qty * effUnitPrice);
+    const vat = Math.round(supply * 0.1);
+    return {
+      no: productContractItems.length + idx + 1,
+      productName: `[출고설치옵션] ${opt.name}`,
+      skuCode: opt.optionCode || '-',
+      spec: opt.subVariant || opt.optionGroupLabel || (opt as any).category || '출고장착옵션',
+      qty: opt.qty,
+      unitPrice: effUnitPrice,
+      supplyAmount: supply,
+      vatAmount: vat,
+      totalAmount: supply + vat,
+      note: opt.isFreeApplied ? '무상장착' : '출고설치옵션'
+    };
+  });
+
+  const contractItems: TradeContractItem[] = [...productContractItems, ...optionContractItems];
 
   const totalSupply = contractItems.reduce((sum, i) => sum + i.supplyAmount, 0);
   const totalVat = contractItems.reduce((sum, i) => sum + i.vatAmount, 0);

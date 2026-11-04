@@ -18,6 +18,7 @@ import {
   SEED_FL_RENTAL_ASSETS,
   SEED_FL_CONSUMABLES,
   SEED_FL_CONSUMABLE_LOTS,
+  SEED_FL_CONSUMABLE_LOGS,
   SEED_FL_CONTRACTS,
   SEED_FL_CONTRACT_ASSETS,
   SEED_FL_REPAIRS
@@ -1315,6 +1316,7 @@ export interface Customer {
   defaultAttachments?: string;       // 기본 부착물 (예: '인증서, 제원표, 보험증권')
   defaultCheckedSpecs?: Record<string, any>; // 기본 요구 사양 체크 상태
   specialNotes?: string;             // 고객사 특이사항 메모 (예: '재임대 출고건으로 운반비 및 배차 한솔렌탈 부담')
+  memo?: string;                     // 고객사 주소록 원본 메모 및 상세 정보
 
   //  사업자등록증 및  통장사본 증빙 스토리지
   businessCertFileUrl?: string;      // 사업자등록증 첨부/스토리지 URL
@@ -1340,8 +1342,10 @@ export interface CustomerContact {
   customerId: string;
   name: string;
   position: string;
+  department?: string;
   contact: string;
   email: string;
+  memo?: string;
   isActive?: boolean; // 사용/미사용 (퇴사/부서이동 등)
   createdAt: string;
   updatedAt?: string;
@@ -1432,27 +1436,69 @@ export interface Product {
   powerType?: string;            // 동력 방식 표준
   ratedCapacityKg?: number;      // 정격 적재하중 · kg
   loadCenterMm?: number;         // 하중중심거리 · mm
-  standardLiftHeightMm?: number; // 표준 인상높이 · mm
+  loadDistanceXMm?: number;      // 전륜축~포크면 거리 x · mm
+  wheelbaseMm?: number;          // 축거 y · mm
+  serviceWeightKg?: number;      // 장비 자중 · kg
+  axleLoadingLadenKg?: string;   // 적재 시 축중 전/후 · kg
+  axleLoadingUnladenKg?: string; // 공차 시 축중 전/후 · kg
+  tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
+  wheelCountFrontRear?: string;  // 차륜수 전/후
+  treadFrontRearMm?: string;     // 윤거 전/후 b10/b11 · mm
+  mastTiltDeg?: string;          // 마스트 경사각 전/후 α/β · °
+  mastLoweredH1Mm?: number;      // 마스트 전고 h1 · mm
+  freeLiftHeightMm?: number;     // 자유 인상높이 h2 · mm
+  standardLiftHeightMm?: number; // 표준 인상높이 h3 · mm
   maxOptionLiftHeightMm?: number;// 최대 옵션 인상높이 · mm
-  freeLiftHeightMm?: number;     // 자유 인상높이 · mm
+  mastExtendedH4Mm?: number;     // 작업시 최대높이 h4 · mm
+  overheadGuardHeightMm?: number;// 헤드가드 높이 h6 · mm
+  seatHeightH7Mm?: number;       // 좌석 높이 h7 · mm
+  couplingHeightH10Mm?: number;  // 견인핀 높이 h10 · mm
+  overallLengthWithForkL1Mm?: number; // 전장 포크포함 l1 · mm
+  overallLengthMm?: number;      // 전장 포크제외 l2 · mm
+  overallWidthMm?: number;       // 전폭 단륜 b1 · mm
+  overallWidthDualB2Mm?: number; // 전폭 복륜 b2 · mm
   forkDimensionsMm?: string;     // 포크 규격 두께×폭×길이 · mm
-  overallLengthMm?: number;      // 전장 포크제외 · mm
-  overallWidthMm?: number;       // 전폭 · mm
-  overheadGuardHeightMm?: number;// 헤드가드 높이 · mm
-  turningRadiusMm?: number;      // 최소 회전반경 · mm
-  aisleWidth1000x1200Mm?: number;// 직각 적재 통로폭 · mm
+  forkCarriageClass?: string;    // 포크 캐리지 규격 ISO 2328
+  forkCarriageWidthB3Mm?: number;// 캐리지 폭 b3 · mm
+  forkSpreadMinMaxB5Mm?: string; // 포크 외폭 최소/최대 b5 · mm
+  groundClearanceMastM1Mm?: number; // 최저지상고 마스트하단 m1 · mm
+  groundClearanceCenterM2Mm?: number; // 최저지상고 축간중앙 m2 · mm
+  aisleWidth1000x1200Mm?: number;// 직각 적재 통로폭 1000×1200 · mm
+  aisleWidth800x1200Mm?: number; // 직각 적재 통로폭 800×1200 · mm
+  turningRadiusMm?: number;      // 최소 회전반경 Wa · mm
+  internalTurningRadiusB13Mm?: string; // 내부 회전반경 b13 · mm
   travelSpeedKmh?: string;       // 주행속도 적재/공차 · km/h
   liftingSpeedMms?: string;      // 인상속도 적재/공차 · mm/s
+  loweringSpeedMms?: string;     // 하강속도 적재/공차 · mm/s
+  drawbarPullN?: string;         // 정격 견인력 적재/공차 · N
+  maxDrawbarPullN?: string;      // 최대 견인력 적재/공차 · N
   gradeabilityPercent?: number;  // 최대 등판능력 · %
-  serviceWeightKg?: number;      // 장비 자중 · kg
-  powerSpecDetail?: string;      // 배터리 전압·용량 / 엔진 형식·배기량
-  motorOrEngineDetail?: string;  // 구동·유압 모터 / 정격 출력·토크
-  chargerOrFuelDetail?: string;  // 충전기 사양 / 연료탱크·변속기
-  tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
+  maxGradeabilityPercent?: string; // 등판능력 적재/공차 · %
+  accelerationTime10mSec?: string; // 가속시간 10m 적재/공차 · s
+  serviceBrake?: string;         // 주 브레이크 방식
+  parkingBrake?: string;         // 주차 브레이크 방식
   brakeType?: string;            // 제동 방식
+  driveMotorKw?: string;         // 주행모터 출력 S2 60min · kW
+  liftMotorKw?: string;          // 인상모터 출력 S3 15% · kW
+  motorOrEngineDetail?: string;  // 구동·유압 모터 / 정격 출력·토크
+  batteryVoltageCapacity?: string; // 배터리 전압/정격용량 · V/Ah
+  batteryWeightKg?: string;      // 배터리 중량 · kg
+  powerSpecDetail?: string;      // 배터리 전압·용량 / 엔진 형식·배기량
+  chargerOrFuelDetail?: string;  // 충전기 사양 / 연료탱크·변속기
+  driveControlType?: string;     // 구동 제어 방식
+  controllerMaker?: string;      // 컨트롤러 제조사
+  operatingPressureMpa?: string; // 어태치먼트 작동압력 · MPa/bar
+  oilFlowLmin?: string;          // 어태치먼트 유량 · l/min
+  soundLevelDb?: string;         // 운전석 소음도 · dB(A)
+  hydraulicTankLiter?: string;   // 유압탱크 용량 · liter
   waterproofRating?: string;     // 방수·운용 등급
   warrantyMonths?: number;       // 보증 개월수
   warrantyTerms?: string;        // 보증 상세 조건
+  vdiSpecs?: any[];              // VDI 2198 전 항목 배열 (1.1 ~ 10.7)
+  mastSpecs?: any[];             // 마스트 단수·높이별 상세 제원표
+  batteryOptions?: any[];        // 배터리·충전기 옵션 매트릭스
+  standardEquipments?: string[]; // 표준 장착 사양 목록
+  optionalEquipments?: string[]; // 선택 옵션 사양 목록
 
   // 표기 및 하위 호환 필드
   workingHeight?: string;        // 최대 인상높이 표기
@@ -1674,14 +1720,34 @@ export interface Consumable {
   id: string;
   skuCode?: string;
   name?: string;
+  partName?: string;
   modelName: string;
   stockQty: number; // 주기장 총 재고 (Lot들의 현재 잔여 수량 합계)
+  currentStock?: number;
   saleStockQty?: number; // 유통 판매용 재고 수량
   repairStockQty?: number; // 렌탈자산 정비용 재고 수량
   inventoryAssetClass?: InventoryAssetClass; // 'CONSUMABLE' | 'PART'
   usagePurpose?: InventoryUsagePurpose; // 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE'
+  brand?: string; // 공급업체명 / 브랜드 (HANGCHA, HELI, BYD)
+  inventoryType?: string; // 재고구분 ('상품')
+  currency?: string; // 통화 ('KRW')
+  compatibleModels?: string; // 호환 지게차 모델
+  baseYm?: string; // 기준년월 ('2026-04')
+  inboundDate?: string; // 최초입고일 ('YYYY-MM-DD')
+  inboundYm?: string; // 입고연월 ('YYYY-MM')
+  agingMonths?: number; // 기준년월 대비 경과월수 (0 ~ 24)
+  initialQty?: number; // 최초입고수량
+  initialAmount?: number; // 최초입고금액 (원단위)
+  stockBalanceAmount?: number; // 현재고잔액 (원단위 정밀 총금액)
+  exactUnitCost?: number; // 정밀 단가 (총금액 / 총재고)
+  serialNo?: string; // 시리얼 번호
+  imageFile?: string; // 이미지 파일 경로
+  imageUrl?: string; // 이미지 URL
+  location?: string; // 보관장소 ('주기장')
   unit: string; // '개' | '박스' 등
   unitPrice: number; // 최근 매입 단가 (참고용)
+  dealerPrice?: number;
+  standardPrice?: number;
   saleUnitPrice?: number; // 유통 판매 단가
   salePrice?: number; // 유통 판매 단가 호환
   supplier: string; // 최근 매입처
@@ -1689,6 +1755,8 @@ export interface Consumable {
   spec?: string;
   modelSpec?: string;
   applicableModels?: string;
+  safetyStock?: number;
+  minStock?: number;
   minStockQty?: number;
   minStockThreshold?: number;
   category?: string;
@@ -1702,10 +1770,31 @@ export interface Consumable {
 export interface ConsumableLot {
   id: string;
   consumableId: string;
+  lotNo?: string;
+  skuCode?: string;
+  modelName?: string;
+  brand?: string;
+  category?: string;
+  inventoryType?: string;
+  currency?: string;
+  purchaseId?: string;
+  vendorId?: string;
   inboundDate: string; // 입고일
+  receivedDate?: string;
+  inboundYm?: string; // 입고연월 ('YYYY-MM')
+  baseYm?: string; // 기준년월 ('2026-04')
+  agingMonths?: number; // 경과월수
   unitPrice: number; // 해당 로트의 입고 단가
+  exactUnitCost?: number;
   initialQty: number; // 최초 입고 수량
   currentQty: number; // 현재 주기장 잔여 수량
+  remainingQty?: number;
+  initialAmount?: number; // 최초 입고 금액 (원단위)
+  stockBalanceAmount?: number; // 현재 로트 재고잔액 (원단위)
+  location?: string;
+  serialNo?: string;
+  imageFile?: string;
+  imageUrl?: string;
   purchaseRequestId?: string; // 연결된 구매 이력
   createdAt: string;
   updatedAt?: string;
@@ -1724,16 +1813,23 @@ export interface ConsumableLog {
   id: string;
   consumableId: string;
   lotId?: string; // 연결된 로트 ID
+  skuCode?: string;
+  modelName?: string;
+  brand?: string;
+  category?: string;
   type: 'INBOUND' | 'OUTBOUND' | 'ADJUST' | 'TRANSFER_TO_VEHICLE' | 'RETURN_TO_HQ';
   quantity: number;
   unitPrice: number;
+  totalAmount?: number; // 입출고 총금액 (원단위 정밀 금액)
   supplier?: string;
+  vendorId?: string;
   userId?: string;
   mechanicId?: string; // 차량 재고 이동 정비사
   fromLocation?: string; // 출처 (예: '주기장 재고', '김정비 차량')
   toLocation?: string; // 이동처 (예: '김정비 차량', '주기장 재고', '현장장비')
   targetAssetId?: string;
   actionDate: string;
+  inboundYm?: string;
   description: string;
   createdAt: string;
 }
@@ -3291,29 +3387,72 @@ const generateMockProducts = (): Product[] => {
       originCountry: item.originCountry,
       equipmentClass: item.equipmentClass,
       powerSource: item.powerType,
+      powerType: item.powerType,
       ratedCapacityKg: item.ratedCapacityKg,
       loadCenterMm: item.loadCenterMm,
+      loadDistanceXMm: item.loadDistanceXMm,
+      wheelbaseMm: item.wheelbaseMm,
+      serviceWeightKg: item.serviceWeightKg,
+      axleLoadingLadenKg: item.axleLoadingLadenKg,
+      axleLoadingUnladenKg: item.axleLoadingUnladenKg,
+      tireSpecFrontRear: item.tireSpecFrontRear,
+      wheelCountFrontRear: item.wheelCountFrontRear,
+      treadFrontRearMm: item.treadFrontRearMm,
+      mastTiltDeg: item.mastTiltDeg,
+      mastLoweredH1Mm: item.mastLoweredH1Mm,
+      freeLiftHeightMm: item.freeLiftHeightMm,
       standardLiftHeightMm: item.standardLiftHeightMm,
       maxOptionLiftHeightMm: item.maxOptionLiftHeightMm,
-      freeLiftHeightMm: item.freeLiftHeightMm,
-      forkDimensionsMm: item.forkDimensionsMm,
+      mastExtendedH4Mm: item.mastExtendedH4Mm,
+      overheadGuardHeightMm: item.overheadGuardHeightMm,
+      seatHeightH7Mm: item.seatHeightH7Mm,
+      couplingHeightH10Mm: item.couplingHeightH10Mm,
+      overallLengthWithForkL1Mm: item.overallLengthWithForkL1Mm,
       overallLengthMm: item.overallLengthMm,
       overallWidthMm: item.overallWidthMm,
-      overheadGuardHeightMm: item.overheadGuardHeightMm,
-      turningRadiusMm: item.turningRadiusMm,
+      overallWidthDualB2Mm: item.overallWidthDualB2Mm,
+      forkDimensionsMm: item.forkDimensionsMm,
+      forkCarriageClass: item.forkCarriageClass,
+      forkCarriageWidthB3Mm: item.forkCarriageWidthB3Mm,
+      forkSpreadMinMaxB5Mm: item.forkSpreadMinMaxB5Mm,
+      groundClearanceMastM1Mm: item.groundClearanceMastM1Mm,
+      groundClearanceCenterM2Mm: item.groundClearanceCenterM2Mm,
       aisleWidth1000x1200Mm: item.aisleWidth1000x1200Mm,
+      aisleWidth800x1200Mm: item.aisleWidth800x1200Mm,
+      turningRadiusMm: item.turningRadiusMm,
+      internalTurningRadiusB13Mm: item.internalTurningRadiusB13Mm,
       travelSpeedKmh: `${item.travelSpeedKmh} km/h`,
       liftingSpeedMms: `${item.liftingSpeedMms} mm/s`,
+      loweringSpeedMms: item.loweringSpeedMms ? `${item.loweringSpeedMms} mm/s` : undefined,
+      drawbarPullN: item.drawbarPullN,
+      maxDrawbarPullN: item.maxDrawbarPullN,
       gradeabilityPercent: item.gradeabilityPercent,
-      serviceWeightKg: item.serviceWeightKg,
-      powerSpecDetail: item.powerSpecDetail,
-      motorOrEngineDetail: item.motorOrEngineDetail,
-      chargerOrFuelDetail: item.chargerOrFuelDetail,
-      tireSpecFrontRear: item.tireSpecFrontRear,
+      maxGradeabilityPercent: item.maxGradeabilityPercent,
+      accelerationTime10mSec: item.accelerationTime10mSec,
+      serviceBrake: item.serviceBrake,
+      parkingBrake: item.parkingBrake,
       brakeType: item.brakeType,
+      driveMotorKw: item.driveMotorKw,
+      liftMotorKw: item.liftMotorKw,
+      motorOrEngineDetail: item.motorOrEngineDetail,
+      batteryVoltageCapacity: item.batteryVoltageCapacity,
+      batteryWeightKg: item.batteryWeightKg,
+      powerSpecDetail: item.powerSpecDetail,
+      chargerOrFuelDetail: item.chargerOrFuelDetail,
+      driveControlType: item.driveControlType,
+      controllerMaker: item.controllerMaker,
+      operatingPressureMpa: item.operatingPressureMpa,
+      oilFlowLmin: item.oilFlowLmin,
+      soundLevelDb: item.soundLevelDb,
+      hydraulicTankLiter: item.hydraulicTankLiter,
       waterproofRating: item.waterproofRating,
       warrantyMonths: 24,
       warrantyTerms: item.warrantyTerms,
+      vdiSpecs: item.vdiSpecs || [],
+      mastSpecs: item.mastSpecs || [],
+      batteryOptions: item.batteryOptions || [],
+      standardEquipments: item.standardEquipments || [],
+      optionalEquipments: item.optionalEquipments || [],
       workingHeight: `${item.maxOptionLiftHeightMm.toLocaleString()} mm`,
       platformHeight: `${item.standardLiftHeightMm.toLocaleString()} mm`,
       weight: `${item.serviceWeightKg.toLocaleString()} kg`,
@@ -3330,7 +3469,7 @@ const generateMockProducts = (): Product[] => {
       safetyCertUrl: primaryManualDoc?.r2Url,
       isActive: true,
       createdAt: '2026-03-01T00:00:00.000Z',
-      updatedAt: '2026-10-01T00:00:00.000Z'
+      updatedAt: '2026-11-04T00:00:00.000Z'
     };
   });
 };
@@ -3793,7 +3932,7 @@ const SEED_CONTACTS: CustomerContact[] = SEED_FL_CONTACTS as any[];
 const SEED_SITES: CustomerSite[] = SEED_FL_SITES as any[];
 const SEED_ASSETS: Asset[] = SEED_FL_RENTAL_ASSETS as any[];
 export const SEED_CONSUMABLES: Consumable[] = SEED_FL_CONSUMABLES as any[];
-const SEED_CONSUMABLE_LOGS: ConsumableLog[] = [];
+const SEED_CONSUMABLE_LOGS: ConsumableLog[] = SEED_FL_CONSUMABLE_LOGS as any[];
 const SEED_CONSUMABLE_PURCHASES: ConsumablePurchaseRequest[] = [];
 const SEED_CONTRACTS: Contract[] = SEED_FL_CONTRACTS as any[];
 const SEED_CONTRACT_ASSETS: ContractAsset[] = SEED_FL_CONTRACT_ASSETS as any[];
@@ -4738,7 +4877,7 @@ class LocalDB {
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
     try {
-      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_initial_v2';
+      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_parts_v5';
       if (localStorage.getItem(STORAGE_VERSION_KEY) !== '1') {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -5128,7 +5267,7 @@ class LocalDB {
 
   get customers() { 
     let raw = this.get<Customer>('customers', SEED_CUSTOMERS);
-    if (raw.some(c => c && (String(c.id || '').startsWith('CUST-000') || String(c.id || '').startsWith('cust-')))) {
+    if (raw.some(c => c && (String(c.id || '').startsWith('CUST-000') || String(c.id || '').startsWith('cust-') || String(c.id || '').startsWith('CUST-FL-00')))) {
       raw = [...SEED_CUSTOMERS];
       this.set('customers', raw);
     }
@@ -5221,13 +5360,18 @@ class LocalDB {
       if (c.transactionStatus !== txStatus || c.blockedReason !== blkReason || c.blockedAt !== blkAt || c.blockedBy !== blkBy) {
         changed = true;
       }
-      const normBizNo = c.bizRegNo || (c as any).businessNumber || '';
-      const normRepEmail = '77.victor.lee@gmail.com';
-      if (c.bizRegNo !== normBizNo || c.repEmail !== normRepEmail) {
+      const seedCust = SEED_CUSTOMERS.find(sc => sc.id === c.id);
+      const normBizNo = c.bizRegNo || (c as any).businessNumber || seedCust?.bizRegNo || '';
+      const normRepEmail = (c.repEmail && c.repEmail !== '77.victor.lee@gmail.com')
+        ? c.repEmail
+        : (seedCust?.repEmail || '');
+      const normMemo = c.memo || c.specialNotes || seedCust?.memo || seedCust?.specialNotes || '';
+      const normSpecialNotes = c.specialNotes || c.memo || seedCust?.specialNotes || seedCust?.memo || '';
+      if (c.bizRegNo !== normBizNo || c.repEmail !== normRepEmail || (c.memo || '') !== normMemo || (c.specialNotes || '') !== normSpecialNotes) {
         changed = true;
       }
       if (changed) {
-        return { ...c, bizRegNo: normBizNo, repEmail: normRepEmail, transactionStatus: txStatus, blockedReason: blkReason, blockedAt: blkAt, blockedBy: blkBy, defaultPaidOptions: defPaid, defaultProtection: defProt, defaultAttachments: defAtt, defaultFreightBillingStandard: defFreightStd, defaultTaxInvoiceIssueType: defTaxIssueType, defaultPaymentMethod: defPaymentMethod, defaultPaymentTermsNote: defPaymentTermsNote, paymentDueMonthOffset: dueMonthOffset, paymentDueDay: dueDay };
+        return { ...c, bizRegNo: normBizNo, repEmail: normRepEmail, memo: normMemo, specialNotes: normSpecialNotes, transactionStatus: txStatus, blockedReason: blkReason, blockedAt: blkAt, blockedBy: blkBy, defaultPaidOptions: defPaid, defaultProtection: defProt, defaultAttachments: defAtt, defaultFreightBillingStandard: defFreightStd, defaultTaxInvoiceIssueType: defTaxIssueType, defaultPaymentMethod: defPaymentMethod, defaultPaymentTermsNote: defPaymentTermsNote, paymentDueMonthOffset: dueMonthOffset, paymentDueDay: dueDay };
       }
       return c;
     }).sort((a, b) => compareCustomerNames(a?.name, b?.name));
@@ -5236,11 +5380,19 @@ class LocalDB {
 
   get contacts() {
     let raw = this.get<CustomerContact>('contacts', SEED_CONTACTS);
-    if (raw.some(c => c && (String(c.id || '').startsWith('CONT-000') || String(c.customerId || '').startsWith('CUST-000') || String(c.customerId || '').startsWith('cust-')))) {
+    if (raw.some(c => c && (String(c.id || '').startsWith('CONT-000') || String(c.id || '').startsWith('CONT-FL-00') || String(c.customerId || '').startsWith('CUST-000') || String(c.customerId || '').startsWith('CUST-FL-00') || String(c.customerId || '').startsWith('cust-'))) || raw.length < SEED_CONTACTS.length) {
       raw = [...SEED_CONTACTS];
       this.set('contacts', raw);
     }
-    return raw.map(cc => cc ? { ...cc, email: '77.victor.lee@gmail.com' } : cc);
+    return raw.map(cc => {
+      if (!cc) return cc;
+      const seedContact = SEED_CONTACTS.find(sc => sc.id === cc.id);
+      const realEmail = (cc.email && cc.email !== '77.victor.lee@gmail.com')
+        ? cc.email
+        : (seedContact?.email || '');
+      const realDept = cc.department ?? seedContact?.department ?? '';
+      return { ...cc, email: realEmail, department: realDept };
+    });
   }
   set contacts(val: CustomerContact[]) { this.set('contacts', val); }
   get customerContacts() { return this.contacts; }
@@ -5277,7 +5429,7 @@ class LocalDB {
 
   get sites() {
     let raw = this.get<CustomerSite>('sites', SEED_SITES);
-    if (raw.some(s => s && (String(s.id || '').startsWith('SITE-000') || String(s.id || '').startsWith('site-') || String(s.customerId || '').startsWith('CUST-000') || String(s.customerId || '').startsWith('cust-')))) {
+    if (raw.some(s => s && (String(s.id || '').startsWith('SITE-000') || String(s.id || '').startsWith('SITE-FL-00') || String(s.id || '').startsWith('site-') || String(s.customerId || '').startsWith('CUST-000') || String(s.customerId || '').startsWith('CUST-FL-00') || String(s.customerId || '').startsWith('cust-'))) || raw.length < SEED_SITES.length) {
       raw = [...SEED_SITES];
       this.set('sites', raw);
     }
@@ -5410,11 +5562,18 @@ class LocalDB {
         }
       }
 
-      email = '77.victor.lee@gmail.com';
-      billingContactEmail = '77.victor.lee@gmail.com';
-      if (safetyContactEmail) safetyContactEmail = '77.victor.lee@gmail.com';
+      const seedSite = SEED_SITES.find(ss => ss.id === s.id);
+      if (!email || email === '77.victor.lee@gmail.com') {
+        email = seedSite?.email || '';
+      }
+      if (!billingContactEmail || billingContactEmail === '77.victor.lee@gmail.com') {
+        billingContactEmail = seedSite?.billingContactEmail || email || '';
+      }
+      if (safetyContactEmail === '77.victor.lee@gmail.com') {
+        safetyContactEmail = '';
+      }
       const normContacts = Array.isArray(s.contacts)
-        ? s.contacts.map(sc => sc ? { ...sc, email: '77.victor.lee@gmail.com' } : sc)
+        ? s.contacts.map(sc => sc ? { ...sc, email: (sc.email && sc.email !== '77.victor.lee@gmail.com') ? sc.email : email } : sc)
         : s.contacts;
       changed = true;
 
@@ -5550,40 +5709,98 @@ class LocalDB {
 
 
   get consumables() {
-    const raw = this.get<Consumable>('consumables', SEED_CONSUMABLES);
+    let raw = this.get<Consumable>('consumables', SEED_CONSUMABLES);
+    if (!raw || raw.length === 0 || raw.some(c => c && String(c.id || '').startsWith('CSM-FL-'))) {
+      raw = [...SEED_CONSUMABLES];
+      this.set('consumables', raw);
+    }
     return raw.map(c => {
       if (!c) return c;
       const cAny = c as any;
+      const seedMatch = SEED_CONSUMABLES.find(sc => sc.id === c.id || (sc.skuCode && c.skuCode && sc.skuCode === c.skuCode));
+      const merged = seedMatch ? { ...seedMatch, ...c } : c;
+      const qty = Number(merged.stockQty ?? cAny.currentStock ?? 0);
+      const unitPrice = Number(merged.unitPrice || 0);
+      const initialQty = Number(merged.initialQty ?? seedMatch?.initialQty ?? qty);
+      const initialAmount = Number(merged.initialAmount ?? seedMatch?.initialAmount ?? (qty * unitPrice));
+      const stockBalanceAmount = Number(merged.stockBalanceAmount ?? seedMatch?.stockBalanceAmount ?? (qty === initialQty ? initialAmount : Math.round(qty * (merged.exactUnitCost || unitPrice))));
+      const inboundDate = merged.inboundDate || seedMatch?.inboundDate || (merged.createdAt ? merged.createdAt.slice(0, 10) : '2026-04-01');
+      const inboundYm = merged.inboundYm || seedMatch?.inboundYm || inboundDate.slice(0, 7);
       return {
-        ...c,
-        name: c.name || c.modelName || '소모품',
-        modelName: c.modelName || c.name || '소모품',
-        unitPrice: Number(c.unitPrice || 0),
-        stockQty: Number(c.stockQty ?? cAny.currentStock ?? 0),
-        repairingQty: Number(c.repairingQty || 0)
+        ...merged,
+        name: merged.name || merged.modelName || '소모품',
+        partName: merged.partName || seedMatch?.partName || merged.name || merged.modelName || '소모품',
+        modelName: merged.modelName || merged.name || '소모품',
+        brand: merged.brand || seedMatch?.brand || merged.supplier || 'HANGCHA',
+        inventoryType: merged.inventoryType || seedMatch?.inventoryType || '상품',
+        currency: merged.currency || seedMatch?.currency || 'KRW',
+        compatibleModels: merged.compatibleModels || seedMatch?.compatibleModels || merged.applicableModels || '',
+        baseYm: merged.baseYm || seedMatch?.baseYm || '2026-04',
+        inboundDate,
+        inboundYm,
+        agingMonths: Number(merged.agingMonths ?? seedMatch?.agingMonths ?? 0),
+        initialQty,
+        initialAmount,
+        stockBalanceAmount,
+        exactUnitCost: Number(merged.exactUnitCost ?? seedMatch?.exactUnitCost ?? (initialQty > 0 ? initialAmount / initialQty : unitPrice)),
+        serialNo: merged.serialNo || seedMatch?.serialNo || '',
+        imageFile: merged.imageFile || seedMatch?.imageFile || '',
+        imageUrl: merged.imageUrl || seedMatch?.imageUrl || '',
+        location: merged.location || seedMatch?.location || '주기장',
+        unitPrice,
+        stockQty: qty,
+        repairingQty: Number(merged.repairingQty || 0)
       };
     });
   }
   set consumables(val: Consumable[]) { this.set('consumables', val); }
 
   get consumableLots() {
-    const raw = this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]);
+    let raw = this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]);
+    if (!raw || raw.length === 0 || raw.some(l => l && String(l.id || '').startsWith('CLOT-FL-'))) {
+      raw = [...(SEED_FL_CONSUMABLE_LOTS as any[])];
+      this.set('consumableLots', raw);
+    }
     return raw.map(l => {
       if (!l) return l;
       const lAny = l as any;
+      const seedMatch = (SEED_FL_CONSUMABLE_LOTS as any[]).find(sl => sl.id === l.id || sl.consumableId === l.consumableId);
+      const merged = seedMatch ? { ...seedMatch, ...l } : l;
+      const inboundDate = merged.inboundDate || lAny.receivedDate || seedMatch?.inboundDate || '2026-04-01';
+      const inboundYm = merged.inboundYm || seedMatch?.inboundYm || inboundDate.slice(0, 7);
+      const unitPrice = Number(merged.unitPrice || lAny.unitCost || 0);
+      const initialQty = Number(merged.initialQty || 0);
+      const remainingQty = Number(merged.remainingQty ?? merged.currentQty ?? initialQty);
+      const initialAmount = Number(merged.initialAmount ?? seedMatch?.initialAmount ?? (initialQty * unitPrice));
+      const stockBalanceAmount = Number(merged.stockBalanceAmount ?? seedMatch?.stockBalanceAmount ?? (remainingQty === initialQty ? initialAmount : Math.round(remainingQty * (merged.exactUnitCost || unitPrice))));
       return {
-        ...l,
-        lotNo: l.lotNo || `LOT-${l.id}`,
-        inboundDate: l.inboundDate || lAny.receivedDate || '2026-09-10',
-        unitPrice: Number(l.unitPrice || lAny.unitCost || 0),
-        initialQty: Number(l.initialQty || 0),
-        remainingQty: Number(l.remainingQty ?? l.initialQty ?? 0)
+        ...merged,
+        lotNo: merged.lotNo || `LOT-${merged.id}`,
+        inboundDate,
+        receivedDate: inboundDate,
+        inboundYm,
+        baseYm: merged.baseYm || seedMatch?.baseYm || '2026-04',
+        agingMonths: Number(merged.agingMonths ?? seedMatch?.agingMonths ?? 0),
+        unitPrice,
+        exactUnitCost: Number(merged.exactUnitCost ?? seedMatch?.exactUnitCost ?? (initialQty > 0 ? initialAmount / initialQty : unitPrice)),
+        initialQty,
+        currentQty: remainingQty,
+        remainingQty,
+        initialAmount,
+        stockBalanceAmount
       };
     });
   }
   set consumableLots(val: ConsumableLot[]) { this.set('consumableLots', val); }
 
-  get consumableLogs() { return this.get<ConsumableLog>('consumableLogs', SEED_CONSUMABLE_LOGS); }
+  get consumableLogs() {
+    let raw = this.get<ConsumableLog>('consumableLogs', SEED_CONSUMABLE_LOGS);
+    if (!raw || raw.length === 0) {
+      raw = [...SEED_CONSUMABLE_LOGS];
+      this.set('consumableLogs', raw);
+    }
+    return raw;
+  }
   set consumableLogs(val: ConsumableLog[]) { this.set('consumableLogs', val); }
 
   get consumablePurchases() { return this.get<ConsumablePurchaseRequest>('consumablePurchases', SEED_CONSUMABLE_PURCHASES); }
@@ -5754,9 +5971,9 @@ class LocalDB {
         ticketNo: r.ticketNo || `AS-${(r.requestDate || '2026-10-28').replace(/-/g, '').slice(2)}-01`,
         assetNo: r.assetNo || 'FL-R35-012',
         modelName: r.modelName || 'FD35-XC',
-        customerId: r.customerId || 'CUST-FL-002',
+        customerId: r.customerId || 'CUST-MJ-002',
         customerName: r.customerName || '태양중공업 주식회사',
-        siteId: r.siteId || 'SITE-FL-003',
+        siteId: r.siteId || 'SITE-MJ-002',
         siteName: r.siteName || '창원 성산 제1중기공장',
         siteAddress: addr || '경상남도 창원시 성산구 공단로 215',
         issueDescription: r.issueDescription || rAny.symptom || r.details || '정기 점검 및 유압계통 정비',
@@ -8216,6 +8433,48 @@ export interface TradeProduct {
   tireSpecFrontRear?: string;    // 전륜·후륜 타이어 규격
   brakeType?: string;            // 제동방식
   waterproofRating?: string;     // 방수·운용등급
+  loadDistanceXMm?: number;
+  wheelbaseMm?: number;
+  axleLoadingLadenKg?: string;
+  axleLoadingUnladenKg?: string;
+  wheelCountFrontRear?: string;
+  treadFrontRearMm?: string;
+  mastTiltDeg?: string;
+  mastLoweredH1Mm?: number;
+  mastExtendedH4Mm?: number;
+  seatHeightH7Mm?: number;
+  couplingHeightH10Mm?: number;
+  overallLengthWithForkL1Mm?: number;
+  overallWidthDualB2Mm?: number;
+  forkCarriageClass?: string;
+  forkCarriageWidthB3Mm?: number;
+  forkSpreadMinMaxB5Mm?: string;
+  groundClearanceMastM1Mm?: number;
+  groundClearanceCenterM2Mm?: number;
+  aisleWidth800x1200Mm?: number;
+  internalTurningRadiusB13Mm?: string;
+  loweringSpeedMms?: string;
+  drawbarPullN?: string;
+  maxDrawbarPullN?: string;
+  maxGradeabilityPercent?: string;
+  accelerationTime10mSec?: string;
+  serviceBrake?: string;
+  parkingBrake?: string;
+  driveMotorKw?: string;
+  liftMotorKw?: string;
+  batteryVoltageCapacity?: string;
+  batteryWeightKg?: string;
+  driveControlType?: string;
+  controllerMaker?: string;
+  operatingPressureMpa?: string;
+  oilFlowLmin?: string;
+  soundLevelDb?: string;
+  hydraulicTankLiter?: string;
+  vdiSpecs?: any[];
+  mastSpecs?: any[];
+  batteryOptions?: any[];
+  standardEquipments?: string[];
+  optionalEquipments?: string[];
   specSheetUrl?: string;         // 공식 제원표·카탈로그 PDF URL
   manualUrl?: string;            // 운전·정비 매뉴얼 PDF URL
   memo?: string;

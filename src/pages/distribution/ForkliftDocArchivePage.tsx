@@ -990,6 +990,146 @@ export const ForkliftDocArchivePage: React.FC = () => {
               </div>
             </div>
 
+            {/* 2-A. VDI 2198 국제표준 전 항목 원문 대조 제원표 */}
+            {selectedModel.vdiSpecs && selectedModel.vdiSpecs.length > 0 && (
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={15} color="#1D4ED8" />
+                  VDI 2198 국제표준 전 항목 기술제원표 · 총 {selectedModel.vdiSpecs.length}개 항목 무누락 수록
+                </div>
+                <div style={{ border: '1px solid #CBD5E1', borderRadius: '8px', overflow: 'hidden', maxHeight: '380px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1E293B', color: '#FFFFFF', zIndex: 1 }}>
+                      <tr>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap', width: '70px' }}>코드</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap', width: '120px' }}>분류</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>한국어 제원 항목명</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>카탈로그 원문 표기</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap', width: '70px' }}>단위</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap', width: '180px' }}>제원 수치 · 사양</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedModel.vdiSpecs.map((row, idx) => (
+                        <tr key={row.code + idx} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                          <td style={{ padding: '6px 10px', fontWeight: 900, color: '#1D4ED8', whiteSpace: 'nowrap' }}>{row.code}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>{row.category}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>{row.itemKo}</td>
+                          <td style={{ padding: '6px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{row.itemEn}</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'center', color: '#475569', fontWeight: 700, whiteSpace: 'nowrap' }}>{row.unit}</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 900, color: '#0F172A', whiteSpace: 'nowrap' }}>{row.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 2-B. 마스트 단수·인상높이별 상세 제원표 */}
+            {selectedModel.mastSpecs && selectedModel.mastSpecs.length > 0 && (
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={15} color="#047857" />
+                  마스트 단수·인상높이별 상세 제원표 · 총 {selectedModel.mastSpecs.length}종 마스트 구성
+                </div>
+                <div style={{ border: '1px solid #CBD5E1', borderRadius: '8px', overflow: 'hidden', maxHeight: '320px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#065F46', color: '#FFFFFF', zIndex: 1 }}>
+                      <tr>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>마스트 형식</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>마스트 모델코드</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>인상높이 h3</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>마스트 전고 h1</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>최대 작업높이 h4</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>자유인상고 h2</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>경사각 전/후</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>허용하중 단륜</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedModel.mastSpecs.map((ms, idx) => (
+                        <tr key={ms.mastModel + idx} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: ms.liftHeightH3Mm === 3000 && ms.mastType.includes('광시야') ? '#ECFDF5' : idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                          <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>{ms.mastType}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 900, color: '#047857', whiteSpace: 'nowrap' }}>{ms.mastModel}</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 900, color: '#0F172A', whiteSpace: 'nowrap' }}>{ms.liftHeightH3Mm.toLocaleString()} mm</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>{ms.loweredHeightH1Mm.toLocaleString()} mm</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>{ms.extendedHeightWithBackrestH4Mm.toLocaleString()} mm</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#1D4ED8', whiteSpace: 'nowrap' }}>{ms.freeLiftWithBackrestH2Mm.toLocaleString()} mm</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>{ms.tiltAngleDeg}°</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 900, color: '#0F172A', whiteSpace: 'nowrap' }}>{ms.loadCapacity500MmSingleKg.toLocaleString()} kg</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 2-C. 배터리·충전기 옵션 매트릭스 및 표준·선택 사양 */}
+            {selectedModel.batteryOptions && selectedModel.batteryOptions.length > 0 && (
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={15} color="#B45309" />
+                  리튬배터리 셀 브랜드 · 용량별 옵션 및 호환 충전기 매트릭스
+                </div>
+                <div style={{ border: '1px solid #CBD5E1', borderRadius: '8px', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead style={{ backgroundColor: '#78350F', color: '#FFFFFF' }}>
+                      <tr>
+                        <th style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>셀 제조사</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>배터리 모델</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>전압 / 정격용량</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'right', whiteSpace: 'nowrap' }}>중량</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>구분</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>적용 모델 범위</th>
+                        <th style={{ padding: '7px 10px', textAlign: 'left', whiteSpace: 'nowrap' }}>호환 충전기 사양</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedModel.batteryOptions.map((bo, idx) => (
+                        <tr key={bo.batteryModel + idx} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FFFBEB' }}>
+                          <td style={{ padding: '6px 10px', fontWeight: 900, color: '#92400E', whiteSpace: 'nowrap' }}>{bo.cellBrand}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>{bo.batteryModel}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 900, color: '#1D4ED8', whiteSpace: 'nowrap' }}>{bo.voltageCapacity}</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>{bo.weightKg ? `${bo.weightKg} kg` : '-'}</td>
+                          <td style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, backgroundColor: bo.status === '표준' ? '#DCFCE7' : '#FEF3C7', color: bo.status === '표준' ? '#166534' : '#92400E' }}>
+                              {bo.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '6px 10px', color: '#334155', whiteSpace: 'nowrap' }}>{bo.applicableModels}</td>
+                          <td style={{ padding: '6px 10px', color: '#475569', whiteSpace: 'nowrap' }}>{bo.chargerOptions || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 2-D. 카탈로그 표준 사양 및 선택 옵션 사양 */}
+            {selectedModel.standardEquipments && selectedModel.standardEquipments.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 900, color: '#0F172A', marginBottom: '8px' }}>카탈로그 표준 장착 사양</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#334155', fontWeight: 600 }}>
+                    {selectedModel.standardEquipments.map((eq, i) => (
+                      <div key={i}>• {eq}</div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 900, color: '#1E40AF', marginBottom: '8px' }}>카탈로그 선택 옵션 사양</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#1E3A8A', fontWeight: 600 }}>
+                    {(selectedModel.optionalEquipments || []).map((eq, i) => (
+                      <div key={i}>• {eq}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 3. 일상점검 수칙 & 정기 예방정비 매뉴얼 요약 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid #BBF7D0', backgroundColor: '#F0FDF4' }}>

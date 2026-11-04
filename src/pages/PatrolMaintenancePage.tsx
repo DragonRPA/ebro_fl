@@ -43,9 +43,9 @@ const INITIAL_PATROL_SCHEDULES: PatrolScheduleRecord[] = [
     completedDate: '2026-10-15',
     mechanicName: '김정비',
     vehicleNo: '경기82더 4411',
-    customerId: 'CUST-FL-001',
+    customerId: 'CUST-MJ-001',
     customerName: '한빛물류센터 주식회사',
-    siteId: 'SITE-FL-001',
+    siteId: 'SITE-MJ-001',
     siteName: '평택항만 제1물류센터 현장',
     siteAddress: '경기도 평택시 포승읍 평택항만길 210 제1보세창고동',
     assetId: 'AST-FL-001',
@@ -66,9 +66,9 @@ const INITIAL_PATROL_SCHEDULES: PatrolScheduleRecord[] = [
     completedDate: '2026-10-24',
     mechanicName: '박기장',
     vehicleNo: '경남80루 1920',
-    customerId: 'CUST-FL-002',
+    customerId: 'CUST-MJ-002',
     customerName: '태양중공업 주식회사',
-    siteId: 'SITE-FL-003',
+    siteId: 'SITE-MJ-002',
     siteName: '창원 제1중공업 공장 현장',
     siteAddress: '경상남도 창원시 성산구 공단로 415 중량조립1공장',
     assetId: 'AST-FL-005',
@@ -89,9 +89,9 @@ const INITIAL_PATROL_SCHEDULES: PatrolScheduleRecord[] = [
     completedDate: '-',
     mechanicName: '김정비',
     vehicleNo: '경기82더 4411',
-    customerId: 'CUST-FL-004',
+    customerId: 'CUST-MJ-004',
     customerName: '대한콜드체인 주식회사',
-    siteId: 'SITE-FL-007',
+    siteId: 'SITE-MJ-004',
     siteName: '용인 제1냉동냉장물류센터 현장',
     siteAddress: '경기도 용인시 처인구 백암면 물류단지로 88 냉동A동',
     assetId: 'AST-FL-007',
@@ -116,9 +116,9 @@ const INITIAL_PATROL_SCHEDULES: PatrolScheduleRecord[] = [
     completedDate: '-',
     mechanicName: '김정비',
     vehicleNo: '경기82더 4411',
-    customerId: 'CUST-FL-003',
+    customerId: 'CUST-MJ-003',
     customerName: '주식회사 서해글로벌모터스',
-    siteId: 'SITE-FL-005',
+    siteId: 'SITE-MJ-003',
     siteName: '인천신항 자동차부품 물류기지 현장',
     siteAddress: '인천광역시 연수구 신항대로 140 제2물류동',
     assetId: 'AST-FL-003',
@@ -163,7 +163,7 @@ export const PatrolMaintenancePage: React.FC = () => {
   // 신규 순회정비 일정 등록 상태
   const [newDate, setNewDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [newMechanic, setNewMechanic] = useState<string>('김정비');
-  const [newSiteId, setNewSiteId] = useState<string>('SITE-FL-001');
+  const [newSiteId, setNewSiteId] = useState<string>('SITE-MJ-001');
   const [newAssetId, setNewAssetId] = useState<string>('AST-FL-001');
   const [newCycleType, setNewCycleType] = useState<PatrolScheduleRecord['patrolCycleType']>('월간 정기순회점검');
 
