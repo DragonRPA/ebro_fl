@@ -2413,7 +2413,7 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v9_mujin';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v10_mujin_specs';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));

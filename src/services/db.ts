@@ -4738,7 +4738,7 @@ class LocalDB {
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
     try {
-      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_initial_v1';
+      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_initial_v2';
       if (localStorage.getItem(STORAGE_VERSION_KEY) !== '1') {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
