@@ -272,10 +272,12 @@ async function generateCompareSpecsPdf(models: FlModelTechnicalSpec[]): Promise<
   ctx.font = 'bold 20px "Pretendard", "Malgun Gothic", sans-serif';
   ctx.fillText('지게차 제원 · 매뉴얼 보관함 공식 출력물', 50, 44);
 
+  const displayModels = models.slice(0, 6);
+
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 34px "Pretendard", "Malgun Gothic", sans-serif';
-  const modelNamesSummary = models.map(m => m.modelName).join(' vs ');
-  ctx.fillText(`지게차 모델별 상세 제원 비교표 · ${models.length}종`, 50, 92);
+  const modelNamesSummary = displayModels.map(m => m.modelName).join(' vs ');
+  ctx.fillText(`지게차 모델별 상세 제원 비교표 · ${displayModels.length}종 (최대 6종)`, 50, 92);
 
   ctx.fillStyle = '#CBD5E1';
   ctx.font = '600 16px "Pretendard", "Malgun Gothic", sans-serif';
@@ -285,7 +287,6 @@ async function generateCompareSpecsPdf(models: FlModelTechnicalSpec[]): Promise<
   const tableTop = 154;
   const tableWidth = width - 100;
   const labelColWidth = 240;
-  const displayModels = models.slice(0, 6);
   const modelColWidth = Math.floor((tableWidth - labelColWidth) / displayModels.length);
 
   // 테이블 헤더
@@ -436,6 +437,7 @@ async function generateCompareSpecsPdf(models: FlModelTechnicalSpec[]): Promise<
 // 제원 비교표 브라우저 인쇄 창 즉시 호출
 function printCompareSpecsTable(models: FlModelTechnicalSpec[]): void {
   if (models.length === 0) return;
+  const displayModels = models.slice(0, 6);
   const compareRows: { label: string; render: (m: FlModelTechnicalSpec) => string }[] = [
     { label: '시리즈명', render: m => m.seriesName },
     { label: '차종 / 동력방식', render: m => `${m.equipmentClass} / ${m.powerType}` },
@@ -457,7 +459,7 @@ function printCompareSpecsTable(models: FlModelTechnicalSpec[]): void {
   const win = window.open('', '_blank', 'width=1200,height=850');
   if (!win) return;
 
-  const thCells = models
+  const thCells = displayModels
     .map(
       m =>
         `<th style="padding:10px 12px;text-align:left;background:#0F172A;color:#FFFFFF;border:1px solid #334155;">
@@ -472,7 +474,7 @@ function printCompareSpecsTable(models: FlModelTechnicalSpec[]): void {
       (row, idx) =>
         `<tr style="background:${idx % 2 === 0 ? '#F8FAFC' : '#FFFFFF'};">
           <td style="padding:8px 12px;font-weight:800;color:#1E3A8A;background:#EFF6FF;border:1px solid #CBD5E1;white-space:nowrap;">${row.label}</td>
-          ${models
+          ${displayModels
             .map(
               m =>
                 `<td style="padding:8px 12px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">${row.render(m)}</td>`
@@ -496,8 +498,8 @@ function printCompareSpecsTable(models: FlModelTechnicalSpec[]): void {
   </style>
 </head>
 <body>
-  <h1>지게차 모델별 제원 비교표 (${models.length}종)</h1>
-  <div class="meta">출력일시: ${new Date().toISOString().split('T')[0]} | 비교 모델: ${models.map(m => `${m.manufacturerName} ${m.modelName}`).join(', ')}</div>
+  <h1>지게차 모델별 제원 비교표 (${displayModels.length}종 · 최대 6종)</h1>
+  <div class="meta">출력일시: ${new Date().toISOString().split('T')[0]} | 비교 모델: ${displayModels.map(m => `${m.manufacturerName} ${m.modelName}`).join(', ')}</div>
   <table>
     <thead>
       <tr>
@@ -686,13 +688,23 @@ export const ForkliftDocArchivePage: React.FC = () => {
     return list;
   }, [docCategoryFilter, manufacturerFilter, searchTerm]);
 
+  const MAX_COMPARE_MODELS = 6;
+
   const comparedModels = useMemo(
-    () => FL_TECHNICAL_ARCHIVE.filter(m => compareIds.includes(m.id)),
+    () => FL_TECHNICAL_ARCHIVE.filter(m => compareIds.includes(m.id)).slice(0, MAX_COMPARE_MODELS),
     [compareIds]
   );
 
   const toggleCompareId = (id: string) => {
-    setCompareIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    if (compareIds.includes(id)) {
+      setCompareIds(prev => prev.filter(x => x !== id));
+      return;
+    }
+    if (compareIds.length >= MAX_COMPARE_MODELS) {
+      showToast(`비교 모델은 최대 ${MAX_COMPARE_MODELS}개까지만 선택 가능합니다.`, 'error');
+      return;
+    }
+    setCompareIds(prev => [...prev, id].slice(0, MAX_COMPARE_MODELS));
   };
 
   // 선택된 비교 모델 제원 비교표 엑셀 내보내기
@@ -798,7 +810,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 color: activeTab === 'COMPARE' ? '#1E40AF' : '#475569'
               }}
             >
-              제원 비교 ({compareIds.length}종)
+              제원 비교 ({compareIds.length}/{MAX_COMPARE_MODELS}종)
             </button>
             <button
               type="button"
@@ -983,13 +995,16 @@ export const ForkliftDocArchivePage: React.FC = () => {
           >
             <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
               <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A' }}>아카이브 수록 지게차 모델 ({filteredModels.length}종)</span>
-              <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>비교 체크 지원</span>
+              <span style={{ fontSize: '11px', color: compareIds.length >= MAX_COMPARE_MODELS ? '#DC2626' : '#64748B', fontWeight: 700 }}>
+                비교 선택 ({compareIds.length}/{MAX_COMPARE_MODELS}종 · 최대 6개)
+              </span>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {filteredModels.map(m => {
                 const isSelected = selectedModel.id === m.id;
                 const isCompared = compareIds.includes(m.id);
+                const isLimitReached = !isCompared && compareIds.length >= MAX_COMPARE_MODELS;
                 return (
                   <div
                     key={m.id}
@@ -1029,6 +1044,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
                           ev.stopPropagation();
                           toggleCompareId(m.id);
                         }}
+                        title={isLimitReached ? '비교 모델은 최대 6개까지만 선택 가능합니다.' : '제원 비교 선택/해제'}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1040,13 +1056,14 @@ export const ForkliftDocArchivePage: React.FC = () => {
                           color: isCompared ? '#FFFFFF' : '#475569',
                           fontSize: '10.5px',
                           fontWeight: 700,
-                          cursor: 'pointer',
+                          cursor: isLimitReached ? 'not-allowed' : 'pointer',
+                          opacity: isLimitReached ? 0.45 : 1,
                           whiteSpace: 'nowrap'
                         }}
                       >
                         {isCompared ? <CheckSquare size={12} /> : <Square size={12} />}
                         비교
- </button>
+                      </button>
                     </div>
 
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1482,14 +1499,38 @@ export const ForkliftDocArchivePage: React.FC = () => {
         <div style={{ flex: 1, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'auto', padding: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', marginRight: '6px', whiteSpace: 'nowrap' }}>비교 모델 선택:</span>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', marginRight: '4px', whiteSpace: 'nowrap' }}>
+                비교 모델 선택 ({compareIds.length}/{MAX_COMPARE_MODELS}종 · 최대 6개):
+              </span>
+              {compareIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setCompareIds([])}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid #FCA5A5',
+                    backgroundColor: '#FEF2F2',
+                    color: '#DC2626',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    marginRight: '4px'
+                  }}
+                >
+                  선택 초기화
+                </button>
+              )}
               {FL_TECHNICAL_ARCHIVE.map(m => {
                 const active = compareIds.includes(m.id);
+                const isLimitReached = !active && compareIds.length >= MAX_COMPARE_MODELS;
                 return (
                   <button
                     key={m.id}
                     type="button"
                     onClick={() => toggleCompareId(m.id)}
+                    title={isLimitReached ? '비교 모델은 최대 6개까지만 선택 가능합니다.' : '제원 비교 선택/해제'}
                     style={{
                       padding: '4px 10px',
                       borderRadius: '6px',
@@ -1498,7 +1539,8 @@ export const ForkliftDocArchivePage: React.FC = () => {
                       color: active ? '#1D4ED8' : '#475569',
                       fontSize: '11.5px',
                       fontWeight: 800,
-                      cursor: 'pointer',
+                      cursor: isLimitReached ? 'not-allowed' : 'pointer',
+                      opacity: isLimitReached ? 0.45 : 1,
                       whiteSpace: 'nowrap'
                     }}
                   >
@@ -1582,7 +1624,25 @@ export const ForkliftDocArchivePage: React.FC = () => {
                 <th style={{ padding: '10px 12px', textAlign: 'left', width: '180px', whiteSpace: 'nowrap' }}>비교 제원 항목</th>
                 {comparedModels.map(m => (
                   <th key={m.id} style={{ padding: '10px 12px', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap' }}>
-                    <div style={{ fontSize: '11px', color: '#93C5FD' }}>{m.manufacturerName} · {m.originCountry}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ fontSize: '11px', color: '#93C5FD' }}>{m.manufacturerName} · {m.originCountry}</div>
+                      <button
+                        type="button"
+                        onClick={() => toggleCompareId(m.id)}
+                        title="비교 대상에서 제외"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#94A3B8',
+                          cursor: 'pointer',
+                          padding: '0 2px',
+                          display: 'inline-flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
                     <div style={{ fontSize: '14px', fontWeight: 900 }}>{m.modelName}</div>
                   </th>
                 ))}
@@ -1869,7 +1929,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span>수록 지게차 모델: <strong style={{ color: '#0F172A' }}>{filteredModels.length}종</strong></span>
           <span style={{ color: '#CBD5E1' }}>|</span>
-          <span>제원 비교 선택: <strong style={{ color: '#2563EB' }}>{compareIds.length}종</strong></span>
+          <span>제원 비교 선택: <strong style={{ color: '#2563EB' }}>{compareIds.length}/{MAX_COMPARE_MODELS}종</strong></span>
           <span style={{ color: '#CBD5E1' }}>|</span>
           <span>공식 브로셔·매뉴얼·제원표 보관문서: <strong style={{ color: '#059669' }}>{r2Files.length || allDocuments.length}건</strong></span>
         </div>
