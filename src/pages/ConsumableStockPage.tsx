@@ -17,7 +17,11 @@ import { normalizeMenuId } from '../config/menu_config';
 import { getRoleTemplatePermission } from '../config/role_templates';
 import { createHangulMatcher } from '../utils/hangulSearch';
 
-export const ConsumableStockPage: React.FC = () => {
+export interface ConsumableStockPageProps {
+  initialTab?: 'STOCK' | 'MASTER' | 'VEHICLE_STOCK' | 'COLLECTED_PARTS' | 'STOCKTAKING';
+}
+
+export const ConsumableStockPage: React.FC<ConsumableStockPageProps> = ({ initialTab = 'STOCK' }) => {
   const {
     consumables,
     consumableLots,
@@ -96,8 +100,12 @@ export const ConsumableStockPage: React.FC = () => {
     return map;
   }, [stocktakingAuditItems]);
 
-  // 활성 탭: STOCK (주기장재고) | VEHICLE_STOCK (차량재고) | COLLECTED_PARTS (고품관리) | STOCKTAKING (재고실사)
-  const [activeTab, setActiveTab] = useState<'STOCK' | 'VEHICLE_STOCK' | 'COLLECTED_PARTS' | 'STOCKTAKING'>('STOCK');
+  // 활성 탭: STOCK (주기장재고) | MASTER (소모품마스터) | VEHICLE_STOCK (차량재고) | COLLECTED_PARTS (고품관리) | STOCKTAKING (재고실사)
+  const [activeTab, setActiveTab] = useState<'STOCK' | 'MASTER' | 'VEHICLE_STOCK' | 'COLLECTED_PARTS' | 'STOCKTAKING'>(initialTab);
+
+  React.useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // 토스트 알림 상태
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -112,12 +120,23 @@ export const ConsumableStockPage: React.FC = () => {
   const [selectedAgingBucket, setSelectedAgingBucket] = useState<number | 'ALL'>('ALL');
   const [brandFilter, setBrandFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [handlingFilter, setHandlingFilter] = useState<'ALL' | 'HANDLED' | 'UNHANDLED'>('HANDLED');
+  const [masterBrandFilter, setMasterBrandFilter] = useState('ALL');
+  const [masterCategoryFilter, setMasterCategoryFilter] = useState('ALL');
+  const [masterHandlingFilter, setMasterHandlingFilter] = useState<'ALL' | 'HANDLED' | 'UNHANDLED'>('ALL');
+  const [masterSearchTerm, setMasterSearchTerm] = useState('');
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [masterEditingId, setMasterEditingId] = useState<string | null>(null);
+  const [masterSkuCode, setMasterSkuCode] = useState('');
   const [masterModelName, setMasterModelName] = useState('');
-  const [masterUnit, setMasterUnit] = useState('개');
+  const [masterCategory, setMasterCategory] = useState('윤활유·오일류');
+  const [masterBrand, setMasterBrand] = useState('SK루브리컨츠');
+  const [masterSpec, setMasterSpec] = useState('');
+  const [masterUnit, setMasterUnit] = useState('통');
   const [masterUnitPrice, setMasterUnitPrice] = useState(0);
+  const [masterSalePrice, setMasterSalePrice] = useState(0);
   const [masterSupplier, setMasterSupplier] = useState('');
+  const [masterIsHandled, setMasterIsHandled] = useState(true);
   const [masterInitialStockQty, setMasterInitialStockQty] = useState(0);
   const [expandedMasterIds, setExpandedMasterIds] = useState<Set<string>>(new Set());
 
@@ -350,6 +369,8 @@ export const ConsumableStockPage: React.FC = () => {
     }));
     let activeKinds = 0;
     for (const bc of backcalculatedConsumables) {
+      if (handlingFilter === 'HANDLED' && bc.isHandled === false) continue;
+      if (handlingFilter === 'UNHANDLED' && bc.isHandled !== false) continue;
       if (!bc.isReceivedAsOfTarget || bc.calcStockQty <= 0) continue;
       activeKinds += 1;
       const b = bc.calcAgingBucket;
@@ -360,15 +381,58 @@ export const ConsumableStockPage: React.FC = () => {
       }
     }
     return { buckets, activeKinds };
-  }, [backcalculatedConsumables]);
+  }, [backcalculatedConsumables, handlingFilter]);
 
   const categoryOptions = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(['윤활유·오일류', '구리스·방청·케미컬', '장갑·안전보호구', '세척·보로·전장소모재']);
     for (const c of consumables) {
       if (c.category) set.add(c.category);
     }
     return Array.from(set);
   }, [consumables]);
+
+  const brandOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of consumables) {
+      const b = c.manufacturer || c.brand;
+      if (b) set.add(b);
+    }
+    return Array.from(set);
+  }, [consumables]);
+
+  // 소모품 마스터 취급/미취급 통계 및 필터링
+  const consumableMasterStats = useMemo(() => {
+    let total = 0;
+    let handled = 0;
+    let unhandled = 0;
+    for (const c of consumables) {
+      total += 1;
+      if (c.isHandled === false) unhandled += 1;
+      else handled += 1;
+    }
+    return { total, handled, unhandled };
+  }, [consumables]);
+
+  const filteredMasterConsumables = useMemo(() => {
+    const matcher = masterSearchTerm ? createHangulMatcher(masterSearchTerm) : null;
+    return consumables.filter(c => {
+      const b = c.manufacturer || c.brand || '';
+      if (masterBrandFilter !== 'ALL' && b !== masterBrandFilter) return false;
+      if (masterCategoryFilter !== 'ALL' && c.category !== masterCategoryFilter) return false;
+      if (masterHandlingFilter === 'HANDLED' && c.isHandled === false) return false;
+      if (masterHandlingFilter === 'UNHANDLED' && c.isHandled !== false) return false;
+      if (!matcher) return true;
+      return matcher.testAny([
+        c.skuCode || '',
+        c.modelName || '',
+        c.category || '',
+        b,
+        c.spec || '',
+        c.compatibleModels || '',
+        c.supplier || ''
+      ]);
+    });
+  }, [consumables, masterBrandFilter, masterCategoryFilter, masterHandlingFilter, masterSearchTerm]);
 
   // 재고 통계 요약 (기준년월 역산 및 유통 판매용 / 렌탈자산 정비용 구분 집계)
   const stockSummary = useMemo(() => {
@@ -378,6 +442,8 @@ export const ConsumableStockPage: React.FC = () => {
     let hqRepairQty = 0;
     let hqTotalValue = 0;
     for (const bc of backcalculatedConsumables) {
+      if (handlingFilter === 'HANDLED' && bc.isHandled === false) continue;
+      if (handlingFilter === 'UNHANDLED' && bc.isHandled !== false) continue;
       if (!bc.isReceivedAsOfTarget) continue;
       hqTotalKinds += 1;
       hqTotalQty += bc.calcStockQty;
@@ -406,7 +472,7 @@ export const ConsumableStockPage: React.FC = () => {
       grandTotalQty: hqTotalQty + vehicleTotalQty,
       grandTotalValue: hqTotalValue + vehicleTotalValue
     };
-  }, [backcalculatedConsumables, mechanicConsumableStocks, consumableMap]);
+  }, [backcalculatedConsumables, handlingFilter, mechanicConsumableStocks, consumableMap]);
 
   // 고품 관리 요약 및 배지 카운트
   const collectedPartsSummary = useMemo(() => {
@@ -457,17 +523,20 @@ export const ConsumableStockPage: React.FC = () => {
     const matcher = stockSearch ? createHangulMatcher(stockSearch) : null;
     return backcalculatedConsumables.filter(c => {
       if (!c.isReceivedAsOfTarget) return false;
-      if (brandFilter !== 'ALL' && (c.brand || 'HANGCHA') !== brandFilter) return false;
+      if (handlingFilter === 'HANDLED' && c.isHandled === false) return false;
+      if (handlingFilter === 'UNHANDLED' && c.isHandled !== false) return false;
+      const b = c.manufacturer || c.brand || '';
+      if (brandFilter !== 'ALL' && b !== brandFilter) return false;
       if (categoryFilter !== 'ALL' && c.category !== categoryFilter) return false;
       if (selectedAgingBucket !== 'ALL' && c.calcAgingBucket !== selectedAgingBucket) return false;
-      return !matcher || matcher.testAny([c.modelName, c.skuCode || '', c.category || '', c.compatibleModels || '', c.supplier]);
+      return !matcher || matcher.testAny([c.modelName, c.skuCode || '', c.category || '', c.compatibleModels || '', c.supplier, b]);
     }).map(c => {
       const totalVehicleQty = vehicleQtyByConsumableMap.get(c.id) || 0;
       const grandQty = (c.calcStockQty || 0) + totalVehicleQty;
       const hqValue = c.calcStockBalanceAmount ?? ((c.calcStockQty || 0) * (c.unitPrice || 0));
       return { ...c, stockQty: c.calcStockQty, totalVehicleQty, grandQty, hqValue };
     });
-  }, [backcalculatedConsumables, brandFilter, categoryFilter, selectedAgingBucket, stockSearch, vehicleQtyByConsumableMap]);
+  }, [backcalculatedConsumables, handlingFilter, brandFilter, categoryFilter, selectedAgingBucket, stockSearch, vehicleQtyByConsumableMap]);
 
   const { items: sortedStock, requestSort: requestSortStock, sortConfig: sortConfigStock } = useSortableData(enrichedStock);
 
@@ -559,55 +628,100 @@ export const ConsumableStockPage: React.FC = () => {
     exportToExcel(excelData, `소모품_차량재고대장_${new Date().toISOString().split('T')[0]}`, '차량재고');
   };
 
-  // --- 품목 마스터 CUD 핸들러 ---
+  // --- 소모품 마스터 CUD 및 취급여부 토글 핸들러 ---
   const openCreateMaster = () => {
     setMasterEditingId(null);
+    setMasterSkuCode(`CSM-${Date.now().toString().slice(-6)}`);
     setMasterModelName('');
-    setMasterUnit('개');
+    setMasterCategory('윤활유·오일류');
+    setMasterBrand('SK루브리컨츠');
+    setMasterSpec('');
+    setMasterUnit('통');
     setMasterUnitPrice(0);
-    setMasterSupplier('');
+    setMasterSalePrice(0);
+    setMasterSupplier('평택항만윤활유상사');
+    setMasterIsHandled(true);
     setMasterInitialStockQty(0);
     setShowMasterModal(true);
   };
 
   const openEditMaster = (item: Consumable) => {
     setMasterEditingId(item.id);
+    setMasterSkuCode(item.skuCode || item.id);
     setMasterModelName(item.modelName);
-    setMasterUnit(item.unit || '개');
+    setMasterCategory(item.category || '윤활유·오일류');
+    setMasterBrand(item.manufacturer || item.brand || 'SK루브리컨츠');
+    setMasterSpec(item.spec || '');
+    setMasterUnit(item.unit || '통');
     setMasterUnitPrice(item.unitPrice || 0);
+    setMasterSalePrice(item.saleUnitPrice || 0);
     setMasterSupplier(item.supplier || '');
+    setMasterIsHandled(item.isHandled !== false);
     setMasterInitialStockQty(item.stockQty || 0);
     setShowMasterModal(true);
+  };
+
+  const handleToggleConsumableHandled = async (item: Consumable) => {
+    const nextHandled = item.isHandled === false ? true : false;
+    try {
+      await updateConsumable(item.id, {
+        isHandled: nextHandled
+      });
+      await db.awaitPendingWrites();
+      showToast(`소모품 마스터 [${item.modelName}] 취급여부가 [${nextHandled ? '취급' : '미취급'}]으로 변경되었습니다.`);
+    } catch (err: any) {
+      showErrorModal(`소모품 취급여부 변경 실패:\n${err?.message || err}`);
+    }
   };
 
   const handleSaveMaster = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!masterModelName.trim()) {
-      showToast('품목명을 입력해 주세요.', 'error');
+      showToast('소모품명을 입력해 주세요.', 'error');
       return;
     }
     try {
       if (masterEditingId) {
         await updateConsumable(masterEditingId, {
+          skuCode: masterSkuCode.trim() || undefined,
           modelName: masterModelName.trim(),
-          unit: masterUnit.trim() || '개',
+          name: masterModelName.trim(),
+          partName: masterModelName.trim(),
+          category: masterCategory,
+          brand: masterBrand.trim() || '공통',
+          manufacturer: masterBrand.trim() || '공통',
+          spec: masterSpec.trim(),
+          unit: masterUnit.trim() || '통',
           unitPrice: masterUnitPrice,
-          supplier: masterSupplier.trim()
+          saleUnitPrice: masterSalePrice || Math.round(masterUnitPrice * 1.35),
+          supplier: masterSupplier.trim(),
+          isHandled: masterIsHandled
         });
-        showToast('품목 마스터 정보가 성공적으로 수정되었습니다.');
+        await db.awaitPendingWrites();
+        showToast('소모품 마스터 정보가 수정되었습니다.');
       } else {
         await addConsumable({
+          skuCode: masterSkuCode.trim() || `CSM-${Date.now().toString().slice(-6)}`,
           modelName: masterModelName.trim(),
-          unit: masterUnit.trim() || '개',
+          name: masterModelName.trim(),
+          partName: masterModelName.trim(),
+          category: masterCategory,
+          brand: masterBrand.trim() || '공통',
+          manufacturer: masterBrand.trim() || '공통',
+          spec: masterSpec.trim(),
+          unit: masterUnit.trim() || '통',
           unitPrice: masterUnitPrice,
+          saleUnitPrice: masterSalePrice || Math.round(masterUnitPrice * 1.35),
           supplier: masterSupplier.trim(),
-          stockQty: masterInitialStockQty
-        });
-        showToast('신규 품목 마스터가 성공적으로 등록되었습니다.');
+          isHandled: masterIsHandled,
+          stockQty: masterIsHandled ? masterInitialStockQty : 0
+        } as any);
+        await db.awaitPendingWrites();
+        showToast('신규 소모품 마스터가 등록되었습니다.');
       }
       setShowMasterModal(false);
     } catch (err: any) {
-      showErrorModal(`품목 저장 실패:\n${err?.message || err}`);
+      showErrorModal(`소모품 마스터 저장 실패:\n${err?.message || err}`);
     }
   };
 
@@ -804,10 +918,10 @@ export const ConsumableStockPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <Boxes size={18} color="var(--primary)" />
           <h2 data-mid="consumable_stock-header" style={{ fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-            소모품 재고 관리
+            소모품 재고 및 소모품 마스터 관리
           </h2>
           <span style={{ padding: '3px 9px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 800, backgroundColor: 'rgba(15, 118, 110, 0.14)', color: '#0f766e', border: '1px solid rgba(15, 118, 110, 0.35)', whiteSpace: 'nowrap' }}>
-            유형자산 구성 4: 소모품 · 유통 판매용 및 렌탈자산 정비용 통합 관리
+            사용 시 소멸 물품 · 윤활유 · 구리스 · 장갑 · 방청제 · 세척제
           </span>
         </div>
 
@@ -819,24 +933,32 @@ export const ConsumableStockPage: React.FC = () => {
             onClick={() => setActiveTab('STOCK')}
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
-            <Boxes size={14} /> 주기장 재고
- </button>
+            <Boxes size={14} /> 주기장 소모품 재고
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'MASTER' ? 'btn-primary' : 'btn-secondary'}
+            onClick={() => setActiveTab('MASTER')}
+            style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+          >
+            <ShieldCheck size={14} /> 소모품 마스터 · 취급여부
+          </button>
           <button
             type="button"
             className={activeTab === 'VEHICLE_STOCK' ? 'btn-primary' : 'btn-secondary'}
             onClick={() => setActiveTab('VEHICLE_STOCK')}
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
-            <Truck size={14} /> 차량 재고
- </button>
+            <Truck size={14} /> 차량 적재 소모품
+          </button>
           <button
             type="button"
             className={activeTab === 'COLLECTED_PARTS' ? 'btn-primary' : 'btn-secondary'}
             onClick={() => setActiveTab('COLLECTED_PARTS')}
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
-            <Archive size={14} /> 고품 관리
- {collectedPartsSummary.uncompletedCount > 0 && (
+            <Archive size={14} /> 폐용기 · 회수품 관리
+            {collectedPartsSummary.uncompletedCount > 0 && (
               <span style={{
                 backgroundColor: '#7c3aed', color: '#fff', fontSize: '11px',
                 padding: '1px 6px', borderRadius: '10px', fontWeight: 700
@@ -851,8 +973,8 @@ export const ConsumableStockPage: React.FC = () => {
             onClick={() => setActiveTab('STOCKTAKING')}
             style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
-            <CheckSquare size={14} /> 재고 실사
- {draftAuditsCount > 0 && (
+            <CheckSquare size={14} /> 소모품 재고 실사
+            {draftAuditsCount > 0 && (
               <span style={{
                 backgroundColor: 'var(--warning)', color: '#fff', fontSize: '11px',
                 padding: '1px 6px', borderRadius: '10px', fontWeight: 700
@@ -863,6 +985,254 @@ export const ConsumableStockPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* [TAB: 소모품 마스터 · 제조사별 조회 · 등록 · 취급여부 결정] */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {activeTab === 'MASTER' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="card" style={{ margin: 0, padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                  소모품 마스터 · 품목분류 및 제조사 기준 조회 · 취급여부 결정
+                </span>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setMasterHandlingFilter('ALL')}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: masterHandlingFilter === 'ALL' ? '2px solid #0f766e' : '1px solid var(--border-color)',
+                      backgroundColor: masterHandlingFilter === 'ALL' ? '#f0fdf4' : 'var(--bg-app)',
+                      color: masterHandlingFilter === 'ALL' ? '#0f766e' : 'var(--text-primary)',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    전체 소모품 마스터 {consumableMasterStats.total}종
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMasterHandlingFilter('HANDLED')}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: masterHandlingFilter === 'HANDLED' ? '2px solid #16a34a' : '1px solid var(--border-color)',
+                      backgroundColor: masterHandlingFilter === 'HANDLED' ? '#dcfce7' : '#ffffff',
+                      color: '#166534',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    취급 소모품 {consumableMasterStats.handled}종
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMasterHandlingFilter('UNHANDLED')}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: masterHandlingFilter === 'UNHANDLED' ? '2px solid #64748b' : '1px solid var(--border-color)',
+                      backgroundColor: masterHandlingFilter === 'UNHANDLED' ? '#f1f5f9' : '#ffffff',
+                      color: '#475569',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    미취급 소모품 {consumableMasterStats.unhandled}종
+                  </button>
+                </div>
+              </div>
+
+              {canSave && (
+                <button
+                  type="button"
+                  className="btn-save"
+                  onClick={openCreateMaster}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={13} /> 소모품 마스터 신규 등록
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', flexWrap: 'wrap', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>소모품 분류</label>
+                <select
+                  value={masterCategoryFilter}
+                  onChange={e => setMasterCategoryFilter(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                >
+                  <option value="ALL">전체 소모품 분류</option>
+                  {categoryOptions.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>제조사 · 브랜드</label>
+                <select
+                  value={masterBrandFilter}
+                  onChange={e => setMasterBrandFilter(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                >
+                  <option value="ALL">전체 제조사</option>
+                  {brandOptions.map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>취급여부 필터</label>
+                <select
+                  value={masterHandlingFilter}
+                  onChange={e => setMasterHandlingFilter(e.target.value as any)}
+                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                >
+                  <option value="ALL">전체 · 취급 및 미취급</option>
+                  <option value="HANDLED">취급 소모품만</option>
+                  <option value="UNHANDLED">미취급 소모품만</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>소모품명 · 규격 · 제조사 검색</label>
+                <input
+                  type="text"
+                  value={masterSearchTerm}
+                  onChange={e => setMasterSearchTerm(e.target.value)}
+                  placeholder="윤활유, 구리스, 장갑, 방청제, 품번 검색"
+                  style={{ padding: '6px 10px', fontSize: '12.5px', width: '250px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ margin: 0, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div className="table-container" style={{ border: 'none', boxShadow: 'none', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto', overflowX: 'auto' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>취급여부 결정</th>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>순번</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>품번</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>소모품 분류</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>제조사 · 브랜드</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>소모품명</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>포장 규격 · 용량</th>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>단위</th>
+                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>기준 매입단가</th>
+                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>기준 판매단가</th>
+                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>현재고</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>주요 공급처</th>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMasterConsumables.map((c, idx) => {
+                    const isHandled = c.isHandled !== false;
+                    return (
+                      <tr
+                        key={c.id}
+                        style={{
+                          backgroundColor: isHandled ? 'transparent' : 'rgba(241, 245, 249, 0.65)'
+                        }}
+                      >
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleConsumableHandled(c)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              border: isHandled ? '1px solid #16a34a' : '1px solid #94a3b8',
+                              backgroundColor: isHandled ? '#dcfce7' : '#f1f5f9',
+                              color: isHandled ? '#166534' : '#475569',
+                              fontSize: '11.5px',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {isHandled ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                            <span>{isHandled ? '취급' : '미취급'}</span>
+                          </button>
+                        </td>
+                        <td style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                        <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>{c.skuCode || c.id}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: '#ccfbf1', color: '#0f766e' }}>
+                            {c.category || '윤활유·오일류'}
+                          </span>
+                        </td>
+                        <td style={{ fontWeight: 700, color: '#0f766e', whiteSpace: 'nowrap' }}>{c.manufacturer || c.brand || '-'}</td>
+                        <td style={{ fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{c.modelName}</td>
+                        <td style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{c.spec || c.compatibleModels || '-'}</td>
+                        <td style={{ textAlign: 'center', fontSize: '12px', whiteSpace: 'nowrap' }}>{c.unit || '통'}</td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>₩{(c.unitPrice || 0).toLocaleString('ko-KR')}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0284c7', whiteSpace: 'nowrap' }}>
+                          ₩{(c.saleUnitPrice || Math.round((c.unitPrice || 0) * 1.35)).toLocaleString('ko-KR')}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: (c.stockQty || 0) > 0 ? '#059669' : '#64748b', whiteSpace: 'nowrap' }}>
+                          {(c.stockQty || 0).toLocaleString('ko-KR')}{c.unit || '개'}
+                        </td>
+                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{c.supplier || '-'}</td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {canSave && (
+                            <div style={{ display: 'inline-flex', gap: '4px' }}>
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => openEditMaster(c)}
+                                style={{ padding: '2px 6px', fontSize: '11px' }}
+                              >
+                                <Edit size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => handleDeleteMaster(c.id, c.modelName)}
+                                style={{ padding: '2px 6px', fontSize: '11px', color: 'var(--danger)' }}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ padding: '10px 16px', backgroundColor: 'var(--bg-app)', borderTop: '2px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                소모품 마스터 조회 결과 {filteredMasterConsumables.length.toLocaleString('ko-KR')}종
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                <span>전체 마스터: <strong>{consumableMasterStats.total}종</strong></span>
+                <span>취급 소모품: <strong style={{ color: '#166534' }}>{consumableMasterStats.handled}종</strong></span>
+                <span>미취급 소모품: <strong style={{ color: '#64748b' }}>{consumableMasterStats.unhandled}종</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {/* [TAB 1] 주기장 재고 */}
@@ -985,46 +1355,78 @@ export const ConsumableStockPage: React.FC = () => {
 
           {/* 검색 및 액션 바 */}
           <div className="card" style={{ margin: 0, padding: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <select
-                  value={brandFilter}
-                  onChange={e => setBrandFilter(e.target.value)}
-                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
-                >
-                  <option value="ALL">전체 브랜드</option>
-                  <option value="HANGCHA">항차</option>
-                  <option value="HELI">헬리</option>
-                  <option value="BYD">비와이디</option>
-                </select>
-                <select
-                  value={categoryFilter}
-                  onChange={e => setCategoryFilter(e.target.value)}
-                  style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
-                >
-                  <option value="ALL">전체 제품종류</option>
-                  {categoryOptions.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={stockSearch}
-                  onChange={e => setStockSearch(e.target.value)}
-                  placeholder="품번, 품목명, 제품종류, 공급처 검색..."
-                  style={{ padding: '6px 10px', fontSize: '12.5px', width: '240px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
-                />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>소모품 분류</label>
+                  <select
+                    value={categoryFilter}
+                    onChange={e => setCategoryFilter(e.target.value)}
+                    style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                  >
+                    <option value="ALL">전체 소모품 분류</option>
+                    {categoryOptions.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>제조사 · 브랜드</label>
+                  <select
+                    value={brandFilter}
+                    onChange={e => setBrandFilter(e.target.value)}
+                    style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                  >
+                    <option value="ALL">전체 제조사</option>
+                    {brandOptions.map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>마스터 취급여부</label>
+                  <select
+                    value={handlingFilter}
+                    onChange={e => setHandlingFilter(e.target.value as any)}
+                    style={{ padding: '6px 10px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}
+                  >
+                    <option value="HANDLED">취급 소모품만</option>
+                    <option value="ALL">전체 · 미취급 포함</option>
+                    <option value="UNHANDLED">미취급 소모품만</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>품번 · 소모품명 · 공급처 검색</label>
+                  <input
+                    type="text"
+                    value={stockSearch}
+                    onChange={e => setStockSearch(e.target.value)}
+                    placeholder="윤활유, 구리스, 장갑, 방청제, 공급처 검색"
+                    style={{ padding: '6px 10px', fontSize: '12.5px', width: '240px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                  />
+                </div>
               </div>
 
               <div className="toolbar-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setActiveTab('MASTER')}
+                  style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  소모품 마스터 · 취급여부 결정
+                </button>
                 {canSave && (
                   <button data-hs-trigger="Register"
                     type="button"
                     className="btn-save"
                     onClick={openCreateMaster}
                   >
-                    <Plus size={13} /> 품목 마스터 등록
- </button>
+                    <Plus size={13} /> 소모품 마스터 등록
+                  </button>
                 )}
                 <button
                   type="button"
@@ -1032,21 +1434,22 @@ export const ConsumableStockPage: React.FC = () => {
                   onClick={handleExportStock}
                 >
                   <Download size={13} /> 경과월 재고잔액 엑셀
- </button>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* 품목 마스터 목록 테이블 */}
+          {/* 소모품 재고 목록 테이블 */}
           <div className="card" style={{ margin: 0 }}>
             <div className="table-container" style={{ border: 'none', boxShadow: 'none', maxHeight: 'calc(100vh - 380px)', overflowY: 'auto', overflowX: 'auto' }}>
               <table>
                 <thead>
                   <tr>
                     <th style={{ whiteSpace: 'nowrap' }}>순번</th>
+                    <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>취급여부</th>
                     <SortableTh label="품번" sortKey="skuCode" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <SortableTh label="부품 · 소모품명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
-                    <SortableTh label="제품종류 · 계통" sortKey="category" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="소모품명" sortKey="modelName" currentSort={sortConfigStock} onSort={requestSortStock} />
+                    <SortableTh label="소모품 분류" sortKey="category" currentSort={sortConfigStock} onSort={requestSortStock} />
                     <SortableTh label="최초입고일" sortKey="inboundDate" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <SortableTh label="경과월수" sortKey="calcAgingBucket" currentSort={sortConfigStock} onSort={requestSortStock} align="center" />
                     <th style={{ textAlign: 'center', color: '#0284c7', whiteSpace: 'nowrap' }}>유통 판매용 재고</th>
@@ -1067,8 +1470,8 @@ export const ConsumableStockPage: React.FC = () => {
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={15} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
-                            등록된 품목이 없습니다.
+                          <td colSpan={16} style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-muted)' }}>
+                            조회 조건에 해당하는 소모품이 없습니다.
                           </td>
                         </tr>
                       );
@@ -1081,15 +1484,30 @@ export const ConsumableStockPage: React.FC = () => {
                       const saleStock = c.calcSaleStockQty ?? c.saleStockQty ?? 0;
                       const repairStock = c.calcRepairStockQty ?? c.repairStockQty ?? 0;
                       const agingLabel = c.calcAgingBucket === 24 ? '24개월이상' : `${c.calcAgingBucket}개월`;
+                      const isHandled = c.isHandled !== false;
 
                       return (
                         <tr key={c.id}>
                           <td style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                          <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <span
+                              style={{
+                                padding: '2px 7px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                backgroundColor: isHandled ? '#dcfce7' : '#f1f5f9',
+                                color: isHandled ? '#166534' : '#64748b'
+                              }}
+                            >
+                              {isHandled ? '취급' : '미취급'}
+                            </span>
+                          </td>
                           <td style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>{c.skuCode || c.id}</td>
                           <td style={{ whiteSpace: 'nowrap' }}><strong style={{ color: 'var(--primary)' }}>{c.modelName}</strong></td>
                           <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                             <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, backgroundColor: '#ccfbf1', color: '#0f766e' }}>
-                              {c.category || '부품'}
+                              {c.category || '윤활유·오일류'}
                             </span>
                           </td>
                           <td style={{ textAlign: 'center', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -2033,17 +2451,17 @@ export const ConsumableStockPage: React.FC = () => {
       )}
 
       {/* ──────────────────────────────────────────────────────────────────────── */}
-      {/* 품목 마스터 CUD 모달 */}
+      {/* 소모품 마스터 CUD 모달 */}
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {showMasterModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
-          <form onSubmit={handleSaveMaster} className="card" style={{ width: '90%', maxWidth: '450px', backgroundColor: 'var(--bg-card)', margin: 0 }}>
+          <form onSubmit={handleSaveMaster} className="card" style={{ width: '90%', maxWidth: '520px', backgroundColor: 'var(--bg-card)', margin: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>
-                {masterEditingId ? '품목 마스터 정보 수정' : '신규 품목 마스터 등록'}
+                {masterEditingId ? '소모품 마스터 정보 수정' : '신규 소모품 마스터 등록'}
               </h3>
               <button type="button" onClick={() => setShowMasterModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -2051,36 +2469,107 @@ export const ConsumableStockPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>소모품 분류 *</label>
+                  <select
+                    value={masterCategory}
+                    onChange={e => setMasterCategory(e.target.value)}
+                    style={{ padding: '8px', fontSize: '13px' }}
+                  >
+                    <option value="윤활유·오일류">윤활유·오일류</option>
+                    <option value="구리스·방청·케미컬">구리스·방청·케미컬</option>
+                    <option value="장갑·안전보호구">장갑·안전보호구</option>
+                    <option value="세척·보로·전장소모재">세척·보로·전장소모재</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>취급여부 결정 *</label>
+                  <select
+                    value={masterIsHandled ? 'HANDLED' : 'UNHANDLED'}
+                    onChange={e => setMasterIsHandled(e.target.value === 'HANDLED')}
+                    style={{ padding: '8px', fontSize: '13px', fontWeight: 700 }}
+                  >
+                    <option value="HANDLED">취급 소모품</option>
+                    <option value="UNHANDLED">미취급 소모품</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>소모품 품번</label>
+                  <input
+                    type="text"
+                    value={masterSkuCode}
+                    onChange={e => setMasterSkuCode(e.target.value)}
+                    placeholder="예: CSM-OIL-VG46-20L"
+                    style={{ padding: '8px', fontSize: '13px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>제조사 · 브랜드</label>
+                  <input
+                    type="text"
+                    value={masterBrand}
+                    onChange={e => setMasterBrand(e.target.value)}
+                    placeholder="예: SK루브리컨츠, 뷔르트, 크린가드"
+                    style={{ padding: '8px', fontSize: '13px' }}
+                  />
+                </div>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600 }}>품목명 *</label>
+                <label style={{ fontSize: '12px', fontWeight: 600 }}>소모품명 *</label>
                 <input
                   type="text"
                   value={masterModelName}
                   onChange={e => setMasterModelName(e.target.value)}
-                  placeholder="예: 엔진오일 15W-40, 유압호스 1/2"
+                  placeholder="예: 유압작동유 ISO VG 46 20L, 고하중 리튬 구리스 박스, 코팅장갑"
                   required
                   style={{ padding: '8px', fontSize: '13px' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600 }}>포장 규격 · 용량 설명</label>
+                <input
+                  type="text"
+                  value={masterSpec}
+                  onChange={e => setMasterSpec(e.target.value)}
+                  placeholder="예: 20L 말통, 400g×20본입 1박스, 10켤레 1묶음"
+                  style={{ padding: '8px', fontSize: '13px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>단위</label>
                   <input
                     type="text"
                     value={masterUnit}
                     onChange={e => setMasterUnit(e.target.value)}
-                    placeholder="개, L, 세트 등"
+                    placeholder="통, 박스, 묶음, 캔"
                     style={{ padding: '8px', fontSize: '13px' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>기본 단가 (원)</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>기준 매입단가</label>
                   <input
                     type="number"
                     min={0}
                     value={masterUnitPrice}
                     onChange={e => setMasterUnitPrice(Math.max(0, parseInt(e.target.value) || 0))}
+                    style={{ padding: '8px', fontSize: '13px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>기준 판매단가</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={masterSalePrice}
+                    onChange={e => setMasterSalePrice(Math.max(0, parseInt(e.target.value) || 0))}
                     style={{ padding: '8px', fontSize: '13px' }}
                   />
                 </div>
@@ -2092,12 +2581,12 @@ export const ConsumableStockPage: React.FC = () => {
                   type="text"
                   value={masterSupplier}
                   onChange={e => setMasterSupplier(e.target.value)}
-                  placeholder="예: 대한오일상사, 현대부품"
+                  placeholder="예: 평택항만윤활유상사, 안산산업안전케미컬"
                   style={{ padding: '8px', fontSize: '13px' }}
                 />
               </div>
 
-              {!masterEditingId && (
+              {!masterEditingId && masterIsHandled && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>초기 주기장 보유 수량</label>
                   <input
@@ -2113,9 +2602,9 @@ export const ConsumableStockPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowMasterModal(false)} style={{ flex: 1, padding: '10px' }}>
                   취소
- </button>
+                </button>
                 <button data-hs-trigger="Register" type="submit" className="btn-primary" style={{ flex: 1, padding: '10px' }}>
-                  {masterEditingId ? '수정 완료' : '등록 완료'}
+                  {masterEditingId ? '수정 완료' : '소모품 마스터 등록'}
                 </button>
               </div>
             </div>

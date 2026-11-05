@@ -1912,8 +1912,10 @@ export interface Consumable {
   repairStockQty?: number; // 렌탈자산 정비용 재고 수량
   inventoryAssetClass?: InventoryAssetClass; // 'CONSUMABLE' | 'PART'
   usagePurpose?: InventoryUsagePurpose; // 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE'
-  brand?: string; // 공급업체명 / 브랜드 (HANGCHA, HELI, BYD)
-  inventoryType?: string; // 재고구분 ('상품')
+  brand?: string; // 공급업체명 / 브랜드
+  manufacturer?: string; // 제조사 / 브랜드
+  isHandled?: boolean; // 취급여부 (true: 취급, false: 미취급)
+  inventoryType?: string; // 재고구분 ('소모품')
   currency?: string; // 통화 ('KRW')
   compatibleModels?: string; // 호환 지게차 모델
   baseYm?: string; // 기준년월 ('2026-04')
@@ -5095,7 +5097,7 @@ class LocalDB {
   private cleanStorageQuotaOverflow(): void {
     if (typeof localStorage === 'undefined') return;
     try {
-      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261104_mujin_parts_v5';
+      const STORAGE_VERSION_KEY = 'ebro_fl_storage_version_v20261105_parts_consumables_v6';
       if (localStorage.getItem(STORAGE_VERSION_KEY) !== '1') {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -6039,7 +6041,11 @@ class LocalDB {
 
   get consumables() {
     let raw = this.get<Consumable>('consumables', SEED_CONSUMABLES);
-    if (!raw || raw.length === 0 || raw.some(c => c && String(c.id || '').startsWith('CSM-FL-'))) {
+    if (
+      !raw ||
+      raw.length === 0 ||
+      raw.some(c => c && (String(c.id || '').startsWith('PRT-MJ-') || String(c.id || '').startsWith('CSM-MJ-')))
+    ) {
       raw = [...SEED_CONSUMABLES];
       this.set('consumables', raw);
     }
@@ -6060,8 +6066,10 @@ class LocalDB {
         name: merged.name || merged.modelName || '소모품',
         partName: merged.partName || seedMatch?.partName || merged.name || merged.modelName || '소모품',
         modelName: merged.modelName || merged.name || '소모품',
-        brand: merged.brand || seedMatch?.brand || merged.supplier || 'HANGCHA',
-        inventoryType: merged.inventoryType || seedMatch?.inventoryType || '상품',
+        brand: merged.brand || seedMatch?.brand || merged.supplier || '공통',
+        manufacturer: merged.manufacturer || merged.brand || seedMatch?.manufacturer || seedMatch?.brand || merged.supplier || '공통',
+        isHandled: merged.isHandled !== undefined ? Boolean(merged.isHandled) : (seedMatch?.isHandled !== undefined ? Boolean(seedMatch.isHandled) : true),
+        inventoryType: merged.inventoryType || seedMatch?.inventoryType || '소모품',
         currency: merged.currency || seedMatch?.currency || 'KRW',
         compatibleModels: merged.compatibleModels || seedMatch?.compatibleModels || merged.applicableModels || '',
         baseYm: merged.baseYm || seedMatch?.baseYm || '2026-04',
@@ -6086,7 +6094,11 @@ class LocalDB {
 
   get consumableLots() {
     let raw = this.get<ConsumableLot>('consumableLots', SEED_FL_CONSUMABLE_LOTS as any[]);
-    if (!raw || raw.length === 0 || raw.some(l => l && String(l.id || '').startsWith('CLOT-FL-'))) {
+    if (
+      !raw ||
+      raw.length === 0 ||
+      raw.some(l => l && (String(l.id || '').startsWith('CLOT-FL-') || String(l.consumableId || '').startsWith('PRT-MJ-') || String(l.consumableId || '').startsWith('CSM-MJ-')))
+    ) {
       raw = [...(SEED_FL_CONSUMABLE_LOTS as any[])];
       this.set('consumableLots', raw);
     }
@@ -6124,7 +6136,11 @@ class LocalDB {
 
   get consumableLogs() {
     let raw = this.get<ConsumableLog>('consumableLogs', SEED_CONSUMABLE_LOGS);
-    if (!raw || raw.length === 0) {
+    if (
+      !raw ||
+      raw.length === 0 ||
+      raw.some(l => l && (String(l.consumableId || '').startsWith('PRT-MJ-') || String(l.consumableId || '').startsWith('CSM-MJ-')))
+    ) {
       raw = [...SEED_CONSUMABLE_LOGS];
       this.set('consumableLogs', raw);
     }

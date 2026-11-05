@@ -267,7 +267,8 @@ export function useMenuPreferences(userId?: string) {
       'exchange_rate',
       'trade_products',
       'trade_purchases',
-      'trade_outbounds'
+      'trade_outbounds',
+      'parts_manage_trade'
     ];
     const commonIds = [
       'customer',

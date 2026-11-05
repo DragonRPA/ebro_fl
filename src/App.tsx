@@ -784,7 +784,8 @@ const App: React.FC = () => {
         name: '부품/소모품관리',
         icon: <Wrench size={18} />,
         items: [
-          { id: 'parts_manage_rental', name: '부품관리-렌탈', icon: <Wrench size={16} />, component: <PartsManagePage /> },
+          { id: 'parts_manage_trade', name: '부품관리-유통', icon: <Wrench size={16} />, component: <PartsManagePage mode="TRADE" /> },
+          { id: 'parts_manage_rental', name: '부품관리-렌탈', icon: <Wrench size={16} />, component: <PartsManagePage mode="RENTAL" /> },
           { id: 'consumable_manage_rental', name: '소모품관리-렌탈', icon: <ClipboardList size={16} />, component: <ConsumableManagePage /> },
         ]
       },
@@ -967,7 +968,7 @@ const App: React.FC = () => {
     } else if (mode === 'RENTAL') {
       const tradeOnlySet = new Set([
         'sales_performance', 'trade_contracts', 'exchange_rate', 'trade_products',
-        'trade_purchases', 'trade_outbounds'
+        'trade_purchases', 'trade_outbounds', 'parts_manage_trade'
       ]);
       if (tradeOnlySet.has(activeTab)) {
         setActiveTab('sales_performance_rental');
@@ -1098,7 +1099,8 @@ const App: React.FC = () => {
     if (tabId === 'sales_performance_rental') return <RentalSalesPerformancePage />;
     if (tabId === 'manual_dictionary') return <ManualDictionaryPage />;
     if (tabId === 'consumable' || tabId === 'consumables' || tabId === 'consumable_manage_rental') return <ConsumableManagePage />;
-    if (tabId === 'parts_manage_rental' || tabId === 'trade_parts_catalog') return <PartsManagePage />;
+    if (tabId === 'parts_manage_trade') return <PartsManagePage mode="TRADE" />;
+    if (tabId === 'parts_manage_rental' || tabId === 'trade_parts_catalog') return <PartsManagePage mode="RENTAL" />;
     if (tabId === 'leave_ot') return <LeaveOtPage />;
     if (tabId === 'fl_doc_archive') return <BrochureCatalogSendPage />;
     if (tabId === 'trade_option_masters') return <ForkliftOptionMasterPage />;

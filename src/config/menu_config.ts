@@ -92,6 +92,9 @@ export const SYSTEM_MENU_CONFIG: MenuGroupConfig[] = [
     id: 'grp_maintenance',
     name: '정비 소모품관리',
     items: [
+      { id: 'parts_manage_trade', name: '부품관리-유통' },
+      { id: 'parts_manage_rental', name: '부품관리-렌탈' },
+      { id: 'consumable_manage_rental', name: '소모품관리-렌탈' },
       { id: 'consumable_purchase', name: '소모품 구매' },
       { id: 'consumable_inout', name: '소모품 입출고' },
       { id: 'consumable_stock', name: '소모품 재고' },
@@ -292,7 +295,16 @@ export const CANONICAL_MENU_ALIASES: Record<string, string> = {
   '실적관리-유통': 'sales_performance',
   'sales_performance_rental': 'sales_performance_rental',
   'sales-performance-rental': 'sales_performance_rental',
-  '실적관리-렌탈': 'sales_performance_rental'
+  '실적관리-렌탈': 'sales_performance_rental',
+  'parts_manage_trade': 'parts_manage_trade',
+  'parts-manage-trade': 'parts_manage_trade',
+  '부품관리-유통': 'parts_manage_trade',
+  'parts_manage_rental': 'parts_manage_rental',
+  'parts-manage-rental': 'parts_manage_rental',
+  '부품관리-렌탈': 'parts_manage_rental',
+  'consumable_manage_rental': 'consumable_manage_rental',
+  'consumable-manage-rental': 'consumable_manage_rental',
+  '소모품관리-렌탈': 'consumable_manage_rental'
 };
 
 export function normalizeMenuId(menuId: string): string {

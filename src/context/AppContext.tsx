@@ -1899,7 +1899,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
         'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',
         'trade_purchases', 'trade_outbounds', 'rental_inbound', 'rental_outbound',
-        'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
+        'parts_manage_trade', 'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
         'repairs', 'repair', 'patrol_maintenance', 'permission', 'operations_manual'
       ]);
 
@@ -1943,7 +1943,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'billing', 'tax_invoice_manage', 'receivable_delinquency', 'product',
       'trade_option_masters', 'trade_products', 'asset', 'rent_assets', 'rent_asset',
       'trade_purchases', 'trade_outbounds', 'rental_inbound', 'rental_outbound',
-      'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
+      'parts_manage_trade', 'parts_manage_rental', 'consumable_manage_rental', 'inspection_checklist_manage',
       'repairs', 'repair', 'patrol_maintenance', 'operations_manual'
     ]);
     if (flDefaultOpenMenus.has(normMenuId) || flDefaultOpenMenus.has(menuId)) {

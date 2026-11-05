@@ -16,6 +16,11 @@ import {
   MUJIN_TRADE_SALES_ORDERS
 } from './mujinGlobalInitialData';
 import { FL_TRADE_RWTT_2026_BUNDLE } from './flTradeRwtt2026Data';
+import {
+  SEED_GENUINE_CONSUMABLES,
+  SEED_GENUINE_CONSUMABLE_LOTS,
+  SEED_GENUINE_CONSUMABLE_LOGS
+} from './flConsumableMasterData';
 
 export type InventoryAssetClass = 'ASSET' | 'PRODUCT' | 'PART' | 'CONSUMABLE';
 export type InventoryUsagePurpose = 'RENTAL_ONLY' | 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE';
@@ -612,19 +617,19 @@ export const SEED_FL_RENTAL_ASSETS = [
 });
 
 // ============================================================
-// 3. 무진글로벌 부품재고리스트 (273종 · 총재고 1,434개 · 재고잔액 64,889,155원)
+// 3. 소모품 마스터 및 소모품 재고 시드 데이터 (윤활유 · 구리스 · 장갑 · 케미컬 · 보로)
 // ============================================================
 
 export const SEED_FL_CONSUMABLES: any[] = [
-  ...MUJIN_CONSUMABLES
+  ...SEED_GENUINE_CONSUMABLES
 ];
 
 export const SEED_FL_CONSUMABLE_LOTS: any[] = [
-  ...MUJIN_CONSUMABLE_LOTS
+  ...SEED_GENUINE_CONSUMABLE_LOTS
 ];
 
 export const SEED_FL_CONSUMABLE_LOGS: any[] = [
-  ...MUJIN_CONSUMABLE_LOGS
+  ...SEED_GENUINE_CONSUMABLE_LOGS
 ];
 
 // ============================================================
