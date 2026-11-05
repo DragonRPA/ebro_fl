@@ -64,6 +64,8 @@ export type PartDiagramSvgType =
 export interface CompatiblePartCatalogItem {
   id: string;
   sku: string;
+  tvhRefNo?: string;
+  tvhBrand?: string;
   oemCrossRefCodes: string[];
   partName: string;
   category: PartCategoryType;
@@ -75,7 +77,7 @@ export interface CompatiblePartCatalogItem {
   compatibleModels: string[];
   compatibleBrands: string[];
   tonnageRange: string;
-  foreignCurrency: 'CNY' | 'USD' | 'KRW';
+  foreignCurrency: 'CNY' | 'USD' | 'EUR' | 'KRW';
   foreignUnitCost: number;
   landedCostKrw: number;
   dealerPriceKrw: number;
@@ -86,8 +88,15 @@ export interface CompatiblePartCatalogItem {
   warehouseLocation: string;
   deliveryPolicy: string;
   diagramType: PartDiagramSvgType;
+  imageUrl?: string;
+  sourceUrl?: string;
+  collectedAt?: string;
+  isActive?: boolean;
   referenceSource: string;
   technicalNote: string;
+  createdAt?: string;
+  updatedAt?: string;
+  tenant_id?: string;
 }
 
 export const BENCHMARK_PARTS_COMPANIES: BenchmarkPartsCompany[] = [
@@ -213,6 +222,88 @@ export const BENCHMARK_PARTS_COMPANIES: BenchmarkPartsCompany[] = [
       '영문/중문 혼용 카탈로그로 인해 국내 대리점·정비소 배포용 한글 주문서로 즉시 활용 불가'
     ],
     ourConversionTakeaway: '중국 직수입 부품의 외화 원가와 부대비용을 반영한 수입원가를 산출하고, 국내 대리점 배포용 순수 한국어 카탈로그 겸 주문서로 자동 변환'
+  },
+  {
+    id: 'bench-intella',
+    companyName: '인텔라 파츠 · 인텔라 리프트파츠',
+    domainUrl: 'https://www.intellaparts.com',
+    countryOrigin: '미국 · 캐나다',
+    specialization: '600만 건 이상의 북미·글로벌 지게차 순정품번 교차검색 및 커티스·알브라이트·안전용품 온라인 직판 플랫폼',
+    targetBrands: ['도요타', '클라크', '하이스터', '예일', '크라운', '레이몬드', '코마츠', '두산밥캣', '현대사이트솔루션'],
+    htmlCssDomArchitecture: {
+      listContainerDom: 'div.category-products > ol.products-list > li.item',
+      itemCardDom: 'div.product-shop > h2.product-name + div.sku-box + div.price-box + button.btn-cart',
+      detailSpecDom: 'table.data-table#product-attribute-specs-table > tbody > tr > th.label + td.data',
+      cssLayoutCharacteristics: '비로그인 상태에서도 단가와 재고 여부를 투명하게 공개하는 오픈 프라이싱 B2B/B2C 하이브리드 카탈로그',
+      crawledSampleHtmlSnippet: `<li class="item">
+  <h2 class="product-name">Albright SW200-279 Main Contactor 48V/80V</h2>
+  <div class="sku-box">OEM Cross Ref: Curtis / Hyster / Yale / Heli</div>
+  <div class="price-box">$168.50 | In Stock - Ships Today</div>
+</li>`
+    },
+    pricingModel: '비로그인 공개 정찰 단가 + 대량 구매 시 볼륨 할인 자동 적용',
+    strengths: [
+      '티브이에이치와 달리 폐쇄형 딜러 포털이 아닌 공개 단가 카탈로그로 신규 정비소·고객 유입 극대화',
+      '브랜드별·계통별 직관적인 부품 분류와 명확한 실측 사진·치수 스펙 테이블 제공'
+    ],
+    structuralLimitations: [
+      '북미 달러 기준 단품 장바구니 방식이어서 복수 품목 일괄 주문서 인쇄 및 거래처별 차등 단가표 발행이 불편함'
+    ],
+    ourConversionTakeaway: '인텔라 파츠의 투명한 단가·스펙 공개 구조와 당사 맞춤 카탈로그 빌더의 거래처 등급별 단가율 자동 조정 기능을 결합'
+  },
+  {
+    id: 'bench-helmar',
+    companyName: '헬마 파츠 · 헬마 인더스트리얼',
+    domainUrl: 'https://www.helmarparts.com',
+    countryOrigin: '미국',
+    specialization: '1982년 설립 북미 지게차 애프터마켓 마스트 롤러·체인·포크·브레이크·유압 씰키트 도매 카탈로그 기업',
+    targetBrands: ['클라크', '도요타', '두산밥캣', '현대사이트솔루션', '하이스터', '미쓰비시', '닛산'],
+    htmlCssDomArchitecture: {
+      listContainerDom: 'div.collection-matrix > div.product-grid-item',
+      itemCardDom: 'a.product-card > img.part-photo + span.part-no + span.dimension-summary + span.dealer-price',
+      detailSpecDom: 'div.rte-specs > ul.dimension-list > li',
+      cssLayoutCharacteristics: '마스트 베어링 외경·내경·폭 및 리프트 체인 피치 규격을 상품명 전면에 배치한 엔지니어 친화적 카탈로그',
+      crawledSampleHtmlSnippet: `<div class="product-grid-item">
+  <span class="part-no">HM-MG30811</span>
+  <span class="dimension-summary">Mast Roller Bearing 40 x 115.8 x 32 mm</span>
+  <span class="fitment">Fits Clark / Doosan / Heli 2.5T-3.0T</span>
+</div>`
+    },
+    pricingModel: '순정품 대비 40~65% 저렴한 도매 표준 단가 및 박스 단위 발주 체계',
+    strengths: [
+      '마스트 베어링, 체인, 킹핀 키트, 습식 디스크 등 기계적 마모 부품의 실측 치수 표준화가 가장 뛰어남'
+    ],
+    structuralLimitations: [
+      '전동지게차 최신 리튬배터리·캔통신 컨트롤러 등 차세대 전장 부품 라인업이 상대적으로 제한적'
+    ],
+    ourConversionTakeaway: '헬마 파츠의 치수 전면 표기 방식과 티브이에이치의 전장·어태치먼트 라인업을 통합하여 기계·유압·전장 전 계통을 단일 카탈로그에 수록'
+  },
+  {
+    id: 'bench-folangsi',
+    companyName: '포랑시 글로벌 · 안후이 완츠 파츠',
+    domainUrl: 'https://www.folangsi.com',
+    countryOrigin: '중국 · 글로벌',
+    specialization: '중국 최대 지게차 정비·부품 공급 상장사 및 글로벌 멀티 브랜드 호환부품 B2B 수출 플랫폼',
+    targetBrands: ['안후이 헬리', '항차그룹', '비와이디', '이피이큅먼트', '도요타', '린다', '융하인리히'],
+    htmlCssDomArchitecture: {
+      listContainerDom: 'div.fls-catalog-container > div.brand-filter-bar + div.part-table-wrap',
+      itemCardDom: 'tr.fls-row > td.part-img + td.part-code + td.truck-model + td.spec + td.inquiry-btn',
+      detailSpecDom: 'div.fls-spec-panel > table.param-table',
+      cssLayoutCharacteristics: '중국산 리튬지게차 및 유럽·일본계 지게차 호환부품을 차대·모델 시리즈별로 묶은 B2B 카탈로그',
+      crawledSampleHtmlSnippet: `<tr class="fls-row">
+  <td class="part-code">FLS-HC-XC25-SEAL</td>
+  <td class="truck-model">Hangcha CPD25-XEY2 / Heli G2 Li-ion</td>
+  <td class="spec">Full Hydraulic Cylinder Seal Overhaul Kit</td>
+</tr>`
+    },
+    pricingModel: '컨테이너·팔레트 단위 대리점 공급가 및 정기 소모품 패키지 단가 운영',
+    strengths: [
+      '중국 현지 지게차 대량 임대·정비 실데이터에 기반하여 고장 빈도가 높은 필수 호환부품 키트 구성이 정교함'
+    ],
+    structuralLimitations: [
+      '개별 품목 단가가 온라인에 즉시 산출되지 않고 별도 견적 문의 절차를 거쳐야 함'
+    ],
+    ourConversionTakeaway: '기종별 고빈도 교체 소모품을 패키지 프리셋으로 원클릭 담기 지원하고, 원화 단가와 이익률을 실시간 대차대조하여 즉시 수주 확정'
   }
 ];
 
@@ -267,6 +358,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 1. 타이어·휠·캐스터 (4종)
   {
     id: 'cp-01',
+    tvhRefNo: 'TVH-TS-70012',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Tyres%20%282%29.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-TIRE-70012-BLK',
     oemCrossRefCodes: ['HL-700-12-SOL', 'CL-2788121', 'HD-31Q6-10120', 'TY-42611-23320-71'],
     partName: '지게차 흑색 통타이어 7.00-12 (전륜 구동용 솔리드)',
@@ -300,6 +397,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-02',
+    tvhRefNo: 'TVH-TS-60009',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Tyres%20%282%29.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-TIRE-6009-BLK',
     oemCrossRefCodes: ['HL-600-9-SOL', 'CL-2788109', 'HC-600-9-STD'],
     partName: '지게차 흑색 통타이어 6.00-9 (후륜 조향용 솔리드)',
@@ -333,6 +436,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-03',
+    tvhRefNo: 'TVH-TS-28915NM',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Tyres%20%282%29.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-TIRE-28915-NM',
     oemCrossRefCodes: ['BYD-28915-NM', 'DS-D30-28915W', 'NX-28915-WHT'],
     partName: '친환경 백색 논마킹 통타이어 28×9-15 (3.0톤 전륜용)',
@@ -366,6 +475,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-04',
+    tvhRefNo: 'TVH-TS-PU23075',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/wheel_54.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-WHEEL-PU23075',
     oemCrossRefCodes: ['EP-1113-130005-00', 'HC-PU230-75', 'HL-CBD20-DW230'],
     partName: '전동 파레트트럭 폴리우레탄 구동륜 230×75mm',
@@ -401,6 +516,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 2. 포크·덧발·어태치먼트 (4종)
   {
     id: 'cp-05',
+    tvhRefNo: 'TVH-CAM-FK2A1070',
+    tvhBrand: 'CAM attachments',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/CAM_USP_480x480_Reliability_0.png',
+    sourceUrl: 'https://www.tvh.com/our-brands/cam-attachments',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-FORK-25T-1070',
     oemCrossRefCodes: ['ISO2328-2A-1070', 'HD-FK25-1070', 'HL-25G2-FK1070', 'TY-42201-23320-71'],
     partName: 'ISO Class II 단조 표준 포크 40×122×1,070mm (1조=2본)',
@@ -434,6 +555,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-06',
+    tvhRefNo: 'TVH-CAM-FK3A1200',
+    tvhBrand: 'CAM attachments',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/CAM_USP_480x480_SmartChoice_0.png',
+    sourceUrl: 'https://www.tvh.com/our-brands/cam-attachments',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-FORK-30T-1200',
     oemCrossRefCodes: ['ISO2328-3A-1200', 'DS-FK30-1200', 'BYD-ECB30-FK1200'],
     partName: 'ISO Class III 중하중 단조 포크 45×125×1,200mm (1조=2본)',
@@ -467,6 +594,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-07',
+    tvhRefNo: 'TVH-CAM-FE1800',
+    tvhBrand: 'CAM attachments',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/CAM_USP_480x480_versatile_0.png',
+    sourceUrl: 'https://www.tvh.com/our-brands/cam-attachments',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-SLEEVE-2530-1800',
     oemCrossRefCodes: ['FK-EXT-1800-HD', 'FORKL-SLV1800', 'SM490A-EXT-1800'],
     partName: '고강도 밀폐형 포크 덧발 1,800mm (2.5~3.0톤 공용, 1조=2본)',
@@ -500,6 +633,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-08',
+    tvhRefNo: 'TVH-CAM-SS25C2',
+    tvhBrand: 'CAM attachments',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/CAM_USP_480x480_versatile_0.png',
+    sourceUrl: 'https://www.tvh.com/our-brands/cam-attachments',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-ATTACH-SS25C',
     oemCrossRefCodes: ['CAS-55F-SSS-A025', 'HL-SS25-980', 'HC-SS25-C2'],
     partName: '캐스케이드 호환 사이드시프터 어셈블리 Class II (2.5톤용)',
@@ -535,6 +674,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 3. 마스트·롤러·체인 (4종)
   {
     id: 'cp-09',
+    tvhRefNo: 'TVH-TS-MG30811',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Transmission%20parts.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BRG-MG30811',
     oemCrossRefCodes: ['MG30811', '780308K', 'TY-63381-23420-71', 'HD-S0182742'],
     partName: '마스트 메인 가이드 롤러 베어링 40×115.8×32mm',
@@ -568,6 +713,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-10',
+    tvhRefNo: 'TVH-TS-MG30912',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Transmission%20parts.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BRG-MG30912',
     oemCrossRefCodes: ['MG30912', 'DS-A213508', 'BYD-MR45128', 'CL-2804512'],
     partName: '3.0톤 고하중 마스트 가이드 롤러 베어링 45×128×36mm',
@@ -601,6 +752,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-11',
+    tvhRefNo: 'TVH-DH-BL623',
+    tvhBrand: 'Donghua',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-06/CatalogueOverview_BANN_600x300px_17.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/donghua-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-CHAIN-LH1223',
     oemCrossRefCodes: ['ISO4347-LH1223', 'DH-LH1223-215L', 'TY-13501-23320-71'],
     partName: '마스트 리프트 판형 체인 LH1223 · 피치 19.05mm, 3M 마스트 1대분',
@@ -634,6 +791,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-12',
+    tvhRefNo: 'TVH-DH-BL823',
+    tvhBrand: 'Donghua',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-06/CatalogueOverview_BANN_600x300px_17.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/donghua-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-CHAIN-LH1623',
     oemCrossRefCodes: ['ISO4347-LH1623', 'DS-CH1623-3M', 'BYD-LH1623-SET'],
     partName: '3.0톤 고하중 리프트 판형 체인 LH1623 · 피치 25.4mm, 3M 1대분',
@@ -669,6 +832,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 4. 전장·컨트롤러·센서 (4종)
   {
     id: 'cp-13',
+    tvhRefNo: 'TVH-CUR-1238E6521',
+    tvhBrand: 'Curtis',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Electrical%20parts_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/curtis-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-CTRL-CURTIS-80V',
     oemCrossRefCodes: ['CURTIS-1238E-6521', 'HL-G2-CTRL80V', 'HC-XC-1238E'],
     partName: '커티스 호환 AC 주행·인양 컨트롤러 1238E-6521 · 80V 550A',
@@ -702,6 +871,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-14',
+    tvhRefNo: 'TVH-CUR-1212C2501',
+    tvhBrand: 'Curtis',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Electrical%20parts_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/curtis-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-CTRL-CURTIS-24V',
     oemCrossRefCodes: ['CURTIS-1212C-2501', 'EP-1113-510002-00', 'HL-CBD20-1212P'],
     partName: '전동 파레트트럭 영구자석 구동 컨트롤러 1212C-2501 · 24V 90A',
@@ -735,6 +910,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-15',
+    tvhRefNo: 'TVH-ALB-SW200',
+    tvhBrand: 'Albright',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-08/CatalogueOverview_BANN_600x300px_4.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/albright-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-ELEC-SW200-80V',
     oemCrossRefCodes: ['ALB-SW200-80L', 'ALB-SW200-48L', 'HD-21G7-40210', 'TY-58210-23320-71'],
     partName: '알브라이트 호환 메인 전자접촉기(컨택터) SW200 400A',
@@ -768,6 +949,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-16',
+    tvhRefNo: 'TVH-34136944-ALT',
+    tvhBrand: 'Mahle',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Mahle%20-%20alternator%20%2834136944%29_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/mahle-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-ELEC-ALT-24V',
     oemCrossRefCodes: ['DS-A404155', 'CL-920145', 'FORKL-8622-ALT', 'YM-129900-77200'],
     partName: '디젤 지게차 고출력 알터네이터(제네레이터) 24V / 90A',
@@ -803,6 +990,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 5. 배터리·충전·커넥터 (3종)
   {
     id: 'cp-17',
+    tvhRefNo: 'TVH-EP-REMA320',
+    tvhBrand: 'Energic Plus',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/styles/max_480x480/public/2025-09/EnergicPlus_Products_340x340_batterycharger_0.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/energic-plus',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BAT-REMA320',
     oemCrossRefCodes: ['REMA-95520-01', 'SB350-80V-BLK', 'HL-CON-320A'],
     partName: '고전류 배터리 충전 전원 커넥터 REMA·앤더슨 호환 320A (암·수 1쌍)',
@@ -836,6 +1029,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-18',
+    tvhRefNo: 'TVH-EP-LFP24160',
+    tvhBrand: 'Energic Plus',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/styles/max_480x480/public/2026-11/EnergicPlus_Products_340x340_BatteriesNEW.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/energic-plus',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BAT-EPL-24V160',
     oemCrossRefCodes: ['EP-LFP-24160', 'HC-LFP24-150', 'CATL-24V160-PLUG'],
     partName: '전동 파레트트럭 탈착식 리튬인산철 배터리팩 24V / 160Ah',
@@ -869,6 +1068,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-19',
+    tvhRefNo: 'TVH-TRJ-48V725',
+    tvhBrand: 'Trojan',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2022-03/Trojan_AGM-2203-480x270px.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/trojan-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BAT-TRAC-48V725',
     oemCrossRefCodes: ['VCE660-48V', 'HD-25B9U-BAT48', 'FORKL-9047', 'TY-8FB25-48V565'],
     partName: '48V 725Ah 전동지게차 산업용 트랙션 배터리 어셈블리 · A급 리빌트',
@@ -904,6 +1109,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 6. 유압·제동·조향 (3종)
   {
     id: 'cp-20',
+    tvhRefNo: 'TVH-TS-HYDSK2530',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Hydraulics.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-HYD-SEALKIT-2530',
     oemCrossRefCodes: ['NOK-SK-FL2530', 'TY-04652-20040-71', 'HL-G2-LIFT-SK', 'DS-K9001425'],
     partName: '마스트 리프트·틸트 유압실린더 우레탄 씰 오버홀 키트 (1대분)',
@@ -937,6 +1148,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-21',
+    tvhRefNo: 'TVH-TS-OCDB224',
+    tvhBrand: 'TotalSource',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Brakes.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-BRK-OCDB-KIT',
     oemCrossRefCodes: ['DS-OCDB-30S7', 'CL-2814012', 'HD-XKAY-00512'],
     partName: '습식 디스크 브레이크 마찰 디스크·스틸 플레이트 세트 (전륜 1축분)',
@@ -970,6 +1187,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-22',
+    tvhRefNo: 'TVH-CAR-KP28182',
+    tvhBrand: 'Carraro',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-06/CatalogueOverview_BANN_600x300px_8.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/carraro-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-STR-KINGPIN-25',
     oemCrossRefCodes: ['HL-KP-25G2', 'TY-04432-20030-71', 'HD-S0411520', 'CL-918542'],
     partName: '후륜 조향 액슬 킹핀·니들베어링 리페어 키트 (좌·우 1대분)',
@@ -1005,6 +1228,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   // 7. 필터·시트·안전용품 (2종)
   {
     id: 'cp-23',
+    tvhRefNo: 'TVH-DON-FL304P',
+    tvhBrand: 'Donaldson',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-06/CatalogueOverview_BANN_600x300px_16.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/donaldson-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-FIL-SET-D30',
     oemCrossRefCodes: ['DS-FILKIT-D24A', 'CL-FILKIT-GTS', 'DONALDSON-FL30-4P'],
     partName: '디젤 지게차 500시간 정기점검 4종 필터 통합 패키지',
@@ -1038,6 +1267,12 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
   },
   {
     id: 'cp-24',
+    tvhRefNo: 'TVH-GRM-MSG20OPS',
+    tvhBrand: 'Grammer',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Cabin%20parts_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/grammer-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
     sku: 'FL-SAFE-SEAT-OPS',
     oemCrossRefCodes: ['GRAMMER-MSG20-OPS', 'HL-SEAT-OPS01', 'TY-53710-23320-71'],
     partName: '전차종 호환 서스펜션 방수 시트 · OPS 착석센서 + 되감기 안전벨트',
@@ -1068,6 +1303,398 @@ export const COMPATIBLE_PARTS_CATALOG: CompatiblePartCatalogItem[] = [
     diagramType: 'SUSPENSION_SEAT',
     referenceSource: '산업안전보건 기준 시트 파손·안전벨트 불량·OPS 센서 고장 시 일괄 교체품',
     technicalNote: '후면 매뉴얼 보관 포켓 및 각도 조절 등받이 기본 포함'
+  },
+
+  // 8. 티브이에이치 글로벌 사이트 공식 수집 스포트라이트 품목 (10종 추가 · 총 34종)
+  {
+    id: 'cp-25',
+    tvhRefNo: 'TVH-3321603',
+    tvhBrand: 'COBO',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-08/COBO%20-%20Front%20light%20%283321603%29.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/cobo-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-COBO-3321603',
+    oemCrossRefCodes: ['TVH-3321603', 'COBO-05.458.000', 'LINDE-0009740804', 'HC-XC-FL3321'],
+    partName: '코보 지게차 전방 고광량 콤비네이션 전조등 어셈블리 · 방향지시등 일체형',
+    category: '전장·컨트롤러·센서',
+    manufacturer: '코보 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '전압 12V~48V 겸용 / 전조등 + 차폭등 + 방향지시등 3기능 일체형 / 방수 IP67',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 3321603 · 이탈리아 코보 정품' },
+      { label: '작동 전압 범위', value: '12V / 24V / 48V 프리볼트 대응' },
+      { label: '하우징 외형 치수', value: '가로 158 mm × 세로 96 mm × 깊이 82 mm' },
+      { label: '방수 등급 및 브래킷', value: 'IP67 방진방수 렌즈 + 하부 M10 회전 각도조절 볼트' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '1.5톤 ~ 5.0톤 전동·디젤 지게차 오버헤드가드 전방 장착용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 34,
+    landedCostKrw: 52000,
+    dealerPriceKrw: 74000,
+    retailPriceKrw: 98000,
+    unitName: '개',
+    moq: 2,
+    stockQty: 32,
+    warehouseLocation: '평택 2창고 E-09',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'CONTACTOR_RELAY',
+    referenceSource: '티브이에이치 코보 브랜드 공식 스포트라이트 품목 3321603 수집',
+    technicalNote: '유럽 안전인증 E-Mark 획득 제품으로 전방 헤드가드 좌·우 공용 브래킷 구조'
+  },
+  {
+    id: 'cp-26',
+    tvhRefNo: 'TVH-14644189',
+    tvhBrand: 'COBO',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-08/COBO%20-%20Ignition%20Switch%20%2814644189%29.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/cobo-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-COBO-14644189',
+    oemCrossRefCodes: ['TVH-14644189', 'COBO-14.155.000', 'HL-JK406C', 'DS-D30-KEYSW'],
+    partName: '코보 방진·방수 이그니션 시동 키스위치 어셈블리 · 예열·시동 4단 접점',
+    category: '전장·컨트롤러·센서',
+    manufacturer: '코보 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '정격 12V/24V/48V 30A / 오프-온-예열-시동 4단 복귀형 / 마스터키 2개 포함',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 14644189 · 코보 시동 스위치' },
+      { label: '패널 장착 홀 규격', value: '외경 22.5 mm 나사 고정식 · 두께 6mm 패널 대응' },
+      { label: '단자 배열', value: '후면 6단자 황동 스크류 터미널 · 방수 더스트부츠 포함' },
+      { label: '부속 키 구성', value: '방수 고무그립 정품 시동키 2개 기본 동봉' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '전 기종 지게차 계기판 시동키박스 교체용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 19,
+    landedCostKrw: 29000,
+    dealerPriceKrw: 42000,
+    retailPriceKrw: 58000,
+    unitName: '세트',
+    moq: 1,
+    stockQty: 48,
+    warehouseLocation: '평택 2창고 E-10',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'CONTACTOR_RELAY',
+    referenceSource: '티브이에이치 코보 브랜드 공식 스포트라이트 품목 14644189 수집',
+    technicalNote: '키 삽입구에 스프링 셔터 캡이 적용되어 외부 분진 및 빗물 유입 차단'
+  },
+  {
+    id: 'cp-27',
+    tvhRefNo: 'TVH-17438386',
+    tvhBrand: 'COBO',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-08/COBO%20-%20Seat%20%2817438386%29.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/cobo-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-COBO-17438386',
+    oemCrossRefCodes: ['TVH-17438386', 'COBO-SC90-M91', 'GRAMMER-MSG65-521'],
+    partName: '코보 프리미엄 로우프로파일 풀서스펜션 운전석 시트 · 팔걸이·벨트·착석센서 일체형',
+    category: '필터·시트·안전용품',
+    manufacturer: '코보 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 17438386 / 접이식 양측 암레스트 / 요추 지지대 / 착석센서·벨트 완비',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 17438386 · 이탈리아 코보 정품 시트' },
+      { label: '서스펜션 및 조절', value: '기계식 가위형 서스펜션 80 mm + 전후 슬라이드 150 mm' },
+      { label: '운전자 편의 사양', value: '각도 조절 양측 팔걸이 + 등받이 리클라이닝 + 요추 서포트' },
+      { label: '안전 사양', value: '운전자 착석 감지 스위치 + 오렌지 고시인성 비상 잠금 벨트' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '2.0톤 ~ 5.0톤 프리미엄 전동·디젤 지게차 공용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 145,
+    landedCostKrw: 225000,
+    dealerPriceKrw: 310000,
+    retailPriceKrw: 395000,
+    unitName: '대',
+    moq: 1,
+    stockQty: 12,
+    warehouseLocation: '평택 1창고 H-06',
+    deliveryPolicy: '16시 이전 당일화물 발송',
+    diagramType: 'SUSPENSION_SEAT',
+    referenceSource: '티브이에이치 코보 브랜드 공식 스포트라이트 품목 17438386 수집',
+    technicalNote: '장시간 물류 상하차 작업 시 운전자 허리 피로도를 줄이는 인체공학 쿠션 폼 적용'
+  },
+  {
+    id: 'cp-28',
+    tvhRefNo: 'TVH-37691295',
+    tvhBrand: 'Mahle',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Mahle%20-%20starter%20%2837691295%29_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/mahle-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-MAHLE-37691295',
+    oemCrossRefCodes: ['TVH-37691295', 'MAHLE-MS430', 'ISKRA-11.131.768', 'DS-A403890'],
+    partName: '말레 디젤 지게차 고토크 감속형 시동모터 어셈블리 12V/24V 3.2kW',
+    category: '전장·컨트롤러·센서',
+    manufacturer: '말레 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 37691295 / 출력 3.2kW / 피니언 기어 11치 / 유성기어 감속 고토크형',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 37691295 · 독일 말레 정품 스타터' },
+      { label: '정격 출력 × 기어수', value: '3.2 kW 고기동 토크 × 피니언 기어 11T' },
+      { label: '플랜지 장착 규격', value: '마운팅 홀 3구 · 센터 인로우 직경 89.0 mm' },
+      { label: '내환경 특화', value: '혹한기 영하 25도 일발 시동 및 방진·방습 솔레노이드 내장' }
+    ],
+    compatibleModels: ['D30S-7', 'GTS25'],
+    compatibleBrands: ['두산밥캣', '클라크', '안후이 헬리', '항차그룹'],
+    tonnageRange: '2.5톤 ~ 4.5톤 디젤 엔진 지게차 공용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 138,
+    landedCostKrw: 215000,
+    dealerPriceKrw: 295000,
+    retailPriceKrw: 380000,
+    unitName: '대',
+    moq: 1,
+    stockQty: 11,
+    warehouseLocation: '평택 2창고 E-11',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'ALTERNATOR',
+    referenceSource: '티브이에이치 말레 브랜드 공식 스포트라이트 품목 37691295 수집',
+    technicalNote: '유성기어 감속 구조로 기존 직결식 스타터 대비 소모 전류는 낮추고 기동 토크는 35% 향상'
+  },
+  {
+    id: 'cp-29',
+    tvhRefNo: 'TVH-45568791',
+    tvhBrand: 'Mahle',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Mahle%20-%20drive%20motor%20%2845568791%29_0.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/mahle-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-MAHLE-45568791',
+    oemCrossRefCodes: ['TVH-45568791', 'MAHLE-AMK5804', 'HL-G2-MOTOR-AC', 'HC-XC-DM80V'],
+    partName: '말레 전동지게차 브러시리스 교류 구동·유압 펌프 모터 어셈블리',
+    category: '전장·컨트롤러·센서',
+    manufacturer: '말레 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 45568791 / 정격 48V~80V 11.5kW / 엔코더·온도센서 일체형 무보수 교류모터',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 45568791 · 말레 산업용 교류 구동모터' },
+      { label: '정격 출력 × 전압', value: '11.5 kW × 48V / 80V 3상 교류 인덕션 방식' },
+      { label: '내장 피드백 센서', value: '고해상도 64펄스 속도 엔코더 + 권선 과열방지 온도센서' },
+      { label: '유지보수 특성', value: '카본 브러시 없는 무점검 밀폐형 구조 · 절연등급 F종' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', '25B-9U', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '현대사이트솔루션', '도요타'],
+    tonnageRange: '2.0톤 ~ 3.5톤 리튬·납산 전동지게차 구동 및 유압펌프용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 480,
+    landedCostKrw: 740000,
+    dealerPriceKrw: 980000,
+    retailPriceKrw: 1250000,
+    unitName: '대',
+    moq: 1,
+    stockQty: 5,
+    warehouseLocation: '평택 2창고 E-12',
+    deliveryPolicy: '당일 화물 발송',
+    diagramType: 'AC_CONTROLLER',
+    referenceSource: '티브이에이치 말레 브랜드 공식 스포트라이트 품목 45568791 수집',
+    technicalNote: '커티스 1238E 및 자피 교류 컨트롤러와 완벽 호환되며 고토크 등판 성능 발휘'
+  },
+  {
+    id: 'cp-30',
+    tvhRefNo: 'TVH-61509178',
+    tvhBrand: 'Nordic Lights',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Nordic%20Lights%20-%20PRO%20work%20light%20%2861509178%29.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/nordic-lights-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-NORDIC-61509178',
+    oemCrossRefCodes: ['TVH-61509178', 'NORDIC-SCORpius-PRO445', 'TVH-6019216'],
+    partName: '노르딕라이츠 프로 중장비 고광량 엘이디 작업등 4,400루멘 · 내진동 알루미늄',
+    category: '필터·시트·안전용품',
+    manufacturer: '노르딕라이츠 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 61509178 / 광속 4,400lm / 12V~80V 멀티전압 / IP68·IP69K 고압세척 방수',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 61509178 · 핀란드 노르딕라이츠 정품' },
+      { label: '실효 광출력 × 색온도', value: '4,400 루멘 와이드 플러드 빔 × 5,000K 자연주광색' },
+      { label: '입력 전압 및 소비전력', value: 'DC 9V ~ 80V 프리볼트 × 50W · 도이치 2핀 방수커넥터' },
+      { label: '내충격 및 방수등급', value: '15.3G 중장비 내진동 설계 + IP68 / IP69K 완전방수' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'EPL205Z', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '이피이큅먼트', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '전 기종 지게차 야간 물류창고 및 컨테이너 상하차 작업용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 52,
+    landedCostKrw: 80000,
+    dealerPriceKrw: 112000,
+    retailPriceKrw: 148000,
+    unitName: '개',
+    moq: 2,
+    stockQty: 40,
+    warehouseLocation: '평택 2창고 H-07',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'CONTACTOR_RELAY',
+    referenceSource: '티브이에이치 노르딕라이츠 공식 스포트라이트 품목 61509178 수집',
+    technicalNote: '눈부심 방지 콰드로 렌즈 기술이 적용되어 야간 작업 시 작업자 시야 피로 최소화'
+  },
+  {
+    id: 'cp-31',
+    tvhRefNo: 'TVH-10506497',
+    tvhBrand: 'Stabilus',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2024-10/TVH10506497_480x270px.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/stabilus-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-STABILUS-10506497',
+    oemCrossRefCodes: ['TVH-10506497', 'STABILUS-084521', 'HL-HOOD-GS450N', 'DS-D30-GS480'],
+    partName: '스타빌루스 엔진후드·배터리커버 리프트 오토 가스스프링 댐퍼 450N',
+    category: '유압·제동·조향',
+    manufacturer: '스타빌루스 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 10506497 / 확장길이 485mm × 스트로크 200mm / 반발력 450N / 볼조인트 양단',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF 10506497 · 독일 스타빌루스 리프트오매트' },
+      { label: '전장 × 행정거리', value: '확장 시 485 mm × 스트로크 200 mm · 실린더 외경 18mm' },
+      { label: '정격 지지 반발력', value: '450 N · 중량물 배터리 후드 및 캐빈 도어 개폐 보조' },
+      { label: '양단 마운팅 타입', value: 'M8 볼 소켓 조인트 · 안전 스냅 클립 일체형' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '1.5톤 ~ 4.5톤 지게차 배터리 본네트·엔진 후드·캐빈 도어 공용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 22,
+    landedCostKrw: 34000,
+    dealerPriceKrw: 49000,
+    retailPriceKrw: 68000,
+    unitName: '본',
+    moq: 2,
+    stockQty: 60,
+    warehouseLocation: '평택 2창고 G-08',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'SEAL_KIT',
+    referenceSource: '티브이에이치 스타빌루스 공식 스포트라이트 품목 10506497 수집',
+    technicalNote: '정비 점검 시 무거운 배터리 커버가 갑자기 닫히는 안전사고를 예방하는 필수 댐퍼'
+  },
+  {
+    id: 'cp-32',
+    tvhRefNo: 'TVH-RAVAS-3200',
+    tvhBrand: 'RAVAS',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-01/Weighing%20forks_copy_0.PNG',
+    sourceUrl: 'https://www.tvh.com/brands/ravas-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-RAVAS-IFORKS32',
+    oemCrossRefCodes: ['TVH-RAVAS-3200', 'RAVAS-IFORKS-32-2A', 'CAM-WF25-1150'],
+    partName: '라바스 무선 블루투스 전자저울 계량포크 시스템 · 운전석 디지털 인디케이터 포함',
+    category: '포크·덧발·어태치먼트',
+    manufacturer: '라바스 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '최대 계량 2,500kg~3,200kg / 오차율 0.1% / 완전 무선 배선리스 장착 / ISO 2A·3A',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF RAVAS-3200 · 네덜란드 라바스 정품 계량포크' },
+      { label: '최대 계량 용량 × 눈금', value: '2,500 kg / 3,200 kg × 최소 눈금 1 kg (정밀도 ±0.1%)' },
+      { label: '포크 치수 및 클래스', value: '58 × 140 × 1,150 mm · ISO 2328 Class II 및 Class III 선택' },
+      { label: '데이터 통신 방식', value: '블루투스 4.0 완전 무선 통신 + 운전석 LED 중량 표시기 포함' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '2.0톤 ~ 3.5톤 지게차 상하차 동시 중량 계량용',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 1250,
+    landedCostKrw: 1920000,
+    dealerPriceKrw: 2480000,
+    retailPriceKrw: 2980000,
+    unitName: '세트',
+    moq: 1,
+    stockQty: 3,
+    warehouseLocation: '평택 1창고 C-10',
+    deliveryPolicy: '당일 화물 발송 및 현장 영점 교정 지원',
+    diagramType: 'FORGED_FORK',
+    referenceSource: '티브이에이치 라바스 브랜드 공식 스포트라이트 계량포크 수집',
+    technicalNote: '별도 마스트 케이블 배선 없이 기존 포크를 빼고 5분 만에 걸어 즉시 계량 작업 가능'
+  },
+  {
+    id: 'cp-33',
+    tvhRefNo: 'TVH-EP-REGEN80',
+    tvhBrand: 'Energic Plus',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/styles/max_480x480/public/2026-01/EnergicPlus_Products_340x340_regenerator%20%283%29.jpg',
+    sourceUrl: 'https://www.tvh.com/our-brands/energic-plus',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-EP-REGEN-2480',
+    oemCrossRefCodes: ['TVH-EP-REGEN80', 'ENERGIC-REJUVENATOR-80V', 'EP-DESULF-2480'],
+    partName: '에너직플러스 고주파 펄스 납산 배터리 황산염 제거 재생기 · 24V~80V 겸용',
+    category: '배터리·충전·커넥터',
+    manufacturer: '에너직플러스 · 티브이에이치 자체브랜드',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 에너직플러스 / 24V·36V·48V·72V·80V 전동지게차 배터리 용량 복원기',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF EP-REGEN80 · 에너직플러스 공식 배터리 재생기' },
+      { label: '지원 배터리 전압', value: '24V / 36V / 48V / 72V / 80V 납산 트랙션 배터리 전 규격' },
+      { label: '복원 메커니즘', value: '고주파 전기 펄스로 극판에 고착된 황산납 결정을 미세 분해·환원' },
+      { label: '디스플레이 및 분석', value: '내장 그래픽 LCD · 셀별 전압 밸런싱 및 복원 리포트 출력' }
+    ],
+    compatibleModels: ['25B-9U', '8FB25', 'CPD25-GB2Li', 'CPD25-XEY2-SI'],
+    compatibleBrands: ['현대사이트솔루션', '도요타', '클라크', '두산밥캣', '안후이 헬리'],
+    tonnageRange: '전동지게차 임대 주기장 및 대형 배터리 정비사업장 필수 설비',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 890,
+    landedCostKrw: 1360000,
+    dealerPriceKrw: 1780000,
+    retailPriceKrw: 2180000,
+    unitName: '대',
+    moq: 1,
+    stockQty: 4,
+    warehouseLocation: '평택 2창고 F-09',
+    deliveryPolicy: '당일 화물 발송 및 사용 매뉴얼 제공',
+    diagramType: 'LFP_BATTERY_PACK',
+    referenceSource: '티브이에이치 에너직플러스 공식 스포트라이트 품목 수집',
+    technicalNote: '노후 전동지게차 배터리의 가동 시간을 30~40% 회복시켜 신품 교체 비용 절감'
+  },
+  {
+    id: 'cp-34',
+    tvhRefNo: 'TVH-CSP-PLP20',
+    tvhBrand: 'Casappa',
+    imageUrl: 'https://www.tvh.com/sites/tvh/files/2023-06/CatalogueOverview_BANN_600x300px_9.jpg',
+    sourceUrl: 'https://www.tvh.com/brands/casappa-parts',
+    collectedAt: '2026-11-05',
+    isActive: true,
+    sku: 'TVH-CASAPPA-PLP20',
+    oemCrossRefCodes: ['TVH-CSP-PLP20', 'CASAPPA-PLP20.16D0', 'HL-G2-HYDPUMP', 'DS-K1004210'],
+    partName: '카사파 지게차 메인 유압 기어펌프 어셈블리 · 22cc/rev 고압 저소음형',
+    category: '유압·제동·조향',
+    manufacturer: '카사파 · 티브이에이치 공식공급',
+    originCountry: '글로벌 OEM',
+    partGrade: '순정 OEM',
+    specSummary: '티브이에이치 CSP-PLP20 / 배제용적 22.0cc / 최대압력 250bar / 스플라인 13치 샤프트',
+    detailedSpecs: [
+      { label: '티브이에이치 참조번호', value: 'TVH REF CSP-PLP20 · 이탈리아 카사파 정품 기어펌프' },
+      { label: '배제용적 × 정격압력', value: '22.0 cc/rev × 정격 210 bar / 피크 250 bar' },
+      { label: '구동축 및 플랜지', value: 'SAE-A 2볼트 마운팅 플랜지 + 13치 인볼류트 스플라인 축' },
+      { label: '몸체 재질', value: '고강도 압출 알루미늄 합금 바디 + 주철 프론트·리어 커버' }
+    ],
+    compatibleModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    compatibleBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    tonnageRange: '2.0톤 ~ 3.5톤 전동·디젤 지게차 메인 마스트 인양 및 조향 유압원',
+    foreignCurrency: 'EUR',
+    foreignUnitCost: 195,
+    landedCostKrw: 300000,
+    dealerPriceKrw: 420000,
+    retailPriceKrw: 540000,
+    unitName: '대',
+    moq: 1,
+    stockQty: 9,
+    warehouseLocation: '평택 2창고 G-09',
+    deliveryPolicy: '16시 이전 당일택배 발송',
+    diagramType: 'SEAL_KIT',
+    referenceSource: '티브이에이치 카사파 브랜드 공식 스포트라이트 유압펌프 수집',
+    technicalNote: '마스트 인상 속도 저하 및 유압 펌프 소음 과다 발생 시 1:1 직결 교체'
   }
 ];
 
@@ -1082,12 +1709,289 @@ export const PART_CATEGORIES: PartCategoryType[] = [
 ];
 
 export const TARGET_FORKLIFT_MODELS: { modelName: string; brand: string; label: string }[] = [
-  { modelName: 'CPD25-GB2Li', brand: '안후이 헬리', label: '안후이 헬리 · CPD25-GB2Li (리튬 2.5톤)' },
-  { modelName: 'ECB30C', brand: '비와이디', label: '비와이디 · ECB30C (리튬 3.0톤)' },
-  { modelName: 'CPD25-XEY2-SI', brand: '항차그룹', label: '항차그룹 · CPD25-XEY2-SI (리튬 2.5톤)' },
-  { modelName: 'EPL205Z', brand: '이피이큅먼트', label: '이피이큅먼트 · EPL205Z (파레트트럭 2.0톤)' },
-  { modelName: 'D30S-7', brand: '두산밥캣', label: '두산밥캣 · D30S-7 (디젤 3.0톤)' },
-  { modelName: '25B-9U', brand: '현대사이트솔루션', label: '현대사이트솔루션 · 25B-9U (전동 2.5톤)' },
-  { modelName: 'GTS25', brand: '클라크', label: '클라크 · GTS25 (디젤 2.5톤)' },
-  { modelName: '8FB25', brand: '도요타', label: '도요타 · 8FB25 (전동 2.5톤)' }
+  { modelName: 'CPD25-GB2Li', brand: '안후이 헬리', label: '안후이 헬리 · CPD25-GB2Li · 리튬 2.5톤' },
+  { modelName: 'ECB30C', brand: '비와이디', label: '비와이디 · ECB30C · 리튬 3.0톤' },
+  { modelName: 'CPD25-XEY2-SI', brand: '항차그룹', label: '항차그룹 · CPD25-XEY2-SI · 리튬 2.5톤' },
+  { modelName: 'EPL205Z', brand: '이피이큅먼트', label: '이피이큅먼트 · EPL205Z · 파레트트럭 2.0톤' },
+  { modelName: 'D30S-7', brand: '두산밥캣', label: '두산밥캣 · D30S-7 · 디젤 3.0톤' },
+  { modelName: '25B-9U', brand: '현대사이트솔루션', label: '현대사이트솔루션 · 25B-9U · 전동 2.5톤' },
+  { modelName: 'GTS25', brand: '클라크', label: '클라크 · GTS25 · 디젤 2.5톤' },
+  { modelName: '8FB25', brand: '도요타', label: '도요타 · 8FB25 · 전동 2.5톤' }
+];
+
+// ============================================================================
+// 맞춤형 카탈로그 빌더 스키마 및 기본 프리셋 시드 (fl_custom_catalogs 연동)
+// ============================================================================
+
+export interface CustomCatalogItemOverride {
+  itemId: string;
+  customPriceKrw?: number;
+  defaultOrderQty?: number;
+  badgeText?: string; // 예: '주력', '특가', '필수소모품', '신규수집'
+  customNote?: string;
+  sortOrder?: number;
+}
+
+export interface CustomCatalogConfig {
+  id: string;
+  catalogCode: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  targetCustomerType: 'DEALER' | 'END_USER' | 'CUSTOM';
+  priceAdjustRate: number; // 기본 단가 대비 할인·할증율 % (예: -5, 0, +10)
+  layoutMode: 'GRID_ORDER' | 'PHOTO_BROCHURE' | 'TECH_DRAWING';
+  targetForkliftBrands: string[];
+  targetModels: string[];
+  targetCategories: PartCategoryType[];
+  selectedItemIds: string[];
+  itemOverrides: Record<string, CustomCatalogItemOverride>;
+  showRealPhoto: boolean;
+  showTechDiagram: boolean;
+  showOemCrossRef: boolean;
+  showDetailedSpecs: boolean;
+  showStockAndLeadTime: boolean;
+  showUnitPrice: boolean;
+  headerNotice: string;
+  footerContact: string;
+  isDefault?: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  tenant_id?: string;
+}
+
+export const SEED_CUSTOM_CATALOGS: CustomCatalogConfig[] = [
+  {
+    id: 'CAT-CFG-001',
+    catalogCode: 'CAT-CN-DEALER-2026',
+    title: '항차·헬리·비와이디 중국 수입 지게차 전용 호환부품 카탈로그',
+    subtitle: '전국 협력 대리점 및 정비사업소 배포용 도매 발주 카탈로그',
+    description: '국내 보급이 급증한 항차·헬리·비와이디·이피 리튬전동 지게차 및 파레트트럭의 필수 교체 부품 22종을 수록한 대리점 전용 카탈로그입니다.',
+    targetCustomerType: 'DEALER',
+    priceAdjustRate: 0,
+    layoutMode: 'GRID_ORDER',
+    targetForkliftBrands: ['안후이 헬리', '비와이디', '항차그룹', '이피이큅먼트'],
+    targetModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'EPL205Z'],
+    targetCategories: [
+      '타이어·휠·캐스터',
+      '포크·덧발·어태치먼트',
+      '마스트·롤러·체인',
+      '전장·컨트롤러·센서',
+      '배터리·충전·커넥터',
+      '유압·제동·조향',
+      '필터·시트·안전용품'
+    ],
+    selectedItemIds: [
+      'cp-01', 'cp-02', 'cp-03', 'cp-04',
+      'cp-05', 'cp-07', 'cp-08',
+      'cp-09', 'cp-10', 'cp-11', 'cp-12',
+      'cp-13', 'cp-14', 'cp-15',
+      'cp-17', 'cp-18',
+      'cp-20', 'cp-22', 'cp-24',
+      'cp-25', 'cp-29', 'cp-30'
+    ],
+    itemOverrides: {
+      'cp-01': { itemId: 'cp-01', badgeText: '주력', defaultOrderQty: 2 },
+      'cp-04': { itemId: 'cp-04', badgeText: '필수소모품', defaultOrderQty: 2 },
+      'cp-07': { itemId: 'cp-07', badgeText: '주력', defaultOrderQty: 1 },
+      'cp-13': { itemId: 'cp-13', badgeText: '순정호환', defaultOrderQty: 1 },
+      'cp-25': { itemId: 'cp-25', badgeText: '신규수집', defaultOrderQty: 2 },
+      'cp-29': { itemId: 'cp-29', badgeText: '신규수집', defaultOrderQty: 1 }
+    },
+    showRealPhoto: true,
+    showTechDiagram: true,
+    showOemCrossRef: true,
+    showDetailedSpecs: true,
+    showStockAndLeadTime: true,
+    showUnitPrice: true,
+    headerNotice: '본 카탈로그는 대리점 공급단가 기준이며, 평택 부품물류센터 재고 보유 품목은 16시 이전 발주 시 당일 출고됩니다.',
+    footerContact: '부품 도매 발주 및 기술 문의: 평택 부품물류센터 031-681-8899 / 팩스 031-681-8890',
+    isDefault: true,
+    createdBy: '관리자',
+    createdAt: '2026-11-05T09:00:00.000Z',
+    updatedAt: '2026-11-05T09:00:00.000Z',
+    tenant_id: 'tenant-ebro-fl'
+  },
+  {
+    id: 'CAT-CFG-002',
+    catalogCode: 'CAT-EV-POWER-2026',
+    title: '티브이에이치 전동지게차 배터리·충전기·전장부품 특화 브로셔',
+    subtitle: '에너직플러스 · 커티스 · 말레 · 코보 · 노르딕라이츠 정품 전장 카탈로그',
+    description: '티브이에이치에서 수집한 유럽·글로벌 순정 전장품 및 배터리 재생·충전 솔루션을 실물 사진 중심으로 구성한 브로셔형 카탈로그입니다.',
+    targetCustomerType: 'END_USER',
+    priceAdjustRate: 0,
+    layoutMode: 'PHOTO_BROCHURE',
+    targetForkliftBrands: ['안후이 헬리', '비와이디', '항차그룹', '이피이큅먼트', '현대사이트솔루션', '도요타'],
+    targetModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'EPL205Z', '25B-9U', '8FB25'],
+    targetCategories: ['전장·컨트롤러·센서', '배터리·충전·커넥터', '필터·시트·안전용품'],
+    selectedItemIds: [
+      'cp-13', 'cp-14', 'cp-15', 'cp-16',
+      'cp-17', 'cp-18', 'cp-19',
+      'cp-25', 'cp-26', 'cp-28', 'cp-29', 'cp-30', 'cp-33'
+    ],
+    itemOverrides: {
+      'cp-13': { itemId: 'cp-13', badgeText: '주력', defaultOrderQty: 1 },
+      'cp-18': { itemId: 'cp-18', badgeText: '주력', defaultOrderQty: 1 },
+      'cp-25': { itemId: 'cp-25', badgeText: '신규수집', defaultOrderQty: 2 },
+      'cp-29': { itemId: 'cp-29', badgeText: '신규수집', defaultOrderQty: 1 },
+      'cp-30': { itemId: 'cp-30', badgeText: '특가', defaultOrderQty: 2 },
+      'cp-33': { itemId: 'cp-33', badgeText: '신규수집', defaultOrderQty: 1 }
+    },
+    showRealPhoto: true,
+    showTechDiagram: true,
+    showOemCrossRef: true,
+    showDetailedSpecs: true,
+    showStockAndLeadTime: true,
+    showUnitPrice: true,
+    headerNotice: '커티스 컨트롤러 발주 시 장착 대상 지게차 모델명을 기재해 주시면 기종별 주행·인양 파라미터를 세팅하여 출고합니다.',
+    footerContact: '전장·배터리 기술지원팀: 031-681-8899',
+    isDefault: false,
+    createdBy: '관리자',
+    createdAt: '2026-11-05T09:10:00.000Z',
+    updatedAt: '2026-11-05T09:10:00.000Z',
+    tenant_id: 'tenant-ebro-fl'
+  },
+  {
+    id: 'CAT-CFG-003',
+    catalogCode: 'CAT-CAM-ATTACH-2026',
+    title: '캠 어태치먼트 · 단조포크 · 라바스 계량포크 기술도면 카탈로그',
+    subtitle: '중량물 하역 어태치먼트 및 마스트 체인·베어링 실측 치수 대장',
+    description: '캠 어태치먼트 사이드시프터, 단조포크, 고강도 덧발, 라바스 무선 계량포크 및 동화 리프트체인의 실측 규격과 도면을 수록한 기술 카탈로그입니다.',
+    targetCustomerType: 'CUSTOM',
+    priceAdjustRate: -5,
+    layoutMode: 'TECH_DRAWING',
+    targetForkliftBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    targetModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    targetCategories: ['포크·덧발·어태치먼트', '마스트·롤러·체인'],
+    selectedItemIds: [
+      'cp-05', 'cp-06', 'cp-07', 'cp-08',
+      'cp-09', 'cp-10', 'cp-11', 'cp-12',
+      'cp-32'
+    ],
+    itemOverrides: {
+      'cp-05': { itemId: 'cp-05', badgeText: '주력', customPriceKrw: 360000, defaultOrderQty: 1 },
+      'cp-07': { itemId: 'cp-07', badgeText: '특가', customPriceKrw: 225000, defaultOrderQty: 1 },
+      'cp-08': { itemId: 'cp-08', badgeText: '주력', customPriceKrw: 645000, defaultOrderQty: 1 },
+      'cp-32': { itemId: 'cp-32', badgeText: '신규수집', customPriceKrw: 2350000, defaultOrderQty: 1 }
+    },
+    showRealPhoto: true,
+    showTechDiagram: true,
+    showOemCrossRef: true,
+    showDetailedSpecs: true,
+    showStockAndLeadTime: true,
+    showUnitPrice: true,
+    headerNotice: '포크 및 사이드시프터 발주 전 캐리지 걸이 높이·Class II 407mm / Class III 508mm 규격을 반드시 확인하시기 바랍니다.',
+    footerContact: '특장·어태치먼트 기술영업팀: 031-681-8899',
+    isDefault: false,
+    createdBy: '관리자',
+    createdAt: '2026-11-05T09:20:00.000Z',
+    updatedAt: '2026-11-05T09:20:00.000Z',
+    tenant_id: 'tenant-ebro-fl'
+  },
+  {
+    id: 'CAT-CFG-004',
+    catalogCode: 'CAT-MRO-PERIODIC-2026',
+    title: '주기장 정기예방정비 필수 타이어·유압·필터·시트 소모품 패키지',
+    subtitle: '렌탈 주기장 및 자체 정비팀 월간 일괄 발주용 표준 주문서',
+    description: '통타이어, 유압실린더 씰키트, 습식 브레이크 디스크, 조향 킹핀 키트, 카사파 유압펌프, 4종 필터 세트, 코보·그래머 시트를 묶은 예방정비 카탈로그입니다.',
+    targetCustomerType: 'DEALER',
+    priceAdjustRate: 0,
+    layoutMode: 'GRID_ORDER',
+    targetForkliftBrands: ['안후이 헬리', '비와이디', '항차그룹', '두산밥캣', '현대사이트솔루션', '클라크', '도요타'],
+    targetModels: ['CPD25-GB2Li', 'ECB30C', 'CPD25-XEY2-SI', 'D30S-7', '25B-9U', 'GTS25', '8FB25'],
+    targetCategories: ['타이어·휠·캐스터', '유압·제동·조향', '필터·시트·안전용품'],
+    selectedItemIds: [
+      'cp-01', 'cp-02', 'cp-03', 'cp-04',
+      'cp-20', 'cp-21', 'cp-22', 'cp-31', 'cp-34',
+      'cp-23', 'cp-24', 'cp-27'
+    ],
+    itemOverrides: {
+      'cp-20': { itemId: 'cp-20', badgeText: '필수소모품', defaultOrderQty: 2 },
+      'cp-23': { itemId: 'cp-23', badgeText: '필수소모품', defaultOrderQty: 5 },
+      'cp-27': { itemId: 'cp-27', badgeText: '신규수집', defaultOrderQty: 1 },
+      'cp-31': { itemId: 'cp-31', badgeText: '신규수집', defaultOrderQty: 2 },
+      'cp-34': { itemId: 'cp-34', badgeText: '신규수집', defaultOrderQty: 1 }
+    },
+    showRealPhoto: true,
+    showTechDiagram: true,
+    showOemCrossRef: true,
+    showDetailedSpecs: true,
+    showStockAndLeadTime: true,
+    showUnitPrice: true,
+    headerNotice: '500시간 정기점검 필터 패키지 및 유압 씰키트는 박스 단위 발주 시 추가 수량 할인이 적용됩니다.',
+    footerContact: '주기장 정비부품 공급센터: 031-681-8899',
+    isDefault: false,
+    createdBy: '관리자',
+    createdAt: '2026-11-05T09:30:00.000Z',
+    updatedAt: '2026-11-05T09:30:00.000Z',
+    tenant_id: 'tenant-ebro-fl'
+  }
+];
+
+export interface TvhOnlineBrandBundle {
+  brandKey: string;
+  brandNameKo: string;
+  tvhBrandLabel: string;
+  sourceUrl: string;
+  bannerImageUrl: string;
+  categorySummary: string;
+  itemIds: string[];
+}
+
+export const TVH_ONLINE_BRAND_BUNDLES: TvhOnlineBrandBundle[] = [
+  {
+    brandKey: 'TOTALSOURCE',
+    brandNameKo: '티브이에이치 토탈소스',
+    tvhBrandLabel: 'TotalSource',
+    sourceUrl: 'https://www.tvh.com/our-brands/totalsource',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/Tyres%20%282%29.jpg',
+    categorySummary: '솔리드 통타이어, 폴리우레탄 구동륜, 마스트 롤러 베어링, 유압 씰키트, 습식 브레이크 디스크',
+    itemIds: ['cp-01', 'cp-02', 'cp-03', 'cp-04', 'cp-09', 'cp-10', 'cp-20', 'cp-21']
+  },
+  {
+    brandKey: 'CAM_ATTACHMENTS',
+    brandNameKo: '캠 어태치먼트 · 라바스',
+    tvhBrandLabel: 'CAM attachments / RAVAS',
+    sourceUrl: 'https://www.tvh.com/our-brands/cam-attachments',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/inline-images/CAM_USP_480x480_versatile_0.png',
+    categorySummary: '단조 포크, 고강도 포크 덧발, 사이드시프터 어셈블리, 라바스 무선 블루투스 계량포크',
+    itemIds: ['cp-05', 'cp-06', 'cp-07', 'cp-08', 'cp-32']
+  },
+  {
+    brandKey: 'COBO_GRAMMER',
+    brandNameKo: '코보 · 그래머 캐빈·전장',
+    tvhBrandLabel: 'COBO / Grammer',
+    sourceUrl: 'https://www.tvh.com/brands/cobo-parts',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/2024-08/COBO%20-%20Seat%20%2817438386%29.jpg',
+    categorySummary: '풀서스펜션 운전석 시트, 콤비네이션 전조등 3321603, 방진 이그니션 시동 스위치 14644189',
+    itemIds: ['cp-24', 'cp-25', 'cp-26', 'cp-27']
+  },
+  {
+    brandKey: 'MAHLE_CURTIS_ALBRIGHT',
+    brandNameKo: '말레 · 커티스 · 알브라이트 구동전장',
+    tvhBrandLabel: 'Mahle / Curtis / Albright',
+    sourceUrl: 'https://www.tvh.com/brands/mahle-parts',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Mahle%20-%20drive%20motor%20%2845568791%29_0.jpg',
+    categorySummary: '교류 구동모터 45568791, 시동모터 37691295, 알터네이터 34136944, 커티스 컨트롤러, 알브라이트 컨택터',
+    itemIds: ['cp-13', 'cp-14', 'cp-15', 'cp-16', 'cp-28', 'cp-29']
+  },
+  {
+    brandKey: 'ENERGIC_PLUS_TROJAN',
+    brandNameKo: '에너직플러스 · 트로잔 배터리·충전',
+    tvhBrandLabel: 'Energic Plus / Trojan',
+    sourceUrl: 'https://www.tvh.com/our-brands/energic-plus',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/styles/max_480x480/public/2026-01/EnergicPlus_Products_340x340_regenerator%20%283%29.jpg',
+    categorySummary: '고주파 배터리 재생기, 리튬인산철 배터리팩, 산업용 트랙션 배터리, 대전류 충전 커넥터',
+    itemIds: ['cp-17', 'cp-18', 'cp-19', 'cp-33']
+  },
+  {
+    brandKey: 'CASAPPA_CARRARO_DONGHUA',
+    brandNameKo: '카사파 · 카라로 · 동화 · 도날드슨 · 노르딕',
+    tvhBrandLabel: 'Casappa / Carraro / Donghua / Donaldson / Nordic Lights / Stabilus',
+    sourceUrl: 'https://www.tvh.com/brands/casappa-parts',
+    bannerImageUrl: 'https://www.tvh.com/sites/tvh/files/2024-05/Nordic%20Lights%20-%20PRO%20work%20light%20%2861509178%29.jpg',
+    categorySummary: '카사파 유압 기어펌프, 카라로 조향 킹핀 키트, 동화 리프트 체인, 도날드슨 필터 세트, 노르딕 작업등, 스타빌루스 가스스프링',
+    itemIds: ['cp-11', 'cp-12', 'cp-22', 'cp-23', 'cp-30', 'cp-31', 'cp-34']
+  }
 ];

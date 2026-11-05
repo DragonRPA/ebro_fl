@@ -6,6 +6,14 @@ import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { MUJIN_STANDARD_OPTIONS } from '../data/mujinGlobalInitialData';
 import { FL_TRADE_RWTT_2026_BUNDLE } from '../data/flTradeRwtt2026Data';
 import {
+  COMPATIBLE_PARTS_CATALOG,
+  SEED_CUSTOM_CATALOGS,
+  CompatiblePartCatalogItem,
+  CustomCatalogConfig
+} from '../data/compatiblePartsCatalogData';
+export type { CompatiblePartCatalogItem, CustomCatalogConfig };
+export { COMPATIBLE_PARTS_CATALOG, SEED_CUSTOM_CATALOGS };
+import {
   InventoryAssetClass,
   InventoryUsagePurpose,
   ContractCategoryType,
@@ -594,6 +602,98 @@ export async function autoApplyAsRouteLogsDdl(): Promise<boolean> {
     return false;
   } catch (e: any) {
     console.warn('[autoApplyAsRouteLogsDdl] dev_exec_ddl RPC 호출 예외:', e?.message || e);
+    return false;
+  }
+}
+
+/**  tvh_catalog_items 및 custom_catalogs 테이블 자동 생성 DDL 및 PostgREST 스키마 캐시 자동 반영 헬퍼 */
+export const TVH_CATALOG_DDL_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS "tvh_catalog_items" (
+    "id" TEXT PRIMARY KEY,
+    "sku" TEXT NOT NULL,
+    "tvhRefNo" TEXT,
+    "tvhBrand" TEXT,
+    "oemCrossRefCodes" JSONB DEFAULT '[]'::jsonb,
+    "partName" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "manufacturer" TEXT,
+    "originCountry" TEXT,
+    "partGrade" TEXT,
+    "specSummary" TEXT,
+    "detailedSpecs" JSONB DEFAULT '[]'::jsonb,
+    "compatibleModels" JSONB DEFAULT '[]'::jsonb,
+    "compatibleBrands" JSONB DEFAULT '[]'::jsonb,
+    "tonnageRange" TEXT,
+    "foreignCurrency" TEXT DEFAULT 'KRW',
+    "foreignUnitCost" DOUBLE PRECISION DEFAULT 0,
+    "landedCostKrw" DOUBLE PRECISION DEFAULT 0,
+    "dealerPriceKrw" DOUBLE PRECISION DEFAULT 0,
+    "retailPriceKrw" DOUBLE PRECISION DEFAULT 0,
+    "unitName" TEXT DEFAULT '개',
+    "moq" INTEGER DEFAULT 1,
+    "stockQty" INTEGER DEFAULT 0,
+    "warehouseLocation" TEXT,
+    "deliveryPolicy" TEXT,
+    "diagramType" TEXT DEFAULT 'SOLID_TIRE',
+    "imageUrl" TEXT,
+    "sourceUrl" TEXT,
+    "collectedAt" TEXT,
+    "isActive" BOOLEAN DEFAULT true,
+    "referenceSource" TEXT,
+    "technicalNote" TEXT,
+    "createdAt" TEXT NOT NULL,
+    "updatedAt" TEXT NOT NULL,
+    "tenant_id" TEXT NOT NULL DEFAULT 'tenant-ebro-fl'
+  );`,
+  `ALTER TABLE "tvh_catalog_items" ENABLE ROW LEVEL SECURITY;`,
+  `DROP POLICY IF EXISTS "allow_all_tvh_catalog_items" ON "tvh_catalog_items";`,
+  `CREATE POLICY "allow_all_tvh_catalog_items" ON "tvh_catalog_items" FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);`,
+  `CREATE TABLE IF NOT EXISTS "custom_catalogs" (
+    "id" TEXT PRIMARY KEY,
+    "catalogCode" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "subtitle" TEXT,
+    "description" TEXT,
+    "targetCustomerType" TEXT DEFAULT 'DEALER',
+    "priceAdjustRate" DOUBLE PRECISION DEFAULT 0,
+    "layoutMode" TEXT DEFAULT 'GRID_ORDER',
+    "targetForkliftBrands" JSONB DEFAULT '[]'::jsonb,
+    "targetModels" JSONB DEFAULT '[]'::jsonb,
+    "targetCategories" JSONB DEFAULT '[]'::jsonb,
+    "selectedItemIds" JSONB DEFAULT '[]'::jsonb,
+    "itemOverrides" JSONB DEFAULT '{}'::jsonb,
+    "showRealPhoto" BOOLEAN DEFAULT true,
+    "showTechDiagram" BOOLEAN DEFAULT true,
+    "showOemCrossRef" BOOLEAN DEFAULT true,
+    "showDetailedSpecs" BOOLEAN DEFAULT true,
+    "showStockAndLeadTime" BOOLEAN DEFAULT true,
+    "showUnitPrice" BOOLEAN DEFAULT true,
+    "headerNotice" TEXT,
+    "footerContact" TEXT,
+    "isDefault" BOOLEAN DEFAULT false,
+    "createdBy" TEXT,
+    "createdAt" TEXT NOT NULL,
+    "updatedAt" TEXT NOT NULL,
+    "tenant_id" TEXT NOT NULL DEFAULT 'tenant-ebro-fl'
+  );`,
+  `ALTER TABLE "custom_catalogs" ENABLE ROW LEVEL SECURITY;`,
+  `DROP POLICY IF EXISTS "allow_all_custom_catalogs" ON "custom_catalogs";`,
+  `CREATE POLICY "allow_all_custom_catalogs" ON "custom_catalogs" FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);`,
+  `NOTIFY pgrst, 'reload schema';`
+];
+
+export async function autoApplyTvhCatalogDdl(): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data, error } = await supabase.rpc('dev_exec_ddl', { statements: TVH_CATALOG_DDL_STATEMENTS });
+    if (!error) {
+      console.log('[autoApplyTvhCatalogDdl] tvh_catalog_items 및 custom_catalogs DDL 실행 성공:', data);
+      return true;
+    }
+    console.warn('[autoApplyTvhCatalogDdl] dev_exec_ddl RPC 실행 실패:', error?.message || error);
+    return false;
+  } catch (e: any) {
+    console.warn('[autoApplyTvhCatalogDdl] dev_exec_ddl RPC 호출 예외:', e?.message || e);
     return false;
   }
 }
@@ -4951,7 +5051,8 @@ export const ALL_DB_KEYS = [
   'approvalRules', 'ruleConsensus', 'approvalRequests', 'approvalSteps', 'delegationRecords',
   'stocktakingAudits', 'stocktakingAuditItems', 'collectedParts', 'equipmentManuals',
   'customRoles', 'rolePermissions', 'privacyAccessLogs', 'errorReports',
-  'monthlyIncomeStatements', 'developerAuthorizedDevices', 'salesJournals'
+  'monthlyIncomeStatements', 'developerAuthorizedDevices', 'salesJournals',
+  'tvhCatalogItems', 'customCatalogs'
 ];
 
 //  [전사 외래키 참조 무결성 룰 SSOT]: schema.sql 전수 파싱 기반
@@ -6529,9 +6630,60 @@ class LocalDB {
   get asRouteLogs() { return this.get<AsRouteLog>('asRouteLogs', []); }
   set asRouteLogs(val: AsRouteLog[]) { this.set('asRouteLogs', val); }
 
+  get tvhCatalogItems(): CompatiblePartCatalogItem[] {
+    const raw = this.get<CompatiblePartCatalogItem>('tvhCatalogItems', COMPATIBLE_PARTS_CATALOG);
+    if (!Array.isArray(raw) || raw.length === 0) {
+      this.set('tvhCatalogItems', COMPATIBLE_PARTS_CATALOG);
+      return COMPATIBLE_PARTS_CATALOG;
+    }
+    // 시드에 추가된 신규 TVH 스포트라이트 품목이나 이미지/참조번호 누락 시 자동 병합 보강
+    let modified = false;
+    const byId = new Map<string, CompatiblePartCatalogItem>();
+    raw.forEach(item => {
+      if (item && item.id) byId.set(item.id, item);
+    });
+    COMPATIBLE_PARTS_CATALOG.forEach(seedItem => {
+      const existing = byId.get(seedItem.id);
+      if (!existing) {
+        byId.set(seedItem.id, seedItem);
+        modified = true;
+      } else if (!existing.imageUrl || !existing.tvhRefNo) {
+        byId.set(seedItem.id, {
+          ...seedItem,
+          ...existing,
+          imageUrl: existing.imageUrl || seedItem.imageUrl,
+          tvhRefNo: existing.tvhRefNo || seedItem.tvhRefNo,
+          tvhBrand: existing.tvhBrand || seedItem.tvhBrand,
+          sourceUrl: existing.sourceUrl || seedItem.sourceUrl
+        });
+        modified = true;
+      }
+    });
+    const merged = Array.from(byId.values());
+    if (modified) {
+      this.set('tvhCatalogItems', merged);
+    }
+    return merged;
+  }
+  set tvhCatalogItems(val: CompatiblePartCatalogItem[]) { this.set('tvhCatalogItems', val); }
+
+  get customCatalogs(): CustomCatalogConfig[] {
+    const raw = this.get<CustomCatalogConfig>('customCatalogs', SEED_CUSTOM_CATALOGS);
+    if (!Array.isArray(raw) || raw.length === 0) {
+      this.set('customCatalogs', SEED_CUSTOM_CATALOGS);
+      return SEED_CUSTOM_CATALOGS;
+    }
+    return raw;
+  }
+  set customCatalogs(val: CustomCatalogConfig[]) { this.set('customCatalogs', val); }
+
   // Supabase 테이블 맵핑
   private mapToSupabaseTable(key: string): string {
     const mapping: Record<string, string> = {
+      tvhCatalogItems: 'tvh_catalog_items',
+      tvh_catalog_items: 'tvh_catalog_items',
+      customCatalogs: 'custom_catalogs',
+      custom_catalogs: 'custom_catalogs',
       asRouteLogs: 'as_route_logs',
       salesJournals: 'sales_journals',
       monthlyIncomeStatements: 'monthly_income_statements',
@@ -7024,6 +7176,10 @@ class LocalDB {
           await autoApplyAsRouteLogsDdl();
           return [];
         }
+        if ((tableName === 'tvh_catalog_items' || tableName === 'custom_catalogs') && (errMsg.includes('Could not find') || errMsg.includes('relation') || lastError?.code === 'PGRST205' || lastError?.code === '42P01')) {
+          await autoApplyTvhCatalogDdl();
+          return [];
+        }
         if (errMsg.includes('Could not find the table') || errMsg.includes('relation') || lastError?.code === 'PGRST205' || lastError?.code === '42P01') {
           console.warn(`[db.ts] Skip missing or removed schema table ${tableName}:`, errMsg);
           return [];
@@ -7070,6 +7226,20 @@ class LocalDB {
           }
         } else if (key === 'rolePermissions' && (!normalizedData || normalizedData.length === 0)) {
           normalizedData = SEED_ROLE_PERMISSIONS;
+        } else if (key === 'tvhCatalogItems' && (!normalizedData || normalizedData.length === 0)) {
+          normalizedData = COMPATIBLE_PARTS_CATALOG;
+          await autoApplyTvhCatalogDdl();
+          await targetClient.from('tvh_catalog_items').upsert(
+            COMPATIBLE_PARTS_CATALOG.map(r => this.sanitizeSupabasePayload(r, 'tvh_catalog_items')),
+            { onConflict: 'id' }
+          );
+        } else if (key === 'customCatalogs' && (!normalizedData || normalizedData.length === 0)) {
+          normalizedData = SEED_CUSTOM_CATALOGS;
+          await autoApplyTvhCatalogDdl();
+          await targetClient.from('custom_catalogs').upsert(
+            SEED_CUSTOM_CATALOGS.map(r => this.sanitizeSupabasePayload(r, 'custom_catalogs')),
+            { onConflict: 'id' }
+          );
         }
         this.set(key as keyof LocalDB, normalizedData);
         return normalizedData;
@@ -7124,6 +7294,24 @@ class LocalDB {
           }
         } else if (key === 'rolePermissions' && Array.isArray(data) && data.length === 0) {
           this.set(key as keyof LocalDB, SEED_ROLE_PERMISSIONS);
+        } else if (key === 'tvhCatalogItems' && Array.isArray(data) && data.length === 0) {
+          this.set(key as keyof LocalDB, COMPATIBLE_PARTS_CATALOG);
+          if (supabase) {
+            await autoApplyTvhCatalogDdl();
+            await supabase.from('tvh_catalog_items').upsert(
+              COMPATIBLE_PARTS_CATALOG.map(r => this.sanitizeSupabasePayload(r, 'tvh_catalog_items')),
+              { onConflict: 'id' }
+            );
+          }
+        } else if (key === 'customCatalogs' && Array.isArray(data) && data.length === 0) {
+          this.set(key as keyof LocalDB, SEED_CUSTOM_CATALOGS);
+          if (supabase) {
+            await autoApplyTvhCatalogDdl();
+            await supabase.from('custom_catalogs').upsert(
+              SEED_CUSTOM_CATALOGS.map(r => this.sanitizeSupabasePayload(r, 'custom_catalogs')),
+              { onConflict: 'id' }
+            );
+          }
         } else {
           this.set(key as keyof LocalDB, data);
         }
@@ -7224,6 +7412,8 @@ class LocalDB {
       case 'errorReports':        prefix = 'ERR-';    break;
       case 'monthlyIncomeStatements': prefix = 'IS-'; break;
       case 'salesJournals':       prefix = 'SJ-';     break;
+      case 'tvhCatalogItems':     prefix = 'TVH-ITEM-'; break;
+      case 'customCatalogs':      prefix = 'CAT-CFG-';  break;
       default:
         prefix = key.slice(0, 4).toUpperCase() + '-';
     }
@@ -8014,6 +8204,10 @@ class LocalDB {
       salesJournals: 'salesJournals',
       as_route_logs: 'asRouteLogs',
       asRouteLogs: 'asRouteLogs',
+      tvh_catalog_items: 'tvhCatalogItems',
+      tvhCatalogItems: 'tvhCatalogItems',
+      custom_catalogs: 'customCatalogs',
+      customCatalogs: 'customCatalogs',
     };
     return (reverseMapping[key] || key) as keyof LocalDB;
   }
@@ -8144,6 +8338,17 @@ class LocalDB {
                 }
               }
               return null;
+            }
+
+            if ((tableName === 'tvh_catalog_items' || tableName === 'custom_catalogs') && (msg.includes('Could not find') || msg.includes('relation') || msg.includes('column') || error.code === 'PGRST205' || error.code === 'PGRST204' || error.code === '42P01' || error.code === '42703')) {
+              const applied = await autoApplyTvhCatalogDdl();
+              if (applied) {
+                await new Promise(r => setTimeout(r, 200));
+                const retryRes = await targetClient.from(tableName).upsert([payloadForSupabase], { onConflict: 'id' });
+                if (!retryRes.error) {
+                  return retryRes.data;
+                }
+              }
             }
 
             if (tableName === 'tenants' && (msg.includes('targetRepo') || msg.includes('solutionType') || msg.includes('stampImageUrl') || msg.includes('stampBase64') || msg.includes('column') || msg.includes('Could not find'))) {
@@ -8346,6 +8551,17 @@ class LocalDB {
               }
             }
 
+            if ((tableName === 'tvh_catalog_items' || tableName === 'custom_catalogs') && (msg.includes('Could not find') || msg.includes('relation') || msg.includes('column') || error.code === 'PGRST205' || error.code === 'PGRST204' || error.code === '42P01' || error.code === '42703')) {
+              const applied = await autoApplyTvhCatalogDdl();
+              if (applied) {
+                await new Promise(r => setTimeout(r, 200));
+                const retryRes = await targetClient.from(tableName).update(payloadForSupabase as any).eq('id', id);
+                if (!retryRes.error) {
+                  return retryRes.data;
+                }
+              }
+            }
+
             if (tableName === 'tenants' && (msg.includes('targetRepo') || msg.includes('solutionType') || msg.includes('stampImageUrl') || msg.includes('stampBase64') || msg.includes('column') || msg.includes('Could not find'))) {
               const applied = await autoApplyTenantsDdl();
               if (applied) {
@@ -8503,6 +8719,14 @@ class LocalDB {
             const msg = error.message || String(error);
             if (tableName === 'tenants' && (msg.includes('column') || msg.includes('Could not find') || error.code === 'PGRST200' || error.code === '42703' || error.code === 'PGRST204')) {
               const applied = await autoApplyTenantsDdl();
+              if (applied) {
+                await new Promise(r => setTimeout(r, 200));
+                const retry = await targetClient.from(tableName).upsert(sanitizedRows, { onConflict: 'id' });
+                if (!retry.error) return retry.data;
+              }
+            }
+            if ((tableName === 'tvh_catalog_items' || tableName === 'custom_catalogs') && (msg.includes('Could not find') || msg.includes('relation') || msg.includes('column') || error.code === 'PGRST205' || error.code === 'PGRST204' || error.code === '42P01' || error.code === '42703')) {
+              const applied = await autoApplyTvhCatalogDdl();
               if (applied) {
                 await new Promise(r => setTimeout(r, 200));
                 const retry = await targetClient.from(tableName).upsert(sanitizedRows, { onConflict: 'id' });
