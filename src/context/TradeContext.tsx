@@ -5,7 +5,7 @@ import {
   TradeSalesOrder, TradeSalesOrderLine, TradeOutbound, TradeBilling,
   TradeReturn, TradeInventoryAdjustment,
   ForkliftOptionMaster, AppliedForkliftOption,
-  db, supabase, Customer, Vendor
+  db, supabase, Customer, Vendor, Asset, AssetInOutLog, calculateAssetDepreciation
 } from '../services/db';
 import { emailService, SentEmail } from '../services/email';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
@@ -21,6 +21,30 @@ import {
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
+export interface AccountTransferLog {
+  id: string;
+  transferDate: string;
+  direction: 'TRADE_TO_RENTAL' | 'RENTAL_TO_TRADE';
+  serialNumber: string;
+  modelName: string;
+  manufacturer: string;
+  sourceRefId: string;
+  targetRefId: string;
+  assetNo: string;
+  warehouseOrYard: string;
+  valuationMethod: 'LANDED_PLUS_OPTION' | 'DEPRECIATION_BOOK' | 'REVENUE_DEDUCT_BOOK';
+  baseCostAmount: number;
+  deductionAmount: number;
+  additionCostAmount: number;
+  inheritedBookValue: number;
+  depreciationMonths?: number;
+  residualValueRate?: number;
+  monthlyRentalFee?: number;
+  actorName: string;
+  memo: string;
+  createdAt: string;
+}
+
 export interface TradeContextType {
   products: TradeProduct[];
   optionMasters: ForkliftOptionMaster[];
@@ -33,6 +57,7 @@ export interface TradeContextType {
   outbounds: TradeOutbound[];
   billings: TradeBilling[];
   returns: TradeReturn[];
+  accountTransferLogs: AccountTransferLog[];
   restoreGoldenTradeData: () => Promise<void>;
 
   // Option Masters CRUD (지게차 옵션·부착물 단가 마스터)
@@ -312,6 +337,35 @@ export interface TradeContextType {
   completeBillingPayment: (billingId: string, paidDate?: string) => Promise<void>;
   cancelBilling: (billingId: string) => Promise<void>;
   deleteBilling: (billingId: string) => Promise<void>;
+
+  // Account Transfer (계정 간 자산 전배: 유통 재고자산 및 렌탈 유형자산 감가상각 장부가 승계)
+  transferLotToRentalAsset: (
+    lotId: string,
+    params: {
+      assetNo: string;
+      yard: string;
+      optionCostAmount: number;
+      selectedOptionNames?: string;
+      depreciationMonths: number;
+      residualValueRate: number;
+      monthlyRentalFee: number;
+      transferDate: string;
+      memo?: string;
+    }
+  ) => Promise<AccountTransferLog>;
+  transferRentalAssetToTradeLot: (
+    assetId: string,
+    params: {
+      valuationMethod: 'DEPRECIATION_BOOK' | 'REVENUE_DEDUCT_BOOK';
+      refurbishCostAmount: number;
+      overrideTransferCost?: number;
+      warehouseName: string;
+      dealerPrice: number;
+      standardPrice: number;
+      transferDate: string;
+      memo?: string;
+    }
+  ) => Promise<AccountTransferLog>;
 }
 
 const DEFAULT_PRODUCTS: TradeProduct[] = [
@@ -2474,10 +2528,56 @@ function ensureFlTradeSeedMigratedOnce(): void {
   }
 }
 
+const DEFAULT_ACCOUNT_TRANSFER_LOGS: AccountTransferLog[] = [
+  {
+    id: 'ATRF-202610-001',
+    transferDate: '2026-10-15',
+    direction: 'TRADE_TO_RENTAL',
+    serialNumber: 'HC-CPD25-260409',
+    modelName: 'CPD25-L1',
+    manufacturer: '항차그룹',
+    sourceRefId: 'LOT-MJ-001',
+    targetRefId: 'AST-TRF-261001',
+    assetNo: 'FL-R-261001',
+    warehouseOrYard: '평택 주기장',
+    valuationMethod: 'LANDED_PLUS_OPTION',
+    baseCostAmount: 15850000,
+    deductionAmount: 0,
+    additionCostAmount: 650000,
+    inheritedBookValue: 16500000,
+    depreciationMonths: 60,
+    residualValueRate: 10,
+    monthlyRentalFee: 680000,
+    actorName: '자산운영팀장',
+    memo: '수입 완제품 로트 도착원가 및 사이드시프트 장착원가 합산 렌탈 유형자산 계정 전배',
+    createdAt: '2026-10-15T10:00:00.000Z'
+  },
+  {
+    id: 'ATRF-202610-002',
+    transferDate: '2026-10-22',
+    direction: 'RENTAL_TO_TRADE',
+    serialNumber: 'HC-CPD20-240812',
+    modelName: 'CPD20-L1',
+    manufacturer: '항차그룹',
+    sourceRefId: 'AST-MJ-009',
+    targetRefId: 'LOT-TRF-261002',
+    assetNo: 'MJ-FL-009',
+    warehouseOrYard: 'A창고',
+    valuationMethod: 'DEPRECIATION_BOOK',
+    baseCostAmount: 15200000,
+    deductionAmount: 4560000,
+    additionCostAmount: 380000,
+    inheritedBookValue: 11020000,
+    actorName: '자산운영팀장',
+    memo: '24개월 대여 반납 후 정액법 미상각 잔액 및 리퍼비시 정비원가 반영 중고 유통상품 재고 전배',
+    createdAt: '2026-10-22T14:30:00.000Z'
+  }
+];
+
 const TradeContext = createContext<TradeContextType | undefined>(undefined);
 
 export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { customers, vendors, currentUser } = useApp();
+  const { customers, vendors, currentUser, assets, acquireAsset, changeAssetStatus, refreshAllData } = useApp();
 
   ensureFlTradeSeedMigratedOnce();
 
@@ -2525,6 +2625,10 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadFromStorage<TradeReturn[]>('ebro_trade_returns', [])
   );
 
+  const [accountTransferLogs, setAccountTransferLogs] = useState<AccountTransferLog[]>(() =>
+    loadFromStorage<AccountTransferLog[]>('ebro_fl_account_transfer_logs', DEFAULT_ACCOUNT_TRANSFER_LOGS)
+  );
+
   // Sync to localStorage on state changes
   useEffect(() => {
     try {
@@ -2539,6 +2643,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('ebro_trade_outbounds', JSON.stringify(outbounds));
       localStorage.setItem('ebro_trade_billings', JSON.stringify(billings));
       localStorage.setItem('ebro_trade_returns', JSON.stringify(returns));
+      localStorage.setItem('ebro_fl_account_transfer_logs', JSON.stringify(accountTransferLogs));
     } catch (e) {}
   }, [
     products,
@@ -2551,7 +2656,8 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     salesOrderLines,
     outbounds,
     billings,
-    returns
+    returns,
+    accountTransferLogs
   ]);
 
   // 테스트 유통계약 삭제 시 연동된 미수금/청구상세 잔여 데이터 자동 정리
@@ -4995,8 +5101,250 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('ebro_trade_outbounds', JSON.stringify(DEFAULT_OUTBOUNDS));
       localStorage.setItem('ebro_trade_billings', JSON.stringify(DEFAULT_BILLINGS));
       localStorage.setItem('ebro_trade_returns', JSON.stringify([]));
+      localStorage.setItem('ebro_fl_account_transfer_logs', JSON.stringify(DEFAULT_ACCOUNT_TRANSFER_LOGS));
     } catch (e) {}
+    setAccountTransferLogs(DEFAULT_ACCOUNT_TRANSFER_LOGS);
     await db.awaitPendingWrites();
+  };
+
+  // [아이디어 #4] 유통 재고자산 로트에서 렌탈 유형자산 계정 전배 및 취득원가 승계
+  const transferLotToRentalAsset = async (
+    lotId: string,
+    params: {
+      assetNo: string;
+      yard: string;
+      optionCostAmount: number;
+      selectedOptionNames?: string;
+      depreciationMonths: number;
+      residualValueRate: number;
+      monthlyRentalFee: number;
+      transferDate: string;
+      memo?: string;
+    }
+  ): Promise<AccountTransferLog> => {
+    const targetLot = inventoryLots.find(l => l.id === lotId);
+    if (!targetLot || targetLot.remainingQty <= 0 || targetLot.lotStatus === 'SOLD') {
+      throw new Error('전배 가능한 현재고 로트가 아니거나 이미 출고·전배 완료된 차대번호입니다.');
+    }
+    const prod = products.find(p => p.id === targetLot.productId);
+    const trimmedAssetNo = (params.assetNo || '').trim();
+    if (!trimmedAssetNo) {
+      throw new Error('렌탈 유형자산 관리번호를 입력해 주세요.');
+    }
+
+    const baseCost = Math.max(0, Math.round(targetLot.unitCost || prod?.standardCost || 0));
+    const optCost = Math.max(0, Math.round(params.optionCostAmount || 0));
+    const inheritedBookValue = baseCost + optCost;
+    const transferDate = params.transferDate || new Date().toISOString().split('T')[0];
+
+    // 1. 렌탈 유형자산 대장에 신규 당사자산 등록 (VDI 2198 제원 및 취득장부가 100% 승계)
+    const createdAsset = await acquireAsset({
+      modelName: prod?.modelName || prod?.name || '지게차',
+      assetNo: trimmedAssetNo,
+      serialNo: targetLot.serialNumber || targetLot.id,
+      manufacturer: prod?.manufacturer || '항차그룹',
+      manufactureYear: (targetLot.inboundDate || transferDate).slice(0, 4),
+      ownerType: 'OWNED',
+      yard: params.yard || '평택',
+      status: 'AVAILABLE',
+      acquisitionDate: transferDate,
+      acquisitionPrice: inheritedBookValue,
+      depreciationMonths: params.depreciationMonths || 60,
+      residualValueRate: params.residualValueRate ?? 10,
+      monthlyRentalFee: params.monthlyRentalFee || 650000,
+      dailyRentalFee: Math.round((params.monthlyRentalFee || 650000) / 15),
+      supplier: '유통재고 계정전배',
+      seriesName: prod?.seriesName,
+      equipmentClass: prod?.equipmentClass,
+      powerType: prod?.powerType,
+      ratedCapacityKg: prod?.ratedCapacityKg,
+      loadCenterMm: prod?.loadCenterMm,
+      standardLiftHeightMm: prod?.standardLiftHeightMm,
+      serviceWeightKg: prod?.serviceWeightKg,
+      memo1: params.selectedOptionNames
+        ? `유통재고 전배 · 장착옵션: ${params.selectedOptionNames}`
+        : '유통 완제품 재고에서 렌탈 유형자산으로 계정 전배',
+      memo2: params.memo || `원본로트 ${targetLot.id} 도착원가 및 옵션원가 합산 장부가 승계`
+    });
+
+    // 2. 유통 재고 로트 수량 차감 및 전배 마감 표시
+    setInventoryLots(prev =>
+      prev.map(l => {
+        if (l.id !== lotId) return l;
+        const nextRem = Math.max(0, l.remainingQty - 1);
+        return {
+          ...l,
+          remainingQty: nextRem,
+          lotStatus: nextRem === 0 ? 'SOLD' : l.lotStatus,
+          soldDate: transferDate,
+          soldCustomerName: `렌탈자산 계정전배 · ${trimmedAssetNo}`
+        };
+      })
+    );
+
+    // 3. 재고 조정 이력 기록
+    const adj: TradeInventoryAdjustment = {
+      id: `ADJ-TRF-${uuidv4()}`,
+      productId: targetLot.productId,
+      warehouseId: targetLot.warehouseName || prod?.defaultWarehouse || 'A창고',
+      adjustQty: -1,
+      reason: `렌탈 유형자산 계정전배 · 관리번호 ${trimmedAssetNo}`,
+      createdAt: new Date().toISOString()
+    };
+    setInventoryAdjustments(prev => [adj, ...prev]);
+
+    // 4. 계정 간 전배 원장 로그 기록
+    const logEntry: AccountTransferLog = {
+      id: `ATRF-${transferDate.replace(/-/g, '').slice(0, 6)}-${uuidv4().slice(0, 4)}`,
+      transferDate,
+      direction: 'TRADE_TO_RENTAL',
+      serialNumber: targetLot.serialNumber || targetLot.id,
+      modelName: prod?.modelName || prod?.name || '지게차',
+      manufacturer: prod?.manufacturer || '항차그룹',
+      sourceRefId: targetLot.id,
+      targetRefId: createdAsset.id,
+      assetNo: trimmedAssetNo,
+      warehouseOrYard: params.yard || '평택',
+      valuationMethod: 'LANDED_PLUS_OPTION',
+      baseCostAmount: baseCost,
+      deductionAmount: 0,
+      additionCostAmount: optCost,
+      inheritedBookValue,
+      depreciationMonths: params.depreciationMonths || 60,
+      residualValueRate: params.residualValueRate ?? 10,
+      monthlyRentalFee: params.monthlyRentalFee || 650000,
+      actorName: currentUser?.name || '자산운영담당',
+      memo: params.memo || '유통 재고자산에서 렌탈 유형자산으로 원클릭 계정 전배',
+      createdAt: new Date().toISOString()
+    };
+    setAccountTransferLogs(prev => [logEntry, ...prev]);
+    await db.awaitPendingWrites();
+    return logEntry;
+  };
+
+  // [아이디어 #4] 렌탈 유형자산에서 유통 중고매각 재고자산 계정 전배 및 감가상각 장부가 승계
+  const transferRentalAssetToTradeLot = async (
+    assetId: string,
+    params: {
+      valuationMethod: 'DEPRECIATION_BOOK' | 'REVENUE_DEDUCT_BOOK';
+      refurbishCostAmount: number;
+      overrideTransferCost?: number;
+      warehouseName: string;
+      dealerPrice: number;
+      standardPrice: number;
+      transferDate: string;
+      memo?: string;
+    }
+  ): Promise<AccountTransferLog> => {
+    const targetAsset = (assets || []).find(a => a.id === assetId);
+    if (!targetAsset) {
+      throw new Error('전배할 렌탈 자산을 찾을 수 없습니다.');
+    }
+    if (targetAsset.status === 'RENTED') {
+      throw new Error('현재 대여중인 자산은 전배할 수 없습니다. 반납 완료 후 임대가능 상태에서 전배해 주세요.');
+    }
+
+    const transferDate = params.transferDate || new Date().toISOString().split('T')[0];
+    const depInfo = calculateAssetDepreciation(targetAsset, new Date(transferDate));
+    const baseCost = Math.max(0, Math.round(targetAsset.acquisitionPrice || 0));
+    const accumDep = Math.max(0, Math.round(depInfo.accumDepreciation || 0));
+    const cumRevenue = Math.max(0, Math.round(targetAsset.cumRentalFee || 0));
+    const refurbCost = Math.max(0, Math.round(params.refurbishCostAmount || 0));
+
+    const deductionAmount = params.valuationMethod === 'DEPRECIATION_BOOK' ? accumDep : cumRevenue;
+    const calculatedBook = Math.max(0, baseCost - deductionAmount + refurbCost);
+    const inheritedBookValue =
+      params.overrideTransferCost !== undefined && params.overrideTransferCost >= 0
+        ? Math.round(params.overrideTransferCost)
+        : calculatedBook;
+
+    // 1. 대응되는 유통 품목 마스터 조회 또는 생성
+    let targetProd = products.find(
+      p =>
+        p.modelName === targetAsset.modelName ||
+        p.name.includes(targetAsset.modelName) ||
+        p.skuCode.includes(targetAsset.modelName)
+    );
+    if (!targetProd) {
+      targetProd = await addProduct({
+        skuCode: `FL-USED-${targetAsset.modelName.replace(/[^A-Z0-9]/gi, '').slice(0, 8).toUpperCase()}`,
+        name: `${targetAsset.modelName} 리퍼비시 중고 지게차`,
+        category: '전동지게차',
+        itemType: 'EQUIPMENT',
+        manufacturer: targetAsset.manufacturer || '항차그룹',
+        modelName: targetAsset.modelName,
+        originCountry: '당사 렌탈자산 전배',
+        defaultWarehouse: params.warehouseName || 'A창고',
+        spec: `렌탈자산 ${targetAsset.assetNo} 계정전배 중고 완제품`,
+        unit: '대',
+        standardCost: inheritedBookValue,
+        dealerPrice: params.dealerPrice || Math.round(inheritedBookValue * 1.15),
+        standardPrice: params.standardPrice || Math.round(inheritedBookValue * 1.25),
+        cogsMethod: 'FIFO',
+        safetyStock: 1,
+        status: 'ACTIVE'
+      });
+    }
+
+    // 2. 유통 재고 차대번호 로트 생성 (장부가액 1:1 승계)
+    const newLotId = `LOT-TRF-${uuidv4()}`;
+    const newLot: TradeInventoryLot = {
+      id: newLotId,
+      purchaseId: 'RENTAL_ASSET_TRANSFER',
+      productId: targetProd.id,
+      serialNumber: targetAsset.serialNo || targetAsset.assetNo,
+      warehouseName: params.warehouseName || 'A창고',
+      inboundDate: transferDate,
+      lotStatus: 'IN_STOCK',
+      initialQty: 1,
+      remainingQty: 1,
+      unitCost: inheritedBookValue,
+      createdAt: new Date().toISOString()
+    };
+    setInventoryLots(prev => [newLot, ...prev]);
+
+    // 3. 렌탈 유형자산 상태 전환 및 입출고 이력 저장
+    await changeAssetStatus(targetAsset.id, 'DISPOSED', {
+      disposalDate: transferDate,
+      bookValue: inheritedBookValue,
+      memo2: `유통 중고상품 재고 계정전배 완료 · 승계장부가 ₩${inheritedBookValue.toLocaleString()}`
+    });
+
+    db.insertRow<AssetInOutLog>('assetInOutLogs', {
+      assetId: targetAsset.id,
+      assetNo: targetAsset.assetNo,
+      modelName: targetAsset.modelName,
+      type: 'DISPOSAL',
+      eventDate: transferDate,
+      memo: `렌탈자산에서 유통재고 계정전배 완료 · 승계장부가 ${inheritedBookValue.toLocaleString()}원 · 입고창고 ${params.warehouseName || 'A창고'}`,
+      createdAt: new Date().toISOString()
+    });
+
+    // 4. 계정 간 전배 원장 로그 기록
+    const logEntry: AccountTransferLog = {
+      id: `ATRF-${transferDate.replace(/-/g, '').slice(0, 6)}-${uuidv4().slice(0, 4)}`,
+      transferDate,
+      direction: 'RENTAL_TO_TRADE',
+      serialNumber: targetAsset.serialNo || targetAsset.assetNo,
+      modelName: targetAsset.modelName,
+      manufacturer: targetAsset.manufacturer || '항차그룹',
+      sourceRefId: targetAsset.id,
+      targetRefId: newLotId,
+      assetNo: targetAsset.assetNo,
+      warehouseOrYard: params.warehouseName || 'A창고',
+      valuationMethod: params.valuationMethod,
+      baseCostAmount: baseCost,
+      deductionAmount,
+      additionCostAmount: refurbCost,
+      inheritedBookValue,
+      actorName: currentUser?.name || '자산운영담당',
+      memo: params.memo || '렌탈 유형자산에서 유통 중고상품 재고로 감가상각 장부가 승계 전배',
+      createdAt: new Date().toISOString()
+    };
+    setAccountTransferLogs(prev => [logEntry, ...prev]);
+    await db.awaitPendingWrites();
+    refreshAllData();
+    return logEntry;
   };
 
   return (
@@ -5013,6 +5361,7 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         outbounds,
         billings,
         returns,
+        accountTransferLogs,
         restoreGoldenTradeData,
         addOptionMaster,
         updateOptionMaster,
@@ -5060,7 +5409,9 @@ export const TradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sendTradeBillingEmail,
         completeBillingPayment,
         cancelBilling,
-        deleteBilling
+        deleteBilling,
+        transferLotToRentalAsset,
+        transferRentalAssetToTradeLot
       }}
     >
       {children}

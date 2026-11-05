@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useTrade } from '../../context/TradeContext';
 import { useApp } from '../../context/AppContext';
-import { TradeProduct, TradeInventoryLot, SerialWarrantyAsLog } from '../../services/db';
+import { TradeProduct, TradeInventoryLot, SerialWarrantyAsLog, calculateAssetDepreciation } from '../../services/db';
 import { exportToExcel } from '../../services/excel';
 import { createHangulMatcher } from '../../utils/hangulSearch';
 import { FL_TECHNICAL_ARCHIVE, FlModelTechnicalSpec } from '../../data/flTechnicalArchive';
@@ -52,15 +52,40 @@ export const TradeProductsPage: React.FC = () => {
   const { assets, showErrorModal, setActiveTab: setGlobalActiveTab } = useApp();
   const {
     products,
+    optionMasters,
     inventoryLots,
     purchases,
+    accountTransferLogs,
     getVendorName,
     getProductStock,
     addProduct,
     updateProduct,
     deleteProduct,
-    adjustProductStock
+    adjustProductStock,
+    transferLotToRentalAsset,
+    transferRentalAssetToTradeLot
   } = useTrade();
+
+  // [아이디어 #4] 계정 간 자산 전배 및 감가상각 장부가 승계 스튜디오 상태
+  const [isTransferStudioOpen, setIsTransferStudioOpen] = useState(false);
+  const [transferStudioTab, setTransferStudioTab] = useState<'TRADE_TO_RENTAL' | 'RENTAL_TO_TRADE' | 'HISTORY'>('TRADE_TO_RENTAL');
+  const [trfLotId, setTrfLotId] = useState<string>('');
+  const [trfAssetNo, setTrfAssetNo] = useState<string>('');
+  const [trfYard, setTrfYard] = useState<string>('평택');
+  const [trfSelectedOptIds, setTrfSelectedOptIds] = useState<string[]>([]);
+  const [trfDepMonths, setTrfDepMonths] = useState<number>(60);
+  const [trfResidualRate, setTrfResidualRate] = useState<number>(10);
+  const [trfMonthlyFee, setTrfMonthlyFee] = useState<number>(680000);
+  const [trfDate, setTrfDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [trfMemo, setTrfMemo] = useState<string>('');
+
+  const [revAssetId, setRevAssetId] = useState<string>('');
+  const [revMethod, setRevMethod] = useState<'DEPRECIATION_BOOK' | 'REVENUE_DEDUCT_BOOK'>('DEPRECIATION_BOOK');
+  const [revRefurbCost, setRevRefurbCost] = useState<number>(0);
+  const [revWarehouse, setRevWarehouse] = useState<string>('A창고');
+  const [revDealerPrice, setRevDealerPrice] = useState<number>(0);
+  const [revStdPrice, setRevStdPrice] = useState<number>(0);
+  const [revMemo, setRevMemo] = useState<string>('');
 
   // 메인 탭: MASTER (제품·부품·소모품 마스터) | SERIAL_AGING (차대번호별 입출고 및 재고 경과일수) | WAREHOUSE_PARTS (창고별·부품 재고현황)
   const [activeViewTab, setActiveViewTab] = useState<'MASTER' | 'SERIAL_AGING' | 'WAREHOUSE_PARTS'>('MASTER');
@@ -760,30 +785,9 @@ export const TradeProductsPage: React.FC = () => {
     searchTerm
   ]);
 
-  // Aging 요약 집계 (현재고 보유중 기준) 및 선제적 사후관리·장기재고 진단
+  // Aging 요약 집계 (현재고 보유중 기준)
   const agingSummary = useMemo(() => {
     const active = enrichedLots.filter(r => !r.isSold);
-    const over90Lots = active.filter(r => r.agingDays > 90);
-    const over90Value = over90Lots.reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0);
-    const monthlyHoldingCost = Math.round((over90Value * 0.06) / 12);
-
-    const nowMs = Date.now();
-    const soldLots = enrichedLots.filter(r => r.isSold);
-    let initialInspectionCount = 0;
-    let warrantyExpiringCount = 0;
-    let paidCareCount = 0;
-
-    soldLots.forEach(r => {
-      const soldMs = r.soldDate && r.soldDate !== '-' ? new Date(r.soldDate).getTime() : NaN;
-      const warMs = r.warrantyEndDate && r.warrantyEndDate !== '-' ? new Date(r.warrantyEndDate).getTime() : NaN;
-      const daysSinceSold = !isNaN(soldMs) ? Math.floor((nowMs - soldMs) / 86400000) : 45;
-      const daysToWarrantyEnd = !isNaN(warMs) ? Math.floor((warMs - nowMs) / 86400000) : 75;
-
-      if (daysSinceSold >= 0 && daysSinceSold <= 100) initialInspectionCount += 1;
-      if (daysToWarrantyEnd >= 0 && daysToWarrantyEnd <= 120) warrantyExpiringCount += 1;
-      if (daysToWarrantyEnd < 0 || daysSinceSold > 100) paidCareCount += 1;
-    });
-
     const counts = {
       ALL: active.length,
       UNDER_30: active.filter(r => r.agingInfo.bucket === 'UNDER_30').length,
@@ -793,88 +797,12 @@ export const TradeProductsPage: React.FC = () => {
       OVER_180: active.filter(r => r.agingInfo.bucket === 'OVER_180').length
     };
     const values = {
-      OVER_90_VALUE: over90Value,
-      MONTHLY_HOLDING_COST: monthlyHoldingCost,
-      OVER_90_COUNT: over90Lots.length,
-      SOLD_TOTAL: soldLots.length,
-      INITIAL_INSPECTION_COUNT: initialInspectionCount,
-      WARRANTY_EXPIRING_COUNT: warrantyExpiringCount,
-      PAID_CARE_COUNT: paidCareCount
+      OVER_90_VALUE: active
+        .filter(r => r.agingDays > 90)
+        .reduce((s, r) => s + r.lot.remainingQty * r.landedUnitCost, 0)
     };
-    return { counts, values, over90Lots, soldLots };
+    return { counts, values };
   }, [enrichedLots]);
-
-  const handleExportLongAgingPromo = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const targetRows = agingSummary.over90Lots.length > 0 ? agingSummary.over90Lots : enrichedLots.filter(r => !r.isSold);
-    const rows = targetRows.map((r, idx) => {
-      const unitCost = r.landedUnitCost || 0;
-      const stdPrice = r.prod?.standardPrice || Math.round(unitCost * 1.25);
-      const promoDiscountRate = r.agingDays >= 180 ? 0.12 : 0.07;
-      const promoPrice = Math.round((stdPrice * (1 - promoDiscountRate)) / 10000) * 10000;
-      const estMonthlyRent36 = Math.round((stdPrice * 0.033) / 1000) * 1000;
-      const bepMonths = estMonthlyRent36 > 0 ? Number((unitCost / estMonthlyRent36).toFixed(1)) : 0;
-      return {
-        순번: idx + 1,
-        차대및로트번호: r.serialNumber,
-        제조사: r.manufacturer,
-        모델명: r.modelName,
-        품명: r.productName,
-        보관창고: r.warehouseName,
-        입고일자: r.inboundDate,
-        보유경과일수: `${r.agingDays}일`,
-        입고도착원가: unitCost,
-        월체화자본비용_연6퍼센트기준: Math.round((unitCost * 0.06) / 12),
-        정상판매단가: stdPrice,
-        권장특가할인율: `${Math.round(promoDiscountRate * 100)}%`,
-        특가프로모션권장가: promoPrice,
-        렌탈전환시_36개월월렌탈료: estMonthlyRent36,
-        렌탈전환시_원가회수개월수: `${bepMonths}개월`,
-        권장전환조치: r.agingDays >= 180 ? '즉시 렌탈자산 전환 또는 대리점 특가공급' : '대리점 프로모션 판촉 또는 단기렌탈 투입'
-      };
-    });
-    exportToExcel(rows, `장기체화완제품_렌탈전환_특가프로모션진단_${todayStr}`, '장기재고전환진단');
-    showToast('장기보유 완제품 렌탈전환 및 특가 프로모션 진단표가 엑셀로 추출되었습니다.');
-  };
-
-  const handleExportAftercareRadar = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const nowMs = Date.now();
-    const rows = agingSummary.soldLots.map((r, idx) => {
-      const soldMs = r.soldDate && r.soldDate !== '-' ? new Date(r.soldDate).getTime() : NaN;
-      const warMs = r.warrantyEndDate && r.warrantyEndDate !== '-' ? new Date(r.warrantyEndDate).getTime() : NaN;
-      const daysSinceSold = !isNaN(soldMs) ? Math.floor((nowMs - soldMs) / 86400000) : 45;
-      const daysToWarrantyEnd = !isNaN(warMs) ? Math.floor((warMs - nowMs) / 86400000) : 75;
-      let careStage = '정기 순회점검 대상';
-      let recommendedAction = '소모품 패키지 및 순정부품 정기교체 안내';
-      if (daysSinceSold >= 0 && daysSinceSold <= 100) {
-        careStage = '초도 90일 무상점검 도래';
-        recommendedAction = '초도 무상점검 방문일정 안내 및 초기 오일·필터류 점검';
-      } else if (daysToWarrantyEnd >= 0 && daysToWarrantyEnd <= 120) {
-        careStage = '무상보증 만료 임박';
-        recommendedAction = '보증만료 전 사전점검 안내 및 유상 유지보수·부품할인 계약 제안';
-      } else if (daysToWarrantyEnd < 0) {
-        careStage = '유상정비·순정부품 전환 완료';
-        recommendedAction = '호환 소모품·배터리·타이어 정기 교체 프로모션 안내';
-      }
-      return {
-        순번: idx + 1,
-        차대번호: r.serialNumber,
-        제조사: r.manufacturer,
-        모델명: r.modelName,
-        품명: r.productName,
-        출고거래처: r.soldCustomerName,
-        출고일자: r.soldDate,
-        출고후경과일수: `${daysSinceSold}일`,
-        무상보증만료일: r.warrantyEndDate,
-        보증잔여일수: `${daysToWarrantyEnd}일`,
-        사후관리단계: careStage,
-        선제영업권장조치: recommendedAction
-      };
-    });
-    exportToExcel(rows, `출고장비_보증만료_정기점검_사후관리명단_${todayStr}`, '출고장비사후관리');
-    showToast('출고완료 장비 보증·정기점검 사후관리 대상 명단이 엑셀로 추출되었습니다.');
-  };
 
   // 창고별 집계 (탭 3)
   const warehouseSummary = useMemo(() => {
@@ -1156,7 +1084,39 @@ export const TradeProductsPage: React.FC = () => {
               }}
             >
               제원·매뉴얼 보관함
- </button>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const firstEquipLot = enrichedLots.find(r => !r.isSold && r.itemType === 'EQUIPMENT');
+                if (firstEquipLot && !trfLotId) {
+                  setTrfLotId(firstEquipLot.lot.id);
+                  setTrfAssetNo(`FL-R-${firstEquipLot.serialNumber.replace(/[^A-Z0-9]/gi, '').slice(-6).toUpperCase()}`);
+                  setTrfMonthlyFee(Math.round(((firstEquipLot.prod?.standardPrice || firstEquipLot.landedUnitCost * 1.25) * 0.032) / 10000) * 10000);
+                }
+                const firstAvailAsset = (assets || []).find(a => a.ownerType === 'OWNED' && a.status === 'AVAILABLE');
+                if (firstAvailAsset && !revAssetId) {
+                  setRevAssetId(firstAvailAsset.id);
+                }
+                setIsTransferStudioOpen(true);
+              }}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                borderRadius: '6px',
+                border: '1px solid #8b5cf6',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                backgroundColor: '#7c3aed',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <RefreshCw size={13} /> 계정간 자산전배 · 장부가승계 [{accountTransferLogs.length}]
+            </button>
           </div>
         </div>
 
@@ -1324,145 +1284,6 @@ export const TradeProductsPage: React.FC = () => {
               </div>
             );
           })}
-          {/* 선제적 차대번호 사후관리 · 장기재고 전환 진단 바 */}
-          <div
-            style={{
-              gridColumn: '1 / -1',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-              gap: '10px'
-            }}
-          >
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: '8px',
-                backgroundColor: '#fff7ed',
-                border: '1px solid #fed7aa',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '10px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#9a3412', whiteSpace: 'nowrap' }}>
-                  90일 초과 장기보유 완제품 자본 묶임 · 렌탈전환 진단
-                </div>
-                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#7c2d12', whiteSpace: 'nowrap' }}>
-                  대상 {agingSummary.values.OVER_90_COUNT}건 · 묶인 원가 ₩{agingSummary.values.OVER_90_VALUE.toLocaleString()} · 월 자본기회비용 ₩{agingSummary.values.MONTHLY_HOLDING_COST.toLocaleString()}
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLotStatusFilter('IN_STOCK');
-                    setAgingBucketFilter('DAYS_91_180');
-                  }}
-                  style={{
-                    padding: '5px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    backgroundColor: '#ffffff',
-                    color: '#9a3412',
-                    border: '1px solid #fdba74',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  장기보유 대상 조회
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportLongAgingPromo}
-                  style={{
-                    padding: '5px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    backgroundColor: '#ea580c',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Download size={12} /> 렌탈전환·특가진단표 추출
-                </button>
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: '8px',
-                backgroundColor: '#eff6ff',
-                border: '1px solid #bfdbfe',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '10px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#1e40af', whiteSpace: 'nowrap' }}>
-                  출고장비 무상보증 · 정기점검 · 유상부품 전환 레이더
-                </div>
-                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#1e3a8a', whiteSpace: 'nowrap' }}>
-                  출고 {agingSummary.values.SOLD_TOTAL}건 중 초도점검 {agingSummary.values.INITIAL_INSPECTION_COUNT}건 · 보증만료임박 {agingSummary.values.WARRANTY_EXPIRING_COUNT}건 · 유상부품제안 {agingSummary.values.PAID_CARE_COUNT}건
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLotStatusFilter('SOLD');
-                    setAgingBucketFilter('ALL');
-                  }}
-                  style={{
-                    padding: '5px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    backgroundColor: '#ffffff',
-                    color: '#1d4ed8',
-                    border: '1px solid #93c5fd',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  출고장비만 조회
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportAftercareRadar}
-                  style={{
-                    padding: '5px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    backgroundColor: '#1d4ed8',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Download size={12} /> 보증·점검 도래명단 추출
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       ) : activeViewTab === 'WAREHOUSE_PARTS' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
@@ -1774,25 +1595,58 @@ export const TradeProductsPage: React.FC = () => {
                     return (
                     <tr key={r.lot.id} style={{ borderBottom: '1px solid var(--border-color)', height: '40px', backgroundColor: r.isSold ? 'var(--bg-app)' : 'transparent' }}>
                       <td style={{ padding: '6px 10px', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedSerialLotId(r.lot.id)}
-                          style={{
-                            padding: '4px 9px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            borderRadius: '4px',
-                            border: '1px solid var(--primary)',
-                            backgroundColor: 'var(--bg-card)',
-                            color: 'var(--primary)',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          <ShieldCheck size={11} /> 이력·보증수리 {asLogs.length > 0 ? `[${asLogs.length}]` : ''}
-                        </button>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSerialLotId(r.lot.id)}
+                            style={{
+                              padding: '4px 9px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              border: '1px solid var(--primary)',
+                              backgroundColor: 'var(--bg-card)',
+                              color: 'var(--primary)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <ShieldCheck size={11} /> 이력·보증수리 {asLogs.length > 0 ? `[${asLogs.length}]` : ''}
+                          </button>
+                          {!r.isSold && r.itemType === 'EQUIPMENT' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTrfLotId(r.lot.id);
+                                setTrfAssetNo(`FL-R-${r.serialNumber.replace(/[^A-Z0-9]/gi, '').slice(-6).toUpperCase()}`);
+                                setTrfSelectedOptIds([]);
+                                setTrfMonthlyFee(Math.round(((r.prod?.standardPrice || r.landedUnitCost * 1.25) * 0.032) / 10000) * 10000);
+                                setTrfMemo(`차대번호 ${r.serialNumber} 유통재고에서 렌탈자산으로 계정전배`);
+                                setTransferStudioTab('TRADE_TO_RENTAL');
+                                setIsTransferStudioOpen(true);
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                borderRadius: '4px',
+                                border: '1px solid #7c3aed',
+                                backgroundColor: '#f5f3ff',
+                                color: '#6d28d9',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <RefreshCw size={10} /> 렌탈자산 전배
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <span
@@ -3220,6 +3074,672 @@ export const TradeProductsPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* [아이디어 #4] 계정 간 자산 전배 및 감가상각 장부가 승계 스튜디오 모달 */}
+      {isTransferStudioOpen && (() => {
+        const availableEquipLots = enrichedLots.filter(r => !r.isSold && r.itemType === 'EQUIPMENT');
+        const selectedLotRow = availableEquipLots.find(r => r.lot.id === trfLotId) || availableEquipLots[0];
+        const selectedOpts = (optionMasters || []).filter(m => trfSelectedOptIds.includes(m.id));
+        const optCostSum = selectedOpts.reduce((s, m) => s + (m.costPrice || Math.round((m.dealerPrice || m.unitPrice) * 0.7)), 0);
+        const lotBaseCost = selectedLotRow ? selectedLotRow.landedUnitCost : 0;
+        const inheritedAcqCost = lotBaseCost + optCostSum;
+        const residualVal = Math.round(inheritedAcqCost * (trfResidualRate / 100));
+        const estMonthlyDep = trfDepMonths > 0 ? Math.round((inheritedAcqCost - residualVal) / trfDepMonths) : 0;
+
+        const transferableRentalAssets = (assets || []).filter(a => a.ownerType === 'OWNED' && a.status === 'AVAILABLE');
+        const selectedRentalAsset = transferableRentalAssets.find(a => a.id === revAssetId) || transferableRentalAssets[0];
+        const depCalc = selectedRentalAsset
+          ? calculateAssetDepreciation(selectedRentalAsset, new Date(trfDate))
+          : { accumDepreciation: 0, bookValue: 0, elapsedMonths: 0, monthlyDepreciation: 0 };
+        const rentalAcqPrice = selectedRentalAsset?.acquisitionPrice || 0;
+        const rentalCumRev = selectedRentalAsset?.cumRentalFee || 0;
+        const revDeduction = revMethod === 'DEPRECIATION_BOOK' ? Math.round(depCalc.accumDepreciation) : Math.round(rentalCumRev);
+        const revInheritedCost = Math.max(0, rentalAcqPrice - revDeduction + Math.max(0, Number(revRefurbCost) || 0));
+        const effectiveDealerPrice = revDealerPrice > 0 ? revDealerPrice : Math.round((revInheritedCost * 1.15) / 10000) * 10000;
+        const effectiveStdPrice = revStdPrice > 0 ? revStdPrice : Math.round((revInheritedCost * 1.25) / 10000) * 10000;
+
+        const handleRunTradeToRental = async () => {
+          if (!selectedLotRow) {
+            showErrorModal('전배할 유통 완제품 차대번호 로트를 선택해 주세요.');
+            return;
+          }
+          try {
+            const log = await transferLotToRentalAsset(selectedLotRow.lot.id, {
+              assetNo: trfAssetNo || `FL-R-${selectedLotRow.serialNumber.slice(-6)}`,
+              yard: trfYard,
+              optionCostAmount: optCostSum,
+              selectedOptionNames: selectedOpts.map(o => o.name).join(', '),
+              depreciationMonths: trfDepMonths,
+              residualValueRate: trfResidualRate,
+              monthlyRentalFee: trfMonthlyFee,
+              transferDate: trfDate,
+              memo: trfMemo
+            });
+            showToast(`유통재고 차대번호 [${log.serialNumber}]가 렌탈 유형자산 [${log.assetNo}]로 전배 완료되었습니다 · 승계장부가 ₩${log.inheritedBookValue.toLocaleString()}`);
+            setTransferStudioTab('HISTORY');
+          } catch (err: any) {
+            showErrorModal(err?.message || '렌탈자산 전배 처리 중 오류가 발생했습니다.');
+          }
+        };
+
+        const handleRunRentalToTrade = async () => {
+          if (!selectedRentalAsset) {
+            showErrorModal('전배할 당사 임대가능 렌탈자산을 선택해 주세요.');
+            return;
+          }
+          try {
+            const log = await transferRentalAssetToTradeLot(selectedRentalAsset.id, {
+              valuationMethod: revMethod,
+              refurbishCostAmount: Number(revRefurbCost) || 0,
+              overrideTransferCost: revInheritedCost,
+              warehouseName: revWarehouse,
+              dealerPrice: effectiveDealerPrice,
+              standardPrice: effectiveStdPrice,
+              transferDate: trfDate,
+              memo: revMemo
+            });
+            showToast(`렌탈 유형자산 [${log.assetNo}]가 유통 중고상품 재고로 전배 완료되었습니다 · 승계장부가 ₩${log.inheritedBookValue.toLocaleString()}`);
+            setTransferStudioTab('HISTORY');
+          } catch (err: any) {
+            showErrorModal(err?.message || '유통재고 전배 처리 중 오류가 발생했습니다.');
+          }
+        };
+
+        const handleExportTransferHistory = () => {
+          const rows = accountTransferLogs.map((l, idx) => ({
+            순번: idx + 1,
+            전배일자: l.transferDate,
+            전배방향: l.direction === 'TRADE_TO_RENTAL' ? '유통재고자산에서 렌탈유형자산 전배' : '렌탈유형자산에서 유통중고상품 전배',
+            차대번호: l.serialNumber,
+            관리번호: l.assetNo,
+            제조사: l.manufacturer,
+            모델명: l.modelName,
+            장부가산정방식:
+              l.valuationMethod === 'LANDED_PLUS_OPTION'
+                ? '입고도착원가 및 장착옵션원가 합산'
+                : l.valuationMethod === 'DEPRECIATION_BOOK'
+                ? '정액법 감가상각 미상각잔액 승계'
+                : '누적 렌탈매출 차감 미회수원가 승계',
+            기초원가: l.baseCostAmount,
+            상각및매출차감액: l.deductionAmount,
+            옵션및리퍼비시가산액: l.additionCostAmount,
+            최종승계장부가액: l.inheritedBookValue,
+            입고주기장및창고: l.warehouseOrYard,
+            처리담당자: l.actorName,
+            전배사유및비고: l.memo
+          }));
+          exportToExcel(rows, `계정간자산전배_장부가승계원장_${trfDate}`, '계정간전배원장');
+          showToast('계정 간 자산 전배 및 장부가 승계 이력 원장이 엑셀로 다운로드되었습니다.');
+        };
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.65)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1300,
+              padding: '20px'
+            }}
+          >
+            <div
+              style={{
+                width: '1080px',
+                maxWidth: '96vw',
+                maxHeight: '90vh',
+                backgroundColor: 'var(--bg-card)',
+                borderRadius: '10px',
+                border: '1px solid var(--border-color)',
+                boxShadow: '0 24px 48px rgba(0,0,0,0.32)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}
+            >
+              {/* 모달 헤더 */}
+              <div
+                style={{
+                  padding: '14px 20px',
+                  backgroundColor: '#1e1b4b',
+                  color: '#ffffff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <RefreshCw size={18} color="#c4b5fd" />
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                      계정 간 자산 전배 및 감가상각 장부가 승계 엔진
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: '#cbd5e1', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                      유통 재고자산과 렌탈 유형자산 간 원클릭 전환 및 취득원가·미상각장부가 100% 승계
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTransferStudioOpen(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '4px' }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* 상단 3대 전배 탭 */}
+              <div
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setTransferStudioTab('TRADE_TO_RENTAL')}
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      borderRadius: '6px',
+                      border: transferStudioTab === 'TRADE_TO_RENTAL' ? 'none' : '1px solid var(--border-color)',
+                      backgroundColor: transferStudioTab === 'TRADE_TO_RENTAL' ? '#6d28d9' : 'var(--bg-card)',
+                      color: transferStudioTab === 'TRADE_TO_RENTAL' ? '#ffffff' : 'var(--text-main)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    1. 유통 재고자산에서 렌탈 유형자산 전배 [{availableEquipLots.length}대 가능]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferStudioTab('RENTAL_TO_TRADE')}
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      borderRadius: '6px',
+                      border: transferStudioTab === 'RENTAL_TO_TRADE' ? 'none' : '1px solid var(--border-color)',
+                      backgroundColor: transferStudioTab === 'RENTAL_TO_TRADE' ? '#0f766e' : 'var(--bg-card)',
+                      color: transferStudioTab === 'RENTAL_TO_TRADE' ? '#ffffff' : 'var(--text-main)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    2. 렌탈 유형자산에서 유통 중고상품 전배 [{transferableRentalAssets.length}대 가능]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferStudioTab('HISTORY')}
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      borderRadius: '6px',
+                      border: transferStudioTab === 'HISTORY' ? 'none' : '1px solid var(--border-color)',
+                      backgroundColor: transferStudioTab === 'HISTORY' ? '#1d4ed8' : 'var(--bg-card)',
+                      color: transferStudioTab === 'HISTORY' ? '#ffffff' : 'var(--text-main)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    3. 계정 간 전배 및 장부가 승계 원장 [{accountTransferLogs.length}건]
+                  </button>
+                </div>
+
+                {transferStudioTab === 'HISTORY' && (
+                  <button
+                    type="button"
+                    onClick={handleExportTransferHistory}
+                    className="btn-excel-download"
+                    style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
+                  >
+                    <Download size={13} /> 전배 원장 엑셀 내보내기
+                  </button>
+                )}
+              </div>
+
+              {/* 모달 본문 */}
+              <div style={{ padding: '18px 20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {transferStudioTab === 'TRADE_TO_RENTAL' && (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>전배 대상 유통 완제품 차대번호</label>
+                        <select
+                          value={selectedLotRow?.lot.id || ''}
+                          onChange={e => {
+                            const nextId = e.target.value;
+                            setTrfLotId(nextId);
+                            const found = availableEquipLots.find(r => r.lot.id === nextId);
+                            if (found) {
+                              setTrfAssetNo(`FL-R-${found.serialNumber.replace(/[^A-Z0-9]/gi, '').slice(-6).toUpperCase()}`);
+                              setTrfMonthlyFee(Math.round(((found.prod?.standardPrice || found.landedUnitCost * 1.25) * 0.032) / 10000) * 10000);
+                            }
+                          }}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          {availableEquipLots.map(r => (
+                            <option key={r.lot.id} value={r.lot.id}>
+                              [{r.serialNumber}] {r.manufacturer} {r.modelName} · 도착원가 ₩{r.landedUnitCost.toLocaleString()} · {r.agingDays}일 경과
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>부여할 렌탈 관리번호</label>
+                        <input
+                          type="text"
+                          value={trfAssetNo}
+                          onChange={e => setTrfAssetNo(e.target.value)}
+                          placeholder="예: FL-R-261101"
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, fontFamily: 'monospace', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--primary)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>배치 주기장</label>
+                        <select
+                          value={trfYard}
+                          onChange={e => setTrfYard(e.target.value)}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          <option value="평택">평택 주기장</option>
+                          <option value="용인">용인 주기장</option>
+                          <option value="김해">김해 주기장</option>
+                          <option value="본사">본사 주기장</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>전배 기준일자</label>
+                        <input
+                          type="date"
+                          value={trfDate}
+                          onChange={e => setTrfDate(e.target.value)}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>정액법 상각 내용연수 개월</label>
+                        <select
+                          value={trfDepMonths}
+                          onChange={e => setTrfDepMonths(Number(e.target.value))}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          <option value={48}>48개월 상각 · 4년</option>
+                          <option value={60}>60개월 상각 · 5년 표준</option>
+                          <option value={72}>72개월 상각 · 6년</option>
+                          <option value={96}>96개월 상각 · 8년</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>잔존가치율 퍼센트</label>
+                        <select
+                          value={trfResidualRate}
+                          onChange={e => setTrfResidualRate(Number(e.target.value))}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          <option value={0}>0% · 전액 상각</option>
+                          <option value={10}>10% · 표준 잔존가치</option>
+                          <option value={15}>15% · 고잔가 설정</option>
+                          <option value={20}>20% · 단기순환 잔가</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>기준 월 렌탈료 원</label>
+                        <input
+                          type="number"
+                          value={trfMonthlyFee}
+                          onChange={e => setTrfMonthlyFee(Number(e.target.value))}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>전배 사유 및 비고</label>
+                        <input
+                          type="text"
+                          value={trfMemo}
+                          onChange={e => setTrfMemo(e.target.value)}
+                          placeholder="예: 신규 장기렌탈 계약 투입을 위한 유통 완제품 계정 전배"
+                          style={{ padding: '7px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 출고 설치옵션 원가 자본화 선택 */}
+                    <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px', backgroundColor: 'var(--bg-app)' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                        전배 시 장착할 출고 옵션 선택 · 선택 시 옵션 매입원가가 렌탈자산 취득원가에 합산 자본화됨
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '6px', maxHeight: '145px', overflowY: 'auto' }}>
+                        {(optionMasters || []).map(opt => {
+                          const checked = trfSelectedOptIds.includes(opt.id);
+                          const optCost = opt.costPrice || Math.round((opt.dealerPrice || opt.unitPrice) * 0.7);
+                          return (
+                            <label
+                              key={opt.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '6px',
+                                padding: '6px 9px',
+                                borderRadius: '6px',
+                                border: checked ? '1.5px solid #6d28d9' : '1px solid var(--border-color)',
+                                backgroundColor: checked ? '#f5f3ff' : 'var(--bg-card)',
+                                cursor: 'pointer',
+                                fontSize: '11.5px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: checked ? 800 : 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    setTrfSelectedOptIds(prev =>
+                                      prev.includes(opt.id) ? prev.filter(x => x !== opt.id) : [...prev, opt.id]
+                                    )
+                                  }
+                                />
+                                {opt.name}
+                              </span>
+                              <span style={{ fontWeight: 800, color: '#6d28d9', fontFamily: 'monospace' }}>
+                                +₩{optCost.toLocaleString()}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 장부가 승계 검증 요약 바 */}
+                    <div
+                      style={{
+                        padding: '14px 18px',
+                        borderRadius: '8px',
+                        backgroundColor: '#f5f3ff',
+                        border: '1px solid #c4b5fd',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#5b21b6' }}>로트 입고 도착원가</div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#1e1b4b' }}>₩{lotBaseCost.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#5b21b6' }}>장착옵션 자본화 가산액</div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#6d28d9' }}>+₩{optCostSum.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#5b21b6' }}>승계 렌탈자산 취득원가</div>
+                          <div style={{ fontSize: '18px', fontWeight: 900, color: '#4c1d95' }}>₩{inheritedAcqCost.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#5b21b6' }}>월 정액 감가상각비 · 잔존가액</div>
+                          <div style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3' }}>
+                            월 ₩{estMonthlyDep.toLocaleString()} / 잔존 ₩{residualVal.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRunTradeToRental}
+                        style={{
+                          padding: '10px 20px',
+                          fontSize: '13px',
+                          fontWeight: 900,
+                          borderRadius: '6px',
+                          border: 'none',
+                          backgroundColor: '#6d28d9',
+                          color: '#ffffff',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        렌탈 유형자산 전배 실행
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {transferStudioTab === 'RENTAL_TO_TRADE' && (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 0.9fr 0.9fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>전배 대상 당사 임대가능 렌탈자산</label>
+                        <select
+                          value={selectedRentalAsset?.id || ''}
+                          onChange={e => setRevAssetId(e.target.value)}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          {transferableRentalAssets.map(a => (
+                            <option key={a.id} value={a.id}>
+                              [{a.assetNo}] {a.manufacturer || '항차그룹'} {a.modelName} · 차대 {a.serialNo || '-'} · 취득원가 ₩{(a.acquisitionPrice || 0).toLocaleString()}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>장부가 산정 기준 선택</label>
+                        <select
+                          value={revMethod}
+                          onChange={e => setRevMethod(e.target.value as any)}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: '#0f766e' }}
+                        >
+                          <option value="DEPRECIATION_BOOK">정액법 감가상각 미상각잔액 기준</option>
+                          <option value="REVENUE_DEDUCT_BOOK">누적 렌탈매출 차감 미회수원가 기준</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>리퍼비시 정비원가 가산액</label>
+                        <input
+                          type="number"
+                          value={revRefurbCost}
+                          onChange={e => setRevRefurbCost(Number(e.target.value))}
+                          placeholder="0"
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>유통 입고창고</label>
+                        <select
+                          value={revWarehouse}
+                          onChange={e => setRevWarehouse(e.target.value)}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 700, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        >
+                          {WAREHOUSES.map(w => (
+                            <option key={w} value={w}>{w}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>중고 대리점 공급단가</label>
+                        <input
+                          type="number"
+                          value={effectiveDealerPrice}
+                          onChange={e => setRevDealerPrice(Number(e.target.value))}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>중고 최종고객 판매단가</label>
+                        <input
+                          type="number"
+                          value={effectiveStdPrice}
+                          onChange={e => setRevStdPrice(Number(e.target.value))}
+                          style={{ padding: '7px 10px', fontSize: '12.5px', fontWeight: 800, borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>전배 사유 및 비고</label>
+                        <input
+                          type="text"
+                          value={revMemo}
+                          onChange={e => setRevMemo(e.target.value)}
+                          placeholder="예: 장기대여 반납 후 리퍼비시 완료 중고 매각용 유통재고 전환"
+                          style={{ padding: '7px 10px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '14px 18px',
+                        borderRadius: '8px',
+                        backgroundColor: '#f0fdfa',
+                        border: '1px solid #99f6e4',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#0f766e' }}>최초 취득원가</div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#134e4a' }}>₩{rentalAcqPrice.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#0f766e' }}>
+                            {revMethod === 'DEPRECIATION_BOOK' ? `감가상각 누계액 · ${depCalc.elapsedMonths}개월 경과` : '누적 렌탈매출 기여액 차감'}
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#dc2626' }}>-₩{revDeduction.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#0f766e' }}>리퍼비시 정비 가산액</div>
+                          <div style={{ fontSize: '16px', fontWeight: 900, color: '#0284c7' }}>+₩{Math.max(0, Number(revRefurbCost) || 0).toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#0f766e' }}>유통재고 승계 입고원가</div>
+                          <div style={{ fontSize: '18px', fontWeight: 900, color: '#0f766e' }}>₩{revInheritedCost.toLocaleString()}</div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRunRentalToTrade}
+                        style={{
+                          padding: '10px 20px',
+                          fontSize: '13px',
+                          fontWeight: 900,
+                          borderRadius: '6px',
+                          border: 'none',
+                          backgroundColor: '#0f766e',
+                          color: '#ffffff',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        유통 재고자산 전배 실행
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {transferStudioTab === 'HISTORY' && (
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 800 }}>전배일자</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 800 }}>전배방향</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 800 }}>차대번호 · 관리번호</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 800 }}>제조사 · 모델명</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 800 }}>장부가 산정방식</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800 }}>기초원가</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800 }}>상각·매출차감액</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800 }}>옵션·정비가산액</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800 }}>최종 승계장부가액</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 800 }}>배치처</th>
+                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 800 }}>비고</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accountTransferLogs.map(log => (
+                          <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', fontFamily: 'monospace' }}>{log.transferDate}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                              <span
+                                style={{
+                                  padding: '3px 8px',
+                                  borderRadius: '999px',
+                                  fontSize: '11px',
+                                  fontWeight: 800,
+                                  backgroundColor: log.direction === 'TRADE_TO_RENTAL' ? '#f5f3ff' : '#f0fdfa',
+                                  color: log.direction === 'TRADE_TO_RENTAL' ? '#6d28d9' : '#0f766e'
+                                }}
+                              >
+                                {log.direction === 'TRADE_TO_RENTAL' ? '유통에서 렌탈전배' : '렌탈에서 유통전배'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 10px', fontWeight: 800, fontFamily: 'monospace' }}>
+                              {log.serialNumber} · <span style={{ color: 'var(--primary)' }}>{log.assetNo}</span>
+                            </td>
+                            <td style={{ padding: '8px 10px', fontWeight: 700 }}>{log.manufacturer} {log.modelName}</td>
+                            <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
+                              {log.valuationMethod === 'LANDED_PLUS_OPTION'
+                                ? '도착원가 + 옵션원가 자본화'
+                                : log.valuationMethod === 'DEPRECIATION_BOOK'
+                                ? '정액법 감가상각 미상각잔액'
+                                : '누적 렌탈매출 차감 미회수원가'}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace' }}>₩{log.baseCostAmount.toLocaleString()}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', color: '#dc2626' }}>
+                              {log.deductionAmount > 0 ? `-₩${log.deductionAmount.toLocaleString()}` : '-'}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'monospace', color: '#0284c7' }}>
+                              {log.additionCostAmount > 0 ? `+₩${log.additionCostAmount.toLocaleString()}` : '-'}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 900, fontFamily: 'monospace', color: 'var(--text-main)' }}>
+                              ₩{log.inheritedBookValue.toLocaleString()}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>{log.warehouseOrYard}</td>
+                            <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>{log.memo}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>

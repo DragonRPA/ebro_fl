@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { useTrade } from '../context/TradeContext';
 import { Search, Download, Eye, Layers, Edit2, Save, X, Wrench, RefreshCw, PlusCircle, ShoppingBag, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import { exportToExcel } from '../services/excel';
 import { Asset, calculateAssetDepreciation, AssetInOutLog, Repair, isVirtualAsset } from '../services/db';
@@ -17,6 +18,14 @@ export const Assets: React.FC = () => {
     saveAsset, showErrorModal, loadTablesForMenu, assetInOutLogs, repairs, 
     vendors, products, setActiveTab: setGlobalActiveTab, currentUser
   } = useApp();
+  const { transferRentalAssetToTradeLot } = useTrade();
+
+  // [아이디어 #4] 렌탈 유형자산에서 유통 중고상품 재고 전배 폼 상태
+  const [showTransferToTradeForm, setShowTransferToTradeForm] = useState(false);
+  const [trfMethod, setTrfMethod] = useState<'DEPRECIATION_BOOK' | 'REVENUE_DEDUCT_BOOK'>('DEPRECIATION_BOOK');
+  const [trfRefurbCost, setTrfRefurbCost] = useState<number>(0);
+  const [trfWarehouse, setTrfWarehouse] = useState<string>('A창고');
+  const [trfMemoText, setTrfMemoText] = useState<string>('');
 
   const canEdit = hasPermission('asset', 'save');
   //  부서별 단가/재무 정보 접근 통제 (경영진, 관리부, 영업부만 열람 허용)
@@ -1702,6 +1711,28 @@ export const Assets: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {canEdit && !isEditing && selectedAsset.ownerType === 'OWNED' && selectedAsset.status === 'AVAILABLE' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTransferToTradeForm(prev => !prev)}
+                    style={{
+                      padding: '3px 9px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      borderRadius: '4px',
+                      border: '1px solid #0f766e',
+                      backgroundColor: showTransferToTradeForm ? '#0f766e' : '#f0fdfa',
+                      color: showTransferToTradeForm ? '#ffffff' : '#0f766e',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <RefreshCw size={11} /> 유통재고 전배
+                  </button>
+                )}
                 {canEdit && !isEditing && (
                   <button
                     className="btn-primary"
@@ -1709,7 +1740,7 @@ export const Assets: React.FC = () => {
                     style={{ padding: '3px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Edit2 size={12} /> 수정
- </button>
+                  </button>
                 )}
                 {isEditing && (
                   <>
@@ -1741,6 +1772,111 @@ export const Assets: React.FC = () => {
 
             {/* 서랍 본문 스크롤 영역 */}
             <div style={{ padding: '16px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12px' }}>
+              {showTransferToTradeForm && selectedAsset.ownerType === 'OWNED' && selectedAsset.status === 'AVAILABLE' && (() => {
+                const acqCost = selectedAsset.acquisitionPrice || 0;
+                const accumDep = Math.round(depn.accumDepreciation || 0);
+                const cumRev = Math.round(selectedAsset.cumRentalFee || 0);
+                const deduction = trfMethod === 'DEPRECIATION_BOOK' ? accumDep : cumRev;
+                const inheritedCost = Math.max(0, acqCost - deduction + Math.max(0, Number(trfRefurbCost) || 0));
+
+                return (
+                  <div style={{ padding: '12px', backgroundColor: '#f0fdfa', borderRadius: '6px', border: '1px solid #5eead4', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f766e', fontSize: '12.5px' }}>
+                      렌탈 유형자산에서 유통 중고상품 재고 전배 · 감가상각 장부가 승계
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={labelStyle}>장부가 산정방식</label>
+                        <select
+                          style={inputStyle}
+                          value={trfMethod}
+                          onChange={e => setTrfMethod(e.target.value as any)}
+                        >
+                          <option value="DEPRECIATION_BOOK">정액법 감가상각 미상각잔액 기준</option>
+                          <option value="REVENUE_DEDUCT_BOOK">누적 렌탈매출 차감 미회수원가 기준</option>
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={labelStyle}>유통 입고창고</label>
+                        <select
+                          style={inputStyle}
+                          value={trfWarehouse}
+                          onChange={e => setTrfWarehouse(e.target.value)}
+                        >
+                          <option value="A창고">A창고</option>
+                          <option value="B창고">B창고</option>
+                          <option value="부품창고">부품창고</option>
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={labelStyle}>리퍼비시 정비 가산원가</label>
+                        <input
+                          type="number"
+                          style={inputStyle}
+                          value={trfRefurbCost}
+                          onChange={e => setTrfRefurbCost(Number(e.target.value))}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={labelStyle}>전배 사유</label>
+                        <input
+                          type="text"
+                          style={inputStyle}
+                          placeholder="중고 매각용 유통재고 전환"
+                          value={trfMemoText}
+                          onChange={e => setTrfMemoText(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ padding: '8px 10px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #99f6e4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#0f766e', fontWeight: 700 }}>
+                          취득 ₩{acqCost.toLocaleString()} - 차감 ₩{deduction.toLocaleString()} + 정비 ₩{Math.max(0, Number(trfRefurbCost) || 0).toLocaleString()}
+                        </div>
+                        <div style={{ fontSize: '14px', fontWeight: 900, color: '#134e4a', marginTop: '2px' }}>
+                          유통재고 승계 입고원가: ₩{inheritedCost.toLocaleString()}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const today = new Date().toISOString().split('T')[0];
+                            const log = await transferRentalAssetToTradeLot(selectedAsset.id, {
+                              valuationMethod: trfMethod,
+                              refurbishCostAmount: Number(trfRefurbCost) || 0,
+                              overrideTransferCost: inheritedCost,
+                              warehouseName: trfWarehouse,
+                              dealerPrice: Math.round((inheritedCost * 1.15) / 10000) * 10000,
+                              standardPrice: Math.round((inheritedCost * 1.25) / 10000) * 10000,
+                              transferDate: today,
+                              memo: trfMemoText || '렌탈자산 상세원장에서 유통 중고상품 재고로 전배'
+                            });
+                            showToast(`자산 [${log.assetNo}]가 유통 재고로 전배 완료되었습니다 · 승계장부가 ₩${log.inheritedBookValue.toLocaleString()}`);
+                            setShowTransferToTradeForm(false);
+                            setSelectedAsset(null);
+                          } catch (err: any) {
+                            showErrorModal(err?.message || '유통재고 전배 중 오류가 발생했습니다.');
+                          }
+                        }}
+                        style={{
+                          padding: '7px 14px',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          borderRadius: '5px',
+                          border: 'none',
+                          backgroundColor: '#0f766e',
+                          color: '#ffffff',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        전배 확정 실행
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
               
               {/* 1. 기본 장비 물리 제원 */}
               <div style={{ padding: '10px 12px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
