@@ -634,6 +634,34 @@ export const OperationManualPage: React.FC = () => {
 
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        className="no-print"
+        data-mid="operation-manual-bottom-summary"
+        style={{
+          padding: '8px 18px',
+          backgroundColor: 'var(--bg-card)',
+          borderTop: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>전사 업무매뉴얼: <strong style={{ color: 'var(--text-main)' }}>{permittedManuals.length}개 메뉴</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>조회 결과: <strong style={{ color: 'var(--primary)' }}>{filteredManuals.length}개 메뉴</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>현재 열람 모드: <strong>{viewMode === 'single' ? '단일 메뉴 상세' : '전체 메뉴 연속 보기'}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>화면 배율: {zoomLevel}%</span>
+      </div>
+
     </div>
   );
 };

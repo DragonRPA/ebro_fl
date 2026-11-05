@@ -5354,7 +5354,7 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
           </div>
           <div style={{ gridColumn: '1 / -1', padding: '8px 16px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '12px', whiteSpace: 'nowrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span>미청구 정산 대상 계약: <strong style={{ color: 'var(--primary)' }}>{unbilledContractsForWizard.length}건</strong></span>
+              <span>미청구 정산 대상 계약: <strong style={{ color: 'var(--primary)' }}>{activeContractsForWizard.length}건</strong></span>
               <span style={{ color: 'var(--border-color)' }}>|</span>
               <span>기본 렌탈료 합계: <strong>₩{totalAmountForWizard.toLocaleString()}</strong></span>
               <span style={{ color: 'var(--border-color)' }}>|</span>

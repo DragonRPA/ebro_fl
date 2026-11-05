@@ -1097,6 +1097,36 @@ export const TradePurchasesPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="trade-purchases-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>조회 발주·입고: <strong style={{ color: 'var(--text-main)' }}>{filteredRows.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>발주수량 합계: <strong>{filteredRows.reduce((s, r) => s + r.pi.orderQty, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>입고완료 수량: <strong style={{ color: '#059669' }}>{filteredRows.reduce((s, r) => s + r.pi.receivedQty, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>도착원가 공급가액 합계: <strong style={{ color: 'var(--primary)' }}>₩{filteredRows.reduce((s, r) => s + r.supplyAmt, 0).toLocaleString()}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>국내매입 · 해외수입 도착원가 집계</span>
+      </div>
+
       {/* 5. 수입·매입 발주 및 도착원가 계산 모달 */}
       {isPurchaseModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>

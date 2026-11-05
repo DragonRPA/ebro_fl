@@ -86,9 +86,6 @@ export const ManualDictionaryPage: React.FC = () => {
           <BookOpen size={20} color="var(--primary)" />
           전사 업무 매뉴얼 사전
  </h2>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          조회된 업무 프로세스: <strong>{filteredProcesses.length}</strong>건 (전체 {allProcesses.length}건)
- </div>
       </div>
 
       <div className="card" style={{ padding: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', flexShrink: 0, marginBottom: 0 }}>
@@ -201,6 +198,34 @@ export const ManualDictionaryPage: React.FC = () => {
             </div>
           ))
         )}
+      </div>
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="manual-dictionary-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>전체 업무 프로세스: <strong style={{ color: 'var(--text-main)' }}>{allProcesses.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>조회 프로세스: <strong style={{ color: 'var(--primary)' }}>{filteredProcesses.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>권한 보유 메뉴: <strong style={{ color: '#059669' }}>{menuOptions.length}개 메뉴</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>전사 업무 매뉴얼 사전 요약</span>
       </div>
     </div>
   );

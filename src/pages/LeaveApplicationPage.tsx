@@ -715,6 +715,38 @@ export const LeaveApplicationPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="leave-application-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>대상 임직원 부여 연차: <strong style={{ color: 'var(--text-main)' }}>{mySummary.grantedDays.toFixed(1)}일</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>소진 일수: <strong style={{ color: 'var(--warning)' }}>{mySummary.usedDays.toFixed(1)}일</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>잔여 연차: <strong style={{ color: '#10b981' }}>{mySummary.remainingDays.toFixed(1)}일</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>조회 신청 이력: <strong style={{ color: 'var(--primary)' }}>{sortedUsages.length}건</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>
+          갱신 주기: {mySummary.periodStart} ~ {mySummary.periodEnd}
+        </span>
+      </div>
+
       {/* 토스트 알림 팝업 (헌장 5.2) */}
       {toastMessage && (
         <div style={{

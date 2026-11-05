@@ -1848,6 +1848,34 @@ export const ForkliftDocArchivePage: React.FC = () => {
         </div>
       )}
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="forklift-doc-archive-bottom-summary"
+        style={{
+          padding: '9px 16px',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #CBD5E1',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>수록 지게차 모델: <strong style={{ color: '#0F172A' }}>{filteredModels.length}종</strong></span>
+          <span style={{ color: '#CBD5E1' }}>|</span>
+          <span>제원 비교 선택: <strong style={{ color: '#2563EB' }}>{compareIds.length}종</strong></span>
+          <span style={{ color: '#CBD5E1' }}>|</span>
+          <span>공식 브로셔·매뉴얼·제원표 보관문서: <strong style={{ color: '#059669' }}>{r2Files.length || allDocuments.length}건</strong></span>
+        </div>
+        <span style={{ color: '#475569', fontWeight: 700 }}>공식 기술제원 및 문서 보관함</span>
+      </div>
+
       {/* 인라인 PDF 미리보기 모달 */}
       {previewDoc && (
         <div

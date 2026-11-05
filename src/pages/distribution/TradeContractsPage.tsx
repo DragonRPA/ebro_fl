@@ -1294,6 +1294,36 @@ export const TradeContractsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="trade-contracts-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>유통 수주계약: <strong style={{ color: 'var(--text-main)' }}>{filteredOrders.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>매출원가 합계: <strong style={{ color: 'var(--text-secondary)' }}>₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + o.totalCogsAmount, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>판매공급가 합계: <strong style={{ color: 'var(--primary)' }}>₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + o.totalSalesAmount, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>매출총이익: <strong style={{ color: '#059669' }}>₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + (o.totalSalesAmount - o.totalCogsAmount), 0).toLocaleString()}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>1출고 = 1유통계약 기준</span>
+      </div>
+
       {/* 5. 수주 상세 등록 / 수정 모달 */}
       {isOrderModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>

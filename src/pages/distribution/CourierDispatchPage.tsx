@@ -1066,6 +1066,38 @@ export const CourierDispatchPage: React.FC = () => {
         </table>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="courier-dispatch-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>택배·화물 배송 건수: <strong style={{ color: 'var(--text-main)' }}>{filteredOutbounds.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>택배배송: <strong style={{ color: '#d97706' }}>{filteredOutbounds.filter(o => o.deliveryType !== 'DIRECT').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>화물직배: <strong style={{ color: '#2563eb' }}>{filteredOutbounds.filter(o => o.deliveryType === 'DIRECT').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>납품완료: <strong style={{ color: '#059669' }}>{filteredOutbounds.filter(o => o.status === 'DELIVERED').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>운송비 합계: <strong style={{ color: 'var(--primary)' }}>₩{filteredOutbounds.reduce((s, o) => s + (o.shippingCost || 0), 0).toLocaleString()}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>택배 송장 · 화물 기사 배차 집계</span>
+      </div>
+
       {/* Modal 1: 택배 송장 번호 등록 및 발송 모달 */}
       {courierModalTarget && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>

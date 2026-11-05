@@ -1911,6 +1911,36 @@ export const TradeProductsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="trade-products-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>조회 품목: <strong style={{ color: 'var(--text-main)' }}>{filteredProducts.length}종</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>가용재고 수량 합계: <strong style={{ color: 'var(--primary)' }}>{filteredProducts.reduce((s, p) => s + p.availableQty, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>재고자산 금액 합계: <strong style={{ color: '#059669' }}>₩{filteredProducts.reduce((s, p) => s + p.stockValue, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>차대·로트 관리 건수: <strong style={{ color: '#1d4ed8' }}>{filteredLots.length}건</strong> (현재고 {filteredLots.filter(l => !l.isSold).length}건)</span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>유통 재고·차대 통합 원장</span>
+      </div>
+
       {/* 5. 제품·부품 등록/수정 모달 (공식 VDI 2198 지게차 제원 통합) */}
       {isProductModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>

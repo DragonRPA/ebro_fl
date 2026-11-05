@@ -580,6 +580,38 @@ export const RentalInboundManagePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="rental-inbound-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>렌탈 반납입고: <strong style={{ color: 'var(--text-primary)' }}>{inbounds.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>정상입고: <strong style={{ color: '#059669' }}>{inbounds.filter(r => r.claimStatus === '불량없음·정상입고').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>수리비 청구생성: <strong style={{ color: '#dc2626' }}>{inbounds.filter(r => r.claimStatus === '고객청구생성완료').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>사용자 수리비 청구합계: <strong style={{ color: '#dc2626' }}>₩{inbounds.reduce((s, r) => s + (r.claimAmount || 0), 0).toLocaleString('ko-KR')}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>회수운송비 합계: <strong style={{ color: 'var(--primary)' }}>₩{inbounds.reduce((s, r) => s + (r.returnFreightCost || 0), 0).toLocaleString('ko-KR')}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>주기장 반납입고 검수 요약</span>
+      </div>
     </div>
   );
 };

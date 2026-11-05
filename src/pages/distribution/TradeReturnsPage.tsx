@@ -768,6 +768,38 @@ export const TradeReturnsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="trade-returns-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>수주 품목 라인: <strong style={{ color: 'var(--text-main)' }}>{filteredLines.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>환입·반품 처리 건수: <strong style={{ color: 'var(--primary)' }}>{filteredReturns.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>정상 환입: <strong style={{ color: '#059669' }}>{filteredReturns.filter(r => r.condition === 'SELLABLE').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>불량 반품: <strong style={{ color: '#dc2626' }}>{filteredReturns.filter(r => r.condition === 'DEFECTIVE').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>환불·차감 합계: <strong style={{ color: '#ef4444' }}>-₩{filteredReturns.reduce((s, r) => s + (r.refundAmount || 0), 0).toLocaleString()}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>환입 · 반품 검수 대장 요약</span>
+      </div>
+
       {/* Return Registration Modal */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1150 }}>

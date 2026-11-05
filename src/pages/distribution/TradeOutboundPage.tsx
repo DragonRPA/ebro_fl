@@ -1175,6 +1175,38 @@ export const TradeOutboundPage: React.FC = () => {
         </div>
       )}
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="trade-outbounds-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>유통 출고 요청: <strong style={{ color: 'var(--text-main)' }}>{displayedOutbounds.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>출고 품목 수량 합계: <strong style={{ color: 'var(--primary)' }}>{displayedOutbounds.reduce((s, r) => s + r.totalQty, 0).toLocaleString()}개</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>옵션 장착 건수: <strong style={{ color: '#6d28d9' }}>{displayedOutbounds.filter(r => r.appliedOpts.length > 0).length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>옵션 추가청구 합계: <strong style={{ color: '#6d28d9' }}>₩{displayedOutbounds.reduce((s, r) => s + r.optionBillingAmount, 0).toLocaleString()}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>합산 청구공급가 합계: <strong style={{ color: '#059669' }}>₩{displayedOutbounds.reduce((s, r) => s + r.totalBillingSupply, 0).toLocaleString()}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>1출고 = 1유통계약 기준</span>
+      </div>
+
       {/* 5. 출고 요청 등록 / 수정 모달 */}
       {isOutboundModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '16px' }}>

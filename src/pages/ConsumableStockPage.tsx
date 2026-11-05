@@ -2165,7 +2165,9 @@ export const ConsumableStockPage: React.FC<ConsumableStockPageProps> = ({ initia
           <span style={{ color: 'var(--border-color)' }}>|</span>
           <span>주기장 재고잔액 합계: <strong style={{ color: '#2563eb' }}>₩{stockSummary.hqTotalValue.toLocaleString('ko-KR')}</strong></span>
           <span style={{ color: 'var(--border-color)' }}>|</span>
-          <span>안전재고 미달: <strong style={{ color: stockSummary.lowStockCount > 0 ? '#dc2626' : 'var(--success)' }}>{stockSummary.lowStockCount}종</strong></span>
+          <span>차량 적재 수량: <strong style={{ color: '#059669' }}>{stockSummary.vehicleTotalQty.toLocaleString('ko-KR')}개</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>전사 총 재고잔액: <strong style={{ color: '#7c3aed' }}>₩{stockSummary.grandTotalValue.toLocaleString('ko-KR')}</strong></span>
         </div>
         <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>기준년월: {targetYm}</span>
       </div>

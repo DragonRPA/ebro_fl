@@ -628,6 +628,36 @@ export const RentalOutboundManagePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="rental-outbound-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>렌탈 출고 건수: <strong style={{ color: 'var(--text-primary)' }}>{filteredOutbounds.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>출고대기·검수중: <strong style={{ color: '#d97706' }}>{filteredOutbounds.filter(r => r.status !== '출고완료·대여중').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>출고완료·대여중: <strong style={{ color: '#059669' }}>{filteredOutbounds.filter(r => r.status === '출고완료·대여중').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>배송운송비 합계: <strong style={{ color: 'var(--primary)' }}>₩{filteredOutbounds.reduce((s, r) => s + (r.freightCost || 0), 0).toLocaleString('ko-KR')}</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>출고검수 승인 즉시 대여중 전환</span>
+      </div>
     </div>
   );
 };

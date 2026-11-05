@@ -1660,6 +1660,35 @@ export const PublicConstructionPermitsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="permits-bottom-summary"
+        style={{
+          padding: '8px 18px',
+          backgroundColor: 'var(--bg-card)',
+          borderTop: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>조회 건축인허가·착공 현장: <strong style={{ color: 'var(--text-main)' }}>{sortedItems.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>장비투입 골든타임 현장: <strong style={{ color: 'var(--success)' }}>{sortedItems.filter(i => i.awpGoldenTime).length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>안전관리 계획 의무 현장: <strong style={{ color: 'var(--warning)' }}>{sortedItems.filter(i => i.csiSafety.safetyPlanRequired).length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>영업 리드 등록 완료: <strong style={{ color: 'var(--primary)' }}>{sortedItems.filter(i => i.leadStatus === 'REGISTERED').length}건</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>건축행정시스템 세움터 · 국토정보플랫폼 연동</span>
+      </div>
+
       {/* ── [공정 단계 추론 및 추천 장비 산출 공식 안내 모달] ── */}
       {isFormulaModalOpen && (
         <div style={{

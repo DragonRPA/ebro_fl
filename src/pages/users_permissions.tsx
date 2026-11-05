@@ -1498,11 +1498,8 @@ export const UsersPermissions: React.FC = () => {
               </select>
             </div>
 
-            {/* 우측 통계 및 엑셀 다운로드 */}
+            {/* 우측 액션 및 엑셀 다운로드 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary, #475569)', whiteSpace: 'nowrap' }}>
-                총 <strong>{filteredUsers.length}</strong>명 / 상속 완료 <strong>{activeUsers.filter(u => u.customRoleId).length}</strong>명 / 차단버튼 허용 <strong style={{ color: '#dc2626' }}>{activeUsers.filter(u => canUserControlCustomerBlock(u, undefined, rolePermissions)).length}</strong>명 / 자동백업 지정 <strong style={{ color: 'var(--primary)' }}>{activeUsers.filter(u => u.autoBackupEnabled).length}</strong>명
- </span>
               <button
                 type="button"
                 disabled={isRunningManualBackup}
@@ -1877,6 +1874,38 @@ export const UsersPermissions: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="users-permissions-bottom-summary"
+        style={{
+          marginTop: '12px',
+          padding: '9px 16px',
+          backgroundColor: 'var(--bg-card, #ffffff)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>등록 권한 명칭: <strong style={{ color: 'var(--text-main)' }}>{customRoles.length}개</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>전사 재직 임직원: <strong style={{ color: 'var(--primary)' }}>{activeUsers.length}명</strong> (조회 {filteredUsers.length}명)</span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>권한 상속 완료: <strong style={{ color: '#059669' }}>{activeUsers.filter(u => u.customRoleId).length}명</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>차단버튼 허용: <strong style={{ color: '#dc2626' }}>{activeUsers.filter(u => canUserControlCustomerBlock(u, undefined, rolePermissions)).length}명</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>자동백업 지정: <strong style={{ color: 'var(--primary)' }}>{activeUsers.filter(u => u.autoBackupEnabled).length}명</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>권한 등급 및 임직원 권한 상속 요약</span>
+      </div>
 
       {/* ─── 직원 권한 상세 미리보기 모달 ─── */}
       {previewUser && (

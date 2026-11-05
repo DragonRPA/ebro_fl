@@ -530,6 +530,36 @@ export const PatrolMaintenancePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="patrol-maintenance-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>순회정비 일정: <strong style={{ color: 'var(--text-primary)' }}>{filteredList.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>방문예정: <strong style={{ color: '#2563eb' }}>{filteredList.filter(r => r.status === '방문예정').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>점검진행중: <strong style={{ color: '#d97706' }}>{filteredList.filter(r => r.status === '점검진행중').length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>처리완료: <strong style={{ color: '#059669' }}>{filteredList.filter(r => r.status === '처리완료').length}건</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>순회정비 예방점검 요약</span>
+      </div>
     </div>
   );
 };
