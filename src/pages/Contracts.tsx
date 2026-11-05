@@ -3093,33 +3093,61 @@ export const Contracts: React.FC = () => {
   }, [contracts, contractAssets.length, contractAssetsByContractMap, contractProfitMap]);
 
   return (
-    <div data-uia="contract-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', minHeight: 0, overflow: 'hidden', fontSize: '13px' }}>
+    <div data-uia="contract-container" data-subview="contract" data-subview-title="계약 관리" style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '100%', minHeight: 0, overflow: 'hidden', fontSize: '12.5px' }}>
       
-      {/* 최상단 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-card)', padding: '12px 18px', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '16px', flexWrap: 'wrap', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* 1. 최상단 헤더 (유통 계약관리와 동일한 초슬림 1열 구성) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-card)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', gap: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {viewMode === 'DETAIL' && (
             <button
               className="btn-secondary"
               onClick={() => setViewMode('LIST')}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12px' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', height: '28px', padding: '0 10px', fontSize: '11.5px' }}
             >
-              <ChevronLeft size={16} /> 목록으로 돌아가기
- </button>
+              <ChevronLeft size={14} /> 목록으로 돌아가기
+            </button>
           )}
-          <div>
-            <h2 style={{ fontWeight: '700', marginBottom: '2px', fontSize: '18px' }}>
-              {viewMode === 'DETAIL' ? `계약 상세: ${activeContract?.contractNo}` : '계약 관리'}
-            </h2>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-              {viewMode === 'DETAIL'
-                ? `${getCustName(activeContract?.customerId || '')} — ${getSiteName(activeContract?.siteId)}`
-                : '계약 등록, 상태 변경, 기간 조정 및 승계 내역을 관리합니다.'}
-            </p>
-          </div>
+          <h2 style={{ fontWeight: 800, margin: 0, fontSize: '15px', whiteSpace: 'nowrap', color: 'var(--text-main)' }}>
+            {viewMode === 'DETAIL' ? `계약 상세: ${activeContract?.contractNo}` : '계약 관리'}
+          </h2>
+          {viewMode === 'DETAIL' && (
+            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              {getCustName(activeContract?.customerId || '')} — {getSiteName(activeContract?.siteId)}
+            </span>
+          )}
+          {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              {[
+                { id: 'ALL', label: `전체 계약 ${contractKpiStats.totalCount}건` },
+                { id: 'RENTAL', label: `렌탈·현장별 ${contractKpiStats.rentalCount}건` },
+                { id: 'TRADE', label: `유통·출고건별 ${contractKpiStats.tradeCount}건` },
+                ...(contractKpiStats.saleCount > 0 ? [{ id: 'SALE', label: `매각 ${contractKpiStats.saleCount}건` }] : [])
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setContractTypeFilter(tab.id as any)}
+                  style={{
+                    height: '25px',
+                    padding: '0 8px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    border: contractTypeFilter === tab.id ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                    backgroundColor: contractTypeFilter === tab.id ? 'var(--primary)' : 'var(--bg-app)',
+                    color: contractTypeFilter === tab.id ? '#fff' : 'var(--text-secondary)'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
           {currentUser?.role === 'ADMIN' && currentTenant && (
             <button
               type="button"
@@ -3134,51 +3162,53 @@ export const Contracts: React.FC = () => {
                 );
               }}
               style={{
-                padding: '6px 12px',
+                height: '28px',
+                padding: '0 9px',
                 fontSize: '11.5px',
                 fontWeight: 700,
-                borderRadius: '6px',
+                borderRadius: '4px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
+                whiteSpace: 'nowrap',
                 border: isTenantTradeOutboundEnabled ? '1px solid #0284c7' : '1px solid var(--border-color)',
                 backgroundColor: isTenantTradeOutboundEnabled ? 'rgba(2, 132, 199, 0.1)' : 'var(--bg-app)',
                 color: isTenantTradeOutboundEnabled ? '#0284c7' : 'var(--text-muted)'
               }}
               title="현재 테넌트의 계약 상세 유통출고 및 당월 청구 합산 기능 사용 여부를 즉시 전환합니다."
             >
-              <Package size={13} />
-              <span>계약 연동 유통출고: {isTenantTradeOutboundEnabled ? '사용중' : '미사용'}</span>
+              <Package size={12} />
+              <span>유통출고 연동: {isTenantTradeOutboundEnabled ? '사용중' : '미사용'}</span>
             </button>
           )}
 
           {viewMode === 'LIST' && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 type="button"
                 className="btn-secondary"
                 disabled={isBackingUpData}
                 onClick={handleDownloadFullBackup}
-                style={{ padding: '7px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700 }}
+                style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700, whiteSpace: 'nowrap' }}
               >
-                <Download size={13} />
-                <span>{isBackingUpData ? '백업 생성중...' : '현재 데이터 백업'}</span>
+                <Download size={12} />
+                <span>{isBackingUpData ? '백업 생성중' : '현재 데이터 백업'}</span>
               </button>
               <button
                 type="button"
                 className="btn-secondary"
                 disabled={isRestoringData}
                 onClick={handleRestoreGoldenBaseline}
-                style={{ padding: '7px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700, borderColor: 'rgba(16, 185, 129, 0.5)', color: '#10b981' }}
+                style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700, borderColor: 'rgba(16, 185, 129, 0.5)', color: '#10b981', whiteSpace: 'nowrap' }}
               >
-                <Repeat size={13} />
-                <span>{isRestoringData ? '기준 데이터 복원중...' : '기준 데이터 복원'}</span>
+                <Repeat size={12} />
+                <span>{isRestoringData ? '복원중' : '기준 데이터 복원'}</span>
               </button>
               <button
                 className={activeTab === 'ALL_LIST' ? 'btn-primary' : 'btn-secondary'}
                 onClick={() => setActiveTab('ALL_LIST')}
-                style={{ padding: '7px 14px', fontSize: '12px' }}
+                style={{ height: '28px', padding: '0 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
               >
                 계약 목록 ({filteredContracts.length})
               </button>
@@ -3186,9 +3216,17 @@ export const Contracts: React.FC = () => {
                 data-uia="btn-new-contract"
                 className={activeTab === 'CREATE' ? 'btn-primary' : 'btn-secondary'}
                 onClick={() => setActiveTab('CREATE')}
-                style={{ padding: '7px 14px', fontSize: '12px' }}
+                style={{ height: '28px', padding: '0 10px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
               >
                 신규 계약 등록
+              </button>
+              <button
+                type="button"
+                className="btn-excel-download"
+                onClick={handleExportExcel}
+                style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+              >
+                <Download size={12} /> 엑셀 다운로드
               </button>
             </div>
           )}
@@ -3198,113 +3236,29 @@ export const Contracts: React.FC = () => {
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* 뷰 1: 계약 목록 (viewMode === 'LIST') */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
-            {/* 계약 운용 및 수익성 통합 KPI 바 */}
       {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
-        <div data-subview="contract" data-subview-title="계약 관리" data-mid="contract-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', flexShrink: 0 }}>
-          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>계약 현황 ({contractKpiStats.totalCount}건)</span>
-            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-              진행 <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.activeCount}</strong> · 만료임박 <strong style={{ color: contractKpiStats.d3Count > 0 ? 'var(--danger-color)' : 'var(--text-muted)' }}>{contractKpiStats.d3Count}</strong> · 투입 <strong style={{ color: 'var(--primary-color)' }}>{contractKpiStats.totalAssetsCount}대</strong>
-            </span>
-          </div>
-
-          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈원가 ({contractKpiStats.rentalCount}건)</span>
-            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-              매출 <strong>₩{contractKpiStats.rentalRevenueSum.toLocaleString()}</strong> · 원가 <strong style={{ color: 'var(--warning-color)' }}>₩{contractKpiStats.rentalCostSum.toLocaleString()}</strong> · <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.rentalMarginRate.toFixed(1)}%</strong>
-            </span>
-          </div>
-
-          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통원가 ({contractKpiStats.tradeCount}건)</span>
-            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-              매출 <strong>₩{contractKpiStats.tradeRevenueSum.toLocaleString()}</strong> · 원가 <strong style={{ color: 'var(--warning-color)' }}>₩{contractKpiStats.tradeCostSum.toLocaleString()}</strong> · <strong style={{ color: 'var(--success-color)' }}>{contractKpiStats.tradeMarginRate.toFixed(1)}%</strong>
-            </span>
-          </div>
-
-          <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>통합 수익성</span>
-            <span style={{ fontSize: '11.5px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-              총이익 <strong style={{ color: 'var(--success-color)' }}>₩{contractKpiStats.totalProfitSum.toLocaleString()}</strong> · 평균 <strong style={{ color: 'var(--primary-color)' }}>{contractKpiStats.totalMarginRate.toFixed(1)}%</strong>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {viewMode === 'LIST' && activeTab === 'ALL_LIST' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           
-          {/* 필터 패널 */}
-          <div className="card" data-mid="contract-filter-panel" style={{ padding: '12px 14px', margin: 0, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
-            
-            {/* 0행: 계약 종류 구분자 탭 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <div className="segmented-tab-group">
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('ALL')}
-                  className={`segmented-tab-item ${contractTypeFilter === 'ALL' ? 'active' : ''}`}
-                >
-                  전체 계약 ({contractKpiStats.totalCount}건)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('RENTAL')}
-                  className={`segmented-tab-item ${contractTypeFilter === 'RENTAL' ? 'active' : ''}`}
-                >
-                  렌탈 계약 · 현장별 ({contractKpiStats.rentalCount}건)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContractTypeFilter('TRADE')}
-                  className={`segmented-tab-item ${contractTypeFilter === 'TRADE' ? 'active' : ''}`}
-                >
-                  유통 계약 · 출고건별 ({contractKpiStats.tradeCount}건)
-                </button>
-                {contractKpiStats.saleCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setContractTypeFilter('SALE')}
-                    className={`segmented-tab-item ${contractTypeFilter === 'SALE' ? 'active' : ''}`}
-                  >
-                    매각 계약 ({contractKpiStats.saleCount}건)
-                  </button>
-                )}
-              </div>
-              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                월 렌탈료 합계: <strong style={{ color: 'var(--primary-color)' }}>₩{contractKpiStats.totalRentSum.toLocaleString()}</strong>
-              </span>
-            </div>
-
-            {/* 1행: 검색어 & 표준 횡배치 버튼군 (조회 -> 엑셀 다운로드) */}
-            <div data-mid="contract-search-bar" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--bg-app)', padding: '8px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                <Search size={16} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="통합 검색 (계약번호, 고객사명, 현장명, 자산번호, 담당자명...)"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
-                  style={{ flex: 1, border: 'none', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-primary)' }}
-                />
-                {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} style={{ border: 'none', background: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}></button>
-                )}
-              </div>
-
-              <div className="toolbar-actions">
-                <button className="btn-excel-download" onClick={handleExportExcel}>
-                  <Download size={13} /> 엑셀 다운로드
- </button>
-              </div>
-            </div>
-
-            {/* 2행: 고객사, 현장, 시작일, 종료일 세부 상세 필터 (레이블 상단 헤더 세로 스택 구조) */}
-            <div data-mid="contract-detailed-filters" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap', backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          {/* 2. 통합 조회 필터 바 (유통 계약관리와 동일한 초슬림 1열 구성) */}
+          <div
+            data-mid="contract-filter-panel"
+            style={{
+              padding: '6px 10px',
+              margin: 0,
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: '8px',
+              flexWrap: 'wrap',
+              flexShrink: 0
+            }}
+          >
+            <div data-mid="contract-detailed-filters" style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap', flex: 1 }}>
               {/* 고객사 콤보박스 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0, position: 'relative' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>고객사 선택</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0, position: 'relative' }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>고객사 선택</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"
@@ -3316,27 +3270,27 @@ export const Contracts: React.FC = () => {
                     }}
                     onFocus={() => setCustomerDropdownOpen(true)}
                     onBlur={() => setTimeout(() => setCustomerDropdownOpen(false), 150)}
-                    placeholder="고객사명 / 초성 (예: ㅅㅅ, ㅎㄷ)"
-                    style={{ padding: '6px 28px 6px 10px', borderRadius: '6px', fontSize: '12.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', whiteSpace: 'nowrap', minWidth: '160px', width: '100%' }}
+                    placeholder="고객사명 / 초성"
+                    style={{ height: '26px', padding: '2px 22px 2px 7px', borderRadius: '4px', fontSize: '11.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '135px' }}
                   />
                   {customerInputText && (
                     <button
                       onMouseDown={e => { e.preventDefault(); setCustomerInputText(''); setCustomerFilter('ALL'); setSiteFilter('ALL'); setSiteInputText(''); }}
-                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', padding: 0 }}
+                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0 }}
                     ></button>
                   )}
                   {customerDropdownOpen && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', marginTop: '2px', minHeight: '44px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
                       <div
                         onMouseDown={() => { setCustomerFilter('ALL'); setCustomerInputText(''); setSiteFilter('ALL'); setSiteInputText(''); setCustomerDropdownOpen(false); }}
-                        style={{ padding: '8px 12px', fontSize: '12.5px', cursor: 'pointer', color: customerFilter === 'ALL' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: customerFilter === 'ALL' ? 700 : 400 }}
+                        style={{ padding: '6px 10px', fontSize: '11.5px', cursor: 'pointer', color: customerFilter === 'ALL' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: customerFilter === 'ALL' ? 700 : 400 }}
                       >전체 고객사</div>
                       {sortCustomersByName(customers.filter(c => !customerInputText || matchHangul(c.name, customerInputText)))
                         .map(c => (
                           <div
                             key={c.id}
                             onMouseDown={() => { setCustomerFilter(c.id); setCustomerInputText(c.name); setSiteFilter('ALL'); setSiteInputText(''); setCustomerDropdownOpen(false); }}
-                            style={{ padding: '8px 12px', fontSize: '12.5px', cursor: 'pointer', color: customerFilter === c.id ? 'var(--primary)' : 'var(--text-primary)', fontWeight: customerFilter === c.id ? 700 : 400, borderTop: '1px solid var(--border-color)' }}
+                            style={{ padding: '6px 10px', fontSize: '11.5px', cursor: 'pointer', color: customerFilter === c.id ? 'var(--primary)' : 'var(--text-primary)', fontWeight: customerFilter === c.id ? 700 : 400, borderTop: '1px solid var(--border-color)' }}
                           >{c.name}</div>
                         ))
                       }
@@ -3346,8 +3300,8 @@ export const Contracts: React.FC = () => {
               </div>
 
               {/* 현장 콤보박스 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0, position: 'relative' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>현장 선택</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0, position: 'relative' }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>현장 선택</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"
@@ -3360,19 +3314,19 @@ export const Contracts: React.FC = () => {
                     onFocus={() => setSiteDropdownOpen(true)}
                     onBlur={() => setTimeout(() => setSiteDropdownOpen(false), 150)}
                     placeholder="전체 현장"
-                    style={{ padding: '6px 28px 6px 10px', borderRadius: '6px', fontSize: '12.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', whiteSpace: 'nowrap', minWidth: '160px', width: '100%' }}
+                    style={{ height: '26px', padding: '2px 22px 2px 7px', borderRadius: '4px', fontSize: '11.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '125px' }}
                   />
                   {siteInputText && (
                     <button
                       onMouseDown={e => { e.preventDefault(); setSiteInputText(''); setSiteFilter('ALL'); }}
-                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', padding: 0 }}
+                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0 }}
                     ></button>
                   )}
                   {siteDropdownOpen && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', marginTop: '2px', minHeight: '44px', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
                       <div
                         onMouseDown={() => { setSiteFilter('ALL'); setSiteInputText(''); setSiteDropdownOpen(false); }}
-                        style={{ padding: '8px 12px', fontSize: '12.5px', cursor: 'pointer', color: siteFilter === 'ALL' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: siteFilter === 'ALL' ? 700 : 400 }}
+                        style={{ padding: '6px 10px', fontSize: '11.5px', cursor: 'pointer', color: siteFilter === 'ALL' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: siteFilter === 'ALL' ? 700 : 400 }}
                       >전체 현장</div>
                       {(customerFilter === 'ALL' ? sites : sites.filter(s => s.customerId === customerFilter))
                         .filter(s => !siteInputText || matchHangul(s.name, siteInputText))
@@ -3380,7 +3334,7 @@ export const Contracts: React.FC = () => {
                           <div
                             key={s.id}
                             onMouseDown={() => { setSiteFilter(s.id); setSiteInputText(s.name); setSiteDropdownOpen(false); }}
-                            style={{ padding: '8px 12px', fontSize: '12.5px', cursor: 'pointer', color: siteFilter === s.id ? 'var(--primary)' : 'var(--text-primary)', fontWeight: siteFilter === s.id ? 700 : 400, borderTop: '1px solid var(--border-color)' }}
+                            style={{ padding: '6px 10px', fontSize: '11.5px', cursor: 'pointer', color: siteFilter === s.id ? 'var(--primary)' : 'var(--text-primary)', fontWeight: siteFilter === s.id ? 700 : 400, borderTop: '1px solid var(--border-color)' }}
                           >{s.name}</div>
                         ))
                       }
@@ -3389,174 +3343,149 @@ export const Contracts: React.FC = () => {
                 </div>
               </div>
 
-              {/* 계약 시작일 (이후) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>계약 시작일 (이후)</label>
-                <input
-                  type="date"
-                  value={startDateFilter}
-                  onChange={e => setStartDateFilter(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
-                  style={{ padding: '5px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}
-                />
-              </div>
-
-              {/* 계약 종료일 (이전) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>계약 종료일 (이전)</label>
-                <input
-                  type="date"
-                  value={endDateFilter}
-                  onChange={e => setEndDateFilter(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
-                  style={{ padding: '5px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}
-                />
-              </div>
-
-              {/* 계약 상태 필터 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>상태</label>
-                <select
-                  value={statusFilter}
-                  onChange={e => {
-                    const nextStatus = e.target.value;
-                    setStatusFilter(nextStatus);
-                    if (nextStatus === 'ALL') setQuickChipFilter('ALL');
-                    else if (nextStatus === 'ACTIVE') setQuickChipFilter('ACTIVE');
-                    else if (nextStatus === 'COMPLETED') setQuickChipFilter('COMPLETED');
-                  }}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
-                  style={{ padding: '5px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                >
-                  <option value="ALL">전체 상태</option>
-                  <option value="ACTIVE">진행중</option>
-                  <option value="COMPLETED">종료</option>
-                  </select>
-              </div>
-
-              {/*  [조회] 버튼 (사용자 지정 위치: 상태 필터 바로 우측) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, visibility: 'hidden', whiteSpace: 'nowrap', userSelect: 'none' }}>조회</label>
-                <button
-                  type="button"
-                  className="btn-query"
-                  onClick={handleSearchClick}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '5px',
-                    padding: '5px 16px',
-                    borderRadius: '6px',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    height: '29px',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  <Search size={14} />
-                  <span>조회</span>
-                </button>
-              </div>
-
-              {/* 필터 초기화 버튼 */}
-              {(statusFilter !== 'ALL' || quickChipFilter !== 'ALL' || customerFilter !== 'ALL' || customerInputText.trim() !== '' || siteFilter !== 'ALL' || siteInputText.trim() !== '' || startDateFilter || endDateFilter || searchTerm) && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 700, visibility: 'hidden', whiteSpace: 'nowrap', userSelect: 'none' }}>초기화</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStatusFilter('ALL');
-                      setQuickChipFilter('ALL');
-                      setCustomerFilter('ALL');
-                      setCustomerInputText('');
-                      setSiteFilter('ALL');
-                      setSiteInputText('');
-                      setStartDateFilter('');
-                      setEndDateFilter('');
-                      setSearchTerm('');
-                    }}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: '6px',
-                      fontSize: '11.5px',
-                      border: '1px solid var(--border-color)',
-                      backgroundColor: 'var(--bg-card)',
-                      color: 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap',
-                      height: '29px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    필터 초기화 
- </button>
+              {/* 계약 기간 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>계약 기간</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="date"
+                    value={startDateFilter}
+                    onChange={e => setStartDateFilter(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
+                    style={{ height: '26px', padding: '2px 6px', borderRadius: '4px', fontSize: '11.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '118px' }}
+                  />
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>~</span>
+                  <input
+                    type="date"
+                    value={endDateFilter}
+                    onChange={e => setEndDateFilter(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
+                    style={{ height: '26px', padding: '2px 6px', borderRadius: '4px', fontSize: '11.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '118px' }}
+                  />
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* 3행: 상태 필터 칩 */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>상태 필터:</span>
-              {[
-                { id: 'ALL', label: `전체 (${contractKpiStats.totalCount})` },
-                { id: 'PENDING_DELIVERY', label: `출고진행 (${pendingDeliveryCount})` },
-                { id: 'ACTIVE', label: `진행중 (${contractKpiStats.allActiveCount})` },
-                { id: 'D3', label: `만료 임박 (${contractKpiStats.allD3Count})` },
-                { id: 'ZERO_FEE', label: `렌탈료 0원 (${contractKpiStats.allZeroFeeCount})` },
-                { id: 'COMPLETED', label: `종결건 (${contractKpiStats.allCompletedCount})` }
-              ].map(chip => (
-                <button
-                  key={chip.id}
-                  onClick={() => {
-                    const nextChip = chip.id as any;
+              {/* 검색어 */}
+              <div data-mid="contract-search-bar" style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>검색어</label>
+                <div style={{ position: 'relative' }}>
+                  <Search size={12} style={{ position: 'absolute', left: '7px', top: '7px', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="계약번호 / 고객사 / 현장 / 자산번호"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
+                    style={{ height: '26px', padding: '2px 8px 2px 24px', fontSize: '11.5px', width: '175px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+                  />
+                </div>
+              </div>
+
+              {/* 상태 필터 (기존 상태 + 칩 통합 드롭다운) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>거래 상태</label>
+                <select
+                  value={quickChipFilter}
+                  onChange={e => {
+                    const nextChip = e.target.value as any;
                     setQuickChipFilter(nextChip);
                     if (nextChip === 'ALL') setStatusFilter('ALL');
                     else if (nextChip === 'COMPLETED') setStatusFilter('COMPLETED');
                     else setStatusFilter('ACTIVE');
                   }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSearchClick(); }}
+                  style={{ height: '26px', padding: '2px 6px', borderRadius: '4px', fontSize: '11.5px', border: '1px solid var(--border-color)', outline: 'none', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '120px' }}
+                >
+                  <option value="ALL">전체 ({contractKpiStats.totalCount})</option>
+                  <option value="PENDING_DELIVERY">출고진행 ({pendingDeliveryCount})</option>
+                  <option value="ACTIVE">진행중 ({contractKpiStats.allActiveCount})</option>
+                  <option value="D3">만료임박 ({contractKpiStats.allD3Count})</option>
+                  <option value="ZERO_FEE">렌탈료 0원 ({contractKpiStats.allZeroFeeCount})</option>
+                  <option value="COMPLETED">종결건 ({contractKpiStats.allCompletedCount})</option>
+                </select>
+              </div>
+
+              {/* [조회] 버튼 */}
+              <button
+                type="button"
+                className="btn-query"
+                onClick={handleSearchClick}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  height: '26px',
+                  padding: '0 10px',
+                  borderRadius: '4px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
+                }}
+              >
+                <Search size={12} />
+                <span>조회</span>
+              </button>
+
+              {/* 필터 초기화 버튼 */}
+              {(statusFilter !== 'ALL' || quickChipFilter !== 'ALL' || customerFilter !== 'ALL' || customerInputText.trim() !== '' || siteFilter !== 'ALL' || siteInputText.trim() !== '' || startDateFilter || endDateFilter || searchTerm) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter('ALL');
+                    setQuickChipFilter('ALL');
+                    setCustomerFilter('ALL');
+                    setCustomerInputText('');
+                    setSiteFilter('ALL');
+                    setSiteInputText('');
+                    setStartDateFilter('');
+                    setEndDateFilter('');
+                    setSearchTerm('');
+                  }}
                   style={{
-                    padding: '4px 10px',
+                    height: '26px',
+                    padding: '0 8px',
                     borderRadius: '4px',
-                    fontSize: '11.5px',
+                    fontSize: '11px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-app)',
+                    color: 'var(--text-secondary)',
                     cursor: 'pointer',
-                    border: `1px solid ${quickChipFilter === chip.id ? 'var(--primary)' : 'var(--border-color)'}`,
-                    backgroundColor: quickChipFilter === chip.id ? 'var(--primary-light)' : 'var(--bg-card)',
-                    color: quickChipFilter === chip.id ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center'
                   }}
                 >
-                  {chip.label}
+                  필터 초기화
                 </button>
-              ))}
-              
-              <div style={{ display: 'flex', gap: '16px', marginLeft: 'auto', alignItems: 'center' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+              )}
+
+              {/* 우측 컬럼 표시 옵션 체크박스 */}
+              <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto', alignItems: 'center', height: '26px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={showOutboundProgressCol} onChange={e => setShowOutboundProgressCol(e.target.checked)} />
                   출고진행현황
- </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={showPeriodCol} onChange={e => setShowPeriodCol(e.target.checked)} />
                   계약기간
- </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={showLastBilledCol} onChange={e => setShowLastBilledCol(e.target.checked)} />
                   최근청구기간
- </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={showBillingCountCol} onChange={e => setShowBillingCountCol(e.target.checked)} />
                   청구건수
- </label>
+                </label>
               </div>
             </div>
           </div>
 
-          {/* 계약 목록 데이터 테이블 (횡 스크롤 지원 & 셀 줄바꿈 방지) */}
-          <div className="card" data-mid="contract-table" style={{ padding: 0, margin: 0, overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          {/* 3. 계약 목록 데이터 테이블 (화면 최대 할애) */}
+          <div className="card" data-mid="contract-table" style={{ padding: 0, margin: 0, borderRadius: '6px', overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div className="table-container" style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'auto', position: 'relative' }}>
               <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'var(--bg-app)' }}>
@@ -3886,14 +3815,14 @@ export const Contracts: React.FC = () => {
 
             {/* Gutenberg Z-패턴 4단계 최하단 회계 대차대조식 검증 바 (헌장 3.5) */}
             <div style={{
-              padding: '8px 14px',
+              padding: '5px 10px',
               backgroundColor: 'var(--bg-app)',
               borderTop: '1px solid var(--border-color)',
               display: 'flex',
               alignItems: 'center',
               flexWrap: 'wrap',
-              gap: '8px',
-              fontSize: '11.5px',
+              gap: '6px',
+              fontSize: '11px',
               borderRadius: '0 0 6px 6px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
