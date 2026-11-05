@@ -17,27 +17,24 @@ export const BrochureCatalogSendPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '100%' }}>
       {toastMsg && (
-        <div style={{ padding: '10px 16px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--primary-color)', color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: 700 }}>
+        <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--primary-color)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700 }}>
           {toastMsg}
         </div>
       )}
 
-      <div className="card" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <BookOpen size={17} color="var(--primary-color)" />
-            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
-              브로셔·카타로그 관리
-            </span>
-          </div>
+      <div style={{ padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+            브로셔·카타로그 관리
+          </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <select
               value={selectedCustomerId}
               onChange={e => setSelectedCustomerId(e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700 }}
+              style={{ height: '28px', padding: '0 8px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 700 }}
             >
               {SEED_FL_CUSTOMERS.map(c => (
                 <option key={c.id} value={c.id}>{c.name} ({c.bizRegNo})</option>
@@ -47,9 +44,9 @@ export const BrochureCatalogSendPage: React.FC = () => {
               type="button"
               onClick={handleSendPackage}
               className="btn btn-primary"
-              style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
+              style={{ height: '28px', padding: '0 10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
             >
-              <Send size={13} />
+              <Send size={12} />
               <span>선택 고객사 발송</span>
             </button>
           </div>
@@ -61,7 +58,7 @@ export const BrochureCatalogSendPage: React.FC = () => {
             onClick={() => setSubTab('BROCHURE_ARCHIVE')}
             className={`segmented-tab-item ${subTab === 'BROCHURE_ARCHIVE' ? 'active' : ''}`}
           >
-            <BookOpen size={14} />
+            <BookOpen size={13} />
             <span>지게차 브로셔·제원표</span>
           </button>
 
@@ -70,7 +67,7 @@ export const BrochureCatalogSendPage: React.FC = () => {
             onClick={() => setSubTab('PARTS_CATALOG')}
             className={`segmented-tab-item ${subTab === 'PARTS_CATALOG' ? 'active' : ''}`}
           >
-            <FileSpreadsheet size={14} />
+            <FileSpreadsheet size={13} />
             <span>호환부품 카타로그</span>
           </button>
         </div>

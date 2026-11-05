@@ -8,9 +8,7 @@ import {
   Plus,
   Minus,
   RotateCcw,
-  Code2,
   X,
-  Sparkles,
   Database,
   Sliders,
   LayoutGrid,
@@ -22,8 +20,6 @@ import {
   Globe
 } from 'lucide-react';
 import {
-  BENCHMARK_PARTS_COMPANIES,
-  CATALOG_TO_ORDER_STRATEGY,
   COMPATIBLE_PARTS_CATALOG,
   PART_CATEGORIES,
   TARGET_FORKLIFT_MODELS,
@@ -286,7 +282,6 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
   });
 
   // 모달 상태
-  const [showStrategyModal, setShowStrategyModal] = useState<boolean>(false);
   const [activePartDetail, setActivePartDetail] = useState<CompatiblePartCatalogItem | null>(null);
   const [showOrderSheetPrintModal, setShowOrderSheetPrintModal] = useState<boolean>(false);
   const [printSheetMode, setPrintSheetMode] = useState<'FULL_CATALOG_FORM' | 'SELECTED_ORDER_ONLY'>('FULL_CATALOG_FORM');
@@ -316,7 +311,15 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
         ]);
         if (!mounted) return;
         if (Array.isArray(db.tvhCatalogItems) && db.tvhCatalogItems.length > 0) {
-          setCatalogItems([...db.tvhCatalogItems]);
+          const sanitized = db.tvhCatalogItems.map(it => ({
+            ...it,
+            partName: (it.partName || '').replace('프리미엄 ', ''),
+            imageUrl: it.imageUrl?.includes('Brakes.jpg')
+              ? 'https://www.tvh.com/sites/tvh/files/inline-images/Transmission%20parts.jpg'
+              : it.imageUrl
+          }));
+          db.tvhCatalogItems = sanitized;
+          setCatalogItems(sanitized);
         } else {
           db.tvhCatalogItems = [...COMPATIBLE_PARTS_CATALOG];
           db.upsertRows('tvhCatalogItems', COMPATIBLE_PARTS_CATALOG);
@@ -868,53 +871,36 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100dvh - 64px)',
-        backgroundColor: '#F8FAFC',
+        height: 'calc(100dvh - 52px)',
+        backgroundColor: 'var(--bg-app, #F4F0EA)',
         overflow: 'hidden'
       }}
     >
       {/* 상단 타이틀 & 파이프라인 액션 바 */}
       <div
         style={{
-          padding: '10px 20px',
-          backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E2E8F0',
+          padding: '6px 14px',
+          backgroundColor: 'var(--bg-card, #FDFBF7)',
+          borderBottom: '1px solid var(--border-color, #DDD6C8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '10px',
           flexShrink: 0,
           flexWrap: 'wrap'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              backgroundColor: '#1E3A8A',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <FileSpreadsheet size={19} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0, whiteSpace: 'nowrap' }}>
-              호환부품 카탈로그 · 주문서
-            </h1>
-            <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              티브이에이치 글로벌 수집 DB {catalogItems.length}종 · 맞춤 카탈로그 {customCatalogs.length}종 연동
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+          <h1 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary, #1C1917)', margin: 0, whiteSpace: 'nowrap' }}>
+            호환부품 카탈로그 · 주문서
+          </h1>
+          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary, #57534E)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            전체 {catalogItems.length}종 · 표시 {filteredCatalog.length}종
+          </span>
         </div>
 
         {/* ② 우상단 파이프라인 액션 버튼군 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => {
@@ -922,91 +908,70 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               setShowTvhCollectorModal(true);
             }}
             style={{
-              padding: '7px 12px',
-              borderRadius: '6px',
-              border: '1px solid #DC2626',
-              backgroundColor: '#FEF2F2',
-              color: '#B91C1C',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-app, #F4F0EA)',
+              color: 'var(--text-primary, #1C1917)',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}
           >
-            <Database size={14} />
-            <span>티브이에이치 제품 수집·등록</span>
+            <Database size={13} />
+            <span>품목 수집·등록</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleOpenCatalogBuilder(activeCustomCatalog ? 'EDIT_CURRENT' : 'CREATE')}
             style={{
-              padding: '7px 12px',
-              borderRadius: '6px',
-              border: '1px solid #7C3AED',
-              backgroundColor: '#F5F3FF',
-              color: '#6D28D9',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-app, #F4F0EA)',
+              color: 'var(--text-primary, #1C1917)',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}
           >
-            <Sliders size={14} />
-            <span>맞춤 카탈로그 빌더</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowStrategyModal(true)}
-            style={{
-              padding: '7px 12px',
-              borderRadius: '6px',
-              border: '1px solid #3B82F6',
-              backgroundColor: '#EFF6FF',
-              color: '#1D4ED8',
-              fontSize: '12.5px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            <Code2 size={15} />
-            <span>전환 전략 · 경쟁사 분석</span>
+            <Sliders size={13} />
+            <span>카탈로그 구성</span>
           </button>
 
           <button
             type="button"
             onClick={handleApplyModelMaintenancePreset}
             style={{
-              padding: '7px 12px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
-              color: '#0F172A',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-app, #F4F0EA)',
+              color: 'var(--text-primary, #1C1917)',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}
           >
-            <Sparkles size={14} color="#D97706" />
             <span>기종별 소모품 담기</span>
           </button>
 
@@ -1014,22 +979,23 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             type="button"
             onClick={handleExportCatalogOrderExcel}
             style={{
-              padding: '7px 12px',
-              borderRadius: '6px',
-              border: '1px solid #16A34A',
-              backgroundColor: '#F0FDF4',
-              color: '#15803D',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-app, #F4F0EA)',
+              color: 'var(--text-primary, #1C1917)',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}
           >
-            <FileSpreadsheet size={14} />
+            <FileSpreadsheet size={13} />
             <span>엑셀 내보내기</span>
           </button>
 
@@ -1040,23 +1006,24 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               setShowOrderSheetPrintModal(true);
             }}
             style={{
-              padding: '7px 13px',
-              borderRadius: '6px',
+              height: '28px',
+              padding: '0 11px',
+              borderRadius: '4px',
               border: '1px solid #0F172A',
               backgroundColor: '#0F172A',
               color: '#FFFFFF',
-              fontSize: '12.5px',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap',
               flexShrink: 0
             }}
           >
-            <Printer size={14} />
-            <span>카탈로그 겸 주문서 양식 인쇄</span>
+            <Printer size={13} />
+            <span>카탈로그·주문서 인쇄</span>
           </button>
         </div>
       </div>
@@ -1064,37 +1031,37 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
       {/* ① 좌상단 스코프 및 맞춤 카탈로그 선택 바 (상하 스택 레이블 표준 준수 - 헌장 3.4) */}
       <div
         style={{
-          padding: '10px 20px',
-          backgroundColor: '#F1F5F9',
-          borderBottom: '1px solid #CBD5E1',
+          padding: '6px 14px',
+          backgroundColor: 'var(--bg-app, #F4F0EA)',
+          borderBottom: '1px solid var(--border-color, #DDD6C8)',
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '12px',
+          gap: '8px',
           flexShrink: 0,
           overflowX: 'auto'
         }}
       >
-        {/* 맞춤 카탈로그 선택 */}
+        {/* 카탈로그 선택 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            맞춤 카탈로그 선택
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            카탈로그 선택
           </label>
           <select
             value={selectedCustomCatalogId}
             onChange={e => handleSelectCustomCatalog(e.target.value)}
             style={{
-              height: '32px',
-              padding: '0 10px',
-              borderRadius: '6px',
-              border: selectedCustomCatalogId !== 'ALL' ? '1.5px solid #7C3AED' : '1px solid #CBD5E1',
-              backgroundColor: selectedCustomCatalogId !== 'ALL' ? '#F5F3FF' : '#FFFFFF',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 8px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
+              fontSize: '12px',
               fontWeight: 700,
-              color: '#0F172A',
-              minWidth: '250px'
+              color: 'var(--text-primary, #1C1917)',
+              minWidth: '210px'
             }}
           >
-            <option value="ALL">전체 티브이에이치 수집 제품 마스터 · {catalogItems.length}종</option>
+            <option value="ALL">전체 호환부품 마스터 · {catalogItems.length}종</option>
             {customCatalogs.map(cat => (
               <option key={cat.id} value={cat.id}>
                 {cat.title} · {cat.selectedItemIds.length}종
@@ -1103,18 +1070,18 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
           </select>
         </div>
 
-        {/* 카탈로그 보기 양식 */}
+        {/* 보기 양식 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            카탈로그 보기 양식
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            보기 양식
           </label>
           <div
             style={{
               display: 'flex',
-              height: '32px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
+              height: '28px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
               padding: '2px',
               gap: '2px'
             }}
@@ -1123,74 +1090,74 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               type="button"
               onClick={() => setLayoutMode('GRID_ORDER')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
                 backgroundColor: layoutMode === 'GRID_ORDER' ? '#0F172A' : 'transparent',
-                color: layoutMode === 'GRID_ORDER' ? '#FFFFFF' : '#475569',
+                color: layoutMode === 'GRID_ORDER' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
             >
-              표준 주문서 그리드
+              주문서 목록
             </button>
             <button
               type="button"
               onClick={() => setLayoutMode('PHOTO_BROCHURE')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
                 backgroundColor: layoutMode === 'PHOTO_BROCHURE' ? '#0F172A' : 'transparent',
-                color: layoutMode === 'PHOTO_BROCHURE' ? '#FFFFFF' : '#475569',
+                color: layoutMode === 'PHOTO_BROCHURE' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
             >
-              실물 사진 브로셔 카드
+              사진 카드
             </button>
             <button
               type="button"
               onClick={() => setLayoutMode('TECH_DRAWING')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
                 backgroundColor: layoutMode === 'TECH_DRAWING' ? '#0F172A' : 'transparent',
-                color: layoutMode === 'TECH_DRAWING' ? '#FFFFFF' : '#475569',
+                color: layoutMode === 'TECH_DRAWING' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
             >
-              기술 치수 도면 대장
+              치수 도면
             </button>
           </div>
         </div>
 
         {/* 주문 거래처 선택 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
             주문 거래처
           </label>
           <select
             value={selectedCustomerId}
             onChange={e => setSelectedCustomerId(e.target.value)}
             style={{
-              height: '32px',
-              padding: '0 10px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 8px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
+              fontSize: '12px',
               fontWeight: 600,
-              color: '#0F172A',
-              minWidth: '175px'
+              color: 'var(--text-primary, #1C1917)',
+              minWidth: '155px'
             }}
           >
             {customers.map((c: any) => (
@@ -1201,18 +1168,18 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
           </select>
         </div>
 
-        {/* 단가 적용 기준 */}
+        {/* 단가 기준 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            카탈로그 단가 기준
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            단가 기준
           </label>
           <div
             style={{
               display: 'flex',
-              height: '32px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
+              height: '28px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
               padding: '2px',
               gap: '2px'
             }}
@@ -1221,11 +1188,11 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               type="button"
               onClick={() => setPriceTier('DEALER')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
-                backgroundColor: priceTier === 'DEALER' ? '#1E3A8A' : 'transparent',
-                color: priceTier === 'DEALER' ? '#FFFFFF' : '#475569',
+                backgroundColor: priceTier === 'DEALER' ? '#0F172A' : 'transparent',
+                color: priceTier === 'DEALER' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -1238,11 +1205,11 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               type="button"
               onClick={() => setPriceTier('RETAIL')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
-                backgroundColor: priceTier === 'RETAIL' ? '#1E3A8A' : 'transparent',
-                color: priceTier === 'RETAIL' ? '#FFFFFF' : '#475569',
+                backgroundColor: priceTier === 'RETAIL' ? '#0F172A' : 'transparent',
+                color: priceTier === 'RETAIL' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -1255,43 +1222,43 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               type="button"
               onClick={() => setPriceTier('CUSTOM')}
               style={{
-                padding: '0 9px',
-                borderRadius: '4px',
+                padding: '0 8px',
+                borderRadius: '3px',
                 border: 'none',
-                backgroundColor: priceTier === 'CUSTOM' ? '#7C3AED' : 'transparent',
-                color: priceTier === 'CUSTOM' ? '#FFFFFF' : '#475569',
+                backgroundColor: priceTier === 'CUSTOM' ? '#0F172A' : 'transparent',
+                color: priceTier === 'CUSTOM' ? '#FFFFFF' : 'var(--text-secondary, #57534E)',
                 fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
             >
-              맞춤 지정단가
+              지정단가
             </button>
           </div>
         </div>
 
-        {/* 적용가능 지게차 모델 필터 */}
+        {/* 적용 지게차 모델 필터 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            적용가능 지게차 모델
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            적용 지게차 모델
           </label>
           <select
             value={selectedModelFilter}
             onChange={e => setSelectedModelFilter(e.target.value)}
             style={{
-              height: '32px',
-              padding: '0 10px',
-              borderRadius: '6px',
-              border: selectedModelFilter !== 'ALL' ? '1.5px solid #2563EB' : '1px solid #CBD5E1',
-              backgroundColor: selectedModelFilter !== 'ALL' ? '#EFF6FF' : '#FFFFFF',
-              fontSize: '12.5px',
-              fontWeight: 700,
-              color: '#0F172A',
-              minWidth: '220px'
+              height: '28px',
+              padding: '0 8px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--text-primary, #1C1917)',
+              minWidth: '185px'
             }}
           >
-            <option value="ALL">전체 지게차 모델 호환부품 · {catalogItems.length}종</option>
+            <option value="ALL">전체 지게차 모델 · {catalogItems.length}종</option>
             {TARGET_FORKLIFT_MODELS.map(m => (
               <option key={m.modelName} value={m.modelName}>
                 {m.label}
@@ -1300,24 +1267,24 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
           </select>
         </div>
 
-        {/* 부품 계통 분류 필터 */}
+        {/* 계통 분류 필터 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            부품 계통 분류
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            계통 분류
           </label>
           <select
             value={selectedCategoryFilter}
             onChange={e => setSelectedCategoryFilter(e.target.value)}
             style={{
-              height: '32px',
-              padding: '0 10px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
-              fontSize: '12.5px',
+              height: '28px',
+              padding: '0 8px',
+              borderRadius: '4px',
+              border: '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: 'var(--bg-card, #FDFBF7)',
+              fontSize: '12px',
               fontWeight: 600,
-              color: '#0F172A',
-              minWidth: '155px'
+              color: 'var(--text-primary, #1C1917)',
+              minWidth: '135px'
             }}
           >
             <option value="ALL">전체 계통</option>
@@ -1329,27 +1296,27 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
           </select>
         </div>
 
-        {/* 품번 · 순정품번 · 규격 통합 검색 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '185px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            티브이에이치 참조번호 · 호환품번 · 규격 검색
+        {/* 품번 · 규격 통합 검색 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '165px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            품번 · 참조번호 · 규격 검색
           </label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Search size={14} color="#64748B" style={{ position: 'absolute', left: '10px' }} />
+            <Search size={13} color="#64748B" style={{ position: 'absolute', left: '8px' }} />
             <input
               type="text"
               value={searchKeyword}
               onChange={e => setSearchKeyword(e.target.value)}
-              placeholder="예: TVH-3321603, 코보, 말레, 라바스, 7.00-12..."
+              placeholder="품번, 참조번호, 브랜드, 규격..."
               style={{
                 width: '100%',
-                height: '32px',
-                padding: '0 10px 0 30px',
-                borderRadius: '6px',
-                border: '1px solid #CBD5E1',
-                backgroundColor: '#FFFFFF',
-                fontSize: '12.5px',
-                color: '#0F172A'
+                height: '28px',
+                padding: '0 8px 0 26px',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color, #DDD6C8)',
+                backgroundColor: 'var(--bg-card, #FDFBF7)',
+                fontSize: '12px',
+                color: 'var(--text-primary, #1C1917)'
               }}
             />
           </div>
@@ -1357,100 +1324,39 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
 
         {/* 주문담긴 품목만 보기 토글 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>
-            주문서 필터
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)', whiteSpace: 'nowrap' }}>
+            주문 필터
           </label>
           <button
             type="button"
             onClick={() => setOnlySelectedOrderItems(prev => !prev)}
             style={{
-              height: '32px',
-              padding: '0 12px',
-              borderRadius: '6px',
-              border: onlySelectedOrderItems ? '1.5px solid #1D4ED8' : '1px solid #CBD5E1',
-              backgroundColor: onlySelectedOrderItems ? '#DBEAFE' : '#FFFFFF',
-              color: onlySelectedOrderItems ? '#1E3A8A' : '#334155',
-              fontSize: '12px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
+              border: onlySelectedOrderItems ? '1px solid #0F172A' : '1px solid var(--border-color, #DDD6C8)',
+              backgroundColor: onlySelectedOrderItems ? '#0F172A' : 'var(--bg-card, #FDFBF7)',
+              color: onlySelectedOrderItems ? '#FFFFFF' : 'var(--text-primary, #1C1917)',
+              fontSize: '11.5px',
               fontWeight: 700,
               cursor: 'pointer',
               whiteSpace: 'nowrap'
             }}
           >
-            주문수량 입력품목만 · {orderSummary.selectedLineCount}종
+            선택품목만 · {orderSummary.selectedLineCount}종
           </button>
         </div>
       </div>
 
-      {/* 선택된 맞춤 카탈로그 안내 배너 */}
-      {activeCustomCatalog && (
-        <div
-          style={{
-            padding: '7px 20px',
-            backgroundColor: '#EEF2FF',
-            borderBottom: '1px solid #C7D2FE',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            flexShrink: 0,
-            fontSize: '12px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: '4px',
-                backgroundColor: '#4F46E5',
-                color: '#FFFFFF',
-                fontWeight: 800,
-                fontSize: '11px',
-                flexShrink: 0
-              }}
-            >
-              {activeCustomCatalog.catalogCode}
-            </span>
-            <strong style={{ color: '#1E1B4B', fontSize: '12.5px' }}>{activeCustomCatalog.title}</strong>
-            <span style={{ color: '#4338CA', fontWeight: 600 }}>| {activeCustomCatalog.subtitle}</span>
-            {activeCustomCatalog.headerNotice && (
-              <span style={{ color: '#3730A3' }}>· {activeCustomCatalog.headerNotice}</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            {activeCustomCatalog.priceAdjustRate !== 0 && (
-              <span style={{ fontWeight: 800, color: '#6D28D9' }}>
-                단가 일괄조정 {activeCustomCatalog.priceAdjustRate > 0 ? `+${activeCustomCatalog.priceAdjustRate}%` : `${activeCustomCatalog.priceAdjustRate}%`}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => handleOpenCatalogBuilder('EDIT_CURRENT')}
-              style={{
-                padding: '3px 9px',
-                borderRadius: '4px',
-                border: '1px solid #6366F1',
-                backgroundColor: '#FFFFFF',
-                color: '#4338CA',
-                fontSize: '11.5px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              현재 카탈로그 구성 편집
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ③ 중앙 본문: 3대 레이아웃 모드 전환 (GRID_ORDER / PHOTO_BROCHURE / TECH_DRAWING) */}
-      <div style={{ flex: 1, overflow: 'auto', padding: layoutMode === 'GRID_ORDER' ? '0' : '16px 20px' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: layoutMode === 'GRID_ORDER' ? '0' : '12px 14px' }}>
         {layoutMode === 'GRID_ORDER' && (
           <table
             style={{
               width: '100%',
               borderCollapse: 'collapse',
-              fontSize: '12.5px',
-              backgroundColor: '#FFFFFF'
+              fontSize: '12px',
+              backgroundColor: 'var(--bg-card, #FDFBF7)'
             }}
           >
             <thead
@@ -1458,43 +1364,46 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                 position: 'sticky',
                 top: 0,
                 zIndex: 10,
-                backgroundColor: '#0F172A',
+                backgroundColor: '#1E293B',
                 color: '#F8FAFC'
               }}
             >
               <tr>
-                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                   상세 · 선택
                 </th>
-                <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                  실물사진 · 규격도면
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  사진
                 </th>
-                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                  티브이에이치 참조번호 / 호환품번
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  호환품번 / 참조번호
                 </th>
-                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                  계통분류 / 부품명 / 브랜드
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  계통분류
                 </th>
-                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  부품명 / 브랜드
+                </th>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
                   핵심 실측 규격
                 </th>
-                <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                  적용가능 지게차 모델
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  적용 지게차 모델
                 </th>
                 {(!activeCustomCatalog || activeCustomCatalog.showStockAndLeadTime) && (
-                  <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                    현재고 · 창고위치
+                  <th style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                    현재고 · 위치
                   </th>
                 )}
                 {(!activeCustomCatalog || activeCustomCatalog.showUnitPrice) && (
-                  <th style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
-                    {priceTier === 'DEALER' ? '대리점 공급단가' : priceTier === 'RETAIL' ? '권장 소비자단가' : '맞춤 지정단가'}
+                  <th style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                    {priceTier === 'DEALER' ? '대리점 공급단가' : priceTier === 'RETAIL' ? '권장 소비자단가' : '지정단가'}
                   </th>
                 )}
-                <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155', backgroundColor: '#1E3A8A' }}>
-                  주문수량 입력
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', borderRight: '1px solid #334155' }}>
+                  주문수량
                 </th>
-                <th style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#1E3A8A' }}>
+                <th style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
                   주문 공급가액
                 </th>
               </tr>
@@ -1505,257 +1414,152 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                 const isSelected = qty > 0;
                 const unitPrice = resolveUnitPrice(item);
                 const lineAmount = unitPrice * qty;
-                const unitMarginRate = unitPrice > 0 ? Math.round(((unitPrice - item.landedCostKrw) / unitPrice) * 100) : 0;
-                const overrideBadge = activeCustomCatalog?.itemOverrides?.[item.id]?.badgeText;
                 const showPhoto = !activeCustomCatalog || activeCustomCatalog.showRealPhoto;
-                const showDiagram = !activeCustomCatalog || activeCustomCatalog.showTechDiagram;
 
                 return (
                   <tr
                     key={item.id}
                     style={{
-                      borderBottom: '1px solid #E2E8F0',
-                      backgroundColor: isSelected ? '#EFF6FF' : idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'
+                      height: '40px',
+                      borderBottom: '1px solid var(--border-color, #DDD6C8)',
+                      backgroundColor: isSelected ? '#EFF6FF' : idx % 2 === 0 ? 'var(--bg-card, #FDFBF7)' : 'var(--bg-app, #F4F0EA)'
                     }}
                   >
                     {/* 1. 상세 액션 + 체크박스 */}
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={e => handleQtyChange(item.id, e.target.checked ? Math.max(item.moq, 1) : 0)}
-                          style={{ width: '15px', height: '15px', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }}
                         />
                         <button
                           type="button"
                           onClick={() => setActivePartDetail(item)}
                           style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid #CBD5E1',
-                            backgroundColor: '#FFFFFF',
-                            color: '#1E3A8A',
-                            fontSize: '11.5px',
+                            padding: '2px 7px',
+                            borderRadius: '3px',
+                            border: '1px solid var(--border-color, #DDD6C8)',
+                            backgroundColor: 'var(--bg-card, #FDFBF7)',
+                            color: 'var(--text-primary, #1C1917)',
+                            fontSize: '11px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
                             flexShrink: 0
                           }}
                         >
-                          도면·상세
+                          상세
                         </button>
                       </div>
                     </td>
 
-                    {/* 2. 실물사진 + 규격도면 SVG */}
-                    <td style={{ padding: '5px 8px', textAlign: 'center', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
+                    {/* 2. 사진 */}
+                    <td style={{ padding: '3px 6px', textAlign: 'center', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
                       <div
                         onClick={() => setActivePartDetail(item)}
-                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                        title="클릭하여 실물 사진 및 치수 규격 도면 확대"
+                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        {showPhoto && item.imageUrl && (
+                        {showPhoto && item.imageUrl ? (
                           <img
                             src={item.imageUrl}
                             alt={item.partName}
+                            onError={e => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                             style={{
-                              width: '56px',
-                              height: '46px',
+                              width: '38px',
+                              height: '30px',
                               objectFit: 'cover',
-                              borderRadius: '6px',
-                              border: '1px solid #CBD5E1',
+                              borderRadius: '3px',
+                              border: '1px solid var(--border-color, #DDD6C8)',
                               backgroundColor: '#FFFFFF',
                               flexShrink: 0
                             }}
                           />
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#94A3B8' }}>-</span>
                         )}
-                        {showDiagram && <PartTechnicalDiagramSvg type={item.diagramType} size="sm" />}
                       </div>
                     </td>
 
-                    {/* 3. 티브이에이치 참조번호 / 자사 호환품번 / 순정 교차품번 */}
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '12.5px', fontFamily: 'monospace' }}>
-                          {item.sku}
+                    {/* 3. 호환품번 / 참조번호 */}
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--text-primary, #1C1917)', fontSize: '12px', fontFamily: 'monospace' }}>
+                        {item.sku}
+                      </span>
+                      {item.tvhRefNo && (
+                        <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-secondary, #57534E)', fontFamily: 'monospace' }}>
+                          ({item.tvhRefNo})
                         </span>
-                        {item.tvhRefNo && (
-                          <span
-                            style={{
-                              fontSize: '10.5px',
-                              fontWeight: 800,
-                              padding: '1px 5px',
-                              borderRadius: '3px',
-                              backgroundColor: '#FEF2F2',
-                              color: '#B91C1C',
-                              border: '1px solid #FECACA',
-                              fontFamily: 'monospace'
-                            }}
-                          >
-                            {item.tvhRefNo}
-                          </span>
-                        )}
-                      </div>
-                      {(!activeCustomCatalog || activeCustomCatalog.showOemCrossRef) && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'nowrap' }}>
-                          {item.oemCrossRefCodes.slice(0, 2).map(code => (
-                            <span
-                              key={code}
-                              style={{
-                                fontSize: '10.5px',
-                                fontWeight: 600,
-                                padding: '1px 5px',
-                                borderRadius: '3px',
-                                backgroundColor: '#F1F5F9',
-                                color: '#475569',
-                                border: '1px solid #CBD5E1',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              순정호환 {code}
-                            </span>
-                          ))}
-                        </div>
                       )}
                     </td>
 
-                    {/* 4. 계통분류 / 부품명 / 브랜드 */}
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
-                        {overrideBadge && (
-                          <span
-                            style={{
-                              fontSize: '10.5px',
-                              fontWeight: 800,
-                              padding: '1px 6px',
-                              borderRadius: '3px',
-                              backgroundColor: '#7C3AED',
-                              color: '#FFFFFF',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {overrideBadge}
-                          </span>
-                        )}
-                        <span
-                          style={{
-                            fontSize: '10.5px',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '3px',
-                            backgroundColor: '#E0E7FF',
-                            color: '#1E40AF',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {item.category}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '10.5px',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '3px',
-                            backgroundColor: item.partGrade === '순정 OEM' ? '#DCFCE7' : item.partGrade === 'A급 재생 호환' ? '#FEF3C7' : '#F1F5F9',
-                            color: item.partGrade === '순정 OEM' ? '#166534' : item.partGrade === 'A급 재생 호환' ? '#92400E' : '#334155',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {item.tvhBrand ? `${item.tvhBrand} · ` : ''}{item.partGrade}
-                        </span>
-                      </div>
-                      <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                    {/* 4. 계통분류 */}
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)', fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary, #57534E)' }}>
+                      {item.category}
+                    </td>
+
+                    {/* 5. 부품명 / 브랜드 */}
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary, #1C1917)', fontSize: '12.5px' }}>
                         {item.partName}
-                      </div>
+                      </span>
+                      <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-secondary, #57534E)', fontWeight: 600 }}>
+                        · {item.tvhBrand || item.manufacturer}
+                      </span>
                     </td>
 
-                    {/* 5. 핵심 실측 규격 */}
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                      <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                        {item.specSummary}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                        제조·공급: {item.manufacturer} | 최소주문: {item.moq}{item.unitName}
-                      </div>
+                    {/* 6. 핵심 실측 규격 */}
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)', fontSize: '11.5px', color: 'var(--text-primary, #1C1917)', fontWeight: 600 }}>
+                      {item.specSummary}
                     </td>
 
-                    {/* 6. 적용가능 지게차 모델 */}
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap' }}>
-                        {item.compatibleModels.map(m => {
-                          const isMatchedModel = selectedModelFilter === m;
-                          return (
-                            <span
-                              key={m}
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                backgroundColor: isMatchedModel ? '#1D4ED8' : '#EFF6FF',
-                                color: isMatchedModel ? '#FFFFFF' : '#1E40AF',
-                                border: '1px solid #BFDBFE',
-                                whiteSpace: 'nowrap',
-                                flexShrink: 0
-                              }}
-                            >
-                              {m}
-                            </span>
-                          );
-                        })}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                        {item.tonnageRange}
-                      </div>
+                    {/* 7. 적용 지게차 모델 */}
+                    <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)', fontSize: '11.5px', color: 'var(--text-secondary, #57534E)', fontWeight: 600 }}>
+                      {item.compatibleModels.slice(0, 3).join(', ')}
+                      {item.compatibleModels.length > 3 ? ` 외 ${item.compatibleModels.length - 3}종` : ''}
                     </td>
 
-                    {/* 7. 현재고 / 창고위치 */}
+                    {/* 8. 현재고 · 위치 */}
                     {(!activeCustomCatalog || activeCustomCatalog.showStockAndLeadTime) && (
-                      <td style={{ padding: '7px 10px', textAlign: 'center', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                        <div style={{ fontWeight: 800, color: item.stockQty <= 5 ? '#DC2626' : '#15803D', fontSize: '12.5px' }}>
-                          {item.stockQty.toLocaleString()} {item.unitName}
-                        </div>
-                        <div style={{ fontSize: '10.5px', color: '#64748B', whiteSpace: 'nowrap' }}>
-                          {item.warehouseLocation}
-                        </div>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
+                        <span style={{ fontWeight: 800, color: item.stockQty <= 5 ? '#B91C1C' : 'var(--text-primary, #1C1917)', fontSize: '12px' }}>
+                          {item.stockQty.toLocaleString()}{item.unitName}
+                        </span>
+                        <span style={{ marginLeft: '5px', fontSize: '11px', color: 'var(--text-secondary, #57534E)' }}>
+                          · {item.warehouseLocation}
+                        </span>
                       </td>
                     )}
 
-                    {/* 8. 적용 단가 */}
+                    {/* 9. 공급단가 */}
                     {(!activeCustomCatalog || activeCustomCatalog.showUnitPrice) && (
-                      <td style={{ padding: '7px 10px', textAlign: 'right', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                        <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '13.5px' }}>
-                          ₩{unitPrice.toLocaleString()}
-                        </div>
-                        <div style={{ fontSize: '10.5px', color: '#64748B', whiteSpace: 'nowrap' }}>
-                          {priceTier === 'DEALER'
-                            ? `소비자가 ₩${item.retailPriceKrw.toLocaleString()}`
-                            : `대리점가 ₩${item.dealerPriceKrw.toLocaleString()}`}{' '}
-                          · 이익률 {unitMarginRate}%
-                        </div>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)', fontWeight: 800, color: 'var(--text-primary, #1C1917)', fontSize: '12.5px', fontVariantNumeric: 'tabular-nums' }}>
+                        ₩{unitPrice.toLocaleString()}
                       </td>
                     )}
 
-                    {/* 9. 인라인 주문수량 스테퍼 */}
-                    <td style={{ padding: '7px 10px', textAlign: 'center', whiteSpace: 'nowrap', borderRight: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {/* 10. 인라인 주문수량 스테퍼 */}
+                    <td style={{ padding: '4px 8px', textAlign: 'center', whiteSpace: 'nowrap', borderRight: '1px solid var(--border-color, #DDD6C8)' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                         <button
                           type="button"
                           onClick={() => handleQtyChange(item.id, qty - 1)}
                           style={{
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '4px',
-                            border: '1px solid #CBD5E1',
-                            backgroundColor: '#FFFFFF',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '3px',
+                            border: '1px solid var(--border-color, #DDD6C8)',
+                            backgroundColor: 'var(--bg-card, #FDFBF7)',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}
                         >
-                          <Minus size={13} />
+                          <Minus size={12} />
                         </button>
                         <input
                           type="number"
@@ -1763,44 +1567,45 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                           value={qty}
                           onChange={e => handleQtyChange(item.id, Number(e.target.value))}
                           style={{
-                            width: '52px',
-                            height: '26px',
+                            width: '44px',
+                            height: '22px',
                             textAlign: 'center',
-                            borderRadius: '4px',
-                            border: isSelected ? '1.5px solid #2563EB' : '1px solid #CBD5E1',
+                            borderRadius: '3px',
+                            border: isSelected ? '1px solid #1D4ED8' : '1px solid var(--border-color, #DDD6C8)',
                             fontWeight: 800,
-                            fontSize: '13px',
-                            color: isSelected ? '#1D4ED8' : '#0F172A'
+                            fontSize: '12px',
+                            color: isSelected ? '#1D4ED8' : 'var(--text-primary, #1C1917)'
                           }}
                         />
                         <button
                           type="button"
                           onClick={() => handleQtyChange(item.id, qty + 1)}
                           style={{
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '4px',
-                            border: '1px solid #CBD5E1',
-                            backgroundColor: '#FFFFFF',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '3px',
+                            border: '1px solid var(--border-color, #DDD6C8)',
+                            backgroundColor: 'var(--bg-card, #FDFBF7)',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}
                         >
-                          <Plus size={13} />
+                          <Plus size={12} />
                         </button>
                       </div>
                     </td>
 
-                    {/* 10. 주문 공급가액 */}
+                    {/* 11. 주문 공급가액 */}
                     <td
                       style={{
-                        padding: '7px 12px',
+                        padding: '4px 10px',
                         textAlign: 'right',
                         whiteSpace: 'nowrap',
                         fontWeight: 800,
-                        fontSize: '13.5px',
+                        fontSize: '12.5px',
+                        fontVariantNumeric: 'tabular-nums',
                         color: isSelected ? '#1D4ED8' : '#94A3B8'
                       }}
                     >
@@ -1818,89 +1623,64 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-              gap: '14px'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '12px'
             }}
           >
             {filteredCatalog.map(item => {
               const qty = orderQuantities[item.id] || 0;
               const isSelected = qty > 0;
               const unitPrice = resolveUnitPrice(item);
-              const overrideBadge = activeCustomCatalog?.itemOverrides?.[item.id]?.badgeText;
 
               return (
                 <div
                   key={item.id}
                   style={{
-                    backgroundColor: '#FFFFFF',
-                    border: isSelected ? '2px solid #2563EB' : '1px solid #CBD5E1',
-                    borderRadius: '8px',
-                    padding: '14px',
+                    backgroundColor: 'var(--bg-card, #FDFBF7)',
+                    border: isSelected ? '1.5px solid #1D4ED8' : '1px solid var(--border-color, #DDD6C8)',
+                    borderRadius: '6px',
+                    padding: '12px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    gap: '10px'
+                    gap: '8px'
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {overrideBadge && (
-                          <span
-                            style={{
-                              fontSize: '10.5px',
-                              fontWeight: 800,
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              backgroundColor: '#7C3AED',
-                              color: '#FFFFFF'
-                            }}
-                          >
-                            {overrideBadge}
-                          </span>
-                        )}
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            padding: '2px 7px',
-                            borderRadius: '4px',
-                            backgroundColor: '#FEF2F2',
-                            color: '#B91C1C',
-                            fontFamily: 'monospace'
-                          }}
-                        >
-                          {item.tvhBrand || 'TVH'} · {item.tvhRefNo || item.sku}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569' }}>{item.category}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary, #1C1917)', fontFamily: 'monospace' }}>
+                        {item.tvhBrand || 'TVH'} · {item.tvhRefNo || item.sku}
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary, #57534E)' }}>{item.category}</span>
                     </div>
 
-                    {/* 실물 사진 + 기술 도면 나란히 배치 */}
                     <div
                       onClick={() => setActivePartDetail(item)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '10px',
-                        padding: '8px',
-                        backgroundColor: '#F8FAFC',
-                        border: '1px solid #E2E8F0',
-                        borderRadius: '6px',
+                        padding: '6px',
+                        backgroundColor: 'var(--bg-app, #F4F0EA)',
+                        border: '1px solid var(--border-color, #DDD6C8)',
+                        borderRadius: '4px',
                         cursor: 'pointer',
-                        marginBottom: '10px'
+                        marginBottom: '8px'
                       }}
                     >
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
                           alt={item.partName}
+                          onError={e => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                           style={{
-                            width: '120px',
-                            height: '86px',
+                            width: '108px',
+                            height: '78px',
                             objectFit: 'cover',
                             borderRadius: '4px',
-                            border: '1px solid #CBD5E1',
+                            border: '1px solid var(--border-color, #DDD6C8)',
                             backgroundColor: '#FFFFFF',
                             flexShrink: 0
                           }}
@@ -1908,50 +1688,35 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                       )}
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                         <PartTechnicalDiagramSvg type={item.diagramType} size="sm" />
-                        <span style={{ fontSize: '10.5px', color: '#1E3A8A', fontWeight: 700 }}>상세 도면 · 스펙 보기</span>
+                        <span style={{ fontSize: '10.5px', color: 'var(--text-secondary, #57534E)', fontWeight: 700 }}>상세 도면 · 스펙</span>
                       </div>
                     </div>
 
-                    <div style={{ fontWeight: 800, fontSize: '14px', color: '#0F172A', marginBottom: '4px' }}>
+                    <div style={{ fontWeight: 800, fontSize: '13.5px', color: 'var(--text-primary, #1C1917)', marginBottom: '3px' }}>
                       {item.partName}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#334155', fontWeight: 600, marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary, #57534E)', fontWeight: 600, marginBottom: '4px' }}>
                       {item.specSummary}
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                      {item.compatibleModels.map(m => (
-                        <span
-                          key={m}
-                          style={{
-                            fontSize: '10.5px',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '3px',
-                            backgroundColor: '#EFF6FF',
-                            color: '#1E40AF',
-                            border: '1px solid #BFDBFE'
-                          }}
-                        >
-                          {m}
-                        </span>
-                      ))}
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary, #57534E)', fontWeight: 600 }}>
+                      적용모델: {item.compatibleModels.join(', ')}
                     </div>
                   </div>
 
                   <div
                     style={{
-                      paddingTop: '10px',
-                      borderTop: '1px solid #E2E8F0',
+                      paddingTop: '8px',
+                      borderTop: '1px solid var(--border-color, #DDD6C8)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>
-                        적용단가 · 재고 {item.stockQty}{item.unitName}
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary, #57534E)', fontWeight: 600 }}>
+                        단가 · 재고 {item.stockQty}{item.unitName}
                       </div>
-                      <div style={{ fontSize: '15px', fontWeight: 900, color: '#0F172A' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-primary, #1C1917)' }}>
                         ₩{unitPrice.toLocaleString()}
                       </div>
                     </div>
@@ -1960,11 +1725,11 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                         type="button"
                         onClick={() => handleQtyChange(item.id, qty - 1)}
                         style={{
-                          width: '28px',
-                          height: '28px',
+                          width: '26px',
+                          height: '26px',
                           borderRadius: '4px',
-                          border: '1px solid #CBD5E1',
-                          backgroundColor: '#FFFFFF',
+                          border: '1px solid var(--border-color, #DDD6C8)',
+                          backgroundColor: 'var(--bg-card, #FDFBF7)',
                           cursor: 'pointer'
                         }}
                       >
@@ -1976,24 +1741,24 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                         value={qty}
                         onChange={e => handleQtyChange(item.id, Number(e.target.value))}
                         style={{
-                          width: '54px',
-                          height: '28px',
+                          width: '50px',
+                          height: '26px',
                           textAlign: 'center',
                           borderRadius: '4px',
-                          border: isSelected ? '1.5px solid #2563EB' : '1px solid #CBD5E1',
+                          border: isSelected ? '1.5px solid #1D4ED8' : '1px solid var(--border-color, #DDD6C8)',
                           fontWeight: 800,
-                          fontSize: '13px'
+                          fontSize: '12.5px'
                         }}
                       />
                       <button
                         type="button"
                         onClick={() => handleQtyChange(item.id, qty + 1)}
                         style={{
-                          width: '28px',
-                          height: '28px',
+                          width: '26px',
+                          height: '26px',
                           borderRadius: '4px',
-                          border: '1px solid #CBD5E1',
-                          backgroundColor: '#FFFFFF',
+                          border: '1px solid var(--border-color, #DDD6C8)',
+                          backgroundColor: 'var(--bg-card, #FDFBF7)',
                           cursor: 'pointer'
                         }}
                       >
@@ -2009,7 +1774,7 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
 
         {/* 레이아웃 3: 기술 치수 도면 대장 뷰 (TECH_DRAWING) */}
         {layoutMode === 'TECH_DRAWING' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(520px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', gap: '12px' }}>
             {filteredCatalog.map(item => {
               const qty = orderQuantities[item.id] || 0;
               const isSelected = qty > 0;
@@ -2019,46 +1784,49 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                 <div
                   key={item.id}
                   style={{
-                    backgroundColor: '#FFFFFF',
-                    border: isSelected ? '2px solid #2563EB' : '1px solid #CBD5E1',
-                    borderRadius: '8px',
-                    padding: '16px',
+                    backgroundColor: 'var(--bg-card, #FDFBF7)',
+                    border: isSelected ? '1.5px solid #1D4ED8' : '1px solid var(--border-color, #DDD6C8)',
+                    borderRadius: '6px',
+                    padding: '14px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px'
+                    gap: '10px'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                     <div>
-                      <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#1D4ED8', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-secondary, #57534E)', fontFamily: 'monospace' }}>
                         {item.sku} · {item.tvhRefNo || '-'} · {item.tvhBrand || item.manufacturer}
                       </div>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary, #1C1917)', marginTop: '2px' }}>
                         {item.partName}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 900, color: '#0F172A' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-primary, #1C1917)' }}>
                         ₩{unitPrice.toLocaleString()}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#64748B' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary, #57534E)' }}>
                         재고 {item.stockQty}{item.unitName} · {item.warehouseLocation}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <PartTechnicalDiagramSvg type={item.diagramType} size="lg" />
                     {item.imageUrl && (
                       <img
                         src={item.imageUrl}
                         alt={item.partName}
+                        onError={e => {
+                          e.currentTarget.style.display = 'none';
+                        }}
                         style={{
-                          width: '130px',
-                          height: '140px',
+                          width: '120px',
+                          height: '130px',
                           objectFit: 'cover',
-                          borderRadius: '6px',
-                          border: '1px solid #CBD5E1',
+                          borderRadius: '4px',
+                          border: '1px solid var(--border-color, #DDD6C8)',
                           flexShrink: 0
                         }}
                       />
@@ -2066,20 +1834,20 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                     <table style={{ flex: 1, borderCollapse: 'collapse', fontSize: '11.5px' }}>
                       <tbody>
                         {item.detailedSpecs.map((sp, i) => (
-                          <tr key={i} style={{ borderBottom: '1px solid #E2E8F0', borderTop: i === 0 ? '1px solid #CBD5E1' : 'none' }}>
+                          <tr key={i} style={{ borderBottom: '1px solid var(--border-color, #DDD6C8)', borderTop: i === 0 ? '1px solid var(--border-color, #DDD6C8)' : 'none' }}>
                             <th
                               style={{
-                                padding: '5px 8px',
-                                backgroundColor: '#F8FAFC',
+                                padding: '4px 8px',
+                                backgroundColor: 'var(--bg-app, #F4F0EA)',
                                 textAlign: 'left',
-                                color: '#334155',
+                                color: 'var(--text-secondary, #57534E)',
                                 fontWeight: 700,
                                 whiteSpace: 'nowrap'
                               }}
                             >
                               {sp.label}
                             </th>
-                            <td style={{ padding: '5px 8px', color: '#0F172A', fontWeight: 600 }}>{sp.value}</td>
+                            <td style={{ padding: '4px 8px', color: 'var(--text-primary, #1C1917)', fontWeight: 600 }}>{sp.value}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -2092,26 +1860,26 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       paddingTop: '8px',
-                      borderTop: '1px solid #E2E8F0',
-                      fontSize: '12px'
+                      borderTop: '1px solid var(--border-color, #DDD6C8)',
+                      fontSize: '11.5px'
                     }}
                   >
-                    <div style={{ color: '#334155', fontWeight: 600 }}>
-                      호환 모델: <strong style={{ color: '#1E40AF' }}>{item.compatibleModels.join(', ')}</strong> · 순정교차: {item.oemCrossRefCodes.join(', ')}
+                    <div style={{ color: 'var(--text-secondary, #57534E)', fontWeight: 600 }}>
+                      호환 모델: <strong style={{ color: 'var(--text-primary, #1C1917)' }}>{item.compatibleModels.join(', ')}</strong> · 순정교차: {item.oemCrossRefCodes.join(', ')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <span style={{ fontWeight: 700, color: '#0F172A' }}>주문수량:</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary, #1C1917)' }}>주문수량:</span>
                       <input
                         type="number"
                         min={0}
                         value={qty}
                         onChange={e => handleQtyChange(item.id, Number(e.target.value))}
                         style={{
-                          width: '60px',
-                          height: '28px',
+                          width: '56px',
+                          height: '26px',
                           textAlign: 'center',
                           borderRadius: '4px',
-                          border: isSelected ? '1.5px solid #2563EB' : '1px solid #CBD5E1',
+                          border: isSelected ? '1.5px solid #1D4ED8' : '1px solid var(--border-color, #DDD6C8)',
                           fontWeight: 800
                         }}
                       />
@@ -2127,66 +1895,59 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
       {/* ④ 우하단 대차대조 합계 검증 및 최종 수주 확정 바 (Gutenberg Z-Pattern Terminal Action) */}
       <div
         style={{
-          padding: '12px 20px',
+          padding: '8px 14px',
           backgroundColor: '#0F172A',
           color: '#FFFFFF',
-          borderTop: '2px solid #1E3A8A',
+          borderTop: '1px solid #1E293B',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px',
+          gap: '12px',
           flexShrink: 0,
           flexWrap: 'wrap'
         }}
       >
         {/* 대차대조 검증식 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', whiteSpace: 'nowrap' }}>
-          <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#93C5FD' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', whiteSpace: 'nowrap', fontSize: '12px' }}>
+          <span style={{ fontWeight: 700, color: '#CBD5E1' }}>
             선택 품목: <strong style={{ color: '#FFFFFF' }}>{orderSummary.selectedLineCount}종 ({orderSummary.totalUnitQty}점)</strong>
-          </div>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#E2E8F0' }}>
-            총 주문합계 <strong style={{ color: '#38BDF8', fontSize: '15px' }}>₩{orderSummary.totalOrderAmount.toLocaleString()}</strong>
+          </span>
+          <span style={{ color: '#475569' }}>|</span>
+          <span style={{ fontWeight: 700, color: '#E2E8F0' }}>
+            총 주문합계 <strong style={{ color: '#38BDF8', fontSize: '13.5px' }}>₩{orderSummary.totalOrderAmount.toLocaleString()}</strong>
             {' = '}
             공급가액 <strong>₩{orderSummary.supplyAmount.toLocaleString()}</strong>
             {' + '}
             부가세 <strong>₩{orderSummary.vatAmount.toLocaleString()}</strong>
-          </div>
-          <div
-            style={{
-              padding: '4px 10px',
-              borderRadius: '4px',
-              backgroundColor: 'rgba(16, 185, 129, 0.18)',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              color: '#6EE7B7',
-              fontSize: '12px',
-              fontWeight: 700
-            }}
-          >
-            예상 매출이익 ₩{orderSummary.expectedGrossProfit.toLocaleString()} · 이익률 {orderSummary.marginRate.toFixed(1)}% · 원가차액 ₩0
- </div>
+          </span>
+          <span style={{ color: '#475569' }}>|</span>
+          <span style={{ fontWeight: 700, color: '#CBD5E1' }}>
+            예상 매출이익 <strong style={{ color: '#34D399' }}>₩{orderSummary.expectedGrossProfit.toLocaleString()}</strong> · 이익률 {orderSummary.marginRate.toFixed(1)}% · 원가차액 ₩0
+          </span>
         </div>
 
         {/* 우하단 최종 완결 버튼군 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => setOrderQuantities({})}
             style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
+              height: '28px',
+              padding: '0 10px',
+              borderRadius: '4px',
               border: '1px solid #475569',
               backgroundColor: '#1E293B',
               color: '#CBD5E1',
-              fontSize: '12.5px',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '4px',
               whiteSpace: 'nowrap'
             }}
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={13} />
             <span>수량 초기화</span>
           </button>
 
@@ -2197,21 +1958,22 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
               setShowOrderSheetPrintModal(true);
             }}
             style={{
-              padding: '8px 14px',
-              borderRadius: '6px',
-              border: '1px solid #60A5FA',
-              backgroundColor: '#1E3A8A',
+              height: '28px',
+              padding: '0 12px',
+              borderRadius: '4px',
+              border: '1px solid #475569',
+              backgroundColor: '#1E293B',
               color: '#FFFFFF',
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap'
             }}
           >
-            <Printer size={15} />
+            <Printer size={13} />
             <span>주문서 발행</span>
           </button>
 
@@ -2220,230 +1982,26 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
             disabled={isSubmittingOrder}
             onClick={handleConfirmErpSalesOrder}
             style={{
-              padding: '8px 18px',
-              borderRadius: '6px',
-              border: '1px solid #3B82F6',
+              height: '28px',
+              padding: '0 14px',
+              borderRadius: '4px',
+              border: '1px solid #2563EB',
               backgroundColor: '#2563EB',
               color: '#FFFFFF',
-              fontSize: '13.5px',
+              fontSize: '12.5px',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               whiteSpace: 'nowrap'
             }}
           >
-            <CheckCircle2 size={16} />
+            <CheckCircle2 size={14} />
             <span>{isSubmittingOrder ? '수주 생성 중...' : '수주 확정'}</span>
           </button>
         </div>
       </div>
-
-      {/* 모달 1: 호환부품 전문 기업 벤치마킹 · HTML/CSS 분석 · 자체 카탈로그 전환 전략 */}
-      {showStrategyModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px'
-          }}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '1180px',
-              maxHeight: '90dvh',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '10px',
-              border: '1px solid #CBD5E1',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
-            <div
-              style={{
-                padding: '16px 22px',
-                backgroundColor: '#0F172A',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}
-            >
-              <div>
-                <h2 style={{ fontSize: '17px', fontWeight: 800, margin: 0 }}>
-                  호환부품 카탈로그 전환 전략
- </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowStrategyModal(false)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#CBD5E1',
-                  cursor: 'pointer',
-                  padding: '4px'
-                }}
-              >
-                <X size={22} />
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* 섹션 A: 자체 카탈로그 겸 주문서 전환 4단계 전략 */}
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                  Ⅰ. 자체 카탈로그 겸 주문서 전환 4단계 핵심 전략
- </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  {CATALOG_TO_ORDER_STRATEGY.map(phase => (
-                    <div
-                      key={phase.stepNumber}
-                      style={{
-                        padding: '14px 16px',
-                        borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
-                        backgroundColor: '#F8FAFC'
-                      }}
-                    >
-                      <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1E3A8A', marginBottom: '4px' }}>
-                        {phase.phaseTitle}
-                      </div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                        목표: {phase.coreObjective}
-                      </div>
-                      <ul style={{ margin: '0 0 8px 16px', padding: 0, fontSize: '12px', color: '#334155', lineHeight: 1.55 }}>
-                        {phase.keyExecutionItems.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                      <div
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: '4px',
-                          backgroundColor: '#EFF6FF',
-                          color: '#1D4ED8',
-                          fontSize: '11.5px',
-                          fontWeight: 700
-                        }}
-                      >
-                        기대 편익: {phase.expectedBusinessImpact}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 섹션 B: 호환부품 전문 판매 기업 4대 벤치마킹 및 HTML/CSS 구조 분석 */}
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                  Ⅱ. 호환부품 전문 판매 기업 벤치마킹 및 판매사이트 HTML/CSS 구조 분석
- </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {BENCHMARK_PARTS_COMPANIES.map(comp => (
-                    <div
-                      key={comp.id}
-                      style={{
-                        padding: '16px',
-                        borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
-                        backgroundColor: '#FFFFFF'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A' }}>{comp.companyName}</span>
-                          <span
-                            style={{
-                              fontSize: '11.5px',
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: '#F1F5F9',
-                              color: '#334155'
-                            }}
-                          >
-                            {comp.countryOrigin} · {comp.domainUrl}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1D4ED8' }}>{comp.pricingModel}</span>
-                      </div>
-
-                      <div style={{ fontSize: '12.5px', color: '#334155', marginBottom: '10px' }}>
-                        <strong>전문 영역:</strong> {comp.specialization} | <strong>주요 취급 브랜드:</strong> {comp.targetBrands.join(', ')}
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1.1fr 1fr',
-                          gap: '12px',
-                          padding: '10px 12px',
-                          borderRadius: '6px',
-                          backgroundColor: '#0F172A',
-                          color: '#E2E8F0',
-                          fontSize: '11.5px'
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 800, color: '#38BDF8', marginBottom: '4px' }}>
-                            판매사이트 DOM · CSS 셀렉터 구조 분석
- </div>
-                          <div>• 목록 컨테이너: <code>{comp.htmlCssDomArchitecture.listContainerDom}</code></div>
-                          <div>• 상품 카드 DOM: <code>{comp.htmlCssDomArchitecture.itemCardDom}</code></div>
-                          <div>• 상세 규격 DOM: <code>{comp.htmlCssDomArchitecture.detailSpecDom}</code></div>
-                          <div>• CSS 특징: {comp.htmlCssDomArchitecture.cssLayoutCharacteristics}</div>
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, color: '#FBBF24', marginBottom: '4px' }}>
-                            실제 수집된 HTML 스니펫
- </div>
-                          <pre
-                            style={{
-                              margin: 0,
-                              padding: '6px 8px',
-                              backgroundColor: '#1E293B',
-                              borderRadius: '4px',
-                              fontSize: '10.5px',
-                              overflowX: 'auto',
-                              color: '#A7F3D0'
-                            }}
-                          >
-                            {comp.htmlCssDomArchitecture.crawledSampleHtmlSnippet}
-                          </pre>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: '10px',
-                          padding: '8px 12px',
-                          borderRadius: '6px',
-                          backgroundColor: '#EFF6FF',
-                          border: '1px solid #BFDBFE',
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          color: '#1E3A8A'
-                        }}
-                      >
-                        당사 자체 카탈로그 겸 주문서 반영 포인트: {comp.ourConversionTakeaway}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 모달 2: 개별 호환부품 실물사진 · 정밀 치수 도면 및 적용기종 상세 모달 */}
       {activePartDetail && (
@@ -2523,6 +2081,9 @@ export const CompatiblePartsCatalogOrderPage: React.FC = () => {
                   <img
                     src={activePartDetail.imageUrl}
                     alt={activePartDetail.partName}
+                    onError={e => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                     style={{
                       width: '180px',
                       height: '140px',
