@@ -248,6 +248,275 @@ async function generateKoreanSpecSheetPdf(spec: FlModelTechnicalSpec): Promise<v
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+// 고해상도 A4 가로 제원 비교표 PDF 생성기
+async function generateCompareSpecsPdf(models: FlModelTechnicalSpec[]): Promise<void> {
+  if (models.length === 0) return;
+
+  const width = 1754; // A4 Landscape 150 DPI
+  const height = 1240;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // 배경
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, width, height);
+
+  // 상단 헤더 바
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(0, 0, width, 130);
+
+  ctx.fillStyle = '#60A5FA';
+  ctx.font = 'bold 20px "Pretendard", "Malgun Gothic", sans-serif';
+  ctx.fillText('지게차 제원 · 매뉴얼 보관함 공식 출력물', 50, 44);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 34px "Pretendard", "Malgun Gothic", sans-serif';
+  const modelNamesSummary = models.map(m => m.modelName).join(' vs ');
+  ctx.fillText(`지게차 모델별 상세 제원 비교표 · ${models.length}종`, 50, 92);
+
+  ctx.fillStyle = '#CBD5E1';
+  ctx.font = '600 16px "Pretendard", "Malgun Gothic", sans-serif';
+  ctx.fillText(`비교 대상: ${modelNamesSummary}`, width - 50 - Math.min(ctx.measureText(`비교 대상: ${modelNamesSummary}`).width, 700), 92);
+
+  const tableLeft = 50;
+  const tableTop = 154;
+  const tableWidth = width - 100;
+  const labelColWidth = 240;
+  const displayModels = models.slice(0, 6);
+  const modelColWidth = Math.floor((tableWidth - labelColWidth) / displayModels.length);
+
+  // 테이블 헤더
+  const headerH = 66;
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(tableLeft, tableTop, tableWidth, headerH);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 17px "Pretendard", "Malgun Gothic", sans-serif';
+  ctx.fillText('비교 제원 항목', tableLeft + 16, tableTop + 40);
+
+  displayModels.forEach((m, i) => {
+    const colX = tableLeft + labelColWidth + i * modelColWidth;
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(colX, tableTop);
+    ctx.lineTo(colX, tableTop + headerH);
+    ctx.stroke();
+
+    ctx.fillStyle = '#93C5FD';
+    ctx.font = 'bold 13px "Pretendard", "Malgun Gothic", sans-serif';
+    ctx.fillText(`${m.manufacturerName} · ${m.originCountry}`, colX + 14, tableTop + 25);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 19px "Pretendard", "Malgun Gothic", sans-serif';
+    ctx.fillText(m.modelName, colX + 14, tableTop + 50);
+  });
+
+  const compareRows: { label: string; render: (m: FlModelTechnicalSpec) => string }[] = [
+    { label: '시리즈명', render: m => m.seriesName },
+    { label: '차종 / 동력방식', render: m => `${m.equipmentClass} / ${m.powerType}` },
+    { label: '정격 적재하중', render: m => `${m.ratedCapacityKg.toLocaleString()} kg · 하중중심 ${m.loadCenterMm} mm` },
+    { label: '표준 / 최대 인상높이', render: m => `${m.standardLiftHeightMm.toLocaleString()} mm / ${m.maxOptionLiftHeightMm.toLocaleString()} mm` },
+    { label: '포크 규격', render: m => `${m.forkDimensionsMm} mm` },
+    { label: '차체 치수 (전장×전폭×전고)', render: m => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
+    { label: '최소 회전반경', render: m => `${m.turningRadiusMm.toLocaleString()} mm` },
+    { label: '직각 적재 통로폭', render: m => `${m.aisleWidth1000x1200Mm.toLocaleString()} mm` },
+    { label: '주행속도 / 인상속도', render: m => `${m.travelSpeedKmh} km/h | ${m.liftingSpeedMms} mm/s` },
+    { label: '최대 등판능력', render: m => `${m.gradeabilityPercent} %` },
+    { label: '장비 자중', render: m => `${m.serviceWeightKg.toLocaleString()} kg` },
+    { label: '배터리 / 엔진 사양', render: m => m.powerSpecDetail },
+    { label: '충전기 / 연료·변속기', render: m => m.chargerOrFuelDetail },
+    { label: '제동장치 / 방수등급', render: m => `${m.brakeType} / ${m.waterproofRating}` },
+    { label: '공식 보증기간', render: m => m.warrantyTerms }
+  ];
+
+  const rowH = 60;
+  let currentY = tableTop + headerH;
+
+  const truncateText = (text: string, maxW: number) => {
+    if (ctx.measureText(text).width <= maxW) return text;
+    let s = text;
+    while (s.length > 0 && ctx.measureText(s + '...').width > maxW) {
+      s = s.slice(0, -1);
+    }
+    return s + '...';
+  };
+
+  compareRows.forEach((row, idx) => {
+    ctx.fillStyle = idx % 2 === 0 ? '#F8FAFC' : '#FFFFFF';
+    ctx.fillRect(tableLeft, currentY, tableWidth, rowH);
+
+    // 좌측 항목 라벨 셀
+    ctx.fillStyle = '#EFF6FF';
+    ctx.fillRect(tableLeft, currentY, labelColWidth, rowH);
+
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tableLeft, currentY, tableWidth, rowH);
+
+    ctx.fillStyle = '#1E3A8A';
+    ctx.font = 'bold 15px "Pretendard", "Malgun Gothic", sans-serif';
+    ctx.fillText(row.label, tableLeft + 16, currentY + 36);
+
+    displayModels.forEach((m, i) => {
+      const colX = tableLeft + labelColWidth + i * modelColWidth;
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.beginPath();
+      ctx.moveTo(colX, currentY);
+      ctx.lineTo(colX, currentY + rowH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '600 14.5px "Pretendard", "Malgun Gothic", sans-serif';
+      const val = row.render(m);
+      const maxCellW = modelColWidth - 24;
+      if (ctx.measureText(val).width <= maxCellW) {
+        ctx.fillText(val, colX + 12, currentY + 36);
+      } else {
+        // 2줄 분할 렌더링
+        let splitIdx = Math.floor(val.length / 2);
+        for (let k = 1; k < val.length; k++) {
+          if (ctx.measureText(val.slice(0, k)).width > maxCellW) {
+            splitIdx = k - 1;
+            break;
+          }
+        }
+        const line1 = val.slice(0, splitIdx);
+        const line2 = truncateText(val.slice(splitIdx).trim(), maxCellW);
+        ctx.fillText(line1, colX + 12, currentY + 25);
+        ctx.fillText(line2, colX + 12, currentY + 46);
+      }
+    });
+
+    currentY += rowH;
+  });
+
+  // 하단 푸터
+  ctx.fillStyle = '#64748B';
+  ctx.font = '500 14px "Pretendard", "Malgun Gothic", sans-serif';
+  ctx.fillText(
+    `발급일시: ${new Date().toISOString().split('T')[0]} | 지게차 제원 · 매뉴얼 보관함 비교 출력물`,
+    50,
+    height - 26
+  );
+
+  const pngBytes: Uint8Array = await new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (!blob) return reject(new Error('캔버스 변환 실패'));
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(blob);
+    }, 'image/png');
+  });
+
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([841.89, 595.28]); // A4 Landscape
+  const pngImage = await pdfDoc.embedPng(pngBytes);
+  page.drawImage(pngImage, {
+    x: 0,
+    y: 0,
+    width: 841.89,
+    height: 595.28
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `지게차_제원비교표_${displayModels.map(m => m.modelName).join('_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// 제원 비교표 브라우저 인쇄 창 즉시 호출
+function printCompareSpecsTable(models: FlModelTechnicalSpec[]): void {
+  if (models.length === 0) return;
+  const compareRows: { label: string; render: (m: FlModelTechnicalSpec) => string }[] = [
+    { label: '시리즈명', render: m => m.seriesName },
+    { label: '차종 / 동력방식', render: m => `${m.equipmentClass} / ${m.powerType}` },
+    { label: '정격 적재하중', render: m => `${m.ratedCapacityKg.toLocaleString()} kg · 하중중심 ${m.loadCenterMm} mm` },
+    { label: '표준 / 최대 인상높이', render: m => `${m.standardLiftHeightMm.toLocaleString()} mm / ${m.maxOptionLiftHeightMm.toLocaleString()} mm` },
+    { label: '포크 규격', render: m => `${m.forkDimensionsMm} mm` },
+    { label: '차체 치수 (전장×전폭×전고)', render: m => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
+    { label: '최소 회전반경', render: m => `${m.turningRadiusMm.toLocaleString()} mm` },
+    { label: '직각 적재 통로폭', render: m => `${m.aisleWidth1000x1200Mm.toLocaleString()} mm` },
+    { label: '주행속도 / 인상속도', render: m => `${m.travelSpeedKmh} km/h | ${m.liftingSpeedMms} mm/s` },
+    { label: '최대 등판능력', render: m => `${m.gradeabilityPercent} %` },
+    { label: '장비 자중', render: m => `${m.serviceWeightKg.toLocaleString()} kg` },
+    { label: '배터리 / 엔진 사양', render: m => m.powerSpecDetail },
+    { label: '충전기 / 연료·변속기', render: m => m.chargerOrFuelDetail },
+    { label: '제동장치 / 방수등급', render: m => `${m.brakeType} / ${m.waterproofRating}` },
+    { label: '공식 보증기간', render: m => m.warrantyTerms }
+  ];
+
+  const win = window.open('', '_blank', 'width=1200,height=850');
+  if (!win) return;
+
+  const thCells = models
+    .map(
+      m =>
+        `<th style="padding:10px 12px;text-align:left;background:#0F172A;color:#FFFFFF;border:1px solid #334155;">
+          <div style="font-size:11px;color:#93C5FD;font-weight:700;">${m.manufacturerName} · ${m.originCountry}</div>
+          <div style="font-size:15px;font-weight:900;margin-top:2px;">${m.modelName}</div>
+        </th>`
+    )
+    .join('');
+
+  const bodyRows = compareRows
+    .map(
+      (row, idx) =>
+        `<tr style="background:${idx % 2 === 0 ? '#F8FAFC' : '#FFFFFF'};">
+          <td style="padding:8px 12px;font-weight:800;color:#1E3A8A;background:#EFF6FF;border:1px solid #CBD5E1;white-space:nowrap;">${row.label}</td>
+          ${models
+            .map(
+              m =>
+                `<td style="padding:8px 12px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">${row.render(m)}</td>`
+            )
+            .join('')}
+        </tr>`
+    )
+    .join('');
+
+  win.document.write(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>지게차 모델별 제원 비교표</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: "Pretendard", "Malgun Gothic", sans-serif; color: #0F172A; margin: 0; padding: 16px; }
+    h1 { margin: 0 0 6px 0; font-size: 20px; font-weight: 900; }
+    .meta { font-size: 12px; color: #475569; margin-bottom: 14px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>지게차 모델별 제원 비교표 (${models.length}종)</h1>
+  <div class="meta">출력일시: ${new Date().toISOString().split('T')[0]} | 비교 모델: ${models.map(m => `${m.manufacturerName} ${m.modelName}`).join(', ')}</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="padding:10px 12px;text-align:left;width:180px;background:#0F172A;color:#FFFFFF;border:1px solid #334155;">비교 제원 항목</th>
+        ${thCells}
+      </tr>
+    </thead>
+    <tbody>
+      ${bodyRows}
+    </tbody>
+  </table>
+  <script>
+    window.onload = function() { window.print(); };
+  </script>
+</body>
+</html>`);
+  win.document.close();
+}
+
 export const ForkliftDocArchivePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'MODELS' | 'COMPARE' | 'DOCUMENTS'>('MODELS');
 
@@ -426,31 +695,44 @@ export const ForkliftDocArchivePage: React.FC = () => {
     setCompareIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   };
 
-  // 전체 제원 아카이브 엑셀 다운로드
-  const handleExportExcel = () => {
-    const rows = filteredModels.map(m => ({
-      제조사: m.manufacturerName,
-      조달구분: m.originCountry,
-      모델명: m.modelName,
-      시리즈: m.seriesName,
-      차종구분: m.equipmentClass,
-      동력방식: m.powerType,
-      정격하중: m.ratedCapacityKg,
-      하중중심: m.loadCenterMm,
-      표준인상높이: m.standardLiftHeightMm,
-      최대옵션인상높이: m.maxOptionLiftHeightMm,
-      포크규격: m.forkDimensionsMm,
-      전장: m.overallLengthMm,
-      전폭: m.overallWidthMm,
-      최소회전반경: m.turningRadiusMm,
-      주행속도: m.travelSpeedKmh,
-      등판능력: m.gradeabilityPercent,
-      장비자중: m.serviceWeightKg,
-      동력계상세: m.powerSpecDetail,
-      보증기준: m.warrantyTerms,
-      공식문서주소: m.documents[0]?.r2Url || ''
-    }));
-    exportToExcel(rows, `지게차_제조사별_공식제원_아카이브_${new Date().toISOString().split('T')[0]}.xlsx`, '공식제원아카이브');
+  // 선택된 비교 모델 제원 비교표 엑셀 내보내기
+  const handleExportCompareExcel = () => {
+    if (comparedModels.length === 0) {
+      showToast('비교할 모델을 1개 이상 선택해 주세요.', 'error');
+      return;
+    }
+    const compareSpecRows: { label: string; render: (m: FlModelTechnicalSpec) => string }[] = [
+      { label: '제조사 · 조달구분', render: m => `${m.manufacturerName} · ${m.originCountry}` },
+      { label: '시리즈명', render: m => m.seriesName },
+      { label: '차종 / 동력방식', render: m => `${m.equipmentClass} / ${m.powerType}` },
+      { label: '정격 적재하중', render: m => `${m.ratedCapacityKg.toLocaleString()} kg · 하중중심 ${m.loadCenterMm} mm` },
+      { label: '표준 / 최대 인상높이', render: m => `${m.standardLiftHeightMm.toLocaleString()} mm / ${m.maxOptionLiftHeightMm.toLocaleString()} mm` },
+      { label: '포크 규격', render: m => `${m.forkDimensionsMm} mm` },
+      { label: '차체 치수 (전장×전폭×전고)', render: m => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
+      { label: '최소 회전반경', render: m => `${m.turningRadiusMm.toLocaleString()} mm` },
+      { label: '직각 적재 통로폭', render: m => `${m.aisleWidth1000x1200Mm.toLocaleString()} mm` },
+      { label: '주행속도 / 인상속도', render: m => `${m.travelSpeedKmh} km/h | ${m.liftingSpeedMms} mm/s` },
+      { label: '최대 등판능력', render: m => `${m.gradeabilityPercent} %` },
+      { label: '장비 자중', render: m => `${m.serviceWeightKg.toLocaleString()} kg` },
+      { label: '배터리 / 엔진 사양', render: m => m.powerSpecDetail },
+      { label: '충전기 / 연료·변속기', render: m => m.chargerOrFuelDetail },
+      { label: '제동장치 / 방수등급', render: m => `${m.brakeType} / ${m.waterproofRating}` },
+      { label: '공식 보증기간', render: m => m.warrantyTerms }
+    ];
+
+    const rows = compareSpecRows.map(specRow => {
+      const record: Record<string, string> = { '비교 제원 항목': specRow.label };
+      comparedModels.forEach(m => {
+        record[`${m.manufacturerName} ${m.modelName}`] = specRow.render(m);
+      });
+      return record;
+    });
+
+    exportToExcel(
+      rows,
+      `지게차_제원비교표_${comparedModels.map(m => m.modelName).join('_')}_${new Date().toISOString().split('T')[0]}.xlsx`,
+      '제원비교표'
+    );
   };
 
   return (
@@ -481,7 +763,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '19px', fontWeight: 900, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <BookOpen size={20} color="#2563EB" />
             제원 · 매뉴얼 보관함
- </h2>
+          </h2>
 
           <div style={{ display: 'inline-flex', backgroundColor: '#E2E8F0', padding: '3px', borderRadius: '8px', gap: '3px' }}>
             <button
@@ -500,7 +782,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
               }}
             >
               모델별 제원 ({FL_TECHNICAL_ARCHIVE.length}종)
- </button>
+            </button>
             <button
               type="button"
               onClick={() => setActiveTab('COMPARE')}
@@ -517,7 +799,7 @@ export const ForkliftDocArchivePage: React.FC = () => {
               }}
             >
               제원 비교 ({compareIds.length}종)
- </button>
+            </button>
             <button
               type="button"
               onClick={() => setActiveTab('DOCUMENTS')}
@@ -534,55 +816,77 @@ export const ForkliftDocArchivePage: React.FC = () => {
               }}
             >
               문서 목록 ({r2Files.length || allDocuments.length}건)
- </button>
+            </button>
           </div>
         </div>
 
-        {/* 우상단 파이프라인 액션 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 13px',
-              borderRadius: '6px',
-              border: '1px solid #CBD5E1',
-              backgroundColor: '#FFFFFF',
-              color: '#0F172A',
-              fontSize: '12px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Download size={14} />
-            엑셀 내보내기
- </button>
-          <button
-            type="button"
-            onClick={() => generateKoreanSpecSheetPdf(selectedModel)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 14px',
-              borderRadius: '6px',
-              border: 'none',
-              backgroundColor: '#2563EB',
-              color: '#FFFFFF',
-              fontSize: '12px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <Printer size={14} />
-            선택모델 한국어 제원·점검표 PDF 발급
- </button>
-        </div>
+        {activeTab === 'COMPARE' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleExportCompareExcel}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 12px',
+                borderRadius: '6px',
+                border: '1px solid #CBD5E1',
+                backgroundColor: '#FFFFFF',
+                color: '#0F172A',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Download size={14} />
+              제원 비교 엑셀 출력
+            </button>
+            <button
+              type="button"
+              onClick={() => printCompareSpecsTable(comparedModels)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 12px',
+                borderRadius: '6px',
+                border: '1px solid #2563EB',
+                backgroundColor: '#EFF6FF',
+                color: '#1D4ED8',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Printer size={14} />
+              제원 비교 인쇄
+            </button>
+            <button
+              type="button"
+              onClick={() => generateCompareSpecsPdf(comparedModels)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 13px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: '#2563EB',
+                color: '#FFFFFF',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <FileText size={14} />
+              제원 비교 PDF 출력
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 상단 필터 바 (헌장 3.4 상하 스택 배치) */}
@@ -1176,9 +1480,9 @@ export const ForkliftDocArchivePage: React.FC = () => {
       {/* 탭 2: 모델 간 상세 스펙 1:N 비교표 */}
       {activeTab === 'COMPARE' && (
         <div style={{ flex: 1, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'auto', padding: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', marginRight: '6px' }}>비교 모델 선택:</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', marginRight: '6px', whiteSpace: 'nowrap' }}>비교 모델 선택:</span>
               {FL_TECHNICAL_ARCHIVE.map(m => {
                 const active = compareIds.includes(m.id);
                 return (
@@ -1203,6 +1507,72 @@ export const ForkliftDocArchivePage: React.FC = () => {
                   </button>
                 );
               })}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={handleExportCompareExcel}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #CBD5E1',
+                  backgroundColor: '#FFFFFF',
+                  color: '#0F172A',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Download size={14} />
+                제원 비교 엑셀 출력
+              </button>
+              <button
+                type="button"
+                onClick={() => printCompareSpecsTable(comparedModels)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #2563EB',
+                  backgroundColor: '#EFF6FF',
+                  color: '#1D4ED8',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Printer size={14} />
+                제원 비교 인쇄
+              </button>
+              <button
+                type="button"
+                onClick={() => generateCompareSpecsPdf(comparedModels)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 13px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <FileText size={14} />
+                제원 비교 PDF 출력
+              </button>
             </div>
           </div>
 
