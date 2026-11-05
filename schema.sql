@@ -641,6 +641,9 @@ CREATE TABLE IF NOT EXISTS trade_sales_orders (
     "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
     "optionSupplyAmount"      DOUBLE PRECISION DEFAULT 0,
     "optionCostAmount"        DOUBLE PRECISION DEFAULT 0,
+    "equipmentSupplyAmount"   DOUBLE PRECISION DEFAULT 0,
+    "equipmentCostAmount"     DOUBLE PRECISION DEFAULT 0,
+    "installedOptionsSummary" TEXT,
     "contractDocStatus"       TEXT DEFAULT 'DRAFT',
     "contractSentAt"          TEXT,
     "contractSentTo"          TEXT,
@@ -713,6 +716,10 @@ CREATE TABLE IF NOT EXISTS trade_outbounds (
     "proofType"               TEXT CHECK ("proofType" IN ('SIGNATURE', 'PHOTO')),
     "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
     "optionBillingAmount"     DOUBLE PRECISION DEFAULT 0,
+    "optionSupplyAmount"      DOUBLE PRECISION DEFAULT 0,
+    "optionCostAmount"        DOUBLE PRECISION DEFAULT 0,
+    "equipmentSupplyAmount"   DOUBLE PRECISION DEFAULT 0,
+    "installedOptionsSummary" TEXT,
     "allocatedAt"             TEXT,
     "packedAt"                TEXT,
     "shippedAt"               TEXT,
@@ -760,13 +767,24 @@ CREATE TABLE IF NOT EXISTS trade_billings (
     id                        TEXT PRIMARY KEY,
     "orderId"                 TEXT,
     "orderIds"                JSONB DEFAULT '[]'::jsonb,
+    "contractId"              TEXT,
+    "contractNo"              TEXT,
     "customerId"              TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
     "billingMonth"            TEXT NOT NULL,
     "billingDate"             TEXT,
+    "dueDate"                 TEXT,
     "supplyAmount"            DOUBLE PRECISION DEFAULT 0,
     "vatAmount"               DOUBLE PRECISION DEFAULT 0,
     "totalAmount"             DOUBLE PRECISION NOT NULL DEFAULT 0,
-    status                    TEXT CHECK (status IN ('DRAFT', 'ISSUED', 'SENT', 'PAID', 'CANCELLED')) NOT NULL DEFAULT 'ISSUED',
+    "paidAmount"              DOUBLE PRECISION DEFAULT 0,
+    "remainingAmount"         DOUBLE PRECISION DEFAULT 0,
+    "overdueDays"             INTEGER DEFAULT 0,
+    "paymentScenario"         TEXT,
+    "appliedOptions"          JSONB DEFAULT '[]'::jsonb,
+    "optionSupplyAmount"      DOUBLE PRECISION DEFAULT 0,
+    "equipmentSupplyAmount"   DOUBLE PRECISION DEFAULT 0,
+    "installedOptionsSummary" TEXT,
+    status                    TEXT CHECK (status IN ('DRAFT', 'ISSUED', 'SENT', 'PARTIAL', 'OVERDUE', 'PAID', 'CANCELLED')) NOT NULL DEFAULT 'ISSUED',
     "recipientName"           TEXT,
     "recipientEmail"          TEXT,
     "ccEmail"                 TEXT,
@@ -813,6 +831,10 @@ CREATE TABLE IF NOT EXISTS consumables (
     "repairingQty"        DOUBLE PRECISION DEFAULT 0,
     supplier              TEXT,
     "vendorId"            TEXT REFERENCES vendors(id) ON DELETE SET NULL,
+    "imageFileName"       TEXT,
+    "imageSource"         TEXT,
+    "imageStatus"         TEXT,
+    "createdDate"         TEXT,
     "createdAt"           TEXT NOT NULL,
     "updatedAt"           TEXT NOT NULL,
     "tenant_id"           TEXT NOT NULL DEFAULT 'fl-demo'
@@ -832,6 +854,10 @@ CREATE TABLE IF NOT EXISTS consumable_lots (
     "remainingQty"        NUMERIC DEFAULT 0,
     "purchaseRequestId"   TEXT,
     "purchaseId"          TEXT,
+    "imageFileName"       TEXT,
+    "imageSource"         TEXT,
+    "imageStatus"         TEXT,
+    "createdDate"         TEXT,
     "createdAt"           TEXT,
     "updatedAt"           TEXT,
     "tenant_id"           TEXT DEFAULT 'fl-demo'
@@ -1195,14 +1221,25 @@ CREATE TABLE IF NOT EXISTS billing_invoices (
 
 CREATE TABLE IF NOT EXISTS billings (
     id                    TEXT PRIMARY KEY,
-    "billingType"         TEXT CHECK ("billingType" IN ('ASSET_SALE', 'REPAIR', 'TRANSPORT', 'RENTAL')) NOT NULL DEFAULT 'ASSET_SALE',
+    "billingType"         TEXT CHECK ("billingType" IN ('ASSET_SALE', 'TRADE', 'REPAIR', 'TRANSPORT', 'RENTAL')) NOT NULL DEFAULT 'ASSET_SALE',
     "billingYm"           TEXT NOT NULL,
     "customerId"          TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    "contractId"          TEXT,
+    "contractType"        TEXT,
+    "tradeOrderId"        TEXT,
+    "tradeBillingId"      TEXT,
     "invoiceId"           TEXT REFERENCES billing_invoices(id) ON DELETE SET NULL,
     "billingDate"         TEXT NOT NULL,
+    "dueDate"             TEXT,
+    "supplyAmount"        DOUBLE PRECISION DEFAULT 0,
+    "vatAmount"           DOUBLE PRECISION DEFAULT 0,
     "totalAmount"         DOUBLE PRECISION NOT NULL DEFAULT 0,
     "paidAmount"          DOUBLE PRECISION NOT NULL DEFAULT 0,
-    status                TEXT CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'REQUESTED', 'REJECTED')) NOT NULL DEFAULT 'UNPAID',
+    "overdueDays"         INTEGER DEFAULT 0,
+    "appliedOptions"      JSONB DEFAULT '[]'::jsonb,
+    "optionSupplyAmount"  DOUBLE PRECISION DEFAULT 0,
+    "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0,
+    status                TEXT CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'OVERDUE', 'ISSUED', 'REQUESTED', 'REJECTED')) NOT NULL DEFAULT 'UNPAID',
     "rejectReason"        TEXT,
     details               JSONB,
     "createdAt"           TEXT NOT NULL,
@@ -1229,16 +1266,26 @@ CREATE TABLE IF NOT EXISTS billing_details (
 
 CREATE TABLE IF NOT EXISTS receivables (
     id                    TEXT PRIMARY KEY,
+    "contractId"          TEXT,
+    "billingId"           TEXT,
+    "tradeOrderId"        TEXT,
+    "tradeBillingId"      TEXT,
     "customerId"          TEXT REFERENCES customers(id) ON DELETE SET NULL,
     "vendorName"          TEXT,
     "assetNo"             TEXT,
-    type                  TEXT CHECK (type IN ('TRANSPORT', 'REPAIR', 'CLEANING', 'OTHER', 'VENDOR_CLAIM')) NOT NULL,
+    type                  TEXT CHECK (type IN ('TRANSPORT', 'REPAIR', 'CLEANING', 'OTHER', 'VENDOR_CLAIM', 'TRADE', 'ASSET_SALE', 'EQUIPMENT_SALE', 'RENTAL')) NOT NULL,
     "occurredDate"        TEXT NOT NULL,
+    "dueDate"             TEXT,
     "internalDescription" TEXT NOT NULL,
     "displayName"         TEXT,
+    "supplyAmount"        DOUBLE PRECISION DEFAULT 0,
+    "vatAmount"           DOUBLE PRECISION DEFAULT 0,
     "totalAmount"         DOUBLE PRECISION NOT NULL DEFAULT 0,
     "billedAmount"        DOUBLE PRECISION NOT NULL DEFAULT 0,
-    status                TEXT CHECK (status IN ('PENDING', 'PARTIAL', 'CLEARED')) NOT NULL DEFAULT 'PENDING',
+    "paidAmount"          DOUBLE PRECISION DEFAULT 0,
+    "remainingAmount"     DOUBLE PRECISION DEFAULT 0,
+    "overdueDays"         INTEGER DEFAULT 0,
+    status                TEXT CHECK (status IN ('PENDING', 'UNPAID', 'PARTIAL', 'OVERDUE', 'CLEARED', 'PAID')) NOT NULL DEFAULT 'PENDING',
     "repairId"            TEXT REFERENCES repairs(id) ON DELETE SET NULL,
     "createdAt"           TEXT NOT NULL,
     "updatedAt"           TEXT NOT NULL,
@@ -1762,6 +1809,7 @@ CREATE TABLE IF NOT EXISTS contracts (
     id                        TEXT PRIMARY KEY,
     "contractNo"              TEXT,
     "contractType"            TEXT DEFAULT 'RENTAL',
+    "contractCategory"        TEXT,
     "contractUnitRule"        TEXT DEFAULT 'PER_CUSTOMER_SITE',
     "outboundId"              TEXT,
     "outboundSeq"             INTEGER,
@@ -1786,6 +1834,8 @@ CREATE TABLE IF NOT EXISTS contracts (
     "optionBillingMode"       TEXT DEFAULT 'MONTHLY_ADDED',
     "optionMonthlyTotal"      DOUBLE PRECISION DEFAULT 0,
     "optionOneTimeTotal"      DOUBLE PRECISION DEFAULT 0,
+    "optionSupplyAmount"      DOUBLE PRECISION DEFAULT 0,
+    "equipmentSupplyAmount"   DOUBLE PRECISION DEFAULT 0,
     "tradeSupplyAmount"       DOUBLE PRECISION DEFAULT 0,
     "tradeTotalAmount"        DOUBLE PRECISION DEFAULT 0,
     "tradeCostAmount"         DOUBLE PRECISION DEFAULT 0,
@@ -1812,6 +1862,9 @@ CREATE TABLE IF NOT EXISTS contracts (
     "tenant_id"               TEXT DEFAULT 'fl-demo'
 );
 
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "contractCategory" TEXT;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "optionSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0;
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeSupplyAmount" DOUBLE PRECISION DEFAULT 0;
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeTotalAmount" DOUBLE PRECISION DEFAULT 0;
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "tradeCostAmount" DOUBLE PRECISION DEFAULT 0;
@@ -1827,6 +1880,100 @@ ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "costAmount" DOUBLE PRE
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "profitAmount" DOUBLE PRECISION DEFAULT 0;
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "marginRate" DOUBLE PRECISION DEFAULT 0;
 ALTER TABLE IF EXISTS contracts ADD COLUMN IF NOT EXISTS "specialTerms" TEXT;
+
+-- 유통·판매·청구·수납 및 자재 이미지 스키마 정합성 보정 DDL
+ALTER TABLE IF EXISTS consumables ADD COLUMN IF NOT EXISTS "imageFileName" TEXT;
+ALTER TABLE IF EXISTS consumables ADD COLUMN IF NOT EXISTS "imageSource" TEXT;
+ALTER TABLE IF EXISTS consumables ADD COLUMN IF NOT EXISTS "imageStatus" TEXT;
+ALTER TABLE IF EXISTS consumables ADD COLUMN IF NOT EXISTS "createdDate" TEXT;
+
+ALTER TABLE IF EXISTS consumable_lots ADD COLUMN IF NOT EXISTS "imageFileName" TEXT;
+ALTER TABLE IF EXISTS consumable_lots ADD COLUMN IF NOT EXISTS "imageSource" TEXT;
+ALTER TABLE IF EXISTS consumable_lots ADD COLUMN IF NOT EXISTS "imageStatus" TEXT;
+ALTER TABLE IF EXISTS consumable_lots ADD COLUMN IF NOT EXISTS "createdDate" TEXT;
+
+ALTER TABLE IF EXISTS trade_sales_orders ADD COLUMN IF NOT EXISTS "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_sales_orders ADD COLUMN IF NOT EXISTS "equipmentCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_sales_orders ADD COLUMN IF NOT EXISTS "installedOptionsSummary" TEXT;
+
+ALTER TABLE IF EXISTS trade_outbounds ADD COLUMN IF NOT EXISTS "optionSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_outbounds ADD COLUMN IF NOT EXISTS "optionCostAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_outbounds ADD COLUMN IF NOT EXISTS "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_outbounds ADD COLUMN IF NOT EXISTS "installedOptionsSummary" TEXT;
+
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "contractId" TEXT;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "contractNo" TEXT;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "dueDate" TEXT;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "paidAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "remainingAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "overdueDays" INTEGER DEFAULT 0;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "paymentScenario" TEXT;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "optionSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS trade_billings ADD COLUMN IF NOT EXISTS "installedOptionsSummary" TEXT;
+ALTER TABLE IF EXISTS trade_billings DROP CONSTRAINT IF EXISTS trade_billings_status_check;
+ALTER TABLE IF EXISTS trade_billings DROP CONSTRAINT IF EXISTS fl_trade_billings_status_check;
+ALTER TABLE IF EXISTS trade_billings ADD CONSTRAINT fl_trade_billings_status_check CHECK (status IN ('DRAFT', 'ISSUED', 'SENT', 'PARTIAL', 'OVERDUE', 'PAID', 'CANCELLED'));
+
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "contractId" TEXT;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "contractType" TEXT;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "tradeOrderId" TEXT;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "tradeBillingId" TEXT;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "dueDate" TEXT;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "supplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "vatAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "overdueDays" INTEGER DEFAULT 0;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "appliedOptions" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "optionSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS billings ADD COLUMN IF NOT EXISTS "equipmentSupplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS billings DROP CONSTRAINT IF EXISTS billings_billingType_check;
+ALTER TABLE IF EXISTS billings DROP CONSTRAINT IF EXISTS fl_billings_billingType_check;
+ALTER TABLE IF EXISTS billings DROP CONSTRAINT IF EXISTS billings_status_check;
+ALTER TABLE IF EXISTS billings DROP CONSTRAINT IF EXISTS fl_billings_status_check;
+ALTER TABLE IF EXISTS billings ADD CONSTRAINT fl_billings_billingType_check CHECK ("billingType" IN ('ASSET_SALE', 'TRADE', 'REPAIR', 'TRANSPORT', 'RENTAL'));
+ALTER TABLE IF EXISTS billings ADD CONSTRAINT fl_billings_status_check CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'OVERDUE', 'ISSUED', 'REQUESTED', 'REJECTED'));
+
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "contractId" TEXT;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "billingId" TEXT;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "tradeOrderId" TEXT;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "tradeBillingId" TEXT;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "dueDate" TEXT;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "supplyAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "vatAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "paidAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "remainingAmount" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE IF EXISTS receivables ADD COLUMN IF NOT EXISTS "overdueDays" INTEGER DEFAULT 0;
+ALTER TABLE IF EXISTS receivables DROP CONSTRAINT IF EXISTS receivables_type_check;
+ALTER TABLE IF EXISTS receivables DROP CONSTRAINT IF EXISTS fl_receivables_type_check;
+ALTER TABLE IF EXISTS receivables DROP CONSTRAINT IF EXISTS receivables_status_check;
+ALTER TABLE IF EXISTS receivables DROP CONSTRAINT IF EXISTS fl_receivables_status_check;
+ALTER TABLE IF EXISTS receivables ADD CONSTRAINT fl_receivables_type_check CHECK (type IN ('TRANSPORT', 'REPAIR', 'CLEANING', 'OTHER', 'VENDOR_CLAIM', 'TRADE', 'ASSET_SALE', 'EQUIPMENT_SALE', 'RENTAL'));
+ALTER TABLE IF EXISTS receivables ADD CONSTRAINT fl_receivables_status_check CHECK (status IN ('PENDING', 'UNPAID', 'PARTIAL', 'OVERDUE', 'CLEARED', 'PAID'));
+
+CREATE TABLE IF NOT EXISTS account_transfer_logs (
+    id                        TEXT PRIMARY KEY,
+    "previousOwnerCustomerId" TEXT,
+    "previousOwnerName"       TEXT,
+    "newOwnerCustomerId"      TEXT,
+    "newOwnerName"            TEXT,
+    "newOwnerContactName"     TEXT,
+    "newOwnerContactPhone"    TEXT,
+    "newOwnerAddress"         TEXT,
+    "assetId"                 TEXT,
+    "assetNo"                 TEXT,
+    "serialNumber"            TEXT,
+    "modelName"               TEXT,
+    "transferDate"            TEXT,
+    "transferType"            TEXT,
+    "warrantyPolicy"          TEXT,
+    "warrantyExpiryDate"      TEXT,
+    "nextPmDueDate"           TEXT,
+    "transferredBy"           TEXT,
+    memo                      TEXT,
+    "createdAt"               TEXT,
+    "tenant_id"               TEXT DEFAULT 'fl-demo'
+);
 
 CREATE TABLE IF NOT EXISTS contract_assets (
     id                        TEXT PRIMARY KEY,

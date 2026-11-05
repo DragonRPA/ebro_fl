@@ -1,0 +1,31 @@
+{
+  "executedAt": "2026-11-05T01:00:41.827Z",
+  "period": "2026-01 ~ 2026-10 (10개월 × 월 3건 = 30건)",
+  "emailSentCount": 0,
+  "counts": {
+    "contracts": 30,
+    "normalPaid": 14,
+    "overduePaid": 5,
+    "partialOverdue": 4,
+    "unpaidOverdue": 4,
+    "issuedUnpaid": 3,
+    "payments": 23,
+    "bankTransactions": 23,
+    "delinquencyLogs": 13
+  },
+  "amounts": {
+    "totalBilled": 724724000,
+    "totalCollected": 441567500,
+    "normalPaidAmt": 275731500,
+    "overduePaidAmt": 120499500,
+    "partialPaidAmt": 45336500,
+    "totalUncollected": 283156500,
+    "partialRemainingAmt": 45336500,
+    "unpaidOverdueAmt": 158158000,
+    "issuedUnpaidAmt": 79662000,
+    "bankSum": 441567500,
+    "paySum": 441567500,
+    "linkSum": 441567500,
+    "conservationDiff": 0
+  }
+}

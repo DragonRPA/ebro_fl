@@ -34,7 +34,7 @@ export const TradeBillingPage: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [customerFilter, setCustomerFilter] = useState<string>('ALL');
   const [productFilter, setProductFilter] = useState<string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNISSUED' | 'ISSUED' | 'SENT' | 'PAID' | 'CANCELLED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNISSUED' | 'ISSUED' | 'SENT' | 'PARTIAL' | 'OVERDUE' | 'PAID' | 'CANCELLED'>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Proof Modal State
@@ -86,9 +86,21 @@ export const TradeBillingPage: React.FC = () => {
             ? order.optionSupplyAmount
             : appliedOptions.reduce((s, o) => s + (o.isFreeApplied ? 0 : o.supplyAmount), 0);
 
-        const billingState: 'UNISSUED' | 'ISSUED' | 'SENT' | 'PAID' | 'CANCELLED' = linkedBilling
+        const billingState: 'UNISSUED' | 'ISSUED' | 'SENT' | 'PARTIAL' | 'OVERDUE' | 'PAID' | 'CANCELLED' = linkedBilling
           ? (linkedBilling.status as any)
           : 'UNISSUED';
+        const rowPaidAmount =
+          billingState === 'PAID'
+            ? totalAmount
+            : billingState === 'PARTIAL'
+            ? Number(linkedBilling?.paidAmount || Math.round(totalAmount * 0.5))
+            : Number(linkedBilling?.paidAmount || 0);
+        const rowRemainingAmount =
+          billingState === 'PAID'
+            ? 0
+            : Math.max(0, totalAmount - rowPaidAmount);
+        const dueDate = linkedBilling?.dueDate || '';
+        const overdueDays = Number(linkedBilling?.overdueDays || 0);
 
         return {
           order,
@@ -100,7 +112,11 @@ export const TradeBillingPage: React.FC = () => {
           billingState,
           supplyAmount,
           vatAmount,
-          totalAmount
+          totalAmount,
+          paidAmount: rowPaidAmount,
+          remainingAmount: rowRemainingAmount,
+          dueDate,
+          overdueDays
         };
       });
   }, [salesOrders, outbounds, salesOrderLines, billings]);
@@ -154,12 +170,20 @@ export const TradeBillingPage: React.FC = () => {
   const summary = useMemo(() => {
     const totalTargetAmount = filteredRows.reduce((s, r) => s + r.totalAmount, 0);
     const unissuedRows = filteredRows.filter(r => r.billingState === 'UNISSUED' || r.billingState === 'CANCELLED');
-    const issuedRows = filteredRows.filter(r => r.billingState === 'ISSUED' || r.billingState === 'SENT');
+    const issuedRows = filteredRows.filter(
+      r => r.billingState === 'ISSUED' || r.billingState === 'SENT' || r.billingState === 'PARTIAL' || r.billingState === 'OVERDUE'
+    );
     const paidRows = filteredRows.filter(r => r.billingState === 'PAID');
 
     const unissuedAmount = unissuedRows.reduce((s, r) => s + r.totalAmount, 0);
-    const issuedAmount = issuedRows.reduce((s, r) => s + r.totalAmount, 0);
-    const paidAmount = paidRows.reduce((s, r) => s + r.totalAmount, 0);
+    const paidAmount = filteredRows.reduce(
+      (s, r) => s + (r.billingState === 'UNISSUED' || r.billingState === 'CANCELLED' ? 0 : r.paidAmount),
+      0
+    );
+    const issuedAmount = filteredRows.reduce(
+      (s, r) => s + (r.billingState === 'UNISSUED' || r.billingState === 'CANCELLED' ? 0 : r.remainingAmount),
+      0
+    );
 
     return {
       totalCount: filteredRows.length,
@@ -212,10 +236,9 @@ export const TradeBillingPage: React.FC = () => {
       cur.supplyTotal += r.supplyAmount;
       cur.vatTotal += r.vatAmount;
       cur.totalAmount += r.totalAmount;
-      if (r.billingState === 'PAID') {
-        cur.paidAmount += r.totalAmount;
-      } else {
-        cur.receivableAmount += r.totalAmount;
+      cur.paidAmount += r.paidAmount;
+      cur.receivableAmount += r.remainingAmount;
+      if (r.remainingAmount > 0) {
         cur.unpaidOrderCount += 1;
       }
       map.set(cid, cur);
@@ -648,6 +671,13 @@ export const TradeBillingPage: React.FC = () => {
             <option value="2026-10">2026-10</option>
             <option value="2026-09">2026-09</option>
             <option value="2026-08">2026-08</option>
+            <option value="2026-07">2026-07</option>
+            <option value="2026-06">2026-06</option>
+            <option value="2026-05">2026-05</option>
+            <option value="2026-04">2026-04</option>
+            <option value="2026-03">2026-03</option>
+            <option value="2026-02">2026-02</option>
+            <option value="2026-01">2026-01</option>
           </select>
         </div>
 
@@ -708,7 +738,9 @@ export const TradeBillingPage: React.FC = () => {
           >
             <option value="ALL">전체 상태</option>
             <option value="UNISSUED">미발행</option>
-            <option value="ISSUED">명세서발행</option>
+            <option value="ISSUED">명세서발행·미납</option>
+            <option value="PARTIAL">부분수납·연체</option>
+            <option value="OVERDUE">장기연체·미납</option>
             <option value="SENT">이메일발송완료</option>
             <option value="PAID">수금완료</option>
             <option value="CANCELLED">발행취소</option>
@@ -836,7 +868,7 @@ export const TradeBillingPage: React.FC = () => {
               </tr>
             ) : (
               filteredRows.map(row => {
-                const { order, matchedOutbound, lines, appliedOptions, optionSupplyAmount, billing, billingState, supplyAmount, vatAmount, totalAmount } = row;
+                const { order, matchedOutbound, lines, appliedOptions, optionSupplyAmount, billing, billingState, supplyAmount, vatAmount, totalAmount, paidAmount, remainingAmount, dueDate, overdueDays } = row;
                 const custName = getCustomerName(order.customerId);
                 const isDelivered = order.status === 'DELIVERED' || matchedOutbound?.status === 'DELIVERED';
                 const hasProof = Boolean(matchedOutbound?.proofUrl);
@@ -883,7 +915,7 @@ export const TradeBillingPage: React.FC = () => {
                           )}
                         </button>
 
-                        {billing && (billingState === 'ISSUED' || billingState === 'SENT') && (
+                        {billing && (billingState === 'ISSUED' || billingState === 'SENT' || billingState === 'PARTIAL' || billingState === 'OVERDUE') && (
                           <>
                             <button
                               onClick={() => {
@@ -978,18 +1010,24 @@ export const TradeBillingPage: React.FC = () => {
                         fontWeight: 700,
                         backgroundColor:
                           billingState === 'PAID' ? '#dcfce7' :
+                          billingState === 'PARTIAL' ? '#fef3c7' :
+                          billingState === 'OVERDUE' ? '#fee2e2' :
                           billingState === 'SENT' ? '#dbeafe' :
                           billingState === 'ISSUED' ? '#e0e7ff' :
                           billingState === 'CANCELLED' ? '#fee2e2' : '#fef3c7',
                         color:
                           billingState === 'PAID' ? '#15803d' :
+                          billingState === 'PARTIAL' ? '#b45309' :
+                          billingState === 'OVERDUE' ? '#b91c1c' :
                           billingState === 'SENT' ? '#1d4ed8' :
                           billingState === 'ISSUED' ? '#4338ca' :
                           billingState === 'CANCELLED' ? '#b91c1c' : '#b45309'
                       }}>
-                        {billingState === 'PAID' ? '수금완료' :
+                        {billingState === 'PAID' ? (overdueDays > 0 ? `연체후완납 ${overdueDays}일` : '수금완료') :
+                         billingState === 'PARTIAL' ? `부분수납·연체 ${overdueDays}일` :
+                         billingState === 'OVERDUE' ? `장기연체 ${overdueDays}일` :
                          billingState === 'SENT' ? '이메일발송완료' :
-                         billingState === 'ISSUED' ? '명세서발행' :
+                         billingState === 'ISSUED' ? '명세서발행·미납' :
                          billingState === 'CANCELLED' ? '발행취소' : '미발행'}
                       </span>
                     </td>
@@ -1086,8 +1124,23 @@ export const TradeBillingPage: React.FC = () => {
 
                     {/* Total Amount */}
                     <td style={{ padding: '10px 12px', fontSize: '13.5px', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                      {totalAmount.toLocaleString()}원
- </td>
+                      <div>{totalAmount.toLocaleString()}원</div>
+                      {paidAmount > 0 && remainingAmount > 0 && (
+                        <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700 }}>
+                          기수납: ₩{paidAmount.toLocaleString()} / 미수: <span style={{ color: '#dc2626' }}>₩{remainingAmount.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {paidAmount === 0 && remainingAmount > 0 && billing && (
+                        <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: 700 }}>
+                          미수잔액: ₩{remainingAmount.toLocaleString()}{dueDate ? ` | 납기 ${dueDate}` : ''}
+                        </div>
+                      )}
+                      {remainingAmount === 0 && paidAmount > 0 && (
+                        <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700 }}>
+                          완납: ₩{paidAmount.toLocaleString()}
+                        </div>
+                      )}
+                    </td>
 
                     {/* Recipient & Email Status */}
                     <td style={{ padding: '10px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}>

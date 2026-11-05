@@ -4,6 +4,7 @@ import { centralSupabase } from './centralDb';
 import { createPrefixedSupabaseClient } from '../lib/supabasePrefixProxy';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { MUJIN_STANDARD_OPTIONS } from '../data/mujinGlobalInitialData';
+import { FL_TRADE_RWTT_2026_BUNDLE } from '../data/flTradeRwtt2026Data';
 import {
   InventoryAssetClass,
   InventoryUsagePurpose,
@@ -4160,16 +4161,19 @@ const SEED_TRANSPORT_DRIVERS: TransportDriver[] = [
   { id: 'TD-002', companyId: 'TC-002', driverName: '홍길동', driverContact: '010-1111-2222', vehicleNo: '경기99바 2222', vehicleType: '1톤 화물차', createdAt: new Date().toISOString() },
   { id: 'TD-003', companyId: 'TC-001', driverName: '김기사', driverContact: '010-3333-3333', vehicleNo: '서울82가 3333', vehicleType: '2.5톤', createdAt: new Date().toISOString() }
 ];
-const SEED_BILLINGS: Billing[] = [];
-const SEED_BILLING_DETAILS: BillingDetail[] = [];
-const SEED_PAYMENTS: Payment[] = [];
+const SEED_BILLINGS: Billing[] = [...(FL_TRADE_RWTT_2026_BUNDLE.billings as any[])];
+const SEED_BILLING_DETAILS: BillingDetail[] = [...(FL_TRADE_RWTT_2026_BUNDLE.billingDetails as any[])];
+const SEED_RECEIVABLES: Receivable[] = [...(FL_TRADE_RWTT_2026_BUNDLE.receivables as any[])];
+const SEED_PAYMENTS: Payment[] = [...(FL_TRADE_RWTT_2026_BUNDLE.payments as any[])];
+const SEED_PAYMENT_DEPOSIT_LINKS: PaymentDepositLink[] = [...(FL_TRADE_RWTT_2026_BUNDLE.paymentDepositLinks as any[])];
+const SEED_DELINQUENCY_ACTION_LOGS: DelinquencyActionLog[] = [...(FL_TRADE_RWTT_2026_BUNDLE.delinquencyActionLogs as any[])];
 const SEED_VENDORS: Vendor[] = SEED_FL_VENDORS as any[];
 const SEED_REPAIRS: Repair[] = SEED_FL_REPAIRS as any[];
 const SEED_REPAIR_CONSUMABLES: RepairConsumable[] = [];
 const SEED_CONTRACT_HISTORY: ContractHistory[] = [];
 const SEED_TODOS: Todo[] = [];
 
-const SEED_BANK_TRANSACTIONS: BankTransaction[] = [];
+const SEED_BANK_TRANSACTIONS: BankTransaction[] = [...(FL_TRADE_RWTT_2026_BUNDLE.bankTransactions as any[])];
 
 const SEED_BANK_MATCHING_RULES: BankMatchingRule[] = [];
 
@@ -6253,7 +6257,7 @@ class LocalDB {
   set billingDetails(val: BillingDetail[]) { this.set('billingDetails', val); }
 
   get receivables() {
-    const raw = this.get<Receivable>('receivables', []);
+    const raw = this.get<Receivable>('receivables', SEED_RECEIVABLES);
     return raw.map(r => r ? {
       ...r,
       supplyAmount: Number(r.supplyAmount || 0),
@@ -6273,7 +6277,7 @@ class LocalDB {
   }
   set payments(val: Payment[]) { this.set('payments', val); }
 
-  get paymentDepositLinks() { return this.get<PaymentDepositLink>('paymentDepositLinks', []); }
+  get paymentDepositLinks() { return this.get<PaymentDepositLink>('paymentDepositLinks', SEED_PAYMENT_DEPOSIT_LINKS); }
   set paymentDepositLinks(val: PaymentDepositLink[]) { this.set('paymentDepositLinks', val); }
 
   get annualLeaveQuotas() { return this.get<AnnualLeaveQuota>('annualLeaveQuotas', SEED_ANNUAL_LEAVE_QUOTAS); }
@@ -6345,7 +6349,7 @@ class LocalDB {
   get todos() { return this.get<Todo>('todos', SEED_TODOS); }
   set todos(val: Todo[]) { this.set('todos', val); }
 
-  get bankTransactions() { return this.get<BankTransaction>('bankTransactions', []); }
+  get bankTransactions() { return this.get<BankTransaction>('bankTransactions', SEED_BANK_TRANSACTIONS); }
   set bankTransactions(val: BankTransaction[]) { this.set('bankTransactions', val); }
 
   get bankMatchingRules() { return this.get<BankMatchingRule>('bankMatchingRules', []); }
@@ -6462,7 +6466,7 @@ class LocalDB {
 
   get legalNoticeTemplates() { return this.get<LegalNoticeTemplate>('legalNoticeTemplates', []); }
   set legalNoticeTemplates(val: LegalNoticeTemplate[]) { this.set('legalNoticeTemplates', val); }
-  get delinquencyActionLogs() { return this.get<DelinquencyActionLog>('delinquencyActionLogs', []); }
+  get delinquencyActionLogs() { return this.get<DelinquencyActionLog>('delinquencyActionLogs', SEED_DELINQUENCY_ACTION_LOGS); }
   set delinquencyActionLogs(val: DelinquencyActionLog[]) { this.set('delinquencyActionLogs', val); }
 
   get corporateVehicles() { return this.get<CorporateVehicle>('corporateVehicles', SEED_CORPORATE_VEHICLES); }
@@ -7426,7 +7430,7 @@ class LocalDB {
         continue;
       }
       // receivables 테이블 전용 허용 컬럼 방어벽 (런타임 claimMeta 등 가상 프로퍼티 원천 격리)
-      if (resolvedTable === 'receivables' && !['id', 'contractId', 'customerId', 'vendorName', 'assetNo', 'type', 'occurredDate', 'internalDescription', 'displayName', 'totalAmount', 'billedAmount', 'status', 'repairId', 'tenant_id', 'createdAt', 'updatedAt'].includes(key)) {
+      if (resolvedTable === 'receivables' && !['id', 'contractId', 'billingId', 'tradeOrderId', 'tradeBillingId', 'customerId', 'vendorName', 'assetNo', 'type', 'occurredDate', 'dueDate', 'internalDescription', 'displayName', 'supplyAmount', 'vatAmount', 'totalAmount', 'billedAmount', 'paidAmount', 'remainingAmount', 'overdueDays', 'status', 'repairId', 'tenant_id', 'createdAt', 'updatedAt'].includes(key)) {
         continue;
       }
 
@@ -8561,6 +8565,13 @@ class LocalDB {
     this.set('consumableLots', [...(SEED_FL_CONSUMABLE_LOTS as any[])]);
     this.set('consumableLogs', [...SEED_CONSUMABLE_LOGS]);
     this.set('repairs', [...SEED_REPAIRS]);
+    this.set('billings', [...SEED_BILLINGS]);
+    this.set('billingDetails', [...SEED_BILLING_DETAILS]);
+    this.set('receivables', [...SEED_RECEIVABLES]);
+    this.set('payments', [...SEED_PAYMENTS]);
+    this.set('paymentDepositLinks', [...SEED_PAYMENT_DEPOSIT_LINKS]);
+    this.set('bankTransactions', [...SEED_BANK_TRANSACTIONS]);
+    this.set('delinquencyActionLogs', [...SEED_DELINQUENCY_ACTION_LOGS]);
 
     if (supabase) {
       await this.upsertRows('standardOptions', SEED_STANDARD_OPTIONS as any[]);
@@ -8573,6 +8584,13 @@ class LocalDB {
       await this.upsertRows('contracts', SEED_CONTRACTS as any[]);
       await this.upsertRows('contractAssets', SEED_CONTRACT_ASSETS as any[]);
       await this.upsertRows('repairs', SEED_REPAIRS as any[]);
+      await this.upsertRows('billings', SEED_BILLINGS as any[]);
+      await this.upsertRows('billingDetails', SEED_BILLING_DETAILS as any[]);
+      await this.upsertRows('receivables', SEED_RECEIVABLES as any[]);
+      await this.upsertRows('payments', SEED_PAYMENTS as any[]);
+      await this.upsertRows('bankTransactions', SEED_BANK_TRANSACTIONS as any[]);
+      await this.upsertRows('paymentDepositLinks', SEED_PAYMENT_DEPOSIT_LINKS as any[]);
+      await this.upsertRows('delinquencyActionLogs', SEED_DELINQUENCY_ACTION_LOGS as any[]);
       await this.awaitPendingWrites();
     }
 
@@ -8994,7 +9012,10 @@ export interface AppliedForkliftOption {
 
 export interface TradeSalesOrder {
   id: string;
+  orderNo?: string;
   customerId: string;
+  customerName?: string;
+  customerBizNo?: string;
   customerTier?: 'DEALER' | 'END_USER';
   contractId?: string;
   contractNo?: string;
@@ -9005,6 +9026,14 @@ export interface TradeSalesOrder {
   outboundId?: string;
   siteId?: string;
   siteName?: string;
+  itemType?: string;
+  manufacturer?: string;
+  modelName?: string;
+  serialNumber?: string;
+  quantity?: number;
+  unitSalesPrice?: number;
+  unitCogs?: number;
+  warehouseName?: string;
   billingMode?: 'RENTAL_MERGED' | 'STANDALONE';
   targetBillingYm?: string;
   linkedReceivableId?: string;
@@ -9013,11 +9042,14 @@ export interface TradeSalesOrder {
   linkedRentalDeliveryId?: string;
   orderDate: string;
   status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'RETURNED' | 'CANCELLED';
+  equipmentSupplyAmount?: number;
+  equipmentCostAmount?: number;
   totalSalesAmount: number;
   totalCogsAmount: number;
   appliedOptions?: AppliedForkliftOption[];
   optionSupplyAmount?: number;
   optionCostAmount?: number;
+  installedOptionsSummary?: string;
   createdAt: string;
   updatedAt: string;
   contractDocStatus?: 'DRAFT' | 'GENERATED' | 'SENT';
@@ -9048,7 +9080,10 @@ export interface TradeSalesOrderLine {
 
 export interface TradeOutbound {
   id: string;
+  outboundNo?: string;
   orderId: string;
+  salesOrderId?: string;
+  orderNo?: string;
   contractId?: string;
   contractNo?: string;
   // 유통 계약은 각 출고횟수가 1개의 계약임
@@ -9056,6 +9091,17 @@ export interface TradeOutbound {
   contractUnitRule?: 'PER_OUTBOUND';
   outboundSeq?: number;
   linkedRentalDeliveryId?: string;
+  requestDate?: string;
+  scheduledDate?: string;
+  completedDate?: string;
+  customerId?: string;
+  customerName?: string;
+  itemType?: string;
+  manufacturer?: string;
+  modelName?: string;
+  serialNumber?: string;
+  quantity?: number;
+  warehouseName?: string;
   status: 'REQUESTED' | 'ALLOCATED' | 'PACKED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   deliveryType?: 'COURIER' | 'DIRECT' | 'BUNDLE_WITH_RENTAL';
   courierName?: string;
@@ -9068,10 +9114,16 @@ export interface TradeOutbound {
   destinationAddress?: string;
   receiverName?: string;
   receiverPhone?: string;
+  inspectorName?: string;
+  inspectionNote?: string;
   proofUrl?: string;
   proofType?: 'SIGNATURE' | 'PHOTO';
   appliedOptions?: AppliedForkliftOption[];
   optionBillingAmount?: number;
+  optionSupplyAmount?: number;
+  optionCostAmount?: number;
+  equipmentSupplyAmount?: number;
+  installedOptionsSummary?: string;
   allocatedAt?: string;
   packedAt?: string;
   shippedAt?: string;
@@ -9085,13 +9137,24 @@ export interface TradeBilling {
   id: string;
   orderId?: string;
   orderIds?: string[];
+  contractId?: string;
+  contractNo?: string;
   customerId: string;
   billingMonth: string;
   billingDate?: string;
+  dueDate?: string;
+  equipmentSupplyAmount?: number;
+  optionSupplyAmount?: number;
   supplyAmount?: number;
   vatAmount?: number;
   totalAmount: number;
-  status: 'DRAFT' | 'ISSUED' | 'SENT' | 'PAID' | 'CANCELLED';
+  paidAmount?: number;
+  remainingAmount?: number;
+  overdueDays?: number;
+  paymentScenario?: string;
+  appliedOptions?: AppliedForkliftOption[];
+  installedOptionsSummary?: string;
+  status: 'DRAFT' | 'ISSUED' | 'SENT' | 'PARTIAL' | 'OVERDUE' | 'PAID' | 'CANCELLED';
   recipientName?: string;
   recipientEmail?: string;
   ccEmail?: string;

@@ -15,6 +15,7 @@ import {
   MUJIN_TRADE_CONTRACTS,
   MUJIN_TRADE_SALES_ORDERS
 } from './mujinGlobalInitialData';
+import { FL_TRADE_RWTT_2026_BUNDLE } from './flTradeRwtt2026Data';
 
 export type InventoryAssetClass = 'ASSET' | 'PRODUCT' | 'PART' | 'CONSUMABLE';
 export type InventoryUsagePurpose = 'RENTAL_ONLY' | 'TRADE_SALE' | 'RENTAL_REPAIR' | 'DUAL_USE';
@@ -630,7 +631,9 @@ export const SEED_FL_CONSUMABLE_LOGS: any[] = [
 // 4. 계약 구분자 적용: 렌탈 계약(고객 현장별 계약) vs 유통 계약(출고 건별 계약)
 // ============================================================
 
-const RAW_SEED_FL_CONTRACTS = [...MUJIN_TRADE_CONTRACTS,
+const RAW_SEED_FL_CONTRACTS = [
+  ...FL_TRADE_RWTT_2026_BUNDLE.contracts,
+  ...MUJIN_TRADE_CONTRACTS,
   // [A] 렌탈 계약 (contractType: 'RENTAL') - 고객의 현장별로 1개 계약 체결
   {
     id: 'CTR-R2607-001',
@@ -1218,5 +1221,11 @@ export function enrichContractWithCostAndMargin(
 }
 
 export const SEED_FL_CONTRACTS = RAW_SEED_FL_CONTRACTS.map(c =>
-  enrichContractWithCostAndMargin(c, SEED_FL_CONTRACT_ASSETS, SEED_FL_RENTAL_ASSETS, MUJIN_TRADE_SALES_ORDERS, SEED_FL_REPAIRS)
+  enrichContractWithCostAndMargin(
+    c,
+    SEED_FL_CONTRACT_ASSETS,
+    SEED_FL_RENTAL_ASSETS,
+    [...FL_TRADE_RWTT_2026_BUNDLE.salesOrders, ...MUJIN_TRADE_SALES_ORDERS],
+    SEED_FL_REPAIRS
+  )
 );

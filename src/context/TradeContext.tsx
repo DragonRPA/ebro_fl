@@ -18,6 +18,7 @@ import {
   MUJIN_TRADE_PURCHASE_ITEMS,
   MUJIN_TRADE_LOTS, MUJIN_TRADE_SALES_ORDERS, MUJIN_TRADE_SALES_ORDER_LINES, MUJIN_TRADE_OUTBOUNDS, MUJIN_TRADE_BILLINGS
 } from '../data/mujinGlobalInitialData';
+import { FL_TRADE_RWTT_2026_BUNDLE } from '../data/flTradeRwtt2026Data';
 
 const uuidv4 = () => Math.random().toString(36).substring(2, 9).toUpperCase();
 
@@ -1886,7 +1887,9 @@ const SEED_OPTIONS_SO103: AppliedForkliftOption[] = [
   }
 ];
 
-const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [...MUJIN_TRADE_SALES_ORDERS,
+const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [
+  ...FL_TRADE_RWTT_2026_BUNDLE.salesOrders,
+  ...MUJIN_TRADE_SALES_ORDERS,
   {
     id: 'SO-202609-101',
     customerId: 'CUST-MJ-005',
@@ -2038,7 +2041,9 @@ const DEFAULT_SALES_ORDERS: TradeSalesOrder[] = [...MUJIN_TRADE_SALES_ORDERS,
   }
 ];
 
-const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [...MUJIN_TRADE_SALES_ORDER_LINES,
+const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [
+  ...FL_TRADE_RWTT_2026_BUNDLE.salesOrderLines,
+  ...MUJIN_TRADE_SALES_ORDER_LINES,
   {
     id: 'SOL-101-1',
     orderId: 'SO-202609-101',
@@ -2200,7 +2205,9 @@ const DEFAULT_SALES_ORDER_LINES: TradeSalesOrderLine[] = [...MUJIN_TRADE_SALES_O
   }
 ];
 
-const DEFAULT_OUTBOUNDS: TradeOutbound[] = [...MUJIN_TRADE_OUTBOUNDS,
+const DEFAULT_OUTBOUNDS: TradeOutbound[] = [
+  ...FL_TRADE_RWTT_2026_BUNDLE.outbounds,
+  ...MUJIN_TRADE_OUTBOUNDS,
   {
     id: 'TOUT-202609-101',
     orderId: 'SO-202609-101',
@@ -2330,7 +2337,9 @@ const DEFAULT_OUTBOUNDS: TradeOutbound[] = [...MUJIN_TRADE_OUTBOUNDS,
   }
 ];
 
-const DEFAULT_BILLINGS: TradeBilling[] = [...MUJIN_TRADE_BILLINGS,
+const DEFAULT_BILLINGS: TradeBilling[] = [
+  ...FL_TRADE_RWTT_2026_BUNDLE.tradeBillings,
+  ...MUJIN_TRADE_BILLINGS,
   {
     id: 'TBIL-202609-101',
     orderId: 'SO-202609-101',
@@ -2510,7 +2519,7 @@ function enrichTradeProductWithArchive(product: TradeProduct): TradeProduct {
 }
 
 function ensureFlTradeSeedMigratedOnce(): void {
-  const MIGRATION_KEY = 'ebro_fl_trade_seed_v14_full_42_pdf_vdi';
+  const MIGRATION_KEY = 'ebro_fl_trade_seed_v15_30_contracts_rwtt';
   try {
     if (localStorage.getItem(MIGRATION_KEY) === 'done') return;
     localStorage.setItem('ebro_fl_option_masters', JSON.stringify(DEFAULT_FORKLIFT_OPTION_MASTERS));

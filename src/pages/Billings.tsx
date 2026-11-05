@@ -235,7 +235,7 @@ export const Billings: React.FC = () => {
   })();
   const [tempSearchTerm, setTempSearchTerm] = useState('');
   const [tempContractNoFilter, setTempContractNoFilter] = useState('');
-  const [tempStartBillingYmFilter, setTempStartBillingYmFilter] = useState(initialYm);
+  const [tempStartBillingYmFilter, setTempStartBillingYmFilter] = useState('2026-01');
   const [tempEndBillingYmFilter, setTempEndBillingYmFilter] = useState(initialYm);
   const [tempPaymentFilter, setTempPaymentFilter] = useState<'ALL' | 'PAID' | 'UNPAID_ANY'>('ALL');
   const [tempMailSentFilter, setTempMailSentFilter] = useState<'ALL' | 'SENT' | 'UNSENT'>('ALL');
@@ -248,7 +248,7 @@ export const Billings: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [contractNoFilter, setContractNoFilter] = useState('');
-  const [startBillingYmFilter, setStartBillingYmFilter] = useState(initialYm);
+  const [startBillingYmFilter, setStartBillingYmFilter] = useState('2026-01');
   const [endBillingYmFilter, setEndBillingYmFilter] = useState(initialYm);
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'PAID' | 'UNPAID_ANY'>('ALL');
   const [mailSentFilter, setMailSentFilter] = useState<'ALL' | 'SENT' | 'UNSENT'>('ALL');
