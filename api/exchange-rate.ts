@@ -3,9 +3,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 interface RateResult {
-  currency: 'CNY' | 'USD' | 'KRW';
+  currency: 'CNY' | 'USD' | 'JPY' | 'EUR' | 'KRW';
   baseDate: string;
-  baseRate: number;      // 매매기준율 (1 외화당 원화)
+  baseRate: number;      // 매매기준율 (1 외화당 원화, 엔화는 100엔당 원화)
   ttsRate: number;       // 전신환매도율 (송금 보낼 때 환율, 약 +1.0% 스프레드)
   customsRate: number;   // 관세 과세 참고환율
   source: string;
@@ -21,9 +21,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const currencyParam = String(req.query.currency || 'CNY').toUpperCase();
-  const targetCurrency: 'CNY' | 'USD' | 'KRW' =
-    currencyParam === 'USD' ? 'USD' : currencyParam === 'KRW' ? 'KRW' : 'CNY';
+  const targetCurrency: 'CNY' | 'USD' | 'JPY' | 'EUR' | 'KRW' =
+    currencyParam === 'USD'
+      ? 'USD'
+      : currencyParam === 'JPY'
+      ? 'JPY'
+      : currencyParam === 'EUR'
+      ? 'EUR'
+      : currencyParam === 'KRW'
+      ? 'KRW'
+      : 'CNY';
   const requestedDate = String(req.query.date || new Date().toISOString().split('T')[0]);
+  const daysParam = Math.min(180, Math.max(0, Number(req.query.days || 0)));
 
   if (targetCurrency === 'KRW') {
     return res.status(200).json({
@@ -37,6 +46,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         source: '원화 기준'
       }
     });
+  }
+
+  // 시계열(최근 N일, 기본 90일) 요청 처리
+  if (daysParam > 0) {
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const endDateStr = requestedDate <= todayStr ? requestedDate : todayStr;
+      const endObj = new Date(endDateStr);
+      const startObj = new Date(endObj.getTime() - daysParam * 24 * 60 * 60 * 1000);
+      const startDateStr = startObj.toISOString().split('T')[0];
+      const unitMultiplier = targetCurrency === 'JPY' ? 100 : 1;
+
+      const tsUrl = `https://api.frankfurter.dev/v1/${startDateStr}..${endDateStr}?base=${targetCurrency}&symbols=KRW`;
+      const tsRes = await fetch(tsUrl);
+      if (tsRes.ok) {
+        const tsJson: any = await tsRes.json();
+        const rateMap = tsJson?.rates || {};
+        const dates = Object.keys(rateMap).sort();
+        if (dates.length > 0) {
+          const series = dates.map(d => {
+            const rawKrw = Number(rateMap[d]?.KRW || 0) * unitMultiplier;
+            const baseRate = Math.round(rawKrw * 100) / 100;
+            return {
+              date: d,
+              baseRate,
+              ttsRate: Math.round(baseRate * 1.01 * 100) / 100,
+              ttbRate: Math.round(baseRate * 0.99 * 100) / 100,
+              customsRate: Math.round(baseRate * 1.003 * 100) / 100
+            };
+          });
+          return res.status(200).json({
+            success: true,
+            data: {
+              currency: targetCurrency,
+              startDate: startDateStr,
+              endDate: endDateStr,
+              source: '국제외환시장 일별 고시 시계열',
+              series
+            }
+          });
+        }
+      }
+    } catch {
+      // 시계열 조회 실패 시 클라이언트 폴백 시계열 사용
+    }
   }
 
   // 1순위: 한국수출입은행 Open API (환경변수 EXIM_API_KEY 설정 시 작동)
