@@ -597,17 +597,6 @@ export const TradeContractsPage: React.FC = () => {
     getCustomerName
   ]);
 
-  // 통계 집계 (매입원가, 판매금액, 매출총이익, 이익률)
-  const stats = useMemo(() => {
-    const activeOrders = salesOrders.filter(o => o.status !== 'CANCELLED');
-    const totalCount = activeOrders.length;
-    const totalSales = activeOrders.reduce((sum, o) => sum + o.totalSalesAmount, 0);
-    const totalCogs = activeOrders.reduce((sum, o) => sum + o.totalCogsAmount, 0);
-    const totalProfit = totalSales - totalCogs;
-    const profitMargin = totalSales > 0 ? Math.round((totalProfit / totalSales) * 1000) / 10 : 0;
-    return { totalCount, totalSales, totalCogs, totalProfit, profitMargin };
-  }, [salesOrders]);
-
   // 엑셀 다운로드
   const handleExportExcel = () => {
     const rows = filteredOrders.map((o, idx) => {
@@ -679,20 +668,20 @@ export const TradeContractsPage: React.FC = () => {
   const draftVatTotal = Math.round(draftSupplyTotal * 0.1);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '14px', backgroundColor: 'var(--bg-app)', padding: '16px 20px', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0, gap: '6px', backgroundColor: 'var(--bg-app)', padding: '0', overflow: 'hidden' }}>
       {toast && (
         <div
           style={{
             position: 'fixed',
-            top: '20px',
-            right: '20px',
+            top: '14px',
+            right: '14px',
             zIndex: 9999,
-            padding: '10px 18px',
+            padding: '8px 14px',
             borderRadius: '6px',
             backgroundColor: toast.type === 'error' ? '#dc2626' : '#059669',
             color: '#fff',
             fontWeight: 700,
-            fontSize: '13px',
+            fontSize: '12.5px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.18)'
           }}
         >
@@ -700,43 +689,43 @@ export const TradeContractsPage: React.FC = () => {
         </div>
       )}
 
-      {/* 1. 상단 헤더 및 수주 파이프라인 바 */}
+      {/* 1. 상단 헤더 및 수주 파이프라인 바 (초슬림 1열 구성) */}
       <div
         style={{
-          padding: '14px 18px',
+          padding: '6px 10px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
-          borderRadius: '8px',
+          borderRadius: '6px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '8px',
           flexShrink: 0
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
           <h2
             data-mid="trade_contracts-header"
             style={{
-              fontSize: '18px',
+              fontSize: '15px',
               fontWeight: 800,
               margin: 0,
               color: 'var(--text-main)',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               whiteSpace: 'nowrap'
             }}
           >
-            <FileSpreadsheet size={20} color="var(--primary)" />
+            <FileSpreadsheet size={17} color="var(--primary)" />
             <span>유통 계약 및 거래처별 판매 · 매출이익 관리</span>
           </h2>
           <span
             style={{
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '11.5px',
+              padding: '2px 7px',
+              borderRadius: '4px',
+              fontSize: '11px',
               fontWeight: 800,
               backgroundColor: 'rgba(2, 132, 199, 0.14)',
               color: '#0284c7',
@@ -744,12 +733,12 @@ export const TradeContractsPage: React.FC = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            계약구분: 유통 계약 · 각 출고횟수가 1개의 계약 (1출고 = 1계약)
+            1출고 = 1계약
           </span>
         </div>
 
         {/* 신규 수주 파이프라인 + 상세 모달 + 엑셀 다운로드 */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <input
               type="text"
@@ -768,8 +757,8 @@ export const TradeContractsPage: React.FC = () => {
                   if (firstMatch) setSelectedCustomerId(firstMatch.id);
                 }
               }}
-              placeholder="거래처 검색..."
-              style={{ width: '115px', padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+              placeholder="거래처 검색"
+              style={{ width: '90px', height: '28px', padding: '2px 7px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
             />
             <select
               data-mid="trade_contracts-customer-select"
@@ -779,7 +768,7 @@ export const TradeContractsPage: React.FC = () => {
                   : filteredQuickCustomerOptions[0]?.id || ''
               }
               onChange={e => setSelectedCustomerId(e.target.value)}
-              style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', minWidth: '150px' }}
+              style={{ height: '28px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', width: '130px', maxWidth: '140px' }}
             >
               {filteredQuickCustomerOptions.length === 0 ? (
                 <option value="">검색된 거래처 없음</option>
@@ -799,7 +788,7 @@ export const TradeContractsPage: React.FC = () => {
                 : inStockProducts[0]?.id || ''
             }
             onChange={e => setSelectedProductId(e.target.value)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+            style={{ height: '28px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', width: '235px', maxWidth: '250px' }}
           >
             {inStockProducts.length === 0 ? (
               <option value="">가용 재고 제품 없음</option>
@@ -821,7 +810,7 @@ export const TradeContractsPage: React.FC = () => {
             min={1}
             value={orderQty}
             onChange={e => setOrderQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
-            style={{ width: '60px', padding: '6px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+            style={{ width: '48px', height: '28px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
           />
 
           <button
@@ -830,80 +819,52 @@ export const TradeContractsPage: React.FC = () => {
             onClick={handleCreateOrder}
             disabled={isSubmitting || inStockProducts.length === 0}
             className="btn-save"
-            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
-            <Plus size={14} /> {isSubmitting ? '등록 중...' : '빠른 판매등록'}
+            <Plus size={13} /> {isSubmitting ? '등록 중' : '빠른 판매등록'}
           </button>
 
           <button
             type="button"
             onClick={openCreateModal}
             className="btn-primary"
-            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
-            <Layers size={14} /> 수주 상세 등록
- </button>
+            <Layers size={13} /> 수주 상세 등록
+          </button>
 
           <button
             type="button"
             data-mid="trade_contracts-excel-btn"
             onClick={handleExportExcel}
             className="btn-excel-download"
-            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            style={{ height: '28px', padding: '0 9px', fontSize: '11.5px', fontWeight: 700, borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
-            <Download size={14} /> 엑셀 다운로드
- </button>
+            <Download size={13} /> 엑셀 다운로드
+          </button>
         </div>
       </div>
 
-      {/* 2. KPI 요약 카드 (판매금액, 매입원가, 매출이익, 이익률) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 판매금액 (공급가액 · {stats.totalCount}건)</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-            ₩{stats.totalSales.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입원가</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-            ₩{stats.totalCogs.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출이익</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#059669', whiteSpace: 'nowrap' }}>
-            ₩{stats.totalProfit.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>평균 매출이익률</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#1d4ed8', whiteSpace: 'nowrap' }}>
-            {stats.profitMargin}%
- </div>
-        </div>
-      </div>
-
-      {/* 3. 통합 조회 필터 바 */}
+      {/* 2. 통합 조회 필터 바 (초슬림 1열 구성) */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: '6px 10px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
-          borderRadius: '8px',
+          borderRadius: '6px',
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '12px',
+          gap: '8px',
           flexWrap: 'wrap',
           flexShrink: 0
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>거래처 구분</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>거래처 구분</label>
           <select
             value={tierFilter}
             onChange={e => setTierFilter(e.target.value as any)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+            style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '82px' }}
           >
             <option value="ALL">전체</option>
             <option value="DEALER">대리점</option>
@@ -911,31 +872,31 @@ export const TradeContractsPage: React.FC = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>주문 기간</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>주문 기간</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <input
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+              style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', width: '118px' }}
             />
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>~</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>~</span>
             <input
               type="date"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              style={{ padding: '5px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+              style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', width: '118px' }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>거래처 선택</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>거래처 선택</label>
           <select
             value={customerFilter}
             onChange={e => setCustomerFilter(e.target.value)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+            style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '140px', maxWidth: '150px' }}
           >
             <option value="ALL">전체 거래처</option>
             {customerOptions.map(c => (
@@ -944,12 +905,12 @@ export const TradeContractsPage: React.FC = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>제품 선택</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>제품 선택</label>
           <select
             value={productFilter}
             onChange={e => setProductFilter(e.target.value)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+            style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '175px', maxWidth: '185px' }}
           >
             <option value="ALL">전체 제품</option>
             {products.map(p => (
@@ -958,27 +919,27 @@ export const TradeContractsPage: React.FC = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>검색어</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>검색어</label>
           <div style={{ position: 'relative' }}>
-            <Search size={13} style={{ position: 'absolute', left: '9px', top: '8px', color: 'var(--text-muted)' }} />
+            <Search size={12} style={{ position: 'absolute', left: '7px', top: '7px', color: 'var(--text-muted)' }} />
             <input
               type="text"
               data-mid="trade_contracts-search-input"
-              placeholder="주문번호 / 거래처 / 차대번호 검색"
+              placeholder="주문번호 / 거래처 / 차대번호"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ padding: '6px 10px 6px 28px', fontSize: '12px', width: '190px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+              style={{ height: '26px', padding: '2px 8px 2px 24px', fontSize: '11.5px', width: '165px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>거래 상태</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', lineHeight: 1.1 }}>거래 상태</label>
           <select
             value={orderStatusFilter}
             onChange={e => setOrderStatusFilter(e.target.value as any)}
-            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap' }}
+            style={{ height: '26px', padding: '2px 6px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', whiteSpace: 'nowrap', width: '96px' }}
           >
             <option value="ALL">전체 거래상태</option>
             <option value="PENDING">수주접수</option>
@@ -994,43 +955,45 @@ export const TradeContractsPage: React.FC = () => {
             type="button"
             onClick={resetFilters}
             className="btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            style={{ height: '26px', padding: '0 8px', fontSize: '11px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', cursor: 'pointer' }}
           >
-            <RefreshCw size={12} /> 필터 초기화
- </button>
+            <RefreshCw size={11} /> 필터 초기화
+          </button>
         )}
       </div>
 
-      {/* 4. 중앙 본문: 고밀도 그리드 테이블 */}
+      {/* 3. 중앙 본문: 고밀도 그리드 테이블 (화면 최대 할애) */}
       <div
         className="card"
         style={{
           flex: 1,
+          minHeight: 0,
           margin: 0,
+          padding: 0,
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
-          borderRadius: '8px',
+          borderRadius: '6px',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
         }}
       >
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 2 }}>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '250px' }}>계약서 / 업무 처리</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>계약번호 / 주문번호</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약구분 · 출고회차</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>거래처구분</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 품목 명세 (제품·부품·소모품)</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 차대번호</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매입원가</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매금액</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출이익 · 이익률</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>수주 상태</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약서 상태</th>
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', width: '230px' }}>계약서 / 업무 처리</th>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>계약번호 / 주문번호</th>
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약구분 · 출고회차</th>
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>거래처구분</th>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>거래처명</th>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 품목 명세 (제품·부품·소모품)</th>
+                <th style={{ padding: '7px 8px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)' }}>출고 차대번호</th>
+                <th style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매입원가</th>
+                <th style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>판매금액</th>
+                <th style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-muted)' }}>매출이익 · 이익률</th>
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>수주 상태</th>
+                <th style={{ padding: '7px 8px', textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>계약서 상태</th>
               </tr>
             </thead>
             <tbody>
@@ -1049,8 +1012,8 @@ export const TradeContractsPage: React.FC = () => {
                   const margin = o.totalSalesAmount > 0 ? Math.round((profit / o.totalSalesAmount) * 1000) / 10 : 0;
 
                   return (
-                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)', height: '42px' }}>
-                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)', height: '36px' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                           <button
                             type="button"
@@ -1058,37 +1021,37 @@ export const TradeContractsPage: React.FC = () => {
                             onClick={() => setModalOrderId(o.id)}
                             className="btn-save"
                             style={{
-                              padding: '4px 9px',
+                              padding: '3px 8px',
                               fontSize: '11px',
                               fontWeight: 700,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '4px',
+                              gap: '3px',
                               cursor: 'pointer',
                               borderRadius: '4px'
                             }}
                           >
-                            <FileSpreadsheet size={12} /> 계약서
- </button>
+                            <FileSpreadsheet size={11} /> 계약서
+                          </button>
 
                           {o.status === 'PENDING' && (
                             <button
                               type="button"
                               onClick={() => handleAcceptOrder(o)}
-                              style={{ padding: '4px 8px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                              style={{ padding: '3px 7px', fontSize: '11px', fontWeight: 700, borderRadius: '4px', border: 'none', backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                             >
                               <Check size={11} /> 확정
- </button>
+                            </button>
                           )}
 
                           {o.status !== 'CANCELLED' && (
                             <button
                               type="button"
                               onClick={() => openEditModal(o)}
-                              style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                              style={{ padding: '3px 6px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                             >
                               <Edit2 size={11} /> 수정
- </button>
+                            </button>
                           )}
 
                           {o.status !== 'CANCELLED' && (
@@ -1097,7 +1060,7 @@ export const TradeContractsPage: React.FC = () => {
                               onClick={() => handleQuickIssueBillingForOrder(o)}
                               title="완제품 + 장착옵션 합산 거래명세서 · 청구 생성"
                               style={{
-                                padding: '4px 7px',
+                                padding: '3px 6px',
                                 fontSize: '11px',
                                 fontWeight: 700,
                                 borderRadius: '4px',
@@ -1118,17 +1081,17 @@ export const TradeContractsPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleCancelOrder(o)}
-                              style={{ padding: '4px 7px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}
+                              style={{ padding: '3px 6px', fontSize: '11px', fontWeight: 600, borderRadius: '4px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}
                             >
                               취소
- </button>
+                            </button>
                           )}
 
                           {(o.status === 'CANCELLED' || o.status === 'PENDING') && (
                             <button
                               type="button"
                               onClick={() => handleDeleteOrder(o)}
-                              style={{ padding: '4px 6px', fontSize: '11px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', cursor: 'pointer' }}
+                              style={{ padding: '3px 5px', fontSize: '11px', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)', cursor: 'pointer' }}
                             >
                               <Trash2 size={11} />
                             </button>
@@ -1136,18 +1099,18 @@ export const TradeContractsPage: React.FC = () => {
                         </div>
                       </td>
 
-                      <td style={{ padding: '8px 12px' }}>
+                      <td style={{ padding: '4px 8px' }}>
                         <div style={{ fontWeight: 800, color: 'var(--primary)', fontFamily: 'monospace' }}>{o.contractNo || o.id}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{o.id} · {o.orderDate}</div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{o.id} · {o.orderDate}</div>
                       </td>
 
-                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
                           <span
                             style={{
-                              padding: '2px 8px',
+                              padding: '1px 6px',
                               borderRadius: '4px',
-                              fontSize: '11px',
+                              fontSize: '10.5px',
                               fontWeight: 800,
                               backgroundColor: 'rgba(2, 132, 199, 0.14)',
                               color: '#0284c7',
@@ -1156,18 +1119,18 @@ export const TradeContractsPage: React.FC = () => {
                           >
                             유통계약 · 제{o.outboundSeq || 1}차 출고
                           </span>
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                          <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                             {o.outboundId || '1출고=1계약'}
                           </span>
                         </div>
                       </td>
 
-                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
                         <span
                           style={{
-                            padding: '2px 8px',
+                            padding: '2px 7px',
                             borderRadius: '4px',
-                            fontSize: '11px',
+                            fontSize: '10.5px',
                             fontWeight: 700,
                             backgroundColor: effectiveTier === 'DEALER' ? '#ede9fe' : '#e0f2fe',
                             color: effectiveTier === 'DEALER' ? '#6d28d9' : '#0369a1'
@@ -1177,51 +1140,51 @@ export const TradeContractsPage: React.FC = () => {
                         </span>
                       </td>
 
-                      <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                      <td style={{ padding: '4px 8px', fontWeight: 700, color: 'var(--text-main)' }}>
                         {getCustomerName(o.customerId)}
                       </td>
 
-                      <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '4px 8px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                         <div>{getOrderItemsSummary(o.id)}</div>
                         {(o.appliedOptions || []).length > 0 && (
-                          <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700, marginTop: '2px' }}>
+                          <div style={{ fontSize: '10px', color: '#6d28d9', fontWeight: 700, marginTop: '1px' }}>
                             + 장착옵션 {(o.appliedOptions || []).length}종 ({(o.appliedOptions || []).slice(0, 2).map(op => op.name).join(', ')}{(o.appliedOptions || []).length > 2 ? ` 외 ${(o.appliedOptions || []).length - 2}종` : ''})
- </div>
+                          </div>
                         )}
                       </td>
 
-                      <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '4px 8px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-secondary)' }}>
                         {getOrderSerialSummary(o.id)}
                       </td>
 
-                      <td style={{ padding: '8px 12px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>
                         <div>₩{Number(o.totalCogsAmount || 0).toLocaleString()}</div>
                         {(o.optionCostAmount || 0) > 0 && (
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>옵션원가 ₩{(o.optionCostAmount || 0).toLocaleString()} 포함</div>
+                          <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>옵션원가 ₩{(o.optionCostAmount || 0).toLocaleString()} 포함</div>
                         )}
                       </td>
 
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 800, color: 'var(--primary)' }}>
                         <div>₩{Number(o.totalSalesAmount || 0).toLocaleString()}</div>
                         {(o.optionSupplyAmount || 0) > 0 && (
-                          <div style={{ fontSize: '10.5px', color: '#6d28d9', fontWeight: 700 }}>옵션청구 +₩{(o.optionSupplyAmount || 0).toLocaleString()} 포함</div>
+                          <div style={{ fontSize: '10px', color: '#6d28d9', fontWeight: 700 }}>옵션청구 +₩{(o.optionSupplyAmount || 0).toLocaleString()} 포함</div>
                         )}
                       </td>
 
-                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'right' }}>
                         <span style={{ fontWeight: 800, color: profit >= 0 ? '#059669' : '#dc2626' }}>
                           ₩{profit.toLocaleString()}
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '5px' }}>
+                        <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginLeft: '4px' }}>
                           ({margin}%)
- </span>
+                        </span>
                       </td>
 
-                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
                         <span
                           style={{
-                            fontSize: '11px',
-                            padding: '2px 8px',
+                            fontSize: '10.5px',
+                            padding: '2px 7px',
                             borderRadius: '10px',
                             backgroundColor:
                               o.status === 'DELIVERED'
@@ -1258,12 +1221,12 @@ export const TradeContractsPage: React.FC = () => {
                         </span>
                       </td>
 
-                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
                         <span
                           data-mid={`trade_contracts-doc_status-${o.id}`}
                           style={{
-                            fontSize: '11px',
-                            padding: '2px 8px',
+                            fontSize: '10.5px',
+                            padding: '2px 7px',
                             borderRadius: '4px',
                             backgroundColor:
                               docStatus === 'SENT'
@@ -1280,7 +1243,7 @@ export const TradeContractsPage: React.FC = () => {
                             fontWeight: 700,
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '3px'
                           }}
                         >
                           {docStatus === 'SENT' ? (
@@ -1299,17 +1262,17 @@ export const TradeContractsPage: React.FC = () => {
             </tbody>
             {filteredOrders.length > 0 && (
               <tfoot>
-                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-                  <td colSpan={7} style={{ padding: '10px 12px', color: 'var(--text-main)' }}>
+                <tr style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '2px solid var(--border-color)', fontWeight: 800, position: 'sticky', bottom: 0, zIndex: 2 }}>
+                  <td colSpan={7} style={{ padding: '6px 10px', color: 'var(--text-main)' }}>
                     조회 합계 ({filteredOrders.length}건 · 1출고 = 1유통계약)
- </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-main)' }}>
+                  </td>
+                  <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text-main)' }}>
                     ₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + o.totalCogsAmount, 0).toLocaleString()}
                   </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--primary)' }}>
+                  <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--primary)' }}>
                     ₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + o.totalSalesAmount, 0).toLocaleString()}
                   </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: '#059669' }}>
+                  <td style={{ padding: '6px 8px', textAlign: 'right', color: '#059669' }}>
                     ₩{filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((s, o) => s + (o.totalSalesAmount - o.totalCogsAmount), 0).toLocaleString()}
                   </td>
                   <td colSpan={2} />

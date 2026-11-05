@@ -2689,7 +2689,7 @@ const App: React.FC = () => {
         </aside>
 
         {/* 메인 콘텐츠 영역 (독자 종스크롤 & 다이나믹 뷰포트 활용, 두꺼운 16px 스크롤바 적용) */}
-        <main style={{ flex: 1, height: '100%', minHeight: 0, padding: '16px 20px 5px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }} className="main-content-area">
+        <main style={{ flex: 1, height: '100%', minHeight: 0, padding: '8px 10px 4px 10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)' }} className="main-content-area">
           {userHasViewPerm ? (
             <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>화면을 불러오는 중입니다...</div>}>
               {keptAliveTabIds.map(tabId => {
