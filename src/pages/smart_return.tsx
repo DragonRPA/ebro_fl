@@ -128,7 +128,7 @@ export const SmartReturn: React.FC = () => {
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
-  //  상단 KPI 요약 바 (1-pass 단일 순회 메모이제이션)
+  // 반납 현황 집계 (1-pass 단일 순회 메모이제이션)
   const returnSummaryStats = useMemo(() => {
     const todayStr = getTodayString();
     const nextWeek = new Date();

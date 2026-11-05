@@ -1358,7 +1358,7 @@ export const RentAssets: React.FC = () => {
     feeQuery, returnQuery, operationStatusQuery, customerQuery, siteQuery
   ]);
 
-  // 조회 결과 연동 KPI 집계 (상단 요약 카드 및 하단 요약 바 연동)
+  // 조회 결과 연동 집계 (하단 대차대조 바 연동)
   const filteredKpiStats = useMemo(() => {
     const activeRentedList: Asset[] = [];
     const returnedList: Asset[] = [];
