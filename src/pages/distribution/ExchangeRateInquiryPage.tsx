@@ -341,41 +341,38 @@ export const ExchangeRateInquiryPage: React.FC = () => {
             />
           </div>
         </div>
+      </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '10px',
-          padding: '12px 14px',
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="exchange-rate-bottom-summary"
+        style={{
+          padding: '10px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
-          backgroundColor: 'var(--bg-app)',
-          border: '1px solid var(--border-color)'
-        }}>
-          <div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>원화 환산 물대</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
-              ₩{simResult.krwGoodsAmount.toLocaleString('ko-KR')}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>예상 관세액</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>
-              ₩{simResult.customsDutyAmount.toLocaleString('ko-KR')}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 수입 인수도원가 합계</div>
-            <div style={{ fontSize: '16px', fontWeight: 900, color: '#1d4ed8', marginTop: '2px' }}>
-              ₩{simResult.totalLandedKrw.toLocaleString('ko-KR')}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>1대당 평균 취득원가</div>
-            <div style={{ fontSize: '16px', fontWeight: 900, color: '#059669', marginTop: '2px' }}>
-              ₩{simResult.perUnitLandedKrw.toLocaleString('ko-KR')}
-            </div>
-          </div>
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px',
+          flexWrap: 'wrap',
+          fontSize: '12.5px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <span>원화 환산 물대: <strong style={{ color: 'var(--text-primary)' }}>₩{simResult.krwGoodsAmount.toLocaleString('ko-KR')}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>예상 관세액: <strong style={{ color: '#d97706' }}>₩{simResult.customsDutyAmount.toLocaleString('ko-KR')}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>총 수입 인수도원가 합계: <strong style={{ color: '#1d4ed8' }}>₩{simResult.totalLandedKrw.toLocaleString('ko-KR')}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>1대당 평균 취득원가: <strong style={{ color: '#059669' }}>₩{simResult.perUnitLandedKrw.toLocaleString('ko-KR')}</strong></span>
         </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>
+          시뮬레이션 통화: {simCurrency} · 수량 {simQty}대 기준
+        </span>
       </div>
     </div>
   );

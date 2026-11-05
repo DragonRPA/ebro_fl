@@ -3089,46 +3089,6 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
               </div>
             </div>
 
-            {/*  청구 및 수납 종합 집계 (1줄 고밀도 압축 스트립, 메모이제이션 적용) */}
-            <div data-mid="billing-kpi-summary" style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-              padding: '8px 14px',
-              backgroundColor: 'var(--bg-app)',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              flexWrap: 'wrap',
-              fontSize: '12.5px',
-              whiteSpace: 'nowrap'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>조회:</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '13.5px' }}>{filteredBillings.length}건</strong>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>공급가액:</span>
-                <strong>₩{billingKpiSummary.totalSupply.toLocaleString()}</strong>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>총 청구:</span>
-                <strong style={{ color: '#0070C0', fontSize: '13.5px' }}>₩{billingKpiSummary.totalGrand.toLocaleString()}</strong>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>수납완료:</span>
-                <strong style={{ color: 'var(--success)' }}>₩{billingKpiSummary.totalPaid.toLocaleString()}</strong>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>미수채권:</span>
-                <strong style={{ color: billingKpiSummary.totalUnpaid > 0 ? '#dc2626' : 'var(--text-muted)' }}>₩{billingKpiSummary.totalUnpaid.toLocaleString()}</strong>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>통장잔액:</span>
-                <strong style={{ color: billingKpiSummary.totalUnappliedDeposit > 0 ? '#10B981' : 'var(--text-muted)' }}>₩{billingKpiSummary.totalUnappliedDeposit.toLocaleString()}</strong>
-              </div>
-            </div>
-
             <div className="table-container" style={{ border: 'none', boxShadow: 'none', overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
               <table data-mid="billing-list-table" style={{ minWidth: '650px', whiteSpace: 'nowrap' }}>
                 <thead>
@@ -5392,6 +5352,18 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
  </div>
             )}
           </div>
+          <div style={{ gridColumn: '1 / -1', padding: '8px 16px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span>미청구 정산 대상 계약: <strong style={{ color: 'var(--primary)' }}>{unbilledContractsForWizard.length}건</strong></span>
+              <span style={{ color: 'var(--border-color)' }}>|</span>
+              <span>기본 렌탈료 합계: <strong>₩{totalAmountForWizard.toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--border-color)' }}>|</span>
+              <span>추가 청구 합계: <strong>₩{extraCharges.reduce((sum, ec) => sum + ec.quantity * ec.unitPrice, 0).toLocaleString()}</strong></span>
+              <span style={{ color: 'var(--border-color)' }}>|</span>
+              <span>총 정산 예상 금액: <strong style={{ color: 'var(--primary)' }}>₩{(totalAmountForWizard + extraCharges.reduce((sum, ec) => sum + ec.quantity * ec.unitPrice, 0)).toLocaleString()}</strong></span>
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>미청구 수시·중도 정산 요약</span>
+          </div>
         </div>
       )}
 
@@ -5656,28 +5628,6 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
  </button>
               </div>
             </div>
-
-            {/* 사유 분석 및 영업사원별 현황 칩 바 */}
-            {(topReasons.length > 0 || topSalespeople.length > 0) && (
-              <div data-mid="waiver-reason-sales-strip" className="card" style={{ margin: 0, padding: '10px 14px', backgroundColor: 'var(--bg-app)', display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap', fontSize: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>사유별 비중:</span>
-                  {topReasons.slice(0, 4).map(([rs, data]) => (
-                    <span key={rs} style={{ backgroundColor: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
-                      <strong>{rs}</strong>: {data.count}건 (₩{data.amount.toLocaleString()})
- </span>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}> 담당자별 면제:</span>
-                  {topSalespeople.slice(0, 4).map(([sp, data]) => (
-                    <span key={sp} style={{ backgroundColor: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>
-                      <strong>{sp}</strong>: ₩{data.amount.toLocaleString()} ({data.count}건)
- </span>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* ③ 본문 고밀도 슬림 그리드 (헌장 3.6 유형 B, 행 높이 38~40px) */}
             <div data-mid="waiver-list-table" className="card" style={{ margin: 0, padding: 0, overflow: 'hidden' }}>

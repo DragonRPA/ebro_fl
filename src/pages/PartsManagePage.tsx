@@ -1654,6 +1654,19 @@ export const PartsManagePage: React.FC<PartsManagePageProps> = ({ mode = 'RENTAL
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>경과월 구간:</span>
+                  <select
+                    value={selectedAgingBucket}
+                    onChange={e => setSelectedAgingBucket(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+                    style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    <option value="ALL">전체 경과월 구간</option>
+                    {agingBucketsSummary.buckets.map(b => (
+                      <option key={b.bucket} value={b.bucket}>{b.label} 경과 ({b.itemCount}종)</option>
+                    ))}
+                  </select>
+                </div>
                 {selectedAgingBucket !== 'ALL' && (
                   <button
                     type="button"
@@ -1672,67 +1685,6 @@ export const PartsManagePage: React.FC<PartsManagePageProps> = ({ mode = 'RENTAL
                 >
                   <Download size={13} /> 39컬럼 경과월 재고잔액 엑셀 내보내기
                 </button>
-              </div>
-            </div>
-
-            {/* 0개월 ~ 24개월이상 가로 스크롤 매트릭스 */}
-            <div style={{ overflowX: 'auto' }}>
-              <div style={{ display: 'flex', gap: '6px', minWidth: 'max-content', paddingBottom: '2px' }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedAgingBucket('ALL')}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    border: selectedAgingBucket === 'ALL' ? '2px solid #2563eb' : '1px solid var(--border-color)',
-                    backgroundColor: selectedAgingBucket === 'ALL' ? '#eff6ff' : 'var(--bg-app)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    minWidth: '115px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#1e40af' }}>전체 경과월 합계</div>
-                  <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
-                    {agingBucketsSummary.totalActiveKinds}종 · {agingBucketsSummary.totalStockQty.toLocaleString('ko-KR')}개
-                  </div>
-                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#2563eb' }}>
-                    ₩{agingBucketsSummary.totalStockAmount.toLocaleString('ko-KR')}
-                  </div>
-                </button>
-
-                {agingBucketsSummary.buckets.map(b => {
-                  const hasData = b.itemCount > 0;
-                  const isSelected = selectedAgingBucket === b.bucket;
-                  return (
-                    <button
-                      key={b.bucket}
-                      type="button"
-                      onClick={() => setSelectedAgingBucket(isSelected ? 'ALL' : b.bucket)}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: isSelected ? '2px solid #2563eb' : '1px solid var(--border-color)',
-                        backgroundColor: isSelected ? '#eff6ff' : hasData ? '#ffffff' : 'var(--bg-app)',
-                        opacity: hasData ? 1 : 0.55,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        minWidth: '96px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      <div style={{ fontSize: '11px', fontWeight: 800, color: b.bucket >= 12 ? '#b45309' : '#0f766e' }}>
-                        {b.label} 경과
-                      </div>
-                      <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
-                        {b.itemCount}종 · {b.stockQty.toLocaleString('ko-KR')}개
-                      </div>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: hasData ? '#1e40af' : 'var(--text-muted)' }}>
-                        ₩{b.stockAmount.toLocaleString('ko-KR')}
-                      </div>
-                    </button>
-                  );
-                })}
               </div>
             </div>
           </div>
@@ -2066,6 +2018,17 @@ export const PartsManagePage: React.FC<PartsManagePageProps> = ({ mode = 'RENTAL
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* 우하단 대차대조 합계 검증 바 */}
+          <div style={{ padding: '10px 16px', backgroundColor: 'var(--bg-app)', borderTop: '2px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+              부품 출고·사용 이력: 총 {filteredUsageHistory.length.toLocaleString('ko-KR')}건
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+              <span>사용수량 합계: <strong style={{ color: 'var(--primary)' }}>{filteredUsageHistory.reduce((s, u) => s + u.usedQty, 0).toLocaleString('ko-KR')}개</strong></span>
+              <span>부품원가 합계: <strong style={{ color: '#d97706' }}>₩{filteredUsageHistory.reduce((s, u) => s + u.totalPartCost, 0).toLocaleString('ko-KR')}</strong></span>
+            </div>
           </div>
         </div>
       )}

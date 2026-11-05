@@ -1097,56 +1097,6 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             })}
           </div>
         </div>
-
-        {/* 영업전개 흐름 4단계 클릭형 파이프라인 바 */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(140px, 1fr))',
-            gap: '8px',
-          }}
-        >
-          {SALES_JOURNAL_STAGES.map((stg, idx) => {
-            const stStyle = STAGE_STYLE_MAP[stg];
-            const count = stageStats.counts[stg] || 0;
-            const isSelected = selectedStageFilter === stg;
-            return (
-              <div
-                key={stg}
-                onClick={() => setSelectedStageFilter(isSelected ? 'ALL' : stg)}
-                style={{
-                  padding: '5px 10px',
-                  borderRadius: '6px',
-                  border: isSelected ? `1.5px solid ${stStyle.text}` : `1px solid ${stStyle.border}`,
-                  background: isSelected ? stStyle.bg : 'var(--bg-app)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '6px',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '11.5px',
-                    fontWeight: 800,
-                    padding: '1px 6px',
-                    borderRadius: '4px',
-                    background: stStyle.bg,
-                    color: stStyle.text,
-                    border: `1px solid ${stStyle.border}`,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {idx + 1}단계 · {stg}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: stStyle.text, whiteSpace: 'nowrap' }}>
-                  {count}건
- </span>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* 본문 2단 스튜디오: 좌측 [자연어 일지 작성 및 추출] / 우측 [영업일지 목록 및 상세] */}
@@ -2159,6 +2109,43 @@ export const SalesJournalPage: React.FC<SalesJournalPageProps> = ({ isMobileEmbe
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 최하단 1줄 요약 바 */}
+      <div
+        data-mid="sales-journal-bottom-summary"
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>전체 영업일지: <strong style={{ color: 'var(--text-main)' }}>{stageStats.total}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>조회 결과: <strong style={{ color: 'var(--primary)' }}>{filteredJournals.length}건</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          {SALES_JOURNAL_STAGES.map((stg, idx) => (
+            <React.Fragment key={stg}>
+              <span>
+                {idx + 1}단계 {stg}: <strong style={{ color: STAGE_STYLE_MAP[stg].text }}>{stageStats.counts[stg] || 0}건</strong>
+              </span>
+              {idx < SALES_JOURNAL_STAGES.length - 1 && <span style={{ color: 'var(--border-color)' }}>|</span>}
+            </React.Fragment>
+          ))}
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>
+          조회기간: {startDateFilter || '전체'} ~ {endDateFilter || '전체'}
+        </span>
       </div>
     </div>
   );

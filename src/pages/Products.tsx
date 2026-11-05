@@ -711,9 +711,6 @@ export const Products: React.FC = () => {
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             제품 모델 관리
  </h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            총 <strong>{products.length}</strong>개 모델 (조회 <strong>{filtered.length}</strong>개)
- </span>
         </div>
 
         {/* 우상단 파이프라인 액션 - 표준 횡배치: 조회 -> 저장/등록 -> 엑셀업로드 -> 엑셀다운로드 */}

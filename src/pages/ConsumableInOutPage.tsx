@@ -1195,46 +1195,46 @@ export const ConsumableInOutPage: React.FC = () => {
               </table>
             </div>
           </div>
-
-          {/* [Z-패턴 4단계: 최하단 대차대조식 수불 무결성 검증 바] */}
-          <div style={{
-            padding: '14px 20px', backgroundColor: 'var(--bg-card)', borderRadius: '8px',
-            border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center', flexWrap: 'wrap', gap: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={18} style={{ color: 'var(--success)' }} />
-              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                수불 대차 검증 요약
- </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-              {logConsumableId !== 'ALL' && (
-                <div style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 600 }}>
-                  선택 품목: <span style={{ color: 'var(--success)' }}>입고 {auditBalance.inboundQty}개</span> / <span style={{ color: 'var(--danger)' }}>출고 {auditBalance.outboundQty}개</span>
-                </div>
-              )}
-              <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}> 입고 합계: </span>
-                <strong style={{ color: 'var(--success)' }}>₩{auditBalance.inboundSum.toLocaleString()}</strong>
-              </div>
-              <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}> 출고 합계: </span>
-                <strong style={{ color: 'var(--danger)' }}>₩{auditBalance.outboundSum.toLocaleString()}</strong>
-              </div>
-              <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}> 차량불출: </span>
-                <strong style={{ color: 'var(--primary)' }}>₩{auditBalance.transferSum.toLocaleString()}</strong>
-              </div>
-              <div style={{ fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-muted)' }}> 주기장반납: </span>
-                <strong style={{ color: 'var(--warning)' }}>₩{auditBalance.returnSum.toLocaleString()}</strong>
-              </div>
-            </div>
-          </div>
         </div>
       )}
+
+      {/* [Z-패턴 4단계: 최하단 대차대조식 수불 무결성 검증 바] */}
+      <div style={{
+        padding: '10px 18px', backgroundColor: 'var(--bg-card)', borderRadius: '8px',
+        border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', flexWrap: 'wrap', gap: '12px', whiteSpace: 'nowrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShieldCheck size={18} style={{ color: 'var(--success)' }} />
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+            수불 대차 검증 요약
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {logConsumableId !== 'ALL' && (
+            <div style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 600 }}>
+              선택 품목: <span style={{ color: 'var(--success)' }}>입고 {auditBalance.inboundQty}개</span> / <span style={{ color: 'var(--danger)' }}>출고 {auditBalance.outboundQty}개</span>
+            </div>
+          )}
+          <div style={{ fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>입고 합계: </span>
+            <strong style={{ color: 'var(--success)' }}>₩{auditBalance.inboundSum.toLocaleString()}</strong>
+          </div>
+          <div style={{ fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>출고 합계: </span>
+            <strong style={{ color: 'var(--danger)' }}>₩{auditBalance.outboundSum.toLocaleString()}</strong>
+          </div>
+          <div style={{ fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>차량불출: </span>
+            <strong style={{ color: 'var(--primary)' }}>₩{auditBalance.transferSum.toLocaleString()}</strong>
+          </div>
+          <div style={{ fontSize: '12px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>주기장반납: </span>
+            <strong style={{ color: 'var(--warning)' }}>₩{auditBalance.returnSum.toLocaleString()}</strong>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

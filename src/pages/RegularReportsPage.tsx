@@ -770,38 +770,6 @@ export const RegularReportsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* ─────────────────────────────────────────────────────────
-              [Z-패턴 4단계: 최하단 대차대조식 검증식 및 완결 요약]
-          ───────────────────────────────────────────────────────── */}
-          <footer style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.85)',
-            border: '1px solid var(--border-color, #334155)',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '12px',
-            fontSize: '12.5px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={18} color="#34d399" />
-              <span style={{ fontWeight: 700, color: 'var(--text-main, #f8fafc)' }}>
-                대차대조 보존 법칙 검증:
- </span>
-              <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
-                매출총이익(₩{metrics.grossProfit.toLocaleString()}) = 순렌탈이익(₩{metrics.pureRentalProfit.toLocaleString()}) + 순유통이익(₩{metrics.pureDistributionProfit.toLocaleString()}) + 기타차액(₩{metrics.otherNetProfit.toLocaleString()})
- </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
-                영업이익(₩{metrics.operatingProfit.toLocaleString()}) = 매출총이익 - 판관비(₩{metrics.sgaTotal.toLocaleString()})
- </span>
-            </div>
-          </footer>
         </div>
       )}
 
@@ -883,6 +851,39 @@ export const RegularReportsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ─────────────────────────────────────────────────────────
+          [Z-패턴 4단계: 최하단 대차대조식 검증식 및 완결 요약 (전체 탭 공통)]
+      ───────────────────────────────────────────────────────── */}
+      <footer style={{
+        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        border: '1px solid var(--border-color, #334155)',
+        borderRadius: '10px',
+        padding: '12px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        fontSize: '12.5px',
+        whiteSpace: 'nowrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShieldCheck size={18} color="#34d399" />
+          <span style={{ fontWeight: 700, color: 'var(--text-main, #f8fafc)' }}>
+            대차대조 보존 법칙 검증:
+          </span>
+          <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
+            매출총이익(₩{metrics.grossProfit.toLocaleString()}) = 순렌탈이익(₩{metrics.pureRentalProfit.toLocaleString()}) + 순유통이익(₩{metrics.pureDistributionProfit.toLocaleString()}) + 기타차액(₩{metrics.otherNetProfit.toLocaleString()})
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ color: 'var(--text-muted, #94a3b8)' }}>
+            영업이익(₩{metrics.operatingProfit.toLocaleString()}) = 매출총이익 - 판관비(₩{metrics.sgaTotal.toLocaleString()})
+          </span>
+        </div>
+      </footer>
     </main>
   );
 };

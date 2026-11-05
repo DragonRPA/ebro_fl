@@ -997,9 +997,6 @@ export const Assets: React.FC = () => {
           <h2 style={{ margin: 0, fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
             자산 관리 대장
  </h2>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            총 <strong>{managedAssets.length}</strong>대 (조회 <strong>{filtered.length}</strong>대)
- </span>
         </div>
 
         {/* 우상단 파이프라인 버튼군 - 표준 횡배치: 조회 -> 엑셀다운로드 */}
@@ -1032,37 +1029,7 @@ export const Assets: React.FC = () => {
         border: '1px solid var(--border-color)',
         flexShrink: 0
       }}>
-        {/* 1행: 조회 결과 및 실물자산 가동률 인라인 요약 바 (드롭다운과 줄바꿈 겹침 방지) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <label style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>통합 검색</label>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '1px 7px', borderRadius: '4px', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', whiteSpace: 'nowrap', flexWrap: 'wrap' }}>
-            <span>
-              조회 결과: 총 <strong style={{ color: 'var(--primary)' }}>{filteredStats.totalCount}대</strong>
-            </span>
-            <span style={{ color: 'var(--border-color)' }}>|</span>
-            <span>
-              실물 <strong style={{ color: 'var(--text-main)' }}>{filteredStats.physicalCount}대</strong>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '10.5px', marginLeft: '3px' }}>
-                (당사 <strong>{filteredStats.ownedPhysicalTotal}</strong>
-                {filteredStats.ownedPhysicalDisposed > 0 ? `[운용 ${filteredStats.ownedPhysicalActive}·매각 ${filteredStats.ownedPhysicalDisposed}]` : ''}
-                {' + '}임차 <strong style={{ color: '#0284c7' }}>{filteredStats.rentedPhysicalTotal}</strong>)
- </span>
-              {' + '}가상 <strong style={{ color: '#7c3aed' }}>{filteredStats.virtualCount}대</strong>
-            </span>
-            <span style={{ color: 'var(--border-color)' }}>|</span>
-            <span>
-              실물자산 가동률: <strong style={{ color: 'var(--success)' }}>{filteredStats.physicalOpRate}%</strong>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '10.5px', marginLeft: '4px', fontWeight: 600 }}>
-                [당사 {filteredStats.ownedPhysicalOpRate}% · 임차 {filteredStats.rentedPhysicalOpRate}%]
- </span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', marginLeft: '4px' }}>
-                (가동 {filteredStats.physicalOperatingCount}대[당사 {filteredStats.ownedPhysicalOperating}·임차 {filteredStats.rentedPhysicalOperating}] / 실물운용 {filteredStats.physicalActiveCount}대[당사 {filteredStats.ownedPhysicalActive}·임차 {filteredStats.rentedPhysicalActive}], 임대가능 {filteredStats.physicalAvailableCount}대[당사 {filteredStats.ownedPhysicalAvailable}·임차 {filteredStats.rentedPhysicalAvailable}]{filteredStats.physicalRepairingCount > 0 ? `, 수리중 ${filteredStats.physicalRepairingCount}대` : ''})
- </span>
-            </span>
-          </div>
-        </div>
-
-        {/* 2행: 좌측 통합 검색창 + 우측 정렬 컴팩트 필터 드롭다운군 */}
+        {/* 좌측 통합 검색창 + 우측 정렬 컴팩트 필터 드롭다운군 */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: '520px', minWidth: '200px' }}>
             <Search size={12} style={{ position: 'absolute', left: '8px', top: '6px', color: 'var(--text-muted)' }} />

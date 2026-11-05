@@ -1280,75 +1280,30 @@ export const ConsumableStockPage: React.FC<ConsumableStockPageProps> = ({ initia
                   </button>
                 </div>
               </div>
-              {selectedAgingBucket !== 'ALL' && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedAgingBucket('ALL')}
-                  className="btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
-                >
-                  경과월 필터 해제
-                </button>
-              )}
-            </div>
-
-            <div style={{ overflowX: 'auto' }}>
-              <div style={{ display: 'flex', gap: '6px', minWidth: 'max-content', paddingBottom: '2px' }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedAgingBucket('ALL')}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    border: selectedAgingBucket === 'ALL' ? '2px solid #2563eb' : '1px solid var(--border-color)',
-                    backgroundColor: selectedAgingBucket === 'ALL' ? '#eff6ff' : 'var(--bg-app)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    minWidth: '115px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#1e40af' }}>전체 경과월 합계</div>
-                  <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
-                    {agingBucketsSummary.activeKinds}종 · {stockSummary.hqTotalQty.toLocaleString('ko-KR')}개
-                  </div>
-                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#2563eb' }}>
-                    ₩{stockSummary.hqTotalValue.toLocaleString('ko-KR')}
-                  </div>
-                </button>
-
-                {agingBucketsSummary.buckets.map(b => {
-                  const hasData = b.itemCount > 0;
-                  const isSelected = selectedAgingBucket === b.bucket;
-                  return (
-                    <button
-                      key={b.bucket}
-                      type="button"
-                      onClick={() => setSelectedAgingBucket(isSelected ? 'ALL' : b.bucket)}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: isSelected ? '2px solid #2563eb' : '1px solid var(--border-color)',
-                        backgroundColor: isSelected ? '#eff6ff' : hasData ? '#ffffff' : 'var(--bg-app)',
-                        opacity: hasData ? 1 : 0.55,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        minWidth: '96px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      <div style={{ fontSize: '11px', fontWeight: 800, color: b.bucket >= 12 ? '#b45309' : '#0f766e' }}>
-                        {b.label} 경과
-                      </div>
-                      <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
-                        {b.itemCount}종 · {b.stockQty.toLocaleString('ko-KR')}개
-                      </div>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: hasData ? '#1e40af' : 'var(--text-muted)' }}>
-                        ₩{b.stockAmount.toLocaleString('ko-KR')}
-                      </div>
-                    </button>
-                  );
-                })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>경과월 구간:</span>
+                  <select
+                    value={selectedAgingBucket}
+                    onChange={e => setSelectedAgingBucket(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+                    style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    <option value="ALL">전체 경과월 구간</option>
+                    {agingBucketsSummary.buckets.map(b => (
+                      <option key={b.bucket} value={b.bucket}>{b.label} 경과 ({b.itemCount}종)</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedAgingBucket !== 'ALL' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAgingBucket('ALL')}
+                    className="btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    경과월 필터 해제
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2184,6 +2139,36 @@ export const ConsumableStockPage: React.FC<ConsumableStockPageProps> = ({ initia
           })()}
         </div>
       )}
+
+      {/* 최하단 1줄 요약 바 (전체 탭 공통) */}
+      <div
+        data-mid="consumable-stock-bottom-summary"
+        style={{
+          padding: '10px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span>등록 소모품: <strong style={{ color: 'var(--text-primary)' }}>{consumables.length}종</strong> (취급 {agingBucketsSummary.activeKinds}종)</span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>주기장 현재고 수량: <strong style={{ color: 'var(--primary)' }}>{stockSummary.hqTotalQty.toLocaleString('ko-KR')}개</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>주기장 재고잔액 합계: <strong style={{ color: '#2563eb' }}>₩{stockSummary.hqTotalValue.toLocaleString('ko-KR')}</strong></span>
+          <span style={{ color: 'var(--border-color)' }}>|</span>
+          <span>안전재고 미달: <strong style={{ color: stockSummary.lowStockCount > 0 ? '#dc2626' : 'var(--success)' }}>{stockSummary.lowStockCount}종</strong></span>
+        </div>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>기준년월: {targetYm}</span>
+      </div>
 
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {/* 주기장  차량 불출 모달 */}

@@ -605,36 +605,6 @@ export const Receivables: React.FC = () => {
             <DollarSign size={18} color="var(--primary)" />
             <h2 data-mid="receivable-header" style={{ margin: 0, fontSize: '17px', fontWeight: 700, whiteSpace: 'nowrap' }}>외상미수금 대장</h2>
           </div>
-          
-          {/* 슬림 인라인 요약 뱃지 (높이 100px 절약 & 중복 해소) */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', fontSize: '11.5px' }}>
-            <span style={{
-              padding: '3px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-color)', fontWeight: 600, color: 'var(--text-main)'
-            }}>
-              조회 <strong>{filtered.length}</strong>건
- </span>
-            <span style={{
-              padding: '3px 8px', borderRadius: '4px', backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-color)', color: 'var(--text-primary)'
-            }}>
-              외상총액 <strong>₩{totalReceivableSum.toLocaleString()}</strong>
-            </span>
-            <span style={{
-              padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--success)', fontWeight: 600
-            }}>
-              기청구 <strong>₩{totalBilledSum.toLocaleString()}</strong>
-            </span>
-            <span style={{
-              padding: '3px 8px', borderRadius: '4px',
-              backgroundColor: totalRemainingSum > 0 ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-card)',
-              border: `1px solid ${totalRemainingSum > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`,
-              color: totalRemainingSum > 0 ? '#dc2626' : 'var(--text-muted)', fontWeight: 700
-            }}>
-              미청구 <strong>₩{totalRemainingSum.toLocaleString()}</strong>
-            </span>
-          </div>
         </div>
 
         {/* 우측 파이프라인 버튼군 - 표준 횡배치: 등록/저장 -> 엑셀다운로드 */}
