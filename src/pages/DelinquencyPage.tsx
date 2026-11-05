@@ -1148,66 +1148,6 @@ export const DelinquencyPage: React.FC = () => {
         </div>
       )}
 
-      {/* 상단 5대 핵심 경영 통제 지표 카드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
-        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>연체 총액</span>
-            <DollarSign size={15} color="var(--danger)" />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--danger)' }}>
-            ₩ {totalOverdueAmount.toLocaleString()}
-          </h3>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>연체 고객 {calculatedDelinquencies.length}개사</span>
-        </div>
-
-        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>고위험 연체</span>
-            <ShieldAlert size={15} color="#dc2626" />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--danger)' }}>
-            {highRiskCount}개사
- </h3>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>60일 초과 또는 약속 2회 위반</span>
-        </div>
-
-        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>수금지시 진행</span>
-            <Send size={15} color="var(--primary)" />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--primary)' }}>
-            {pendingDirectiveCount}건
- </h3>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>영업 담당자 연동</span>
-        </div>
-
-        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-secondary)', fontWeight: 700 }}>
-              지시 미이행 (3일 초과)
- </span>
-            <AlertCircle size={15} color={neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-muted)'} />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: neglectedDirectiveCount > 0 ? '#b91c1c' : 'var(--text-muted)' }}>
-            {neglectedDirectiveCount}건
- </h3>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>독촉 지시 후 조치 미등록</span>
-        </div>
-
-        <div className="card" style={{ padding: '14px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>약속 위반</span>
-            <ThumbsDown size={15} color="#d97706" />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: '800', margin: '2px 0', color: 'var(--warning)' }}>
-            {brokenPromises}건
- </h3>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>약속 {totalPromises}건 중 {keptPromises}건 이행</span>
-        </div>
-      </div>
-
       {/* 2열 메인 레이아웃 (좌측: 연체 대장 목록 / 우측: 조치 및 경영진 지시 스튜디오) */}
       <div style={{ display: 'grid', gridTemplateColumns: selectedDelinquency ? '1.25fr 1fr' : '1fr', gap: '12px', minHeight: 0, flex: 1 }}>
         

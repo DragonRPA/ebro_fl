@@ -304,53 +304,6 @@ export const LeaveApplicationPage: React.FC = () => {
  </button>
       </div>
 
-      {/*  본인 연차 현황 카드 */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '12px',
-        backgroundColor: 'var(--bg-card)',
-        padding: '14px 16px',
-        borderRadius: '8px',
-        border: '1px solid var(--border-color)',
-        flexShrink: 0
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>신청 대상 임직원</span>
-          <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>
-            {getApplicantDisplayName(activeApplicantUser)} ({activeApplicantUser?.department || '미지정'})
- </strong>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>현재 1년 갱신 주기</span>
-          <strong style={{ fontSize: '13.5px', color: 'var(--text-main)', fontFamily: 'monospace' }}>
-            {mySummary.periodStart} ~ {mySummary.periodEnd}
-          </strong>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>1년 부여 연차</span>
-          <strong style={{ fontSize: '16px', color: 'var(--primary)' }}>
-            {mySummary.grantedDays}일
- </strong>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>누적 소진 일수</span>
-          <strong style={{ fontSize: '16px', color: 'var(--warning)' }}>
-            {mySummary.usedDays}일
- </strong>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>잔여 연차</span>
-          <strong style={{ fontSize: '18px', color: mySummary.remainingDays > 0 ? '#10b981' : '#ef4444' }}>
-            {mySummary.remainingDays}일
- </strong>
-        </div>
-      </div>
-
       {/* 2단 작업대 레이아웃 (좌: 신청 폼 / 우: 신청 이력) */}
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '340px 1fr', gap: '16px', overflow: 'hidden' }}>
         

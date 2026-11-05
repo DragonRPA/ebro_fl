@@ -519,45 +519,6 @@ export const MobileAssetSearch: React.FC<MobileAssetSearchProps> = ({ deptMode, 
          ════════════════════════════════════════════════════════════════════════ */}
       {viewMode === 'INVENTORY_TABLE' ? (
         <div className="flex flex-col gap-3">
-          {/* 상단 3대 핵심 요약 KPI 카드 */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-blue-500/40 flex flex-col justify-between">
-              <span className="text-[10.5px] font-bold text-blue-200 whitespace-nowrap">계약가능 재고</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <strong className={`text-lg font-black whitespace-nowrap ${
-                  inventoryTotals.availableContractQty < 0 ? 'text-rose-400' : 'text-sky-300'
-                }`}>
-                  {inventoryTotals.availableContractQty}대
- </strong>
-                <span className="text-[10px] text-slate-300 whitespace-nowrap">재고-예정</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-emerald-500/40 flex flex-col justify-between">
-              <span className="text-[10.5px] font-bold text-emerald-200 whitespace-nowrap">현재고 (당사/임차)</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <strong className="text-lg font-black text-emerald-300 whitespace-nowrap">
-                  {inventoryTotals.stockOwned + inventoryTotals.stockRented}대
- </strong>
-                <span className="text-[10px] text-slate-200 font-bold whitespace-nowrap">
-                  {inventoryTotals.stockOwned}/{inventoryTotals.stockRented}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-amber-500/40 flex flex-col justify-between">
-              <span className="text-[10.5px] font-bold text-amber-200 whitespace-nowrap">출고예정 (당사/임차)</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <strong className="text-lg font-black text-amber-300 whitespace-nowrap">
-                  {inventoryTotals.scheduledOwned + inventoryTotals.scheduledRented}대
- </strong>
-                <span className="text-[10px] text-slate-200 font-bold whitespace-nowrap">
-                  {inventoryTotals.scheduledOwned}/{inventoryTotals.scheduledRented}
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* 표 1: 모델별 가용재고 2단 헤더 테이블 (고대비 다크 솔리드 배색) */}
           <div className="rounded-xl overflow-hidden border border-slate-600 bg-slate-900 shadow-lg" style={{ backgroundColor: '#0f172a', backgroundImage: 'none' }}>
             <div className="overflow-x-auto" style={{ backgroundColor: '#0f172a', backgroundImage: 'none' }}>

@@ -82,70 +82,144 @@ export function buildStatementItemFromDetail(
     ? db.assets?.find((a: any) => a.id === ca.assetId)
     : (d?.assetId ? db.assets?.find((a: any) => a.id === d.assetId) : undefined);
 
-  const rawModel = (d?.modelName || asset?.modelName || ca?.expectedModel || d?.itemName || d?.description || '장비')
+  const rawItemText = String(d?.itemName || d?.modelName || asset?.modelName || ca?.expectedModel || d?.description || '장비').trim();
+  const fullDescText = `${d?.itemName || ''} ${d?.displayName || ''} ${d?.internalDescription || ''} ${d?.description || ''}`;
+
+  const isTradeBilling = Boolean(
+    billing?.contractType === 'TRADE' ||
+    contract?.contractType === 'TRADE' ||
+    contract?.contractType === 'SALE' ||
+    billing?.tradeOrderId ||
+    billing?.tradeBillingId ||
+    contract?.tradeOrderId ||
+    contract?.outboundId ||
+    (billing?.details && !Array.isArray(billing.details) && (billing.details.orderId || billing.details.outboundId)) ||
+    /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|\[유통출고/.test(fullDescText)
+  );
+
+  // 괄호 안 제조번호/시리얼 추출: 예 "(HC-XE25-261001)"
+  const parenSerialMatch = rawItemText.match(/\(([A-Z]{2,}-[A-Z0-9,\s-]+)\)\s*$/);
+  const descSerialMatch = fullDescText.match(/시리얼\s*[:：]?\s*([A-Z0-9_-]+(?:\s*,\s*[A-Z0-9_-]+)*)/i);
+  const billingSerialFirst = (billing?.details && !Array.isArray(billing.details) && Array.isArray(billing.details.serialNumbers) && billing.details.serialNumbers[0])
+    ? String(billing.details.serialNumbers[0]).trim()
+    : '';
+
+  let rawModel = rawItemText
     .replace(/\(관리번호:[^)]+\)/g, '')
+    .replace(/^\[(완제품|출고설치옵션|설치옵션|유상옵션|부품|호환부품)\]\s*/g, '')
     .replace(/렌탈료|임대료/g, '')
     .trim();
 
-  const prod = db.products?.find((p: any) =>
-    p.modelName && rawModel && (
-      p.modelName.replace(/\s+/g, '').toUpperCase() === rawModel.replace(/\s+/g, '').toUpperCase() ||
-      rawModel.replace(/\s+/g, '').toUpperCase().includes(p.modelName.replace(/\s+/g, '').toUpperCase())
-    )
-  );
-  const workingHeight = d?.workingHeight || prod?.workingHeight || '';
-  const assetNo = d?.assetNo || asset?.assetNo || '';
-  const siteEntryDate = d?.siteEntryDate || ca?.startDate || contract?.startDate || '';
+  if (parenSerialMatch) {
+    rawModel = rawModel.replace(/\(([A-Z]{2,}-[A-Z0-9,\s-]+)\)\s*$/, '').trim();
+  }
 
-  const periodStr = calcServicePeriod(d, billing, contract);
-  const [pStart, pEnd] = periodStr.includes('~')
+  const prod = !isTradeBilling
+    ? db.products?.find((p: any) =>
+        p.modelName && rawModel && (
+          p.modelName.replace(/\s+/g, '').toUpperCase() === rawModel.replace(/\s+/g, '').toUpperCase() ||
+          rawModel.replace(/\s+/g, '').toUpperCase().includes(p.modelName.replace(/\s+/g, '').toUpperCase())
+        )
+      )
+    : undefined;
+  const workingHeight = isTradeBilling ? '' : (d?.workingHeight || prod?.workingHeight || '');
+  const assetNo = d?.assetNo || asset?.assetNo || '';
+  const siteEntryDate = isTradeBilling ? '-' : (d?.siteEntryDate || ca?.startDate || contract?.startDate || '');
+
+  const periodStr = isTradeBilling ? '-' : calcServicePeriod(d, billing, contract);
+  const [pStart, pEnd] = (!isTradeBilling && periodStr.includes('~'))
     ? periodStr.split('~').map((s: string) => s.trim())
     : [periodStr.trim(), ''];
 
   let unitPrice = Number(d?.unitPrice || 0);
   let quantity = Number(d?.quantity || 1);
   const supplyAmount = Number(d?.amount || (unitPrice * quantity));
-  const isRental = Boolean(d?.contractAssetId || d?.assetId || assetNo);
+  const isRental = !isTradeBilling && Boolean(d?.contractAssetId || d?.assetId || assetNo);
   if (isRental && quantity >= 28 && supplyAmount > 0) {
     quantity = 1;
     unitPrice = supplyAmount;
   }
-  const vatAmount = d?.vatAmount !== undefined ? Number(d.vatAmount) : Math.round(supplyAmount * 0.1);
+  const vatAmount = (d?.vatAmount !== undefined && Number(d.vatAmount) !== 0)
+    ? Number(d.vatAmount)
+    : Math.round(supplyAmount * 0.1);
 
   let billingCategory = d?.billingCategory || '';
-  if (!billingCategory) {
-    const checkText = `${d?.itemName || ''} ${d?.description || ''} ${d?.internalDescription || ''} ${billing?.billingType || ''}`;
-    if (billing?.billingType === 'TRANSPORT' || d?.itemCategory === 'TRANSPORT' || /운반|운송|배차|회수|상하차/.test(checkText)) {
+  let itemCategoryLabel = '';
+  let unit = '대';
+  let serialOrCode = parenSerialMatch?.[1]?.trim() || descSerialMatch?.[1]?.trim() || '';
+
+  if (isTradeBilling) {
+    if (/\[완제품\]|완제품/.test(fullDescText)) {
+      itemCategoryLabel = '완제품';
+      unit = '대';
+      if (!serialOrCode) serialOrCode = billingSerialFirst || assetNo || '-';
+    } else if (/\[출고설치옵션\]|\[설치옵션\]|\[유상옵션\]|설치옵션/.test(fullDescText)) {
+      itemCategoryLabel = '설치옵션';
+      unit = '식';
+      if (!serialOrCode) serialOrCode = billingSerialFirst ? `${billingSerialFirst} 장착` : '출고장착옵션';
+    } else if (/운반|운송|배차/.test(fullDescText)) {
+      itemCategoryLabel = '운반비';
+      unit = '건';
+      if (!serialOrCode) serialOrCode = '-';
+    } else if (/부품|컨트롤러|포크암|작동유|필터|배터리|타이어|충전기/.test(fullDescText)) {
+      itemCategoryLabel = '호환부품';
+      unit = 'EA';
+      if (!serialOrCode) serialOrCode = assetNo || '-';
+    } else {
+      itemCategoryLabel = '완제품';
+      unit = '대';
+      if (!serialOrCode) serialOrCode = billingSerialFirst || assetNo || '-';
+    }
+    billingCategory = itemCategoryLabel;
+  } else if (!billingCategory) {
+    // 주의: billing?.billingType === 'ASSET_SALE' 이 /AS/i 에 오매칭되지 않도록 분리 검증
+    if (billing?.billingType === 'TRANSPORT' || d?.itemCategory === 'TRANSPORT' || /운반|운송|배차|회수|상하차/.test(fullDescText)) {
       billingCategory = '운반비';
-    } else if (billing?.billingType === 'REPAIR' || d?.itemCategory === 'REPAIR' || /수리|파손|정비|부품|AS/i.test(checkText)) {
+    } else if (billing?.billingType === 'REPAIR' || d?.itemCategory === 'REPAIR' || /수리|파손|정비|(?:^|[^A-Za-z])A\/?S(?:$|[^A-Za-z])/i.test(fullDescText)) {
       billingCategory = '수리비';
-    } else if (/\[유상옵션\]|\[OPT:/.test(checkText)) {
+    } else if (/\[유상옵션\]|\[설치옵션\]|\[OPT:/.test(fullDescText)) {
       billingCategory = '유상옵션';
-    } else if (billing?.billingType === 'ASSET_SALE' || contract?.contractType === 'SALE' || /매각|양도|판매/.test(checkText)) {
+    } else if (billing?.billingType === 'ASSET_SALE' || contract?.contractType === 'SALE' || /매각|양도|판매/.test(fullDescText)) {
       billingCategory = '매각';
-    } else if (isRental || billing?.billingType === 'RENTAL' || /렌탈|임대/.test(checkText)) {
+    } else if (isRental || billing?.billingType === 'RENTAL' || /렌탈|임대/.test(fullDescText)) {
       billingCategory = '임대료';
     } else {
-      billingCategory = '기타';
+      billingCategory = '임대료';
+    }
+  }
+
+  let notes = String(d?.memo || d?.notes || '').trim();
+  if (!notes && isTradeBilling) {
+    const outMatch = String(d?.description || '').match(/출고번호\s*([A-Z0-9_-]+)/);
+    if (outMatch) {
+      notes = outMatch[1];
+    } else if (d?.displayName && d.displayName.includes('장착')) {
+      notes = d.displayName;
     }
   }
 
   return {
+    statementMode: isTradeBilling ? 'TRADE' : 'RENTAL',
     month: dateM,
     day: dateD,
     modelName: rawModel,
     workingHeight,
-    assetNo,
-    siteEntryDate,
-    periodStart: pStart || '-',
-    periodEnd: pEnd || '-',
+    assetNo: isTradeBilling ? (serialOrCode || '-') : assetNo,
+    serialOrCode: isTradeBilling ? (serialOrCode || '-') : (assetNo || '-'),
+    itemCategoryLabel: isTradeBilling ? itemCategoryLabel : billingCategory,
+    unit,
+    siteEntryDate: isTradeBilling ? '-' : siteEntryDate,
+    periodStart: isTradeBilling ? '-' : (pStart || '-'),
+    periodEnd: isTradeBilling ? '-' : (pEnd || '-'),
     billingCategory,
-    itemDescription: formatStatementItemName({ ...d, modelName: rawModel, assetNo }, billing, contract),
+    itemDescription: isTradeBilling
+      ? `${rawModel}${serialOrCode && serialOrCode !== '-' ? ` (${serialOrCode})` : ''}`
+      : formatStatementItemName({ ...d, modelName: rawModel, assetNo }, billing, contract),
     quantity,
     unitPrice,
     supplyAmount,
     vatAmount,
-    notes: d?.memo || d?.notes || ''
+    notes
   };
 }
 

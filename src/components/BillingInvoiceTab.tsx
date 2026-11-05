@@ -360,9 +360,14 @@ export const BillingInvoiceTab: React.FC = () => {
   // A4 명세서 11행 그리드 데이터 구성
   const statementItems = useMemo(() => {
     const items: Array<{
+      statementMode: 'TRADE' | 'RENTAL';
       date: string;
       itemName: string;
       spec: string;
+      serialOrAssetNo: string;
+      periodText: string;
+      categoryLabel: string;
+      unit: string;
       qty: number;
       unitPrice: number;
       amount: number;
@@ -371,32 +376,45 @@ export const BillingInvoiceTab: React.FC = () => {
     }> = [];
 
     selectedBillingsData.forEach(b => {
+      const bParts = (b.billingDate || '').split('-');
+      const m = bParts.length >= 2 ? parseInt(bParts[1], 10) : 10;
+      const dNum = bParts.length >= 3 ? parseInt(bParts[2], 10) : 1;
       if (b.details && b.details.length > 0) {
         b.details.forEach(d => {
-          const supply = d.amount || (d.unitPrice * d.quantity) || 0;
-          const vat = d.vatAmount != null ? d.vatAmount : Math.floor(supply * 0.1);
-          const cleanItemName = (d.itemName || d.description || '품목').replace(/\(가상\)/g, '').replace(/\s+/g, ' ').trim();
+          const parsed = buildStatementItemFromDetail(d, b, b.contract, m, dNum);
           items.push({
-            date: b.billingDate ? b.billingDate.slice(5) : '-',
-            itemName: cleanItemName,
-            spec: d.spec || d.assetNo || b.siteName || '-',
-            qty: d.quantity || 1,
-            unitPrice: d.unitPrice || supply,
-            amount: supply,
-            vat: vat,
-            memo: d.memo || b.contract?.contractNo || ''
+            statementMode: parsed.statementMode || 'RENTAL',
+            date: b.billingDate ? b.billingDate.slice(5) : `${String(m).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`,
+            itemName: parsed.modelName || parsed.itemDescription || '품목',
+            spec: parsed.workingHeight || b.siteName || '-',
+            serialOrAssetNo: parsed.statementMode === 'TRADE' ? (parsed.serialOrCode || parsed.assetNo || '-') : (parsed.assetNo || '-'),
+            periodText: (parsed.periodStart && parsed.periodStart !== '-') ? `${parsed.periodStart.slice(5)}~${(parsed.periodEnd || '').slice(5)}` : '-',
+            categoryLabel: parsed.statementMode === 'TRADE' ? (parsed.itemCategoryLabel || parsed.billingCategory || '완제품') : (parsed.billingCategory || '임대료'),
+            unit: parsed.unit || (parsed.statementMode === 'TRADE' ? '대' : '식'),
+            qty: parsed.quantity || 1,
+            unitPrice: parsed.unitPrice || 0,
+            amount: parsed.supplyAmount || 0,
+            vat: parsed.vatAmount || 0,
+            memo: parsed.notes || b.contract?.contractNo || ''
           });
         });
       } else {
         const supply = b.totalAmount || 0;
         const vat = Math.floor(supply * 0.1);
+        const isTrade = Boolean((b as any).contractType === 'TRADE' || (b.contract as any)?.contractType === 'TRADE' || String((b as any).billingType || '').toUpperCase() === 'ASSET_SALE');
         const name = b.category === 'REPAIR' ? '장비 파손 수리비'
           : b.category === 'TRANSPORT' ? '장비 배차 운반비'
+          : isTrade ? `유통 공급 (${b.siteName || b.billingYm})`
           : `렌탈료 (${b.siteName || b.billingYm})`;
         items.push({
+          statementMode: isTrade ? 'TRADE' : 'RENTAL',
           date: b.billingDate ? b.billingDate.slice(5) : '-',
           itemName: name.replace(/\(가상\)/g, '').replace(/\s+/g, ' ').trim(),
           spec: b.contract?.contractNo || b.siteName || '-',
+          serialOrAssetNo: b.contract?.contractNo || '-',
+          periodText: '-',
+          categoryLabel: isTrade ? '완제품' : (b.category === 'REPAIR' ? '수리비' : b.category === 'TRANSPORT' ? '운반비' : '임대료'),
+          unit: isTrade ? '대' : '식',
           qty: 1,
           unitPrice: supply,
           amount: supply,
@@ -408,6 +426,10 @@ export const BillingInvoiceTab: React.FC = () => {
 
     return items;
   }, [selectedBillingsData]);
+
+  const isTradeStatement = useMemo(() => {
+    return statementItems.length > 0 && statementItems.some(it => it.statementMode === 'TRADE');
+  }, [statementItems]);
 
   // 고객 정보 객체
   const selectedCustomer = useMemo(() => {
@@ -567,7 +589,10 @@ export const BillingInvoiceTab: React.FC = () => {
       }
     });
 
+    const isTrade = items.some(it => it.statementMode === 'TRADE');
     return {
+      statementMode: isTrade ? 'TRADE' : 'RENTAL',
+      supplySummary: isTrade ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외',
       billingDate: new Date().toISOString().split('T')[0],
       billingYm: selectedYm || initialYm,
       contractNo: selectedBillingsData[0]?.contract?.contractNo || '',
@@ -787,7 +812,10 @@ export const BillingInvoiceTab: React.FC = () => {
       }
     });
 
+    const isTrade = items.some(it => it.statementMode === 'TRADE');
     return {
+      statementMode: isTrade ? 'TRADE' : 'RENTAL',
+      supplySummary: isTrade ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외',
       billingDate: inv.createdAt ? inv.createdAt.slice(0, 10) : new Date().toISOString().split('T')[0],
       billingYm: inv.billingYm,
       contractNo: childBillings[0]?.contract?.contractNo || '',
@@ -1508,18 +1536,34 @@ export const BillingInvoiceTab: React.FC = () => {
  </div>
               </div>
 
-              {/* ── 11행 정규 규격 그리드 (table-layout fixed, no-wrap 방어) ── */}
+              {/* ── 11행 정규 규격 그리드 (table-layout fixed, no-wrap 방어, 유통/렌탈 양식 분리) ── */}
               <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', border: '1px solid var(--border-color)', fontSize: '10px', backgroundColor: 'var(--bg-card)' }}>
                 <thead>
                   <tr style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                    <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '24px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>순번</th>
                     <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '34px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>월/일</th>
-                    <th style={{ padding: '4px 4px', borderRight: '1px solid var(--border-color)', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>품목명</th>
-                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '65px', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>규격/현장</th>
-                    <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '28px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>수량</th>
-                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '56px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>단가</th>
-                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '66px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>공급가액</th>
-                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '56px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>세액</th>
-                    <th style={{ padding: '4px 3px', width: '50px', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>비고</th>
+                    <th style={{ padding: '4px 4px', borderRight: '1px solid var(--border-color)', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>
+                      {isTradeStatement ? '품목명 / 모델·규격' : '모델 / 사양'}
+                    </th>
+                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: isTradeStatement ? '68px' : '54px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>
+                      {isTradeStatement ? '제조번호/코드' : '자산번호'}
+                    </th>
+                    {isTradeStatement ? (
+                      <>
+                        <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '44px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>품목구분</th>
+                        <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '26px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>단위</th>
+                      </>
+                    ) : (
+                      <>
+                        <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '68px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>사용기간</th>
+                        <th style={{ padding: '4px 2px', borderRight: '1px solid var(--border-color)', width: '40px', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>청구구분</th>
+                      </>
+                    )}
+                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '28px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>수량</th>
+                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '54px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>단가</th>
+                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '62px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>공급가액</th>
+                    <th style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', width: '52px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>세액</th>
+                    <th style={{ padding: '4px 3px', width: '46px', textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-main)', backgroundColor: 'var(--bg-secondary)' }}>비고</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1529,27 +1573,49 @@ export const BillingInvoiceTab: React.FC = () => {
                     return (
                       <tr key={idx} style={{ height: '22px', borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                          {item ? item.date : ''}
-                        </td>
-                        <td style={{ padding: '2px 4px', borderRight: '1px solid var(--border-color)', fontWeight: item ? 600 : 400, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item?.itemName}>
-                          {item ? item.itemName : ''}
-                        </td>
-                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item?.spec}>
-                          {item ? item.spec : ''}
+                          {item ? idx + 1 : ''}
                         </td>
                         <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                          {item ? item.qty : ''}
+                          {item ? item.date : ''}
                         </td>
-                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '2px 4px', borderRight: '1px solid var(--border-color)', textAlign: 'left', fontWeight: item ? 600 : 400, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item?.itemName}>
+                          {item ? item.itemName : ''}
+                        </td>
+                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item?.serialOrAssetNo}>
+                          {item ? item.serialOrAssetNo : ''}
+                        </td>
+                        {isTradeStatement ? (
+                          <>
+                            <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                              {item ? item.categoryLabel : ''}
+                            </td>
+                            <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                              {item ? item.unit : ''}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item?.periodText}>
+                              {item ? item.periodText : ''}
+                            </td>
+                            <td style={{ padding: '2px 2px', borderRight: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                              {item ? item.categoryLabel : ''}
+                            </td>
+                          </>
+                        )}
+                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                          {item ? item.qty.toLocaleString() : ''}
+                        </td>
+                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                           {item ? item.unitPrice.toLocaleString() : ''}
                         </td>
-                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                           {item ? item.amount.toLocaleString() : ''}
                         </td>
-                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '2px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                           {item ? item.vat.toLocaleString() : ''}
                         </td>
-                        <td style={{ padding: '2px 3px', color: 'var(--text-secondary)', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <td style={{ padding: '2px 3px', textAlign: 'left', color: 'var(--text-secondary)', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {item ? item.memo : ''}
                         </td>
                       </tr>
@@ -1558,16 +1624,16 @@ export const BillingInvoiceTab: React.FC = () => {
                 </tbody>
                 <tfoot>
                   <tr style={{ backgroundColor: 'var(--bg-app)', borderTop: '2px solid var(--border-color)', fontWeight: 700 }}>
-                    <td colSpan={5} style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', fontWeight: 800 }}>
+                    <td colSpan={8} style={{ padding: '4px 6px', borderRight: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-main)', fontWeight: 800 }}>
                       소계 및 합계
- </td>
-                    <td style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 700 }}>
+                    </td>
+                    <td style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                       {accountingSummary.supplyAmount.toLocaleString()}
                     </td>
-                    <td style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 700 }}>
+                    <td style={{ padding: '4px 3px', borderRight: '1px solid var(--border-color)', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                       {accountingSummary.vatAmount.toLocaleString()}
                     </td>
-                    <td style={{ padding: '4px 3px', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 800 }}>
+                    <td style={{ padding: '4px 3px', textAlign: 'right', color: 'var(--text-main)', whiteSpace: 'nowrap', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
                       {accountingSummary.grandTotal.toLocaleString()}
                     </td>
                   </tr>

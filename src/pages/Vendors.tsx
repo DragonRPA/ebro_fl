@@ -779,30 +779,6 @@ export const Vendors: React.FC = () => {
         </div>
       </div>
 
-      {/*  매입처 등록 현황 요약 바 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: 0, flexShrink: 0 }}>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입 협력처</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>{vendors.length}개사</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>전사 매입 누적거래액</span>
-          <strong style={{ fontSize: '15px', color: 'var(--success)', whiteSpace: 'nowrap' }}>₩{vendorStats.totalPurchaseSum.toLocaleString()}</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>거래 개시처</span>
-          <strong style={{ fontSize: '15px', color: '#8b5cf6', whiteSpace: 'nowrap' }}>{vendorStats.startedVendorsCount}개사</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>임차 / 운송사</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>{vendorStats.rentalCount + vendorStats.transportCount}개사</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>외주 정비 / 구매처</span>
-          <strong style={{ fontSize: '15px', color: 'var(--warning)', whiteSpace: 'nowrap' }}>{vendorStats.repairCount + vendorStats.purchaseCount}개사</strong>
-        </div>
-      </div>
-
       {/* 검색 및 필터 패널 (3.4 상하 스택 레이아웃 표준 준수) */}
       <div className="card" style={{ padding: '12px 14px', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap', justifyContent: 'space-between' }}>

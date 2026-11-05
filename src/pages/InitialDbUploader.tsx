@@ -2980,30 +2980,6 @@ export const InitialDbUploader: React.FC = () => {
             {parsedPermData && (
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* 4대 요약 지표 */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>매핑 임직원</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>{parsedPermData.matchedUsersCount}명</div>
-                  </div>
-                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>총 권한 항목</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)', marginTop: '2px' }}>{parsedPermData.totalPermissions}건</div>
-                  </div>
-                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>미매핑 기록</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: parsedPermData.unmatchedRecordsCount > 0 ? '#dc2626' : '#059669', marginTop: '2px' }}>
-                      {parsedPermData.unmatchedRecordsCount}건
-                    </div>
-                  </div>
-                  <div style={{ backgroundColor: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>기준 파일 일자</div>
-                    <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
-                      {parsedPermData.metadata?.exportedDateText || '당일'}
-                    </div>
-                  </div>
-                </div>
-
                 {/* 미매핑 알림 (있을 경우) */}
                 {parsedPermData.unmatchedUsers.length > 0 && (
                   <div style={{ padding: '8px 12px', backgroundColor: 'var(--danger-light)', borderRadius: '6px', border: '1px solid #fecaca', fontSize: '12px', color: 'var(--danger)' }}>
@@ -3105,103 +3081,6 @@ export const InitialDbUploader: React.FC = () => {
                 <span style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                    스키마 및 외래키 무결성 검증 완료
                 </span>
-              </div>
-
-              {/* 통계 카드 그리드 (라이프사이클 & 회계) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '12px' }}>
-                {/* 1. 마스터 자산 */}
-                <div style={{ backgroundColor: 'var(--bg-app)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Layers size={14} /> 자산 대장
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
-                    {parsedData.stats.assetsCount} 대
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    대여중 계약연동 {parsedData.stats.activeRentedAssetsCount || 0}대 100% 매핑
-                  </div>
-                </div>
-
-                {/* 2. 장비 모델 & 제원문서 */}
-                <div style={{ backgroundColor: '#f0fdfa', padding: '14px', borderRadius: '8px', border: '1px solid #ccfbf1' }}>
-                  <div style={{ fontSize: '12px', color: '#0f766e', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FileText size={14} /> 모델 및 제원표
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: '#115e59', marginTop: '4px' }}>
-                    {parsedData.stats.productsCount} 종
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--success)', marginTop: '2px' }}>
-                    R2 제원표/안전문서 {parsedData.stats.docLinkedProductsCount || 0}종 자동 연동
-                  </div>
-                </div>
-
-                {/* 3. 렌탈 계약 */}
-                <div style={{ backgroundColor: 'var(--bg-app)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FileCheck size={14} /> 렌탈 계약
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
-                    {parsedData.stats.contractsCount} 건
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>고객사 {parsedData.stats.customersCount}사 / 현장 {parsedData.stats.sitesCount}개소</div>
-                </div>
-
-                {/* 4. 출고 배차 체인 */}
-                <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--primary)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Truck size={14} /> 출고 배차
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
-                    {parsedData.stats.outboundDeliveriesCount} 건
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>출고검수 {parsedData.stats.outboundInspectionsCount}건 자동 승인</div>
-                </div>
-
-                {/* 5. 회수 배차 체인 */}
-                <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <div style={{ fontSize: '12px', color: '#10b981', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <RotateCcw size={14} /> 회수 배차
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
-                    {parsedData.stats.inboundDeliveriesCount} 건
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#22c55e', marginTop: '2px' }}>종료 계약 입고 등록 100% 매핑</div>
-                </div>
-
-                {/* 6. 과거 소급 청구서 */}
-                <div style={{ backgroundColor: '#faf5ff', padding: '14px', borderRadius: '8px', border: '1px solid #e9d5ff' }}>
-                  <div style={{ fontSize: '12px', color: '#7e22ce', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <History size={14} /> 과거 소급 청구서
-                  </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: '#6b21a8', marginTop: '4px' }}>
-                    {parsedData.stats.historicalBillingsCount} 건
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#9333ea', marginTop: '2px' }}>누적 ₩{parsedData.stats.totalHistoricalBillingAmount.toLocaleString()}</div>
-                </div>
-
-                {/* 7. 2026-08 당월 청구서 */}
-                <div style={{ backgroundColor: 'var(--warning-light)', padding: '14px', borderRadius: '8px', border: '1px solid #fef08a' }}>
-                  <div style={{ fontSize: '12px', color: '#a16207', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Receipt size={14} /> 2026-08 당월 청구 합계
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#854d0e', marginTop: '4px' }}>
-                    ₩{parsedData.stats.currentMonthBillingAmount.toLocaleString()}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#ca8a04', marginTop: '2px' }}>71개사 청구서 (차액 ₩0 일치)</div>
-                </div>
-
-                {/* 8. 전대 매입 & 외상미수금 */}
-                <div style={{ backgroundColor: '#fff7ed', padding: '14px', borderRadius: '8px', border: '1px solid #ffedd5' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--warning)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <TrendingUp size={14} /> 전대 매입 & 부대비
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#9a3412', marginTop: '4px' }}>
-                    ₩{parsedData.stats.totalPurchaseBillingAmount.toLocaleString()}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#ea580c', marginTop: '2px' }}>
-                    외상미수금 {parsedData.stats.receivablesCount}건 (운반비 등)
-                  </div>
-                </div>
               </div>
 
               {/* 3. 일괄 적재 실행 버튼 및 프로그레스 바 */}

@@ -869,40 +869,6 @@ export const ConsumableStockPage: React.FC = () => {
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {activeTab === 'STOCK' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* 상단 통계 카드 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>기준년월 관리 품목수</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)' }}>
-                {stockSummary.hqTotalKinds}종
-              </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: 700 }}>유통 판매용 부품 재고</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#0284c7' }}>
-                {stockSummary.hqSaleQty.toLocaleString()}개
-              </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#b45309', fontWeight: 700 }}>렌탈자산 정비용 부품 재고</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#b45309' }}>
-                {stockSummary.hqRepairQty.toLocaleString()}개
-              </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>주기장 총보유 재고수량</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: 'var(--success)' }}>
-                {stockSummary.hqTotalQty.toLocaleString()}개
-              </div>
-            </div>
-            <div className="card" style={{ margin: 0, padding: '16px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>기준년월 총 재고잔액</div>
-              <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#7c3aed' }}>
-                ₩{stockSummary.grandTotalValue.toLocaleString()}
-              </div>
-            </div>
-          </div>
-
           {/* 입고연월 기준 1개월 단위 경과월수별 재고잔량 · 재고잔액 역산 매트릭스 바 */}
           <div className="card" style={{ margin: 0, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
@@ -1375,32 +1341,6 @@ export const ConsumableStockPage: React.FC = () => {
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {activeTab === 'COLLECTED_PARTS' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* 상단 요약 카드 */}
-          {(() => {
-            const { totalCount, rebuildCount, scrapCount, warrantyCount } = collectedPartsSummary;
-
-            return (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                <div className="card" style={{ margin: 0, padding: '14px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>총 수거 고품</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '2px' }}>{totalCount}건</div>
-                </div>
-                <div className="card" style={{ margin: 0, padding: '14px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>재생 대상</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '2px', color: '#7c3aed' }}>{rebuildCount}건</div>
-                </div>
-                <div className="card" style={{ margin: 0, padding: '14px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>폐기/고철</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '2px', color: '#ea580c' }}>{scrapCount}건</div>
-                </div>
-                <div className="card" style={{ margin: 0, padding: '14px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>제조사 무상보증 클레임</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '2px', color: 'var(--primary)' }}>{warrantyCount}건</div>
-                </div>
-              </div>
-            );
-          })()}
-
           {/* 필터 바 */}
           <div className="card" style={{ margin: 0, padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>

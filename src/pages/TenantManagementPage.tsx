@@ -4024,30 +4024,6 @@ export const TenantManagementPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* 상단 통계 요약 바 */}
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '12px'
-                  }}>
-                    <div style={{ padding: '12px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>등록 에이전트</div>
-                      <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>2대</div>
-                    </div>
-                    <div style={{ padding: '12px', backgroundColor: '#ecfdf5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                      <div style={{ fontSize: '11px', color: '#047857', fontWeight: 600 }}>정상 가동</div>
-                      <div style={{ fontSize: '20px', fontWeight: 800, color: '#059669', marginTop: '4px' }}>2대</div>
-                    </div>
-                    <div style={{ padding: '12px', backgroundColor: '#fff1f2', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-                      <div style={{ fontSize: '11px', color: '#be123c', fontWeight: 600 }}>오프라인 (퇴근/절전)</div>
-                      <div style={{ fontSize: '20px', fontWeight: 800, color: '#e11d48', marginTop: '4px' }}>0대</div>
-                    </div>
-                    <div style={{ padding: '12px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                      <div style={{ fontSize: '11px', color: '#1d4ed8', fontWeight: 600 }}>클라우드 대기 큐</div>
-                      <div style={{ fontSize: '20px', fontWeight: 800, color: '#2563eb', marginTop: '4px' }}>0건 (대기 없음)</div>
-                    </div>
-                  </div>
-
                   {/* 텔레그램 및 클라우드 큐잉 안내 배너 */}
                   <div style={{
                     padding: '12px 16px',

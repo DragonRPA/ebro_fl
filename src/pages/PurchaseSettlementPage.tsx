@@ -1251,22 +1251,6 @@ export const PurchaseSettlementPage: React.FC = () => {
                   </div>
 
                   <div style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {/* 상단 요약 카드 */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', backgroundColor: 'var(--bg-app)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>총 정산 확정액</div>
-                        <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>{targetSettlement.totalAmount.toLocaleString()}원</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>누적 지급액</div>
-                        <div style={{ fontSize: '16px', fontWeight: '800', color: '#10B981' }}>{targetSettlement.paidAmount.toLocaleString()}원</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>미지급 잔액</div>
-                        <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--danger)' }}>{(targetSettlement.totalAmount - targetSettlement.paidAmount).toLocaleString()}원</div>
-                      </div>
-                    </div>
-
                     {/* 통장 출금 증빙 연결 이력 */}
                     {bankTx && (
                       <div style={{ padding: '12px', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '13px' }}>

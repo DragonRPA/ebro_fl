@@ -3821,26 +3821,6 @@ showToast('밴드 과거 AS 빅데이터 탑재를 시작합니다.');
               </div>
             </div>
 
-            {/* KPI 요약 카드 4종 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              <div className="card" style={{ padding: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>총 AS 접수 건수</div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{totalCount.toLocaleString()}건</div>
-              </div>
-              <div className="card" style={{ padding: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>조치 완료율</div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--success)' }}>{completeRate}% ({completedCount}건)</div>
-              </div>
-              <div className="card" style={{ padding: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>유상 AS 청구 건수</div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: '#ea580c' }}>{billableCount}건</div>
-              </div>
-              <div className="card" style={{ padding: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>유상 AS 청구 총액</div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--primary)' }}>₩{billableTotal.toLocaleString()}원</div>
-              </div>
-            </div>
-
             {/* 고장 원인 분석 및 기사별 실적 2열 그리드 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="card" style={{ padding: '16px' }}>

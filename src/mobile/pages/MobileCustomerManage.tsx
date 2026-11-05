@@ -265,26 +265,6 @@ export const MobileCustomerManage: React.FC<MobileCustomerManageProps> = ({ onNa
 
   return (
     <div className="flex flex-col gap-3 pb-24 pt-2 font-sans text-slate-100">
-      {/* 1. 상단 통계 바 */}
-      <div className="grid grid-cols-4 gap-2 px-1">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-center">
-          <div className="text-[10px] text-slate-400 font-bold whitespace-nowrap">전체 거래처</div>
-          <div className="text-base font-black text-white font-mono mt-0.5">{stats.total}</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-center">
-          <div className="text-[10px] text-emerald-400 font-bold whitespace-nowrap">정상 거래</div>
-          <div className="text-base font-black text-emerald-400 font-mono mt-0.5">{stats.allowed}</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-center">
-          <div className="text-[10px] text-rose-400 font-bold whitespace-nowrap">출고 제한</div>
-          <div className="text-base font-black text-rose-400 font-mono mt-0.5">{stats.blocked}</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-center">
-          <div className="text-[10px] text-amber-400 font-bold whitespace-nowrap">정보 누락</div>
-          <div className="text-base font-black text-amber-400 font-mono mt-0.5">{stats.incomplete}</div>
-        </div>
-      </div>
-
       {/* 2. 헌장 3.4 준수: 상하 세로 스택 검색창 및 상태/정렬 필터 칩 */}
       <div className="flex flex-col gap-1.5 px-1">
         <div className="flex items-center justify-between">

@@ -388,37 +388,6 @@ export const ConsumablePurchasesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. 핵심 지표 카드 ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 총 구매신청</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--text-main)' }}>
-            {purchaseSummary.totalRequested}건
- </div>
-        </div>
-
-        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>승인 대기 건수</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: purchaseSummary.pendingCount > 0 ? '#f59e0b' : 'var(--text-main)' }}>
-            {purchaseSummary.pendingCount}건
- </div>
-        </div>
-
-        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>입고 완료 건수</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: '#10b981' }}>
-            {purchaseSummary.completedCount}건
- </div>
-        </div>
-
-        <div className="card" style={{ padding: '14px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>당월 예상 총 구매액</div>
-          <div style={{ fontSize: '18px', fontWeight: '800', marginTop: '4px', color: 'var(--primary)' }}>
-            ₩{purchaseSummary.totalAmount.toLocaleString()}원
- </div>
-        </div>
-      </div>
-
       {/* ── 3. 상단 2대 탭 바 (규격 3.1 명칭) ── */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '2px' }}>
         <button

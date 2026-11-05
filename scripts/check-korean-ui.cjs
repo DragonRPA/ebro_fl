@@ -34,6 +34,23 @@ const bannedPhrases = [
   '대차(교체)',
 ];
 
+const bannedKpiCardMarkers = [
+  'data-mid="trade_profitability-kpi"',
+  'data-mid="customer-kpi-summary"',
+  'data-mid="waiver-kpi-summary"',
+  'data-mid="asset-kpi-summary"',
+  'data-mid="cash_flow-kpi"',
+  'data-mid="asset-category-summary-strip"',
+  'data-mid="smart_return-summary"',
+  'data-mid="leave-inspection-summary"',
+  'KPI 요약 카드',
+  'KPI 요약 바',
+  '상단 요약 카드',
+  '핵심 요약 지표 카드',
+  '2x2 KPI 요약 그리드',
+  '상단 2x2 핵심 KPI 그리드',
+];
+
 const files = walk(path.join(__dirname, '..', 'src'));
 const violations = [];
 
@@ -45,6 +62,11 @@ for (const file of files) {
   lines.forEach((line, idx) => {
     if (EMOJI_RE.test(line)) {
       violations.push(`${rel}:${idx + 1} [이모지 검출] "${line.trim().slice(0, 80)}"`);
+    }
+    for (const kpiMarker of bannedKpiCardMarkers) {
+      if (line.includes(kpiMarker)) {
+        violations.push(`${rel}:${idx + 1} [카드형 요약정보 영구 금지 위반] "${kpiMarker}"`);
+      }
     }
     const trimmed = line.trim();
     if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('{/*')) {

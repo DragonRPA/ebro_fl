@@ -492,56 +492,6 @@ export const RentalSalesPerformancePage: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* 렌탈 전용 단일 KPI 요약 바 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))', gap: '10px' }}>
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈 체결계약 · 자산대수</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                {summary.count}건 · {summary.totalAssets}대
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>전체 보유자산 {(assets || []).length}대 기준</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈 총매출액</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                ₩{summary.totalRev.toLocaleString()}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>월/일 렌탈료 + 유상옵션 청구액</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>장비 감가상각 원가</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                ₩{summary.totalDepr.toLocaleString()}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>체결자산 가동기간 감가상각비</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>설치형옵션 · 정비 원가</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--warning-color)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                ₩{(summary.totalOpt + summary.totalMaint).toLocaleString()}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                옵션 ₩{summary.totalOpt.toLocaleString()} · 정비 ₩{summary.totalMaint.toLocaleString()}
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>렌탈 매출총이익</span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success-color)' }}>이익률 {summary.marginRate.toFixed(1)}%</span>
-              </div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--success-color)', marginTop: '3px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                ₩{summary.totalProfit.toLocaleString()}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                렌탈원가 합계 ₩{summary.totalCost.toLocaleString()}
-              </div>
-            </div>
-          </div>
-
           {/* 필터 바 (헌장 3.4 상하 스택) */}
           <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
             {activeTab !== 'RENTAL_ASSET' && (

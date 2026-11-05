@@ -198,63 +198,6 @@ export const AgenticAiLabPage: React.FC = () => {
 
       </div>
 
-      {/* ── 3. 편의성 및 효익 정량 비교 HUD (Terminal Metric) ── */}
-      {currentResult && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '10px',
-          padding: '14px',
-          borderRadius: '8px',
-          backgroundColor: 'rgba(59, 130, 246, 0.05)',
-          border: '1px solid rgba(59, 130, 246, 0.25)'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>작업 소요 시간</span>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={16} />
-              <span>{currentResult.metrics.manualMinutes}분 {currentResult.metrics.aiSeconds}초</span>
-            </div>
-            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
-              {currentResult.metrics.timeSavedPercent}% 시간 단축
- </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>마우스 클릭 및 입력 조작</span>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MousePointer size={16} />
-              <span>{currentResult.metrics.manualClicks}회 {currentResult.metrics.aiClicks}회</span>
-            </div>
-            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
-              {currentResult.metrics.clicksSavedPercent}% 조작 감소
- </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>데이터 입력 오류율</span>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle2 size={16} />
-              <span>0.00% (오류 0건)</span>
-            </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-              헌장 가드레일 자동 검증
- </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>대차대조 보존 차액</span>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShieldCheck size={16} />
-              <span>₩{currentResult.metrics.conservationDiff.toLocaleString()}</span>
-            </div>
-            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
-              수지 보존 법칙 100% 충족
- </span>
-          </div>
-        </div>
-      )}
-
       {/* ── 4. 본문: ReAct 추론 타임라인 & 20대 도구 카탈로그 ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '14px' }}>
         

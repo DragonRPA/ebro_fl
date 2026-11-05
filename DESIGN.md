@@ -44,9 +44,10 @@
 
 ---
 
-## 5. AI 슬롭(AI Slop) 5대 영구 금지 규칙 (Charter 3.7)
-1. **카드 내 카드 중첩 금지 (No Cards in Cards)**: `.card` 내부에 또 다른 `.card`나 두꺼운 컬러 테두리 박스를 중첩하지 않고, 1px 구분선(`var(--border-color)`) 또는 단일 요약 스트립으로 정리한다.
+## 5. AI 슬롭(AI Slop) 6대 영구 금지 규칙 (Charter 3.7)
+1. **카드 내 카드 중첩 금지 (No Cards in Cards)**: `.card` 내부에 또 다른 `.card`나 두꺼운 컬러 테두리 박스를 중첩하지 않고, 1px 구분선(`var(--border-color)`)으로 정리한다.
 2. **장식적 그라디언트 및 그림자 금지 (Zero Box-Shadow)**: 모든 컨테이너는 `box-shadow: none !important`와 `1px solid var(--border-color)`만으로 경계를 정의한다.
 3. **좌측 두꺼운 컬러 보더 탭(`border-left: 4px solid`) 금지**: 콜아웃이나 카드 좌측에 무의미한 두꺼운 색띠를 두르는 대신, 깔끔한 1px 전체 테두리(`border: 1px solid`)와 상태 배지를 사용한다.
 4. **바운스 애니메이션(`animate-bounce`) 및 레이아웃 폭 트랜지션(`transition: width`) 금지**: 과장된 바운스 모션을 제거하고, 프로그레스 바 등은 `transition: transform` 또는 불투명도/색상 트랜지션만 허용한다.
 5. **유채색 배경 위 회색 텍스트(`gray-on-color`) 금지**: 컬러 배지나 버튼 위에는 반드시 고대비 텍스트 토큰을 사용하여 가독성을 보장한다.
+6. **상단 카드형 요약정보(KPI Summary Card Strip / Grid) 영구 금지**: 화면 상단이나 탭 상단에 다열 박스/그리드(`repeat(auto-fit/fill, ...)`, `grid-cols-2~6` 등)로 품목수·수량·금액·건수 등을 나열하는 카드형 요약 스트립을 절대 배치하지 않는다. 모든 집계·대사 수치는 오직 테이블 하단(`tfoot`) 또는 구텐베르크 Z-패턴 4단계 우하단 대차대조 검증 바에서만 표기한다.

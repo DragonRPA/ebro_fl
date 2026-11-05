@@ -610,28 +610,6 @@ export const OtManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/*  통계 요약 바 */}
-      <div data-mid="ot_management-terminal-audit" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', flexShrink: 0 }}>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 등록건수</span>
-          <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>{overtimeRecords.length}건</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 승인 OT 시간</span>
-          <strong style={{ fontSize: '15px', color: 'var(--warning)' }}>{totalOtHours.toFixed(1)}시간</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>당월 OT 시간</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{thisMonthOtHours.toFixed(1)}시간</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>급여 대장 연동</span>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <CheckCircle2 size={13} /> 반영
- </span>
-        </div>
-      </div>
-
       {/* 2단 작업대 레이아웃 (좌: 등록 폼 / 우: 대장 그리드 및 월간 캘린더) */}
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: isFormCollapsed ? '1fr' : '330px 1fr', gap: '16px', overflow: 'hidden', transition: 'all 0.2s ease' }}>
         

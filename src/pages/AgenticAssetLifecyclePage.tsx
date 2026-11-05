@@ -129,30 +129,6 @@ export const AgenticAssetLifecyclePage: React.FC = () => {
         </div>
       )}
 
-      {/* 6대 라이프사이클 상태 요약 HUD */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }} data-uia="monitor-lifecycle-flow">
-        <div className="card" style={{ padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>임대가능</div>
-          <div style={{ fontSize: '20px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>1대</div>
-        </div>
-        <div className="card" style={{ padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>출고대기</div>
-          <div style={{ fontSize: '20px', fontWeight: '900', color: '#f59e0b', marginTop: '4px' }}>1대</div>
-        </div>
-        <div className="card" style={{ padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>대여중</div>
-          <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary)', marginTop: '4px' }}>2대</div>
-        </div>
-        <div className="card" style={{ padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>정비중</div>
-          <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--danger)', marginTop: '4px' }}>1대</div>
-        </div>
-        <div className="card" style={{ padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>상태 보존 법칙</div>
-          <div style={{ fontSize: '14px', fontWeight: '800', color: '#10b981', marginTop: '6px' }}>100% 충족</div>
-        </div>
-      </div>
-
       {/* 자산 카드 리스트 (유형 A 관제 스튜디오) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)' }}>자산 라이프사이클 관제 큐 ({assetList.length}대)</div>

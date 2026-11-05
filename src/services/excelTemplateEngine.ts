@@ -448,13 +448,17 @@ export async function generateSafetyInspectionPdf(data: SafetyInspectionExcelDat
 export interface TransactionStatementItem {
   month: number | string;
   day: number | string;
-  modelName?: string;        // {모델}
-  workingHeight?: string;    // {높이} (작업높이, 예: '10 M')
-  assetNo?: string;          // {관리번호}
-  siteEntryDate?: string;    // {현장투입일} (계약 자산 시작일 startDate)
-  periodStart?: string;      // {청구시작일}
-  periodEnd?: string;        // {청구종료일}
-  billingCategory?: string;  // {청구구분} (임대료 / 운반비 / 수리비 / 매각 / 기타)
+  modelName?: string;        // {모델} 또는 품목명
+  workingHeight?: string;    // {높이} / 사양
+  assetNo?: string;          // {자산번호} (렌탈) 또는 제조번호/품목코드 (유통)
+  serialOrCode?: string;     // 유통 전용: 제조번호 / 품목코드
+  itemCategoryLabel?: string;// 유통 전용: 완제품 / 설치옵션 / 호환부품 / 운반비
+  unit?: string;             // 유통 전용: 대 / 식 / EA / 건
+  statementMode?: 'TRADE' | 'RENTAL';
+  siteEntryDate?: string;    // {현장투입일} (렌탈 전용)
+  periodStart?: string;      // {청구시작일} (렌탈 전용)
+  periodEnd?: string;        // {청구종료일} (렌탈 전용)
+  billingCategory?: string;  // {청구구분} (임대료 / 유상옵션 / 운반비 / 수리비 / 매각 / 기타)
   itemDescription: string;   // 레거시/이메일 본문 요약 호환용
   quantity: number;          // {수량}
   unitPrice: number;         // {단가}
@@ -467,6 +471,8 @@ export interface TransactionStatementPdfData {
   billingDate: string; // YYYY-MM-DD
   billingYm: string;   // YYYY-MM
   contractNo?: string;
+  statementMode?: 'TRADE' | 'RENTAL'; // 유통('TRADE') vs 렌탈('RENTAL') 양식 구분
+  supplySummary?: string;             // 공급내역 요약 문구
 
   // 공급자 (당사 테넌트)
   lessorBizNo?: string;          // {테넌트사업자등록번호}
@@ -492,12 +498,12 @@ export interface TransactionStatementPdfData {
   customerAddress?: string;      // {고객주소}
   customerBizType?: string;      // {고객업태}
   customerBizItem?: string;      // {고객종목}
-  siteManagerName?: string;      // {현장담당자}
+  siteManagerName?: string;      // {현장담당자} / 인수담당자
   siteManagerPhone?: string;     // {현장담당자연락처}
   custBillingManagerName?: string;  // {계산서담당자}
   custBillingManagerPhone?: string; // {계산서담당자연락처}
   custBillingEmail?: string;        // {계산서메일}
-  siteName?: string;                // {현장명}
+  siteName?: string;                // {현장명} / 납품장소
   bankAccount?: string;             // {테넌트계좌}
 
   // 품목 내역 (페이지당 최대 13행: Row 16 ~ Row 28)
@@ -509,44 +515,121 @@ export interface TransactionStatementPdfData {
 }
 
 /**
- * 거래명세서 품목 1행에서 {모델} / {높이}, {관리번호}, {현장투입일}, {청구시작일}, {청구종료일}, {청구구분} 추출 정규화 헬퍼
+ * 거래명세서 데이터가 유통('TRADE')인지 렌탈('RENTAL')인지 자동 판별
  */
-export function resolveStatementRowColumns(item: TransactionStatementItem, fallbackYm?: string) {
-  let model = (item.modelName || '').trim();
+export function detectStatementMode(data?: Partial<TransactionStatementPdfData> | null): 'TRADE' | 'RENTAL' {
+  if (!data) return 'RENTAL';
+  if (data.statementMode === 'TRADE' || data.statementMode === 'RENTAL') {
+    return data.statementMode;
+  }
+  const items = data.items || [];
+  if (items.some(it => it.statementMode === 'TRADE')) return 'TRADE';
+  if (items.some(it => it.statementMode === 'RENTAL')) return 'RENTAL';
+
+  const cNo = String(data.contractNo || '').trim().toUpperCase();
+  if (cNo.startsWith('T-') || cNo.startsWith('TRD-') || cNo.startsWith('SO-') || cNo.startsWith('TOUT-')) {
+    return 'TRADE';
+  }
+
+  const hasTradeKeyword = items.some(it => {
+    const text = `${it.modelName || ''} ${it.itemDescription || ''} ${it.billingCategory || ''} ${it.itemCategoryLabel || ''}`;
+    return /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|\[유통출고|완제품|설치옵션|호환부품|매각/.test(text);
+  });
+  if (hasTradeKeyword) return 'TRADE';
+
+  // 계약이 조회 가능할 경우 contractType 확인
+  if (cNo && db.contracts) {
+    const matchedContract = db.contracts.find((c: any) => c.contractNo === data.contractNo || c.id === data.contractNo);
+    if (matchedContract && ((matchedContract as any).contractType === 'TRADE' || (matchedContract as any).contractType === 'SALE' || (matchedContract as any).tradeOrderId)) {
+      return 'TRADE';
+    }
+  }
+
+  return 'RENTAL';
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+/**
+ * 거래명세서 품목 1행에서 유통('TRADE') 및 렌탈('RENTAL') 컬럼 추출 정규화 헬퍼
+ */
+export function resolveStatementRowColumns(
+  item: TransactionStatementItem,
+  _fallbackYm?: string,
+  forceMode?: 'TRADE' | 'RENTAL'
+) {
+  const mode: 'TRADE' | 'RENTAL' = forceMode || item.statementMode || (
+    /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|완제품|설치옵션|호환부품|매각/.test(
+      `${item.modelName || ''} ${item.itemDescription || ''} ${item.billingCategory || ''} ${item.itemCategoryLabel || ''}`
+    ) ? 'TRADE' : 'RENTAL'
+  );
+
+  let rawModel = (item.modelName || '').trim();
   let height = (item.workingHeight || '').trim();
   let assetNo = (item.assetNo || '').trim();
+  let serialOrCode = (item.serialOrCode || '').trim();
+  let itemCategoryLabel = (item.itemCategoryLabel || '').trim();
+  let unit = (item.unit || '').trim();
   let siteEntryDate = (item.siteEntryDate || '').trim();
   let periodStart = (item.periodStart || '').trim();
   let periodEnd = (item.periodEnd || '').trim();
   let billingCategory = (item.billingCategory || '').trim();
+  let notes = (item.notes || '').trim();
 
-  // itemDescription 에서 보조 파싱 (예: JCPT1012AC_K10304_2026-08-01~2026-08-31)
   const desc = (item.itemDescription || '').trim();
-  if (!model && desc) {
+  if (!rawModel && desc) {
     const parts = desc.split('_');
     if (parts.length >= 3 && parts[parts.length - 1].includes('~')) {
-      model = parts[0];
+      rawModel = parts[0];
       if (!assetNo) assetNo = parts[1];
       const [ps, pe] = parts[parts.length - 1].split('~');
       if (!periodStart && ps) periodStart = ps.trim();
       if (!periodEnd && pe) periodEnd = pe.trim();
     } else if (parts.length === 2 && parts[1].includes('~')) {
-      model = parts[0];
+      rawModel = parts[0];
       const [ps, pe] = parts[1].split('~');
       if (!periodStart && ps) periodStart = ps.trim();
       if (!periodEnd && pe) periodEnd = pe.trim();
     } else {
-      model = desc;
+      rawModel = desc;
     }
   }
 
-  // 제품 마스터에서 작업높이 자동 보완
-  if (!height && model && db.products && db.products.length > 0) {
-    const cleanModel = model.replace(/\s+/g, '').toUpperCase();
+  const combinedSource = `${rawModel} ${desc}`;
+
+  // 괄호 안 제조번호/시리얼 추출: 예 "(HC-XE25-261001)" 또는 "(HL-K325-260303)"
+  const parenSerialMatch = rawModel.match(/\(([A-Z]{2,}-[A-Z0-9,\s-]+)\)\s*$/);
+  if (parenSerialMatch && !serialOrCode) {
+    serialOrCode = parenSerialMatch[1].trim();
+  }
+  const descSerialMatch = combinedSource.match(/시리얼\s*[:：]?\s*([A-Z0-9_-]+(?:\s*,\s*[A-Z0-9_-]+)*)/i);
+  if (descSerialMatch && !serialOrCode) {
+    serialOrCode = descSerialMatch[1].trim();
+  }
+
+  // 앞쪽 태그([완제품], [출고설치옵션] 등) 및 중복 시리얼 괄호 제거
+  let cleanModel = rawModel
+    .replace(/^\[(완제품|출고설치옵션|설치옵션|유상옵션|부품|호환부품)\]\s*/g, '')
+    .trim();
+  if (parenSerialMatch) {
+    cleanModel = cleanModel.replace(/\(([A-Z]{2,}-[A-Z0-9,\s-]+)\)\s*$/, '').trim();
+  }
+
+  // 제품 마스터에서 작업높이/사양 자동 보완 (렌탈 모드일 때만)
+  if (mode === 'RENTAL' && !height && cleanModel && db.products && db.products.length > 0) {
+    const normModel = cleanModel.replace(/\s+/g, '').toUpperCase();
     const matchedProd = db.products.find(p =>
       p.modelName && (
-        p.modelName.replace(/\s+/g, '').toUpperCase() === cleanModel ||
-        cleanModel.includes(p.modelName.replace(/\s+/g, '').toUpperCase())
+        p.modelName.replace(/\s+/g, '').toUpperCase() === normModel ||
+        normModel.includes(p.modelName.replace(/\s+/g, '').toUpperCase())
       )
     );
     if (matchedProd?.workingHeight) {
@@ -554,33 +637,77 @@ export function resolveStatementRowColumns(item: TransactionStatementItem, fallb
     }
   }
 
-  // 청구구분 기본값 판별 (임대료 / 운반비 / 수리비 / 매각 / 기타)
-  if (!billingCategory) {
-    const checkStr = `${model} ${desc}`;
-    if (/운반|운송|배차|회수|상하차/.test(checkStr)) {
-      billingCategory = '운반비';
-    } else if (/수리|파손|정비|부품|AS/i.test(checkStr)) {
-      billingCategory = '수리비';
-    } else if (/매각|양도|판매/.test(checkStr)) {
-      billingCategory = '매각';
-    } else if (assetNo || periodStart || /렌탈|임대/.test(checkStr) || height) {
-      billingCategory = '임대료';
-    } else {
-      billingCategory = '기타';
+  if (mode === 'TRADE') {
+    if (!itemCategoryLabel) {
+      if (/\[완제품\]|완제품/.test(combinedSource)) {
+        itemCategoryLabel = '완제품';
+      } else if (/\[출고설치옵션\]|\[설치옵션\]|\[유상옵션\]|설치옵션|풀캐빈|반캐빈|히터|에어컨|후방카메라|사이드시프트|포크포지셔너|레드라인|블루라이트/.test(combinedSource)) {
+        itemCategoryLabel = '설치옵션';
+      } else if (/운반|운송|배차/.test(combinedSource)) {
+        itemCategoryLabel = '운반비';
+      } else if (/부품|컨트롤러|포크암|작동유|필터|배터리|타이어|충전기/.test(combinedSource)) {
+        itemCategoryLabel = '호환부품';
+      } else {
+        itemCategoryLabel = '완제품';
+      }
+    }
+    if (!unit) {
+      unit = itemCategoryLabel === '완제품' ? '대'
+        : itemCategoryLabel === '설치옵션' ? '식'
+        : itemCategoryLabel === '운반비' ? '건'
+        : 'EA';
+    }
+    if (!serialOrCode) {
+      if (assetNo && assetNo !== '-') {
+        serialOrCode = assetNo;
+      } else if (itemCategoryLabel === '설치옵션') {
+        serialOrCode = '출고장착옵션';
+      } else {
+        serialOrCode = '-';
+      }
+    }
+    billingCategory = itemCategoryLabel;
+  } else {
+    // 렌탈 모드 청구구분 판별 (ASSET_SALE의 'AS' 오매칭 방지)
+    if (!billingCategory || billingCategory === '수리비') {
+      if (/^\[(완제품|출고설치옵션|설치옵션)\]/.test(rawModel)) {
+        billingCategory = rawModel.startsWith('[완제품]') ? '완제품' : '설치옵션';
+      } else if (/운반|운송|배차|회수|상하차/.test(combinedSource)) {
+        billingCategory = '운반비';
+      } else if (/수리|파손|정비|(?:^|[^A-Za-z])A\/?S(?:$|[^A-Za-z])/i.test(combinedSource) && !/\[완제품\]|\[출고설치옵션\]/.test(combinedSource)) {
+        billingCategory = '수리비';
+      } else if (/\[유상옵션\]|\[OPT:|유상옵션|설치옵션/.test(combinedSource)) {
+        billingCategory = '유상옵션';
+      } else if (/매각|양도|판매/.test(combinedSource)) {
+        billingCategory = '매각';
+      } else {
+        billingCategory = '임대료';
+      }
     }
   }
 
-  const modelAndHeight = height ? `${model} / ${height}` : (model || desc || '-');
+  const modelAndHeight = (mode === 'RENTAL' && height)
+    ? `${cleanModel} / ${height}`
+    : (cleanModel || desc || '-');
+
+  const cleanEntryDate = (siteEntryDate || periodStart || '-').replace(/T00:00:00(?:\.000)?Z$/, '');
+  const cleanPStart = (periodStart || '-').replace(/T00:00:00(?:\.000)?Z$/, '');
+  const cleanPEnd = (periodEnd || '-').replace(/T00:00:00(?:\.000)?Z$/, '');
 
   return {
-    model: model || '-',
+    mode,
+    model: cleanModel || '-',
     height: height || '',
     modelAndHeight,
-    assetNo: assetNo || '-',
-    siteEntryDate: siteEntryDate || periodStart || '-',
-    periodStart: periodStart || '-',
-    periodEnd: periodEnd || '-',
-    billingCategory
+    assetNo: (mode === 'TRADE' ? serialOrCode : assetNo) || '-',
+    serialOrCode: serialOrCode || assetNo || '-',
+    itemCategoryLabel: itemCategoryLabel || billingCategory || (mode === 'TRADE' ? '완제품' : '임대료'),
+    unit: unit || (mode === 'TRADE' ? '대' : '대'),
+    siteEntryDate: mode === 'TRADE' ? '-' : cleanEntryDate,
+    periodStart: mode === 'TRADE' ? '-' : cleanPStart,
+    periodEnd: mode === 'TRADE' ? '-' : cleanPEnd,
+    billingCategory: mode === 'TRADE' ? (itemCategoryLabel || '완제품') : (billingCategory || '임대료'),
+    notes
   };
 }
 
@@ -596,14 +723,19 @@ export async function generateTransactionStatementPdf(data: TransactionStatement
       ? `${primaryAccount.bankName} ${primaryAccount.accountNumber} (${primaryAccount.accountHolder || (primaryAccount as any).holder || curTenant?.tradeName || curTenant?.corporateName || ''})`
       : '';
 
+    const mode = detectStatementMode(data);
     const normalizedItems = (data.items || []).map(item => {
-      const resolved = resolveStatementRowColumns(item, data.billingYm);
+      const resolved = resolveStatementRowColumns(item, data.billingYm, mode);
       return {
         ...item,
+        statementMode: mode,
         modelName: resolved.model,
         workingHeight: resolved.height,
         modelAndHeight: resolved.modelAndHeight,
         assetNo: resolved.assetNo,
+        serialOrCode: resolved.serialOrCode,
+        itemCategoryLabel: resolved.itemCategoryLabel,
+        unit: resolved.unit,
         siteEntryDate: resolved.siteEntryDate,
         periodStart: resolved.periodStart,
         periodEnd: resolved.periodEnd,
@@ -611,8 +743,23 @@ export async function generateTransactionStatementPdf(data: TransactionStatement
       };
     });
 
+    // 프론트엔드 ExcelJS로 유통/렌탈 정밀 서식·병합·정렬이 완비된 워크북 바이너리 선행 생성
+    let excelBase64: string | undefined;
+    try {
+      const excelBuffer = await generateTransactionStatementExcel({
+        ...data,
+        statementMode: mode,
+        items: normalizedItems
+      });
+      excelBase64 = arrayBufferToBase64(excelBuffer);
+    } catch (excelPreErr) {
+      console.warn('[StatementPDF] 사전 엑셀 버퍼 생성 경고:', excelPreErr);
+    }
+
     const payload = {
       ...data,
+      statementMode: mode,
+      excelBase64,
       items: normalizedItems,
       tenantName: data.lessorName || curTenant?.tradeName || curTenant?.corporateName || curTenant?.displayName,
       lessorName: data.lessorName || curTenant?.tradeName || curTenant?.corporateName || curTenant?.displayName,
@@ -744,6 +891,7 @@ export async function generateTransactionStatementExcel(data: TransactionStateme
   const bankAccount = data.bankAccount || defaultBankAccount;
 
   // 13개 단위 분할 (Row 16 ~ Row 28)
+  const mode = detectStatementMode(data);
   const items = data.items || [];
   const chunkSize = 13;
   const chunks: TransactionStatementItem[][] = [];
@@ -809,6 +957,96 @@ export async function generateTransactionStatementExcel(data: TransactionStateme
     replaceTagInSheet('{현장명}', `${data.siteName || '-'}${pageTag}`);
     replaceTagInSheet('{작성일자}', `${data.billingDate || new Date().toISOString().split('T')[0]}${pageTag}`);
 
+    // 2-1. 영업 형태(유통 vs 렌탈)별 상단 헤더 레이블 및 공급내역 설정
+    if (mode === 'TRADE') {
+      ws.getCell('C9').value = '영업담당자';
+      ws.getCell('P9').value = '인수담당자';
+      ws.getCell('E12').value = data.supplySummary || '지게차 완제품 및 옵션·부품 공급';
+      ws.getCell('P12').value = '납품장소';
+    } else {
+      ws.getCell('C9').value = '계약담당자';
+      ws.getCell('P9').value = '현장담당자';
+      ws.getCell('E12').value = data.supplySummary || '지게차 임대료 외';
+      ws.getCell('P12').value = '현장명';
+    }
+
+    // 상단 공급자/공급받는자 텍스트 잘림 방지 (shrinkToFit 적용)
+    for (const addr of ['E5','E6','K6','E7','E8','K8','E9','K9','E10','K10','E11','E12','E13','R5','R6','X6','R7','R8','X8','R9','X9','R10','X10','R11','R12','T13']) {
+      const c = ws.getCell(addr);
+      c.alignment = { ...(c.alignment || {}), horizontal: 'center', vertical: 'middle', shrinkToFit: true };
+    }
+
+    // 2-2. 품목 테이블 헤더(Row 15) 및 데이터 행(Row 16 ~ Row 28) 병합·테두리·정렬 정규화
+    const clearRowMerges = (r: number) => {
+      const possibleRanges = [
+        `E${r}:G${r}`, `H${r}:J${r}`, `L${r}:N${r}`, `O${r}:P${r}`,
+        `E${r}:J${r}`, `K${r}:M${r}`, `N${r}:O${r}`,
+        `R${r}:S${r}`, `T${r}:V${r}`, `W${r}:X${r}`, `Y${r}:AA${r}`
+      ];
+      for (const rng of possibleRanges) {
+        try { ws.unMergeCells(rng); } catch (e) {}
+      }
+    };
+
+    const applyRowMerges = (r: number) => {
+      clearRowMerges(r);
+      const targetRanges = mode === 'TRADE'
+        ? [`E${r}:J${r}`, `K${r}:M${r}`, `N${r}:O${r}`, `R${r}:S${r}`, `T${r}:V${r}`, `W${r}:X${r}`, `Y${r}:AA${r}`]
+        : [`E${r}:G${r}`, `H${r}:J${r}`, ...(r === 15 ? [`L${r}:N${r}`] : []), `O${r}:P${r}`, `R${r}:S${r}`, `T${r}:V${r}`, `W${r}:X${r}`, `Y${r}:AA${r}`];
+      for (const rng of targetRanges) {
+        try { ws.mergeCells(rng); } catch (e) {}
+      }
+      // 테두리 보존 (B열~AA열: 2~27)
+      for (let cIdx = 2; cIdx <= 27; cIdx++) {
+        const cell = ws.getCell(r, cIdx);
+        cell.border = {
+          left: { style: cIdx === 2 ? 'medium' : 'hair', color: { argb: 'FF0070C0' } },
+          right: { style: cIdx === 27 ? 'medium' : 'hair', color: { argb: 'FF0070C0' } },
+          top: { style: r === 15 ? 'medium' : 'hair', color: { argb: 'FF0070C0' } },
+          bottom: { style: (r === 15 || r === 28) ? 'medium' : 'hair', color: { argb: 'FF0070C0' } }
+        };
+      }
+    };
+
+    // Row 15 컬럼 헤더 설정
+    applyRowMerges(15);
+    const setHeaderCell = (col: string, label: string) => {
+      const cell = ws.getCell(`${col}15`);
+      cell.value = label;
+      cell.numFmt = '@';
+      cell.font = { name: '맑은 고딕', size: 14, bold: true, color: { argb: 'FF0070C0' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', shrinkToFit: true };
+    };
+
+    if (mode === 'TRADE') {
+      setHeaderCell('B', '순번');
+      setHeaderCell('C', '월');
+      setHeaderCell('D', '일');
+      setHeaderCell('E', '품목명 / 모델·규격');
+      setHeaderCell('K', '제조번호 / 품목코드');
+      setHeaderCell('N', '품목구분');
+      setHeaderCell('P', '단위');
+      setHeaderCell('Q', '수량');
+      setHeaderCell('R', '단가');
+      setHeaderCell('T', '공급가액');
+      setHeaderCell('W', '세 액');
+      setHeaderCell('Y', '비고');
+    } else {
+      setHeaderCell('B', '순번');
+      setHeaderCell('C', '월');
+      setHeaderCell('D', '일');
+      setHeaderCell('E', '모델 / 사양');
+      setHeaderCell('H', '자산번호');
+      setHeaderCell('K', '현장투입일');
+      setHeaderCell('L', '사용기간');
+      setHeaderCell('O', '청구구분');
+      setHeaderCell('Q', '수량');
+      setHeaderCell('R', '단가');
+      setHeaderCell('T', '공급가액');
+      setHeaderCell('W', '세 액');
+      setHeaderCell('Y', '비고');
+    }
+
     // 3. 품목 13행 기입 (Row 16 ~ Row 28)
     let pageSupply = 0;
     let pageVat = 0;
@@ -816,59 +1054,104 @@ export async function generateTransactionStatementExcel(data: TransactionStateme
     for (let i = 0; i < 13; i++) {
       const rowNum = 16 + i;
       const item = chunk[i];
-      if (!ws.getCell(`Y${rowNum}`).isMerged) {
-        try { ws.mergeCells(`Y${rowNum}:AA${rowNum}`); } catch (e) {}
-      }
+      applyRowMerges(rowNum);
+
+      // 행 전체 초기화 및 일관된 폰트/정렬/포맷 지정
+      const formatDataCell = (
+        col: string,
+        val: any,
+        align: 'left' | 'center' | 'right',
+        numFmt: string = '@',
+        shrink: boolean = true,
+        indent: number = 0
+      ) => {
+        const cell = ws.getCell(`${col}${rowNum}`);
+        cell.value = val;
+        cell.numFmt = numFmt;
+        cell.font = { name: '맑은 고딕', size: 12, bold: false, italic: false, color: { argb: 'FF000000' } };
+        cell.alignment = {
+          horizontal: align,
+          vertical: 'middle',
+          shrinkToFit: shrink,
+          ...(indent > 0 ? { indent } : {})
+        };
+      };
 
       if (item) {
-        const resolved = resolveStatementRowColumns(item, data.billingYm);
+        const resolved = resolveStatementRowColumns(item, data.billingYm, mode);
         const qty = Number(item.quantity ?? 1);
         const unitPrice = Number(item.unitPrice ?? 0);
         const supplyAmount = Number(item.supplyAmount ?? (unitPrice * qty));
-        const vatAmount = Number(item.vatAmount ?? Math.round(supplyAmount * 0.1));
+        const vatAmount = (item.vatAmount !== undefined && Number(item.vatAmount) !== 0)
+          ? Number(item.vatAmount)
+          : Math.round(supplyAmount * 0.1);
         pageSupply += supplyAmount;
         pageVat += vatAmount;
 
-        ws.getCell(`B${rowNum}`).value = startGlobalIdx + i + 1;
-        ws.getCell(`C${rowNum}`).value = item.month !== undefined && item.month !== '' ? Number(item.month) : '';
-        ws.getCell(`D${rowNum}`).value = item.day !== undefined && item.day !== '' ? Number(item.day) : '';
-        ws.getCell(`E${rowNum}`).value = resolved.modelAndHeight;
-        ws.getCell(`H${rowNum}`).value = resolved.assetNo;
-        ws.getCell(`K${rowNum}`).value = resolved.siteEntryDate;
-        ws.getCell(`L${rowNum}`).value = resolved.periodStart;
-        ws.getCell(`M${rowNum}`).value = (resolved.periodStart !== '-' || resolved.periodEnd !== '-') ? '~' : '';
-        ws.getCell(`N${rowNum}`).value = resolved.periodEnd;
-        ws.getCell(`O${rowNum}`).value = resolved.billingCategory;
-        ws.getCell(`Q${rowNum}`).value = qty;
-        ws.getCell(`R${rowNum}`).value = unitPrice;
-        ws.getCell(`T${rowNum}`).value = supplyAmount;
-        ws.getCell(`W${rowNum}`).value = vatAmount;
-        ws.getCell(`Y${rowNum}`).value = item.notes || '';
+        const mVal = item.month !== undefined && item.month !== '' ? String(Number(item.month)) : '';
+        const dVal = item.day !== undefined && item.day !== '' ? String(Number(item.day)) : '';
+
+        if (mode === 'TRADE') {
+          // 유통 거래명세서 (사용기간 없음)
+          // 중앙정렬: 순번(B), 월(C), 일(D), 제조번호/품목코드(K:M), 품목구분(N:O), 단위(P)
+          // 좌측정렬: 품목명/모델·규격(E:J), 비고(Y:AA)
+          // 우측정렬: 수량(Q), 단가(R:S), 공급가액(T:V), 세액(W:X)
+          formatDataCell('B', startGlobalIdx + i + 1, 'center', '@', false);
+          formatDataCell('C', mVal, 'center', '@', false);
+          formatDataCell('D', dVal, 'center', '@', false);
+          formatDataCell('E', resolved.modelAndHeight, 'left', '@', true, 1);
+          formatDataCell('K', resolved.serialOrCode, 'center', '@', true);
+          formatDataCell('N', resolved.itemCategoryLabel, 'center', '@', true);
+          formatDataCell('P', resolved.unit, 'center', '@', false);
+          formatDataCell('Q', qty, 'right', '#,##0', true, 1);
+          formatDataCell('R', unitPrice, 'right', '#,##0', true, 1);
+          formatDataCell('T', supplyAmount, 'right', '#,##0', true, 1);
+          formatDataCell('W', vatAmount, 'right', '#,##0', true, 1);
+          formatDataCell('Y', resolved.notes || '', 'left', '@', true, 1);
+        } else {
+          // 렌탈 거래명세서 (현장투입일 및 사용기간 포함)
+          // 중앙정렬: 순번(B), 월(C), 일(D), 자산번호(H:J), 현장투입일(K), 사용기간(L,M,N), 청구구분(O:P)
+          // 좌측정렬: 모델/사양(E:G), 비고(Y:AA)
+          // 우측정렬: 수량(Q), 단가(R:S), 공급가액(T:V), 세액(W:X)
+          const hasPeriod = resolved.periodStart !== '-' || resolved.periodEnd !== '-';
+          formatDataCell('B', startGlobalIdx + i + 1, 'center', '@', false);
+          formatDataCell('C', mVal, 'center', '@', false);
+          formatDataCell('D', dVal, 'center', '@', false);
+          formatDataCell('E', resolved.modelAndHeight, 'left', '@', true, 1);
+          formatDataCell('H', resolved.assetNo, 'center', '@', true);
+          formatDataCell('K', resolved.siteEntryDate, 'center', '@', true);
+          formatDataCell('L', resolved.periodStart, 'center', '@', true);
+          formatDataCell('M', hasPeriod ? '~' : '', 'center', '@', false);
+          formatDataCell('N', resolved.periodEnd, 'center', '@', true);
+          formatDataCell('O', resolved.billingCategory, 'center', '@', true);
+          formatDataCell('Q', qty, 'right', '#,##0', true, 1);
+          formatDataCell('R', unitPrice, 'right', '#,##0', true, 1);
+          formatDataCell('T', supplyAmount, 'right', '#,##0', true, 1);
+          formatDataCell('W', vatAmount, 'right', '#,##0', true, 1);
+          formatDataCell('Y', resolved.notes || '', 'left', '@', true, 1);
+        }
       } else {
-        ws.getCell(`B${rowNum}`).value = null;
-        ws.getCell(`C${rowNum}`).value = null;
-        ws.getCell(`D${rowNum}`).value = null;
-        ws.getCell(`E${rowNum}`).value = null;
-        ws.getCell(`H${rowNum}`).value = null;
-        ws.getCell(`K${rowNum}`).value = null;
-        ws.getCell(`L${rowNum}`).value = null;
-        ws.getCell(`M${rowNum}`).value = null;
-        ws.getCell(`N${rowNum}`).value = null;
-        ws.getCell(`O${rowNum}`).value = null;
-        ws.getCell(`Q${rowNum}`).value = null;
-        ws.getCell(`R${rowNum}`).value = null;
-        ws.getCell(`T${rowNum}`).value = null;
-        ws.getCell(`W${rowNum}`).value = null;
-        ws.getCell(`Y${rowNum}`).value = null;
+        for (const col of ['B','C','D','E','H','K','L','M','N','O','P','Q','R','T','W','Y']) {
+          const isNumCol = ['Q','R','T','W'].includes(col);
+          const align = ['E','Y'].includes(col) ? 'left' : isNumCol ? 'right' : 'center';
+          formatDataCell(col, null, align, isNumCol ? '#,##0' : '@', true, ['E','Y','Q','R','T','W'].includes(col) ? 1 : 0);
+        }
       }
     }
 
-    // 4. 합계 행 (Row 29: 수식 보존 및 캐시 result 기입)
+    // 4. 합계 행 (Row 29: 수식 보존 및 캐시 result 기입 + 우측정렬 일관 적용)
     const finalSupply = totalPages === 1 ? (data.totalSupply || pageSupply) : pageSupply;
     const finalVat = totalPages === 1 ? (data.totalVat || pageVat) : pageVat;
-    ws.getCell('E29').value = { formula: 'SUM(T16:V28)', result: finalSupply };
-    ws.getCell('L29').value = { formula: 'SUM(W16:X28)', result: finalVat };
-    ws.getCell('Q29').value = { formula: 'E29+L29', result: finalSupply + finalVat };
+    for (const sumEntry of [
+      { addr: 'E29', formula: 'SUM(T16:V28)', result: finalSupply },
+      { addr: 'L29', formula: 'SUM(W16:X28)', result: finalVat },
+      { addr: 'Q29', formula: 'E29+L29', result: finalSupply + finalVat }
+    ]) {
+      const c = ws.getCell(sumEntry.addr);
+      c.value = { formula: sumEntry.formula, result: sumEntry.result };
+      c.numFmt = '₩#,##0;₩-#,##0;₩0';
+      c.alignment = { horizontal: 'right', vertical: 'middle', shrinkToFit: true, indent: 1 };
+    }
   }
 
   const buffer = await workbook.xlsx.writeBuffer();

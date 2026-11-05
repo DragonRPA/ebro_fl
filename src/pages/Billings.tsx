@@ -1227,6 +1227,15 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
     let totalSupply = 0;
     let totalVat = 0;
 
+    const isTradeBilling = Boolean(
+      (billing as any)?.contractType === 'TRADE' ||
+      (contract as any)?.contractType === 'TRADE' ||
+      (billing as any)?.tradeOrderId ||
+      (billing as any)?.tradeBillingId ||
+      String(billing?.billingType || '').toUpperCase() === 'ASSET_SALE' ||
+      details.some(d => /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|\[호환부품\]/.test(`${d.itemName || ''} ${(d as any).description || ''}`))
+    );
+
     const hasCustom = Boolean(billing?.hasCustomStatement && billing.customStatementItems && billing.customStatementItems.length > 0);
     const items = hasCustom
       ? billing!.customStatementItems!.map(ci => {
@@ -1235,15 +1244,19 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
           totalSupply += supply;
           totalVat += vat;
           return {
+            statementMode: (isTradeBilling ? 'TRADE' : 'RENTAL') as 'TRADE' | 'RENTAL',
             month: dateM,
             day: dateD,
             modelName: ci.itemDescription || '',
             workingHeight: ci.specification || '',
             assetNo: '-',
-            siteEntryDate: contract?.startDate || '-',
-            periodStart: '-',
-            periodEnd: '-',
-            billingCategory: '임대료',
+            serialOrCode: ci.specification || '-',
+            siteEntryDate: isTradeBilling ? '' : (contract?.startDate || '-'),
+            periodStart: isTradeBilling ? '' : '-',
+            periodEnd: isTradeBilling ? '' : '-',
+            billingCategory: isTradeBilling ? '완제품' : '임대료',
+            itemCategoryLabel: isTradeBilling ? '완제품' : '임대료',
+            unit: isTradeBilling ? '대' : '식',
             itemDescription: ci.specification ? `${ci.itemDescription} (${ci.specification})` : ci.itemDescription,
             quantity: ci.quantity,
             unitPrice: ci.unitPrice,
@@ -1261,6 +1274,8 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
 
     try {
       const pdfBytes = await generateTransactionStatementPdf({
+        statementMode: isTradeBilling ? 'TRADE' : 'RENTAL',
+        supplySummary: isTradeBilling ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외',
         billingDate,
         billingYm: ym,
         contractNo: contract?.contractNo,
@@ -1365,6 +1380,15 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
     let totalSupply = 0;
     let totalVat = 0;
 
+    const isTradeBilling = Boolean(
+      (billing as any)?.contractType === 'TRADE' ||
+      (contract as any)?.contractType === 'TRADE' ||
+      (billing as any)?.tradeOrderId ||
+      (billing as any)?.tradeBillingId ||
+      String(billing?.billingType || '').toUpperCase() === 'ASSET_SALE' ||
+      details.some(d => /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|\[호환부품\]/.test(`${d.itemName || ''} ${(d as any).description || ''}`))
+    );
+
     const hasCustom = Boolean(billing?.hasCustomStatement && billing.customStatementItems && billing.customStatementItems.length > 0);
     const items = hasCustom
       ? billing!.customStatementItems!.map(ci => {
@@ -1373,15 +1397,19 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
           totalSupply += supply;
           totalVat += vat;
           return {
+            statementMode: (isTradeBilling ? 'TRADE' : 'RENTAL') as 'TRADE' | 'RENTAL',
             month: dateM,
             day: dateD,
             modelName: ci.itemDescription || '',
             workingHeight: ci.specification || '',
             assetNo: '-',
-            siteEntryDate: contract?.startDate || '-',
-            periodStart: '-',
-            periodEnd: '-',
-            billingCategory: '임대료',
+            serialOrCode: ci.specification || '-',
+            siteEntryDate: isTradeBilling ? '' : (contract?.startDate || '-'),
+            periodStart: isTradeBilling ? '' : '-',
+            periodEnd: isTradeBilling ? '' : '-',
+            billingCategory: isTradeBilling ? '완제품' : '임대료',
+            itemCategoryLabel: isTradeBilling ? '완제품' : '임대료',
+            unit: isTradeBilling ? '대' : '식',
             itemDescription: ci.specification ? `${ci.itemDescription} (${ci.specification})` : ci.itemDescription,
             quantity: ci.quantity,
             unitPrice: ci.unitPrice,
@@ -1399,6 +1427,8 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
 
     try {
       const excelBuffer = await generateTransactionStatementExcel({
+        statementMode: isTradeBilling ? 'TRADE' : 'RENTAL',
+        supplySummary: isTradeBilling ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외',
         billingDate,
         billingYm: ym,
         contractNo: contract?.contractNo,
@@ -1506,6 +1536,15 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
     let totalSupply = 0;
     let totalVat = 0;
 
+    const isTradeBilling = Boolean(
+      (billing as any)?.contractType === 'TRADE' ||
+      (contract as any)?.contractType === 'TRADE' ||
+      (billing as any)?.tradeOrderId ||
+      (billing as any)?.tradeBillingId ||
+      String(billing?.billingType || '').toUpperCase() === 'ASSET_SALE' ||
+      details.some(d => /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|\[호환부품\]/.test(`${d.itemName || ''} ${(d as any).description || ''}`))
+    );
+
     const hasCustom = Boolean(billing?.hasCustomStatement && billing.customStatementItems && billing.customStatementItems.length > 0);
     const items = hasCustom
       ? billing!.customStatementItems!.map(ci => {
@@ -1514,15 +1553,19 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
           totalSupply += supply;
           totalVat += vat;
           return {
+            statementMode: (isTradeBilling ? 'TRADE' : 'RENTAL') as 'TRADE' | 'RENTAL',
             month: dateM,
             day: dateD,
             modelName: ci.itemDescription || '',
             workingHeight: ci.specification || '',
             assetNo: '-',
-            siteEntryDate: contract?.startDate || '-',
-            periodStart: '-',
-            periodEnd: '-',
-            billingCategory: '임대료',
+            serialOrCode: ci.specification || '-',
+            siteEntryDate: isTradeBilling ? '' : (contract?.startDate || '-'),
+            periodStart: isTradeBilling ? '' : '-',
+            periodEnd: isTradeBilling ? '' : '-',
+            billingCategory: isTradeBilling ? '완제품' : '임대료',
+            itemCategoryLabel: isTradeBilling ? '완제품' : '임대료',
+            unit: isTradeBilling ? '대' : '식',
             itemDescription: ci.specification ? `${ci.itemDescription} (${ci.specification})` : ci.itemDescription,
             quantity: ci.quantity,
             unitPrice: ci.unitPrice,
@@ -1548,31 +1591,35 @@ showToast('모든 수납 내역 일괄 취소 및 통장 잔액을 복원합니�
 
     const body =
 `========================================================================================
-                        ${currentTenant?.tradeName || currentTenant?.corporateName || 'e-Bro LIFT'}   거 래 명 세 서
+                        ${currentTenant?.tradeName || currentTenant?.corporateName || '지게차 관리 시스템'}   거 래 명 세 서
 ========================================================================================
 
 안녕하세요, ${getCustName(billing?.customerId || '')} 귀하.
-당사 리프트 임대 계약(계약번호: ${contract?.contractNo || '-'})에 따른 ${billing?.billingYm} 거래명세서 및 청구 내역을 아래와 같이 송부해 드립니다.
+당사 ${isTradeBilling ? '유통 공급 계약' : '장비 임대 계약'}(계약번호: ${contract?.contractNo || '-'})에 따른 ${billing?.billingYm} 거래명세서 및 청구 내역을 아래와 같이 송부해 드립니다.
 
 [1. 공급자 정보]
 - 사업자등록번호: ${currentTenant?.businessNumber || '-'} | 상호: ${currentTenant?.tradeName || currentTenant?.corporateName || '-'} | 대표자: ${currentTenant?.representativeName || '-'}
-- 계약담당자(영업): ${spName} (연락처: ${spPhone})
-- 계산서담당자(경영): ${currentTenant?.workplaces?.[0]?.managerName || '정수아'} (연락처: ${currentTenant?.tel || '-'})
+- ${isTradeBilling ? '영업담당자' : '계약담당자'}: ${spName} (연락처: ${spPhone})
+- 계산서담당자: ${currentTenant?.workplaces?.[0]?.managerName || '정수아'} (연락처: ${currentTenant?.tel || '-'})
 - 이메일: ${currentTenant?.taxEmail || currentTenant?.email || '-'}
 
 [2. 공급받는 자 정보]
 - 상호(법인명): ${customer?.name || '-'} | 대표자명: ${customer?.representative || '-'}
 - 사업자등록번호: ${customer?.bizRegNo || '-'} | 사업장주소: ${customer?.address || '-'}
-- 현장명: ${site?.name || '-'}
-- 현장담당자: ${siteManagerName} (연락처: ${siteManagerPhone})
+- ${isTradeBilling ? '납품장소' : '현장명'}: ${site?.name || '-'}
+- ${isTradeBilling ? '인수담당자' : '현장담당자'}: ${siteManagerName} (연락처: ${siteManagerPhone})
 - 계산서담당자: ${billingManagerName} (연락처: ${billingManagerPhone})
 - 계산서메일: ${billingEmail}
 
 [3. 거래 세부 내역]
 ----------------------------------------------------------------------------------------
 ${items.map((item, idx) => {
-  return `${idx + 1}. ${item.modelName || item.itemDescription}${item.workingHeight ? ` / ${item.workingHeight}` : ''} [관리번호: ${item.assetNo || '-'}] (현장투입일: ${item.siteEntryDate || '-'} | 사용기간: ${item.periodStart || '-'} ~ ${item.periodEnd || '-'} | 구분: ${item.billingCategory || '임대료'})
-   - 수량: ${item.quantity}대 | 단가: ${item.unitPrice.toLocaleString()}원 | 공급가액: ${item.supplyAmount.toLocaleString()}원 | 부가세: ${item.vatAmount.toLocaleString()}원 | 합계: ${(item.supplyAmount + item.vatAmount).toLocaleString()}원`;
+  if (isTradeBilling || item.statementMode === 'TRADE') {
+    return `${idx + 1}. ${item.modelName || item.itemDescription}${item.workingHeight ? ` / ${item.workingHeight}` : ''} [제조번호/코드: ${item.serialOrCode || item.assetNo || '-'}] (품목구분: ${item.itemCategoryLabel || item.billingCategory || '완제품'} | 단위: ${item.unit || '대'})
+   - 수량: ${item.quantity}${item.unit || '대'} | 단가: ${item.unitPrice.toLocaleString()}원 | 공급가액: ${item.supplyAmount.toLocaleString()}원 | 부가세: ${item.vatAmount.toLocaleString()}원 | 합계: ${(item.supplyAmount + item.vatAmount).toLocaleString()}원`;
+  }
+  return `${idx + 1}. ${item.modelName || item.itemDescription}${item.workingHeight ? ` / ${item.workingHeight}` : ''} [자산번호: ${item.assetNo || '-'}] (현장투입일: ${item.siteEntryDate || '-'} | 사용기간: ${item.periodStart || '-'} ~ ${item.periodEnd || '-'} | 구분: ${item.billingCategory || '임대료'})
+   - 수량: ${item.quantity}식 | 단가: ${item.unitPrice.toLocaleString()}원 | 공급가액: ${item.supplyAmount.toLocaleString()}원 | 부가세: ${item.vatAmount.toLocaleString()}원 | 합계: ${(item.supplyAmount + item.vatAmount).toLocaleString()}원`;
 }).join('\n----------------------------------------------------------------------------------------\n')}
 ----------------------------------------------------------------------------------------
 
@@ -1603,6 +1650,8 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
         const sName = site?.name || '현장';
         const ym = billing?.billingYm || '';
         const pdfBytes = await generateTransactionStatementPdf({
+          statementMode: isTradeBilling ? 'TRADE' : 'RENTAL',
+          supplySummary: isTradeBilling ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외',
           billingDate,
           billingYm: ym,
           contractNo: contract?.contractNo,
@@ -5605,49 +5654,6 @@ ${currentTenant?.tradeName || currentTenant?.corporateName || '임대인'} 올�
                 >
                   <Download size={13} /> 차감 대장 엑셀
  </button>
-              </div>
-            </div>
-
-            {/* ② KPI 요약 카드 그리드 */}
-            <div data-mid="waiver-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>총 영업 면제 손실액</div>
-                <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--danger)' }}>
-                  ₩{totalWaivedAmount.toLocaleString()}원
- </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  총 {totalWaivedCount}건 면제 승인
- </div>
-              </div>
-
-              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>현장 AS 비용 면제</div>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
-                  ₩{fieldAsAmount.toLocaleString()}원
- </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {fieldAsWaived.length}건 (고객 과실 현장 출동)
- </div>
-              </div>
-
-              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>반납 입고 정비비 면제</div>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary)' }}>
-                  ₩{inboundAmount.toLocaleString()}원
- </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {inboundWaived.length}건 (입고 검수 결함 파손)
- </div>
-              </div>
-
-              <div className="card" style={{ margin: 0, padding: '14px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '4px' }}>고객부담 운송료 면제</div>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: '#ea580c' }}>
-                  ₩{deliveryAmount.toLocaleString()}원
- </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {deliveryWaived.length}건 (배차 및 추가 운송비)
- </div>
               </div>
             </div>
 

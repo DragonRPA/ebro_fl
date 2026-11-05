@@ -727,34 +727,6 @@ export const TradePurchasesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. KPI 요약 카드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))', gap: '12px', flexShrink: 0 }}>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>해외수입 도착원가 누계</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#1d4ed8', whiteSpace: 'nowrap' }}>
-            ₩{kpi.importSupplyAmt.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>수입 부대비용 합계</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#d97706', whiteSpace: 'nowrap' }}>
-            ₩{kpi.totalIncidental.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>국내매입 원가 누계</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#059669', whiteSpace: 'nowrap' }}>
-            ₩{kpi.domesticSupplyAmt.toLocaleString()}
-          </div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매입·수입 합계</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-            ₩{kpi.totalPurchaseAmt.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
       {/* 3. 통합 조회 필터 바 */}
       <div
         style={{

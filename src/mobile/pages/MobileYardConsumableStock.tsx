@@ -214,42 +214,7 @@ export const MobileYardConsumableStock: React.FC<MobileYardConsumableStockProps>
         </button>
       </header>
 
-      {/* 2. 상단 요약 통계 카드 */}
       <div className="p-4 flex flex-col gap-3">
-        <div className="grid grid-cols-4 gap-2">
-          {/* 총 품목 */}
-          <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
-            <span className="text-[11px] font-bold text-slate-400">총 품목</span>
-            <span className="text-lg font-black text-white font-mono mt-1">
-              {summary.totalKinds}<span className="text-xs font-normal text-slate-400 ml-0.5">종</span>
-            </span>
-          </div>
-
-          {/* 보유 품목 */}
-          <div className="p-3 rounded-2xl bg-slate-900/80 border border-emerald-500/30 flex flex-col justify-between">
-            <span className="text-[11px] font-bold text-emerald-400">보유 품목</span>
-            <span className="text-lg font-black text-emerald-400 font-mono mt-1">
-              {summary.inStockKinds}<span className="text-xs font-normal text-slate-400 ml-0.5">종</span>
-            </span>
-          </div>
-
-          {/* 품절/부족 */}
-          <div className="p-3 rounded-2xl bg-slate-900/80 border border-red-500/30 flex flex-col justify-between">
-            <span className="text-[11px] font-bold text-red-400">품절/부족</span>
-            <span className="text-lg font-black text-red-400 font-mono mt-1">
-              {summary.outOfStockKinds}<span className="text-xs font-normal text-slate-400 ml-0.5">종</span>
-            </span>
-          </div>
-
-          {/* 주기장 총재고 */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-500/40 flex flex-col justify-between">
-            <span className="text-[11px] font-bold text-amber-300">주기장 총수량</span>
-            <span className="text-lg font-black text-amber-300 font-mono mt-1">
-              {summary.totalYardQty}<span className="text-xs font-normal text-slate-400 ml-0.5">개</span>
-            </span>
-          </div>
-        </div>
-
         {/* 3. 검색창 */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

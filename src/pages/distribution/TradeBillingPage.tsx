@@ -4,6 +4,12 @@ import { useApp } from '../../context/AppContext';
 import { TradeSalesOrder, TradeBilling } from '../../services/db';
 import { exportToExcel } from '../../services/excel';
 import {
+  generateTransactionStatementExcel,
+  generateTransactionStatementPdf,
+  TransactionStatementPdfData,
+  TransactionStatementItem
+} from '../../services/excelTemplateEngine';
+import {
   CheckCircle, FileText, X, Download, RotateCcw, Mail, Printer,
   CreditCard, Ban, Trash2, Eye, Send, PlusCircle
 } from 'lucide-react';
@@ -24,7 +30,7 @@ export const TradeBillingPage: React.FC = () => {
     cancelBilling,
     deleteBilling
   } = useTrade();
-  const { customers, showErrorModal } = useApp();
+  const { customers, currentTenant, showErrorModal } = useApp();
   const showSuccessToast = (msg: string) => console.info(msg);
 
   // Filter states (청구월, 시작일, 종료일, 고객사, 품명, 상태, 검색어)
@@ -392,9 +398,8 @@ export const TradeBillingPage: React.FC = () => {
     }
   };
 
-  // Print Transaction Statement (거래명세서 A4 인쇄)
-  const handlePrintStatement = () => {
-    if (!statementModalOrder) return;
+  const buildTradeStatementData = (): TransactionStatementPdfData | null => {
+    if (!statementModalOrder) return null;
     const custName = getCustomerName(statementModalOrder.customerId);
     const cust = getCustomerById(statementModalOrder.customerId);
     const lines = salesOrderLines.filter(l => l.orderId === statementModalOrder.id);
@@ -403,46 +408,174 @@ export const TradeBillingPage: React.FC = () => {
     const supply = activeBilling?.supplyAmount ?? statementModalOrder.totalSalesAmount;
     const vat = activeBilling?.vatAmount ?? Math.round(supply * 0.1);
     const total = activeBilling?.totalAmount ?? (supply + vat);
-    const stmtNo = activeBilling?.id || `STMT-${statementModalOrder.id}`;
 
-    const prodRowsHtml = lines.map((l, idx) => {
+    const bDate = formBillingDate || new Date().toISOString().split('T')[0];
+    const bParts = bDate.split('-');
+    const m = bParts[1] ? Number(bParts[1]) : 10;
+    const d = bParts[2] ? Number(bParts[2]) : 25;
+
+    const items: TransactionStatementItem[] = [];
+    lines.forEach(l => {
       const prod = products.find(p => p.id === l.productId);
       const lineSupply = l.qty * l.unitPrice;
       const lineVat = Math.round(lineSupply * 0.1);
-      return `
-        <tr>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${idx + 1}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${prod?.skuCode || '-'}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1;">${prod?.name || '유통상품'}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${prod?.spec || prod?.unit || '식'}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${l.qty.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${l.unitPrice.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineSupply.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineVat.toLocaleString()}</td>
-        </tr>
-      `;
-    }).join('');
+      const isForklift = prod?.category === 'FORKLIFT' || /지게차|전동|디젤|리치|스태커/i.test(prod?.name || '');
+      items.push({
+        statementMode: 'TRADE',
+        month: m,
+        day: d,
+        modelName: prod?.name || '유통상품',
+        workingHeight: prod?.spec || '',
+        assetNo: prod?.skuCode || '-',
+        serialOrCode: (l as any).serialNo || prod?.skuCode || '-',
+        siteEntryDate: '',
+        periodStart: '',
+        periodEnd: '',
+        billingCategory: isForklift ? '완제품' : '호환부품',
+        itemCategoryLabel: isForklift ? '완제품' : '호환부품',
+        unit: prod?.unit || (isForklift ? '대' : 'EA'),
+        itemDescription: prod?.name || '유통상품',
+        quantity: l.qty,
+        unitPrice: l.unitPrice,
+        supplyAmount: lineSupply,
+        vatAmount: lineVat,
+        notes: formMemo || ''
+      });
+    });
 
-    const optRowsHtml = appliedOpts.map((opt, idx) => {
+    appliedOpts.forEach(opt => {
       const lineSupply = opt.isFreeApplied ? 0 : opt.supplyAmount;
       const lineVat = Math.round(lineSupply * 0.1);
-      return `
-        <tr style="background:#faf5ff;">
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${lines.length + idx + 1}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${opt.optionCode}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1;">[장착옵션·${opt.optionGroupLabel}] ${opt.name}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:center;">${opt.subVariant}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${opt.qty.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${opt.isFreeApplied ? '무상시공' : opt.unitPrice.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineSupply.toLocaleString()}</td>
-          <td style="padding:8px; border:1px solid #cbd5e1; text-align:right;">${lineVat.toLocaleString()}</td>
-        </tr>
-      `;
-    }).join('');
+      items.push({
+        statementMode: 'TRADE',
+        month: m,
+        day: d,
+        modelName: `${opt.optionGroupLabel} · ${opt.name} (${opt.subVariant})`,
+        workingHeight: '',
+        assetNo: opt.optionCode || '-',
+        serialOrCode: opt.optionCode || '-',
+        siteEntryDate: '',
+        periodStart: '',
+        periodEnd: '',
+        billingCategory: '설치옵션',
+        itemCategoryLabel: '설치옵션',
+        unit: '식',
+        itemDescription: `${opt.optionGroupLabel} · ${opt.name}`,
+        quantity: opt.qty,
+        unitPrice: opt.isFreeApplied ? 0 : opt.unitPrice,
+        supplyAmount: lineSupply,
+        vatAmount: lineVat,
+        notes: opt.isFreeApplied ? '무상시공' : ''
+      });
+    });
 
-    const rowsHtml = prodRowsHtml + optRowsHtml;
+    const primaryAcc = currentTenant?.bankAccounts?.find(a => a.isDefault) || currentTenant?.bankAccounts?.[0];
+    const bankAccountStr = primaryAcc
+      ? `${primaryAcc.bankName} ${primaryAcc.accountNumber} , ${primaryAcc.accountHolder || currentTenant?.corporateName || currentTenant?.displayName || ''}`
+      : '주거래 입금계좌';
 
-    const printWin = window.open('', '_blank', 'width=900,height=950');
+    return {
+      statementMode: 'TRADE',
+      supplySummary: '지게차 완제품 및 옵션·부품 공급',
+      billingDate: bDate,
+      billingYm: formMonth,
+      contractNo: statementModalOrder.id,
+      lessorBizNo: currentTenant?.businessNumber || '108-86-99999',
+      lessorName: currentTenant?.tradeName || currentTenant?.corporateName || currentTenant?.displayName || '공급자',
+      lessorCeo: currentTenant?.representativeName || '이정용',
+      lessorAddress: currentTenant?.businessAddress || '',
+      lessorBizType: currentTenant?.businessCategory || '도소매 및 무역업',
+      lessorBizItem: currentTenant?.businessItem || '지게차 및 물류장비 판매·부품 공급',
+      salespersonName: (statementModalOrder as any).salesPerson || (statementModalOrder as any).salespersonName || '유통영업부',
+      salespersonPhone: currentTenant?.salesPhone || currentTenant?.tel || '-',
+      billingManagerName: currentTenant?.workplaces?.[0]?.managerName || currentTenant?.representativeName || '-',
+      billingManagerPhone: currentTenant?.tel || '-',
+      lessorEmail: currentTenant?.taxEmail || currentTenant?.email || '-',
+      customerBizNo: (cust as any)?.bizRegNo || (cust as any)?.businessNumber || '-',
+      customerName: custName || '-',
+      customerCeo: cust?.representative || (cust as any)?.representativeName || '-',
+      customerAddress: cust?.address || '-',
+      customerBizType: cust?.bizType || '-',
+      customerBizItem: cust?.bizItem || '-',
+      siteManagerName: formRecipientName || (cust as any)?.managerName || '-',
+      siteManagerPhone: (cust as any)?.phone || '-',
+      custBillingManagerName: formRecipientName || (cust as any)?.billingManagerName || '-',
+      custBillingManagerPhone: (cust as any)?.billingManagerPhone || (cust as any)?.phone || '-',
+      custBillingEmail: formRecipientEmail || (cust as any)?.billingEmail || cust?.repEmail || '-',
+      siteName: statementModalOrder.deliveryLocation || '-',
+      bankAccount: bankAccountStr,
+      items,
+      totalSupply: supply,
+      totalVat: vat,
+      totalGrand: total
+    };
+  };
+
+  const handleDownloadStatementExcel = async () => {
+    const data = buildTradeStatementData();
+    if (!data || !statementModalOrder) return;
+    try {
+      const excelBuffer = await generateTransactionStatementExcel(data);
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const custName = getCustomerName(statementModalOrder.customerId);
+      a.download = `[${currentTenant?.displayName || '유통'}]_거래명세서_${formMonth}_${statementModalOrder.id}_${custName}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      if (showErrorModal) showErrorModal(`거래명세서 엑셀 생성 실패: ${err.message || err}`);
+    }
+  };
+
+  const handleDownloadStatementPdf = async () => {
+    const data = buildTradeStatementData();
+    if (!data || !statementModalOrder) return;
+    try {
+      const pdfBytes = await generateTransactionStatementPdf(data);
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const custName = getCustomerName(statementModalOrder.customerId);
+      a.download = `[${currentTenant?.displayName || '유통'}]_거래명세서_${formMonth}_${statementModalOrder.id}_${custName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      if (showErrorModal) showErrorModal(`거래명세서 PDF 생성 실패: ${err.message || err}`);
+    }
+  };
+
+  // Print Transaction Statement (거래명세서 A4 인쇄)
+  const handlePrintStatement = () => {
+    const data = buildTradeStatementData();
+    if (!data || !statementModalOrder) return;
+    const stmtNo = activeBilling?.id || `STMT-${statementModalOrder.id}`;
+    const bParts = (data.billingDate || '').split('-');
+    const mmDd = bParts.length >= 3 ? `${bParts[1]}-${bParts[2]}` : '-';
+
+    const rowsHtml = data.items.map((item, idx) => `
+      <tr>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:center;">${idx + 1}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:center;">${mmDd}</td>
+        <td style="padding:7px 8px; border:1px solid #cbd5e1; text-align:left; font-weight:600;">${item.modelName}${item.workingHeight ? ` / ${item.workingHeight}` : ''}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:center;">${item.serialOrCode || '-'}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:center;">${item.itemCategoryLabel || '완제품'}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:center;">${item.unit || '대'}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:right; font-variant-numeric:tabular-nums;">${item.quantity.toLocaleString()}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:right; font-variant-numeric:tabular-nums;">${item.unitPrice.toLocaleString()}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${item.supplyAmount.toLocaleString()}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:right; font-variant-numeric:tabular-nums;">${item.vatAmount.toLocaleString()}</td>
+        <td style="padding:7px 6px; border:1px solid #cbd5e1; text-align:left;">${item.notes || ''}</td>
+      </tr>
+    `).join('');
+
+    const printWin = window.open('', '_blank', 'width=980,height=950');
     if (printWin) {
       printWin.document.write(`
         <!DOCTYPE html>
@@ -451,46 +584,49 @@ export const TradeBillingPage: React.FC = () => {
           <meta charset="utf-8">
           <title>거래명세서 - ${stmtNo}</title>
           <style>
-            body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; padding: 32px; color: #0f172a; }
-            h1 { text-align: center; font-size: 24px; letter-spacing: 6px; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
-            .meta-grid { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
-            .box { flex: 1; border: 1px solid #64748b; padding: 12px; border-radius: 4px; font-size: 13px; line-height: 1.6; }
-            table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
-            th { background: #f1f5f9; padding: 9px; border: 1px solid #cbd5e1; }
-            .total-bar { margin-top: 16px; padding: 14px; background: #f8fafc; border: 2px solid #0f172a; display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; }
+            body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; padding: 28px; color: #0f172a; }
+            h1 { text-align: center; font-size: 24px; letter-spacing: 6px; margin-bottom: 18px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
+            .meta-grid { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+            .box { flex: 1; border: 1px solid #64748b; padding: 12px; border-radius: 4px; font-size: 12.5px; line-height: 1.6; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+            th { background: #f1f5f9; padding: 8px 6px; border: 1px solid #cbd5e1; white-space: nowrap; }
+            .total-bar { margin-top: 14px; padding: 12px 14px; background: #f8fafc; border: 2px solid #0f172a; display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; }
           </style>
         </head>
         <body>
           <h1>거 래 명 세 서</h1>
-          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12.5px;">
             <div><strong>명세서 번호:</strong> ${stmtNo} (수주번호: ${statementModalOrder.id})</div>
-            <div><strong>청구연월 / 발행일:</strong> ${formMonth} / ${formBillingDate}</div>
+            <div><strong>청구연월 / 작성일자:</strong> ${formMonth} / ${formBillingDate}</div>
           </div>
           <div class="meta-grid">
             <div class="box">
-              <div style="font-weight:800; font-size:14px; margin-bottom:4px; color:#1e40af;">[공급자] (주)기연리프트</div>
-              <div>사업자번호: 123-86-00000 | 대표자: 이정용</div>
-              <div>주소: 경기도 화성시 향남읍 발안공단로</div>
-              <div>담당부서: 유통사업부 (031-000-0000)</div>
+              <div style="font-weight:800; font-size:13.5px; margin-bottom:4px; color:#1e40af;">[공급자] ${data.lessorName}</div>
+              <div>사업자번호: ${data.lessorBizNo} | 대표자: ${data.lessorCeo}</div>
+              <div>주소: ${data.lessorAddress || '-'}</div>
+              <div>영업담당자: ${data.salespersonName} (${data.salespersonPhone || '-'}) | 입금계좌: ${data.bankAccount}</div>
             </div>
             <div class="box">
-              <div style="font-weight:800; font-size:14px; margin-bottom:4px; color:#0f172a;">[공급받는자] ${custName} 귀중</div>
-              <div>사업자번호: ${(cust as any)?.businessNumber || '-'} | 대표자: ${cust?.representative || '-'}</div>
-              <div>수신담당자: ${formRecipientName} (${formRecipientEmail})</div>
-              <div>납품장소: ${statementModalOrder.deliveryLocation || '-'}</div>
+              <div style="font-weight:800; font-size:13.5px; margin-bottom:4px; color:#0f172a;">[공급받는자] ${data.customerName} 귀중</div>
+              <div>사업자번호: ${data.customerBizNo} | 대표자: ${data.customerCeo}</div>
+              <div>인수담당자: ${data.siteManagerName} (${data.custBillingEmail})</div>
+              <div>납품장소: ${data.siteName}</div>
             </div>
           </div>
           <table>
             <thead>
               <tr>
-                <th>순번</th>
-                <th>품목코드</th>
-                <th>품명</th>
-                <th>규격/단위</th>
-                <th>수량</th>
-                <th>단가(원)</th>
-                <th>공급가액(원)</th>
-                <th>세액(원)</th>
+                <th style="text-align:center;">순번</th>
+                <th style="text-align:center;">월/일</th>
+                <th style="text-align:left;">품목명 / 모델·규격</th>
+                <th style="text-align:center;">제조번호 / 품목코드</th>
+                <th style="text-align:center;">품목구분</th>
+                <th style="text-align:center;">단위</th>
+                <th style="text-align:right;">수량</th>
+                <th style="text-align:right;">단가</th>
+                <th style="text-align:right;">공급가액</th>
+                <th style="text-align:right;">세액</th>
+                <th style="text-align:left;">비고</th>
               </tr>
             </thead>
             <tbody>
@@ -498,12 +634,9 @@ export const TradeBillingPage: React.FC = () => {
             </tbody>
           </table>
           <div class="total-bar">
-            <span>공급가액: ${supply.toLocaleString()}원</span>
-            <span>부가세(10%): ${vat.toLocaleString()}원</span>
-            <span>합계 청구금액: ₩${total.toLocaleString()} (부가세 포함)</span>
-          </div>
-          <div style="margin-top:14px; font-size:12.5px; color:#475569;">
-            <strong>비고:</strong> ${formMemo || '-'}
+            <span>공급가액: ₩${data.totalSupply.toLocaleString()}</span>
+            <span>세액: ₩${data.totalVat.toLocaleString()}</span>
+            <span>합계 청구금액: ₩${data.totalGrand.toLocaleString()}</span>
           </div>
           <script>window.onload = function() { window.print(); };</script>
         </body>
@@ -618,34 +751,6 @@ export const TradeBillingPage: React.FC = () => {
             <Download size={14} color="#16a34a" />
             엑셀 다운로드
  </button>
-        </div>
-      </div>
-
-      {/* KPI Strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(160px, 1fr))', gap: '10px' }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 매출액</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
-            {summary.totalTargetAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.totalCount}건)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>수금완료 확정액</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
-            {summary.paidAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.paidCount}건)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>거래처 미수금 총잔액</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#dc2626', marginTop: '2px' }}>
-            {summary.totalReceivableAmount.toLocaleString()}원 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({summary.unissuedCount + summary.issuedCount}건)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>명세서 발행 / 미발행 내역</div>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#2563eb', marginTop: '4px', whiteSpace: 'nowrap' }}>
-            발행 ₩{summary.issuedAmount.toLocaleString()} · 미발행 <span style={{ color: '#d97706' }}>₩{summary.unissuedAmount.toLocaleString()}</span>
-          </div>
         </div>
       </div>
 
@@ -1224,96 +1329,159 @@ export const TradeBillingPage: React.FC = () => {
             <div style={{ flex: 1, overflow: 'auto', padding: '18px', display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '18px', backgroundColor: 'var(--bg-app)' }}>
               {/* Left Column */}
               <div style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '20px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '3px', color: '#0f172a' }}>거 래 명 세 서</div>
                     <div style={{ fontSize: '11.5px', color: '#475569', marginTop: '2px' }}>
                       명세서번호: <strong>{activeBilling?.id || `신규발행예정 · ${statementModalOrder.id}`}</strong>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handlePrintStatement}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#0f172a',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px'
-                    }}
-                  >
-                    <Printer size={13} />
-                    거래명세서 인쇄
- </button>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={handleDownloadStatementExcel}
+                      style={{
+                        padding: '6px 10px',
+                        backgroundColor: '#166534',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Download size={13} />
+                      정품 엑셀
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDownloadStatementPdf}
+                      style={{
+                        padding: '6px 10px',
+                        backgroundColor: '#1d4ed8',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <FileText size={13} />
+                      정품 PDF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePrintStatement}
+                      style={{
+                        padding: '6px 10px',
+                        backgroundColor: '#0f172a',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Printer size={13} />
+                      인쇄
+                    </button>
+                  </div>
                 </div>
 
                 {/* Supplier & Buyer Info */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
                   <div style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', backgroundColor: '#f8fafc' }}>
-                    <div style={{ fontWeight: 800, color: '#1e40af', marginBottom: '4px' }}>[공급자] (주)기연리프트</div>
-                    <div>사업자번호: 123-86-00000</div>
-                    <div>대표자: 이정용 | 유통사업부</div>
+                    <div style={{ fontWeight: 800, color: '#1e40af', marginBottom: '4px' }}>
+                      [공급자] {currentTenant?.tradeName || currentTenant?.corporateName || currentTenant?.displayName || '공급자'}
+                    </div>
+                    <div>사업자번호: {currentTenant?.businessNumber || '-'}</div>
+                    <div>대표자: {currentTenant?.representativeName || '-'} | 영업담당: {(statementModalOrder as any).salesPerson || (statementModalOrder as any).salespersonName || '유통영업부'}</div>
                     <div>청구연월: {formMonth} ({formBillingDate})</div>
                   </div>
                   <div style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', backgroundColor: '#f8fafc' }}>
                     <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>[공급받는자] {getCustomerName(statementModalOrder.customerId)} 귀중</div>
                     <div>수주번호: {statementModalOrder.id}</div>
-                    <div>수신담당: {formRecipientName || '-'}</div>
-                    <div>이메일: {formRecipientEmail || '-'}</div>
+                    <div>인수담당: {formRecipientName || '-'}</div>
+                    <div>납품장소: {statementModalOrder.deliveryLocation || '-'}</div>
                   </div>
                 </div>
 
-                {/* Statement Line Items Table */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                {/* Statement Line Items Table (유통 전용 양식: 사용기간 제외, 정렬 표준 적용) */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f1f5f9' }}>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center' }}>코드</th>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'left' }}>품명 / 규격</th>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>수량</th>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>단가</th>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>공급가액</th>
-                      <th style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>세액</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', whiteSpace: 'nowrap' }}>순번</th>
+                      <th style={{ padding: '6px 6px', border: '1px solid #cbd5e1', textAlign: 'left', whiteSpace: 'nowrap' }}>품목명 / 모델·규격</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', whiteSpace: 'nowrap' }}>제조번호/코드</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', whiteSpace: 'nowrap' }}>품목구분</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', whiteSpace: 'nowrap' }}>단위</th>
+                      <th style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'right', whiteSpace: 'nowrap' }}>수량</th>
+                      <th style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', whiteSpace: 'nowrap' }}>단가</th>
+                      <th style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', whiteSpace: 'nowrap' }}>공급가액</th>
+                      <th style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', whiteSpace: 'nowrap' }}>세액</th>
                     </tr>
                   </thead>
                   <tbody>
                     {salesOrderLines
                       .filter(l => l.orderId === statementModalOrder.id)
-                      .map(l => {
+                      .map((l, idx) => {
                         const prod = products.find(p => p.id === l.productId);
                         const lineSupply = l.qty * l.unitPrice;
                         const lineVat = Math.round(lineSupply * 0.1);
+                        const isForklift = prod?.category === 'FORKLIFT' || /지게차|전동|디젤|리치|스태커/i.test(prod?.name || '');
                         return (
                           <tr key={l.id}>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace' }}>{prod?.skuCode || '-'}</td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 600 }}>{prod?.name || '상품'} <span style={{ color: '#64748b', fontSize: '11px' }}>({prod?.spec || prod?.unit || '식'})</span></td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{l.qty.toLocaleString()}</td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{l.unitPrice.toLocaleString()}</td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700 }}>{lineSupply.toLocaleString()}</td>
-                            <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{lineVat.toLocaleString()}</td>
+                            <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>{idx + 1}</td>
+                            <td style={{ padding: '6px 6px', border: '1px solid #cbd5e1', textAlign: 'left', fontWeight: 600 }}>
+                              {prod?.name || '상품'}{prod?.spec ? ` / ${prod.spec}` : ''}
+                            </td>
+                            <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace' }}>
+                              {(l as any).serialNo || prod?.skuCode || '-'}
+                            </td>
+                            <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                              {isForklift ? '완제품' : '호환부품'}
+                            </td>
+                            <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                              {prod?.unit || (isForklift ? '대' : 'EA')}
+                            </td>
+                            <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{l.qty.toLocaleString()}</td>
+                            <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{l.unitPrice.toLocaleString()}</td>
+                            <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{lineSupply.toLocaleString()}</td>
+                            <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{lineVat.toLocaleString()}</td>
                           </tr>
                         );
                       })}
-                    {(outbounds.find(ob => ob.orderId === statementModalOrder.id && ob.status !== 'CANCELLED')?.appliedOptions || statementModalOrder.appliedOptions || []).map(opt => {
+                    {(outbounds.find(ob => ob.orderId === statementModalOrder.id && ob.status !== 'CANCELLED')?.appliedOptions || statementModalOrder.appliedOptions || []).map((opt, idx) => {
                       const optSupply = opt.isFreeApplied ? 0 : opt.supplyAmount;
                       const optVat = Math.round(optSupply * 0.1);
+                      const baseLen = salesOrderLines.filter(l => l.orderId === statementModalOrder.id).length;
                       return (
-                        <tr key={opt.optionId} style={{ backgroundColor: '#faf5ff' }}>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace', color: '#6d28d9', fontWeight: 700 }}>{opt.optionCode}</td>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#6d28d9' }}>
-                            [장착옵션·{opt.optionGroupLabel}] {opt.name} <span style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}>· {opt.subVariant}</span>
+                        <tr key={opt.optionId} style={{ backgroundColor: '#f8fafc' }}>
+                          <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>{baseLen + idx + 1}</td>
+                          <td style={{ padding: '6px 6px', border: '1px solid #cbd5e1', textAlign: 'left', fontWeight: 600 }}>
+                            {opt.optionGroupLabel} · {opt.name} ({opt.subVariant})
                           </td>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{opt.qty.toLocaleString()}</td>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', color: opt.isFreeApplied ? '#047857' : '#0f172a' }}>
+                          <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center', fontFamily: 'monospace' }}>{opt.optionCode}</td>
+                          <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>설치옵션</td>
+                          <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'center' }}>식</td>
+                          <td style={{ padding: '6px 4px', border: '1px solid #cbd5e1', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{opt.qty.toLocaleString()}</td>
+                          <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', color: opt.isFreeApplied ? '#047857' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
                             {opt.isFreeApplied ? '무상시공' : opt.unitPrice.toLocaleString()}
                           </td>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 800, color: '#6d28d9' }}>{optSupply.toLocaleString()}</td>
-                          <td style={{ padding: '7px', border: '1px solid #cbd5e1', textAlign: 'right' }}>{optVat.toLocaleString()}</td>
+                          <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{optSupply.toLocaleString()}</td>
+                          <td style={{ padding: '6px 5px', border: '1px solid #cbd5e1', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{optVat.toLocaleString()}</td>
                         </tr>
                       );
                     })}
@@ -1338,8 +1506,8 @@ export const TradeBillingPage: React.FC = () => {
                       fontSize: '13px',
                       fontWeight: 800
                     }}>
-                      <span>공급가액: {supply.toLocaleString()}원</span>
-                      <span>부가세: {vat.toLocaleString()}원</span>
+                      <span>공급가액: ₩{supply.toLocaleString()}</span>
+                      <span>세액: ₩{vat.toLocaleString()}</span>
                       <span style={{ color: '#1d4ed8', fontSize: '15px' }}>합계: ₩{total.toLocaleString()}</span>
                     </div>
                   );

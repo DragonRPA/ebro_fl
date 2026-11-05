@@ -1021,56 +1021,6 @@ export const Assets: React.FC = () => {
         </div>
       </div>
 
-      {/* ② 자산 운용 KPI 요약 바 */}
-      <div data-mid="asset-kpi-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '6px', flexShrink: 0 }}>
-        <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>임대 가능 (주기장)</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' }}>
-            <strong style={{ fontSize: '14px', color: 'var(--success)' }}>{kpiStats.physicalAvailableCount}대</strong>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-              (당사 {kpiStats.ownedPhysicalAvailable}·임차 {kpiStats.rentedPhysicalAvailable} | 가상 {kpiStats.virtualAvailableCount})
- </span>
-          </div>
-        </div>
-        <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>현장 대여중</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' }}>
-            <strong style={{ fontSize: '14px', color: 'var(--primary)' }}>{kpiStats.physicalRentedOpCount}대</strong>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-              (당사 {kpiStats.ownedPhysicalRented}·임차 {kpiStats.rentedPhysicalRented}{kpiStats.virtualOperatingCount > 0 ? ` | 가상 ${kpiStats.virtualOperatingCount}` : ''})
- </span>
-          </div>
-        </div>
-        <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>출고/검수 대기</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' }}>
-            <strong style={{ fontSize: '14px', color: '#0070C0' }}>{kpiStats.physicalAssignedCount}대</strong>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-              (당사 {kpiStats.ownedPhysicalAssigned}·임차 {kpiStats.rentedPhysicalAssigned})
- </span>
-          </div>
-        </div>
-        <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>수리/정비중</span>
-          <strong style={{ fontSize: '14px', color: 'var(--danger)', whiteSpace: 'nowrap' }}>{kpiStats.physicalRepairingCount}대</strong>
-        </div>
-        {kpiStats.ownedPhysicalDisposed > 0 && (
-          <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>매각 완료</span>
-            <strong style={{ fontSize: '14px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{kpiStats.ownedPhysicalDisposed}대</strong>
-          </div>
-        )}
-        <div style={{ padding: '7px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>실물자산 가동률</span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', whiteSpace: 'nowrap' }}>
-            <strong style={{ fontSize: '14px', color: 'var(--primary)' }}>{kpiStats.opRate}%</strong>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-              (당사 {kpiStats.ownedPhysicalOpRate}%·임차 {kpiStats.rentedPhysicalOpRate}%)
- </span>
-          </div>
-        </div>
-      </div>
-
       {/* ③ 필터 컨트롤 바 (Vertical Header-Label Layout: 헌장 3.4) */}
       <div data-mid="asset-filter-bar" style={{
         display: 'flex',

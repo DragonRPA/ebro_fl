@@ -213,42 +213,6 @@ export const ExchangeRateInquiryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 통화별 요약 카드 4종 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(220px, 1fr))', gap: '10px' }}>
-        {rates.map(r => (
-          <div
-            key={r.code}
-            onClick={() => setSimCurrency(r.code)}
-            className="card"
-            style={{
-              padding: '14px 16px',
-              cursor: 'pointer',
-              border: simCurrency === r.code ? '2px solid #2563eb' : '1px solid var(--border-color)',
-              backgroundColor: simCurrency === r.code ? 'rgba(37, 99, 235, 0.04)' : 'var(--bg-card)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-primary)' }}>{r.currencyName}</span>
-              <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#334155' }}>
-                {r.unitLabel}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <div style={{ fontSize: '21px', fontWeight: 900, color: '#1e40af' }}>
-                ₩{r.baseRate.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <span style={{ fontSize: '11.5px', fontWeight: 700, color: r.prevDiff >= 0 ? '#dc2626' : '#2563eb' }}>
-                {r.prevDiff >= 0 ? `전일대비 +${r.prevDiff.toFixed(2)}` : `전일대비 ${r.prevDiff.toFixed(2)}`}
-              </span>
-            </div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
-              <span>송금보낼때: ₩{r.ttsRate.toLocaleString('ko-KR', { minimumFractionDigits: 2 })}</span>
-              <span>관세환율: ₩{r.customsRate.toLocaleString('ko-KR', { minimumFractionDigits: 2 })}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* 공식 환율 상세 고시 테이블 */}
       <div className="card" style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>

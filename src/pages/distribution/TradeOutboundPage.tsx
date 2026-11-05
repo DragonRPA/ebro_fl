@@ -648,32 +648,6 @@ export const TradeOutboundPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. KPI 요약 카드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(165px, 1fr))', gap: '12px', flexShrink: 0 }}>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>전체 출고 요청</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{kpi.total}건</div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>할당 대기</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: kpi.requested > 0 ? '#d97706' : 'var(--text-main)', whiteSpace: 'nowrap' }}>{kpi.requested}건</div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>할당 / 패킹 완료</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#2563eb', whiteSpace: 'nowrap' }}>{kpi.allocated}건</div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>배송중 / 납품 완료</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '4px', color: '#059669', whiteSpace: 'nowrap' }}>{kpi.completed}건</div>
-        </div>
-        <div className="card" style={{ padding: '12px 16px', margin: 0, backgroundColor: 'var(--bg-card)', border: '1px solid rgba(124, 58, 237, 0.35)' }}>
-          <div style={{ fontSize: '11px', color: '#6d28d9', fontWeight: 700, whiteSpace: 'nowrap' }}>출고 옵션 장착 · 청구추가 합계</div>
-          <div style={{ fontSize: '17px', fontWeight: 800, marginTop: '4px', color: '#6d28d9', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-            +₩{kpi.optionBillingTotal.toLocaleString()} <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)' }}>({kpi.optionInstalledCount}건 장착)</span>
-          </div>
-        </div>
-      </div>
-
       {/* 3. 통합 조회 필터 바 (기간, 고객사, 품명, 상태) */}
       <div
         style={{

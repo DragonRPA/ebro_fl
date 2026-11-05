@@ -850,52 +850,6 @@ export const TradeProfitabilityPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified Distribution KPI Strip */}
-      <div data-mid="trade_profitability-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))', gap: '10px' }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>누적 매입·수입 총액</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-            ₩{totals.totalPurchaseAmt.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>해외수입 도착원가 + 국내매입</div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>지게차 판매대수</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-            {totals.totalForkliftUnits.toLocaleString()}대
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>수주 {filteredOrderRows.length}건 기준</div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통 총 매출실적</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary-color)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-            ₩{totals.totalRev.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>유통 매출원가 ₩{totals.totalCogs.toLocaleString()}</div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통 매출총이익</span>
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success-color)' }}>평균 {totals.marginPct.toFixed(1)}%</span>
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--success-color)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-            ₩{totals.grossMargin.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>판매금액 - 도착매입·옵션원가</div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>거래처 미수금 잔액</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: totals.totalReceivables > 0 ? 'var(--danger-color)' : 'var(--text-primary)', marginTop: '2px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-            ₩{totals.totalReceivables.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>대리점·최종고객 미수 합계</div>
-        </div>
-      </div>
-
       {/* Filter Bar */}
       <div style={{
         backgroundColor: 'var(--bg-card)',

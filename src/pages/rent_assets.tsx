@@ -1980,28 +1980,6 @@ export const RentAssets: React.FC = () => {
  </button>
       </div>
 
-      {/*  임차 장비 보유 및 월 임차료 요약 바 (임차자산 대장 탭 전용 노출로 정산화면 슬림화) */}
-      {activeTab === 'CURRENT' && (() => {
-        const { activeRentedList, returnedList, totalMonthlyRentCost } = filteredKpiStats;
-
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '8px', flexShrink: 0 }}>
-            <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>가동중인 임차장비</span>
-              <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{activeRentedList.length}대</strong>
-            </div>
-            <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>월 총 임차료 지출</span>
-              <strong style={{ fontSize: '15px', color: 'var(--danger)' }}>₩{totalMonthlyRentCost.toLocaleString()}원</strong>
-            </div>
-            <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span data-mid="stat-returned-assets" style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>반납 완료 장비</span>
-              <strong style={{ fontSize: '15px', color: 'var(--text-muted)' }}>{returnedList.length}대</strong>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* ========================================================================= */}
       {/* 탭 1: 임차자산 정산 - Z-구텐버그 4단계 표준 준수 */}
       {/* ========================================================================= */}
@@ -2278,59 +2256,6 @@ export const RentAssets: React.FC = () => {
             {/* =================================================================== */}
             {/* ③ 중앙 본문 [BODY / INSPECTION]: 고밀도 1:1 대사 작업대 (36px 슬림) */}
             {/* =================================================================== */}
-            
-            {/* 건조 KPI 요약 바 (6대 핵심 지표 - 100% 가로 폭 초슬림 컴팩트) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '6px', width: '100%' }}>
-              <div style={{ backgroundColor: 'var(--bg-card)', padding: '5px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>총 청구 명세</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{statsRecon.totalCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>₩{statsRecon.totalBilled.toLocaleString()}</div>
-              </div>
-
-              <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: '#10b981', fontWeight: 700, whiteSpace: 'nowrap' }}>완벽 일치</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#10b981', whiteSpace: 'nowrap' }}>{statsRecon.matchedCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: '#10b981', whiteSpace: 'nowrap' }}>단가·기간 정합</div>
-              </div>
-
-              <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: '#f59e0b', fontWeight: 700, whiteSpace: 'nowrap' }}>차액</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#f59e0b', whiteSpace: 'nowrap' }}>{statsRecon.priceMismatchCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: statsRecon.totalDiffAmount > 0 ? '#ef4444' : '#10b981', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  차액: {statsRecon.totalDiffAmount > 0 ? `+${statsRecon.totalDiffAmount.toLocaleString()}` : statsRecon.totalDiffAmount.toLocaleString()}원
- </div>
-              </div>
-
-              <div style={{ backgroundColor: 'rgba(249, 115, 22, 0.08)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(249, 115, 22, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: '#f97316', fontWeight: 700, whiteSpace: 'nowrap' }}>연장 / 단축</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#f97316', whiteSpace: 'nowrap' }}>{statsRecon.periodMismatchCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: '#f97316', whiteSpace: 'nowrap' }}>계약 기간 차이</div>
-              </div>
-
-              <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: 'var(--danger)', fontWeight: 700, whiteSpace: 'nowrap' }}>임차등록 대상</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--danger)', whiteSpace: 'nowrap' }}>{statsRecon.unregisteredCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: 'var(--danger)', fontWeight: 700, whiteSpace: 'nowrap' }}>자산 대장 미등록</div>
-              </div>
-
-              <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)', padding: '5px 10px', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>미청구 / 반납</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--primary)', whiteSpace: 'nowrap' }}>{statsRecon.missingCount}건</span>
-                </div>
-                <div style={{ fontSize: '10.5px', color: 'var(--primary)', whiteSpace: 'nowrap' }}>반납 확인 또는 제외</div>
-              </div>
-            </div>
 
             {/* 인라인 검색 및 일괄 선택 툴바 */}
             <div style={{
@@ -3268,36 +3193,6 @@ export const RentAssets: React.FC = () => {
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-            {/* 대차대조 손익 KPI 카드 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>전대 확정 청구액 (매출)</span>
-                <strong style={{ fontSize: '17px', color: 'var(--primary)' }}>₩{totalRev.toLocaleString()}</strong>
-                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>확정 매출 세금계산서 기준</span>
-              </div>
-
-              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>매입 임차료 원가 (매입)</span>
-                <strong style={{ fontSize: '17px', color: 'var(--danger)' }}>₩{totalCost.toLocaleString()}</strong>
-                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>임차처 매입세금계산서 기준</span>
-              </div>
-
-              <div style={{ padding: '12px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>직송 운송비 원가</span>
-                <strong style={{ fontSize: '17px', color: 'var(--warning)' }}>₩{totalFreight.toLocaleString()}</strong>
-                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>화물 배차 대장 확정액</span>
-              </div>
-
-              <div style={{ padding: '12px 14px', backgroundColor: 'var(--success-light)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 700 }}>전대 순마진 (대차대조)</span>
-                <strong style={{ fontSize: '17px', color: 'var(--success)' }}>₩{netProfit.toLocaleString()}</strong>
-                <span style={{ fontSize: '10.5px', fontWeight: 700, color: marginRate >= 20 ? 'var(--success)' : '#d97706' }}>
-                  마진율: {marginRate.toFixed(1)}% ({marginRate >= 0 ? '흑자' : '적자'})
- </span>
-              </div>
-            </div>
-
           {/* 서브 세그먼트 스위처 & 엑셀 내보내기 버튼 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '6px', backgroundColor: 'var(--bg-app)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>

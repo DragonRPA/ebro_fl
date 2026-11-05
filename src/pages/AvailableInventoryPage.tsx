@@ -795,34 +795,6 @@ export const AvailableInventoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ② 핵심 요약 지표 카드 바 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))', gap: '8px', flexShrink: 0 }}>
-        <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>계약가능 재고 합계</span>
-          <strong style={{ fontSize: '15px', color: totals.availableContractQty < 0 ? 'var(--danger)' : 'var(--primary)', fontWeight: 800 }}>
-            {totals.availableContractQty}대
- </strong>
-        </div>
-        <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>재고 (당사자산)</span>
-          <strong style={{ fontSize: '15px', color: 'var(--text-main)', fontWeight: 800 }}>{totals.stockOwned}대</strong>
-        </div>
-        <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>재고 (임차자산)</span>
-          <strong style={{ fontSize: '15px', color: '#b45309', fontWeight: 800 }}>{totals.stockRented}대</strong>
-        </div>
-        <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>출고예정 (당사 / 임차)</span>
-          <strong style={{ fontSize: '15px', color: '#d97706', fontWeight: 800 }}>
-            {totals.scheduledOwned + totals.scheduledRented}대 <span style={{ fontSize: '11.5px', fontWeight: 600 }}>({totals.scheduledOwned}/{totals.scheduledRented})</span>
-          </strong>
-        </div>
-        <div style={{ padding: '8px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>미완결 출고예정 건수</span>
-          <strong style={{ fontSize: '15px', color: 'var(--warning)', fontWeight: 800 }}>{scheduledOutboundLines.length}건</strong>
-        </div>
-      </div>
-
       {/* ③ 조회 조건 필터 바 (헌장 3.2 줄바꿈 방지, 3.4 상하 스택 배치) */}
       <div style={{
         display: 'flex',

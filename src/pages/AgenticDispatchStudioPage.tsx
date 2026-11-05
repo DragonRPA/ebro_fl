@@ -119,39 +119,6 @@ export const AgenticDispatchStudioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 편의성 비교 HUD (인간 vs AI) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }} data-uia="hud-dispatch-metrics">
-        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>배차 수립 소요시간</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
-            <span style={{ fontSize: '18px', fontWeight: '900', color: '#10b981' }}>1.8초</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>인간 25분</span>
-          </div>
-          <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', marginTop: '2px' }}>99.2% 시간 단축</div>
-        </div>
-
-        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>필요 조작 클릭 수</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
-            <span style={{ fontSize: '18px', fontWeight: '900', color: 'var(--primary)' }}>1회</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>인간 28회</span>
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>96.4% 조작 절감</div>
-        </div>
-
-        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>헌장 2.3 교환 배차 단일화</div>
-          <div data-mid="kpi-exchange-compliance" style={{ fontSize: '18px', fontWeight: '900', color: '#f59e0b', marginTop: '4px' }}>100% 준수</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>왕복할인 ₩60,000 자동 차감</div>
-        </div>
-
-        <div className="card" style={{ padding: '12px 16px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>헌장 1.3 자산상태 비조작</div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>보존 완료</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>출고 승인 시 대여중 전환 보장</div>
-        </div>
-      </div>
-
       {/* 자연어 AI 배차 명령 콘솔 (헌장 3.4 상하 세로 스택) */}
       <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>자연어 배차 지시</label>

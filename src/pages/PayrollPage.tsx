@@ -479,26 +479,6 @@ export const PayrollPage: React.FC = () => {
         </div>
       </div>
 
-      {/*  당월 급여 집계 요약 바 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '6px', flexShrink: 0, gap: '8px' }}>
-        <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>정산 대상 인원</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary)' }}>{payrollAuditSummary.totalCount}명</div>
-        </div>
-        <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>기본급 합계</div>
-          <div style={{ fontSize: '16px', fontWeight: 800 }}>₩{payrollAuditSummary.totalBase.toLocaleString()}원</div>
-        </div>
-        <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>총 OT 시간</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--warning)' }}>{payrollAuditSummary.totalOtHours}시간</div>
-        </div>
-        <div style={{ padding: '6px 12px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>실지급 총액</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--success)' }}>₩{payrollAuditSummary.totalPay.toLocaleString()}원</div>
-        </div>
-      </div>
-
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '320px 1fr', gap: '10px', alignItems: 'stretch' }}>
         {/* 좌측 제어판 */}
         <div className="card" style={{ margin: 0, height: '100%', minHeight: 0, overflowY: 'auto', padding: '12px', boxSizing: 'border-box' }}>

@@ -1002,22 +1002,6 @@ export const SmartReturn: React.FC = () => {
         </div>
       </div>
 
-      {/*  회수 대상 및 계약 만료 현황 요약 바 */}
-      <div data-mid="smart_return-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px', flexShrink: 0 }}>
-        <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>진행중인 계약</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{returnSummaryStats.activeContractsCount}건</strong>
-        </div>
-        <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>현장 대여중 장비</span>
-          <strong style={{ fontSize: '15px', color: 'var(--success)' }}>{returnSummaryStats.totalRentedAssets}대</strong>
-        </div>
-        <div style={{ padding: '8px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>7일 내 만료예정 계약</span>
-          <strong style={{ fontSize: '15px', color: returnSummaryStats.expiringSoonCount > 0 ? '#d97706' : 'var(--text-muted)' }}>{returnSummaryStats.expiringSoonCount}건</strong>
-        </div>
-      </div>
-
       {/* 모드 전환 탭 */}
       <div data-mid="smart_return-mode-tabs" style={{ display: 'flex', gap: '8px', borderBottom: '2px solid var(--border-color)', paddingBottom: '6px', flexShrink: 0 }}>
         <button

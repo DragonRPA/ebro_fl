@@ -442,24 +442,6 @@ export const AssetHistory: React.FC = () => {
  </button>
       </div>
 
-      {/*  자산 라이프사이클 이벤트 요약 바 */}
-      {(() => {
-        const { inboundCount, outboundCount } = inOutSummaryCounts;
-
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-            <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span data-mid="stat-inout-returns" style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 입고(반납) 이력</span>
-              <strong style={{ fontSize: '15px', color: 'var(--success)' }}>{inboundCount}건</strong>
-            </div>
-            <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>총 출고(출하) 이력</span>
-              <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{outboundCount}건</strong>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* 2. 3대 탭 메뉴 (입고등록, 입고조회, 출고조회) */}
       <div style={{ display: 'flex', gap: '10px', borderBottom: '2px solid var(--border-color)', paddingBottom: '10px' }}>
         <button data-hs-trigger="Register"

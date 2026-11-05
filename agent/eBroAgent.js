@@ -82,8 +82,8 @@ function agentLog(type, message) {
 }
 
 
-const VERSION = 'v2.0.0.Build.29';
-const CORE_HASH = 'dc6adc8a89c5';
+const VERSION = 'v2.0.0.Build.33';
+const CORE_HASH = 'eda932ea37c1';
 const PORT = process.env.PORT || 5175;
 const CALLSIGN = process.env.AGENT_CALLSIGN || 'admin';
 const MACHINE_NAME = os.hostname();
@@ -1955,6 +1955,14 @@ async function executeGenerateStatementInternal(payload) {
     const yyyyMm = (payload.billingYm || (payload.billingDate ? payload.billingDate.substring(0, 7) : new Date().toISOString().substring(0, 7))).replace(/[\\/:*?"<>|]/g, '');
 
     const items = payload.items || [];
+    const statementMode = payload.statementMode === 'TRADE' || items.some(it => it && (it.statementMode === 'TRADE' || /\[완제품\]|\[출고설치옵션\]|\[설치옵션\]|완제품|설치옵션|호환부품/.test(`${it.modelName || ''} ${it.itemDescription || ''} ${it.billingCategory || ''}`)))
+      ? 'TRADE'
+      : 'RENTAL';
+    const supplySummary = (payload.supplySummary || (statementMode === 'TRADE' ? '지게차 완제품 및 옵션·부품 공급' : '지게차 임대료 외')).replace(/"/g, '""');
+    const hasPrebuiltExcel = Boolean(payload.excelBase64 && typeof payload.excelBase64 === 'string' && payload.excelBase64.length > 100);
+    if (hasPrebuiltExcel) {
+      fs.writeFileSync(path.join(tempBuildDir, '거래명세서_작업용.xlsx'), Buffer.from(payload.excelBase64, 'base64'));
+    }
 
     // 13개 단위 분할 (Row 16 ~ Row 28: 다중 페이지 거래명세서 엔진)
     const chunkSize = 13;
@@ -1998,6 +2006,14 @@ $masterIn = '${DRIVE_MIRROR_DIR.replace(/\\/g, '\\\\')}\\\\00.거래명세서양
 $statementWork = '${tempBuildDir.replace(/\\/g, '\\\\')}\\\\거래명세서_작업용.xlsx'
 $statementPdf = '${tempBuildDir.replace(/\\/g, '\\\\')}\\\\거래명세서.pdf'
 
+` + (hasPrebuiltExcel ? `
+$wb = $excel.Workbooks.Open($statementWork)
+for ($idx = 1; $idx -le $wb.Sheets.Count; $idx++) {
+  $curWs = $wb.Sheets.Item($idx)
+  $curWs.Calculate()
+  Setup-Sheet-Page $curWs
+}
+` : `
 Copy-Item $masterIn $statementWork -Force
 $wb = $excel.Workbooks.Open($statementWork)
 $wsBase = $wb.Sheets.Item(1)
@@ -2011,7 +2027,6 @@ $wsBase = $wb.Sheets.Item(1)
       let s = '';
       if (isFirst) {
         if (totalPages > 1) {
-          // 다중 페이지일 때는 1페이지 수정 전에 원본 템플릿 시트를 필요한 만큼 미리 복제해 둔다
           for (let p = 2; p <= totalPages; p++) {
             s += `$wsBase.Copy([Type]::Missing, $wb.Sheets.Item($wb.Sheets.Count))\n`;
             s += `$wb.Sheets.Item($wb.Sheets.Count).Name = "거래명세서_${p}"\n`;
@@ -2051,12 +2066,80 @@ Replace-Tag $curWs "{계산서담당자연락처}" "${custBillingPhone}"
 Replace-Tag $curWs "{계산서메일}" "${custBillingEmail}"
 Replace-Tag $curWs "{현장명}" "${siteName}${pageTag}"
 Replace-Tag $curWs "{작성일자}" "${billingDate}${pageTag}"
+$curWs.Range("C9").Value2 = "${statementMode === 'TRADE' ? '영업담당자' : '계약담당자'}"
+$curWs.Range("P9").Value2 = "${statementMode === 'TRADE' ? '인수담당자' : '현장담당자'}"
+$curWs.Range("E12").Value2 = "${supplySummary}"
+$curWs.Range("P12").Value2 = "${statementMode === 'TRADE' ? '납품장소' : '현장명'}"
 `;
+
+      if (statementMode === 'TRADE') {
+        s += `
+for ($r = 15; $r -le 28; $r++) {
+  $curWs.Range("E$r:Y$r").UnMerge()
+  $curWs.Range("E$r:J$r").Merge()
+  $curWs.Range("K$r:M$r").Merge()
+  $curWs.Range("N$r:O$r").Merge()
+  $curWs.Range("R$r:S$r").Merge()
+  $curWs.Range("T$r:V$r").Merge()
+  $curWs.Range("W$r:X$r").Merge()
+  $curWs.Range("Y$r:AA$r").Merge()
+}
+$curWs.Range("E15").Value2 = "품목명 / 모델·규격"
+$curWs.Range("K15").Value2 = "제조번호 / 품목코드"
+$curWs.Range("N15").Value2 = "품목구분"
+$curWs.Range("P15").Value2 = "단위"
+$curWs.Range("Q15").Value2 = "수량"
+$curWs.Range("R15").Value2 = "단가"
+$curWs.Range("T15").Value2 = "공급가액"
+$curWs.Range("W15").Value2 = "세 액"
+$curWs.Range("Y15").Value2 = "비고"
+$curWs.Range("B15:AA15").HorizontalAlignment = -4108
+`;
+      } else {
+        s += `
+for ($r = 15; $r -le 28; $r++) {
+  $curWs.Range("E$r:Y$r").UnMerge()
+  $curWs.Range("E$r:G$r").Merge()
+  $curWs.Range("H$r:J$r").Merge()
+  if ($r -eq 15) { $curWs.Range("L15:N15").Merge() }
+  $curWs.Range("O$r:P$r").Merge()
+  $curWs.Range("R$r:S$r").Merge()
+  $curWs.Range("T$r:V$r").Merge()
+  $curWs.Range("W$r:X$r").Merge()
+  $curWs.Range("Y$r:AA$r").Merge()
+}
+$curWs.Range("E15").Value2 = "모델 / 사양"
+$curWs.Range("H15").Value2 = "자산번호"
+$curWs.Range("K15").Value2 = "현장투입일"
+$curWs.Range("L15").Value2 = "사용기간"
+$curWs.Range("O15").Value2 = "청구구분"
+$curWs.Range("Q15").Value2 = "수량"
+$curWs.Range("R15").Value2 = "단가"
+$curWs.Range("T15").Value2 = "공급가액"
+$curWs.Range("W15").Value2 = "세 액"
+$curWs.Range("Y15").Value2 = "비고"
+$curWs.Range("B15:AA15").HorizontalAlignment = -4108
+`;
+      }
 
       // 품목 기입 (Row 16 ~ Row 28, 최대 13행)
       for (let r = 0; r < 13; r++) {
         const item = chunk[r];
         const rowNum = 16 + r;
+        s += `
+$curWs.Range("B${rowNum}:AA${rowNum}").Font.Size = 12
+$curWs.Range("B${rowNum}:AA${rowNum}").Font.Italic = $false
+$curWs.Range("B${rowNum}:D${rowNum}").HorizontalAlignment = -4108
+$curWs.Range("E${rowNum}").HorizontalAlignment = -4131
+$curWs.Range("E${rowNum}").ShrinkToFit = $true
+$curWs.Range("H${rowNum}:P${rowNum}").HorizontalAlignment = -4108
+$curWs.Range("H${rowNum}:P${rowNum}").ShrinkToFit = $true
+$curWs.Range("Q${rowNum}:X${rowNum}").HorizontalAlignment = -4152
+$curWs.Range("Q${rowNum}:X${rowNum}").NumberFormat = "#,##0"
+$curWs.Range("Q${rowNum}:X${rowNum}").ShrinkToFit = $true
+$curWs.Range("Y${rowNum}").HorizontalAlignment = -4131
+$curWs.Range("Y${rowNum}").ShrinkToFit = $true
+`;
         if (item) {
           const globalNo = startGlobalIdx + r + 1;
           let m = item.month !== undefined && item.month !== null ? item.month : '';
@@ -2069,43 +2152,54 @@ Replace-Tag $curWs "{작성일자}" "${billingDate}${pageTag}"
             }
           }
 
-          let model = String(item.modelName || item.model || '').trim();
+          let model = String(item.modelName || item.model || '').replace(/^\[(완제품|출고설치옵션|설치옵션|유상옵션|부품|호환부품)\]\s*/g, '').trim();
           let height = String(item.workingHeight || item.height || '').trim();
           let assetNo = String(item.assetNo || '').trim();
-          let siteEntryDate = String(item.siteEntryDate || '').trim();
-          let periodStart = String(item.periodStart || '').trim();
-          let periodEnd = String(item.periodEnd || '').trim();
+          let serialOrCode = String(item.serialOrCode || assetNo || '').trim();
+          let itemCategoryLabel = String(item.itemCategoryLabel || item.billingCategory || '').trim();
+          let unit = String(item.unit || '대').trim();
+          let siteEntryDate = String(item.siteEntryDate || '').replace(/T00:00:00(?:\.000)?Z$/, '').trim();
+          let periodStart = String(item.periodStart || '').replace(/T00:00:00(?:\.000)?Z$/, '').trim();
+          let periodEnd = String(item.periodEnd || '').replace(/T00:00:00(?:\.000)?Z$/, '').trim();
           let billingCategory = String(item.billingCategory || '').trim();
           const rawDesc = String(item.itemDescription || item.description || item.itemName || '').trim();
 
-          if (!model && rawDesc) {
-            const parts = rawDesc.split('_');
-            if (parts.length >= 3 && parts[parts.length - 1].includes('~')) {
-              model = parts[0];
-              if (!assetNo) assetNo = parts[1];
-              const [ps, pe] = parts[parts.length - 1].split('~');
-              if (!periodStart && ps) periodStart = ps.trim();
-              if (!periodEnd && pe) periodEnd = pe.trim();
-            } else {
-              model = rawDesc;
-            }
-          }
-          const modelAndHeight = (item.modelAndHeight || (height ? `${model} / ${height}` : (model || rawDesc || '-'))).replace(/"/g, '""');
+          const modelAndHeight = (item.modelAndHeight || (statementMode === 'RENTAL' && height ? `${model} / ${height}` : (model || rawDesc || '-'))).replace(/"/g, '""');
           const safeAssetNo = (assetNo || '-').replace(/"/g, '""');
+          const safeSerialOrCode = (serialOrCode || '-').replace(/"/g, '""');
           const safeSiteEntry = (siteEntryDate || periodStart || '-').replace(/"/g, '""');
           const safePStart = (periodStart || '-').replace(/"/g, '""');
           const safePEnd = (periodEnd || '-').replace(/"/g, '""');
           const safeTilde = (safePStart !== '-' || safePEnd !== '-') ? '~' : '';
           const safeCategory = (billingCategory || '임대료').replace(/"/g, '""');
+          const safeItemCat = (itemCategoryLabel || '완제품').replace(/"/g, '""');
+          const safeUnit = (unit || '대').replace(/"/g, '""');
 
           const qty = Number(item.quantity || item.qty || 1);
           const priceNum = item.unitPrice !== undefined ? Number(item.unitPrice) : (item.price !== undefined ? Number(item.price) : 0);
           const supplyNum = item.supplyAmount !== undefined ? Number(item.supplyAmount) : (item.amount !== undefined ? Number(item.amount) : (priceNum * qty));
-          const vatNum = item.vatAmount !== undefined ? Number(item.vatAmount) : (item.vat !== undefined ? Number(item.vat) : Math.round(supplyNum * 0.1));
+          const vatNum = (item.vatAmount !== undefined && Number(item.vatAmount) !== 0)
+            ? Number(item.vatAmount)
+            : (item.vat !== undefined && Number(item.vat) !== 0 ? Number(item.vat) : Math.round(supplyNum * 0.1));
           const notes = String(item.notes || item.remarks || item.memo || '').replace(/"/g, '""');
 
-          s += `
-$curWs.Range("Y${rowNum}:AA${rowNum}").Merge()
+          if (statementMode === 'TRADE') {
+            s += `
+$curWs.Cells.Item(${rowNum}, 2).Value2 = ${globalNo}
+$curWs.Cells.Item(${rowNum}, 3).Value2 = "${m}"
+$curWs.Cells.Item(${rowNum}, 4).Value2 = "${d}"
+$curWs.Cells.Item(${rowNum}, 5).Value2 = "${modelAndHeight}"
+$curWs.Cells.Item(${rowNum}, 11).Value2 = "${safeSerialOrCode}"
+$curWs.Cells.Item(${rowNum}, 14).Value2 = "${safeItemCat}"
+$curWs.Cells.Item(${rowNum}, 16).Value2 = "${safeUnit}"
+$curWs.Cells.Item(${rowNum}, 17).Value2 = ${qty}
+$curWs.Cells.Item(${rowNum}, 18).Value2 = ${priceNum}
+$curWs.Cells.Item(${rowNum}, 20).Value2 = ${supplyNum}
+$curWs.Cells.Item(${rowNum}, 23).Value2 = ${vatNum}
+$curWs.Cells.Item(${rowNum}, 25).Value2 = "${notes}"
+`;
+          } else {
+            s += `
 $curWs.Cells.Item(${rowNum}, 2).Value2 = ${globalNo}
 $curWs.Cells.Item(${rowNum}, 3).Value2 = "${m}"
 $curWs.Cells.Item(${rowNum}, 4).Value2 = "${d}"
@@ -2122,35 +2216,24 @@ $curWs.Cells.Item(${rowNum}, 20).Value2 = ${supplyNum}
 $curWs.Cells.Item(${rowNum}, 23).Value2 = ${vatNum}
 $curWs.Cells.Item(${rowNum}, 25).Value2 = "${notes}"
 `;
+          }
         } else {
           s += `
-$curWs.Range("Y${rowNum}:AA${rowNum}").Merge()
-$curWs.Cells.Item(${rowNum}, 2).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 3).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 4).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 5).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 8).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 11).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 12).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 13).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 14).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 15).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 17).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 18).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 20).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 23).Value2 = $null
-$curWs.Cells.Item(${rowNum}, 25).Value2 = $null
+$curWs.Range("B${rowNum}:AA${rowNum}").Value2 = $null
 `;
         }
       }
 
       s += `
+$curWs.Range("E29").HorizontalAlignment = -4152
+$curWs.Range("L29").HorizontalAlignment = -4152
+$curWs.Range("Q29").HorizontalAlignment = -4152
 $curWs.Calculate()
 Setup-Sheet-Page $curWs
 `;
 
       return s;
-    }).join('\n') + `
+    }).join('\n')) + `
 $wb.Save()
 
 # --- 5. 전체 워크북 1회 Export (모든 시트가 1개의 단일 다중 페이지 PDF로) ---
@@ -2212,128 +2295,154 @@ $wb.ExportAsFixedFormat(0, $statementPdf, 0, $true, $false, [System.Reflection.M
       const rawBillingDate = unescapePs(billingDate);
 
       let firstWb = null;
-      for (let pageIdx = 0; pageIdx < chunks.length; pageIdx++) {
-        const chunk = chunks[pageIdx];
-        const pageNum = pageIdx + 1;
-        const pageTag = totalPages > 1 ? ` ( ${pageNum} / ${totalPages} 쪽 )` : '';
-        const startGlobalIdx = pageIdx * chunkSize;
+      if (hasPrebuiltExcel && fs.existsSync(xlsxWorkFile)) {
+        const wbPrebuilt = new ExcelJS.Workbook();
+        await wbPrebuilt.xlsx.readFile(xlsxWorkFile);
+        for (const ws of wbPrebuilt.worksheets) {
+          pageHtmls.push(renderExcelWorksheetToHtmlPage(wbPrebuilt, ws, 1, 30, 2, 27));
+        }
+      } else {
+        for (let pageIdx = 0; pageIdx < chunks.length; pageIdx++) {
+          const chunk = chunks[pageIdx];
+          const pageNum = pageIdx + 1;
+          const pageTag = totalPages > 1 ? ` ( ${pageNum} / ${totalPages} 쪽 )` : '';
+          const startGlobalIdx = pageIdx * chunkSize;
 
-        const wbStmt = new ExcelJS.Workbook();
-        await wbStmt.xlsx.readFile(statementMasterPath);
-        if (pageIdx === 0) firstWb = wbStmt;
-        const curWs = wbStmt.worksheets[0];
+          const wbStmt = new ExcelJS.Workbook();
+          await wbStmt.xlsx.readFile(statementMasterPath);
+          if (pageIdx === 0) firstWb = wbStmt;
+          const curWs = wbStmt.worksheets[0];
 
-        replaceTagInWorksheet(curWs, '{테넌트사업자등록번호}', rawLessorBizNo);
-        replaceTagInWorksheet(curWs, '{테넌트상호}', rawLessorName);
-        replaceTagInWorksheet(curWs, '{테넌트대표}', rawLessorCeo);
-        replaceTagInWorksheet(curWs, '{테넌트주소}', rawLessorAddress);
-        replaceTagInWorksheet(curWs, '{테넌트업태}', rawLessorBizType);
-        replaceTagInWorksheet(curWs, '{테넌트종목}', rawLessorBizItem);
-        replaceTagInWorksheet(curWs, '{영업담당자}', rawSalespersonName);
-        replaceTagInWorksheet(curWs, '{영업담당자연락처}', rawSalespersonPhone);
-        replaceTagInWorksheet(curWs, '{테넌트계산서담당자}', rawBillingManagerName);
-        replaceTagInWorksheet(curWs, '{테넌트전화}', rawBillingManagerPhone);
-        replaceTagInWorksheet(curWs, '{테넌트세금계산서메일}', rawLessorEmail);
-        replaceTagInWorksheet(curWs, '{테넌트계좌}', rawBankAccount);
+          replaceTagInWorksheet(curWs, '{테넌트사업자등록번호}', rawLessorBizNo);
+          replaceTagInWorksheet(curWs, '{테넌트상호}', rawLessorName);
+          replaceTagInWorksheet(curWs, '{테넌트대표}', rawLessorCeo);
+          replaceTagInWorksheet(curWs, '{테넌트주소}', rawLessorAddress);
+          replaceTagInWorksheet(curWs, '{테넌트업태}', rawLessorBizType);
+          replaceTagInWorksheet(curWs, '{테넌트종목}', rawLessorBizItem);
+          replaceTagInWorksheet(curWs, '{영업담당자}', rawSalespersonName);
+          replaceTagInWorksheet(curWs, '{영업담당자연락처}', rawSalespersonPhone);
+          replaceTagInWorksheet(curWs, '{테넌트계산서담당자}', rawBillingManagerName);
+          replaceTagInWorksheet(curWs, '{테넌트전화}', rawBillingManagerPhone);
+          replaceTagInWorksheet(curWs, '{테넌트세금계산서메일}', rawLessorEmail);
+          replaceTagInWorksheet(curWs, '{테넌트계좌}', rawBankAccount);
 
-        replaceTagInWorksheet(curWs, '{고객사업자등록증번호}', rawBizRegNo);
-        replaceTagInWorksheet(curWs, '{고객상호}', rawCustName);
-        replaceTagInWorksheet(curWs, '{고객대표}', rawCeoName);
-        replaceTagInWorksheet(curWs, '{고객주소}', rawSiteAddress);
-        replaceTagInWorksheet(curWs, '{고객업태}', rawCustBizType);
-        replaceTagInWorksheet(curWs, '{고객종목}', rawCustBizItem);
-        replaceTagInWorksheet(curWs, '{현장담당자}', rawSiteManagerName);
-        replaceTagInWorksheet(curWs, '{현장담당자연락처}', rawSiteManagerPhone);
-        replaceTagInWorksheet(curWs, '{계산서담당자}', rawCustBillingName);
-        replaceTagInWorksheet(curWs, '{계산서담당자연락처}', rawCustBillingPhone);
-        replaceTagInWorksheet(curWs, '{계산서메일}', rawCustBillingEmail);
-        replaceTagInWorksheet(curWs, '{현장명}', `${rawSiteName}${pageTag}`);
-        replaceTagInWorksheet(curWs, '{작성일자}', `${rawBillingDate}${pageTag}`);
+          replaceTagInWorksheet(curWs, '{고객사업자등록증번호}', rawBizRegNo);
+          replaceTagInWorksheet(curWs, '{고객상호}', rawCustName);
+          replaceTagInWorksheet(curWs, '{고객대표}', rawCeoName);
+          replaceTagInWorksheet(curWs, '{고객주소}', rawSiteAddress);
+          replaceTagInWorksheet(curWs, '{고객업태}', rawCustBizType);
+          replaceTagInWorksheet(curWs, '{고객종목}', rawCustBizItem);
+          replaceTagInWorksheet(curWs, '{현장담당자}', rawSiteManagerName);
+          replaceTagInWorksheet(curWs, '{현장담당자연락처}', rawSiteManagerPhone);
+          replaceTagInWorksheet(curWs, '{계산서담당자}', rawCustBillingName);
+          replaceTagInWorksheet(curWs, '{계산서담당자연락처}', rawCustBillingPhone);
+          replaceTagInWorksheet(curWs, '{계산서메일}', rawCustBillingEmail);
+          replaceTagInWorksheet(curWs, '{현장명}', `${rawSiteName}${pageTag}`);
+          replaceTagInWorksheet(curWs, '{작성일자}', `${rawBillingDate}${pageTag}`);
+          curWs.getCell('C9').value = statementMode === 'TRADE' ? '영업담당자' : '계약담당자';
+          curWs.getCell('P9').value = statementMode === 'TRADE' ? '인수담당자' : '현장담당자';
+          curWs.getCell('E12').value = unescapePs(supplySummary);
+          curWs.getCell('P12').value = statementMode === 'TRADE' ? '납품장소' : '현장명';
 
-        let pageSupplySum = 0;
-        let pageVatSum = 0;
+          let pageSupplySum = 0;
+          let pageVatSum = 0;
 
-        for (let r = 0; r < 13; r++) {
-          const item = chunk[r];
-          const rowNum = 16 + r;
-          const rowObj = curWs.getRow(rowNum);
-          if (item) {
-            const globalNo = startGlobalIdx + r + 1;
-            let m = item.month !== undefined && item.month !== null ? item.month : '';
-            let d = item.day !== undefined && item.day !== null ? item.day : '';
-            if ((!m || !d) && (item.billingDate || item.date || item.transactionDate || rawBillingDate)) {
-              const dtParts = String(item.billingDate || item.date || item.transactionDate || rawBillingDate).split('-');
-              if (dtParts.length === 3) {
-                if (!m) m = parseInt(dtParts[1], 10);
-                if (!d) d = parseInt(dtParts[2], 10);
+          for (let r = 0; r < 13; r++) {
+            const item = chunk[r];
+            const rowNum = 16 + r;
+            const rowObj = curWs.getRow(rowNum);
+            if (item) {
+              const globalNo = startGlobalIdx + r + 1;
+              let m = item.month !== undefined && item.month !== null ? item.month : '';
+              let d = item.day !== undefined && item.day !== null ? item.day : '';
+              if ((!m || !d) && (item.billingDate || item.date || item.transactionDate || rawBillingDate)) {
+                const dtParts = String(item.billingDate || item.date || item.transactionDate || rawBillingDate).split('-');
+                if (dtParts.length === 3) {
+                  if (!m) m = parseInt(dtParts[1], 10);
+                  if (!d) d = parseInt(dtParts[2], 10);
+                }
               }
-            }
-            let model = String(item.modelName || item.model || '').trim();
-            let height = String(item.workingHeight || item.height || '').trim();
-            let assetNo = String(item.assetNo || '').trim();
-            let siteEntryDate = String(item.siteEntryDate || '').trim();
-            let periodStart = String(item.periodStart || '').trim();
-            let periodEnd = String(item.periodEnd || '').trim();
-            let billingCategory = String(item.billingCategory || '').trim();
-            const rawDesc = String(item.itemDescription || item.description || item.itemName || '').trim();
+              let model = String(item.modelName || item.model || '').trim();
+              let height = String(item.workingHeight || item.height || '').trim();
+              let assetNo = String(item.assetNo || '').trim();
+              let serialOrCode = String(item.serialOrCode || item.serialNo || item.skuCode || '').trim();
+              let siteEntryDate = String(item.siteEntryDate || '').trim();
+              let periodStart = String(item.periodStart || '').trim();
+              let periodEnd = String(item.periodEnd || '').trim();
+              let billingCategory = String(item.billingCategory || '').trim();
+              let itemCategoryLabel = String(item.itemCategoryLabel || '').trim();
+              let unit = String(item.unit || '').trim();
+              const rawDesc = String(item.itemDescription || item.description || item.itemName || '').trim();
 
-            if (!model && rawDesc) {
-              const parts = rawDesc.split('_');
-              if (parts.length >= 3 && parts[parts.length - 1].includes('~')) {
-                model = parts[0];
-                if (!assetNo) assetNo = parts[1];
-                const [ps, pe] = parts[parts.length - 1].split('~');
-                if (!periodStart && ps) periodStart = ps.trim();
-                if (!periodEnd && pe) periodEnd = pe.trim();
+              if (!model && rawDesc) {
+                const parts = rawDesc.split('_');
+                if (parts.length >= 3 && parts[parts.length - 1].includes('~')) {
+                  model = parts[0];
+                  if (!assetNo) assetNo = parts[1];
+                  const [ps, pe] = parts[parts.length - 1].split('~');
+                  if (!periodStart && ps) periodStart = ps.trim();
+                  if (!periodEnd && pe) periodEnd = pe.trim();
+                } else {
+                  model = rawDesc;
+                }
+              }
+              const rawModelAndHeight = item.modelAndHeight || (height ? `${model} / ${height}` : (model || rawDesc || '-'));
+              const modelAndHeight = rawModelAndHeight.replace(/^\[(완제품|출고설치옵션|설치옵션|호환부품)\]\s*/g, '').replace(/\s*\([A-Z0-9-]{6,}\)\s*$/g, '').trim() || rawModelAndHeight;
+              const safeAssetNo = assetNo || '-';
+              const safeSerialOrCode = serialOrCode || (assetNo && assetNo !== '-' ? assetNo : '-');
+              const safeSiteEntry = siteEntryDate || periodStart || '-';
+              const safePStart = periodStart || '-';
+              const safePEnd = periodEnd || '-';
+              const safeTilde = (safePStart !== '-' || safePEnd !== '-') ? '~' : '';
+              const safeCategory = billingCategory || '임대료';
+              const safeItemCat = itemCategoryLabel || (statementMode === 'TRADE' ? '완제품' : safeCategory);
+              const safeUnit = unit || (statementMode === 'TRADE' ? '대' : '식');
+
+              const qty = Number(item.quantity || item.qty || 1);
+              const priceNum = item.unitPrice !== undefined ? Number(item.unitPrice) : (item.price !== undefined ? Number(item.price) : 0);
+              const supplyNum = item.supplyAmount !== undefined ? Number(item.supplyAmount) : (item.amount !== undefined ? Number(item.amount) : (priceNum * qty));
+              const vatNum = (item.vatAmount !== undefined && Number(item.vatAmount) !== 0)
+                ? Number(item.vatAmount)
+                : (item.vat !== undefined && Number(item.vat) !== 0 ? Number(item.vat) : Math.round(supplyNum * 0.1));
+              const notes = String(item.notes || item.remarks || item.memo || '');
+
+              pageSupplySum += supplyNum;
+              pageVatSum += vatNum;
+
+              rowObj.getCell(2).value = globalNo;
+              rowObj.getCell(3).value = String(m);
+              rowObj.getCell(4).value = String(d);
+              rowObj.getCell(5).value = modelAndHeight;
+              if (statementMode === 'TRADE') {
+                rowObj.getCell(11).value = safeSerialOrCode;
+                rowObj.getCell(14).value = safeItemCat;
+                rowObj.getCell(16).value = safeUnit;
               } else {
-                model = rawDesc;
+                rowObj.getCell(8).value = safeAssetNo;
+                rowObj.getCell(11).value = safeSiteEntry;
+                rowObj.getCell(12).value = safePStart;
+                rowObj.getCell(13).value = safeTilde;
+                rowObj.getCell(14).value = safePEnd;
+                rowObj.getCell(15).value = safeCategory;
               }
-            }
-            const modelAndHeight = item.modelAndHeight || (height ? `${model} / ${height}` : (model || rawDesc || '-'));
-            const safeAssetNo = assetNo || '-';
-            const safeSiteEntry = siteEntryDate || periodStart || '-';
-            const safePStart = periodStart || '-';
-            const safePEnd = periodEnd || '-';
-            const safeTilde = (safePStart !== '-' || safePEnd !== '-') ? '~' : '';
-            const safeCategory = billingCategory || '임대료';
-
-            const qty = Number(item.quantity || item.qty || 1);
-            const priceNum = item.unitPrice !== undefined ? Number(item.unitPrice) : (item.price !== undefined ? Number(item.price) : 0);
-            const supplyNum = item.supplyAmount !== undefined ? Number(item.supplyAmount) : (item.amount !== undefined ? Number(item.amount) : (priceNum * qty));
-            const vatNum = item.vatAmount !== undefined ? Number(item.vatAmount) : (item.vat !== undefined ? Number(item.vat) : Math.round(supplyNum * 0.1));
-            const notes = String(item.notes || item.remarks || item.memo || '');
-
-            pageSupplySum += supplyNum;
-            pageVatSum += vatNum;
-
-            rowObj.getCell(2).value = globalNo;
-            rowObj.getCell(3).value = String(m);
-            rowObj.getCell(4).value = String(d);
-            rowObj.getCell(5).value = modelAndHeight;
-            rowObj.getCell(8).value = safeAssetNo;
-            rowObj.getCell(11).value = safeSiteEntry;
-            rowObj.getCell(12).value = safePStart;
-            rowObj.getCell(13).value = safeTilde;
-            rowObj.getCell(14).value = safePEnd;
-            rowObj.getCell(15).value = safeCategory;
-            rowObj.getCell(17).value = qty;
-            rowObj.getCell(18).value = priceNum;
-            rowObj.getCell(20).value = supplyNum;
-            rowObj.getCell(23).value = vatNum;
-            rowObj.getCell(25).value = notes;
-          } else {
-            for (const cIdx of [2, 3, 4, 5, 8, 11, 12, 13, 14, 15, 17, 18, 20, 23, 25]) {
-              rowObj.getCell(cIdx).value = null;
+              rowObj.getCell(17).value = qty;
+              rowObj.getCell(18).value = priceNum;
+              rowObj.getCell(20).value = supplyNum;
+              rowObj.getCell(23).value = vatNum;
+              rowObj.getCell(25).value = notes;
+            } else {
+              for (const cIdx of [2, 3, 4, 5, 8, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23, 25]) {
+                rowObj.getCell(cIdx).value = null;
+              }
             }
           }
+
+          curWs.getCell('E29').value = { formula: 'SUM(T16:V28)', result: pageSupplySum };
+          curWs.getCell('L29').value = { formula: 'SUM(W16:X28)', result: pageVatSum };
+          curWs.getCell('Q29').value = { formula: 'E29+L29', result: pageSupplySum + pageVatSum };
+
+          pageHtmls.push(renderExcelWorksheetToHtmlPage(wbStmt, curWs, 1, 30, 2, 27));
         }
-
-        // 수식 결과값(E29: 공급가액 합계, L29: 세액 합계, Q29: 총 합계) 직접 주입
-        curWs.getCell('E29').value = { formula: 'SUM(T16:V28)', result: pageSupplySum };
-        curWs.getCell('L29').value = { formula: 'SUM(W16:X28)', result: pageVatSum };
-        curWs.getCell('Q29').value = { formula: 'E29+L29', result: pageSupplySum + pageVatSum };
-
-        pageHtmls.push(renderExcelWorksheetToHtmlPage(wbStmt, curWs, 1, 30, 2, 27));
       }
 
       if (firstWb) {

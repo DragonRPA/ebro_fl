@@ -1114,60 +1114,6 @@ export const AsRouteTrackingPage: React.FC<AsRouteTrackingPageProps> = ({
         </div>
       </div>
 
-      {/* ③ 상단 KPI 요약 바 */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isMobileEmbedded
-            ? 'repeat(3, minmax(0, 1fr))'
-            : 'repeat(6, minmax(0, 1fr))',
-          gap: '8px',
-        }}
-      >
-        {[
-          { label: '활동 기사', value: `${kpiStats.activeMechanicsCount}명`, color: '#3b82f6' },
-          { label: '현장 이동중', value: `${kpiStats.movingCount}명`, color: '#0ea5e9' },
-          { label: '현장 작업중', value: `${kpiStats.workingCount}명`, color: '#f59e0b' },
-          { label: '작업 완료', value: `${kpiStats.completedCount}건`, color: '#22c55e' },
-          { label: '평균 이동시간', value: kpiStats.avgTravelMin ? `${kpiStats.avgTravelMin}분` : '-', color: '#8b5cf6' },
-          { label: '퇴근 인원', value: `${kpiStats.clockedOutCount}명`, color: '#f43f5e' },
-        ].map((card, idx) => (
-          <div
-            key={idx}
-            style={{
-              padding: '10px 12px',
-              borderRadius: '8px',
-              background: 'var(--bg-card, #1e293b)',
-              border: '1px solid var(--border-color, #334155)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: 'var(--text-muted, #94a3b8)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {card.label}
-            </span>
-            <span
-              style={{
-                fontSize: '16px',
-                fontWeight: 900,
-                color: card.color,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {card.value}
-            </span>
-          </div>
-        ))}
-      </div>
-
       {/* ④ 본문 뷰 1: 기사별 일자별 동선 타임라인 */}
       {viewMode === 'TIMELINE' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

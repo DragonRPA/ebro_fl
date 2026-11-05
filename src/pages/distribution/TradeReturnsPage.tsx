@@ -316,30 +316,6 @@ export const TradeReturnsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', gap: '10px' }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>누적 반품 건수</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{kpi.totalReturnCount}건</div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>반품 검수 대기</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>{kpi.requestedCount}건</div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>정상 환입</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
-            {kpi.sellableQty}개 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({kpi.sellableRefund.toLocaleString()}원)</span>
-          </div>
-        </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>불량 반품</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: '#ef4444', marginTop: '2px' }}>
-            {kpi.defectiveQty}개 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({kpi.defectiveRefund.toLocaleString()}원)</span>
-          </div>
-        </div>
-      </div>
-
       {/* Filter Bar (Rule 3.4 Vertical Stack) */}
       <div style={{
         backgroundColor: 'var(--bg-card)',

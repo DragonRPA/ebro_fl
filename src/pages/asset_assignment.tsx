@@ -1164,30 +1164,6 @@ export const AssetAssignment: React.FC = () => {
         </div>
       </div>
 
-      {/*  현황 요약 바 (필터 설정에 따라 조회된 내용의 건수만 표시) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>조회 요청 건수</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{filteredTotalGroupsCount}건 ({filteredTotalSlotsCount}대)</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 미할당 슬롯</span>
-          <strong style={{ fontSize: '15px', color: filteredPendingSlotsCount > 0 ? '#d97706' : 'var(--text-muted)' }}>{filteredPendingSlotsCount}대</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>할당 완료 슬롯</span>
-          <strong style={{ fontSize: '15px', color: filteredAssignedSlotsCount > 0 ? 'var(--success)' : 'var(--text-muted)' }}>{filteredAssignedSlotsCount}대</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>교환 우선 할당 대기</span>
-          <strong style={{ fontSize: '15px', color: exchangeSlotsCount > 0 ? '#c2410c' : 'var(--text-muted)' }}>{exchangeSlotsCount}대</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>가용 장비 (임대가능)</span>
-          <strong style={{ fontSize: '15px', color: 'var(--success)' }}>{availablePool.length}대</strong>
-        </div>
-      </div>
-
       {/* 교환 출고할당 대기 (최우선 표출) */}
       {exchangePendingGroups.length > 0 && (
         <div style={{ backgroundColor: 'var(--warning-light)', padding: '14px', borderRadius: '10px', border: '2px solid var(--warning)' }}>

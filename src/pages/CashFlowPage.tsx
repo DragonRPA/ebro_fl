@@ -210,84 +210,6 @@ export const CashFlowPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── 2. 5대 핵심 유동성 KPI 지표 바 ─── */}
-      <header data-mid="cash_flow-kpi" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-        gap: '12px',
-        backgroundColor: 'var(--bg-card)',
-        padding: '16px 20px',
-        borderRadius: '8px',
-        border: '1px solid var(--border-color)'
-      }}>
-        {/* 총 가용 통장 잔고 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>통장 실물 총잔액</span>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)' }}>
-            ₩{report.totalBankBalance.toLocaleString()}원
- </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            총 {report.bankAccountBalances.length}개 보유 계좌 실시간 합산
- </span>
-        </div>
-
-        {/* D+7 단기 지출 예정액 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>D+7 지출 예정액</span>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--danger)' }}>
-            ₩{report.upcomingPayablesD7.toLocaleString()}원
- </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            단기 만기 매입정산 및 정기 급여
- </span>
-        </div>
-
-        {/* 순 가용 자금 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>순 가용 자금 (안전자금)</span>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: report.netAvailableCash < 0 ? 'var(--danger)' : 'var(--success)' }}>
-            ₩{report.netAvailableCash.toLocaleString()}원
- </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            단기 지출액 공제 후 순유동성
- </span>
-        </div>
-
-        {/* 월간 순현금흐름 예상 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>당월 순현금흐름</span>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: report.expectedMonthlyNet < 0 ? 'var(--danger)' : 'var(--success)' }}>
-            {report.expectedMonthlyNet > 0 ? '+' : ''}₩{report.expectedMonthlyNet.toLocaleString()}원
- </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            유입 ₩{report.inflowBreakdown.totalExpectedInflow.toLocaleString()} / 지출 ₩{report.outflowBreakdown.totalExpectedOutflow.toLocaleString()}
-          </span>
-        </div>
-
-        {/* 자금 런웨이 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>현금 런웨이</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px', fontWeight: 800, color: report.cashRunway < 3 ? 'var(--danger)' : 'var(--text-primary)' }}>
-              {report.cashRunway}개월
- </span>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '2px 6px',
-              borderRadius: '4px',
-              backgroundColor: report.cashRunway >= 6 ? 'rgba(16,185,129,0.15)' : report.cashRunway >= 3 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
-              color: report.cashRunway >= 6 ? 'var(--success)' : report.cashRunway >= 3 ? 'var(--warning)' : 'var(--danger)'
-            }}>
-              {report.cashRunway >= 6 ? '안전' : report.cashRunway >= 3 ? '주의' : '위험'}
-            </span>
-          </div>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            월평균 소진액 ₩{Math.round(report.monthlyBurnRate / 10000).toLocaleString()}만원 기준
- </span>
-        </div>
-      </header>
-
       {/* ─── 3. 4대 작업대 탭 네비게이션 ─── */}
       <div style={{
         display: 'flex',
@@ -390,42 +312,6 @@ export const CashFlowPage: React.FC = () => {
         {/* ═══ 탭 1: 종합 현금흐름표 및 통장 잔고 ═══ */}
         {activeTab === 'STATEMENT' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
-            {/* 상단: 당사 보유 계좌 카드 목록 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-              {report.bankAccountBalances.map(acc => (
-                <div key={acc.id} style={{
-                  padding: '14px 16px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '8px',
-                  border: `1px solid ${acc.isDefault ? 'var(--primary)' : 'var(--border-color)'}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Building2 size={15} color="var(--primary)" />
-                      <strong style={{ fontSize: '13px', color: 'var(--text-main)' }}>{acc.bankName}</strong>
-                    </div>
-                    {acc.isDefault && (
-                      <span style={{ fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(79,70,229,0.15)', color: 'var(--primary)' }}>
-                        대표계좌
- </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                    {acc.accountNumber} ({acc.accountHolder})
- </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '4px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>현재 잔액</span>
-                    <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)' }}>
-                      ₩{acc.currentBalance.toLocaleString()}원
- </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
             {/* 하단: 3대 활동 표준 현금흐름표 + 우측 인라인 드릴다운 */}
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px', flex: 1, minHeight: 0 }}>
               {/* 좌측: 마스터 현금흐름표 */}

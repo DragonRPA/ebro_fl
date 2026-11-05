@@ -496,36 +496,6 @@ export const PartsManagePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 상단 요약 카드 */}
-      {subTab !== 'CATALOG' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>기준년월 보유 품목수</div>
-            <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--primary)', marginTop: '4px', whiteSpace: 'nowrap' }}>{agingBucketsSummary.totalActiveKinds.toLocaleString('ko-KR')}종</div>
-          </div>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>기준년월 총 재고수량</div>
-            <div style={{ fontSize: '20px', fontWeight: 900, color: '#059669', marginTop: '4px', whiteSpace: 'nowrap' }}>{agingBucketsSummary.totalStockQty.toLocaleString('ko-KR')}개</div>
-          </div>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>유통판매용 / 렌탈정비용</div>
-            <div style={{ fontSize: '18px', fontWeight: 900, color: '#1d4ed8', marginTop: '4px', whiteSpace: 'nowrap' }}>
-              {agingBucketsSummary.totalSaleQty.toLocaleString('ko-KR')}개 / <span style={{ color: '#b45309' }}>{agingBucketsSummary.totalRepairQty.toLocaleString('ko-KR')}개</span>
-            </div>
-          </div>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>기준년월 총 재고잔액</div>
-            <div style={{ fontSize: '20px', fontWeight: 900, color: '#7c3aed', marginTop: '4px', whiteSpace: 'nowrap' }}>₩{agingBucketsSummary.totalStockAmount.toLocaleString('ko-KR')}</div>
-          </div>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 700, whiteSpace: 'nowrap' }}>현재 필터 선택 합계</div>
-            <div style={{ fontSize: '16.5px', fontWeight: 900, color: 'var(--text-primary)', marginTop: '4px', whiteSpace: 'nowrap' }}>
-              {filteredTotals.qty.toLocaleString('ko-KR')}개 · ₩{filteredTotals.amount.toLocaleString('ko-KR')}
-            </div>
-          </div>
-        </div>
-      )}
-
       {subTab === 'CATALOG' ? (
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <CompatiblePartsCatalogOrderPage />

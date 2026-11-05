@@ -1193,33 +1193,6 @@ export const VehicleOperationLogPage: React.FC = () => {
       {/* ── 4-3. 탭 3: 법인 차량 관리 ── */}
       {activeTab === 'FLEET_MASTER' && (
         <>
-          {/* 차량 마스터 KPI 요약 카드 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', flexShrink: 0 }}>
-            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '4px' }}>전사 등록 차량</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)' }}>{corporateVehicles.length} <span style={{ fontSize: '13px', fontWeight: '500' }}>대</span></div>
-              <div style={{ fontSize: '11px', color: '#10b981', marginTop: '3px' }}>가용 {corporateVehicles.filter(v => v.isActive).length}대 / 휴차 {corporateVehicles.filter(v => !v.isActive).length}대</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '4px' }}>당월 전사 총 주행거리</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary)' }}>{operationMetrics.totalDistance.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '500' }}>km</span></div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '3px' }}>업무사용비율 {operationMetrics.businessRatio}%</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '4px' }}>당월 총 주유비 지출</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#10b981' }}>₩{fuelMetrics.totalAmount.toLocaleString()}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '3px' }}>총 주유량 {fuelMetrics.totalVolume.toFixed(1)} L</div>
-            </div>
-
-            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '4px' }}>법정 증빙 영수증 첨부율</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#eab308' }}>{fuelMetrics.proofRatio} <span style={{ fontSize: '13px', fontWeight: '500' }}>%</span></div>
-              <div style={{ fontSize: '11px', color: '#10b981', marginTop: '3px' }}>국세청 감사 대비 100% 보존</div>
-            </div>
-          </div>
-
           {/* 차량 마스터 테이블 */}
           <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'var(--bg-card)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left', whiteSpace: 'nowrap' }}>

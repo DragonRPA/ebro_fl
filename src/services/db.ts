@@ -6247,12 +6247,20 @@ class LocalDB {
 
   get billingDetails() {
     const raw = this.get<BillingDetail>('billingDetails', SEED_BILLING_DETAILS);
-    return raw.map(bd => bd ? {
-      ...bd,
-      amount: Number(bd.amount || 0),
-      supplyAmount: Number((bd as any).supplyAmount || bd.amount || 0),
-      vatAmount: Number((bd as any).vatAmount || 0)
-    } : bd);
+    return raw.map(bd => {
+      if (!bd) return bd;
+      const supply = Number((bd as any).supplyAmount || bd.amount || 0);
+      const rawVat = (bd as any).vatAmount;
+      const vat = rawVat !== undefined && rawVat !== null && Number(rawVat) !== 0
+        ? Number(rawVat)
+        : Math.round(supply * 0.1);
+      return {
+        ...bd,
+        amount: Number(bd.amount || 0),
+        supplyAmount: supply,
+        vatAmount: vat
+      };
+    });
   }
   set billingDetails(val: BillingDetail[]) { this.set('billingDetails', val); }
 

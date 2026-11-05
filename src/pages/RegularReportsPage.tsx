@@ -524,78 +524,6 @@ export const RegularReportsPage: React.FC = () => {
  </span>
           </div>
 
-          {/* 4대 핵심 재무 KPI 요약 카드뉴스 */}
-          <div data-mid="reports-income-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
-            {/* 1. 총 매출액 */}
-            <div className="card" style={{ padding: '16px 18px', backgroundColor: 'var(--bg-card, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>총 매출액</span>
-                <span style={{ fontSize: '11px', fontWeight: 600, padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>매출 합계</span>
-              </div>
-              <span style={{ fontSize: '22px', fontWeight: 800, color: '#38bdf8' }}>
-                ₩{metrics.totalRevenue.toLocaleString()}
-              </span>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)', display: 'flex', gap: '8px' }}>
-                <span>렌탈: ₩{metrics.rentalRevenue.toLocaleString()}</span>
-                <span>•</span>
-                <span>유통: ₩{metrics.distributionRevenue.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* 2. 순 렌탈료 이익 */}
-            <div className="card" style={{ padding: '16px 18px', backgroundColor: 'var(--bg-card, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>순 렌탈료 이익</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: metrics.pureRentalProfit >= 0 ? 'rgba(5, 150, 105, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: metrics.pureRentalProfit >= 0 ? '#34d399' : '#f87171' }}>
-                  이익률 {metrics.rentalMarginRate}%
- </span>
-              </div>
-              <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.pureRentalProfit >= 0 ? '#34d399' : 'var(--danger, #ef4444)' }}>
-                ₩{metrics.pureRentalProfit.toLocaleString()}
-              </span>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
-                감가상각비 ₩{statement.rentalCost.depreciation.toLocaleString()} / 임차료 ₩{statement.rentalCost.subleasePayment.toLocaleString()}
-              </div>
-            </div>
-
-            {/* 3. 매출총이익 */}
-            <div className="card" style={{ padding: '16px 18px', backgroundColor: 'var(--bg-card, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>매출총이익</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd' }}>
-                  총이익률 {metrics.grossMarginRate}%
- </span>
-              </div>
-              <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.grossProfit >= 0 ? '#60a5fa' : 'var(--danger, #ef4444)' }}>
-                ₩{metrics.grossProfit.toLocaleString()}
-              </span>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
-                유통이익 ₩{metrics.pureDistributionProfit.toLocaleString()} / 기타차액 ₩{metrics.otherNetProfit.toLocaleString()}
-              </div>
-            </div>
-
-            {/* 4. 영업이익 및 예상 순이익 */}
-            <div className="card" style={{ padding: '16px 18px', backgroundColor: 'var(--bg-card, #1e293b)', border: '1px solid var(--border-color, #334155)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>영업이익 / 예상 순이익</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', backgroundColor: metrics.operatingProfit >= 0 ? 'rgba(5, 150, 105, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: metrics.operatingProfit >= 0 ? '#34d399' : '#f87171' }}>
-                  영업이익률 {metrics.operatingMarginRate}%
- </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                <span style={{ fontSize: '22px', fontWeight: 800, color: metrics.projectedNetProfit >= 0 ? '#fbbf24' : 'var(--danger, #ef4444)' }}>
-                  ₩{metrics.projectedNetProfit.toLocaleString()}
-                </span>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>
-                  (영업이익: ₩{metrics.operatingProfit.toLocaleString()})
- </span>
-              </div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #94a3b8)' }}>
-                총판관비 ₩{metrics.sgaTotal.toLocaleString()} (급여 ₩{metrics.payroll.toLocaleString()})
- </div>
-            </div>
-          </div>
-
           {/* 중앙 본문 2단 분할 레이아웃: 좌측 손익계산서 본문 + 우측 기타 청구 정산 대사 */}
           <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '16px', alignItems: 'start' }}>
             {/* 좌측: 표준 손익계산서 대장 */}
@@ -882,33 +810,6 @@ export const RegularReportsPage: React.FC = () => {
       ───────────────────────────────────────────────────────── */}
       {activeReportTab === 'CASH_FLOW' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div data-mid="reports-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-            <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>당일 가용 현금</span>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: cfReport.netAvailableCash < 0 ? 'var(--danger)' : 'var(--primary)' }}>
-                ₩{cfReport.netAvailableCash.toLocaleString()}
-              </span>
-            </div>
-            <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>월간 예상 순현금</span>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: cfReport.expectedMonthlyNet < 0 ? 'var(--danger)' : '#34d399' }}>
-                {cfReport.expectedMonthlyNet > 0 ? '+' : ''}{cfReport.expectedMonthlyNet.toLocaleString()}
-              </span>
-            </div>
-            <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>현금 런웨이</span>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: cfReport.cashRunway < 3 ? 'var(--danger)' : 'var(--text-main, #f8fafc)' }}>
-                {cfReport.cashRunway} 개월
- </span>
-            </div>
-            <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>데이터 무결성</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', fontWeight: 800, color: cfReport.integrity.isValid ? '#34d399' : 'var(--danger)' }}>
-                {cfReport.integrity.isValid ? <><CheckCircle2 size={24} /> 100% 일치 (안전)</> : <><AlertTriangle size={24} /> 차액 발생</>}
-              </span>
-            </div>
-          </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', flex: 1, minHeight: 0 }}>
             {/* 악성 미수 채권 대장 */}
             <div className="card table-container" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 350px)', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '10px', border: '1px solid var(--border-color, #334155)' }}>
@@ -979,40 +880,6 @@ export const RegularReportsPage: React.FC = () => {
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #94a3b8)', lineHeight: 1.6, margin: 0 }}>
               영업 실적, 플릿 가동률, 물류 배차, 정비 MTTR, 채권 연체 및 경영진 지시사항이 포함된 통합 리포트입니다. 우상단 [PDF 정기보고서 생성] 버튼을 눌러 인쇄용 3페이지 풀컬러 정식 보고서를 다운로드하실 수 있습니다.
  </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
-            <div className="card" style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '8px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>현장 가동 장비</span>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
-                {executiveDossier.kpis.activeAssetCount}대 / {executiveDossier.kpis.totalFleetCount}대
- </div>
-              <span style={{ fontSize: '11.5px', color: '#60a5fa' }}>가동률 {executiveDossier.kpis.fleetUtilizationRate}%</span>
-            </div>
-
-            <div className="card" style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '8px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>총 배차 및 교환</span>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
-                {executiveDossier.kpis.totalDispatches}건 (교환 {executiveDossier.kpis.exchangeCount}건)
- </div>
-              <span style={{ fontSize: '11.5px', color: '#34d399' }}>왕복절감 ₩{executiveDossier.kpis.exchangeSavedCost.toLocaleString()}</span>
-            </div>
-
-            <div className="card" style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '8px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>정비 완료 및 평균 MTTR</span>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
-                {executiveDossier.kpis.totalRepairs}건
- </div>
-              <span style={{ fontSize: '11.5px', color: '#fbbf24' }}>평균 복구 {executiveDossier.kpis.avgMttrHours}시간</span>
-            </div>
-
-            <div className="card" style={{ padding: '14px 16px', backgroundColor: 'var(--bg-card, #1e293b)', borderRadius: '8px', border: '1px solid var(--border-color, #334155)' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }}>당월 청구 수납률</span>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px' }}>
-                {executiveDossier.kpis.collectionRate}%
- </div>
-              <span style={{ fontSize: '11.5px', color: '#38bdf8' }}>실수납 ₩{executiveDossier.kpis.collectedAmount.toLocaleString()}</span>
-            </div>
           </div>
         </div>
       )}

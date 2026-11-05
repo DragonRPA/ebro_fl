@@ -401,42 +401,6 @@ export const MobileVehicleStock: React.FC = () => {
           )}
         </div>
 
-        {/* 3대 핵심 수치 지표 */}
-        <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-800/80">
-          <div className="flex flex-col items-center bg-slate-950/50 rounded-xl p-2 border border-slate-800/60">
-            <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">적재 품목</span>
-            <span className="text-base font-black text-amber-400 mt-0.5 whitespace-nowrap">
-              {stockSummary.totalLoadedItems}
-              <span className="text-[10px] text-slate-400 font-normal ml-0.5">종</span>
-            </span>
-          </div>
-
-          <div className="flex flex-col items-center bg-slate-950/50 rounded-xl p-2 border border-slate-800/60">
-            <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">총 보유 수량</span>
-            <span className="text-base font-black text-white mt-0.5 whitespace-nowrap">
-              {stockSummary.totalLoadedQty}
-              <span className="text-[10px] text-slate-400 font-normal ml-0.5">개</span>
-            </span>
-          </div>
-
-          {showUnitPrice ? (
-            <div className="flex flex-col items-center bg-slate-950/50 rounded-xl p-2 border border-slate-800/60">
-              <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">적재 자산가치</span>
-              <span className="text-xs font-black text-emerald-400 mt-1 truncate max-w-full whitespace-nowrap">
-                {stockSummary.totalValue > 0 ? `₩${Math.round(stockSummary.totalValue / 10000).toLocaleString('ko-KR')}만원` : '₩0원'}
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center bg-slate-950/50 rounded-xl p-2 border border-slate-800/60">
-              <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">전체 등록 품목</span>
-              <span className="text-base font-black text-emerald-400 mt-0.5 whitespace-nowrap">
-                {(consumables || []).length}
-                <span className="text-[10px] text-slate-400 font-normal ml-0.5">종</span>
-              </span>
-            </div>
-          )}
-        </div>
-
         {/* 모바일 차량 재고실사 전표 원클릭 발의 액션 */}
         <div className="mt-2.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between">
           <span className="text-[11px] text-slate-400">차량 전산-실물 재고 감사</span>

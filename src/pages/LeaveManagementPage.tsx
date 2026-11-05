@@ -358,26 +358,6 @@ export const LeaveManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/*  전사 연차 통계 요약 바 */}
-      <div data-mid="leave-inspection-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 등록 임직원</span>
-          <strong style={{ fontSize: '15px', color: 'var(--primary)' }}>{users.length}명</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 부여 연차 일수</span>
-          <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>{totalCompanyGranted.toFixed(1)}일</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 연차 소진 일수</span>
-          <strong style={{ fontSize: '15px', color: 'var(--warning)' }}>{totalCompanyUsed.toFixed(1)}일</strong>
-        </div>
-        <div style={{ padding: '10px 14px', backgroundColor: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>총 잔여 연차 일수</span>
-          <strong style={{ fontSize: '15px', color: '#10b981' }}>{totalCompanyRemaining.toFixed(1)}일</strong>
-        </div>
-      </div>
-
       {/* 검색 바 */}
       <div style={{ display: 'flex', gap: '8px', maxWidth: '360px' }}>
         <div style={{ position: 'relative', flex: 1 }}>
