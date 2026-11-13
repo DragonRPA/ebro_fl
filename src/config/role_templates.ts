@@ -38,6 +38,7 @@ export const ACCOUNTING_TEMPLATE: PermissionRuleMap = {
   cash_flow: { canView: true, canSave: true },
   delinquency: { canView: true, canSave: true },
   depreciation_execution: { canView: true, canSave: true },
+  financial_statement: { canView: true, canSave: true },
   payroll: { canView: true, canSave: true },
   leave_management: { canView: true, canSave: true }, // 급여 권한자와 100% 동일
   ot_management: { canView: true, canSave: true },    // 관리부 OT 관리 권한
@@ -94,6 +95,7 @@ export const SALES_TEMPLATE: PermissionRuleMap = {
   daily_inout: { canView: true, canSave: false },
   // 열람만 허용
   billing: { canView: true, canSave: false },
+  financial_statement: { canView: true, canSave: false },
   kiyeun_contract_status: { canView: true, canSave: false },
   available_inventory: { canView: true, canSave: false },
   product: { canView: true, canSave: false },

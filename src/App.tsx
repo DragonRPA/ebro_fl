@@ -9,7 +9,7 @@ import {
   TrendingUp, Clock, AlertTriangle, Building2, ChevronDown, ChevronRight, ChevronLeft, Briefcase, Box, FolderKanban, ShieldAlert, Terminal, ArrowLeftRight, CheckSquare,
   Smartphone, Monitor, Car, FileText, Search, Printer, PackagePlus, Boxes, Calendar, Camera, BookOpen,
   FileCheck, ShieldCheck, Bot, Download, Bell, ClipboardList, Brain, RefreshCw
-, CheckCircle, Settings as SettingsIcon, SlidersHorizontal, Mail, Mic, FileSpreadsheet } from 'lucide-react';
+, CheckCircle, Settings as SettingsIcon, SlidersHorizontal, Mail, Mic, FileSpreadsheet, Scale } from 'lucide-react';
 const OfficialMailPage = React.lazy(() => import('./pages/OfficialMailPage').then(module => ({ default: module.OfficialMailPage })));
 import { getTenantAgentInstallerInfo, triggerTenantAgentDownload, AGENT_CERT_URL, syncTenantPolicyToAgent, startGlobalAgentHealthMonitor, EXPECTED_AGENT_VERSION, subscribeAgentStatus, triggerAgentSelfUpdate } from './services/agentService';
 
@@ -151,6 +151,7 @@ const BillingManageIntegratedPage = React.lazy(() => import('./pages/BillingMana
 const TradeOutboundIntegratedPage = React.lazy(() => import('./pages/TradeOutboundIntegratedPage').then(module => ({ default: module.TradeOutboundIntegratedPage })));
 const RentalMaintenanceManagePage = React.lazy(() => import('./pages/RentalMaintenanceManagePage').then(module => ({ default: module.RentalMaintenanceManagePage })));
 const BrochureCatalogSendPage = React.lazy(() => import('./pages/BrochureCatalogSendPage').then(module => ({ default: module.BrochureCatalogSendPage })));
+const FinancialStatementPage = React.lazy(() => import('./pages/FinancialStatementPage').then(module => ({ default: module.FinancialStatementPage })));
 
 export interface SubMenuItem {
   id: string;
@@ -747,6 +748,7 @@ const App: React.FC = () => {
           { id: 'billing', name: '청구관리', icon: <FileSpreadsheet size={16} />, component: <BillingManageIntegratedPage /> },
           { id: 'tax_invoice_manage', name: '세금계산서 관리', icon: <ClipboardList size={16} />, component: <TaxInvoiceManagePage /> },
           { id: 'receivable_delinquency', name: '수납/연체관리', icon: <CheckCircle size={16} />, component: <ReceivableDelinquencyIntegratedPage /> },
+          { id: 'financial_statement', name: '재무제표 · 손익계산서', icon: <Scale size={16} />, component: <FinancialStatementPage /> },
         ]
       },
       {
@@ -1110,6 +1112,7 @@ const App: React.FC = () => {
     if (tabId === 'trade_outbounds') return <TradeOutboundIntegratedPage />;
     if (tabId === 'courier_dispatch') return <CourierDispatchPage />;
     if (tabId === 'trade_billing' || tabId === 'billing') return <BillingManageIntegratedPage />;
+    if (tabId === 'financial_statement') return <FinancialStatementPage />;
     if (tabId === 'trade_returns') return <TradeReturnsPage />;
     if (tabId === 'vendors') return <CustomerVendorManagePage />;
     return <SalesPerformanceReportPage />;

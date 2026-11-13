@@ -276,6 +276,7 @@ export function useMenuPreferences(userId?: string) {
       'billing',
       'tax_invoice_manage',
       'receivable_delinquency',
+      'financial_statement',
       'product',
       'trade_option_masters',
       'permission',

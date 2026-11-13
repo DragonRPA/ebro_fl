@@ -117,6 +117,7 @@ export const SYSTEM_MENU_CONFIG: MenuGroupConfig[] = [
       { id: 'corporate_card', name: '법인카드 매입정산' },
       { id: 'cash_flow', name: '자금 흐름 분석' },
       { id: 'depreciation_execution', name: '감가상각 마감 실행' },
+      { id: 'financial_statement', name: '재무제표 · 손익계산서' },
       { id: 'regular_reports', name: '정기보고서 생성' },
       { id: 'kiyeun_contract_status', name: '계약현황(기연전용)' }
     ]
@@ -304,7 +305,12 @@ export const CANONICAL_MENU_ALIASES: Record<string, string> = {
   '부품관리-렌탈': 'parts_manage_rental',
   'consumable_manage_rental': 'consumable_manage_rental',
   'consumable-manage-rental': 'consumable_manage_rental',
-  '소모품관리-렌탈': 'consumable_manage_rental'
+  '소모품관리-렌탈': 'consumable_manage_rental',
+  'financial_statement': 'financial_statement',
+  'financial-statement': 'financial_statement',
+  '재무제표': 'financial_statement',
+  '손익계산서': 'financial_statement',
+  '재무제표 · 손익계산서': 'financial_statement'
 };
 
 export function normalizeMenuId(menuId: string): string {
