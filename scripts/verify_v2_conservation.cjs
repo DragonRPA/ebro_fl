@@ -618,9 +618,22 @@ async function main() {
       tierLevel: 2,
       joinDate: '2026-11-01',
       phone: '010-1234-9999',
+      residentRegNo: '920315-1234567',
+      annualLeaveGrant: 15,
+      annualLeaveUsed: 2.5,
+      pledgeDate: '2026-11-01',
+      pledgeScanName: 'pledge.pdf',
       baseSalaryKrw: 3500000,
+      mealAllowanceKrw: 200000,
+      vehicleAllowanceKrw: 100000,
+      serviceContractKrw: 500000,
       payrollBankName: '기업은행',
+      payrollAccountHolder: 'WTT사원',
       payrollAccountNo: '010-9999-1111',
+      insNationalPension: true,
+      insHealthInsurance: true,
+      insEmploymentInsurance: false,
+      insIndustrialAccident: true,
       actor: { id: 'u-1', name: '개발자' },
     });
     tracked.hrUserIds.push(testHrUser.id);
@@ -666,6 +679,25 @@ async function main() {
     const hrRow1 = (await pgClient.query('SELECT * FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
     assert(cryptoVault.verifyPassword('InitPass!1', hrRow1.password_hash), 'Initial password must verify');
     assert.strictEqual(Number(hrRow1.base_salary_krw), 3500000, 'Salary must persist');
+    assert.strictEqual(Number(hrRow1.hourly_wage_krw), 0, 'Ordinary wage must NOT be auto-calculated from baseSalary');
+    assert.strictEqual(Number(hrRow1.meal_allowance_krw), 200000, 'Meal allowance must persist');
+    assert.strictEqual(Number(hrRow1.vehicle_allowance_krw), 100000, 'Vehicle allowance must persist');
+    assert.strictEqual(Number(hrRow1.service_contract_krw), 500000, 'Service contract amount must persist');
+    assert.strictEqual(Number(hrRow1.annual_leave_grant), 15, 'Annual leave grant must persist');
+    assert.strictEqual(Number(hrRow1.annual_leave_used), 2.5, 'Annual leave used must persist');
+    assert.strictEqual(hrRow1.pledge_date, '2026-11-01', 'Pledge date must persist');
+    assert.strictEqual(hrRow1.pledge_scan_name, 'pledge.pdf', 'Pledge scan name must persist');
+    assert.strictEqual(hrRow1.payroll_account_holder, 'WTT사원', 'Payroll account holder must persist');
+    assert.strictEqual(hrRow1.ins_employment_insurance, false, 'Insurance opt-out must persist');
+    assert(
+      typeof hrRow1.resident_reg_no === 'string' && hrRow1.resident_reg_no.startsWith('__EBRO_ENC__v1__'),
+      'Resident reg no must be encrypted at rest'
+    );
+    assert.strictEqual(
+      cryptoVault.decryptSecret(hrRow1.resident_reg_no),
+      '920315-1234567',
+      'Resident reg no must decrypt back intact'
+    );
 
     await adminResetUserPassword({
       targetUser: testHrUser,
@@ -676,35 +708,53 @@ async function main() {
     const hrRow2 = (await pgClient.query('SELECT * FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
     assert(!cryptoVault.verifyPassword('InitPass!1', hrRow2.password_hash), 'Old password must fail after reset');
     assert(cryptoVault.verifyPassword('ResetPass!2', hrRow2.password_hash), 'New reset password must verify');
+    assert.strictEqual(hrRow2.must_change_password, true, 'Reset password must flag must_change_password');
 
     await updateEmployeeHrRecord({
       prevUser: testHrUser,
-      patch: { departmentId: 'DEPT-0000003', tierLevel: 3, position: '대리' },
+      patch: { departmentId: 'DEPT-0000003', tierLevel: 3, position: '대리', hourlyWageKrw: 18500 },
       deptNameMap: { [testDept.id]: testDept.name, 'DEPT-0000003': '영업부' },
       effectiveDate: '2026-11-10',
-      reason: 'WTT 부서이동 및 승진 발령',
+      reason: 'WTT 부서이동 · 승진 · 수동 통상임금 등록',
       actor: { id: 'u-1', name: '개발자' },
     });
 
     await updateEmployeeHrRecord({
-      prevUser: { ...testHrUser, departmentId: 'DEPT-0000003', tierLevel: 3, position: '대리' },
-      patch: { status: 'RETIRED', retireDate: '2026-11-15' },
+      prevUser: {
+        ...testHrUser,
+        departmentId: 'DEPT-0000003',
+        tierLevel: 3,
+        position: '대리',
+        hourlyWageKrw: 18500,
+      },
+      patch: { baseSalaryKrw: 4200000, status: 'RETIRED', retireDate: '2026-11-15' },
       deptNameMap: { 'DEPT-0000003': '영업부' },
       effectiveDate: '2026-11-15',
-      reason: 'WTT 퇴사 처리 검증',
+      reason: 'WTT 기본급 인상 시 수동 통상임금 보존 및 퇴사 검증',
       actor: { id: 'u-1', name: '개발자' },
     });
 
-    const hrRow3 = (await pgClient.query('SELECT status, is_active, retire_date, tier_level, department_id FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
+    const hrRow3 = (
+      await pgClient.query(
+        'SELECT status, is_active, retire_date, tier_level, department_id, base_salary_krw, hourly_wage_krw FROM public.fl_users WHERE id = $1',
+        [testHrUser.id]
+      )
+    ).rows[0];
     assert.strictEqual(hrRow3.status, 'RETIRED');
     assert.strictEqual(hrRow3.is_active, false);
     assert.strictEqual(hrRow3.retire_date, '2026-11-15');
     assert.strictEqual(hrRow3.tier_level, 3);
     assert.strictEqual(hrRow3.department_id, 'DEPT-0000003');
+    assert.strictEqual(Number(hrRow3.base_salary_krw), 4200000);
+    assert.strictEqual(
+      Number(hrRow3.hourly_wage_krw),
+      18500,
+      'Manual ordinary wage must stay exact (18500) even when baseSalary changes to 4200000'
+    );
 
     const histRows = (await pgClient.query('SELECT event_type FROM public.fl_hr_histories WHERE user_id = $1 ORDER BY created_at', [testHrUser.id])).rows;
     const histTypes = histRows.map((r) => r.event_type);
-    for (const reqEv of ['입사등록', '비밀번호초기화', '부서이동', '직책변경', '티어변경', '퇴사처리']) {
+    for (const reqEv of ['입사등록', '비밀번호초기화', '부서이동', '직책변경', '티어변경', '급여변경', '퇴사처리']) {
       assert(histTypes.includes(reqEv), `Missing HR history event_type=${reqEv}, got ${histTypes.join(',')}`);
     }
     console.log(`[WTT 8 PASS] Org & HR lifecycle (${histTypes.length} audit history events + password reset + retirement) verified.`);

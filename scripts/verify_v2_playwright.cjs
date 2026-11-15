@@ -141,9 +141,14 @@ async function main() {
     await page.getByText('정원 검증 일치', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
 
     await page.locator('button', { hasText: '상세' }).first().click();
-    await page.getByText('급여 · 계좌', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByText('부여 연차일수', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByText('보안서약서 스캔본', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
     await page.locator('button', { hasText: '급여 · 계좌' }).first().click();
     await page.getByText('현재 등록 월 기본급', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    await page.locator('input[data-manual-wage="true"]').first().waitFor({ state: 'visible', timeout: 3000 });
+    await page.getByText('4대보험 가입여부', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    const autoCalcBtnCount = await page.locator('button', { hasText: '209' }).count();
+    assert.strictEqual(autoCalcBtnCount, 0, 'Ordinary wage auto-calc (209h) button must NOT exist');
     await page.locator('button', { hasText: '비밀번호 초기화' }).first().click();
     await page.getByText('비밀번호 초기화 실행', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
     await page.locator('button', { hasText: '닫기' }).first().click();

@@ -10,6 +10,7 @@ import {
   snakeToCamelRow,
 } from './supabase';
 import {
+  decryptSecret,
   getVaultItem,
   hashPassword,
   safeLocalStorageSet,
@@ -361,10 +362,33 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const rawDepts = mapRows<FlDepartment>(deptRes.data, ['sortOrder']);
     const deptNameMap = new Map(rawDepts.map((d) => [d.id, d.name]));
 
-    const users = mapRows<FlUser>(usrRes.data, ['tierLevel', 'baseSalaryKrw']).map((u) => ({
+    const users = mapRows<FlUser>(usrRes.data, [
+      'tierLevel',
+      'baseSalaryKrw',
+      'hourlyWageKrw',
+      'mealAllowanceKrw',
+      'vehicleAllowanceKrw',
+      'serviceContractKrw',
+      'annualLeaveGrant',
+      'annualLeaveUsed',
+    ]).map((u) => ({
       ...u,
       tierLevel: Math.min(7, Math.max(1, Number(u.tierLevel || 1))) as TierLevel,
       baseSalaryKrw: Number(u.baseSalaryKrw || 0),
+      // 통상임금은 수동 입력 전용이므로 자동계산 없이 저장된 수치 그대로 로드한다.
+      hourlyWageKrw: Number(u.hourlyWageKrw || 0),
+      mealAllowanceKrw: Number(u.mealAllowanceKrw || 0),
+      vehicleAllowanceKrw: Number(u.vehicleAllowanceKrw || 0),
+      serviceContractKrw: Number(u.serviceContractKrw || 0),
+      annualLeaveGrant: u.annualLeaveGrant !== undefined && u.annualLeaveGrant !== null ? Number(u.annualLeaveGrant) : 15,
+      annualLeaveUsed: Number(u.annualLeaveUsed || 0),
+      mustChangePassword: Boolean(u.mustChangePassword),
+      insNationalPension: u.insNationalPension !== false,
+      insHealthInsurance: u.insHealthInsurance !== false,
+      insEmploymentInsurance: u.insEmploymentInsurance !== false,
+      insIndustrialAccident: u.insIndustrialAccident !== false,
+      residentRegNo: u.residentRegNo ? decryptSecret(u.residentRegNo) : null,
+      payrollAccountNo: u.payrollAccountNo ? decryptSecret(u.payrollAccountNo) : null,
       departmentName: u.departmentId ? deptNameMap.get(u.departmentId) || '' : '',
     }));
     const userNameMap = new Map(users.map((u) => [u.id, u.name]));
@@ -694,7 +718,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await execDbMutation('본인 비밀번호 변경', () =>
         flSupabase
           .from('users')
-          .update({ password_hash: nextHash, updated_at: now })
+          .update({ password_hash: nextHash, must_change_password: false, updated_at: now })
           .eq('id', currentUser.id)
       );
 

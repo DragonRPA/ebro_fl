@@ -85,6 +85,23 @@ function cleanTextOrNull(val) {
       ADD COLUMN IF NOT EXISTS base_salary_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
       ADD COLUMN IF NOT EXISTS payroll_bank_name TEXT,
       ADD COLUMN IF NOT EXISTS payroll_account_no TEXT,
+      ADD COLUMN IF NOT EXISTS profile_image_url TEXT,
+      ADD COLUMN IF NOT EXISTS resident_reg_no TEXT,
+      ADD COLUMN IF NOT EXISTS annual_leave_grant NUMERIC(5, 1) NOT NULL DEFAULT 15.0,
+      ADD COLUMN IF NOT EXISTS annual_leave_used NUMERIC(5, 1) NOT NULL DEFAULT 0.0,
+      ADD COLUMN IF NOT EXISTS pledge_date TEXT,
+      ADD COLUMN IF NOT EXISTS pledge_scan_name TEXT,
+      ADD COLUMN IF NOT EXISTS pledge_scan_url TEXT,
+      ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS payroll_account_holder TEXT,
+      ADD COLUMN IF NOT EXISTS hourly_wage_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS meal_allowance_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS vehicle_allowance_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS service_contract_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS ins_national_pension BOOLEAN NOT NULL DEFAULT true,
+      ADD COLUMN IF NOT EXISTS ins_health_insurance BOOLEAN NOT NULL DEFAULT true,
+      ADD COLUMN IF NOT EXISTS ins_employment_insurance BOOLEAN NOT NULL DEFAULT true,
+      ADD COLUMN IF NOT EXISTS ins_industrial_accident BOOLEAN NOT NULL DEFAULT true,
       ADD COLUMN IF NOT EXISTS memo TEXT;
 
     CREATE TABLE IF NOT EXISTS public.fl_hr_histories (
@@ -139,7 +156,7 @@ function cleanTextOrNull(val) {
   console.log(`[migrate_hr_v2] Normalized functional_tags & sort_order for ${deptRows.length} departments`);
 
   const backupUsersRes = await client.query(
-    'SELECT id, "loginId", "baseSalary", phone, email, address, "birthDate", "joinDate", "retireDate" FROM public.fl_backup_users'
+    'SELECT id, "loginId", "baseSalary", phone, email, address, "birthDate", "joinDate", "retireDate", "profileImageUrl" FROM public.fl_backup_users'
   );
   const backupById = new Map(backupUsersRes.rows.map((r) => [r.id, r]));
 
@@ -174,6 +191,10 @@ function cleanTextOrNull(val) {
     const retireDate = validDateOrNull(u.retire_date) || validDateOrNull(b?.retireDate);
     const empNo = cleanTextOrNull(u.employee_no) || nextEmployeeNo();
     const salary = Number(u.base_salary_krw || 0) > 0 ? Number(u.base_salary_krw) : Math.max(0, Number(b?.baseSalary || 0));
+    const profileImg = cleanTextOrNull(u.profile_image_url) || cleanTextOrNull(b?.profileImageUrl);
+    const acctHolder =
+      cleanTextOrNull(u.payroll_account_holder) ||
+      (cleanTextOrNull(u.payroll_bank_name) || cleanTextOrNull(u.payroll_account_no) ? u.name : null);
 
     await client.query(
       `UPDATE public.fl_users
@@ -185,9 +206,11 @@ function cleanTextOrNull(val) {
            join_date = $6,
            retire_date = $7,
            base_salary_krw = $8,
+           profile_image_url = $9,
+           payroll_account_holder = $10,
            updated_at = now()
-       WHERE id = $9`,
-      [empNo, decPhone, decEmail, decAddress, decBirth, joinDate, retireDate, salary, u.id]
+       WHERE id = $11`,
+      [empNo, decPhone, decEmail, decAddress, decBirth, joinDate, retireDate, salary, profileImg, acctHolder, u.id]
     );
     updatedUsers++;
 

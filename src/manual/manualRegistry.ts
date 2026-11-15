@@ -522,22 +522,23 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageTitle: '조직 인사 관리',
     groupLabel: '정산 · 회계 · 설정',
     basicDescription:
-      '부서 조직 계층과 업무 기능 태그, 임직원 인사원장, 급여·계좌 정보, 관리자 비밀번호 초기화 및 인사 발령 이력을 통합 관리한다.',
+      '부서 조직 계층과 업무 기능 태그, 임직원 개인 신상·연차·보안서약·급여·수동 통상임금·4대보험·계좌 정보, 관리자 비밀번호 초기화 및 인사 발령 이력을 통합 관리한다.',
     anchors: [
       { anchorId: 'hr-tabs', title: '조직·인사 업무 탭', summary: '임직원 인사원장, 부서 조직도, 전체 발령 이력 탭을 전환한다.' },
       { anchorId: 'hr-filter', title: '부서·상태 필터 및 등록 버튼', summary: '소속 부서와 재직 상태로 임직원을 조회하고 엑셀 내보내기 및 신규 등록을 실행한다.' },
       { anchorId: 'hr-dept-tree', title: '조직 계층 트리', summary: '상하위 부서 계층별 재직 인원을 확인하고 선택한 부서 소속 임직원을 필터링한다.' },
-      { anchorId: 'hr-grid', title: '인사원장 그리드', summary: '사번, 아이디, 성명, 부서, 직책, 티어, 재직 상태를 조회하고 상세 버튼으로 인사카드를 연다.' },
+      { anchorId: 'hr-grid', title: '인사원장 그리드', summary: '사번, 성명, 부서, 직책, 티어, 연차 잔여일수, 서약 여부, 재직 상태를 조회하고 상세 버튼으로 인사카드를 연다.' },
       { anchorId: 'hr-conservation', title: '정원 대차 검증 바', summary: '전체 임직원 수와 재직·휴직·퇴사 인원의 합계 일치를 즉시 대조한다.' },
     ],
     processes: [
       {
         processName: '신규 입사 등록 및 인사 발령',
-        purpose: '신규 임직원 계정과 사번을 발급하고 부서 이동·직책·티어·재직 상태 발령을 이력과 함께 기록한다.',
+        purpose: '신규 임직원 계정과 사번을 발급하고 개인 신상·연차·보안서약·발령 변경 이력을 기록한다.',
         steps: [
-          { stepNo: 1, targetLabel: '신규 입사 등록 버튼', manualAnchorId: 'hr-filter', actionDetail: '로그인 아이디, 초기 비밀번호, 사번, 소속 부서, 직급 티어를 입력해 계정을 생성한다.' },
-          { stepNo: 2, targetLabel: '인사원장 상세 버튼', manualAnchorId: 'hr-grid', actionDetail: '상세 모달에서 부서·직책·티어·상태를 변경하고 인사 발령 실행을 눌러 결재선 또는 즉시 반영을 처리한다.' },
-          { stepNo: 3, targetLabel: '비밀번호 초기화 탭', manualAnchorId: 'hr-grid', actionDetail: '4단계 이상 관리자가 임시 비밀번호를 재발급하고 비밀번호 초기화 이력을 남긴다.' },
+          { stepNo: 1, targetLabel: '신규 입사 등록 버튼', manualAnchorId: 'hr-filter', actionDetail: '로그인 아이디, 초기 비밀번호, 사번, 소속 부서, 직급 티어, 부여 연차와 급여·4대보험 초기값을 입력해 계정을 생성한다.' },
+          { stepNo: 2, targetLabel: '인사원장 상세 버튼', manualAnchorId: 'hr-grid', actionDetail: '인사정보·발령 탭에서 프로필 사진, 주민등록번호, 연차, 보안서약 스캔본, 부서·직책·티어·상태를 수정 저장한다.' },
+          { stepNo: 3, targetLabel: '급여 · 계좌 탭', manualAnchorId: 'hr-grid', actionDetail: '6단계 이상 급여 권한자가 월 기본급, 수동 입력 통상임금, 식대, 차량보조금, 용역계약금액, 급여계좌, 4대보험 가입여부를 저장한다.' },
+          { stepNo: 4, targetLabel: '비밀번호 초기화 탭', manualAnchorId: 'hr-grid', actionDetail: '4단계 이상 관리자가 임시 비밀번호를 재발급하고 비밀번호 초기화 이력을 남긴다.' },
         ],
       },
       {

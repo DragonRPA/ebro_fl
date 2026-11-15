@@ -42,9 +42,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const [myError, setMyError] = useState<string | null>(null);
   const [myBusy, setMyBusy] = useState(false);
 
-  const openMyModal = () => {
+  const openMyModal = (initialTab: 'INFO' | 'PASSWORD' = 'INFO') => {
     if (!currentUser) return;
-    setMyTab('INFO');
+    setMyTab(initialTab);
     setMyPhone(currentUser.phone || '');
     setMyEmail(currentUser.email || '');
     setMyAddress(currentUser.address || '');
@@ -346,7 +346,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             {currentUser && (
               <button
                 type="button"
-                onClick={openMyModal}
+                onClick={() => openMyModal('INFO')}
                 style={{ ...actionBtnStyle('secondary', true), whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 <UserCog size={13} />
@@ -371,6 +371,32 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             gap: '14px',
           }}
         >
+          {currentUser?.mustChangePassword && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                border: '1px solid var(--warning)',
+                backgroundColor: 'var(--warning-light)',
+                color: 'var(--text-main)',
+                fontSize: '13px',
+                fontWeight: 600,
+              }}
+            >
+              <span>초기 또는 임시 비밀번호 상태입니다. 보안을 위해 새 비밀번호로 변경하십시오.</span>
+              <button
+                type="button"
+                onClick={() => openMyModal('PASSWORD')}
+                style={{ ...actionBtnStyle('primary', true), whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                비밀번호 변경
+              </button>
+            </div>
+          )}
           {children}
         </main>
       </div>
@@ -396,7 +422,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <ModalDialog
         open={myModalOpen}
         title="내 정보 · 비밀번호 변경"
-        width={560}
+        width={620}
         onClose={() => setMyModalOpen(false)}
       >
         {currentUser && (
@@ -404,7 +430,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
                 gap: '8px',
                 padding: '10px 12px',
                 border: '1px solid var(--border-color)',
@@ -431,6 +457,13 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                   {tierLabel(currentUser.tierLevel)} ·{' '}
                   {EMPLOYMENT_STATUS_LABELS[(currentUser.status as EmploymentStatus) || 'ACTIVE'] ||
                     currentUser.status}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>연차 잔여 / 부여</div>
+                <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {Math.max(0, Number(currentUser.annualLeaveGrant || 0) - Number(currentUser.annualLeaveUsed || 0)).toFixed(1)}일 /{' '}
+                  {Number(currentUser.annualLeaveGrant || 0).toFixed(1)}일
                 </div>
               </div>
             </div>

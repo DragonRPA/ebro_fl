@@ -5,7 +5,7 @@ import {
   flSupabase,
   newId,
 } from '../core/supabase';
-import { hashPassword } from '../utils/cryptoVault';
+import { encryptSecret, hashPassword } from '../utils/cryptoVault';
 import type {
   CurrencyCode,
   FlApPayable,
@@ -1735,9 +1735,37 @@ export interface CreateEmployeeUserInput {
   baseSalaryKrw?: number;
   payrollBankName?: string | null;
   payrollAccountNo?: string | null;
+  profileImageUrl?: string | null;
+  residentRegNo?: string | null;
+  annualLeaveGrant?: number;
+  annualLeaveUsed?: number;
+  pledgeDate?: string | null;
+  pledgeScanName?: string | null;
+  pledgeScanUrl?: string | null;
+  mustChangePassword?: boolean;
+  payrollAccountHolder?: string | null;
+  hourlyWageKrw?: number;
+  mealAllowanceKrw?: number;
+  vehicleAllowanceKrw?: number;
+  serviceContractKrw?: number;
+  insNationalPension?: boolean;
+  insHealthInsurance?: boolean;
+  insEmploymentInsurance?: boolean;
+  insIndustrialAccident?: boolean;
   memo?: string | null;
   status?: string;
   actor: { id: string; name: string };
+}
+
+function roundKrw(val: unknown): number {
+  const n = Number(val ?? 0);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+}
+
+function roundLeaveDays(val: unknown, fallback: number): number {
+  if (val === undefined || val === null || val === '') return fallback;
+  const n = Number(val);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n * 10) / 10) : fallback;
 }
 
 interface ExistingUserIdentifierRow {
@@ -1828,6 +1856,8 @@ export async function createEmployeeUser(input: CreateEmployeeUserInput): Promis
   const id = newId('USR');
   const passwordHash = hashPassword(input.initialPassword.trim());
 
+  const cleanResidentRegNo = input.residentRegNo?.trim() || null;
+
   const user: FlUser = {
     id,
     tenantId: DEFAULT_TENANT_ID,
@@ -1847,9 +1877,27 @@ export async function createEmployeeUser(input: CreateEmployeeUserInput): Promis
     retireDate: null,
     address: input.address?.trim() || null,
     emergencyContact: input.emergencyContact?.trim() || null,
-    baseSalaryKrw: Math.max(0, Math.round(Number(input.baseSalaryKrw || 0))),
+    baseSalaryKrw: roundKrw(input.baseSalaryKrw),
     payrollBankName: input.payrollBankName?.trim() || null,
     payrollAccountNo: input.payrollAccountNo?.trim() || null,
+    profileImageUrl: input.profileImageUrl?.trim() || null,
+    residentRegNo: cleanResidentRegNo,
+    annualLeaveGrant: roundLeaveDays(input.annualLeaveGrant, 15),
+    annualLeaveUsed: roundLeaveDays(input.annualLeaveUsed, 0),
+    pledgeDate: input.pledgeDate?.trim() || null,
+    pledgeScanName: input.pledgeScanName?.trim() || null,
+    pledgeScanUrl: input.pledgeScanUrl?.trim() || null,
+    mustChangePassword: Boolean(input.mustChangePassword),
+    payrollAccountHolder: input.payrollAccountHolder?.trim() || null,
+    // 통상임금은 자동계산하지 않고 담당자 수동 입력값만 저장한다.
+    hourlyWageKrw: roundKrw(input.hourlyWageKrw),
+    mealAllowanceKrw: roundKrw(input.mealAllowanceKrw),
+    vehicleAllowanceKrw: roundKrw(input.vehicleAllowanceKrw),
+    serviceContractKrw: roundKrw(input.serviceContractKrw),
+    insNationalPension: input.insNationalPension !== false,
+    insHealthInsurance: input.insHealthInsurance !== false,
+    insEmploymentInsurance: input.insEmploymentInsurance !== false,
+    insIndustrialAccident: input.insIndustrialAccident !== false,
     memo: input.memo?.trim() || null,
     status,
     isActive: status !== 'RETIRED',
@@ -1859,6 +1907,7 @@ export async function createEmployeeUser(input: CreateEmployeeUserInput): Promis
     flSupabase.from('users').insert({
       ...camelToSnakeRow({
         ...user,
+        residentRegNo: cleanResidentRegNo ? encryptSecret(cleanResidentRegNo) : null,
         createdAt: now,
         updatedAt: now,
       }),
@@ -1906,6 +1955,23 @@ export interface UpdateEmployeeHrInput {
     baseSalaryKrw?: number;
     payrollBankName?: string | null;
     payrollAccountNo?: string | null;
+    profileImageUrl?: string | null;
+    residentRegNo?: string | null;
+    annualLeaveGrant?: number;
+    annualLeaveUsed?: number;
+    pledgeDate?: string | null;
+    pledgeScanName?: string | null;
+    pledgeScanUrl?: string | null;
+    mustChangePassword?: boolean;
+    payrollAccountHolder?: string | null;
+    hourlyWageKrw?: number;
+    mealAllowanceKrw?: number;
+    vehicleAllowanceKrw?: number;
+    serviceContractKrw?: number;
+    insNationalPension?: boolean;
+    insHealthInsurance?: boolean;
+    insEmploymentInsurance?: boolean;
+    insIndustrialAccident?: boolean;
     memo?: string | null;
     status?: string;
   };
@@ -1947,8 +2013,30 @@ export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Prom
   const nextIsActive = nextStatus !== 'RETIRED';
   const nextSalary =
     patch.baseSalaryKrw !== undefined
-      ? Math.max(0, Math.round(Number(patch.baseSalaryKrw || 0)))
-      : prevUser.baseSalaryKrw;
+      ? roundKrw(patch.baseSalaryKrw)
+      : roundKrw(prevUser.baseSalaryKrw);
+  // 통상임금은 기본급 변경 시에도 절대 재계산하지 않고 기존 또는 수동 입력값만 유지한다.
+  const nextHourlyWage =
+    patch.hourlyWageKrw !== undefined
+      ? roundKrw(patch.hourlyWageKrw)
+      : roundKrw(prevUser.hourlyWageKrw);
+  const nextMealAllowance =
+    patch.mealAllowanceKrw !== undefined
+      ? roundKrw(patch.mealAllowanceKrw)
+      : roundKrw(prevUser.mealAllowanceKrw);
+  const nextVehicleAllowance =
+    patch.vehicleAllowanceKrw !== undefined
+      ? roundKrw(patch.vehicleAllowanceKrw)
+      : roundKrw(prevUser.vehicleAllowanceKrw);
+  const nextServiceContract =
+    patch.serviceContractKrw !== undefined
+      ? roundKrw(patch.serviceContractKrw)
+      : roundKrw(prevUser.serviceContractKrw);
+
+  const nextResidentPlain =
+    patch.residentRegNo !== undefined
+      ? patch.residentRegNo?.trim() || null
+      : prevUser.residentRegNo?.trim() || null;
 
   let nextRetireDate =
     patch.retireDate !== undefined ? patch.retireDate?.trim() || null : prevUser.retireDate || null;
@@ -1989,6 +2077,57 @@ export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Prom
       patch.payrollAccountNo !== undefined
         ? patch.payrollAccountNo?.trim() || null
         : prevUser.payrollAccountNo || null,
+    profile_image_url:
+      patch.profileImageUrl !== undefined
+        ? patch.profileImageUrl?.trim() || null
+        : prevUser.profileImageUrl || null,
+    resident_reg_no: nextResidentPlain ? encryptSecret(nextResidentPlain) : null,
+    annual_leave_grant:
+      patch.annualLeaveGrant !== undefined
+        ? roundLeaveDays(patch.annualLeaveGrant, 15)
+        : roundLeaveDays(prevUser.annualLeaveGrant, 15),
+    annual_leave_used:
+      patch.annualLeaveUsed !== undefined
+        ? roundLeaveDays(patch.annualLeaveUsed, 0)
+        : roundLeaveDays(prevUser.annualLeaveUsed, 0),
+    pledge_date:
+      patch.pledgeDate !== undefined ? patch.pledgeDate?.trim() || null : prevUser.pledgeDate || null,
+    pledge_scan_name:
+      patch.pledgeScanName !== undefined
+        ? patch.pledgeScanName?.trim() || null
+        : prevUser.pledgeScanName || null,
+    pledge_scan_url:
+      patch.pledgeScanUrl !== undefined
+        ? patch.pledgeScanUrl?.trim() || null
+        : prevUser.pledgeScanUrl || null,
+    must_change_password:
+      patch.mustChangePassword !== undefined
+        ? Boolean(patch.mustChangePassword)
+        : Boolean(prevUser.mustChangePassword),
+    payroll_account_holder:
+      patch.payrollAccountHolder !== undefined
+        ? patch.payrollAccountHolder?.trim() || null
+        : prevUser.payrollAccountHolder || null,
+    hourly_wage_krw: nextHourlyWage,
+    meal_allowance_krw: nextMealAllowance,
+    vehicle_allowance_krw: nextVehicleAllowance,
+    service_contract_krw: nextServiceContract,
+    ins_national_pension:
+      patch.insNationalPension !== undefined
+        ? Boolean(patch.insNationalPension)
+        : prevUser.insNationalPension !== false,
+    ins_health_insurance:
+      patch.insHealthInsurance !== undefined
+        ? Boolean(patch.insHealthInsurance)
+        : prevUser.insHealthInsurance !== false,
+    ins_employment_insurance:
+      patch.insEmploymentInsurance !== undefined
+        ? Boolean(patch.insEmploymentInsurance)
+        : prevUser.insEmploymentInsurance !== false,
+    ins_industrial_accident:
+      patch.insIndustrialAccident !== undefined
+        ? Boolean(patch.insIndustrialAccident)
+        : prevUser.insIndustrialAccident !== false,
     memo: patch.memo !== undefined ? patch.memo?.trim() || null : prevUser.memo || null,
     status: nextStatus,
     is_active: nextIsActive,
@@ -2036,13 +2175,24 @@ export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Prom
   if (prevUser.tierLevel !== nextTier) {
     pushHistory('티어변경', `${prevUser.tierLevel}단계`, `${nextTier}단계`);
   }
-  if (Number(prevUser.baseSalaryKrw || 0) !== nextSalary) {
-    pushHistory(
-      '급여변경',
-      `₩${Math.round(Number(prevUser.baseSalaryKrw || 0)).toLocaleString('ko-KR')}`,
-      `₩${nextSalary.toLocaleString('ko-KR')}`
-    );
+
+  const payDiffPrev: string[] = [];
+  const payDiffNext: string[] = [];
+  const addPayDiff = (label: string, prevVal: number, nextVal: number) => {
+    if (prevVal !== nextVal) {
+      payDiffPrev.push(`${label} ₩${prevVal.toLocaleString('ko-KR')}`);
+      payDiffNext.push(`${label} ₩${nextVal.toLocaleString('ko-KR')}`);
+    }
+  };
+  addPayDiff('기본급', roundKrw(prevUser.baseSalaryKrw), nextSalary);
+  addPayDiff('통상임금', roundKrw(prevUser.hourlyWageKrw), nextHourlyWage);
+  addPayDiff('식대', roundKrw(prevUser.mealAllowanceKrw), nextMealAllowance);
+  addPayDiff('차량보조금', roundKrw(prevUser.vehicleAllowanceKrw), nextVehicleAllowance);
+  addPayDiff('용역계약금액', roundKrw(prevUser.serviceContractKrw), nextServiceContract);
+  if (payDiffPrev.length > 0) {
+    pushHistory('급여변경', payDiffPrev.join(' · '), payDiffNext.join(' · '));
   }
+
   if (prevUser.status !== nextStatus) {
     const ev: HrEventType =
       nextStatus === 'RETIRED'
@@ -2081,7 +2231,7 @@ export async function adminResetUserPassword(params: {
   await execDbMutation('비밀번호 초기화', () =>
     flSupabase
       .from('users')
-      .update({ password_hash: passwordHash, updated_at: now })
+      .update({ password_hash: passwordHash, must_change_password: true, updated_at: now })
       .eq('id', params.targetUser.id)
   );
 
