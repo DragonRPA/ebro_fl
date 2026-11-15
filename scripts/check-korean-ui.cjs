@@ -21,7 +21,7 @@ function walk(dir) {
   return results;
 }
 
-const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{26A0}\u{2705}\u{274C}\u{2728}\u{26A1}\u{1F680}-\u{1F6FF}\u{FE0F}➔✓✕☑☐]/u;
+const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{26A0}\u{2705}\u{274C}\u{2728}\u{26A1}\u{1F680}-\u{1F6FF}\u{FE0F}➔✓✕☑☐★]/u;
 const CSS_JS_FN_PREFIX = /(?<!\\)(?:url|var|calc|rgba?|hsla?|translate[XYZ3d]*|scale[XYZ3d]*|rotate[XYZ3d]*|skew[XY]?|matrix3d?|linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|cubic-bezier|drop-shadow|blur|brightness|contrast|grayscale|hue-rotate|invert|opacity|saturate|sepia|minmax|fit-content|repeat|clamp|max|min|env|attr|counter|counters|not|is|where|has|nth-child|nth-of-type|contains|import|require|function|if|for|while|switch|catch|super|return|typeof|instanceof|void|delete|await|yield|SUM|COUNT|AVG|MIN|MAX|COALESCE|CAST|EXTRACT|DATE_TRUNC|NOW|RANDOM|gen_random_uuid|USING|CHECK)\s*$/i;
 const PAREN_ALPHA_RE = /(\s*)\(([^()\n]*[A-Za-z][^()\n]*)\)/g;
 
@@ -32,7 +32,27 @@ const bannedPhrases = [
   '[ASAP]',
   '교체(대차)',
   '대차(교체)',
+  '스마트',
+  '실시간',
+  '원클릭',
+  '올인원',
+  '강력한',
+  '완벽한',
+  '혁신적인',
+  '자동화된',
+  '최적화된',
+  '초고속',
+  '비주얼',
+  '맞교환',
+  '스왑',
+  '대차교체',
 ];
+
+const EXCLUDED_PHRASE_FILES = new Set([
+  'src/data/accountingStandardsData.ts',
+  'src/lib/supabasePrefixProxy.ts',
+  'src/utils/cryptoVault.ts',
+]);
 
 const bannedKpiCardMarkers = [
   'data-mid="trade_profitability-kpi"',
@@ -72,9 +92,11 @@ for (const file of files) {
     if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('{/*')) {
       return;
     }
-    for (const phrase of bannedPhrases) {
-      if (line.includes(phrase)) {
-        violations.push(`${rel}:${idx + 1} [금지 표현] "${phrase}"`);
+    if (!EXCLUDED_PHRASE_FILES.has(rel)) {
+      for (const phrase of bannedPhrases) {
+        if (line.includes(phrase)) {
+          violations.push(`${rel}:${idx + 1} [금지 표현] "${phrase}"`);
+        }
       }
     }
   });

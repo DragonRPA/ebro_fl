@@ -1,16 +1,16 @@
-import type { TenantFeatures } from './db';
+import type { TenantFeatures } from '../types/domain';
 
 export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.33';
 export const EXPECTED_CORE_HASH: string = 'eda932ea37c1';
-//  GitHub Releases 글로벌 초고속 CDN (Azure/Fastly 한국 PoP 8~10MB/s 3초 다운로드)
+// GitHub Releases CDN
 export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
-//  Cloudflare R2 보조 엔드포인트
+// Cloudflare R2 보조 엔드포인트
 export const DEFAULT_CF_R2_BASE_URL = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev';
 
-export const AGENT_INSTALLER_BASE_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`; // Inno Setup 16MB 초고속 정식 인스톨러
-export const AGENT_EXE_URL = AGENT_INSTALLER_BASE_URL; // 기본 초고속 인스톨러 다운로드 엔드포인트
-export const AGENT_SILENT_INSTALL_CMD = 'eBroAgent_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART'; // 무음 설치 명령행
-export const AGENT_VERSION_CHECK_URL = '/downloads/version.json'; // 스마트 업데이트 검증 메타데이터
+export const AGENT_INSTALLER_BASE_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
+export const AGENT_EXE_URL = AGENT_INSTALLER_BASE_URL;
+export const AGENT_SILENT_INSTALL_CMD = 'eBroAgent_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART';
+export const AGENT_VERSION_CHECK_URL = '/downloads/version.json';
 export const AGENT_DOWNLOAD_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
 export const AGENT_BRO_JS_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
 export const AGENT_EBRO_JS_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;

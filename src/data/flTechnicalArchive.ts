@@ -140,12 +140,9 @@ export interface FlModelTechnicalSpec {
   optionalEquipments?: string[];
 }
 
-import { MUJIN_TECHNICAL_ARCHIVE_ADDITIONS } from './mujinGlobalInitialData';
-
 const R2_BASE = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_doc';
 
 export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
-  ...MUJIN_TECHNICAL_ARCHIVE_ADDITIONS,
   {
     id: 'FL-SPEC-HELI-CPD25-GB2LI',
     manufacturerCode: 'HELI',
@@ -251,7 +248,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     safetyFeatures: [
       '코너링 자동 속도 제어 및 과부하 전자식 리프트 제한 센서',
       '경사로 밀림 방지 보조 및 운전자 이석 시 주행·유압 자동 잠금',
-      '다기능 컬러 TFT 디스플레이 — 실시간 하중·배터리 잔량·고장코드 표시'
+      '다기능 컬러 TFT 디스플레이 — 하중·배터리 잔량·고장코드 표시'
     ],
     dailyChecklist: [
       '측면 고속 충전 소켓 내부 이물질 확인 및 충전 케이블 절연 피복 점검',
@@ -593,7 +590,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     waterproofRating: '전천후 야외 건설·철강·물류 현장 운용',
     warrantyTerms: '국내 공식 2년 또는 3,000시간 보증',
     safetyFeatures: [
-      '실시간 적재하중 측정 센서 및 과적 경보 표시등',
+      '적재하중 측정 센서 및 과적 경보 표시등',
       '후방 광각 카메라, 후진 음성 경보기 및 레드존 라인 빔 기본 구성 가능',
       '클러치 보호 시스템으로 전·후진 급전환 시 미션 손상 원천 방지'
     ],
@@ -784,7 +781,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
     serviceWeightKg: 4050,
     powerSpecDetail: '48V / 565Ah~730Ah 도요타 고효율 배터리 시스템 (리튬이온 옵션 지원)',
     motorOrEngineDetail: '도요타 자체설계 IPM 교류모터 + 회생제동 에너지 회수 시스템',
-    chargerOrFuelDetail: '도요타 스마트 충전기 · 과충전 방지 및 이퀄라이징 균등충전 지원',
+    chargerOrFuelDetail: '도요타 충전기 · 과충전 방지 및 이퀄라이징 균등충전 지원',
     tireSpecFrontRear: '전륜 21×8-9 / 후륜 16×6-8 솔리드 타이어',
     brakeType: '전자제어 회생제동 + 방수형 브레이크',
     waterproofRating: 'IPX4 동급 최고 수준 방수 인증 (우천 야외 상하차 가능)',

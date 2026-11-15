@@ -1,26 +1,13 @@
-import { StrictMode, Suspense } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
-import { initializeHindsightTracker } from './utils/hindsightTracker'
-import { AppProvider } from './context/AppContext.tsx'
-import { TradeProvider } from './context/TradeContext.tsx'
-import { ErrorBoundary } from './components/ErrorBoundary.tsx'
-import { initClientSecurityDefense } from './utils/clientSecurityDefense'
+import React, { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App';
 
-//  역공학 방어: 프로덕션 콘솔 소탕, 개발자 도구 변조 및 우클릭/단축키 방어 활성화
-initClientSecurityDefense();
-
-// [System Optimization] Global Unhandled Promise Rejection Handler
-// 비동기 프로세스(fire-and-forget DB 호출 등)가 실패 시 브라우저 기본 alert로 화면이 차단되는 현상을 방지하고 콘솔에 기록합니다.
 window.addEventListener('unhandledrejection', (event) => {
   console.warn('Unhandled Promise Rejection:', event.reason);
   event.preventDefault();
 });
 
-initializeHindsightTracker();
-
-//  브라우저 주소창 임시 캐시무효화 파라미터 자동 정리 (히스토리 오염 방지)
 try {
   if (typeof window !== 'undefined' && window.location.search) {
     const url = new URL(window.location.href);
@@ -34,19 +21,83 @@ try {
       changed = true;
     }
     if (changed) {
-      const cleanPath = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
+      const cleanPath =
+        url.pathname +
+        (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') +
+        url.hash;
       window.history.replaceState(window.history.state, document.title, cleanPath);
     }
   }
-} catch (e) {
-  // Silent ignore
+} catch {
+  // URL 파라미터 정리 예외 무시
 }
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  message: string;
+}
+
+class RootErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+
+  static getDerivedStateFromError(err: Error): ErrorBoundaryState {
+    return { hasError: true, message: err?.message || '알 수 없는 화면 오류' };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            backgroundColor: 'var(--bg-app)',
+            color: 'var(--text-main)',
+            padding: '24px',
+          }}
+        >
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--danger)' }}>
+            화면 처리 중 오류가 발생했습니다
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            {this.state.message}
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--primary)',
+              color: '#ffffff',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            새로고침
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary fallbackTitle="시스템 일시 오류 복구">
-      <AppProvider>
-        <TradeProvider><Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#090d16', color: '#94a3b8' }}>시스템 로딩 중...</div>}><App /></Suspense></TradeProvider>
-      </AppProvider>
-    </ErrorBoundary>
-  </StrictMode>,
-)
+    <RootErrorBoundary>
+      <App />
+    </RootErrorBoundary>
+  </StrictMode>
+);
