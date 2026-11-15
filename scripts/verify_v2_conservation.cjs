@@ -117,6 +117,8 @@ async function main() {
     contractLineIds: [],
     fulfillmentIds: [],
     approvalIds: [],
+    hrDeptIds: [],
+    hrUserIds: [],
   };
 
   let preCounts = {};
@@ -125,6 +127,7 @@ async function main() {
     const domainEngine = await viteServer.ssrLoadModule('/src/services/domainEngine.ts');
     const fsEngine = await viteServer.ssrLoadModule('/src/services/financialStatementEngine.ts');
     const supabaseMod = await viteServer.ssrLoadModule('/src/core/supabase.ts');
+    const cryptoVault = await viteServer.ssrLoadModule('/src/utils/cryptoVault.ts');
 
     const {
       confirmPurchaseInbound,
@@ -136,6 +139,10 @@ async function main() {
       completeFulfillment,
       executeRentalExchange,
       calculateRentalProRataForMonth,
+      saveDepartment,
+      createEmployeeUser,
+      updateEmployeeHrRecord,
+      adminResetUserPassword,
     } = domainEngine;
     const { generateFinancialStatements } = fsEngine;
     const { DEFAULT_TENANT_ID, flSupabase, snakeToCamelRow, camelToSnakeRow, newId } = supabaseMod;
@@ -552,6 +559,84 @@ async function main() {
     console.log('[WTT 6 PASS] 7-tier approval workflow (Tier 2 PENDING -> Tier 4 APPROVED) verified.');
 
     // =========================================================================
+    // Test 8: Org & HR Lifecycle (Dept, Hire, Password Reset, Move, Retire, History)
+    // =========================================================================
+    assert(Object.keys(preCounts).length >= 30, `Expected 30 fl_* tables, got ${Object.keys(preCounts).length}`);
+    const testDept = await saveDepartment({
+      name: `WTT임시부서_${Date.now()}`,
+      parentDepartmentId: 'DEPT-0000001',
+      functionalTags: ['경영관리', '재무회계'],
+      sortOrder: 99,
+      memo: 'WTT 검증용 임시 부서',
+    });
+    tracked.hrDeptIds.push(testDept.id);
+
+    const wttLoginId = `wtt_hr_${Date.now()}`;
+    const testHrUser = await createEmployeeUser({
+      loginId: wttLoginId,
+      initialPassword: 'InitPass!1',
+      name: 'WTT사원',
+      employeeNo: `EMP-WTT-${String(Date.now()).slice(-4)}`,
+      departmentId: testDept.id,
+      position: '주임',
+      duty: '전산검증',
+      tierLevel: 2,
+      joinDate: '2026-11-01',
+      phone: '010-1234-9999',
+      baseSalaryKrw: 3500000,
+      payrollBankName: '기업은행',
+      payrollAccountNo: '010-9999-1111',
+      actor: { id: 'u-1', name: '개발자' },
+    });
+    tracked.hrUserIds.push(testHrUser.id);
+
+    const hrRow1 = (await pgClient.query('SELECT * FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
+    assert(cryptoVault.verifyPassword('InitPass!1', hrRow1.password_hash), 'Initial password must verify');
+    assert.strictEqual(Number(hrRow1.base_salary_krw), 3500000, 'Salary must persist');
+
+    await adminResetUserPassword({
+      targetUser: testHrUser,
+      newPassword: 'ResetPass!2',
+      actor: { id: 'u-1', name: '개발자' },
+      reason: 'WTT 비밀번호 초기화 검증',
+    });
+    const hrRow2 = (await pgClient.query('SELECT * FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
+    assert(!cryptoVault.verifyPassword('InitPass!1', hrRow2.password_hash), 'Old password must fail after reset');
+    assert(cryptoVault.verifyPassword('ResetPass!2', hrRow2.password_hash), 'New reset password must verify');
+
+    await updateEmployeeHrRecord({
+      prevUser: testHrUser,
+      patch: { departmentId: 'DEPT-0000003', tierLevel: 3, position: '대리' },
+      deptNameMap: { [testDept.id]: testDept.name, 'DEPT-0000003': '영업부' },
+      effectiveDate: '2026-11-10',
+      reason: 'WTT 부서이동 및 승진 발령',
+      actor: { id: 'u-1', name: '개발자' },
+    });
+
+    await updateEmployeeHrRecord({
+      prevUser: { ...testHrUser, departmentId: 'DEPT-0000003', tierLevel: 3, position: '대리' },
+      patch: { status: 'RETIRED', retireDate: '2026-11-15' },
+      deptNameMap: { 'DEPT-0000003': '영업부' },
+      effectiveDate: '2026-11-15',
+      reason: 'WTT 퇴사 처리 검증',
+      actor: { id: 'u-1', name: '개발자' },
+    });
+
+    const hrRow3 = (await pgClient.query('SELECT status, is_active, retire_date, tier_level, department_id FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
+    assert.strictEqual(hrRow3.status, 'RETIRED');
+    assert.strictEqual(hrRow3.is_active, false);
+    assert.strictEqual(hrRow3.retire_date, '2026-11-15');
+    assert.strictEqual(hrRow3.tier_level, 3);
+    assert.strictEqual(hrRow3.department_id, 'DEPT-0000003');
+
+    const histRows = (await pgClient.query('SELECT event_type FROM public.fl_hr_histories WHERE user_id = $1 ORDER BY created_at', [testHrUser.id])).rows;
+    const histTypes = histRows.map((r) => r.event_type);
+    for (const reqEv of ['입사등록', '비밀번호초기화', '부서이동', '직책변경', '티어변경', '퇴사처리']) {
+      assert(histTypes.includes(reqEv), `Missing HR history event_type=${reqEv}, got ${histTypes.join(',')}`);
+    }
+    console.log(`[WTT 8 PASS] Org & HR lifecycle (${histTypes.length} audit history events + password reset + retirement) verified.`);
+
+    // =========================================================================
     // Test 7: Balanced Financial Statements (with WTT mutations active)
     // =========================================================================
     const dsActive = await loadFinancialDataset(flSupabase, snakeToCamelRow);
@@ -583,6 +668,9 @@ async function main() {
 
     try {
       await safeDel(`DELETE FROM public.fl_approval_requests WHERE id = ANY($1)`, tracked.approvalIds);
+      await safeDel(`DELETE FROM public.fl_hr_histories WHERE user_id = ANY($1)`, tracked.hrUserIds);
+      await safeDel(`DELETE FROM public.fl_users WHERE id = ANY($1)`, tracked.hrUserIds);
+      await safeDel(`DELETE FROM public.fl_departments WHERE id = ANY($1)`, tracked.hrDeptIds);
       await safeDel(`DELETE FROM public.fl_asset_events WHERE unit_id = ANY($1)`, tracked.unitIds);
       await safeDel(`DELETE FROM public.fl_asset_events WHERE contract_id = ANY($1)`, tracked.contractIds);
       await safeDel(`DELETE FROM public.fl_stock_movements WHERE unit_id = ANY($1)`, tracked.unitIds);

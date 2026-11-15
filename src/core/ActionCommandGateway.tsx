@@ -26,6 +26,7 @@ import {
   recordTradeAftercare,
   settleApPayable,
   calculateRentalProRataForMonth,
+  updateEmployeeHrRecord,
 } from '../services/domainEngine';
 
 export function useActionGateway() {
@@ -390,6 +391,24 @@ export async function executeApprovedPayload(
           })
           .eq('id', String(p.policyId || req.targetId))
       );
+      return;
+    }
+
+    case 'HR_APPOINTMENT': {
+      const targetUser = datasets.users.find((u) => u.id === String(p.userId || req.targetId));
+      if (!targetUser) throw new Error('인사 발령 대상 임직원을 찾을 수 없습니다.');
+      const deptNameMap: Record<string, string> = {};
+      datasets.departments.forEach((d) => {
+        deptNameMap[d.id] = d.name;
+      });
+      await updateEmployeeHrRecord({
+        prevUser: targetUser,
+        patch: (p.patch as Record<string, unknown>) || {},
+        deptNameMap,
+        effectiveDate: p.effectiveDate ? String(p.effectiveDate) : undefined,
+        reason: p.reason ? String(p.reason) : undefined,
+        actor: { id: approver.id, name: approver.name },
+      });
       return;
     }
 

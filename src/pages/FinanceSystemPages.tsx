@@ -1472,6 +1472,7 @@ export const SystemSettingsPage: React.FC = () => {
     notifyToast,
     updateTenantConfig,
     canEditPage,
+    navigateTo,
   } = useAppShell();
   const canEdit = canEditPage('system_settings');
 
@@ -1814,9 +1815,27 @@ export const SystemSettingsPage: React.FC = () => {
 
               <DataGrid
                 columns={[
-                  { key: 'loginId', header: '아이디', width: 120, render: (u) => u.loginId },
-                  { key: 'name', header: '성명', width: 110, render: (u) => <span style={{ fontWeight: 700 }}>{u.name}</span> },
-                  { key: 'pos', header: '직책', width: 110, render: (u) => u.position || '-' },
+                  {
+                    key: 'hrLink',
+                    header: '인사카드',
+                    width: 90,
+                    align: 'center',
+                    stickyLeft: true,
+                    render: () => (
+                      <button
+                        type="button"
+                        onClick={() => navigateTo('organization_hr')}
+                        style={actionBtnStyle('secondary', true)}
+                      >
+                        인사 관리
+                      </button>
+                    ),
+                  },
+                  { key: 'employeeNo', header: '사번', width: 96, render: (u) => u.employeeNo || '-' },
+                  { key: 'loginId', header: '아이디', width: 110, render: (u) => u.loginId },
+                  { key: 'name', header: '성명', width: 100, render: (u) => <span style={{ fontWeight: 700 }}>{u.name}</span> },
+                  { key: 'dept', header: '소속 부서', width: 110, render: (u) => u.departmentName || '미배정' },
+                  { key: 'pos', header: '직책', width: 100, render: (u) => u.position || '-' },
                   {
                     key: 'tier',
                     header: '7단계 티어 지정',

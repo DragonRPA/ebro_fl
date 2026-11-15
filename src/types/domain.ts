@@ -36,6 +36,7 @@ export type FlPageId =
   | 'ap_settlements'
   | 'bank_matching'
   | 'financial_statements'
+  | 'organization_hr'
   | 'operation_manual'
   | 'system_settings';
 
@@ -102,6 +103,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'ap_settlements', label: '매입 비용 정산', shortDesc: '매입채무 · 물류비 · 외주비 · 리스이자 정산' },
       { pageId: 'bank_matching', label: '통장 입출금 대사', shortDesc: '통장 거래내역과 청구 · 채무 대사' },
       { pageId: 'financial_statements', label: '재무제표 조회', shortDesc: '재무상태표 · 손익계산서 · 리스명세 · 회계기준' },
+      { pageId: 'organization_hr', label: '조직 인사 관리', shortDesc: '부서 조직도 · 임직원 인사원장 · 발령 이력' },
       { pageId: 'operation_manual', label: '업무 매뉴얼', shortDesc: '화면별 기본기능 · 조작순서 검색' },
       { pageId: 'system_settings', label: '시스템 설정', shortDesc: '7단계 티어 · 결재선 · 양식 · 문서발송 설정' },
     ],
@@ -167,13 +169,56 @@ export interface TenantProfile {
   features: TenantFeatures;
 }
 
+export type EmploymentStatus = 'ACTIVE' | 'LEAVE_OF_ABSENCE' | 'RETIRED';
+
+export const EMPLOYMENT_STATUS_LABELS: Record<EmploymentStatus, string> = {
+  ACTIVE: '재직',
+  LEAVE_OF_ABSENCE: '휴직',
+  RETIRED: '퇴사',
+};
+
+export type DepartmentFuncTag =
+  | '경영관리'
+  | '영업'
+  | '유통출고'
+  | '렌탈자산'
+  | '정비'
+  | '물류'
+  | '재무회계';
+
+export const ALL_DEPARTMENT_FUNC_TAGS: DepartmentFuncTag[] = [
+  '경영관리',
+  '영업',
+  '유통출고',
+  '렌탈자산',
+  '정비',
+  '물류',
+  '재무회계',
+];
+
+export type HrEventType =
+  | '입사등록'
+  | '부서이동'
+  | '직책변경'
+  | '티어변경'
+  | '급여변경'
+  | '휴직처리'
+  | '복직처리'
+  | '퇴사처리'
+  | '비밀번호변경'
+  | '비밀번호초기화'
+  | '인사정보수정';
+
 export interface FlDepartment {
   id: string;
   tenantId: string;
   name: string;
   parentDepartmentId?: string | null;
   managerId?: string | null;
+  managerName?: string;
   functionalTags: string[];
+  sortOrder: number;
+  memo?: string | null;
   isActive: boolean;
 }
 
@@ -183,6 +228,7 @@ export interface FlUser {
   loginId: string;
   passwordHash: string;
   name: string;
+  employeeNo?: string | null;
   departmentId?: string | null;
   departmentName?: string;
   position?: string | null;
@@ -191,8 +237,31 @@ export interface FlUser {
   maskSalesPrice: boolean;
   phone?: string | null;
   email?: string | null;
+  birthDate?: string | null;
+  joinDate?: string | null;
+  retireDate?: string | null;
+  address?: string | null;
+  emergencyContact?: string | null;
+  baseSalaryKrw: number;
+  payrollBankName?: string | null;
+  payrollAccountNo?: string | null;
+  memo?: string | null;
   status: string;
   isActive: boolean;
+}
+
+export interface FlHrHistory {
+  id: string;
+  tenantId: string;
+  userId: string;
+  eventType: HrEventType | string;
+  effectiveDate: string;
+  prevSummary?: string | null;
+  nextSummary?: string | null;
+  reason?: string | null;
+  actorId?: string | null;
+  actorName?: string | null;
+  createdAt?: string;
 }
 
 export interface FlUserPermission {
@@ -218,7 +287,8 @@ export type ApprovalActionCode =
   | 'BILLING_CREATE'
   | 'AP_SETTLEMENT_PAY'
   | 'ASSET_DISPOSAL'
-  | 'POLICY_CONFIG_SAVE';
+  | 'POLICY_CONFIG_SAVE'
+  | 'HR_APPOINTMENT';
 
 export interface FlApprovalPolicy {
   id: string;

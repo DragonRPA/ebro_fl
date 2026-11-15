@@ -5,6 +5,7 @@ import {
   flSupabase,
   newId,
 } from '../core/supabase';
+import { hashPassword } from '../utils/cryptoVault';
 import type {
   CurrencyCode,
   FlApPayable,
@@ -14,6 +15,7 @@ import type {
   FlCollection,
   FlContract,
   FlContractLine,
+  FlDepartment,
   FlFinanceLease,
   FlFinanceLeaseSchedule,
   FlFulfillment,
@@ -25,8 +27,11 @@ import type {
   FlRentalMaintenance,
   FlStockMovement,
   FlTradeAftercareCase,
+  FlUser,
+  HrEventType,
   ItemCategory,
   ManagementType,
+  TierLevel,
 } from '../types/domain';
 
 export function addDaysIso(dateIso: string, days: number): string {
@@ -1620,4 +1625,379 @@ export async function recordLogisticsDispatch(params: {
   );
 
   return { dispatch, payable };
+}
+
+
+// ============================================================================
+// 11. 조직 및 인사 원장 관리
+// ============================================================================
+
+export interface SaveDepartmentInput {
+  id?: string;
+  name: string;
+  parentDepartmentId?: string | null;
+  managerId?: string | null;
+  functionalTags: string[];
+  sortOrder?: number;
+  memo?: string | null;
+  isActive?: boolean;
+}
+
+export async function saveDepartment(input: SaveDepartmentInput): Promise<FlDepartment> {
+  const cleanName = input.name.trim();
+  if (!cleanName) throw new Error('부서명을 입력하십시오.');
+  if (input.id && input.parentDepartmentId === input.id) {
+    throw new Error('자기 자신을 상위 부서로 지정할 수 없습니다.');
+  }
+
+  const now = new Date().toISOString();
+  const isNew = !input.id;
+  const id = input.id || newId('DEPT');
+  const dept: FlDepartment = {
+    id,
+    tenantId: DEFAULT_TENANT_ID,
+    name: cleanName,
+    parentDepartmentId: input.parentDepartmentId || null,
+    managerId: input.managerId || null,
+    functionalTags: Array.isArray(input.functionalTags) ? input.functionalTags : [],
+    sortOrder: Number.isFinite(Number(input.sortOrder)) ? Number(input.sortOrder) : 100,
+    memo: input.memo?.trim() || null,
+    isActive: input.isActive !== false,
+  };
+
+  if (isNew) {
+    await execDbMutation('부서 등록', () =>
+      flSupabase.from('departments').insert({
+        ...camelToSnakeRow({
+          ...dept,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      })
+    );
+  } else {
+    await execDbMutation('부서 정보 수정', () =>
+      flSupabase
+        .from('departments')
+        .update({
+          name: dept.name,
+          parent_department_id: dept.parentDepartmentId,
+          manager_id: dept.managerId,
+          functional_tags: dept.functionalTags,
+          sort_order: dept.sortOrder,
+          memo: dept.memo,
+          is_active: dept.isActive,
+          updated_at: now,
+        })
+        .eq('id', dept.id)
+    );
+  }
+
+  return dept;
+}
+
+export interface CreateEmployeeUserInput {
+  loginId: string;
+  initialPassword: string;
+  name: string;
+  employeeNo?: string | null;
+  departmentId?: string | null;
+  position?: string | null;
+  duty?: string | null;
+  tierLevel: TierLevel;
+  maskSalesPrice?: boolean;
+  phone?: string | null;
+  email?: string | null;
+  birthDate?: string | null;
+  joinDate?: string | null;
+  address?: string | null;
+  emergencyContact?: string | null;
+  baseSalaryKrw?: number;
+  payrollBankName?: string | null;
+  payrollAccountNo?: string | null;
+  memo?: string | null;
+  status?: string;
+  actor: { id: string; name: string };
+}
+
+export async function createEmployeeUser(input: CreateEmployeeUserInput): Promise<FlUser> {
+  const loginId = input.loginId.trim();
+  const name = input.name.trim();
+  if (!loginId) throw new Error('로그인 아이디를 입력하십시오.');
+  if (!name) throw new Error('성명을 입력하십시오.');
+  if (!input.initialPassword || input.initialPassword.trim().length < 4) {
+    throw new Error('초기 비밀번호는 4자 이상이어야 합니다.');
+  }
+
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10);
+  const status = input.status || 'ACTIVE';
+  const employeeNo =
+    (input.employeeNo || '').trim() || `EMP-${Date.now().toString().slice(-6)}`;
+  const id = newId('USR');
+  const passwordHash = hashPassword(input.initialPassword.trim());
+
+  const user: FlUser = {
+    id,
+    tenantId: DEFAULT_TENANT_ID,
+    loginId,
+    passwordHash,
+    name,
+    employeeNo,
+    departmentId: input.departmentId || null,
+    position: input.position?.trim() || '사원',
+    duty: input.duty?.trim() || null,
+    tierLevel: input.tierLevel,
+    maskSalesPrice: Boolean(input.maskSalesPrice),
+    phone: input.phone?.trim() || null,
+    email: input.email?.trim() || null,
+    birthDate: input.birthDate?.trim() || null,
+    joinDate: input.joinDate?.trim() || today,
+    retireDate: null,
+    address: input.address?.trim() || null,
+    emergencyContact: input.emergencyContact?.trim() || null,
+    baseSalaryKrw: Math.max(0, Math.round(Number(input.baseSalaryKrw || 0))),
+    payrollBankName: input.payrollBankName?.trim() || null,
+    payrollAccountNo: input.payrollAccountNo?.trim() || null,
+    memo: input.memo?.trim() || null,
+    status,
+    isActive: status !== 'RETIRED',
+  };
+
+  await execDbMutation('임직원 신규 등록', () =>
+    flSupabase.from('users').insert({
+      ...camelToSnakeRow({
+        ...user,
+        createdAt: now,
+        updatedAt: now,
+      }),
+    })
+  );
+
+  await execDbMutation('입사 이력 기록', () =>
+    flSupabase.from('hr_histories').insert(
+      camelToSnakeRow({
+        id: newId('HRH'),
+        tenantId: DEFAULT_TENANT_ID,
+        userId: user.id,
+        eventType: '입사등록',
+        effectiveDate: user.joinDate || today,
+        prevSummary: null,
+        nextSummary: `${employeeNo} · ${user.name} · ${user.position || '사원'} · ${user.tierLevel}단계`,
+        reason: '신규 임직원 입사 등록',
+        actorId: input.actor.id,
+        actorName: input.actor.name,
+        createdAt: now,
+      })
+    )
+  );
+
+  return user;
+}
+
+export interface UpdateEmployeeHrInput {
+  prevUser: FlUser;
+  patch: {
+    name?: string;
+    employeeNo?: string | null;
+    departmentId?: string | null;
+    position?: string | null;
+    duty?: string | null;
+    tierLevel?: TierLevel;
+    maskSalesPrice?: boolean;
+    phone?: string | null;
+    email?: string | null;
+    birthDate?: string | null;
+    joinDate?: string | null;
+    retireDate?: string | null;
+    address?: string | null;
+    emergencyContact?: string | null;
+    baseSalaryKrw?: number;
+    payrollBankName?: string | null;
+    payrollAccountNo?: string | null;
+    memo?: string | null;
+    status?: string;
+  };
+  deptNameMap?: Record<string, string>;
+  effectiveDate?: string;
+  reason?: string;
+  actor: { id: string; name: string };
+}
+
+export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Promise<void> {
+  const { prevUser, patch, deptNameMap = {}, actor } = input;
+  const now = new Date().toISOString();
+  const effectiveDate = (input.effectiveDate || '').trim() || now.slice(0, 10);
+
+  const nextName = patch.name !== undefined ? patch.name.trim() : prevUser.name;
+  if (!nextName) throw new Error('성명을 입력하십시오.');
+
+  const nextDeptId =
+    patch.departmentId !== undefined ? patch.departmentId || null : prevUser.departmentId || null;
+  const nextPosition =
+    patch.position !== undefined ? patch.position?.trim() || null : prevUser.position || null;
+  const nextDuty = patch.duty !== undefined ? patch.duty?.trim() || null : prevUser.duty || null;
+  const nextTier = patch.tierLevel !== undefined ? patch.tierLevel : prevUser.tierLevel;
+  const nextStatus = patch.status !== undefined ? patch.status : prevUser.status;
+  const nextIsActive = nextStatus !== 'RETIRED';
+  const nextSalary =
+    patch.baseSalaryKrw !== undefined
+      ? Math.max(0, Math.round(Number(patch.baseSalaryKrw || 0)))
+      : prevUser.baseSalaryKrw;
+
+  let nextRetireDate =
+    patch.retireDate !== undefined ? patch.retireDate?.trim() || null : prevUser.retireDate || null;
+  if (nextStatus === 'RETIRED' && !nextRetireDate) {
+    nextRetireDate = effectiveDate;
+  } else if (nextStatus === 'ACTIVE') {
+    nextRetireDate = null;
+  }
+
+  const updateRow = {
+    name: nextName,
+    employee_no:
+      patch.employeeNo !== undefined
+        ? patch.employeeNo?.trim() || null
+        : prevUser.employeeNo || null,
+    department_id: nextDeptId,
+    position: nextPosition,
+    duty: nextDuty,
+    tier_level: nextTier,
+    mask_sales_price:
+      patch.maskSalesPrice !== undefined ? Boolean(patch.maskSalesPrice) : prevUser.maskSalesPrice,
+    phone: patch.phone !== undefined ? patch.phone?.trim() || null : prevUser.phone || null,
+    email: patch.email !== undefined ? patch.email?.trim() || null : prevUser.email || null,
+    birth_date:
+      patch.birthDate !== undefined ? patch.birthDate?.trim() || null : prevUser.birthDate || null,
+    join_date:
+      patch.joinDate !== undefined ? patch.joinDate?.trim() || null : prevUser.joinDate || null,
+    retire_date: nextRetireDate,
+    address:
+      patch.address !== undefined ? patch.address?.trim() || null : prevUser.address || null,
+    emergency_contact:
+      patch.emergencyContact !== undefined
+        ? patch.emergencyContact?.trim() || null
+        : prevUser.emergencyContact || null,
+    base_salary_krw: nextSalary,
+    payroll_bank_name:
+      patch.payrollBankName !== undefined
+        ? patch.payrollBankName?.trim() || null
+        : prevUser.payrollBankName || null,
+    payroll_account_no:
+      patch.payrollAccountNo !== undefined
+        ? patch.payrollAccountNo?.trim() || null
+        : prevUser.payrollAccountNo || null,
+    memo: patch.memo !== undefined ? patch.memo?.trim() || null : prevUser.memo || null,
+    status: nextStatus,
+    is_active: nextIsActive,
+    updated_at: now,
+  };
+
+  await execDbMutation('임직원 인사원장 수정', () =>
+    flSupabase.from('users').update(updateRow).eq('id', prevUser.id)
+  );
+
+  const historyRows: Record<string, unknown>[] = [];
+  const pushHistory = (
+    eventType: HrEventType,
+    prevSummary: string | null,
+    nextSummary: string | null
+  ) => {
+    historyRows.push(
+      camelToSnakeRow({
+        id: newId('HRH'),
+        tenantId: DEFAULT_TENANT_ID,
+        userId: prevUser.id,
+        eventType,
+        effectiveDate,
+        prevSummary,
+        nextSummary,
+        reason: input.reason?.trim() || '인사원장 변경 반영',
+        actorId: actor.id,
+        actorName: actor.name,
+        createdAt: now,
+      })
+    );
+  };
+
+  if ((prevUser.departmentId || null) !== nextDeptId) {
+    const prevDeptLabel =
+      (prevUser.departmentId ? deptNameMap[prevUser.departmentId] : '') ||
+      prevUser.departmentName ||
+      '미배정';
+    const nextDeptLabel = (nextDeptId ? deptNameMap[nextDeptId] : '') || '미배정';
+    pushHistory('부서이동', prevDeptLabel, nextDeptLabel);
+  }
+  if ((prevUser.position || null) !== nextPosition) {
+    pushHistory('직책변경', prevUser.position || '-', nextPosition || '-');
+  }
+  if (prevUser.tierLevel !== nextTier) {
+    pushHistory('티어변경', `${prevUser.tierLevel}단계`, `${nextTier}단계`);
+  }
+  if (Number(prevUser.baseSalaryKrw || 0) !== nextSalary) {
+    pushHistory(
+      '급여변경',
+      `₩${Math.round(Number(prevUser.baseSalaryKrw || 0)).toLocaleString('ko-KR')}`,
+      `₩${nextSalary.toLocaleString('ko-KR')}`
+    );
+  }
+  if (prevUser.status !== nextStatus) {
+    const ev: HrEventType =
+      nextStatus === 'RETIRED'
+        ? '퇴사처리'
+        : nextStatus === 'LEAVE_OF_ABSENCE'
+          ? '휴직처리'
+          : '복직처리';
+    pushHistory(ev, prevUser.status, nextStatus);
+  }
+  if (historyRows.length === 0) {
+    pushHistory(
+      '인사정보수정',
+      `${prevUser.name} · ${prevUser.employeeNo || '-'}`,
+      `${nextName} · ${updateRow.employee_no || '-'}`
+    );
+  }
+
+  await execDbMutation('인사 이력 기록', () =>
+    flSupabase.from('hr_histories').insert(historyRows)
+  );
+}
+
+export async function adminResetUserPassword(params: {
+  targetUser: FlUser;
+  newPassword: string;
+  actor: { id: string; name: string };
+  reason?: string;
+}): Promise<void> {
+  const cleanPw = params.newPassword.trim();
+  if (cleanPw.length < 4) {
+    throw new Error('초기화할 비밀번호는 4자 이상이어야 합니다.');
+  }
+  const now = new Date().toISOString();
+  const passwordHash = hashPassword(cleanPw);
+
+  await execDbMutation('비밀번호 초기화', () =>
+    flSupabase
+      .from('users')
+      .update({ password_hash: passwordHash, updated_at: now })
+      .eq('id', params.targetUser.id)
+  );
+
+  await execDbMutation('비밀번호 초기화 이력 기록', () =>
+    flSupabase.from('hr_histories').insert(
+      camelToSnakeRow({
+        id: newId('HRH'),
+        tenantId: DEFAULT_TENANT_ID,
+        userId: params.targetUser.id,
+        eventType: '비밀번호초기화',
+        effectiveDate: now.slice(0, 10),
+        prevSummary: '기존 비밀번호',
+        nextSummary: '관리자 임시 비밀번호 발급',
+        reason: params.reason?.trim() || '관리자 비밀번호 초기화',
+        actorId: params.actor.id,
+        actorName: params.actor.name,
+        createdAt: now,
+      })
+    )
+  );
 }

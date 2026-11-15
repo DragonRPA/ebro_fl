@@ -1,24 +1,47 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 
+const SAVED_LOGIN_ID_KEY = 'ebro_fl_saved_login_id';
+
+function readSavedLoginId(): string {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage.getItem(SAVED_LOGIN_ID_KEY) || '' : '';
+  } catch {
+    return '';
+  }
+}
+
 export const LoginView: React.FC = () => {
   const { tenantProfile, loginWithCredentials } = useAppShell();
-  const [loginId, setLoginId] = useState('');
+  const initialSavedId = readSavedLoginId();
+  const [loginId, setLoginId] = useState(initialSavedId);
+  const [rememberId, setRememberId] = useState(Boolean(initialSavedId));
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginId.trim() || !password) {
-      setErrorMsg('아이디와 비밀번호를 입력해 주세요.');
+      setErrorMsg('아이디 또는 사번과 비밀번호를 입력하십시오.');
       return;
     }
     setBusy(true);
     setErrorMsg(null);
     try {
       await loginWithCredentials(loginId.trim(), password);
+      try {
+        if (rememberId) {
+          window.localStorage.setItem(SAVED_LOGIN_ID_KEY, loginId.trim());
+        } else {
+          window.localStorage.removeItem(SAVED_LOGIN_ID_KEY);
+        }
+      } catch {
+        // 무시
+      }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     } finally {
@@ -81,7 +104,7 @@ export const LoginView: React.FC = () => {
           </h1>
         </div>
 
-        <VerticalField label="아이디" required>
+        <VerticalField label="아이디 또는 사번" required>
           <input
             type="text"
             value={loginId}
@@ -93,15 +116,61 @@ export const LoginView: React.FC = () => {
         </VerticalField>
 
         <VerticalField label="비밀번호" required>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            placeholder="비밀번호 입력"
-            style={controlInputStyle}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="비밀번호 입력"
+              style={{ ...controlInputStyle, paddingRight: '72px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? '비밀번호 숨김' : '비밀번호 표시'}
+              style={{
+                position: 'absolute',
+                right: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-secondary)',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+              {showPassword ? '숨김' : '표시'}
+            </button>
+          </div>
         </VerticalField>
+
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={rememberId}
+            onChange={(e) => setRememberId(e.target.checked)}
+          />
+          아이디 저장
+        </label>
 
         {errorMsg && (
           <div

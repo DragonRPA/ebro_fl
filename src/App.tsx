@@ -34,6 +34,7 @@ import {
   OperationManualPage,
   SystemSettingsPage,
 } from './pages/FinanceSystemPages';
+import { OrganizationHrPage } from './pages/OrganizationHrPages';
 import type { FlPageId } from './types/domain';
 
 function renderActivePage(pageId: FlPageId): React.ReactNode {
@@ -82,6 +83,8 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
       return <BankMatchingPage />;
     case 'financial_statements':
       return <FinancialStatementsPage />;
+    case 'organization_hr':
+      return <OrganizationHrPage />;
     case 'operation_manual':
       return <OperationManualPage />;
     case 'system_settings':

@@ -5,11 +5,13 @@ import {
   centralSupabase,
   execDbMutation,
   flSupabase,
+  newId,
   registerErrorModalHandler,
   snakeToCamelRow,
 } from './supabase';
 import {
   getVaultItem,
+  hashPassword,
   safeLocalStorageSet,
   setVaultItem,
   signSessionUser,
@@ -37,6 +39,7 @@ import {
   type FlFinanceLease,
   type FlFinanceLeaseSchedule,
   type FlFulfillment,
+  type FlHrHistory,
   type FlInventoryUnit,
   type FlItemMaster,
   type FlLogisticsDispatch,
@@ -95,6 +98,7 @@ export interface FlDatasets {
   bankTransactions: FlBankTransaction[];
   financeLeases: FlFinanceLease[];
   financeLeaseSchedules: FlFinanceLeaseSchedule[];
+  hrHistories: FlHrHistory[];
 }
 
 const EMPTY_DATASETS: FlDatasets = {
@@ -127,6 +131,7 @@ const EMPTY_DATASETS: FlDatasets = {
   bankTransactions: [],
   financeLeases: [],
   financeLeaseSchedules: [],
+  hrHistories: [],
 };
 
 const DEFAULT_TENANT_PROFILE: TenantProfile = {
@@ -196,6 +201,13 @@ export interface AppShellContextValue {
   formatMoney: (amount: number | null | undefined, options?: { salesSensitive?: boolean }) => string;
   tierLabel: (tier?: TierLevel) => string;
   updateTenantConfig: (patch: Partial<TenantProfile>) => Promise<void>;
+  changeOwnPassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateOwnContactInfo: (patch: {
+    phone?: string;
+    email?: string;
+    address?: string;
+    emergencyContact?: string;
+  }) => Promise<void>;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -339,18 +351,34 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       flSupabase.from('finance_leases').select('*').order('start_date', { ascending: false }),
       flSupabase.from('finance_lease_schedules').select('*').order('installment_no'),
     ]);
+    const hrHistRes = await flSupabase
+      .from('hr_histories')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    const depts = mapRows<FlDepartment>(deptRes.data);
-    const deptNameMap = new Map(depts.map((d) => [d.id, d.name]));
+    const hrHistories = mapRows<FlHrHistory>(hrHistRes.data);
+    const rawDepts = mapRows<FlDepartment>(deptRes.data, ['sortOrder']);
+    const deptNameMap = new Map(rawDepts.map((d) => [d.id, d.name]));
 
-    const users = mapRows<FlUser>(usrRes.data, ['tierLevel']).map((u) => ({
+    const users = mapRows<FlUser>(usrRes.data, ['tierLevel', 'baseSalaryKrw']).map((u) => ({
       ...u,
       tierLevel: Math.min(7, Math.max(1, Number(u.tierLevel || 1))) as TierLevel,
+      baseSalaryKrw: Number(u.baseSalaryKrw || 0),
       departmentName: u.departmentId ? deptNameMap.get(u.departmentId) || '' : '',
     }));
+    const userNameMap = new Map(users.map((u) => [u.id, u.name]));
+    const depts = rawDepts
+      .map((d) => ({
+        ...d,
+        sortOrder: Number(d.sortOrder ?? 100),
+        functionalTags: Array.isArray(d.functionalTags) ? d.functionalTags : [],
+        managerName: d.managerId ? userNameMap.get(d.managerId) || '' : '',
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
 
     setDatasets({
       departments: depts,
+      hrHistories,
       users,
       userPermissions: mapRows<FlUserPermission>(permRes.data, ['tierLevel']),
       approvalPolicies: mapRows<FlApprovalPolicy>(polRes.data, ['requiredTier']),
@@ -477,7 +505,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (rawSess) {
       const parsed = verifySessionUser<{ id: string }>(rawSess);
       if (parsed) {
-        const fresh = users.find((u) => u.id === parsed.id && u.isActive);
+        const fresh = users.find((u) => u.id === parsed.id && u.isActive && u.status === 'ACTIVE');
         if (fresh) {
           setCurrentUser(fresh);
         } else {
@@ -504,9 +532,23 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loginWithCredentials = useCallback(
     async (loginId: string, password: string) => {
-      const target = datasets.users.find((u) => u.loginId === loginId.trim() && u.isActive);
+      const key = loginId.trim();
+      const target = datasets.users.find(
+        (u) =>
+          u.loginId === key ||
+          (u.employeeNo && u.employeeNo.trim().toUpperCase() === key.toUpperCase())
+      );
       if (!target) {
-        throw new Error('등록되지 않은 사용자 계정이거나 비활성 상태입니다.');
+        throw new Error('등록되지 않은 아이디 또는 사번입니다.');
+      }
+      if (target.status === 'RETIRED') {
+        throw new Error('퇴사 처리된 계정입니다. 인사 관리자에게 문의하십시오.');
+      }
+      if (target.status === 'LEAVE_OF_ABSENCE') {
+        throw new Error('휴직 상태인 계정입니다. 복직 처리 후 로그인하십시오.');
+      }
+      if (!target.isActive) {
+        throw new Error('비활성화된 사용자 계정입니다.');
       }
       const ok = verifyPassword(password, target.passwordHash);
       if (!ok) {
@@ -634,6 +676,79 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [fetchTenantProfile, notifyToast, tenantProfile]
   );
 
+  const changeOwnPassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!currentUser) throw new Error('로그인된 사용자가 없습니다.');
+      if (!verifyPassword(currentPassword, currentUser.passwordHash)) {
+        throw new Error('현재 비밀번호가 일치하지 않습니다.');
+      }
+      const cleanNew = newPassword.trim();
+      if (cleanNew.length < 4) {
+        throw new Error('새 비밀번호는 4자 이상이어야 합니다.');
+      }
+      if (cleanNew === currentPassword) {
+        throw new Error('기존 비밀번호와 다른 새 비밀번호를 입력하십시오.');
+      }
+      const now = new Date().toISOString();
+      const nextHash = hashPassword(cleanNew);
+
+      await execDbMutation('본인 비밀번호 변경', () =>
+        flSupabase
+          .from('users')
+          .update({ password_hash: nextHash, updated_at: now })
+          .eq('id', currentUser.id)
+      );
+
+      await execDbMutation('비밀번호 변경 이력 기록', () =>
+        flSupabase.from('hr_histories').insert(
+          camelToSnakeRow({
+            id: newId('HRH'),
+            tenantId: DEFAULT_TENANT_ID,
+            userId: currentUser.id,
+            eventType: '비밀번호변경',
+            effectiveDate: now.slice(0, 10),
+            prevSummary: '기존 비밀번호',
+            nextSummary: '본인 비밀번호 변경 완료',
+            reason: '임직원 본인 비밀번호 변경',
+            actorId: currentUser.id,
+            actorName: currentUser.name,
+            createdAt: now,
+          })
+        )
+      );
+
+      await refreshAll();
+      notifyToast('비밀번호가 변경되었습니다.', 'success');
+    },
+    [currentUser, notifyToast, refreshAll]
+  );
+
+  const updateOwnContactInfo = useCallback(
+    async (patch: { phone?: string; email?: string; address?: string; emergencyContact?: string }) => {
+      if (!currentUser) throw new Error('로그인된 사용자가 없습니다.');
+      const now = new Date().toISOString();
+      await execDbMutation('개인 연락처 수정', () =>
+        flSupabase
+          .from('users')
+          .update({
+            phone: patch.phone !== undefined ? patch.phone.trim() || null : currentUser.phone || null,
+            email: patch.email !== undefined ? patch.email.trim() || null : currentUser.email || null,
+            address:
+              patch.address !== undefined ? patch.address.trim() || null : currentUser.address || null,
+            emergency_contact:
+              patch.emergencyContact !== undefined
+                ? patch.emergencyContact.trim() || null
+                : currentUser.emergencyContact || null,
+            updated_at: now,
+          })
+          .eq('id', currentUser.id)
+      );
+      await refreshAll();
+      notifyToast('개인 정보가 저장되었습니다.', 'success');
+    },
+    [currentUser, notifyToast, refreshAll]
+  );
+
   const value: AppShellContextValue = {
     isLoading,
     currentUser,
@@ -660,6 +775,8 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     formatMoney,
     tierLabel,
     updateTenantConfig,
+    changeOwnPassword,
+    updateOwnContactInfo,
   };
 
   return <AppShellContext.Provider value={value}>{children}</AppShellContext.Provider>;

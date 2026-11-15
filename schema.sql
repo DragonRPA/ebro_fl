@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS public.fl_departments (
   parent_department_id TEXT,
   manager_id TEXT,
   functional_tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  sort_order INTEGER NOT NULL DEFAULT 100,
+  memo TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -23,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.fl_users (
   login_id TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
+  employee_no TEXT,
   department_id TEXT,
   position TEXT,
   duty TEXT,
@@ -30,11 +33,36 @@ CREATE TABLE IF NOT EXISTS public.fl_users (
   mask_sales_price BOOLEAN NOT NULL DEFAULT false,
   phone TEXT,
   email TEXT,
+  birth_date TEXT,
+  join_date TEXT,
+  retire_date TEXT,
+  address TEXT,
+  emergency_contact TEXT,
+  base_salary_krw NUMERIC(18, 2) NOT NULL DEFAULT 0,
+  payroll_bank_name TEXT,
+  payroll_account_no TEXT,
+  memo TEXT,
   status TEXT NOT NULL DEFAULT 'ACTIVE',
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS public.fl_hr_histories (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
+  user_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  effective_date TEXT NOT NULL,
+  prev_summary TEXT,
+  next_summary TEXT,
+  reason TEXT,
+  actor_id TEXT,
+  actor_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_fl_hr_histories_user ON public.fl_hr_histories(user_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS public.fl_user_permissions (
   id TEXT PRIMARY KEY,
@@ -715,7 +743,7 @@ DECLARE
     'fl_quotations', 'fl_contracts', 'fl_contract_lines', 'fl_fulfillments',
     'fl_trade_aftercare_cases', 'fl_rental_maintenances', 'fl_asset_events',
     'fl_billings', 'fl_collections', 'fl_bank_transactions',
-    'fl_finance_leases', 'fl_finance_lease_schedules'
+    'fl_finance_leases', 'fl_finance_lease_schedules', 'fl_hr_histories'
   ];
 BEGIN
   FOREACH tbl IN ARRAY fl_tables LOOP

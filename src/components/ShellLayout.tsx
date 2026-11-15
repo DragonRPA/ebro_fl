@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { BookOpen, Menu, RefreshCw, Search, Sun, Moon, LogOut } from 'lucide-react';
+import { BookOpen, KeyRound, Menu, RefreshCw, Search, Sun, Moon, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from '../manual/ManualContext';
-import { ModalDialog, StatusBadge, actionBtnStyle } from './UiPrimitives';
+import { EMPLOYMENT_STATUS_LABELS, type EmploymentStatus } from '../types/domain';
+import { ModalDialog, StatusBadge, VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 
 export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -21,11 +22,83 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshAll,
     closeErrorModal,
     tierLabel,
+    changeOwnPassword,
+    updateOwnContactInfo,
   } = useAppShell();
 
   const { overlayOpen, toggleOverlay, setSearchModalOpen, activeEntry } = useManual();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const [myModalOpen, setMyModalOpen] = useState(false);
+  const [myTab, setMyTab] = useState<'INFO' | 'PASSWORD'>('INFO');
+  const [myPhone, setMyPhone] = useState('');
+  const [myEmail, setMyEmail] = useState('');
+  const [myAddress, setMyAddress] = useState('');
+  const [myEmergency, setMyEmergency] = useState('');
+  const [curPassword, setCurPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [myError, setMyError] = useState<string | null>(null);
+  const [myBusy, setMyBusy] = useState(false);
+
+  const openMyModal = () => {
+    if (!currentUser) return;
+    setMyTab('INFO');
+    setMyPhone(currentUser.phone || '');
+    setMyEmail(currentUser.email || '');
+    setMyAddress(currentUser.address || '');
+    setMyEmergency(currentUser.emergencyContact || '');
+    setCurPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setMyError(null);
+    setMyModalOpen(true);
+  };
+
+  const handleSaveMyContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMyBusy(true);
+    setMyError(null);
+    try {
+      await updateOwnContactInfo({
+        phone: myPhone,
+        email: myEmail,
+        address: myAddress,
+        emergencyContact: myEmergency,
+      });
+      setMyModalOpen(false);
+    } catch (err) {
+      setMyError(err instanceof Error ? err.message : '개인 정보 저장에 실패했습니다.');
+    } finally {
+      setMyBusy(false);
+    }
+  };
+
+  const handleSaveMyPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMyError(null);
+    if (!curPassword || !newPassword || !confirmPassword) {
+      setMyError('현재 비밀번호와 새 비밀번호를 모두 입력하십시오.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMyError('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+    setMyBusy(true);
+    try {
+      await changeOwnPassword(curPassword, newPassword);
+      setCurPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setMyModalOpen(false);
+    } catch (err) {
+      setMyError(err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
+    } finally {
+      setMyBusy(false);
+    }
+  };
 
   const pendingApprovals = useMemo(() => {
     if (!currentUser) return 0;
@@ -270,6 +343,17 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               />
             )}
 
+            {currentUser && (
+              <button
+                type="button"
+                onClick={openMyModal}
+                style={{ ...actionBtnStyle('secondary', true), whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                <UserCog size={13} />
+                내 정보 · 비밀번호
+              </button>
+            )}
+
             <button type="button" onClick={logout} style={actionBtnStyle('secondary', true)}>
               <LogOut size={13} />
               로그아웃
@@ -307,6 +391,178 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             </button>
           </div>
         </div>
+      </ModalDialog>
+
+      <ModalDialog
+        open={myModalOpen}
+        title="내 정보 · 비밀번호 변경"
+        width={560}
+        onClose={() => setMyModalOpen(false)}
+      >
+        {currentUser && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: '8px',
+                padding: '10px 12px',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                backgroundColor: 'var(--bg-secondary)',
+                fontSize: '12px',
+              }}
+            >
+              <div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>사번 · 아이디</div>
+                <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {currentUser.employeeNo || '-'} · {currentUser.loginId}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>소속 · 직책</div>
+                <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {currentUser.departmentName || '미배정'} · {currentUser.position || '-'}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>티어 · 상태</div>
+                <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {tierLabel(currentUser.tierLevel)} ·{' '}
+                  {EMPLOYMENT_STATUS_LABELS[(currentUser.status as EmploymentStatus) || 'ACTIVE'] ||
+                    currentUser.status}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMyTab('INFO');
+                  setMyError(null);
+                }}
+                style={actionBtnStyle(myTab === 'INFO' ? 'primary' : 'secondary', true)}
+              >
+                <UserCog size={13} />
+                개인 연락처
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMyTab('PASSWORD');
+                  setMyError(null);
+                }}
+                style={actionBtnStyle(myTab === 'PASSWORD' ? 'primary' : 'secondary', true)}
+              >
+                <KeyRound size={13} />
+                비밀번호 변경
+              </button>
+            </div>
+
+            {myTab === 'INFO' ? (
+              <form onSubmit={handleSaveMyContact} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <VerticalField label="연락처">
+                    <input
+                      type="text"
+                      value={myPhone}
+                      onChange={(e) => setMyPhone(e.target.value)}
+                      placeholder="010-0000-0000"
+                      style={controlInputStyle}
+                    />
+                  </VerticalField>
+                  <VerticalField label="이메일">
+                    <input
+                      type="email"
+                      value={myEmail}
+                      onChange={(e) => setMyEmail(e.target.value)}
+                      placeholder="이메일 입력"
+                      style={controlInputStyle}
+                    />
+                  </VerticalField>
+                </div>
+                <VerticalField label="주소">
+                  <input
+                    type="text"
+                    value={myAddress}
+                    onChange={(e) => setMyAddress(e.target.value)}
+                    placeholder="거주지 주소 입력"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="비상연락처">
+                  <input
+                    type="text"
+                    value={myEmergency}
+                    onChange={(e) => setMyEmergency(e.target.value)}
+                    placeholder="관계 및 연락처 입력"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                {myError && (
+                  <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--danger)' }}>
+                    {myError}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                  <button type="button" onClick={() => setMyModalOpen(false)} style={actionBtnStyle('secondary')}>
+                    취소
+                  </button>
+                  <button type="submit" disabled={myBusy} style={actionBtnStyle('primary')}>
+                    {myBusy ? '저장 중' : '연락처 저장'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSaveMyPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <VerticalField label="현재 비밀번호" required>
+                  <input
+                    type="password"
+                    value={curPassword}
+                    onChange={(e) => setCurPassword(e.target.value)}
+                    autoComplete="current-password"
+                    placeholder="현재 비밀번호 입력"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="새 비밀번호" required>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    placeholder="4자 이상 입력"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="새 비밀번호 확인" required>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    placeholder="새 비밀번호 재입력"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                {myError && (
+                  <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--danger)' }}>
+                    {myError}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                  <button type="button" onClick={() => setMyModalOpen(false)} style={actionBtnStyle('secondary')}>
+                    취소
+                  </button>
+                  <button type="submit" disabled={myBusy} style={actionBtnStyle('primary')}>
+                    {myBusy ? '변경 중' : '비밀번호 변경'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </ModalDialog>
 
       {toasts.length > 0 && (
