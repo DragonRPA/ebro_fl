@@ -232,6 +232,24 @@ function cleanTextOrNull(val) {
     console.log('[migrate_hr_v2] HR_APPOINTMENT policy already exists');
   }
 
+  for (let tier = 1; tier <= 7; tier++) {
+    const canView = tier >= 4;
+    const canEdit = tier >= 4;
+    const canApprove = tier >= 5;
+    await client.query(
+      `INSERT INTO public.fl_user_permissions (
+         id, tenant_id, user_id, tier_level, page_id, can_view, can_edit, can_approve
+       ) VALUES ($1, 'tenant-ebro-fl', NULL, $2, 'organization_hr', $3, $4, $5)
+       ON CONFLICT (id) DO UPDATE
+       SET can_view = EXCLUDED.can_view,
+           can_edit = EXCLUDED.can_edit,
+           can_approve = EXCLUDED.can_approve,
+           updated_at = now()`,
+      [`PERM-T${tier}-organization_hr`, tier, canView, canEdit, canApprove]
+    );
+  }
+  console.log('[migrate_hr_v2] Upserted 7-tier permissions for organization_hr (T1..T3 hidden, T4 view/edit, T5..T7 approve)');
+
   function appendOrgHrPage(pages) {
     const arr = Array.isArray(pages) ? [...pages] : [];
     if (arr.includes('organization_hr')) return arr;

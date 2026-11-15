@@ -562,6 +562,21 @@ async function main() {
     // Test 8: Org & HR Lifecycle (Dept, Hire, Password Reset, Move, Retire, History)
     // =========================================================================
     assert(Object.keys(preCounts).length >= 30, `Expected 30 fl_* tables, got ${Object.keys(preCounts).length}`);
+    const orgPermRes = await pgClient.query(
+      "SELECT tier_level, can_view, can_edit, can_approve FROM public.fl_user_permissions WHERE user_id IS NULL AND page_id = 'organization_hr' ORDER BY tier_level"
+    );
+    assert.strictEqual(orgPermRes.rows.length, 7, `Expected 7 tier permissions for organization_hr, got ${orgPermRes.rows.length}`);
+    for (const pr of orgPermRes.rows) {
+      if (pr.tier_level <= 3) {
+        assert.strictEqual(pr.can_view, false, `Tier ${pr.tier_level} must not view organization_hr`);
+        assert.strictEqual(pr.can_edit, false, `Tier ${pr.tier_level} must not edit organization_hr`);
+      } else {
+        assert.strictEqual(pr.can_view, true, `Tier ${pr.tier_level} must view organization_hr`);
+        assert.strictEqual(pr.can_edit, true, `Tier ${pr.tier_level} must edit organization_hr`);
+      }
+      assert.strictEqual(pr.can_approve, pr.tier_level >= 5, `Tier ${pr.tier_level} approve parity mismatch`);
+    }
+
     const testDept = await saveDepartment({
       name: `WTT임시부서_${Date.now()}`,
       parentDepartmentId: 'DEPT-0000001',
@@ -570,6 +585,26 @@ async function main() {
       memo: 'WTT 검증용 임시 부서',
     });
     tracked.hrDeptIds.push(testDept.id);
+
+    const childDept = await saveDepartment({
+      name: `WTT하위부서_${Date.now()}`,
+      parentDepartmentId: testDept.id,
+      functionalTags: ['경영관리'],
+      sortOrder: 100,
+    });
+    tracked.hrDeptIds.push(childDept.id);
+
+    await assert.rejects(
+      () =>
+        saveDepartment({
+          id: testDept.id,
+          name: testDept.name,
+          parentDepartmentId: childDept.id,
+          functionalTags: ['경영관리'],
+        }),
+      /하위 부서를 상위 부서로 지정할 수 없습니다/,
+      'Multi-hop department cycle must be rejected'
+    );
 
     const wttLoginId = `wtt_hr_${Date.now()}`;
     const testHrUser = await createEmployeeUser({
@@ -589,6 +624,44 @@ async function main() {
       actor: { id: 'u-1', name: '개발자' },
     });
     tracked.hrUserIds.push(testHrUser.id);
+
+    await assert.rejects(
+      () =>
+        createEmployeeUser({
+          loginId: wttLoginId,
+          initialPassword: 'InitPass!1',
+          name: '중복아이디',
+          tierLevel: 1,
+          actor: { id: 'u-1', name: '개발자' },
+        }),
+      /이미 사용 중인 로그인 아이디입니다/,
+      'Duplicate loginId must be rejected'
+    );
+
+    await assert.rejects(
+      () =>
+        createEmployeeUser({
+          loginId: `${wttLoginId}_dupemp`,
+          employeeNo: testHrUser.employeeNo,
+          initialPassword: 'InitPass!1',
+          name: '중복사번',
+          tierLevel: 1,
+          actor: { id: 'u-1', name: '개발자' },
+        }),
+      /이미 등록된 사번입니다/,
+      'Duplicate employeeNo must be rejected'
+    );
+
+    await assert.rejects(
+      () =>
+        updateEmployeeHrRecord({
+          prevUser: testHrUser,
+          patch: { status: 'RETIRED', retireDate: '2026-11-15' },
+          actor: { id: testHrUser.id, name: testHrUser.name },
+        }),
+      /본인 계정을 직접 퇴사 또는 휴직 처리할 수 없습니다/,
+      'Self-retirement must be rejected'
+    );
 
     const hrRow1 = (await pgClient.query('SELECT * FROM public.fl_users WHERE id = $1', [testHrUser.id])).rows[0];
     assert(cryptoVault.verifyPassword('InitPass!1', hrRow1.password_hash), 'Initial password must verify');
@@ -670,6 +743,9 @@ async function main() {
       await safeDel(`DELETE FROM public.fl_approval_requests WHERE id = ANY($1)`, tracked.approvalIds);
       await safeDel(`DELETE FROM public.fl_hr_histories WHERE user_id = ANY($1)`, tracked.hrUserIds);
       await safeDel(`DELETE FROM public.fl_users WHERE id = ANY($1)`, tracked.hrUserIds);
+      if (tracked.hrDeptIds.length > 0) {
+        await pgClient.query(`UPDATE public.fl_departments SET parent_department_id = NULL WHERE id = ANY($1)`, [tracked.hrDeptIds]);
+      }
       await safeDel(`DELETE FROM public.fl_departments WHERE id = ANY($1)`, tracked.hrDeptIds);
       await safeDel(`DELETE FROM public.fl_asset_events WHERE unit_id = ANY($1)`, tracked.unitIds);
       await safeDel(`DELETE FROM public.fl_asset_events WHERE contract_id = ANY($1)`, tracked.contractIds);

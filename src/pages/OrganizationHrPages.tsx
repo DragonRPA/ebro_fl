@@ -173,6 +173,10 @@ export const OrganizationHrPage: React.FC = () => {
   const [resetPwReason, setResetPwReason] = useState('임시 비밀번호 재발급');
 
   const deptTree = useMemo(() => buildDeptTreeOrder(datasets.departments), [datasets.departments]);
+  const blockedParentDeptIds = useMemo(
+    () => (editDeptId ? collectDescendantDeptIds(editDeptId, datasets.departments) : new Set<string>()),
+    [editDeptId, datasets.departments]
+  );
   const deptNameMap = useMemo(() => {
     const m: Record<string, string> = {};
     datasets.departments.forEach((d) => {
@@ -1275,7 +1279,7 @@ export const OrganizationHrPage: React.FC = () => {
               >
                 <option value="">최상위 조직</option>
                 {deptTree
-                  .filter(({ dept }) => dept.id !== editDeptId)
+                  .filter(({ dept }) => !blockedParentDeptIds.has(dept.id))
                   .map(({ dept, depth }) => (
                     <option key={dept.id} value={dept.id}>
                       {'  '.repeat(depth)}

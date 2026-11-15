@@ -7,7 +7,8 @@ import {
   PutObjectCommand, 
   DeleteObjectCommand, 
   HeadBucketCommand,
-  GetObjectCommand
+  GetObjectCommand,
+  type ListObjectsV2CommandOutput
 } from '@aws-sdk/client-s3';
 
 
@@ -101,7 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const prefix = (req.query.prefix as string) || (req.body && req.body.prefix) || '';
       let isTruncated = true;
       let continuationToken: string | undefined = undefined;
-      const allFiles: Array<{ key: string; size: number; lastModified: string; etag: string }> = [];
+      const allFiles: Array<{ key: string; size: number; isDirectory: boolean; lastModified: string; etag: string }> = [];
 
       while (isTruncated) {
         const cmd = new ListObjectsV2Command({
@@ -109,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Prefix: prefix,
           ContinuationToken: continuationToken
         });
-        const response = await s3.send(cmd);
+        const response: ListObjectsV2CommandOutput = await s3.send(cmd);
         
         if (response.Contents) {
           for (const item of response.Contents) {

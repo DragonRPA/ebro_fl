@@ -1,7 +1,7 @@
 // d:\Kiyeun_Lift\api\send-email.ts
 // Vercel Serverless Function — Gmail SMTP (App Password) 메일 발송 API
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import nodemailer from 'nodemailer';
+import nodemailer, { type SendMailOptions } from 'nodemailer';
 
 // Vercel Serverless Function Config — 페이로드 용량 10MB로 확장
 export const config = {
@@ -184,7 +184,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const normalizedTo = toEmails.length > 0 ? toEmails.join(', ') : String(to).trim();
     const normalizedCc = ccEmails.length > 0 ? ccEmails.join(', ') : undefined;
 
-    const mailOptions: nodemailer.SendMailOptions = {
+    const mailOptions: SendMailOptions = {
       from: `"${senderBrand}" <${cleanEmail}>`,
       to: normalizedTo,
       cc: normalizedCc,

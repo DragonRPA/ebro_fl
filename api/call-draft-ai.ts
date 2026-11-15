@@ -104,7 +104,7 @@ async function runWhisperSTT(audioBuffer: Buffer, fileName: string): Promise<str
     };
     const mimeType = mimeMap[ext] || 'audio/mp4';
 
-    const blob = new Blob([audioBuffer], { type: mimeType });
+    const blob = new Blob([new Uint8Array(audioBuffer)], { type: mimeType });
     const formData = new FormData();
     formData.append('file', blob, fileName);
     formData.append('model', 'whisper-large-v3');

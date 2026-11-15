@@ -23,7 +23,6 @@ import {
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
-  type GridColumn,
 } from '../components/UiPrimitives';
 import type {
   FlContract,

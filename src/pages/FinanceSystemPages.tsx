@@ -5,16 +5,17 @@ import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId }
 import {
   addDaysIso,
   calculateRentalProRataForMonth,
+  createEmployeeUser,
   payLeaseInstallment,
   recordBillingCollection,
   settleApPayable,
+  updateEmployeeHrRecord,
 } from '../services/domainEngine';
 import { generateFinancialStatements } from '../services/financialStatementEngine';
 import { generateTransactionStatementExcel } from '../services/documentService';
 import { useManual } from '../manual/ManualContext';
 import { ALL_MANUAL_ENTRIES } from '../manual/manualRegistry';
 import { COMMENTARY_SECTIONS, STANDARD_ARTICLES } from '../data/accountingStandardsData';
-import { hashPassword } from '../utils/cryptoVault';
 import {
   ConservationBar,
   DataGrid,
@@ -30,13 +31,12 @@ import {
 import {
   FL_MENU_GROUPS,
   TIER_LABELS,
+  defaultTierPagePermission,
   type DocumentTemplateType,
-  type FlApPayable,
   type FlApprovalPolicy,
   type FlBankTransaction,
   type FlBilling,
   type FlDocumentTemplate,
-  type FlFinanceLeaseSchedule,
   type FlPageId,
   type FlUser,
   type TierLevel,
@@ -1515,18 +1515,15 @@ export const SystemSettingsPage: React.FC = () => {
   const handleUpdateUserTier = async (u: FlUser, tierLevel: TierLevel, maskSalesPrice: boolean) => {
     setBusy(true);
     try {
-      await execDbMutation('사용자 티어 변경', () =>
-        flSupabase
-          .from('users')
-          .update(
-            camelToSnakeRow({
-              tierLevel,
-              maskSalesPrice,
-              updatedAt: new Date().toISOString(),
-            })
-          )
-          .eq('id', u.id)
-      );
+      await updateEmployeeHrRecord({
+        prevUser: u,
+        patch: { tierLevel, maskSalesPrice },
+        reason: '시스템 설정 권한 변경',
+        actor: {
+          id: currentUser?.id || 'u-1',
+          name: currentUser?.name || '관리자',
+        },
+      });
       await refreshAll();
       notifyToast(`${u.name} 직급 티어 저장 완료`, 'success');
     } catch (err) {
@@ -1543,22 +1540,17 @@ export const SystemSettingsPage: React.FC = () => {
     }
     setBusy(true);
     try {
-      const id = newId('USR');
-      await execDbMutation('사용자 등록', () =>
-        flSupabase.from('users').insert(
-          camelToSnakeRow({
-            id,
-            tenantId: DEFAULT_TENANT_ID,
-            loginId: newLoginId.trim(),
-            passwordHash: hashPassword(newPass),
-            name: newName.trim(),
-            tierLevel: newTier,
-            maskSalesPrice: newMaskPrice,
-            status: 'ACTIVE',
-            isActive: true,
-          })
-        )
-      );
+      await createEmployeeUser({
+        loginId: newLoginId,
+        initialPassword: newPass,
+        name: newName,
+        tierLevel: newTier,
+        maskSalesPrice: newMaskPrice,
+        actor: {
+          id: currentUser?.id || 'u-1',
+          name: currentUser?.name || '관리자',
+        },
+      });
       setNewLoginId('');
       setNewName('');
       setNewPass('');
@@ -1589,6 +1581,7 @@ export const SystemSettingsPage: React.FC = () => {
             .eq('id', existing.id)
         );
       } else {
+        const fallback = defaultTierPagePermission(pageId, permTier);
         await execDbMutation('티어 권한 생성', () =>
           flSupabase.from('user_permissions').insert(
             camelToSnakeRow({
@@ -1596,9 +1589,9 @@ export const SystemSettingsPage: React.FC = () => {
               tenantId: DEFAULT_TENANT_ID,
               tierLevel: permTier,
               pageId,
-              canView: field === 'canView' ? val : true,
-              canEdit: field === 'canEdit' ? val : permTier >= 2,
-              canApprove: field === 'canApprove' ? val : permTier >= 3,
+              canView: field === 'canView' ? val : fallback.canView,
+              canEdit: field === 'canEdit' ? val : fallback.canEdit,
+              canApprove: field === 'canApprove' ? val : fallback.canApprove,
             })
           )
         );
@@ -1929,7 +1922,7 @@ export const SystemSettingsPage: React.FC = () => {
                       const p = datasets.userPermissions.find(
                         (x) => !x.userId && x.tierLevel === permTier && x.pageId === r.pageId
                       );
-                      const checked = p ? p.canView : true;
+                      const checked = p ? p.canView : defaultTierPagePermission(r.pageId, permTier).canView;
                       return (
                         <input
                           type="checkbox"
@@ -1949,7 +1942,7 @@ export const SystemSettingsPage: React.FC = () => {
                       const p = datasets.userPermissions.find(
                         (x) => !x.userId && x.tierLevel === permTier && x.pageId === r.pageId
                       );
-                      const checked = p ? p.canEdit : permTier >= 2;
+                      const checked = p ? p.canEdit : defaultTierPagePermission(r.pageId, permTier).canEdit;
                       return (
                         <input
                           type="checkbox"
@@ -1969,7 +1962,7 @@ export const SystemSettingsPage: React.FC = () => {
                       const p = datasets.userPermissions.find(
                         (x) => !x.userId && x.tierLevel === permTier && x.pageId === r.pageId
                       );
-                      const checked = p ? p.canApprove : permTier >= 3;
+                      const checked = p ? p.canApprove : defaultTierPagePermission(r.pageId, permTier).canApprove;
                       return (
                         <input
                           type="checkbox"

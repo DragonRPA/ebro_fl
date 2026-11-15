@@ -23,6 +23,7 @@ import {
   ALL_FL_PAGE_IDS,
   FL_MENU_GROUPS,
   TIER_LABELS,
+  defaultTierPagePermission,
   type FlApPayable,
   type FlApprovalPolicy,
   type FlApprovalRequest,
@@ -585,7 +586,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const tierRule = datasets.userPermissions.find(
         (p) => !p.userId && p.tierLevel === currentUser.tierLevel && p.pageId === pageId
       );
-      return tierRule ? tierRule.canView : true;
+      return tierRule ? tierRule.canView : defaultTierPagePermission(pageId, currentUser.tierLevel).canView;
     },
     [currentUser, datasets.userPermissions, tenantProfile]
   );
@@ -599,7 +600,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const tierRule = datasets.userPermissions.find(
         (p) => !p.userId && p.tierLevel === currentUser.tierLevel && p.pageId === pageId
       );
-      return tierRule ? tierRule.canEdit : currentUser.tierLevel >= 2;
+      return tierRule ? tierRule.canEdit : defaultTierPagePermission(pageId, currentUser.tierLevel).canEdit;
     },
     [currentUser, datasets.userPermissions]
   );
@@ -613,7 +614,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const tierRule = datasets.userPermissions.find(
         (p) => !p.userId && p.tierLevel === currentUser.tierLevel && p.pageId === pageId
       );
-      return tierRule ? tierRule.canApprove : currentUser.tierLevel >= 3;
+      return tierRule ? tierRule.canApprove : defaultTierPagePermission(pageId, currentUser.tierLevel).canApprove;
     },
     [currentUser, datasets.userPermissions]
   );
@@ -662,12 +663,10 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await execDbMutation('테넌트 문서설정 갱신', () =>
         centralSupabase
           .from('tenants')
-          .update(
-            camelToSnakeRow({
-              features: patch.features ?? tenantProfile.features,
-              taxEmail: patch.taxEmail ?? tenantProfile.taxEmail,
-            })
-          )
+          .update({
+            features: patch.features ?? tenantProfile.features,
+            taxEmail: patch.taxEmail ?? tenantProfile.taxEmail,
+          })
           .eq('id', tenantProfile.id)
       );
       await fetchTenantProfile();

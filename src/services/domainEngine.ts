@@ -10,7 +10,6 @@ import type {
   CurrencyCode,
   FlApPayable,
   FlAssetEvent,
-  FlBankTransaction,
   FlBilling,
   FlCollection,
   FlContract,
@@ -1650,6 +1649,27 @@ export async function saveDepartment(input: SaveDepartmentInput): Promise<FlDepa
     throw new Error('자기 자신을 상위 부서로 지정할 수 없습니다.');
   }
 
+  if (input.id && input.parentDepartmentId) {
+    const deptRes = await flSupabase.from('departments').select('id, parent_department_id');
+    if (deptRes.error) {
+      throw new Error(deptRes.error.message || '부서 계층 조회 실패');
+    }
+    const parentMap = new Map<string, string | null>();
+    for (const row of deptRes.data || []) {
+      const rec = row as { id: string; parent_department_id: string | null };
+      parentMap.set(rec.id, rec.parent_department_id || null);
+    }
+    let cur: string | null = input.parentDepartmentId;
+    const visited = new Set<string>();
+    while (cur && !visited.has(cur)) {
+      if (cur === input.id) {
+        throw new Error('하위 부서를 상위 부서로 지정할 수 없습니다.');
+      }
+      visited.add(cur);
+      cur = parentMap.get(cur) || null;
+    }
+  }
+
   const now = new Date().toISOString();
   const isNew = !input.id;
   const id = input.id || newId('DEPT');
@@ -1720,6 +1740,74 @@ export interface CreateEmployeeUserInput {
   actor: { id: string; name: string };
 }
 
+interface ExistingUserIdentifierRow {
+  id: string;
+  loginId: string;
+  employeeNo: string | null;
+}
+
+async function fetchExistingUserIdentifiers(): Promise<ExistingUserIdentifierRow[]> {
+  const res = await flSupabase.from('users').select('id, login_id, employee_no');
+  if (res.error) {
+    throw new Error(res.error.message || '임직원 식별자 조회 실패');
+  }
+  return (res.data || []).map((row) => {
+    const rec = row as { id: string; login_id: string; employee_no: string | null };
+    return {
+      id: rec.id,
+      loginId: rec.login_id || '',
+      employeeNo: rec.employee_no || null,
+    };
+  });
+}
+
+function nextSequentialEmployeeNo(existingUsers: ExistingUserIdentifierRow[]): string {
+  const used = new Set<string>();
+  let maxSeq = 2600;
+  for (const row of existingUsers) {
+    const emp = (row.employeeNo || '').trim().toUpperCase();
+    if (!emp) continue;
+    used.add(emp);
+    const m = /^EMP-(\d+)$/.exec(emp);
+    if (m) {
+      const num = Number(m[1]);
+      if (Number.isFinite(num) && num > maxSeq) maxSeq = num;
+    }
+  }
+  let seq = maxSeq + 1;
+  while (used.has(`EMP-${seq}`)) seq++;
+  return `EMP-${seq}`;
+}
+
+function assertUniqueUserIdentifiers(
+  existingUsers: ExistingUserIdentifierRow[],
+  params: { excludeUserId?: string; loginId?: string; employeeNo?: string | null }
+): void {
+  const cleanLoginLower = params.loginId?.trim().toLowerCase() || '';
+  const cleanEmpUpper = params.employeeNo?.trim().toUpperCase() || '';
+  for (const row of existingUsers) {
+    if (params.excludeUserId && row.id === params.excludeUserId) continue;
+    const rowLoginLower = row.loginId.trim().toLowerCase();
+    const rowEmpUpper = (row.employeeNo || '').trim().toUpperCase();
+    if (cleanLoginLower) {
+      if (rowLoginLower === cleanLoginLower) {
+        throw new Error('이미 사용 중인 로그인 아이디입니다.');
+      }
+      if (rowEmpUpper && rowEmpUpper === cleanLoginLower.toUpperCase()) {
+        throw new Error('다른 임직원의 사번과 동일한 로그인 아이디는 사용할 수 없습니다.');
+      }
+    }
+    if (cleanEmpUpper) {
+      if (rowEmpUpper && rowEmpUpper === cleanEmpUpper) {
+        throw new Error('이미 등록된 사번입니다.');
+      }
+      if (rowLoginLower && rowLoginLower.toUpperCase() === cleanEmpUpper) {
+        throw new Error('다른 임직원의 로그인 아이디와 동일한 사번은 사용할 수 없습니다.');
+      }
+    }
+  }
+}
+
 export async function createEmployeeUser(input: CreateEmployeeUserInput): Promise<FlUser> {
   const loginId = input.loginId.trim();
   const name = input.name.trim();
@@ -1729,11 +1817,14 @@ export async function createEmployeeUser(input: CreateEmployeeUserInput): Promis
     throw new Error('초기 비밀번호는 4자 이상이어야 합니다.');
   }
 
+  const existingUsers = await fetchExistingUserIdentifiers();
+  const explicitEmpNo = (input.employeeNo || '').trim();
+  const employeeNo = explicitEmpNo || nextSequentialEmployeeNo(existingUsers);
+  assertUniqueUserIdentifiers(existingUsers, { loginId, employeeNo });
+
   const now = new Date().toISOString();
   const today = now.slice(0, 10);
   const status = input.status || 'ACTIVE';
-  const employeeNo =
-    (input.employeeNo || '').trim() || `EMP-${Date.now().toString().slice(-6)}`;
   const id = newId('USR');
   const passwordHash = hashPassword(input.initialPassword.trim());
 
@@ -1839,6 +1930,20 @@ export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Prom
   const nextDuty = patch.duty !== undefined ? patch.duty?.trim() || null : prevUser.duty || null;
   const nextTier = patch.tierLevel !== undefined ? patch.tierLevel : prevUser.tierLevel;
   const nextStatus = patch.status !== undefined ? patch.status : prevUser.status;
+  if (prevUser.id === actor.id && nextStatus !== 'ACTIVE') {
+    throw new Error('본인 계정을 직접 퇴사 또는 휴직 처리할 수 없습니다.');
+  }
+  const nextEmpNo =
+    patch.employeeNo !== undefined
+      ? patch.employeeNo?.trim() || null
+      : prevUser.employeeNo || null;
+  if (nextEmpNo && nextEmpNo.toUpperCase() !== (prevUser.employeeNo || '').trim().toUpperCase()) {
+    const existingUsers = await fetchExistingUserIdentifiers();
+    assertUniqueUserIdentifiers(existingUsers, {
+      excludeUserId: prevUser.id,
+      employeeNo: nextEmpNo,
+    });
+  }
   const nextIsActive = nextStatus !== 'RETIRED';
   const nextSalary =
     patch.baseSalaryKrw !== undefined
@@ -1855,10 +1960,7 @@ export async function updateEmployeeHrRecord(input: UpdateEmployeeHrInput): Prom
 
   const updateRow = {
     name: nextName,
-    employee_no:
-      patch.employeeNo !== undefined
-        ? patch.employeeNo?.trim() || null
-        : prevUser.employeeNo || null,
+    employee_no: nextEmpNo,
     department_id: nextDeptId,
     position: nextPosition,
     duty: nextDuty,

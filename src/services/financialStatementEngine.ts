@@ -161,22 +161,6 @@ const BS_CREDIT_NORMAL = new Set([
   '기초이월잉여금',
 ]);
 
-const NOMINAL_CREDIT_NORMAL = new Set([
-  '상품매출(유통)',
-  '임대매출(렌탈)',
-  '외환차익',
-]);
-
-const NOMINAL_DEBIT_NORMAL = new Set([
-  '상품매출원가',
-  '감가상각비(렌탈)',
-  '수선유지·외주정비비',
-  '전대임차료(원가)',
-  '운반·물류비',
-  '이자비용(금융리스)',
-  '외환차손',
-]);
-
 export function generateFinancialStatements(
   data: FinancialDatasetInput,
   startYm: string,

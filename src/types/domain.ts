@@ -112,6 +112,34 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
 
 export const ALL_FL_PAGE_IDS: FlPageId[] = FL_MENU_GROUPS.flatMap((g) => g.items.map((i) => i.pageId));
 
+export function defaultTierPagePermission(
+  pageId: FlPageId,
+  tierLevel: TierLevel
+): { canView: boolean; canEdit: boolean; canApprove: boolean } {
+  if (tierLevel >= 7) {
+    return { canView: true, canEdit: true, canApprove: true };
+  }
+  if (pageId === 'organization_hr') {
+    return {
+      canView: tierLevel >= 4,
+      canEdit: tierLevel >= 4,
+      canApprove: tierLevel >= 5,
+    };
+  }
+  if (pageId === 'system_settings' || pageId === 'financial_statements') {
+    return {
+      canView: tierLevel >= 4,
+      canEdit: tierLevel >= 4,
+      canApprove: tierLevel >= 4,
+    };
+  }
+  return {
+    canView: true,
+    canEdit: tierLevel >= 2,
+    canApprove: tierLevel >= 3,
+  };
+}
+
 export type PartnerRole =
   | '매출처'
   | '대리점'
