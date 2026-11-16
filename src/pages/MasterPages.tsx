@@ -1124,7 +1124,7 @@ export const PartnersPage: React.FC = () => {
           rowKey={(r) => r.id}
           selectedRowId={selectedId}
           onRowClick={selectPartner}
-          maxHeight="calc(100vh - 200px)"
+          maxHeight="calc(100vh - 215px)"
         />
 
         <div
@@ -1132,7 +1132,7 @@ export const PartnersPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-page-gap)',
-            maxHeight: 'calc(100vh - 200px)',
+            maxHeight: 'calc(100vh - 215px)',
             overflowY: 'auto',
             paddingRight: '2px',
           }}
