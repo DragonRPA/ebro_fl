@@ -10,6 +10,11 @@ import type {
   FlQuotation,
   TenantProfile,
 } from '../types/domain';
+import type {
+  FlMastSpecRow,
+  FlModelTechnicalSpec,
+  FlVdiSpecItem,
+} from '../data/flTechnicalArchive';
 
 function bufferToBase64(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
@@ -516,4 +521,91 @@ export async function sendDocumentEmailViaAgent(params: {
     const text = await resp.text().catch(() => '');
     throw new Error(`공식 이메일 발송 실패: ${text || resp.statusText}`);
   }
+}
+
+export async function generateModelSpecExcel(params: {
+  spec: FlModelTechnicalSpec;
+  vdiRows: FlVdiSpecItem[];
+  mastRows: FlMastSpecRow[];
+  coreRows: { label: string; value: string }[];
+}): Promise<void> {
+  const { spec, vdiRows, mastRows, coreRows } = params;
+  const wb = new ExcelJS.Workbook();
+  const wsCore = wb.addWorksheet('핵심제원');
+  wsCore.columns = [
+    { header: '제원 항목', key: 'label', width: 28 },
+    { header: '규격 · 수치', key: 'value', width: 58 },
+  ];
+  wsCore.getRow(1).font = { bold: true };
+  coreRows.forEach((r) => wsCore.addRow(r));
+  wsCore.addRow({ label: '배터리·엔진 상세', value: spec.powerSpecDetail });
+  wsCore.addRow({ label: '모터·출력 및 제어', value: spec.motorOrEngineDetail });
+  wsCore.addRow({ label: '충전기·연료계통', value: spec.chargerOrFuelDetail });
+  wsCore.addRow({ label: '타이어 규격', value: spec.tireSpecFrontRear });
+  wsCore.addRow({ label: '제동 시스템', value: spec.brakeType });
+  wsCore.addRow({ label: '방수 등급', value: spec.waterproofRating });
+  wsCore.addRow({ label: '품질보증 기준', value: spec.warrantyTerms });
+
+  const wsVdi = wb.addWorksheet('VDI 2198 표준표');
+  wsVdi.columns = [
+    { header: '코드', key: 'code', width: 10 },
+    { header: '분류', key: 'category', width: 18 },
+    { header: '한국어 항목명', key: 'itemKo', width: 32 },
+    { header: '원문 항목명', key: 'itemEn', width: 32 },
+    { header: '단위', key: 'unit', width: 10 },
+    { header: '제원 수치', key: 'value', width: 28 },
+  ];
+  wsVdi.getRow(1).font = { bold: true };
+  vdiRows.forEach((v) => wsVdi.addRow(v));
+
+  if (mastRows.length > 0) {
+    const wsMast = wb.addWorksheet('마스트 제원');
+    wsMast.columns = [
+      { header: '마스트 형식', key: 'mastType', width: 24 },
+      { header: '마스트 코드', key: 'mastModel', width: 14 },
+      { header: '인상고 h3 · mm', key: 'liftHeightH3Mm', width: 14 },
+      { header: '최저전고 h1 · mm', key: 'loweredHeightH1Mm', width: 14 },
+      { header: '최대높이 h4 · mm', key: 'extendedHeightWithBackrestH4Mm', width: 14 },
+      { header: '자유인상 h2 · mm', key: 'freeLiftWithBackrestH2Mm', width: 14 },
+      { header: '경사각', key: 'tiltAngleDeg', width: 12 },
+      { header: '허용하중 단륜 · kg', key: 'loadCapacity500MmSingleKg', width: 16 },
+    ];
+    wsMast.getRow(1).font = { bold: true };
+    mastRows.forEach((m) => wsMast.addRow(m));
+  }
+
+  if (spec.batteryOptions && spec.batteryOptions.length > 0) {
+    const wsBat = wb.addWorksheet('배터리 옵션');
+    wsBat.columns = [
+      { header: '셀 제조사', key: 'cellBrand', width: 14 },
+      { header: '배터리 모델', key: 'batteryModel', width: 16 },
+      { header: '전압/용량', key: 'voltageCapacity', width: 16 },
+      { header: '중량 · kg', key: 'weightKg', width: 12 },
+      { header: '구분', key: 'status', width: 10 },
+      { header: '적용 모델', key: 'applicableModels', width: 30 },
+      { header: '호환 충전기', key: 'chargerOptions', width: 32 },
+    ];
+    wsBat.getRow(1).font = { bold: true };
+    spec.batteryOptions.forEach((b) => wsBat.addRow(b));
+  }
+
+  const ab = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
+  downloadExcelFile(`${spec.manufacturerName}_${spec.modelName}_기술제원표.xlsx`, new Uint8Array(ab));
+}
+
+export async function generateCompareSpecsExcel(params: {
+  models: FlModelTechnicalSpec[];
+  rows: { label: string; values: string[] }[];
+}): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('모델 제원 비교');
+  ws.addRow(['비교 제원 항목', ...params.models.map((m) => `${m.manufacturerName} ${m.modelName}`)]);
+  ws.getRow(1).font = { bold: true };
+  ws.getColumn(1).width = 28;
+  params.models.forEach((_, i) => {
+    ws.getColumn(i + 2).width = 30;
+  });
+  params.rows.forEach((r) => ws.addRow([r.label, ...r.values]));
+  const ab = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
+  downloadExcelFile(`지게차_모델별_제원비교_${params.models.length}종.xlsx`, new Uint8Array(ab));
 }

@@ -64,7 +64,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'trade_item_masters', label: '유통 품목 관리', shortDesc: '판매 완제품 · 부품 · 대리점가 · 판매정가' },
       { pageId: 'rental_item_masters', label: '렌탈 품목 관리', shortDesc: '임대 기종 · 옵션 · 월·일 렌탈료 · 상각기준' },
       { pageId: 'exchange_rates', label: '환율 관리', shortDesc: '고시환율 등록 및 외화 환산 기준' },
-      { pageId: 'catalogs', label: '제원 카탈로그', shortDesc: '장비 상세 제원 및 호환 부품 카탈로그' },
+      { pageId: 'catalogs', label: '제원 카탈로그', shortDesc: 'VDI 2198 제원 및 호환 부품 카탈로그' },
     ],
   },
   {
@@ -447,7 +447,6 @@ export interface FlItemMaster {
   standardDailyRentalKrw: number;
   depreciationMonths: number;
   residualValueKrw: number;
-  safetyStock: number;
   warehouseLocation: string;
   diagramType?: string | null;
   imageUrl?: string | null;

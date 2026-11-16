@@ -562,7 +562,6 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'standardDailyRentalKrw',
         'depreciationMonths',
         'residualValueKrw',
-        'safetyStock',
       ]).map((it) => ({
         ...it,
         itemDomain:

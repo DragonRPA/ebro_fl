@@ -305,6 +305,43 @@ async function main() {
     }
     console.log(`[E2E 7g PASS] Pure Korean badges (확정/정산확정/출고완료/진행중), currency labels, and zero English StatusBadges verified across all ${navCount} sidebar menus.`);
 
+    // [E2E 7h] Verify restored CatalogsPage technical specs (52 models, VDI 2198/kg/mm/OEM, mast/battery tables, compare & parts)
+    await page.locator('aside nav button', { hasText: '제원 카탈로그' }).first().click();
+    await page.getByText('VDI 2198 제원 · 호환 부품 카탈로그', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await page.locator('[data-manual-id="cat-conservation"]').getByText('52종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const leftModelRows = await page.locator('[data-manual-id="cat-detail"] table').first().locator('tbody tr').count();
+    assert(leftModelRows >= 50, `Expected >=50 models in 제원 카탈로그 left grid, got ${leftModelRows}`);
+
+    const coreGridText = await page.locator('[data-testid="cat-core-grid"]').innerText();
+    assert(coreGridText.includes('2,500 kg') && coreGridText.includes('3,000 mm'), `Restored kg/mm units missing in core grid: ${coreGridText.slice(0, 200)}`);
+    const coreCardCount = await page.locator('[data-testid="cat-core-grid"] > div').count();
+    assert(coreCardCount >= 24, `Expected >=24 detailed core spec cells, got ${coreCardCount}`);
+    await page.locator('[data-testid="cat-vdi-section"]').waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-testid="cat-mast-section"]').waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-testid="cat-battery-section"]').waitFor({ state: 'visible', timeout: 5000 });
+
+    // Select a backup-restored model (CPD25-XEY2HA-SI)
+    const specSearchInput = page.locator('input[placeholder="모델명, 제조사, 시리즈 검색"]').first();
+    await specSearchInput.fill('CPD25-XEY2HA-SI');
+    await page.waitForTimeout(200);
+    await page.locator('[data-manual-id="cat-detail"] table').first().locator('tbody tr').first().click();
+    await page.locator('[data-testid="cat-vdi-section"]').getByText('55항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await specSearchInput.fill('');
+
+    // Compare tab
+    const catTabs = page.locator('[data-manual-id="cat-tabs"]');
+    await catTabs.locator('button', { hasText: '모델 제원 비교' }).first().click();
+    await page.getByText('비교 제원 항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const cmpColCount = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
+    assert(cmpColCount >= 4, `Expected >=4 columns in compare table, got ${cmpColCount}`);
+
+    // Parts tab
+    await catTabs.locator('button', { hasText: '호환부품 카탈로그' }).first().click();
+    await page.getByText('부품명 · 품번 · OEM 교차코드 검색', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-testid="part-detail-specs"]').getByText('실측 치수 · 상세 규격표', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-testid="part-detail-specs"]').getByText('OEM 교차품번 목록', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    console.log(`[E2E 7h PASS] Restored 제원 카탈로그 (${leftModelRows} models, ${coreCardCount} spec cells, VDI 2198/kg/mm/OEM, mast/battery, compare & parts detail) verified.`);
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');

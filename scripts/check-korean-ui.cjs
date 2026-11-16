@@ -102,7 +102,17 @@ const UI_OBJ_KEYS = new Set([
   'sectionTitle',
 ]);
 
-function checkUiOutputExpr(expr, sf, checkEnumProp) {
+const ALLOWED_TECH_TOKEN_RE =
+  /(?<![A-Za-z])(?:VDI\s*2198|VDI|ISO\s*5053|ISO\s*2328|ISO|OEM|TVH|KS|CE|IPX4|BMS|AC|DC|LED|LFP|PDF|kg|mm|cm|km\/h|mm\/s|l\/min|L\/min|kW|MPa|kPa|dB|Ah|Wh|Hz|rpm|h(?:10|[1-9])|l[1-2]|b(?:1[0-3]|[1-9])|m[1-2]|Wa|Ast|[mNVLAQcxysel])(?![A-Za-z])/g;
+
+function hasDisallowedUiText(text, allowTechTokens) {
+  const source = String(text || '');
+  if (source.includes('->')) return true;
+  const checkStr = allowTechTokens ? source.replace(ALLOWED_TECH_TOKEN_RE, ' ') : source;
+  return /[A-Za-z]/.test(checkStr);
+}
+
+function checkUiOutputExpr(expr, sf, checkEnumProp, allowTechTokens = true) {
   const hits = [];
   function inspectOutput(node) {
     if (!node) return;
@@ -156,7 +166,7 @@ function checkUiOutputExpr(expr, sf, checkEnumProp) {
     }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       const t = node.text;
-      if (/[A-Za-z]|->/.test(t)) {
+      if (hasDisallowedUiText(t, allowTechTokens)) {
         hits.push(`"${t}"`);
       }
       return;
@@ -164,7 +174,7 @@ function checkUiOutputExpr(expr, sf, checkEnumProp) {
     if (ts.isTemplateExpression(node)) {
       const parts = [node.head.text, ...node.templateSpans.map((s) => s.literal.text)];
       for (const p of parts) {
-        if (/[A-Za-z]|->/.test(p)) {
+        if (hasDisallowedUiText(p, allowTechTokens)) {
           hits.push(`템플릿 "${p}"`);
         }
       }
@@ -318,12 +328,12 @@ for (const file of files) {
     if (ts.isJsxText(node)) {
       const raw = code.slice(node.getFullStart(), node.getEnd());
       checkText(raw, node.getStart(sf), false);
-      // 규칙 2: JSX 본문 영문/화살표 직접 노출 차단
+      // 규칙 2: JSX 본문 영문/화살표 직접 노출 차단 (허용 기술 표준 단위·기호 제외)
       const cleaned = node
         .getText(sf)
         .replace(/&(?:nbsp|amp|lt|gt|quot|apos);/g, '')
         .trim();
-      if (cleaned && /[A-Za-z]|->/.test(cleaned)) {
+      if (cleaned && hasDisallowedUiText(cleaned, true)) {
         violations.push(
           `${rel}:${lineNum} [JSX 영문/화살표 노출 금지] "${cleaned.replace(/\s+/g, ' ').slice(0, 80)}"`
         );
@@ -355,21 +365,22 @@ for (const file of files) {
           ? node.parent.parent.tagName.getText(sf)
           : '';
       if (parentTag === 'StatusBadge' && attrName === 'label') {
-        if (ts.isStringLiteral(node.initializer) && /[A-Za-z]|->/.test(node.initializer.text)) {
+        if (ts.isStringLiteral(node.initializer) && hasDisallowedUiText(node.initializer.text, false)) {
           violations.push(`${rel}:${lineNum} [영문 배지/원시코드 금지] "${node.initializer.text}"`);
         } else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
-          for (const h of checkUiOutputExpr(node.initializer.expression, sf, true)) {
+          for (const h of checkUiOutputExpr(node.initializer.expression, sf, true, false)) {
             violations.push(`${rel}:${lineNum} [영문 배지/원시코드 금지] ${h}`);
           }
         }
       } else if (isUiScope && UI_JSX_ATTRS.has(attrName)) {
-        if (ts.isStringLiteral(node.initializer) && /[A-Za-z]|->/.test(node.initializer.text)) {
+        if (ts.isStringLiteral(node.initializer) && hasDisallowedUiText(node.initializer.text, true)) {
           violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${attrName}="${node.initializer.text}"`);
         } else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
           for (const h of checkUiOutputExpr(
             node.initializer.expression,
             sf,
-            attrName === 'label' || attrName === 'header'
+            attrName === 'label' || attrName === 'header',
+            true
           )) {
             violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${attrName}=${h}`);
           }
@@ -384,7 +395,8 @@ for (const file of files) {
         for (const h of checkUiOutputExpr(
           node.initializer,
           sf,
-          propKey === 'label' || propKey === 'header'
+          propKey === 'label' || propKey === 'header',
+          true
         )) {
           violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${propKey}: ${h}`);
         }

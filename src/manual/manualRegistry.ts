@@ -112,10 +112,10 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'trade_item_masters',
     pageTitle: '유통 품목 관리',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '유통 판매 전용 및 공용 완제품·어태치먼트·부품·소모품의 표준원가, 대리점가, 판매정가와 안전재고를 관리한다.',
+    basicDescription: '유통 판매 전용 및 공용 완제품·어태치먼트·부품·소모품의 표준원가, 대리점가, 판매정가를 관리한다.',
     anchors: [
       { anchorId: 'itm-filter', title: '유통 품목 · 단가 필터', summary: '유통 전용/공용 구분 및 품목군, 키워드·초성으로 품목을 필터링한다.' },
-      { anchorId: 'itm-grid', title: '유통 품목 단가 목록', summary: '품목코드, 품목군, 추적방식, 표준원가, 대리점가, 판매정가, 안전재고를 확인한다.' },
+      { anchorId: 'itm-grid', title: '유통 품목 단가 목록', summary: '품목코드, 품목군, 추적방식, 표준원가, 대리점가, 판매정가를 확인한다.' },
       { anchorId: 'itm-form', title: '유통 품목 등록·수정 버튼', summary: '신규 유통 품목을 추가하거나 선택 품목의 판매단가를 수정한다.' },
       { anchorId: 'itm-sum', title: '유통 품목 원장 요약', summary: '조회된 유통 품목 수와 품목군별 구성 현황을 1줄로 검증한다.' },
     ],
@@ -125,7 +125,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
         purpose: '유통 매입·견적·계약에서 참조하는 판매 품목코드와 대리점가·판매정가를 관리한다.',
         steps: [
           { stepNo: 1, targetLabel: '유통 품목 검색 바', manualAnchorId: 'itm-filter', actionDetail: '운용구분과 품목군 탭에서 대상 품목군을 선택한다.' },
-          { stepNo: 2, targetLabel: '유통 품목 추가 버튼', manualAnchorId: 'itm-form', actionDetail: '품목코드, 품명, 표준원가, 대리점가, 판매정가, 안전재고를 입력한다.' },
+          { stepNo: 2, targetLabel: '유통 품목 추가 버튼', manualAnchorId: 'itm-form', actionDetail: '품목코드, 품명, 표준원가, 대리점가, 판매정가를 입력한다.' },
           { stepNo: 3, targetLabel: '품목 저장 버튼', manualAnchorId: 'itm-form', actionDetail: '저장 버튼으로 유통 품목 마스터를 확정한다.' },
         ],
       },
@@ -188,7 +188,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'catalogs',
     pageTitle: '제원 카탈로그',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '지게차 모델별 국제표준 기술제원·마스트·배터리 사양과 대리점 배포용 호환 부품 카탈로그 패키지를 조회한다.',
+    basicDescription: '지게차 모델별 VDI 2198 기술제원·마스트·배터리 사양과 대리점 배포용 호환 부품 카탈로그 패키지를 조회한다.',
     anchors: [
       { anchorId: 'cat-tabs', title: '제원·부품 전환 탭', summary: '장비 기술제원표와 호환부품 카탈로그를 전환한다.' },
       { anchorId: 'cat-detail', title: '기술제원·카탈로그 본문', summary: '마스트 높이별 하중표, 배터리 옵션, 호환품번을 확인한다.' },

@@ -214,7 +214,6 @@ CREATE TABLE IF NOT EXISTS public.fl_item_masters (
   standard_daily_rental_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   depreciation_months INTEGER NOT NULL DEFAULT 60,
   residual_value_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
-  safety_stock NUMERIC(12,2) NOT NULL DEFAULT 0,
   warehouse_location TEXT NOT NULL DEFAULT '평택 주기장',
   diagram_type TEXT,
   image_url TEXT,

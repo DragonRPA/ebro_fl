@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import { syncPartnerNameAcrossTables, upsertManagedExchangeRates } from '../services/domainEngine';
@@ -7,6 +7,10 @@ import {
   analyzeBusinessLicenseFile,
   uploadBusinessLicenseImageToR2,
 } from '../services/businessLicenseOcrService';
+import {
+  generateCompareSpecsExcel,
+  generateModelSpecExcel,
+} from '../services/documentService';
 import {
   CommaNumberInput,
   ConservationBar,
@@ -35,8 +39,17 @@ import {
   type PartnerRole,
 } from '../types/domain';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
-import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
-import { COMPATIBLE_PARTS_CATALOG, PART_CATEGORIES } from '../data/compatiblePartsCatalogData';
+import {
+  FL_TECHNICAL_ARCHIVE,
+  getCompleteMastSpecs,
+  getCompleteVdiSpecs,
+  type FlModelTechnicalSpec,
+} from '../data/flTechnicalArchive';
+import {
+  COMPATIBLE_PARTS_CATALOG,
+  PART_CATEGORIES,
+  type CompatiblePartCatalogItem,
+} from '../data/compatiblePartsCatalogData';
 
 const ALL_ROLES: PartnerRole[] = [
   '매출처',
@@ -1139,7 +1152,6 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
       standardDailyRentalKrw: 0,
       depreciationMonths: 60,
       residualValueKrw: 0,
-      safetyStock: 1,
       warehouseLocation: '평택 주기장',
       isActive: true,
     });
@@ -1185,7 +1197,6 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
         standardDailyRentalKrw: Math.round(Number(editing.standardDailyRentalKrw || 0)),
         depreciationMonths: Number(editing.depreciationMonths || 60),
         residualValueKrw: Math.round(Number(editing.residualValueKrw || 0)),
-        safetyStock: Number(editing.safetyStock || 0),
         warehouseLocation: editing.warehouseLocation || '평택 주기장',
         vdiSpecs: editing.vdiSpecs || [],
         mastSpecs: editing.mastSpecs || [],
@@ -1283,13 +1294,6 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             width: 115,
             align: 'right',
             render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
-          },
-          {
-            key: 'safetyStock',
-            header: '안전재고',
-            width: 90,
-            align: 'right',
-            render: (r) => `${Number(r.safetyStock || 0).toLocaleString('ko-KR')} ${r.unitName}`,
           },
         ] as GridColumn<FlItemMaster>[])
       : ([
@@ -1518,7 +1522,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             </div>
 
             {isTrade ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 <VerticalField label="표준원가">
                   <CommaNumberInput
                     value={Number(editing.standardCostKrw ?? 0)}
@@ -1539,13 +1543,6 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
                     disabled={maskPrice}
                     value={maskPrice ? 0 : Number(editing.retailPriceKrw ?? 0)}
                     onChange={(val) => setEditing((p) => ({ ...p, retailPriceKrw: val }))}
-                    min={0}
-                  />
-                </VerticalField>
-                <VerticalField label="안전재고">
-                  <CommaNumberInput
-                    value={Number(editing.safetyStock ?? 0)}
-                    onChange={(val) => setEditing((p) => ({ ...p, safetyStock: val }))}
                     min={0}
                   />
                 </VerticalField>
@@ -2551,46 +2548,208 @@ export const ExchangeRatesPage: React.FC = () => {
   );
 };
 
+const MAX_COMPARE_MODELS = 6;
+
+function buildCoreSpecCells(spec: FlModelTechnicalSpec): { label: string; value: string }[] {
+  const cells: { label: string; value: string }[] = [
+    { label: '정격 적재하중 Q', value: `${spec.ratedCapacityKg.toLocaleString('ko-KR')} kg` },
+    { label: '하중중심 거리 c', value: `${spec.loadCenterMm.toLocaleString('ko-KR')} mm` },
+    { label: '표준 인상고 h3', value: `${spec.standardLiftHeightMm.toLocaleString('ko-KR')} mm` },
+    { label: '최대 옵션 인상고', value: `${spec.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
+    { label: '자유 인상고 h2', value: `${spec.freeLiftHeightMm.toLocaleString('ko-KR')} mm` },
+    { label: '표준 포크 규격 s×e×l', value: `${spec.forkDimensionsMm} mm` },
+    { label: '본체 전장 l2', value: `${spec.overallLengthMm.toLocaleString('ko-KR')} mm` },
+    { label: '전폭 b1', value: `${spec.overallWidthMm.toLocaleString('ko-KR')} mm` },
+    { label: '헤드가드 높이 h6', value: `${spec.overheadGuardHeightMm.toLocaleString('ko-KR')} mm` },
+    { label: '최소 회전반경 Wa', value: `${spec.turningRadiusMm.toLocaleString('ko-KR')} mm` },
+    { label: '직각통로폭 1000×1200 Ast', value: `${spec.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
+    { label: '주행속도 적재/공차', value: spec.travelSpeedKmh.includes('km/h') ? spec.travelSpeedKmh : `${spec.travelSpeedKmh} km/h` },
+    { label: '인상속도 적재/공차', value: spec.liftingSpeedMms.includes('mm/s') ? spec.liftingSpeedMms : `${spec.liftingSpeedMms} mm/s` },
+    { label: '최대 등판능력', value: `${spec.gradeabilityPercent} %` },
+    { label: '장비 자중', value: `${spec.serviceWeightKg.toLocaleString('ko-KR')} kg` },
+    { label: '방수 등급', value: spec.waterproofRating },
+  ];
+
+  const optPush = (label: string, val: unknown, suffix = '') => {
+    if (val === undefined || val === null || val === '') return;
+    const str = typeof val === 'number' ? val.toLocaleString('ko-KR') : String(val);
+    cells.push({ label, value: suffix && !str.endsWith(suffix.trim()) ? `${str}${suffix}` : str });
+  };
+
+  optPush('하중거리 x', spec.loadDistanceXMm, ' mm');
+  optPush('축거 y', spec.wheelbaseMm, ' mm');
+  optPush('적재 축중 전/후', spec.axleLoadingLadenKg, ' kg');
+  optPush('공차 축중 전/후', spec.axleLoadingUnladenKg, ' kg');
+  optPush('차륜수 전/후', spec.wheelCountFrontRear);
+  optPush('윤거 전/후', spec.treadFrontRearMm, ' mm');
+  optPush('마스트 경사각 전/후', spec.mastTiltDeg, ' °');
+  optPush('마스트 최저전고 h1', spec.mastLoweredH1Mm, ' mm');
+  optPush('마스트 최대높이 h4', spec.mastExtendedH4Mm, ' mm');
+  optPush('좌석 높이 h7', spec.seatHeightH7Mm, ' mm');
+  optPush('견인핀 높이 h10', spec.couplingHeightH10Mm, ' mm');
+  optPush('포크포함 전장 l1', spec.overallLengthWithForkL1Mm, ' mm');
+  optPush('복륜 전폭 b2', spec.overallWidthDualB2Mm, ' mm');
+  optPush('포크캐리지 등급', spec.forkCarriageClass);
+  optPush('포크캐리지 폭 b3', spec.forkCarriageWidthB3Mm, ' mm');
+  optPush('포크 외폭 최소/최대 b5', spec.forkSpreadMinMaxB5Mm, ' mm');
+  optPush('최저지상고 마스트하부 m1', spec.groundClearanceMastM1Mm, ' mm');
+  optPush('최저지상고 중앙 m2', spec.groundClearanceCenterM2Mm, ' mm');
+  optPush('직각통로폭 800×1200 Ast', spec.aisleWidth800x1200Mm, ' mm');
+  optPush('하강속도 적재/공차', spec.loweringSpeedMms, ' mm/s');
+  optPush('최대 견인력 적재/공차', spec.maxDrawbarPullN, ' N');
+  optPush('등판능력 적재/공차', spec.maxGradeabilityPercent, ' %');
+  optPush('주브레이크 / 주차브레이크', spec.serviceBrake && spec.parkingBrake ? `${spec.serviceBrake} / ${spec.parkingBrake}` : undefined);
+  optPush('주행 / 인양모터 출력', spec.driveMotorKw && spec.liftMotorKw ? `${spec.driveMotorKw} kW / ${spec.liftMotorKw} kW` : undefined);
+  optPush('배터리 전압·용량 / 중량', spec.batteryVoltageCapacity ? `${spec.batteryVoltageCapacity}${spec.batteryWeightKg ? ` · ${spec.batteryWeightKg} kg` : ''}` : undefined);
+  optPush('구동 제어 / 컨트롤러', spec.driveControlType && spec.controllerMaker ? `${spec.driveControlType} · ${spec.controllerMaker}` : spec.driveControlType || spec.controllerMaker);
+  optPush('유압 작동압력 / 토출유량', spec.operatingPressureMpa || spec.oilFlowLmin ? `${spec.operatingPressureMpa || '-'} MPa / ${spec.oilFlowLmin || '-'} l/min` : undefined);
+  optPush('운전원귀 소음도 / 유압탱크', spec.soundLevelDb || spec.hydraulicTankLiter ? `${spec.soundLevelDb || '-'} dB / ${spec.hydraulicTankLiter || '-'} L` : undefined);
+
+  return cells.slice(0, 36);
+}
+
 export const CatalogsPage: React.FC = () => {
   const { datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('catalogs');
 
-  const [subTab, setSubTab] = useState<'SPECS' | 'PARTS' | 'PACKAGES'>('SPECS');
+  const [subTab, setSubTab] = useState<'SPECS' | 'COMPARE' | 'PARTS' | 'PACKAGES'>('SPECS');
+  const [detailSection, setDetailSection] = useState<'ALL' | 'CORE' | 'VDI' | 'MAST' | 'GUIDE'>('ALL');
   const [specKeyword, setSpecKeyword] = useState('');
+  const [mfgFilter, setMfgFilter] = useState('ALL');
+  const [powerFilter, setPowerFilter] = useState('ALL');
+  const [classFilter, setClassFilter] = useState('ALL');
+  const [vdiCatFilter, setVdiCatFilter] = useState('ALL');
   const [selectedSpecId, setSelectedSpecId] = useState(FL_TECHNICAL_ARCHIVE[0]?.id || '');
+  const [compareIds, setCompareIds] = useState<string[]>([
+    'FL-SPEC-HELI-CPD25-GB2LI',
+    'FL-SPEC-BYD-ECB30C',
+    'FL-SPEC-HANGCHA-CPD25-XEY2',
+    'ARC-MJ-CPD25-K3',
+  ].filter((id) => FL_TECHNICAL_ARCHIVE.some((m) => m.id === id)));
+  const [previewDoc, setPreviewDoc] = useState<{ title: string; url: string; r2Url: string } | null>(null);
+
   const [partCategory, setPartCategory] = useState('ALL');
   const [partKeyword, setPartKeyword] = useState('');
+  const [selectedPartId, setSelectedPartId] = useState(COMPATIBLE_PARTS_CATALOG[0]?.id || '');
 
   const [pkgTitle, setPkgTitle] = useState('');
   const [pkgRole, setPkgRole] = useState('대리점');
   const [pkgSaving, setPkgSaving] = useState(false);
 
+  const manufacturers = useMemo(
+    () => Array.from(new Set(FL_TECHNICAL_ARCHIVE.map((s) => s.manufacturerName))),
+    []
+  );
+  const powerTypes = useMemo(
+    () => Array.from(new Set(FL_TECHNICAL_ARCHIVE.map((s) => s.powerType))),
+    []
+  );
+  const equipmentClasses = useMemo(
+    () => Array.from(new Set(FL_TECHNICAL_ARCHIVE.map((s) => s.equipmentClass))),
+    []
+  );
+
   const filteredSpecs = useMemo(() => {
-    const q = specKeyword.trim().toLowerCase();
-    if (!q) return FL_TECHNICAL_ARCHIVE;
-    return FL_TECHNICAL_ARCHIVE.filter(
-      (s) =>
-        s.modelName.toLowerCase().includes(q) ||
-        s.manufacturerName.toLowerCase().includes(q) ||
-        s.seriesName.toLowerCase().includes(q)
-    );
-  }, [specKeyword]);
+    const q = specKeyword.trim();
+    return FL_TECHNICAL_ARCHIVE.filter((s) => {
+      if (mfgFilter !== 'ALL' && s.manufacturerName !== mfgFilter) return false;
+      if (powerFilter !== 'ALL' && s.powerType !== powerFilter) return false;
+      if (classFilter !== 'ALL' && s.equipmentClass !== classFilter) return false;
+      if (!q) return true;
+      return matchesKoreanQuery(`${s.modelName} ${s.manufacturerName} ${s.seriesName} ${s.powerType}`, q);
+    });
+  }, [classFilter, mfgFilter, powerFilter, specKeyword]);
 
   const activeSpec =
     filteredSpecs.find((s) => s.id === selectedSpecId) || filteredSpecs[0] || null;
 
+  const activeCoreCells = useMemo(
+    () => (activeSpec ? buildCoreSpecCells(activeSpec) : []),
+    [activeSpec]
+  );
+  const activeVdiRows = useMemo(
+    () => (activeSpec ? getCompleteVdiSpecs(activeSpec) : []),
+    [activeSpec]
+  );
+  const activeVdiCategories = useMemo(
+    () => Array.from(new Set(activeVdiRows.map((r) => r.category))),
+    [activeVdiRows]
+  );
+  const filteredVdiRows = useMemo(
+    () => (vdiCatFilter === 'ALL' ? activeVdiRows : activeVdiRows.filter((r) => r.category === vdiCatFilter)),
+    [activeVdiRows, vdiCatFilter]
+  );
+  const activeMastRows = useMemo(
+    () => (activeSpec ? getCompleteMastSpecs(activeSpec) : []),
+    [activeSpec]
+  );
+
+  const comparedModels = useMemo(
+    () =>
+      compareIds
+        .map((id) => FL_TECHNICAL_ARCHIVE.find((m) => m.id === id))
+        .filter((m): m is FlModelTechnicalSpec => Boolean(m)),
+    [compareIds]
+  );
+
+  const toggleCompareId = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_COMPARE_MODELS) {
+        notifyToast(`모델 제원 비교는 최대 ${MAX_COMPARE_MODELS}개 기종까지 선택할 수 있습니다.`, 'error');
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const compareRows = useMemo(
+    () => [
+      { label: '시리즈명', render: (m: FlModelTechnicalSpec) => m.seriesName },
+      { label: '차종 · 동력방식', render: (m: FlModelTechnicalSpec) => `${m.equipmentClass} · ${m.powerType}` },
+      { label: '정격하중 Q · 하중중심 c', render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString('ko-KR')} kg · ${m.loadCenterMm} mm` },
+      { label: '축거 y · 하중거리 x', render: (m: FlModelTechnicalSpec) => `${m.wheelbaseMm || '-'} mm · ${m.loadDistanceXMm || '-'} mm` },
+      { label: '표준 · 최대 인상고 h3', render: (m: FlModelTechnicalSpec) => `${m.standardLiftHeightMm.toLocaleString('ko-KR')} mm · ${m.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
+      { label: '자유인상고 h2 · 전고 h1', render: (m: FlModelTechnicalSpec) => `${m.freeLiftHeightMm.toLocaleString('ko-KR')} mm · ${(m.mastLoweredH1Mm || m.overheadGuardHeightMm).toLocaleString('ko-KR')} mm` },
+      { label: '포크 규격 s×e×l', render: (m: FlModelTechnicalSpec) => `${m.forkDimensionsMm} mm` },
+      { label: '본체 전장×전폭×헤드가드고', render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
+      { label: '포크포함 전장 l1', render: (m: FlModelTechnicalSpec) => `${m.overallLengthWithForkL1Mm ? m.overallLengthWithForkL1Mm.toLocaleString('ko-KR') : '-'} mm` },
+      { label: '최소 회전반경 Wa', render: (m: FlModelTechnicalSpec) => `${m.turningRadiusMm.toLocaleString('ko-KR')} mm` },
+      { label: '직각 적재 통로폭 Ast', render: (m: FlModelTechnicalSpec) => `${m.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
+      { label: '주행속도 · 인상속도', render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h · ${m.liftingSpeedMms} mm/s` },
+      { label: '하강속도 · 최대 견인력', render: (m: FlModelTechnicalSpec) => `${m.loweringSpeedMms || '-'} mm/s · ${m.maxDrawbarPullN || '-'} N` },
+      { label: '최대 등판능력', render: (m: FlModelTechnicalSpec) => `${m.maxGradeabilityPercent || m.gradeabilityPercent} %` },
+      { label: '장비 자중 · 적재·공차 축중', render: (m: FlModelTechnicalSpec) => `${m.serviceWeightKg.toLocaleString('ko-KR')} kg · ${m.axleLoadingLadenKg || '-'}` },
+      { label: '배터리 · 엔진 상세 사양', render: (m: FlModelTechnicalSpec) => m.powerSpecDetail },
+      { label: '주행·인양 출력 · 제어', render: (m: FlModelTechnicalSpec) => `${m.motorOrEngineDetail}${m.controllerMaker ? ` · ${m.controllerMaker}` : ''}` },
+      { label: '충전기 · 연료계통', render: (m: FlModelTechnicalSpec) => m.chargerOrFuelDetail },
+      { label: '타이어 규격 전/후', render: (m: FlModelTechnicalSpec) => m.tireSpecFrontRear },
+      { label: '작동압력 · 유량 · 소음도', render: (m: FlModelTechnicalSpec) => `${m.operatingPressureMpa || '-'} MPa · ${m.oilFlowLmin || '-'} l/min · ${m.soundLevelDb || '-'} dB` },
+      { label: '제동장치 · 방수등급', render: (m: FlModelTechnicalSpec) => `${m.brakeType} · ${m.waterproofRating}` },
+      { label: '공식 보증기간', render: (m: FlModelTechnicalSpec) => m.warrantyTerms },
+    ],
+    []
+  );
+
   const filteredParts = useMemo(() => {
-    const q = partKeyword.trim().toLowerCase();
+    const q = partKeyword.trim();
     return COMPATIBLE_PARTS_CATALOG.filter((p) => {
       if (partCategory !== 'ALL' && p.category !== partCategory) return false;
       if (!q) return true;
-      return (
-        p.partName.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.oemCrossRefCodes.some((c) => c.toLowerCase().includes(q))
+      return matchesKoreanQuery(
+        `${p.partName} ${p.sku} ${p.tvhRefNo || ''} ${p.oemCrossRefCodes.join(' ')} ${p.compatibleModels.join(' ')}`,
+        q
       );
     });
   }, [partCategory, partKeyword]);
+
+  const activePart: CompatiblePartCatalogItem | null =
+    filteredParts.find((p) => p.id === selectedPartId) || filteredParts[0] || null;
+
+  const vdiCompletedModelCount = useMemo(
+    () => FL_TECHNICAL_ARCHIVE.filter((m) => Array.isArray(m.vdiSpecs) && m.vdiSpecs.length >= 50).length,
+    []
+  );
 
   const handleSavePackage = async () => {
     if (!pkgTitle.trim()) {
@@ -2605,8 +2764,8 @@ export const CatalogsPage: React.FC = () => {
         catalogCode: `CAT-${Date.now().toString(36).toUpperCase()}`,
         title: pkgTitle.trim(),
         targetPartnerRole: pkgRole,
-        targetModels: activeSpec ? [activeSpec.modelName] : [],
-        selectedItemSkus: filteredParts.slice(0, 10).map((p) => p.sku),
+        targetModels: comparedModels.length > 0 ? comparedModels.map((m) => m.modelName) : activeSpec ? [activeSpec.modelName] : [],
+        selectedItemSkus: filteredParts.slice(0, 12).map((p) => p.sku),
         showUnitPrice: true,
         showStock: true,
         isDefault: false,
@@ -2627,12 +2786,13 @@ export const CatalogsPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <SectionPanel
-        title="제원 · 호환 부품 카탈로그"
+        title="VDI 2198 제원 · 호환 부품 카탈로그"
         manualId="cat-tabs"
         rightSlot={
           <SegmentedTabs
             tabs={[
               { id: 'SPECS', label: '장비 제원표', count: FL_TECHNICAL_ARCHIVE.length },
+              { id: 'COMPARE', label: '모델 제원 비교', count: comparedModels.length },
               { id: 'PARTS', label: '호환부품 카탈로그', count: COMPATIBLE_PARTS_CATALOG.length },
               { id: 'PACKAGES', label: '배포 패키지', count: datasets.catalogPackages.length },
             ]}
@@ -2643,95 +2803,518 @@ export const CatalogsPage: React.FC = () => {
       >
         {subTab === 'SPECS' && (
           <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <VerticalField label="장비 기종 · 제조사 검색" width={340}>
-              <input
-                type="text"
-                value={specKeyword}
-                onChange={(e) => setSpecKeyword(e.target.value)}
-                placeholder="모델명 또는 제조사"
-                style={controlInputStyle}
-              />
-            </VerticalField>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+              <VerticalField label="장비 기종 · 제조사 검색" minWidth={240} flex={1}>
+                <input
+                  type="text"
+                  value={specKeyword}
+                  onChange={(e) => setSpecKeyword(e.target.value)}
+                  placeholder="모델명, 제조사, 시리즈 검색"
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="제조사" width={175}>
+                <select value={mfgFilter} onChange={(e) => setMfgFilter(e.target.value)} style={controlInputStyle}>
+                  <option value="ALL">전체 제조사</option>
+                  {manufacturers.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </VerticalField>
+              <VerticalField label="동력구분" width={165}>
+                <select value={powerFilter} onChange={(e) => setPowerFilter(e.target.value)} style={controlInputStyle}>
+                  <option value="ALL">전체 동력</option>
+                  {powerTypes.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </VerticalField>
+              <VerticalField label="차종구분" width={205}>
+                <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} style={controlInputStyle}>
+                  <option value="ALL">전체 차종</option>
+                  {equipmentClasses.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </VerticalField>
+            </div>
 
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(290px, 1fr) minmax(380px, 1.5fr)',
+                gridTemplateColumns: 'minmax(350px, 1fr) minmax(520px, 1.85fr)',
                 gap: '14px',
                 alignItems: 'start',
               }}
             >
               <DataGrid
                 columns={[
-                  { key: 'mfg', header: '제조사', width: 90, render: (r) => r.manufacturerName },
-                  { key: 'model', header: '모델명', render: (r) => <span style={{ fontWeight: 700 }}>{r.modelName}</span> },
+                  { key: 'mfg', header: '제조사', width: 96, render: (r) => r.manufacturerName },
+                  {
+                    key: 'model',
+                    header: '모델명 · 시리즈',
+                    render: (r) => (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{r.modelName}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.seriesName}</span>
+                      </div>
+                    ),
+                  },
                   {
                     key: 'cap',
                     header: '적재하중',
-                    width: 100,
+                    width: 85,
                     align: 'right',
-                    render: (r) => `${r.ratedCapacityKg} 킬로그램`,
+                    render: (r) => `${r.ratedCapacityKg.toLocaleString('ko-KR')} kg`,
+                  },
+                  {
+                    key: 'vdiCnt',
+                    header: 'VDI',
+                    width: 66,
+                    align: 'center',
+                    render: (r) => `${getCompleteVdiSpecs(r).length}항목`,
+                  },
+                  {
+                    key: 'cmp',
+                    header: '비교',
+                    width: 74,
+                    align: 'center',
+                    render: (r) => {
+                      const active = compareIds.includes(r.id);
+                      return (
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            toggleCompareId(r.id);
+                          }}
+                          style={actionBtnStyle(active ? 'primary' : 'secondary', true)}
+                        >
+                          {active ? '선택됨' : '담기'}
+                        </button>
+                      );
+                    },
                   },
                 ]}
                 rows={filteredSpecs}
                 rowKey={(r) => r.id}
                 selectedRowId={activeSpec?.id || null}
-                onRowClick={(r) => setSelectedSpecId(r.id)}
-                maxHeight="520px"
+                onRowClick={(r) => {
+                  setSelectedSpecId(r.id);
+                  setVdiCatFilter('ALL');
+                }}
+                maxHeight="780px"
               />
 
               {activeSpec && (
-                <SectionPanel title={`${activeSpec.manufacturerName} · ${activeSpec.modelName}`}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                      <div>동력구분: {activeSpec.powerType}</div>
-                      <div>정격하중: {activeSpec.ratedCapacityKg} 킬로그램</div>
-                      <div>표준인상고: {activeSpec.standardLiftHeightMm} 밀리미터</div>
-                      <div>최소회전반경: {activeSpec.turningRadiusMm} 밀리미터</div>
-                      <div>직각적재통로폭: {activeSpec.aisleWidth1000x1200Mm} 밀리미터</div>
-                      <div>헤드가드높이: {activeSpec.overheadGuardHeightMm} 밀리미터</div>
+                <SectionPanel
+                  title={`${activeSpec.manufacturerName} · ${activeSpec.modelName}`}
+                  titleSlot={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <StatusBadge label={activeSpec.originCountry} tone="neutral" />
+                      <StatusBadge label={activeSpec.equipmentClass} tone="info" />
+                      <StatusBadge label={activeSpec.powerType} tone="success" />
+                    </div>
+                  }
+                  rightSlot={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCompareId(activeSpec.id)}
+                        style={actionBtnStyle(compareIds.includes(activeSpec.id) ? 'primary' : 'secondary', true)}
+                      >
+                        {compareIds.includes(activeSpec.id) ? '비교 제외' : '비교 추가'}
+                      </button>
+                      {activeSpec.documents[0] && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewDoc({
+                              title: activeSpec.documents[0].title,
+                              url: activeSpec.documents[0].localUrl || activeSpec.documents[0].r2Url,
+                              r2Url: activeSpec.documents[0].r2Url,
+                            })
+                          }
+                          style={actionBtnStyle('secondary', true)}
+                        >
+                          <Eye size={13} />
+                          문서 미리보기
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await generateModelSpecExcel({
+                              spec: activeSpec,
+                              vdiRows: activeVdiRows,
+                              mastRows: activeMastRows,
+                              coreRows: activeCoreCells,
+                            });
+                            notifyToast(`${activeSpec.modelName} 제원표 엑셀 생성 완료`, 'success');
+                          } catch (err) {
+                            notifyToast(err instanceof Error ? err.message : '엑셀 출력 실패', 'error');
+                          }
+                        }}
+                        style={actionBtnStyle('primary', true)}
+                      >
+                        <Download size={13} />
+                        제원표 엑셀
+                      </button>
+                    </div>
+                  }
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12.5px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '10px',
+                        flexWrap: 'wrap',
+                        paddingBottom: '8px',
+                        borderBottom: '1px solid var(--table-row-border)',
+                      }}
+                    >
+                      <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
+                        {activeSpec.seriesName}
+                      </span>
+                      <SegmentedTabs
+                        tabs={[
+                          { id: 'ALL', label: '전체 보기' },
+                          { id: 'CORE', label: '핵심 · 동력 제원', count: activeCoreCells.length },
+                          { id: 'VDI', label: 'VDI 2198 표준표', count: activeVdiRows.length },
+                          { id: 'MAST', label: '마스트 · 배터리', count: activeMastRows.length },
+                          { id: 'GUIDE', label: '사양 · 정비 · 문서', count: activeSpec.documents.length },
+                        ]}
+                        activeId={detailSection}
+                        onChange={(id) => setDetailSection(id as typeof detailSection)}
+                      />
                     </div>
 
-                    {activeSpec.mastSpecs && activeSpec.mastSpecs.length > 0 && (
-                      <DataGrid
-                        columns={[
-                          { key: 'mastModel', header: '마스트 모델', render: (m) => m.mastModel },
-                          { key: 'mastType', header: '단수', render: (m) => m.mastType },
-                          { key: 'h3', header: '최대인상고', align: 'right', render: (m) => `${m.liftHeightH3Mm} 밀리미터` },
-                          { key: 'h1', header: '최저전고', align: 'right', render: (m) => `${m.loweredHeightH1Mm} 밀리미터` },
-                        ]}
-                        rows={activeSpec.mastSpecs}
-                        rowKey={(m) => `${m.mastModel}-${m.liftHeightH3Mm}`}
-                        maxHeight="200px"
-                      />
+                    {(detailSection === 'ALL' || detailSection === 'CORE') && (
+                      <>
+                        <div
+                          data-testid="cat-core-grid"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                            gap: '8px',
+                          }}
+                        >
+                          {activeCoreCells.map((cell) => (
+                            <div
+                              key={cell.label}
+                              style={{
+                                padding: '8px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--table-row-border)',
+                                backgroundColor: 'var(--bg-app)',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  color: 'var(--text-muted)',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  marginBottom: '2px',
+                                }}
+                              >
+                                {cell.label}
+                              </div>
+                              <div
+                                title={cell.value}
+                                style={{
+                                  fontSize: '12.5px',
+                                  fontWeight: 700,
+                                  color: 'var(--text-main)',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {cell.value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: '8px',
+                          }}
+                        >
+                          {[
+                            { label: '배터리 · 엔진 상세 사양', value: activeSpec.powerSpecDetail },
+                            { label: '모터 · 출력 및 제어 시스템', value: activeSpec.motorOrEngineDetail },
+                            { label: '충전기 · 연료계통 및 변속기', value: activeSpec.chargerOrFuelDetail },
+                            { label: '타이어 규격 전/후', value: activeSpec.tireSpecFrontRear },
+                            { label: '제동 시스템', value: activeSpec.brakeType },
+                            { label: '공식 품질보증 기준', value: activeSpec.warrantyTerms },
+                          ].map((info) => (
+                            <div
+                              key={info.label}
+                              style={{
+                                padding: '9px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--table-row-border)',
+                                backgroundColor: 'var(--bg-header)',
+                              }}
+                            >
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', marginBottom: '3px' }}>
+                                {info.label}
+                              </div>
+                              <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.45 }}>
+                                {info.value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
 
-                    {activeSpec.documents && activeSpec.documents.length > 0 && (
-                      <DataGrid
-                        columns={[
-                          { key: 'cat', header: '문서구분', width: 110, render: (d) => d.docCategoryLabel },
-                          { key: 'title', header: '문서제목', render: (d) => d.title },
-                          {
-                            key: 'link',
-                            header: '열기',
-                            width: 75,
-                            align: 'center',
-                            render: (d) => (
-                              <a
-                                href={d.r2Url}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ color: 'var(--primary)', fontWeight: 700 }}
+                    {(detailSection === 'ALL' || detailSection === 'VDI') && (
+                      <div data-testid="cat-vdi-section" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
+                            VDI 2198 표준 기술제원표 · {filteredVdiRows.length}항목
+                          </span>
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              onClick={() => setVdiCatFilter('ALL')}
+                              style={actionBtnStyle(vdiCatFilter === 'ALL' ? 'primary' : 'secondary', true)}
+                            >
+                              전체 · {activeVdiRows.length}
+                            </button>
+                            {activeVdiCategories.map((cat) => (
+                              <button
+                                key={cat}
+                                type="button"
+                                onClick={() => setVdiCatFilter(cat)}
+                                style={actionBtnStyle(vdiCatFilter === cat ? 'primary' : 'secondary', true)}
                               >
-                                보기
-                              </a>
-                            ),
-                          },
-                        ]}
-                        rows={activeSpec.documents}
-                        rowKey={(d) => d.id}
-                        maxHeight="180px"
-                      />
+                                {cat} · {activeVdiRows.filter((x) => x.category === cat).length}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <DataGrid
+                          columns={[
+                            { key: 'code', header: '코드', width: 72, render: (r) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{r.code}</span> },
+                            { key: 'cat', header: '분류', width: 115, render: (r) => r.category },
+                            { key: 'itemKo', header: '한국어 제원 항목명', render: (r) => <span style={{ fontWeight: 700 }}>{r.itemKo}</span> },
+                            { key: 'itemEn', header: '원문 항목 표기', render: (r) => <span style={{ color: 'var(--text-secondary)' }}>{r.itemEn}</span> },
+                            { key: 'unit', header: '단위', width: 72, align: 'center', render: (r) => r.unit },
+                            { key: 'val', header: '제원 수치 · 사양', width: 185, align: 'right', render: (r) => <span style={{ fontWeight: 700 }}>{r.value}</span> },
+                          ]}
+                          rows={filteredVdiRows}
+                          rowKey={(r, i) => `${r.code}-${i}`}
+                          maxHeight="380px"
+                        />
+                      </div>
+                    )}
+
+                    {(detailSection === 'ALL' || detailSection === 'MAST') && (
+                      <>
+                        {activeMastRows.length > 0 && (
+                          <div data-testid="cat-mast-section" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
+                              마스트 단수 · 인상높이별 상세 제원표 · {activeMastRows.length}종
+                            </span>
+                            <DataGrid
+                              columns={[
+                                { key: 'mastType', header: '마스트 형식', render: (m) => <span style={{ fontWeight: 700 }}>{m.mastType}</span> },
+                                { key: 'mastModel', header: '모델코드', width: 95, render: (m) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{m.mastModel}</span> },
+                                { key: 'h3', header: '인상고 h3 · mm', width: 115, align: 'right', render: (m) => `${m.liftHeightH3Mm.toLocaleString('ko-KR')} mm` },
+                                { key: 'h1', header: '최저전고 h1 · mm', width: 120, align: 'right', render: (m) => `${m.loweredHeightH1Mm.toLocaleString('ko-KR')} mm` },
+                                { key: 'h4', header: '최대높이 h4 · mm', width: 120, align: 'right', render: (m) => `${m.extendedHeightWithBackrestH4Mm.toLocaleString('ko-KR')} mm` },
+                                { key: 'h2', header: '자유인상고 h2 · mm', width: 125, align: 'right', render: (m) => `${m.freeLiftWithBackrestH2Mm.toLocaleString('ko-KR')} mm` },
+                                { key: 'tilt', header: '경사각', width: 80, align: 'center', render: (m) => `${m.tiltAngleDeg}°` },
+                                { key: 'capSingle', header: '허용하중 500mm · kg', width: 135, align: 'right', render: (m) => `${m.loadCapacity500MmSingleKg.toLocaleString('ko-KR')} kg` },
+                                {
+                                  key: 'capDual',
+                                  header: '복륜 / 600mm · kg',
+                                  width: 135,
+                                  align: 'right',
+                                  render: (m) =>
+                                    m.loadCapacity500MmDualKg || m.loadCapacity600MmSingleKg
+                                      ? `${m.loadCapacity500MmDualKg ? `${m.loadCapacity500MmDualKg.toLocaleString('ko-KR')} kg` : '-'} / ${m.loadCapacity600MmSingleKg ? `${m.loadCapacity600MmSingleKg.toLocaleString('ko-KR')} kg` : '-'}`
+                                      : '-',
+                                },
+                              ]}
+                              rows={activeMastRows}
+                              rowKey={(m, i) => `${m.mastModel}-${m.liftHeightH3Mm}-${i}`}
+                              maxHeight="320px"
+                            />
+                          </div>
+                        )}
+
+                        {activeSpec.batteryOptions && activeSpec.batteryOptions.length > 0 && (
+                          <div data-testid="cat-battery-section" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
+                              배터리 셀 브랜드 · 용량 옵션 및 호환 충전기 매트릭스 · {activeSpec.batteryOptions.length}종
+                            </span>
+                            <DataGrid
+                              columns={[
+                                { key: 'brand', header: '셀 브랜드', width: 95, render: (b) => <span style={{ fontWeight: 700 }}>{b.cellBrand}</span> },
+                                { key: 'model', header: '배터리 모델', width: 115, render: (b) => <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{b.batteryModel}</span> },
+                                { key: 'vc', header: '전압 / 정격용량', width: 120, render: (b) => b.voltageCapacity },
+                                { key: 'wt', header: '중량 · kg', width: 90, align: 'right', render: (b) => (b.weightKg ? `${b.weightKg} kg` : '-') },
+                                {
+                                  key: 'st',
+                                  header: '구분',
+                                  width: 72,
+                                  align: 'center',
+                                  render: (b) => (
+                                    <StatusBadge
+                                      label={b.status === '표준' ? '표준' : '옵션'}
+                                      tone={b.status === '표준' ? 'success' : 'warning'}
+                                    />
+                                  ),
+                                },
+                                { key: 'app', header: '적용 모델 범위', render: (b) => b.applicableModels },
+                                { key: 'chg', header: '호환 충전기 사양', render: (b) => b.chargerOptions || '-' },
+                              ]}
+                              rows={activeSpec.batteryOptions}
+                              rowKey={(b, i) => `${b.cellBrand}-${b.batteryModel}-${i}`}
+                              maxHeight="280px"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {(detailSection === 'ALL' || detailSection === 'GUIDE') && (
+                      <>
+                        {((activeSpec.standardEquipments && activeSpec.standardEquipments.length > 0) ||
+                          (activeSpec.optionalEquipments && activeSpec.optionalEquipments.length > 0)) && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                              <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--text-main)' }}>
+                                기본 출고 사양 · {(activeSpec.standardEquipments || []).length}항목
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {(activeSpec.standardEquipments || []).map((eq, i) => (
+                                  <div key={i}>• {eq}</div>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                              <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--primary)' }}>
+                                선택 장착 옵션 사양 · {(activeSpec.optionalEquipments || []).length}항목
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {(activeSpec.optionalEquipments || []).map((eq, i) => (
+                                  <div key={i}>• {eq}</div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                          <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                            <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--success)' }}>
+                              안전 사양 및 운전자 일일점검 수칙
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-main)' }}>
+                              {activeSpec.safetyFeatures.map((sf, idx) => (
+                                <div key={`sf-${idx}`}>• [안전] {sf}</div>
+                              ))}
+                              {activeSpec.dailyChecklist.map((dc, idx) => (
+                                <div key={`dc-${idx}`} style={{ color: 'var(--primary)' }}>• [일일점검] {dc}</div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                            <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--warning)' }}>
+                              가동시간별 예방정비 주기 및 호환 부품
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-main)' }}>
+                              {activeSpec.periodicMaintenance.map((pm, idx) => (
+                                <div key={`pm-${idx}`}>• {pm}</div>
+                              ))}
+                              {activeSpec.compatibleParts.length > 0 && (
+                                <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed var(--border-color)' }}>
+                                  <div style={{ fontWeight: 700, marginBottom: '3px', color: 'var(--text-secondary)' }}>연동 호환 부품 목록</div>
+                                  {activeSpec.compatibleParts.map((cp) => (
+                                    <div key={cp.partCode} style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                                      • [{cp.partCode}] {cp.partName} · {cp.category} · {cp.replacementCycle}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {activeSpec.documents && activeSpec.documents.length > 0 && (
+                          <DataGrid
+                            columns={[
+                              { key: 'cat', header: '문서구분', width: 120, render: (d) => d.docCategoryLabel },
+                              { key: 'title', header: '문서제목', render: (d) => <span style={{ fontWeight: 700 }}>{d.title}</span> },
+                              { key: 'docNo', header: '문서번호', width: 145, render: (d) => d.docNo },
+                              { key: 'pages', header: '분량 · 크기', width: 105, render: (d) => `${d.pageCount}쪽 · ${d.fileSizeLabel}` },
+                              { key: 'issued', header: '발행일', width: 95, render: (d) => d.issuedDate },
+                              {
+                                key: 'preview',
+                                header: '미리보기',
+                                width: 86,
+                                align: 'center',
+                                render: (d) => (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPreviewDoc({
+                                        title: d.title,
+                                        url: d.localUrl || d.r2Url,
+                                        r2Url: d.r2Url,
+                                      })
+                                    }
+                                    style={actionBtnStyle('secondary', true)}
+                                  >
+                                    보기
+                                  </button>
+                                ),
+                              },
+                              {
+                                key: 'link',
+                                header: '원본',
+                                width: 70,
+                                align: 'center',
+                                render: (d) => (
+                                  <a
+                                    href={d.r2Url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ color: 'var(--primary)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                  >
+                                    열기
+                                    <ExternalLink size={12} />
+                                  </a>
+                                ),
+                              },
+                            ]}
+                            rows={activeSpec.documents}
+                            rowKey={(d) => d.id}
+                            maxHeight="220px"
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 </SectionPanel>
@@ -2740,15 +3323,121 @@ export const CatalogsPage: React.FC = () => {
           </div>
         )}
 
+        {subTab === 'COMPARE' && (
+          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '10px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end', flex: 1 }}>
+                <VerticalField label={`비교 기종 추가 · ${comparedModels.length}/${MAX_COMPARE_MODELS}종`} width={290}>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) toggleCompareId(e.target.value);
+                    }}
+                    style={controlInputStyle}
+                  >
+                    <option value="">비교할 장비 기종 선택</option>
+                    {FL_TECHNICAL_ARCHIVE.filter((m) => !compareIds.includes(m.id)).map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.manufacturerName} · {m.modelName} · {m.ratedCapacityKg.toLocaleString('ko-KR')} kg
+                      </option>
+                    ))}
+                  </select>
+                </VerticalField>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                  {comparedModels.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => toggleCompareId(m.id)}
+                      style={actionBtnStyle('primary', true)}
+                    >
+                      {m.manufacturerName} {m.modelName} ×
+                    </button>
+                  ))}
+                  {comparedModels.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setCompareIds([])}
+                      style={actionBtnStyle('secondary', true)}
+                    >
+                      선택 초기화
+                    </button>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={comparedModels.length === 0}
+                onClick={async () => {
+                  try {
+                    await generateCompareSpecsExcel({
+                      models: comparedModels,
+                      rows: compareRows.map((r) => ({
+                        label: r.label,
+                        values: comparedModels.map((m) => r.render(m)),
+                      })),
+                    });
+                    notifyToast('모델 제원 비교표 엑셀 생성 완료', 'success');
+                  } catch (err) {
+                    notifyToast(err instanceof Error ? err.message : '비교표 엑셀 출력 실패', 'error');
+                  }
+                }}
+                style={actionBtnStyle('primary')}
+              >
+                <Download size={14} />
+                비교표 엑셀 다운로드
+              </button>
+            </div>
+
+            {comparedModels.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                비교할 장비 기종을 1종 이상 선택하십시오.
+              </div>
+            ) : (
+              <div style={{ width: '100%', overflowX: 'auto', border: '1px solid var(--table-border-color)', borderRadius: '8px', backgroundColor: 'var(--bg-card)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', color: 'var(--text-main)' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-header)', borderBottom: '1px solid var(--table-border-color)' }}>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', width: '210px', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
+                        비교 제원 항목
+                      </th>
+                      {comparedModels.map((m) => (
+                        <th key={m.id} style={{ padding: '10px 12px', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap', borderRight: '1px solid var(--table-row-border)' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{m.manufacturerName} · {m.originCountry}</div>
+                          <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)' }}>{m.modelName}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {compareRows.map((row) => (
+                      <tr key={row.label} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
+                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
+                          {row.label}
+                        </td>
+                        {comparedModels.map((m) => (
+                          <td key={`${row.label}-${m.id}`} style={{ padding: '8px 12px', borderRight: '1px solid var(--table-row-border)' }}>
+                            {row.render(m)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {subTab === 'PARTS' && (
           <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
-              <VerticalField label="부품명 · 품번 · 순정 교차품번 검색" minWidth={240} flex={1}>
+              <VerticalField label="부품명 · 품번 · OEM 교차코드 검색" minWidth={240} flex={1}>
                 <input
                   type="text"
                   value={partKeyword}
                   onChange={(e) => setPartKeyword(e.target.value)}
-                  placeholder="부품명, 품목코드, 호환품번"
+                  placeholder="부품명, 품목코드, OEM 교차코드, 적용기종 검색"
                   style={controlInputStyle}
                 />
               </VerticalField>
@@ -2768,32 +3457,122 @@ export const CatalogsPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <DataGrid
-              columns={[
-                { key: 'sku', header: '품목코드', width: 130, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
-                { key: 'category', header: '분류', width: 145, render: (r) => r.category },
-                { key: 'partName', header: '부품명', render: (r) => r.partName },
-                { key: 'specSummary', header: '규격 요약', render: (r) => r.specSummary },
-                { key: 'oem', header: '교차품번', render: (r) => r.oemCrossRefCodes.slice(0, 2).join(', ') || '-' },
-                {
-                  key: 'dealerPriceKrw',
-                  header: '대리점가',
-                  width: 110,
-                  align: 'right',
-                  render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
-                },
-                {
-                  key: 'retailPriceKrw',
-                  header: '소비자가',
-                  width: 110,
-                  align: 'right',
-                  render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
-                },
-              ]}
-              rows={filteredParts}
-              rowKey={(r) => r.id}
-              maxHeight="520px"
-            />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(480px, 1.35fr) minmax(360px, 1fr)',
+                gap: '14px',
+                alignItems: 'start',
+              }}
+            >
+              <DataGrid
+                columns={[
+                  { key: 'sku', header: '품목코드', width: 130, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
+                  { key: 'category', header: '분류', width: 135, render: (r) => r.category },
+                  { key: 'partName', header: '부품명', render: (r) => r.partName },
+                  { key: 'tonnage', header: '적용톤수', width: 100, render: (r) => r.tonnageRange },
+                  {
+                    key: 'dealerPriceKrw',
+                    header: '대리점가',
+                    width: 105,
+                    align: 'right',
+                    render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
+                  },
+                  {
+                    key: 'retailPriceKrw',
+                    header: '소비자가',
+                    width: 105,
+                    align: 'right',
+                    render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
+                  },
+                ]}
+                rows={filteredParts}
+                rowKey={(r) => r.id}
+                selectedRowId={activePart?.id || null}
+                onRowClick={(r) => setSelectedPartId(r.id)}
+                maxHeight="580px"
+              />
+
+              {activePart && (
+                <SectionPanel
+                  title={activePart.partName}
+                  titleSlot={
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <StatusBadge label={activePart.partGrade} tone="info" />
+                      <StatusBadge label={activePart.originCountry} tone="neutral" />
+                    </div>
+                  }
+                >
+                  <div data-testid="part-detail-specs" style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12.5px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+                      {[
+                        { label: '자사 품목코드', value: activePart.sku },
+                        { label: '참조 품번 · 브랜드', value: `${activePart.tvhRefNo || '-'} · ${activePart.tvhBrand || activePart.manufacturer}` },
+                        { label: '적용 톤수 범위', value: activePart.tonnageRange },
+                        { label: '보관 창고 · 단위', value: `${activePart.warehouseLocation} · ${activePart.unitName}` },
+                        { label: '재고 · 최소발주', value: `${activePart.stockQty} ${activePart.unitName} · 최소 ${activePart.moq}` },
+                        { label: '납기 기준', value: activePart.deliveryPolicy },
+                      ].map((row) => (
+                        <div
+                          key={row.label}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--table-row-border)',
+                            backgroundColor: 'var(--bg-app)',
+                          }}
+                        >
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>{row.label}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{row.value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px' }}>표준 요약 규격</div>
+                      <div style={{ fontWeight: 600 }}>{activePart.specSummary}</div>
+                    </div>
+
+                    {activePart.detailedSpecs && activePart.detailedSpecs.length > 0 && (
+                      <div>
+                        <div style={{ fontWeight: 800, marginBottom: '6px' }}>실측 치수 · 상세 규격표</div>
+                        <DataGrid
+                          columns={[
+                            { key: 'label', header: '규격 항목', width: 150, render: (s) => <span style={{ fontWeight: 700 }}>{s.label}</span> },
+                            { key: 'value', header: '측정 규격 · 수치', render: (s) => s.value },
+                          ]}
+                          rows={activePart.detailedSpecs}
+                          rowKey={(s, idx) => `${s.label}-${idx}`}
+                          maxHeight="220px"
+                        />
+                      </div>
+                    )}
+
+                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                      <div style={{ fontWeight: 800, marginBottom: '4px', color: 'var(--primary)' }}>OEM 교차품번 목록</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                        {activePart.oemCrossRefCodes.join(', ') || '-'}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                      <div style={{ fontWeight: 800, marginBottom: '4px' }}>호환 제조사 · 적용 기종</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                        제조사: {activePart.compatibleBrands.join(', ')}
+                      </div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                        적용 모델: {activePart.compatibleModels.join(', ')}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)', fontSize: '12px' }}>
+                      <div style={{ fontWeight: 700, marginBottom: '3px' }}>기술 노트 · {activePart.referenceSource}</div>
+                      <div style={{ color: 'var(--text-secondary)', lineHeight: 1.45 }}>{activePart.technicalNote}</div>
+                    </div>
+                  </div>
+                </SectionPanel>
+              )}
+            </div>
           </div>
         )}
 
@@ -2851,6 +3630,53 @@ export const CatalogsPage: React.FC = () => {
           </div>
         )}
       </SectionPanel>
+
+      <ConservationBar
+        manualId="cat-conservation"
+        balanced={FL_TECHNICAL_ARCHIVE.length >= 52}
+        balanceMessage="백업 제원 아카이브 복원 완료"
+        items={[
+          { label: '수록 장비 기종', value: `${FL_TECHNICAL_ARCHIVE.length}종`, tone: 'primary' },
+          { label: 'VDI 2198 55항목 완비', value: `${vdiCompletedModelCount}종`, tone: 'success' },
+          { label: '호환부품 마스터', value: `${COMPATIBLE_PARTS_CATALOG.length}종`, tone: 'neutral' },
+          { label: '배포 패키지', value: `${datasets.catalogPackages.length}건`, tone: 'neutral' },
+          { label: '모델 제원 비교', value: `${comparedModels.length}/${MAX_COMPARE_MODELS}종`, tone: 'primary' },
+        ]}
+      />
+
+      <ModalDialog
+        open={Boolean(previewDoc)}
+        title={previewDoc ? previewDoc.title : ''}
+        onClose={() => setPreviewDoc(null)}
+        width={900}
+      >
+        {previewDoc && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <a
+                href={previewDoc.r2Url}
+                target="_blank"
+                rel="noreferrer"
+                style={actionBtnStyle('primary', true)}
+              >
+                <ExternalLink size={13} />
+                새 창에서 열기
+              </a>
+            </div>
+            <iframe
+              src={previewDoc.url}
+              title={previewDoc.title}
+              style={{
+                width: '100%',
+                height: '68vh',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                backgroundColor: 'var(--bg-app)',
+              }}
+            />
+          </div>
+        )}
+      </ModalDialog>
     </div>
   );
 };
