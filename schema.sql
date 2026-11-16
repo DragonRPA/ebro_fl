@@ -176,6 +176,10 @@ CREATE TABLE IF NOT EXISTS public.fl_partners (
   biz_cert_name TEXT,
   bankbook_url TEXT,
   bankbook_name TEXT,
+  nts_status TEXT CHECK (nts_status IS NULL OR nts_status IN ('정상', '휴업', '폐업', '미등록')),
+  nts_closed_date TEXT,
+  nts_tax_type TEXT,
+  nts_checked_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT fl_partners_payment_due_day_check CHECK (

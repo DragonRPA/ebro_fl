@@ -26,6 +26,104 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 
+const LOCAL_NTS_DEFAULT_KEY =
+  '7f24250bd002412aaa152a6e3ec63e556604f75be0fa9181983c33a618cb2e03';
+
+function attachNtsStatusMiddleware(
+  middlewares: { use: (fn: (req: any, res: any, next: () => void) => void) => void },
+  ssrLoader?: () => Promise<{ default: (mockReq: unknown, mockRes: unknown) => Promise<void> }>
+) {
+  middlewares.use((req, res, next) => {
+    if (!req.url || !req.url.startsWith('/api/nts-status')) {
+      next();
+      return;
+    }
+    let bodyStr = '';
+    req.on('data', (chunk: Buffer) => {
+      bodyStr += chunk;
+    });
+    req.on('end', async () => {
+      try {
+        const parsed = bodyStr ? JSON.parse(bodyStr) : {};
+        if (ssrLoader) {
+          const mod = await ssrLoader();
+          let statusCode = 200;
+          const headers: Record<string, string> = { 'Content-Type': 'application/json; charset=utf-8' };
+          const mockRes = {
+            setHeader: (k: string, v: string) => {
+              headers[k] = v;
+            },
+            status: (code: number) => {
+              statusCode = code;
+              return mockRes;
+            },
+            json: (data: unknown) => {
+              Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+              res.statusCode = statusCode;
+              res.end(JSON.stringify(data));
+            },
+            end: (chunk?: string) => {
+              Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+              res.statusCode = statusCode;
+              res.end(chunk);
+            },
+          };
+          await mod.default({ method: req.method || 'POST', body: parsed }, mockRes);
+          return;
+        }
+
+        const rawList = Array.isArray(parsed?.b_no) ? parsed.b_no : [];
+        const cleanNumbers = rawList
+          .slice(0, 100)
+          .map((no: unknown) => String(no || '').replace(/[^0-9]/g, ''));
+        const activeKey = String(
+          parsed?.serviceKey || process.env.NTS_API_KEY || process.env.PUBLIC_DATA_PORTAL_KEY || LOCAL_NTS_DEFAULT_KEY
+        ).trim();
+        const targetUrl = `https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=${encodeURIComponent(activeKey)}`;
+        const ntsRes = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ b_no: cleanNumbers }),
+        });
+        if (!ntsRes.ok) {
+          throw new Error(`NTS upstream HTTP ${ntsRes.status}`);
+        }
+        const json = (await ntsRes.json()) as { data?: unknown[] };
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.statusCode = 200;
+        res.end(
+          JSON.stringify({
+            success: true,
+            source: 'NTS_LIVE_API',
+            totalCount: Array.isArray(json.data) ? json.data.length : 0,
+            data: Array.isArray(json.data) ? json.data : [],
+          })
+        );
+      } catch (e: any) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.statusCode = 500;
+        res.end(JSON.stringify({ success: false, error: e?.message || String(e) }));
+      }
+    });
+  });
+}
+
+function ntsStatusPlugin(): Plugin {
+  return {
+    name: 'nts-status-plugin',
+    configurePreviewServer(server) {
+      attachNtsStatusMiddleware(server.middlewares);
+    },
+    configureServer(server) {
+      attachNtsStatusMiddleware(server.middlewares, () =>
+        server.ssrLoadModule('./api/nts-status.ts') as Promise<{
+          default: (mockReq: unknown, mockRes: unknown) => Promise<void>;
+        }>
+      );
+    },
+  };
+}
+
 function developerDevicePlugin(): Plugin {
   return {
     name: 'developer-device-plugin',
@@ -184,7 +282,7 @@ function developerDevicePlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), r2DevPlugin(), developerDevicePlugin()],
+  plugins: [react(), r2DevPlugin(), ntsStatusPlugin(), developerDevicePlugin()],
   server: {
     port: 5174,
     watch: {

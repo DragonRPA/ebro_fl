@@ -521,6 +521,31 @@ export function computeDueDateFromCycle(
   return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(finalDay).padStart(2, '0')}`;
 }
 
+export type PartnerNtsStatus = '정상' | '휴업' | '폐업' | '미등록';
+
+export function formatPartnerNtsStatus(
+  ntsStatus?: string | null,
+  ntsClosedDate?: string | null
+): string {
+  const st = String(ntsStatus || '').trim();
+  const dt = String(ntsClosedDate || '').trim();
+  if (st === '정상') return '정상';
+  if (st === '휴업') return dt ? `휴업 · ${dt}` : '휴업';
+  if (st === '폐업') return dt ? `폐업 · ${dt}` : '폐업';
+  if (st === '미등록') return '미등록';
+  return '-';
+}
+
+export function partnerNtsStatusTone(
+  ntsStatus?: string | null
+): 'success' | 'warning' | 'danger' | 'neutral' {
+  const st = String(ntsStatus || '').trim();
+  if (st === '정상') return 'success';
+  if (st === '휴업') return 'warning';
+  if (st === '폐업') return 'danger';
+  return 'neutral';
+}
+
 export interface FlPartner {
   id: string;
   tenantId: string;
@@ -549,6 +574,10 @@ export interface FlPartner {
   bizCertName?: string | null;
   bankbookUrl?: string | null;
   bankbookName?: string | null;
+  ntsStatus?: PartnerNtsStatus | string | null;
+  ntsClosedDate?: string | null;
+  ntsTaxType?: string | null;
+  ntsCheckedAt?: string | null;
 }
 
 export interface FlPartnerSite {

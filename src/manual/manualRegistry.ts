@@ -85,12 +85,21 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     basicDescription: '매출처, 대리점, 금융사, 매입처, 전대공급처, 운송사, 외주정비처 역할을 단일 거래처 원장으로 통합 관리하고 사업자등록증·통장사본 판독 및 결제수단·지급기일 조건을 설정한다.',
     anchors: [
       { anchorId: 'prt-search', title: '거래처 검색·역할 필터', summary: '상호, 사업자등록번호, 거래처 역할로 목록을 조회한다.' },
+      { anchorId: 'prt-nts-check', title: '사업자휴폐업조회 버튼', summary: '등록 거래처의 사업자등록번호를 국세청 기준으로 일괄 조회하여 정상·휴업·폐업 및 휴폐업일자를 갱신한다.' },
       { anchorId: 'prt-grid', title: '거래처 목록·상세 패널', summary: '좌측 목록에서 거래처를 선택하고 우측에서 계좌정보, 지급기일 조건, 사업장을 편집한다.' },
       { anchorId: 'prt-view-bizcert', title: '사업자등록증 보기', summary: '등록된 사업자등록증 원본과 사업자 기본정보를 대조 수정한다.' },
       { anchorId: 'prt-view-bankbook', title: '통장사본 보기', summary: '등록된 통장사본 이미지와 은행명, 계좌번호, 예금주를 대조 수정한다.' },
       { anchorId: 'prt-save', title: '거래처 저장 버튼', summary: '거래처 기본정보, 입금계좌, 결제수단, 청구마감일 및 월별 지급기일 조건을 저장한다.' },
     ],
     processes: [
+      {
+        processName: '사업자휴폐업 일괄 조회 및 상태 확인',
+        purpose: '전체 거래처의 사업자등록상태를 국세청 기준으로 점검하여 정상·휴업·폐업 및 휴폐업일자를 목록에 표시한다.',
+        steps: [
+          { stepNo: 1, targetLabel: '사업자휴폐업조회 버튼', manualAnchorId: 'prt-nts-check', actionDetail: '상단 우측 사업자휴폐업조회 버튼을 눌러 등록된 사업자번호를 일괄 조회한다.' },
+          { stepNo: 2, targetLabel: '사업자상태 열 및 상세', manualAnchorId: 'prt-grid', actionDetail: '목록의 사업자상태 열에서 정상, 휴업·휴업일, 폐업·폐업일을 확인한다.' },
+        ],
+      },
       {
         processName: '사업자등록증·통장사본 등록 및 결제·지급기일 설정',
         purpose: '증빙 서류로 기본정보와 입금계좌를 등록하고 결제수단과 월구분 지급기일을 분리 설정한다.',

@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Eye,
   FileText,
+  RefreshCw,
   RotateCcw,
   Upload,
   X,
@@ -29,6 +30,10 @@ import {
   generateModelSpecPdf,
 } from '../services/documentService';
 import {
+  queryBatchPartnerNtsStatus,
+  querySinglePartnerNtsStatus,
+} from '../services/ntsBusinessService';
+import {
   CommaNumberInput,
   ConservationBar,
   DataGrid,
@@ -51,9 +56,11 @@ import {
   cycleToMonthOffset,
   formatClosingDayLabel,
   formatKoCurrency,
+  formatPartnerNtsStatus,
   formatPaymentTermsLabel,
   normalizePaymentMethod,
   offsetToPaymentCycle,
+  partnerNtsStatusTone,
   type CurrencyCode,
   type FlCatalogPackage,
   type FlExchangeRate,
@@ -63,6 +70,7 @@ import {
   type ItemCategory,
   type ItemDomain,
   type ManagementType,
+  type PartnerNtsStatus,
   type PartnerRole,
   type PaymentCycleType,
   type PaymentMethodType,
@@ -415,6 +423,8 @@ export const PartnersPage: React.FC = () => {
   const [isBankbookModalOpen, setIsBankbookModalOpen] = useState(false);
   const [bankbookZoom, setBankbookZoom] = useState(100);
   const [modalForm, setModalForm] = useState<Partial<FlPartner>>({});
+  const [checkingNts, setCheckingNts] = useState(false);
+  const [ntsProgressText, setNtsProgressText] = useState('');
   const bizCertInputRef = useRef<HTMLInputElement | null>(null);
   const bankbookInputRef = useRef<HTMLInputElement | null>(null);
   const didInitPartnerRef = useRef(Boolean(datasets.partners[0]));
@@ -603,6 +613,21 @@ export const PartnersPage: React.FC = () => {
       setForm(applyOcr);
       setModalForm(applyOcr);
 
+      if (res.bizRegNo) {
+        void querySinglePartnerNtsStatus(res.bizRegNo).then((nts) => {
+          if (!nts) return;
+          const patchNts = (prev: Partial<FlPartner>): Partial<FlPartner> => ({
+            ...prev,
+            ntsStatus: nts.ntsStatus,
+            ntsClosedDate: nts.ntsClosedDate,
+            ntsTaxType: nts.ntsTaxType,
+            ntsCheckedAt: nts.ntsCheckedAt,
+          });
+          setForm(patchNts);
+          setModalForm(patchNts);
+        });
+      }
+
       notifyToast(
         `${res.companyName || '사업자등록증'} 정보 자동 입력 완료 · 확인 후 저장해 주세요.`,
         'success'
@@ -653,6 +678,10 @@ export const PartnersPage: React.FC = () => {
       bizCertName: null,
       bankbookUrl: null,
       bankbookName: null,
+      ntsStatus: null,
+      ntsClosedDate: null,
+      ntsTaxType: null,
+      ntsCheckedAt: null,
       isActive: true,
     });
   };
@@ -683,10 +712,35 @@ export const PartnersPage: React.FC = () => {
 
     setSaving(true);
     try {
+      const prevPartner = selectedId ? datasets.partners.find((p) => p.id === selectedId) : undefined;
+      const trimmedBizNo = String(target.bizRegNo || '').trim();
+      let resolvedNtsStatus: PartnerNtsStatus | string | null = target.ntsStatus || null;
+      let resolvedNtsClosedDate: string | null = target.ntsClosedDate || null;
+      let resolvedNtsTaxType: string | null = target.ntsTaxType || null;
+      let resolvedNtsCheckedAt: string | null = target.ntsCheckedAt || null;
+
+      if (!trimmedBizNo) {
+        resolvedNtsStatus = null;
+        resolvedNtsClosedDate = null;
+        resolvedNtsTaxType = null;
+        resolvedNtsCheckedAt = null;
+      } else if (
+        trimmedBizNo !== String(prevPartner?.bizRegNo || '').trim() ||
+        !resolvedNtsStatus
+      ) {
+        const ntsRes = await querySinglePartnerNtsStatus(trimmedBizNo);
+        if (ntsRes) {
+          resolvedNtsStatus = ntsRes.ntsStatus;
+          resolvedNtsClosedDate = ntsRes.ntsClosedDate;
+          resolvedNtsTaxType = ntsRes.ntsTaxType;
+          resolvedNtsCheckedAt = ntsRes.ntsCheckedAt;
+        }
+      }
+
       const payload = {
         tenantId: DEFAULT_TENANT_ID,
         name: target.name.trim(),
-        bizRegNo: target.bizRegNo || null,
+        bizRegNo: trimmedBizNo || null,
         representative: target.representative || null,
         bizType: target.bizType || null,
         bizItem: target.bizItem || null,
@@ -709,11 +763,14 @@ export const PartnersPage: React.FC = () => {
         bizCertName: target.bizCertName || null,
         bankbookUrl: target.bankbookUrl || null,
         bankbookName: target.bankbookName || null,
+        ntsStatus: resolvedNtsStatus,
+        ntsClosedDate: resolvedNtsClosedDate,
+        ntsTaxType: resolvedNtsTaxType,
+        ntsCheckedAt: resolvedNtsCheckedAt,
         isActive: target.isActive ?? true,
         updatedAt: new Date().toISOString(),
       };
       if (selectedId) {
-        const prevPartner = datasets.partners.find((p) => p.id === selectedId);
         await execDbMutation('거래처 정보 수정', () =>
           flSupabase.from('partners').update(camelToSnakeRow(payload)).eq('id', selectedId)
         );
@@ -740,6 +797,10 @@ export const PartnersPage: React.FC = () => {
         defaultPaymentDueDay: resolvedDueDay,
         defaultPaymentMonthOffset: resolvedOffset,
         paymentMethod: resolvedMethod,
+        ntsStatus: resolvedNtsStatus,
+        ntsClosedDate: resolvedNtsClosedDate,
+        ntsTaxType: resolvedNtsTaxType,
+        ntsCheckedAt: resolvedNtsCheckedAt,
       }));
       await refreshAll();
       notifyToast('거래처 저장 완료', 'success');
@@ -749,6 +810,106 @@ export const PartnersPage: React.FC = () => {
       return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleBatchNtsCheck = async () => {
+    const targets = datasets.partners.filter((p) => String(p.bizRegNo || '').trim().length > 0);
+    if (targets.length === 0) {
+      notifyToast('사업자등록번호가 등록된 거래처가 없습니다.', 'info');
+      return;
+    }
+    setCheckingNts(true);
+    setNtsProgressText(`0/${targets.length}`);
+    try {
+      const resultMap = await queryBatchPartnerNtsStatus(
+        targets.map((p) => String(p.bizRegNo || '')),
+        (done, total) => setNtsProgressText(`${done}/${total}`)
+      );
+
+      let normalCnt = 0;
+      let suspendedCnt = 0;
+      let closedCnt = 0;
+      let unregCnt = 0;
+      const updates: {
+        id: string;
+        ntsStatus: PartnerNtsStatus;
+        ntsClosedDate: string | null;
+        ntsTaxType: string | null;
+        ntsCheckedAt: string;
+      }[] = [];
+
+      for (const p of targets) {
+        const raw = String(p.bizRegNo || '').trim();
+        const digits = raw.replace(/[^0-9]/g, '');
+        const matched = resultMap.get(digits) || resultMap.get(raw);
+        if (!matched) continue;
+        if (matched.ntsStatus === '정상') normalCnt += 1;
+        else if (matched.ntsStatus === '휴업') suspendedCnt += 1;
+        else if (matched.ntsStatus === '폐업') closedCnt += 1;
+        else unregCnt += 1;
+
+        updates.push({
+          id: p.id,
+          ntsStatus: matched.ntsStatus,
+          ntsClosedDate: matched.ntsClosedDate,
+          ntsTaxType: matched.ntsTaxType,
+          ntsCheckedAt: matched.ntsCheckedAt,
+        });
+      }
+
+      if (canEdit && updates.length > 0) {
+        const CHUNK = 15;
+        await execDbMutation('사업자휴폐업조회 결과 저장', async () => {
+          for (let i = 0; i < updates.length; i += CHUNK) {
+            const slice = updates.slice(i, i + CHUNK);
+            const results = await Promise.all(
+              slice.map((u) =>
+                flSupabase
+                  .from('partners')
+                  .update(
+                    camelToSnakeRow({
+                      ntsStatus: u.ntsStatus,
+                      ntsClosedDate: u.ntsClosedDate,
+                      ntsTaxType: u.ntsTaxType,
+                      ntsCheckedAt: u.ntsCheckedAt,
+                    })
+                  )
+                  .eq('id', u.id)
+              )
+            );
+            const firstErr = results.find((r) => r.error)?.error;
+            if (firstErr) {
+              return { data: null, error: firstErr };
+            }
+          }
+          return { data: updates.length, error: null };
+        });
+      }
+
+      if (selectedId) {
+        const matchedSel = updates.find((u) => u.id === selectedId);
+        if (matchedSel) {
+          setForm((prev) => ({
+            ...prev,
+            ntsStatus: matchedSel.ntsStatus,
+            ntsClosedDate: matchedSel.ntsClosedDate,
+            ntsTaxType: matchedSel.ntsTaxType,
+            ntsCheckedAt: matchedSel.ntsCheckedAt,
+          }));
+        }
+      }
+
+      await refreshAll();
+      notifyToast(
+        `사업자휴폐업조회 완료 · 정상 ${normalCnt}건 · 휴업 ${suspendedCnt}건 · 폐업 ${closedCnt}건${unregCnt > 0 ? ` · 미등록 ${unregCnt}건` : ''}`,
+        closedCnt > 0 || suspendedCnt > 0 ? 'info' : 'success'
+      );
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '사업자휴폐업조회 실패', 'error');
+    } finally {
+      setCheckingNts(false);
+      setNtsProgressText('');
     }
   };
 
@@ -818,6 +979,20 @@ export const PartnersPage: React.FC = () => {
     [datasets.partnerSites, selectedId]
   );
 
+  const ntsSummary = useMemo(() => {
+    let normal = 0;
+    let suspended = 0;
+    let closed = 0;
+    let other = 0;
+    for (const p of datasets.partners) {
+      if (p.ntsStatus === '정상') normal += 1;
+      else if (p.ntsStatus === '휴업') suspended += 1;
+      else if (p.ntsStatus === '폐업') closed += 1;
+      else other += 1;
+    }
+    return { normal, suspended, closed, other };
+  }, [datasets.partners]);
+
   const columns: GridColumn<FlPartner>[] = [
     {
       key: 'select',
@@ -832,6 +1007,21 @@ export const PartnersPage: React.FC = () => {
       ),
     },
     { key: 'name', header: '상호명', render: (r) => <span style={{ fontWeight: 700 }}>{r.name}</span> },
+    {
+      key: 'ntsStatus',
+      header: '사업자상태',
+      width: 132,
+      align: 'center',
+      render: (r) =>
+        r.ntsStatus ? (
+          <StatusBadge
+            label={formatPartnerNtsStatus(r.ntsStatus, r.ntsClosedDate)}
+            tone={partnerNtsStatusTone(r.ntsStatus)}
+          />
+        ) : (
+          '-'
+        ),
+    },
     {
       key: 'roles',
       header: '역할',
@@ -872,11 +1062,26 @@ export const PartnersPage: React.FC = () => {
         title="거래처 조회 · 역할 필터"
         manualId="prt-search"
         rightSlot={
-          canEdit && (
-            <button type="button" onClick={resetToNew} style={actionBtnStyle('primary', true)}>
-              신규 거래처
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              data-testid="prt-nts-check-btn"
+              data-manual-id="prt-nts-check"
+              disabled={checkingNts}
+              onClick={() => {
+                void handleBatchNtsCheck();
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              <RefreshCw size={13} />
+              {checkingNts ? `휴폐업 조회 중 · ${ntsProgressText || '진행'}` : '사업자휴폐업조회'}
             </button>
-          )
+            {canEdit && (
+              <button type="button" onClick={resetToNew} style={actionBtnStyle('primary', true)}>
+                신규 거래처
+              </button>
+            )}
+          </div>
         }
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
@@ -1287,6 +1492,45 @@ export const PartnersPage: React.FC = () => {
                 {`정산 기준: 마감 ${formatClosingDayLabel(form.defaultClosingDay)} · 지급 ${formatPaymentTermsLabel(form.defaultPaymentCycle, form.defaultPaymentDueDay, form.defaultPaymentMonthOffset)} · 결제수단 ${normalizePaymentMethod(form.paymentMethod)}`}
               </div>
 
+              <div
+                data-testid="prt-detail-nts-status"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--table-row-border)',
+                  backgroundColor: 'var(--bg-app)',
+                  fontSize: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    국세청 사업자 상태
+                  </span>
+                  {form.ntsStatus ? (
+                    <StatusBadge
+                      label={formatPartnerNtsStatus(form.ntsStatus, form.ntsClosedDate)}
+                      tone={partnerNtsStatusTone(form.ntsStatus)}
+                    />
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>미조회</span>
+                  )}
+                  {form.ntsTaxType && (
+                    <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      {form.ntsTaxType}
+                    </span>
+                  )}
+                </div>
+                {form.ntsCheckedAt && (
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    {`조회일 ${String(form.ntsCheckedAt).slice(0, 10)}`}
+                  </span>
+                )}
+              </div>
+
               <VerticalField label="특이 메모">
                 <textarea
                   rows={2}
@@ -1344,6 +1588,23 @@ export const PartnersPage: React.FC = () => {
           </SectionPanel>
         </div>
       </div>
+
+      <ConservationBar
+        manualId="prt-conservation"
+        balanced={ntsSummary.closed === 0 && ntsSummary.suspended === 0}
+        balanceMessage={
+          ntsSummary.closed > 0 || ntsSummary.suspended > 0
+            ? `휴·폐업 거래처 ${ntsSummary.suspended + ntsSummary.closed}건 확인`
+            : '등록 거래처 상태 정상'
+        }
+        items={[
+          { label: '전체 거래처', value: `${datasets.partners.length}건`, tone: 'neutral' },
+          { label: '정상', value: `${ntsSummary.normal}건`, tone: 'success' },
+          { label: '휴업', value: `${ntsSummary.suspended}건`, tone: ntsSummary.suspended > 0 ? 'warning' : 'neutral' },
+          { label: '폐업', value: `${ntsSummary.closed}건`, tone: ntsSummary.closed > 0 ? 'danger' : 'neutral' },
+          { label: '미등록 · 미입력', value: `${ntsSummary.other}건`, tone: 'neutral' },
+        ]}
+      />
 
       <ModalDialog
         open={isBizCertModalOpen}

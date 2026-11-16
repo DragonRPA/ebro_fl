@@ -76,7 +76,7 @@ const RAW_ENUM_PROP_RE =
 const RAW_RENDER_ENUM_RE =
   /\.(?:status|lineStatus|settlementStatus|payableType|currencyCode|acquisitionType|actionCode|matchedType|matchStatus)$/;
 const KO_CONVERTER_CALL_RE =
-  /(?:formatKoStatus|formatKoCurrency|formatKoPayableType|formatKoAcquisitionType|formatKoActionCode|formatKoTargetTable|statusText|statusLabel|tierLabel)$/;
+  /(?:formatKoStatus|formatKoCurrency|formatKoPayableType|formatKoAcquisitionType|formatKoActionCode|formatKoTargetTable|formatPartnerNtsStatus|statusText|statusLabel|tierLabel)$/;
 const UI_JSX_ATTRS = new Set([
   'label',
   'title',

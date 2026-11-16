@@ -414,7 +414,36 @@ async function main() {
     await bankModal.waitFor({ state: 'visible', timeout: 5000 });
     await bankModal.locator('button', { hasText: '닫기' }).first().click();
     await bankModal.waitFor({ state: 'hidden', timeout: 5000 });
-    console.log('[E2E 7i PASS] 거래처 관리 통장사본 modal, 계좌 inputs, 결제수단 options, and 월구분/일자 지급기일 verified.');
+
+    // [E2E 7i-nts] Verify 사업자휴폐업조회 button (left of 신규 거래처), 사업자상태 column between 상호명 & 역할, 정상/폐업·일자 rendering
+    const ntsBtn = page.locator('button[data-testid="prt-nts-check-btn"]').first();
+    const newPartnerBtn = page.locator('[data-manual-id="prt-search"] button', { hasText: '신규 거래처' }).first();
+    await ntsBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await newPartnerBtn.waitFor({ state: 'visible', timeout: 5000 });
+    const ntsBox = await ntsBtn.boundingBox();
+    const newBtnBox = await newPartnerBtn.boundingBox();
+    assert(
+      ntsBox && newBtnBox && ntsBox.x + ntsBox.width <= newBtnBox.x,
+      `사업자휴폐업조회 must be left of 신규 거래처 (ntsEnd=${ntsBox ? ntsBox.x + ntsBox.width : 0}, newX=${newBtnBox ? newBtnBox.x : 0})`
+    );
+
+    const prtHeaders = await page.locator('[data-manual-id="prt-grid"] table thead th').allInnerTexts();
+    const cleanHeaders = prtHeaders.map((h) => h.trim());
+    const idxName = cleanHeaders.indexOf('상호명');
+    const idxNts = cleanHeaders.indexOf('사업자상태');
+    const idxRoles = cleanHeaders.indexOf('역할');
+    assert(
+      idxName >= 0 && idxNts === idxName + 1 && idxRoles === idxNts + 1,
+      `사업자상태 column must appear between 상호명 and 역할, got headers: ${cleanHeaders.join(' | ')}`
+    );
+
+    await ntsBtn.click();
+    await page.getByText('사업자휴폐업조회 완료', { exact: false }).first().waitFor({ state: 'visible', timeout: 20000 });
+    await page.locator('[data-manual-id="prt-grid"] table tbody [data-ui="status-badge"]', { hasText: '정상' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-manual-id="prt-grid"] table tbody [data-ui="status-badge"]', { hasText: '폐업 · 2023-10-19' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-manual-id="prt-grid"] table tbody tr', { hasText: '지게차코리아' }).first().click();
+    await page.locator('[data-testid="prt-detail-nts-status"]').getByText('폐업 · 2023-10-19', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    console.log('[E2E 7i PASS] 거래처 관리 통장사본 modal, 결제/지급기일, 사업자휴폐업조회 버튼, 사업자상태(정상/폐업·일자) verified.');
 
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
