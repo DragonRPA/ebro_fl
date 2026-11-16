@@ -4,6 +4,7 @@ import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import {
   addDaysIso,
+  allocateSequentialUnitCodes,
   calculateRentalProRataForMonth,
   completeFulfillment,
   computeUnitDepreciationAsOf,
@@ -702,10 +703,11 @@ export const RentalAssetsPage: React.FC = () => {
     setSubBusy(true);
     try {
       const id = newId('UNIT');
+      const [unitCode] = await allocateSequentialUnitCodes(today, 1);
       const unit: FlInventoryUnit = {
         id,
         tenantId: DEFAULT_TENANT_ID,
-        unitCode: id,
+        unitCode,
         itemId: item.id,
         sku: item.sku,
         itemName: item.name,

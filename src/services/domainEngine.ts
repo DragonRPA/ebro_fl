@@ -264,6 +264,32 @@ export interface CreatePurchaseInput {
   }[];
 }
 
+export async function allocateSequentialUnitCodes(
+  effectiveDate: string,
+  count: number
+): Promise<string[]> {
+  const cleanDate = (effectiveDate || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  const yymm = `${cleanDate.slice(2, 4)}${cleanDate.slice(5, 7)}`;
+  const prefix = `U-${yymm}-`;
+  const res = await flSupabase
+    .from('inventory_units')
+    .select('unit_code')
+    .like('unit_code', `${prefix}%`);
+  let maxSeq = 0;
+  if (!res.error && Array.isArray(res.data)) {
+    for (const row of res.data as { unit_code?: string }[]) {
+      const code = row.unit_code || '';
+      if (!code.startsWith(prefix)) continue;
+      const num = Number(code.slice(prefix.length));
+      if (Number.isFinite(num) && num > maxSeq) maxSeq = num;
+    }
+  }
+  return Array.from({ length: Math.max(1, count) }, (_, i) => {
+    const seq = String(maxSeq + 1 + i).padStart(4, '0');
+    return `${prefix}${seq}`;
+  });
+}
+
 export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promise<{
   purchase: FlPurchase;
   lines: FlPurchaseLine[];
@@ -323,6 +349,12 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
   // 원화 물품가액 및 부대비용 비례 배분 (마지막 행 1원 단수 보정)
   let merchAllocatedSoFar = 0;
   let ancAllocatedSoFar = 0;
+  const totalUnitCodesNeeded = input.lines.reduce(
+    (s, l) => s + (l.managementType === 'SERIAL' ? Math.max(1, Number(l.quantity)) : 1),
+    0
+  );
+  const allocatedUnitCodes = await allocateSequentialUnitCodes(input.effectiveDate, totalUnitCodesNeeded);
+  let unitCodeCursor = 0;
   const purchaseLines: FlPurchaseLine[] = [];
   const createdUnits: FlInventoryUnit[] = [];
   const movements: FlStockMovement[] = [];
@@ -390,7 +422,7 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
         const unit: FlInventoryUnit = {
           id: uid,
           tenantId: DEFAULT_TENANT_ID,
-          unitCode: uid,
+          unitCode: allocatedUnitCodes[unitCodeCursor++] || uid,
           itemId: l.itemId,
           sku: l.sku,
           itemName: l.itemName,
@@ -465,7 +497,7 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
       const unit: FlInventoryUnit = {
         id: uid,
         tenantId: DEFAULT_TENANT_ID,
-        unitCode: uid,
+        unitCode: allocatedUnitCodes[unitCodeCursor++] || uid,
         itemId: l.itemId,
         sku: l.sku,
         itemName: l.itemName,
@@ -746,6 +778,7 @@ export async function createFinanceLeaseWithAsset(params: {
 }> {
   const leaseId = newId('FLS');
   const unitId = newId('UNIT');
+  const [unitCode] = await allocateSequentialUnitCodes(params.startDate, 1);
   const endDt = (() => {
     const [sy, sm] = params.startDate.split('-').map(Number);
     const dt = new Date(Date.UTC(sy, (sm - 1) + (params.termMonths - 1), Math.min(params.paymentDay || 25, 28)));
@@ -786,7 +819,7 @@ export async function createFinanceLeaseWithAsset(params: {
   const unit: FlInventoryUnit = {
     id: unitId,
     tenantId: DEFAULT_TENANT_ID,
-    unitCode: unitId,
+    unitCode,
     itemId: params.itemId,
     sku: params.sku,
     itemName: params.itemName,
