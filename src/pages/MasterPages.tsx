@@ -21,17 +21,18 @@ import {
   controlTextareaStyle,
   type GridColumn,
 } from '../components/UiPrimitives';
-import type {
-  CurrencyCode,
-  FlCatalogPackage,
-  FlExchangeRate,
-  FlItemMaster,
-  FlPartner,
-  FlPartnerSite,
-  ItemCategory,
-  ItemDomain,
-  ManagementType,
-  PartnerRole,
+import {
+  formatKoCurrency,
+  type CurrencyCode,
+  type FlCatalogPackage,
+  type FlExchangeRate,
+  type FlItemMaster,
+  type FlPartner,
+  type FlPartnerSite,
+  type ItemCategory,
+  type ItemDomain,
+  type ManagementType,
+  type PartnerRole,
 } from '../types/domain';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
@@ -107,7 +108,7 @@ export const PartnersPage: React.FC = () => {
       lowerName.endsWith('.webp');
 
     if (!isSupported) {
-      notifyToast('이미지 또는 PDF 형식의 사업자등록증 파일을 올려주세요.', 'error');
+      notifyToast('이미지 또는 문서 형식의 사업자등록증 파일을 올려주세요.', 'error');
       return;
     }
 
@@ -1704,7 +1705,7 @@ export const ExchangeRatesPage: React.FC = () => {
     setBusy(true);
     try {
       const resp = await fetch(`/api/exchange-rate?currency=${currencyCode}&date=${rateDate}`);
-      if (!resp.ok) throw new Error(`환율 조회 HTTP ${resp.status}`);
+      if (!resp.ok) throw new Error(`환율 조회 오류 · 상태코드 ${resp.status}`);
       const json = (await resp.json()) as {
         success?: boolean;
         data?: { baseRate: number; ttsRate: number; baseDate: string; source: string };
@@ -2016,7 +2017,7 @@ export const ExchangeRatesPage: React.FC = () => {
               style={controlInputStyle}
             />
           </VerticalField>
-          <VerticalField label="통화코드" width={140}>
+          <VerticalField label="통화 선택" width={140}>
             <select
               value={currencyCode}
               onChange={(e) =>
@@ -2026,7 +2027,7 @@ export const ExchangeRatesPage: React.FC = () => {
             >
               {FX_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.code} · {c.name}
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -2089,14 +2090,14 @@ export const ExchangeRatesPage: React.FC = () => {
       </SectionPanel>
 
       <SectionPanel
-        title={`관리 환율 ${currentPeriodLabel} 추이 차트 · ${currentCurrencyMeta.code} · ${currentCurrencyMeta.name}`}
+        title={`관리 환율 ${currentPeriodLabel} 추이 차트 · ${currentCurrencyMeta.name}`}
         manualId="fx-chart"
         rightSlot={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <SegmentedTabs
               tabs={FX_CURRENCIES.map((c) => ({
                 id: c.code,
-                label: c.code,
+                label: c.name,
                 count: currencyCountsInPeriod[c.code],
               }))}
               activeId={currencyCode}
@@ -2442,7 +2443,7 @@ export const ExchangeRatesPage: React.FC = () => {
                 color: 'var(--text-secondary)',
               }}
             >
-              <span>기준 단위: 1 {currencyCode} 당 원화 · 차트 일자 클릭 시 상단 편집칸 반영</span>
+              <span>기준 단위: 1 {currentCurrencyMeta.name} 당 원화 · 차트 일자 클릭 시 상단 편집칸 반영</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--primary)' }}>
                   <span style={{ width: '14px', height: '2.5px', backgroundColor: 'var(--primary)', display: 'inline-block' }} />
@@ -2472,7 +2473,7 @@ export const ExchangeRatesPage: React.FC = () => {
               { id: 'ALL', label: '전체', count: datasets.exchangeRates.length },
               ...FX_CURRENCIES.map((c) => ({
                 id: c.code,
-                label: c.code,
+                label: c.name,
                 count: (currencySeriesMap[c.code] || []).length,
               })),
             ]}
@@ -2493,9 +2494,9 @@ export const ExchangeRatesPage: React.FC = () => {
             {
               key: 'currencyCode',
               header: '통화',
-              width: 90,
+              width: 105,
               align: 'center',
-              render: (r) => <StatusBadge label={r.currencyCode} tone="primary" />,
+              render: (r) => <StatusBadge label={formatKoCurrency(r.currencyCode)} tone="primary" />,
             },
             {
               key: 'baseRateKrw',
@@ -2535,9 +2536,9 @@ export const ExchangeRatesPage: React.FC = () => {
         items={[
           { label: '관리 통화', value: `${FX_CURRENCIES.length}종`, tone: 'neutral' },
           { label: '전체 원장', value: `${datasets.exchangeRates.length}건`, tone: 'primary' },
-          { label: `${currencyCode} ${currentPeriodLabel}`, value: `${activeChartSeries.length}건`, tone: 'success' },
+          { label: `${currentCurrencyMeta.name} ${currentPeriodLabel}`, value: `${activeChartSeries.length}건`, tone: 'success' },
           {
-            label: `${currencyCode} 최신 매매기준율`,
+            label: `${currentCurrencyMeta.name} 최신 매매기준율`,
             value:
               chartStats
                 ? `${formatFxRate(chartStats.endRate, currencyCode)} 원`
@@ -2667,9 +2668,9 @@ export const CatalogsPage: React.FC = () => {
                   {
                     key: 'cap',
                     header: '적재하중',
-                    width: 85,
+                    width: 100,
                     align: 'right',
-                    render: (r) => `${r.ratedCapacityKg} kg`,
+                    render: (r) => `${r.ratedCapacityKg} 킬로그램`,
                   },
                 ]}
                 rows={filteredSpecs}
@@ -2684,11 +2685,11 @@ export const CatalogsPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                       <div>동력구분: {activeSpec.powerType}</div>
-                      <div>정격하중: {activeSpec.ratedCapacityKg} kg</div>
-                      <div>표준인상고: {activeSpec.standardLiftHeightMm} mm</div>
-                      <div>최소회전반경: {activeSpec.turningRadiusMm} mm</div>
-                      <div>직각적재통로폭: {activeSpec.aisleWidth1000x1200Mm} mm</div>
-                      <div>헤드가드높이: {activeSpec.overheadGuardHeightMm} mm</div>
+                      <div>정격하중: {activeSpec.ratedCapacityKg} 킬로그램</div>
+                      <div>표준인상고: {activeSpec.standardLiftHeightMm} 밀리미터</div>
+                      <div>최소회전반경: {activeSpec.turningRadiusMm} 밀리미터</div>
+                      <div>직각적재통로폭: {activeSpec.aisleWidth1000x1200Mm} 밀리미터</div>
+                      <div>헤드가드높이: {activeSpec.overheadGuardHeightMm} 밀리미터</div>
                     </div>
 
                     {activeSpec.mastSpecs && activeSpec.mastSpecs.length > 0 && (
@@ -2696,8 +2697,8 @@ export const CatalogsPage: React.FC = () => {
                         columns={[
                           { key: 'mastModel', header: '마스트 모델', render: (m) => m.mastModel },
                           { key: 'mastType', header: '단수', render: (m) => m.mastType },
-                          { key: 'h3', header: '최대인상고', align: 'right', render: (m) => `${m.liftHeightH3Mm} mm` },
-                          { key: 'h1', header: '최저전고', align: 'right', render: (m) => `${m.loweredHeightH1Mm} mm` },
+                          { key: 'h3', header: '최대인상고', align: 'right', render: (m) => `${m.liftHeightH3Mm} 밀리미터` },
+                          { key: 'h1', header: '최저전고', align: 'right', render: (m) => `${m.loweredHeightH1Mm} 밀리미터` },
                         ]}
                         rows={activeSpec.mastSpecs}
                         rowKey={(m) => `${m.mastModel}-${m.liftHeightH3Mm}`}
@@ -2742,7 +2743,7 @@ export const CatalogsPage: React.FC = () => {
         {subTab === 'PARTS' && (
           <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
-              <VerticalField label="부품명 · 품번 · OEM 교차코드 검색" minWidth={240} flex={1}>
+              <VerticalField label="부품명 · 품번 · 순정 교차품번 검색" minWidth={240} flex={1}>
                 <input
                   type="text"
                   value={partKeyword}

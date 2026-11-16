@@ -1945,7 +1945,7 @@ export const OrganizationHrPage: React.FC = () => {
                 </button>
               </div>
               <StatusBadge
-                label={`${selectedUser.loginId} · ${TIER_LABELS[selectedUser.tierLevel]}`}
+                label={`${selectedUser.name} · ${TIER_LABELS[selectedUser.tierLevel]}`}
                 tone="primary"
               />
             </div>

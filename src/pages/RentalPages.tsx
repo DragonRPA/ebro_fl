@@ -27,12 +27,18 @@ import {
   controlInputStyle,
   toPartnerSelectOptions,
 } from '../components/UiPrimitives';
-import type {
-  FlContract,
-  FlContractLine,
-  FlFulfillment,
-  FlInventoryUnit,
-  FlRentalMaintenance,
+import {
+  CONTRACT_LINE_STATUS_KO_LABELS,
+  CONTRACT_STATUS_KO_LABELS,
+  FULFILLMENT_STATUS_KO_LABELS,
+  formatKoAcquisitionType,
+  formatKoStatus,
+  koStatusTone,
+  type FlContract,
+  type FlContractLine,
+  type FlFulfillment,
+  type FlInventoryUnit,
+  type FlRentalMaintenance,
 } from '../types/domain';
 
 function listMonthsBetween(fromYm: string, toYm: string): string[] {
@@ -467,7 +473,12 @@ export const RentalContractsPage: React.FC = () => {
                 header: '상태',
                 width: 115,
                 align: 'center',
-                render: (l) => <StatusBadge label={l.lineStatus} />,
+                render: (l) => (
+                  <StatusBadge
+                    label={CONTRACT_LINE_STATUS_KO_LABELS[l.lineStatus] || formatKoStatus(l.lineStatus)}
+                    tone={koStatusTone(l.lineStatus)}
+                  />
+                ),
               },
             ]}
             rows={selectedLines}
@@ -494,7 +505,18 @@ export const RentalContractsPage: React.FC = () => {
             align: 'right',
             render: (r) => formatMoney(r.monthlyRentalKrw, { salesSensitive: true }),
           },
-          { key: 'status', header: '상태', width: 100, align: 'center', render: (r) => <StatusBadge label={r.status} /> },
+          {
+            key: 'status',
+            header: '상태',
+            width: 100,
+            align: 'center',
+            render: (r) => (
+              <StatusBadge
+                label={CONTRACT_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+                tone={koStatusTone(r.status)}
+              />
+            ),
+          },
         ]}
         rows={rentalContracts}
         rowKey={(r) => r.id}
@@ -709,7 +731,7 @@ export const RentalAssetsPage: React.FC = () => {
                 },
                 { key: 'itemName', header: '모델명', render: (u) => u.itemName },
                 { key: 'serialNo', header: '시리얼', width: 140, render: (u) => u.serialNo || '-' },
-                { key: 'acqType', header: '취득방식', width: 115, render: (u) => u.acquisitionType },
+                { key: 'acqType', header: '취득방식', width: 115, render: (u) => formatKoAcquisitionType(u.acquisitionType) },
                 {
                   key: 'cost',
                   header: '취득원가',
@@ -736,7 +758,7 @@ export const RentalAssetsPage: React.FC = () => {
                   header: '가동시간',
                   width: 85,
                   align: 'right',
-                  render: (u) => `${u.operatingHours}h`,
+                  render: (u) => `${u.operatingHours}시간`,
                 },
                 {
                   key: 'status',
@@ -745,7 +767,7 @@ export const RentalAssetsPage: React.FC = () => {
                   align: 'center',
                   render: (u) => (
                     <StatusBadge
-                      label={u.status}
+                      label={formatKoStatus(u.status)}
                       tone={
                         u.status === '대여중'
                           ? 'primary'
@@ -790,7 +812,7 @@ export const RentalAssetsPage: React.FC = () => {
                     actionCode="ACCOUNT_TRANSFER"
                     targetTable="fl_inventory_units"
                     targetId={selectedAsset.id}
-                    title={`렌탈자산 -> 유통재고 계정대체 · ${selectedAsset.unitCode}`}
+                    title={`렌탈자산 유통재고 계정대체 · ${selectedAsset.unitCode}`}
                     buildPayload={() => ({
                       unitId: selectedAsset.id,
                       toDomain: '유통재고',
@@ -1212,7 +1234,10 @@ export const RentalFulfillmentPage: React.FC = () => {
                 width: 95,
                 align: 'center',
                 render: (f) => (
-                  <StatusBadge label={f.status} tone={f.status === 'COMPLETED' ? 'success' : 'warning'} />
+                  <StatusBadge
+                    label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
+                    tone={koStatusTone(f.status)}
+                  />
                 ),
               },
             ]}
@@ -1343,7 +1368,7 @@ export const RentalFulfillmentPage: React.FC = () => {
                 )}
               </select>
             </VerticalField>
-            <VerticalField label="교체 투입 후장비" required>
+            <VerticalField label="교환 투입 후장비" required>
               <select
                 value={newUnitObj?.id || ''}
                 onChange={(e) => setExNewUnitId(e.target.value)}
@@ -1674,7 +1699,7 @@ export const RentalMaintenancePage: React.FC = () => {
           { key: 'effectiveDate', header: '정비일', width: 100, render: (m) => m.effectiveDate },
           { key: 'maintType', header: '구분', width: 95, render: (m) => <StatusBadge label={m.maintType} tone="info" /> },
           { key: 'serialNo', header: '시리얼', width: 130, render: (m) => m.serialNo || '-' },
-          { key: 'hours', header: '가동시간', width: 85, align: 'right', render: (m) => `${m.operatingHours}h` },
+          { key: 'hours', header: '가동시간', width: 85, align: 'right', render: (m) => `${m.operatingHours}시간` },
           { key: 'parts', header: '부품비', width: 100, align: 'right', render: (m) => formatMoney(m.partsCostKrw) },
           { key: 'labor', header: '노무비', width: 100, align: 'right', render: (m) => formatMoney(m.laborCostKrw) },
           { key: 'ext', header: '외주비', width: 100, align: 'right', render: (m) => formatMoney(m.externalCostKrw) },

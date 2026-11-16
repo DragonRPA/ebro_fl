@@ -13,7 +13,13 @@ import {
   controlTextareaStyle,
   type GridColumn,
 } from '../components/UiPrimitives';
-import { TIER_LABELS, type FlApprovalRequest, type FlPageId } from '../types/domain';
+import {
+  TIER_LABELS,
+  formatKoActionCode,
+  formatKoTargetTable,
+  type FlApprovalRequest,
+  type FlPageId,
+} from '../types/domain';
 
 type TodoCategory = 'ALL' | 'APPROVAL' | 'FULFILLMENT' | 'BILLING' | 'CONTRACT';
 
@@ -324,7 +330,7 @@ export const ApprovalInboxPage: React.FC = () => {
       },
     },
     { key: 'id', header: '요청번호', width: 140, render: (r) => r.id },
-    { key: 'actionCode', header: '업무코드', width: 165, render: (r) => r.actionCode },
+    { key: 'actionCode', header: '업무구분', width: 155, render: (r) => formatKoActionCode(r.actionCode) },
     { key: 'title', header: '요청 제목', render: (r) => <span style={{ fontWeight: 700 }}>{r.title}</span> },
     {
       key: 'requester',
@@ -397,7 +403,7 @@ export const ApprovalInboxPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '13px' }}>
               <span>요청번호: {selectedReq.id}</span>
-              <span>대상테이블: {selectedReq.targetTable}</span>
+              <span>대상원장: {formatKoTargetTable(selectedReq.targetTable)}</span>
               <span>필요티어: {TIER_LABELS[selectedReq.requiredTier]}</span>
             </div>
             {selectedReq.rejectReason && (

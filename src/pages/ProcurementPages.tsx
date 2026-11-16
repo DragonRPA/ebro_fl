@@ -17,14 +17,19 @@ import {
   type GridColumn,
   type SearchableSelectOption,
 } from '../components/UiPrimitives';
-import type {
-  CurrencyCode,
-  FlExchangeRate,
-  FlLogisticsDispatch,
-  FlPurchase,
-  FlPurchaseLine,
-  ItemCategory,
-  ManagementType,
+import {
+  PURCHASE_STATUS_KO_LABELS,
+  SETTLEMENT_STATUS_KO_LABELS,
+  formatKoCurrency,
+  formatKoStatus,
+  koStatusTone,
+  type CurrencyCode,
+  type FlExchangeRate,
+  type FlLogisticsDispatch,
+  type FlPurchase,
+  type FlPurchaseLine,
+  type ItemCategory,
+  type ManagementType,
 } from '../types/domain';
 
 const DEFAULT_FX_RATES: Record<Exclude<CurrencyCode, 'KRW'>, number> = {
@@ -395,7 +400,7 @@ export const PurchasesPage: React.FC = () => {
       ),
     },
     { key: 'supplierName', header: '매입처', render: (r) => r.supplierName },
-    { key: 'currencyCode', header: '통화', width: 70, align: 'center', render: (r) => r.currencyCode },
+    { key: 'currencyCode', header: '통화', width: 90, align: 'center', render: (r) => formatKoCurrency(r.currencyCode) },
     {
       key: 'fxDate',
       header: '환율적용일',
@@ -416,7 +421,18 @@ export const PurchasesPage: React.FC = () => {
       align: 'right',
       render: (r) => <span style={{ fontWeight: 700 }}>{formatMoney(r.totalLandedCostKrw)}</span>,
     },
-    { key: 'status', header: '상태', width: 85, align: 'center', render: (r) => <StatusBadge label={r.status} tone="success" /> },
+    {
+      key: 'status',
+      header: '상태',
+      width: 85,
+      align: 'center',
+      render: (r) => (
+        <StatusBadge
+          label={PURCHASE_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+          tone={koStatusTone(r.status)}
+        />
+      ),
+    },
   ];
 
   return (
@@ -482,11 +498,11 @@ export const PurchasesPage: React.FC = () => {
                   onChange={(e) => handleCurrencyChange(e.target.value as CurrencyCode)}
                   style={controlInputStyle}
                 >
-                  <option value="USD">USD</option>
-                  <option value="CNY">CNY</option>
-                  <option value="EUR">EUR</option>
-                  <option value="JPY">JPY</option>
-                  <option value="KRW">KRW</option>
+                  <option value="USD">미국 달러</option>
+                  <option value="CNY">중국 위안</option>
+                  <option value="EUR">유럽 유로</option>
+                  <option value="JPY">일본 엔</option>
+                  <option value="KRW">원화</option>
                 </select>
               </VerticalField>
               <VerticalField label="환율적용일" minWidth={0} required>
@@ -513,7 +529,7 @@ export const PurchasesPage: React.FC = () => {
                   }}
                 />
               </VerticalField>
-              <VerticalField label="BL 번호" minWidth={0}>
+              <VerticalField label="선하증권 번호" minWidth={0}>
                 <input
                   type="text"
                   value={blNo}
@@ -521,7 +537,7 @@ export const PurchasesPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="LC 번호" minWidth={0}>
+              <VerticalField label="신용장 번호" minWidth={0}>
                 <input
                   type="text"
                   value={lcNo}
@@ -614,7 +630,7 @@ export const PurchasesPage: React.FC = () => {
                       }
                     />
                   </VerticalField>
-                  <VerticalField label={`단가 ${currencyCode}`} minWidth={0}>
+                  <VerticalField label={`단가 · ${formatKoCurrency(currencyCode)}`} minWidth={0}>
                     <CommaNumberInput
                       dataTestId="pur-line-price"
                       allowDecimal={currencyCode !== 'KRW'}
@@ -690,7 +706,7 @@ export const PurchasesPage: React.FC = () => {
             <ConservationBar
               manualId="pur-commit"
               items={[
-                { label: `외화물품액 ${currencyCode}`, value: summary.foreignTotal.toLocaleString('ko-KR') },
+                { label: `외화물품액 · ${formatKoCurrency(currencyCode)}`, value: summary.foreignTotal.toLocaleString('ko-KR') },
                 { label: '원화환산물품액', value: formatMoney(summary.krwMerchandise) },
                 { label: '부대비용합계', value: formatMoney(summary.ancillary), tone: 'warning' },
                 { label: '총입고원가', value: formatMoney(summary.totalLanded), tone: 'primary' },
@@ -1001,7 +1017,7 @@ export const LogisticsCostsPage: React.FC = () => {
           { key: 'dispatchDate', header: '일자', width: 100, render: (r) => r.dispatchDate },
           { key: 'purpose', header: '목적', width: 95, render: (r) => <StatusBadge label={r.dispatchPurpose} tone="info" /> },
           { key: 'carrierName', header: '운송사', width: 130, render: (r) => r.carrierName },
-          { key: 'route', header: '구간', render: (r) => `${r.originAddress} -> ${r.destinationAddress}` },
+          { key: 'route', header: '구간', render: (r) => `${r.originAddress} · ${r.destinationAddress}` },
           {
             key: 'cost',
             header: '운송비',
@@ -1021,7 +1037,18 @@ export const LogisticsCostsPage: React.FC = () => {
               />
             ),
           },
-          { key: 'status', header: '정산', width: 90, align: 'center', render: (r) => <StatusBadge label={r.settlementStatus} /> },
+          {
+            key: 'status',
+            header: '정산',
+            width: 95,
+            align: 'center',
+            render: (r) => (
+              <StatusBadge
+                label={SETTLEMENT_STATUS_KO_LABELS[r.settlementStatus] || formatKoStatus(r.settlementStatus)}
+                tone={koStatusTone(r.settlementStatus)}
+              />
+            ),
+          },
         ]}
         rows={[...datasets.logisticsDispatches].sort((a, b) => b.dispatchDate.localeCompare(a.dispatchDate))}
         rowKey={(r) => r.id}

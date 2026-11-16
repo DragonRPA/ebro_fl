@@ -113,7 +113,8 @@
 - **보편적 한국어 단일 표기**: 화면에 표시되는 모든 UI 텍스트(제목, 부제목, 인쇄 양식 헤더, 버튼, 배지, 탭, 테이블 컬럼명, 입력 안내문, 알림 메시지)는 **누구나 직관적으로 이해할 수 있는 보편적인 한국어 표준 단어만**을 사용하며, 영어 단어 사용을 절대 엄격히 금지한다.
 - **영문 헤더 및 장식적 영문 부제 영구 금지**: `ERP DISPATCH ORDER`, `RECEIPT OF PAYMENT`, `SYSTEM EXCEPTION LOG`, `ASAP` 등 영문 타이틀이나 상단/하단 장식용 영문 표기를 전면 금지한다 (예: `(주)기연리프트 ERP DISPATCH ORDER` ➔ `(주)기연리프트 출고요청서`, `ASAP` ➔ `최우선`).
 - **한국어 뒤 괄호 영문 병기(`한국어(English)`) 영구 금지**: `교환(EXCHANGE)`, `대여중(RENTED)`, `임대가능(AVAILABLE)`, `유상옵션(PAID)`, `제조번호(S/N)`, `입금표 인쇄(Print)`, `결재(Approve)` 등 한국어 뒤에 괄호로 영문 코드나 단어를 덧붙이는 표기를 전면 금지하고 순수 한국어만 표기한다.
-- **빌드 전 한국어 UI 정적 감사 게이트 의무화**: 배포 전 `scripts/check-korean-ui.cjs`를 통해 UI 파일 내 괄호 영문 병기 및 금지 영문 헤더가 0건임을 검증한다.
+- **DB 영문 상태코드·통화코드·영문 약어·화살표 직접 노출 영구 금지**: `CONFIRMED`, `SETTLED`, `FULFILLED`, `ACTIVE`, `PENDING`, `PARTIAL`, `PAID`, `UNPAID`, `USD`, `CNY`, `EUR`, `JPY`, `KRW` 등 DB 내부 코드값과 `BL`, `LC`, `FIFO`, `OEM`, `UI`, `kg`, `mm`, `h` 등의 영문 약어 및 ASCII 텍스트 화살표(`->`)를 배지(`StatusBadge`), 셀, 드롭다운 `<option>`, 탭, 제목, 레이블에 직접 렌더링하는 것을 절대 금지한다. 모든 내부 코드는 `src/types/domain.ts` 단일 한글 표준 매핑(`formatKoStatus`, `formatKoCurrency` 등)을 경유하여 100% 한국어로만 출력한다.
+- **빌드 전 한국어 UI 정적 감사 게이트 의무화**: 배포 전 `scripts/check-korean-ui.cjs`를 통해 TypeScript AST 기반으로 괄호 영문 병기, 금지 영문 헤더, 원시 영문 배지/열 반환, JSX/UI 속성 영문 단어 및 `->` 화살표가 0건임을 의무 검증한다.
 
 ---
 

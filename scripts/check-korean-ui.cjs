@@ -71,6 +71,126 @@ const bannedKpiCardMarkers = [
   '상단 2x2 핵심 KPI 그리드',
 ];
 
+const RAW_ENUM_PROP_RE =
+  /\.(?:status|lineStatus|settlementStatus|payableType|currencyCode|acquisitionType|actionCode|matchedType|matchStatus|loginId|code)$/;
+const RAW_RENDER_ENUM_RE =
+  /\.(?:status|lineStatus|settlementStatus|payableType|currencyCode|acquisitionType|actionCode|matchedType|matchStatus)$/;
+const KO_CONVERTER_CALL_RE =
+  /(?:formatKoStatus|formatKoCurrency|formatKoPayableType|formatKoAcquisitionType|formatKoActionCode|formatKoTargetTable|statusText|statusLabel|tierLabel)$/;
+const UI_JSX_ATTRS = new Set([
+  'label',
+  'title',
+  'header',
+  'placeholder',
+  'searchPlaceholder',
+  'balanceMessage',
+  'emptyText',
+  'docLabel',
+  'aria-label',
+]);
+const UI_OBJ_KEYS = new Set([
+  'label',
+  'header',
+  'shortDesc',
+  'basicDescription',
+  'processName',
+  'purpose',
+  'targetLabel',
+  'actionDetail',
+  'balanceMessage',
+  'emptyText',
+  'sectionTitle',
+]);
+
+function checkUiOutputExpr(expr, sf, checkEnumProp) {
+  const hits = [];
+  function inspectOutput(node) {
+    if (!node) return;
+    if (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isNonNullExpression(node)
+    ) {
+      inspectOutput(node.expression);
+      return;
+    }
+    if (ts.isConditionalExpression(node)) {
+      // 삼항 조건식은 제외하고 실제 화면 출력 분기만 검사
+      inspectOutput(node.whenTrue);
+      inspectOutput(node.whenFalse);
+      return;
+    }
+    if (ts.isBinaryExpression(node)) {
+      const op = node.operatorToken.kind;
+      if (
+        op === ts.SyntaxKind.BarBarToken ||
+        op === ts.SyntaxKind.QuestionQuestionToken ||
+        op === ts.SyntaxKind.PlusToken
+      ) {
+        inspectOutput(node.left);
+        inspectOutput(node.right);
+      } else if (op === ts.SyntaxKind.AmpersandAmpersandToken) {
+        inspectOutput(node.right);
+      }
+      return;
+    }
+    if (ts.isCallExpression(node)) {
+      const fn = node.expression.getText(sf);
+      if (KO_CONVERTER_CALL_RE.test(fn)) {
+        return;
+      }
+      if (
+        fn.endsWith('.toLocaleString') ||
+        fn.endsWith('.toFixed') ||
+        fn.endsWith('.slice') ||
+        fn.endsWith('.replace')
+      ) {
+        return;
+      }
+    }
+    if (ts.isElementAccessExpression(node)) {
+      const arrName = node.expression.getText(sf);
+      if (arrName.endsWith('_LABELS') || arrName === 'TIER_LABELS') {
+        return;
+      }
+    }
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      const t = node.text;
+      if (/[A-Za-z]|->/.test(t)) {
+        hits.push(`"${t}"`);
+      }
+      return;
+    }
+    if (ts.isTemplateExpression(node)) {
+      const parts = [node.head.text, ...node.templateSpans.map((s) => s.literal.text)];
+      for (const p of parts) {
+        if (/[A-Za-z]|->/.test(p)) {
+          hits.push(`템플릿 "${p}"`);
+        }
+      }
+      for (const s of node.templateSpans) {
+        inspectOutput(s.expression);
+      }
+      return;
+    }
+    if (checkEnumProp && ts.isPropertyAccessExpression(node)) {
+      const txt = node.getText(sf);
+      if (RAW_ENUM_PROP_RE.test(txt)) {
+        hits.push(`원시코드 "${txt}"`);
+      }
+      return;
+    }
+    if (checkEnumProp && ts.isIdentifier(node)) {
+      const txt = node.getText(sf);
+      if (txt === 'currencyCode') {
+        hits.push(`원시통화 "${txt}"`);
+      }
+    }
+  }
+  inspectOutput(expr);
+  return hits;
+}
+
 const files = walk(path.join(__dirname, '..', 'src'));
 const violations = [];
 
@@ -188,9 +308,26 @@ for (const file of files) {
   }
 
   function visit(node) {
+    const lineNum = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+    const isUiScope =
+      rel.startsWith('src/components/') ||
+      rel.startsWith('src/pages/') ||
+      rel.startsWith('src/manual/') ||
+      rel === 'src/types/domain.ts';
+
     if (ts.isJsxText(node)) {
       const raw = code.slice(node.getFullStart(), node.getEnd());
       checkText(raw, node.getStart(sf), false);
+      // 규칙 2: JSX 본문 영문/화살표 직접 노출 차단
+      const cleaned = node
+        .getText(sf)
+        .replace(/&(?:nbsp|amp|lt|gt|quot|apos);/g, '')
+        .trim();
+      if (cleaned && /[A-Za-z]|->/.test(cleaned)) {
+        violations.push(
+          `${rel}:${lineNum} [JSX 영문/화살표 노출 금지] "${cleaned.replace(/\s+/g, ' ').slice(0, 80)}"`
+        );
+      }
     } else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       if (!isExcludedContext(node)) {
         const raw = code.slice(node.getStart(sf) + 1, node.getEnd() - 1);
@@ -209,6 +346,81 @@ for (const file of files) {
         }
       }
     }
+
+    // 규칙 1 & 규칙 3a: StatusBadge 및 UI 표시 JSX 속성 검사
+    if (ts.isJsxAttribute(node) && node.initializer) {
+      const attrName = node.name.getText(sf);
+      const parentTag =
+        node.parent && node.parent.parent && node.parent.parent.tagName
+          ? node.parent.parent.tagName.getText(sf)
+          : '';
+      if (parentTag === 'StatusBadge' && attrName === 'label') {
+        if (ts.isStringLiteral(node.initializer) && /[A-Za-z]|->/.test(node.initializer.text)) {
+          violations.push(`${rel}:${lineNum} [영문 배지/원시코드 금지] "${node.initializer.text}"`);
+        } else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+          for (const h of checkUiOutputExpr(node.initializer.expression, sf, true)) {
+            violations.push(`${rel}:${lineNum} [영문 배지/원시코드 금지] ${h}`);
+          }
+        }
+      } else if (isUiScope && UI_JSX_ATTRS.has(attrName)) {
+        if (ts.isStringLiteral(node.initializer) && /[A-Za-z]|->/.test(node.initializer.text)) {
+          violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${attrName}="${node.initializer.text}"`);
+        } else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+          for (const h of checkUiOutputExpr(
+            node.initializer.expression,
+            sf,
+            attrName === 'label' || attrName === 'header'
+          )) {
+            violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${attrName}=${h}`);
+          }
+        }
+      }
+    }
+
+    // 규칙 3b & 규칙 4: UI 객체 프로퍼티 및 그리드 render 반환 검사
+    if (isUiScope && ts.isPropertyAssignment(node)) {
+      const propKey = node.name.getText(sf).replace(/['"]/g, '');
+      if (UI_OBJ_KEYS.has(propKey)) {
+        for (const h of checkUiOutputExpr(
+          node.initializer,
+          sf,
+          propKey === 'label' || propKey === 'header'
+        )) {
+          violations.push(`${rel}:${lineNum} [UI 속성 영문/화살표 금지] ${propKey}: ${h}`);
+        }
+      }
+      if ((rel.startsWith('src/pages/') || rel.startsWith('src/components/')) && propKey === 'render') {
+        const fn = node.initializer;
+        if (ts.isArrowFunction(fn) || ts.isFunctionExpression(fn)) {
+          const returns = [];
+          if (!ts.isBlock(fn.body)) {
+            returns.push(fn.body);
+          } else {
+            function findRet(b) {
+              if (ts.isFunctionLike(b) && b !== fn) return;
+              if (ts.isReturnStatement(b) && b.expression) returns.push(b.expression);
+              ts.forEachChild(b, findRet);
+            }
+            findRet(fn.body);
+          }
+          for (const ret of returns) {
+            let unwrap = ret;
+            while (ts.isParenthesizedExpression(unwrap)) unwrap = unwrap.expression;
+            const retLine = sf.getLineAndCharacterOfPosition(ret.getStart(sf)).line + 1;
+            if (ts.isPropertyAccessExpression(unwrap) && RAW_RENDER_ENUM_RE.test(unwrap.getText(sf))) {
+              violations.push(`${rel}:${retLine} [그리드 원시 영문코드 반환 금지] "${unwrap.getText(sf)}"`);
+            }
+            if (ts.isTemplateExpression(unwrap)) {
+              const lits = [unwrap.head.text, ...unwrap.templateSpans.map((s) => s.literal.text)];
+              if (lits.some((l) => l.includes('->'))) {
+                violations.push(`${rel}:${retLine} [그리드 화살표 표기 금지] ${unwrap.getText(sf).slice(0, 80)}`);
+              }
+            }
+          }
+        }
+      }
+    }
+
     ts.forEachChild(node, visit);
   }
 
@@ -223,6 +435,6 @@ if (violations.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log(`[UI 표기 검증 통과] 검사 파일 ${files.length}개 내 이모지, 괄호 영문, 금지 표현 0건 확인 완료.`);
+  console.log(`[UI 표기 검증 통과] 검사 파일 ${files.length}개 내 이모지, 괄호 영문, 금지 표현, 영문 배지·표기 0건 확인 완료.`);
   process.exit(0);
 }

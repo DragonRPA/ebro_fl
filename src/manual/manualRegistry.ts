@@ -188,7 +188,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'catalogs',
     pageTitle: '제원 카탈로그',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '지게차 모델별 VDI 2198 기술제원·마스트·배터리 사양과 대리점 배포용 호환 부품 카탈로그 패키지를 조회한다.',
+    basicDescription: '지게차 모델별 국제표준 기술제원·마스트·배터리 사양과 대리점 배포용 호환 부품 카탈로그 패키지를 조회한다.',
     anchors: [
       { anchorId: 'cat-tabs', title: '제원·부품 전환 탭', summary: '장비 기술제원표와 호환부품 카탈로그를 전환한다.' },
       { anchorId: 'cat-detail', title: '기술제원·카탈로그 본문', summary: '마스트 높이별 하중표, 배터리 옵션, 호환품번을 확인한다.' },
@@ -294,15 +294,15 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'trade_inventory',
     pageTitle: '유통 재고 조회',
     groupLabel: '유통 관리',
-    basicDescription: '유통재고의 시리얼·로트별 입출고 현황과 FIFO 순번을 조회하고, 보유중 완제품·어태치먼트를 렌탈자산으로 계정대체한다.',
+    basicDescription: '유통재고의 시리얼·로트별 입출고 현황과 선입선출 순번을 조회하고, 보유중 완제품·어태치먼트를 렌탈자산으로 계정대체한다.',
     anchors: [
       { anchorId: 'tinv-filter', title: '품목군·상태 검색', summary: '유통재고 품목군과 보유중·판매완료 상태를 조회한다.' },
-      { anchorId: 'tinv-grid', title: '유통 재고 원장', summary: '입고일자순 FIFO 정렬과 시리얼·로트별 단가를 확인한다.' },
+      { anchorId: 'tinv-grid', title: '유통 재고 원장', summary: '입고일자순 선입선출 정렬과 시리얼·로트별 단가를 확인한다.' },
       { anchorId: 'tinv-xfer', title: '계정대체 실행 버튼', summary: '보유중 자산을 장부가 그대로 렌탈자산 계정으로 전환한다.' },
     ],
     processes: [
       {
-        processName: '유통재고 -> 렌탈자산 계정대체',
+        processName: '유통재고 렌탈자산 계정대체',
         purpose: '판매 대기 자산을 평가변경 없이 기존 장부가 그대로 렌탈자산으로 편입한다.',
         steps: [
           { stepNo: 1, targetLabel: '재고 검색 바', manualAnchorId: 'tinv-filter', actionDetail: '상태를 보유중으로 필터링하여 전환 대상 장비를 찾는다.' },
@@ -315,9 +315,9 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'trade_fulfillment',
     pageTitle: '유통 출고 관리',
     groupLabel: '유통 관리',
-    basicDescription: '유통 출고의뢰에 대해 FIFO 또는 수동 선택 시리얼·로트로 희망완료일 기준 출고 실행완료를 처리하고, 공급사 정비중개·반품환불·반품교환을 관리한다.',
+    basicDescription: '유통 출고의뢰에 대해 선입선출 또는 수동 선택 시리얼·로트로 희망완료일 기준 출고 실행완료를 처리하고, 공급사 정비중개·반품환불·반품교환을 관리한다.',
     anchors: [
-      { anchorId: 'tful-exec', title: '출고 실행완료 패널', summary: 'FIFO 제안 및 수동 시리얼·로트 선택 후 희망완료일로 출고 완료를 확정한다.' },
+      { anchorId: 'tful-exec', title: '출고 실행완료 패널', summary: '선입선출 제안 및 수동 시리얼·로트 선택 후 희망완료일로 출고 완료를 확정한다.' },
       { anchorId: 'tful-aftercare', title: '유통 사후처리 패널', summary: '공급사 정비중개, 반품환불, 반품교환 3종 사후처리를 등록한다.' },
     ],
     processes: [
@@ -589,7 +589,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'operation_manual',
     pageTitle: '업무 매뉴얼',
     groupLabel: '정산 · 회계 · 설정',
-    basicDescription: '전체 25개 메뉴 화면의 기본기능 설명, 업무 프로세스 명칭, UI 조작 순서를 키워드 검색하고 현재 화면 매뉴얼 오버레이를 호출한다.',
+    basicDescription: '전체 26개 메뉴 화면의 기본기능 설명, 업무 프로세스 명칭, 화면 조작 순서를 키워드 검색하고 현재 화면 매뉴얼 오버레이를 호출한다.',
     anchors: [
       { anchorId: 'man-search', title: '통합 매뉴얼 검색창', summary: '메뉴명, 업무 프로세스, 버튼명, 조작 단어로 전체 매뉴얼을 검색한다.' },
       { anchorId: 'man-list', title: '화면·프로세스 조작 순서 본문', summary: '선택한 화면의 기본기능과 단계별 조작 순서를 확인한다.' },
@@ -597,7 +597,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     processes: [
       {
         processName: '매뉴얼 검색 및 화면별 조작순서 조회',
-        purpose: '모든 임직원이 동일한 표준 용어와 UI 조작 순서를 즉시 확인한다.',
+        purpose: '모든 임직원이 동일한 표준 용어와 화면 조작 순서를 즉시 확인한다.',
         steps: [
           { stepNo: 1, targetLabel: '매뉴얼 검색창', manualAnchorId: 'man-search', actionDetail: '찾고자 하는 업무 명칭이나 기능 단어를 입력한다.' },
           { stepNo: 2, targetLabel: '화면 이동 또는 오버레이 보기', manualAnchorId: 'man-list', actionDetail: '조작 순서 단계를 확인하고 해당 업무 화면으로 이동한다.' },

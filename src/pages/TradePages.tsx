@@ -26,15 +26,21 @@ import {
   controlInputStyle,
   toPartnerSelectOptions,
 } from '../components/UiPrimitives';
-import type {
-  FlContract,
-  FlContractLine,
-  FlFulfillment,
-  FlInventoryUnit,
-  FlQuotation,
-  FlTradeAftercareCase,
-  ItemCategory,
-  QuotationLine,
+import {
+  CONTRACT_LINE_STATUS_KO_LABELS,
+  CONTRACT_STATUS_KO_LABELS,
+  FULFILLMENT_STATUS_KO_LABELS,
+  QUOTATION_STATUS_KO_LABELS,
+  formatKoStatus,
+  koStatusTone,
+  type FlContract,
+  type FlContractLine,
+  type FlFulfillment,
+  type FlInventoryUnit,
+  type FlQuotation,
+  type FlTradeAftercareCase,
+  type ItemCategory,
+  type QuotationLine,
 } from '../types/domain';
 
 export const QuotationsPage: React.FC = () => {
@@ -466,7 +472,7 @@ export const QuotationsPage: React.FC = () => {
             <span>견적일자: {selectedQuote.quoteDate}</span>
             <span>공급가액: {formatMoney(selectedQuote.supplyAmountKrw, { salesSensitive: true })}</span>
             <span>합계금액: {formatMoney(selectedQuote.totalAmountKrw, { salesSensitive: true })}</span>
-            <span>상태: {selectedQuote.status}</span>
+            <span>상태: {QUOTATION_STATUS_KO_LABELS[selectedQuote.status] || formatKoStatus(selectedQuote.status)}</span>
           </div>
         </SectionPanel>
       )}
@@ -490,7 +496,18 @@ export const QuotationsPage: React.FC = () => {
             align: 'right',
             render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
           },
-          { key: 'status', header: '상태', width: 95, align: 'center', render: (r) => <StatusBadge label={r.status} /> },
+          {
+            key: 'status',
+            header: '상태',
+            width: 95,
+            align: 'center',
+            render: (r) => (
+              <StatusBadge
+                label={QUOTATION_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+                tone={koStatusTone(r.status)}
+              />
+            ),
+          },
         ]}
         rows={[...datasets.quotations].sort((a, b) => b.quoteDate.localeCompare(a.quoteDate))}
         rowKey={(r) => r.id}
@@ -836,7 +853,18 @@ export const TradeContractsPage: React.FC = () => {
                 align: 'right',
                 render: (l) => formatMoney(l.totalAmountKrw, { salesSensitive: true }),
               },
-              { key: 'st', header: '상태', width: 95, align: 'center', render: (l) => <StatusBadge label={l.lineStatus} /> },
+              {
+                key: 'st',
+                header: '상태',
+                width: 95,
+                align: 'center',
+                render: (l) => (
+                  <StatusBadge
+                    label={CONTRACT_LINE_STATUS_KO_LABELS[l.lineStatus] || formatKoStatus(l.lineStatus)}
+                    tone={koStatusTone(l.lineStatus)}
+                  />
+                ),
+              },
             ]}
             rows={selectedLines}
             rowKey={(l) => l.id}
@@ -857,7 +885,18 @@ export const TradeContractsPage: React.FC = () => {
             align: 'right',
             render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
           },
-          { key: 'status', header: '상태', width: 100, align: 'center', render: (r) => <StatusBadge label={r.status} /> },
+          {
+            key: 'status',
+            header: '상태',
+            width: 100,
+            align: 'center',
+            render: (r) => (
+              <StatusBadge
+                label={CONTRACT_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+                tone={koStatusTone(r.status)}
+              />
+            ),
+          },
         ]}
         rows={tradeContracts}
         rowKey={(r) => r.id}
@@ -900,7 +939,7 @@ export const TradeInventoryPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <SectionPanel title="유통재고 FIFO 조회 · 계정대체" manualId="tinv-filter">
+      <SectionPanel title="유통재고 선입선출 조회 · 계정대체" manualId="tinv-filter">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
           <SegmentedTabs
             tabs={[
@@ -953,7 +992,7 @@ export const TradeInventoryPage: React.FC = () => {
             width: 90,
             align: 'center',
             render: (u) => (
-              <StatusBadge label={u.status} tone={u.status === '보유중' ? 'success' : 'neutral'} />
+              <StatusBadge label={formatKoStatus(u.status)} tone={u.status === '보유중' ? 'success' : 'neutral'} />
             ),
           },
         ]}
@@ -987,7 +1026,7 @@ export const TradeInventoryPage: React.FC = () => {
               actionCode="ACCOUNT_TRANSFER"
               targetTable="fl_inventory_units"
               targetId={selectedUnit.id}
-              title={`유통재고 -> 렌탈자산 계정대체 · ${selectedUnit.unitCode}`}
+              title={`유통재고 렌탈자산 계정대체 · ${selectedUnit.unitCode}`}
               buildPayload={() => ({
                 unitId: selectedUnit.id,
                 toDomain: '렌탈자산',
@@ -1121,7 +1160,10 @@ export const TradeFulfillmentPage: React.FC = () => {
                 width: 90,
                 align: 'center',
                 render: (f) => (
-                  <StatusBadge label={f.status} tone={f.status === 'COMPLETED' ? 'success' : 'warning'} />
+                  <StatusBadge
+                    label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
+                    tone={koStatusTone(f.status)}
+                  />
                 ),
               },
             ]}
@@ -1148,7 +1190,7 @@ export const TradeFulfillmentPage: React.FC = () => {
                 backgroundColor: 'var(--bg-header)',
               }}
             >
-              <VerticalField label="출고 재고 FIFO 우선 · 수동선택" required minWidth={280} flex={1}>
+              <VerticalField label="출고 재고 선입선출 우선 · 수동선택" required minWidth={280} flex={1}>
                 <select
                   value={resolvedUnit?.id || ''}
                   onChange={(e) => setChosenUnitId(e.target.value)}
@@ -1159,7 +1201,7 @@ export const TradeFulfillmentPage: React.FC = () => {
                   ) : (
                     candidateUnits.map((u, idx) => (
                       <option key={u.id} value={u.id}>
-                        {idx === 0 ? '[FIFO 선입] ' : '[수동선택] '}
+                        {idx === 0 ? '[선입선출] ' : '[수동선택] '}
                         {u.unitCode} · {u.serialNo || u.lotNo || '단품'} · 잔여 {u.qtyOnHand} · 원가{' '}
                         {u.unitCostKrw.toLocaleString('ko-KR')}원
                       </option>

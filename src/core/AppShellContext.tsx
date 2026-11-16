@@ -141,7 +141,7 @@ const DEFAULT_TENANT_PROFILE: TenantProfile = {
   tenantCode: 'EBRO_FL',
   subdomain: 'fl-demo',
   solutionType: 'FL',
-  displayName: 'eBroFL 렌탈',
+  displayName: '이브로지게차 렌탈',
   corporateName: '주식회사 이브로지게차렌탈',
   businessNumber: '123-81-45678',
   representativeName: '이정용',
@@ -269,7 +269,10 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           tenantCode: String(matched.tenantCode || 'EBRO_FL'),
           subdomain: String(matched.subdomain || 'fl-demo'),
           solutionType: String(matched.solutionType || 'FL'),
-          displayName: String(matched.displayName || 'eBroFL 렌탈'),
+          displayName:
+            matched.displayName && matched.displayName !== 'eBroFL 렌탈'
+              ? String(matched.displayName)
+              : '이브로지게차 렌탈',
           corporateName: String(matched.corporateName || DEFAULT_TENANT_PROFILE.corporateName),
           businessNumber: String(matched.businessNumber || DEFAULT_TENANT_PROFILE.businessNumber),
           representativeName: String(matched.representativeName || DEFAULT_TENANT_PROFILE.representativeName),

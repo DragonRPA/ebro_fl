@@ -284,7 +284,7 @@ export const ManualOverlay: React.FC = () => {
               {activeProcess && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    UI 조작 순서
+                    화면 조작 순서
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{activeProcess.purpose}</div>
                   {activeProcess.steps.map((st) => {
@@ -490,7 +490,7 @@ export const ManualOverlay: React.FC = () => {
                 autoFocus
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="메뉴명, 업무 프로세스 명칭, UI 조작 키워드 검색"
+                placeholder="메뉴명, 업무 프로세스 명칭, 화면 조작 키워드 검색"
                 style={{
                   flex: 1,
                   padding: '7px 10px',

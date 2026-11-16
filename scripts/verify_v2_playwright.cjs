@@ -198,8 +198,8 @@ async function main() {
     const polylineCount = await chartSvg.locator('polyline').count();
     assert(polylineCount >= 1, `Expected >=1 SVG polyline in 3-month FX chart, got ${polylineCount}`);
     const fxChartSection = page.locator('[data-manual-id="fx-chart"]');
-    await fxChartSection.locator('button', { hasText: 'JPY' }).first().click();
-    await fxChartSection.getByText('일본 엔', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    await fxChartSection.locator('button', { hasText: '일본 엔' }).first().click();
+    await fxChartSection.getByText('기준 단위: 1 일본 엔 당 원화', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
     await fxChartSection.locator('button', { hasText: '1개월' }).first().click();
     await fxChartSection.getByText('관리 환율 1개월 추이 차트', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
     await fxChartSection.locator('button', { hasText: '3개월' }).first().click();
@@ -258,6 +258,52 @@ async function main() {
     const rentalHasDealerHeader = await page.locator('table thead th', { hasText: '대리점가' }).count();
     assert.strictEqual(rentalHasDealerHeader, 0, '렌탈 품목 관리 must NOT display 대리점가 header');
     console.log('[E2E 7f PASS] Separated 유통 품목 관리 & 렌탈 품목 관리 columns verified.');
+
+    // [E2E 7g] Verify Pure Korean badges, currency labels, routes, and zero English StatusBadges
+    const assertZeroEnglishBadges = async (menuName) => {
+      const badgeTexts = await page.locator('[data-ui="status-badge"]').allInnerTexts();
+      const englishBadges = badgeTexts.filter((t) => /[A-Za-z]/.test(t));
+      assert.strictEqual(
+        englishBadges.length,
+        0,
+        `${menuName} must have 0 English status badges, found: ${englishBadges.join(', ')}`
+      );
+      return badgeTexts;
+    };
+
+    await page.locator('aside nav button', { hasText: '매입 통관 관리' }).first().click();
+    await page.getByText('선하증권 번호', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await page.getByText('신용장 번호', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('table tbody').getByText('미국 달러', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const purBadges = await assertZeroEnglishBadges('매입 통관 관리');
+    assert(purBadges.includes('확정'), `Expected '확정' badge in 매입 통관 관리, got: ${purBadges.join(', ')}`);
+    assert(!purBadges.includes('CONFIRMED'), 'CONFIRMED badge must not appear');
+
+    await page.locator('aside nav button', { hasText: '물류비 관리' }).first().click();
+    await page.locator('table tbody').getByText('평택 주기장 · 용산구 현장', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    const logBadges = await assertZeroEnglishBadges('물류비 관리');
+    assert(logBadges.includes('정산확정'), `Expected '정산확정' badge in 물류비 관리, got: ${logBadges.join(', ')}`);
+    assert(!logBadges.includes('SETTLED'), 'SETTLED badge must not appear');
+    const logTableText = await page.locator('table tbody').first().innerText();
+    assert(!logTableText.includes('->'), 'Logistics table route must not contain ASCII arrow ->');
+
+    await page.locator('aside nav button', { hasText: '렌탈 계약 관리' }).first().click();
+    await page.locator('[data-ui="status-badge"]', { hasText: '진행중' }).first().waitFor({ state: 'visible', timeout: 8000 });
+    const rctrBadges = await assertZeroEnglishBadges('렌탈 계약 관리');
+    assert(rctrBadges.includes('출고완료'), `Expected '출고완료' badge in 렌탈 계약 관리, got: ${rctrBadges.join(', ')}`);
+    assert(rctrBadges.includes('진행중'), `Expected '진행중' badge in 렌탈 계약 관리, got: ${rctrBadges.join(', ')}`);
+    assert(!rctrBadges.includes('FULFILLED') && !rctrBadges.includes('ACTIVE'), 'FULFILLED/ACTIVE badges must not appear');
+
+    const navButtons = page.locator('aside nav button');
+    const navCount = await navButtons.count();
+    for (let i = 0; i < navCount; i++) {
+      const btn = navButtons.nth(i);
+      const label = (await btn.innerText()).trim().replace(/\s+/g, ' ');
+      await btn.click();
+      await page.waitForTimeout(180);
+      await assertZeroEnglishBadges(label);
+    }
+    console.log(`[E2E 7g PASS] Pure Korean badges (확정/정산확정/출고완료/진행중), currency labels, and zero English StatusBadges verified across all ${navCount} sidebar menus.`);
 
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { BookOpen, KeyRound, Menu, RefreshCw, Search, Sun, Moon, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from '../manual/ManualContext';
-import { EMPLOYMENT_STATUS_LABELS, type EmploymentStatus } from '../types/domain';
+import { EMPLOYMENT_STATUS_LABELS, formatKoStatus, type EmploymentStatus } from '../types/domain';
 import { ModalDialog, StatusBadge, VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 
 export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -320,7 +320,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             <button
               type="button"
               onClick={toggleOverlay}
-              title="단축키 Ctrl+M"
+              title="매뉴얼 전환 단축키"
               style={actionBtnStyle(overlayOpen ? 'primary' : 'secondary', true)}
             >
               <BookOpen size={13} />
@@ -456,7 +456,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                 <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
                   {tierLabel(currentUser.tierLevel)} ·{' '}
                   {EMPLOYMENT_STATUS_LABELS[(currentUser.status as EmploymentStatus) || 'ACTIVE'] ||
-                    currentUser.status}
+                    formatKoStatus(currentUser.status)}
                 </div>
               </div>
               <div>

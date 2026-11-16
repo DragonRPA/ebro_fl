@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
-import type { FlPartner } from '../types/domain';
+import { formatKoStatus, koStatusTone, type FlPartner } from '../types/domain';
 import {
   downloadExcelFile,
   openExcelInAgent,
@@ -271,7 +271,7 @@ export type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger'
 
 export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
   label,
-  tone = 'neutral',
+  tone,
 }) => {
   const toneStyles: Record<BadgeTone, { bg: string; fg: string; border: string }> = {
     neutral: {
@@ -305,9 +305,12 @@ export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
       border: 'var(--info)',
     },
   };
-  const palette = toneStyles[tone];
+  const displayLabel = formatKoStatus(label);
+  const resolvedTone = tone ?? koStatusTone(label);
+  const palette = toneStyles[resolvedTone];
   return (
     <span
+      data-ui="status-badge"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -323,7 +326,7 @@ export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
         flexShrink: 0,
       }}
     >
-      {label}
+      {displayLabel}
     </span>
   );
 };
@@ -791,7 +794,7 @@ export const DocumentActionBar: React.FC<{
           type="button"
           disabled={busy || disabled}
           onClick={handleOpenInAgent}
-          title={agentOnline ? 'PC 엑셀 편집 열기' : 'eBro Agent 실행 필요'}
+          title={agentOnline ? '로컬 엑셀 편집 열기' : '전용 에이전트 실행 필요'}
           style={actionBtnStyle('secondary', true)}
         >
           <FileSpreadsheet size={13} />
@@ -821,7 +824,7 @@ export const DocumentActionBar: React.FC<{
                 type="email"
                 value={toEmail}
                 onChange={(e) => setToEmail(e.target.value)}
-                placeholder="customer@example.com"
+                placeholder="수신자 이메일 주소 입력"
                 style={controlInputStyle}
               />
             </VerticalField>

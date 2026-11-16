@@ -64,7 +64,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'trade_item_masters', label: '유통 품목 관리', shortDesc: '판매 완제품 · 부품 · 대리점가 · 판매정가' },
       { pageId: 'rental_item_masters', label: '렌탈 품목 관리', shortDesc: '임대 기종 · 옵션 · 월·일 렌탈료 · 상각기준' },
       { pageId: 'exchange_rates', label: '환율 관리', shortDesc: '고시환율 등록 및 외화 환산 기준' },
-      { pageId: 'catalogs', label: '제원 카탈로그', shortDesc: 'VDI 2198 제원 및 호환 부품 카탈로그' },
+      { pageId: 'catalogs', label: '제원 카탈로그', shortDesc: '장비 상세 제원 및 호환 부품 카탈로그' },
     ],
   },
   {
@@ -81,7 +81,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
     items: [
       { pageId: 'quotations', label: '견적 관리', shortDesc: '유통 · 렌탈 견적 작성 및 계약 전환' },
       { pageId: 'trade_contracts', label: '유통 계약 관리', shortDesc: '유통 수주 · 계약서 발송 · 출고의뢰' },
-      { pageId: 'trade_inventory', label: '유통 재고 조회', shortDesc: '시리얼 · 로트 FIFO 및 계정대체' },
+      { pageId: 'trade_inventory', label: '유통 재고 조회', shortDesc: '시리얼 · 로트 선입선출 및 계정대체' },
       { pageId: 'trade_fulfillment', label: '유통 출고 관리', shortDesc: '출고 실행완료 · 공급사 중개 · 반품처리' },
       { pageId: 'trade_performance', label: '유통 실적 조회', shortDesc: '유통 매출 · 원가 · 반품차감 손익집계' },
     ],
@@ -944,4 +944,240 @@ export interface FlFinanceLeaseSchedule {
   isPaid: boolean;
   paidDate?: string | null;
   bankTxId?: string | null;
+}
+
+export type KoBadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+
+export const CURRENCY_KO_LABELS: Record<CurrencyCode, string> = {
+  KRW: '원화',
+  USD: '미국 달러',
+  CNY: '중국 위안',
+  EUR: '유럽 유로',
+  JPY: '일본 엔',
+};
+
+export const PURCHASE_STATUS_KO_LABELS: Record<FlPurchase['status'], string> = {
+  DRAFT: '임시저장',
+  CONFIRMED: '확정',
+  CANCELLED: '취소',
+};
+
+export const SETTLEMENT_STATUS_KO_LABELS: Record<FlLogisticsDispatch['settlementStatus'], string> = {
+  UNSETTLED: '미정산',
+  SETTLED: '정산확정',
+  PAID: '지급완료',
+};
+
+export const QUOTATION_STATUS_KO_LABELS: Record<FlQuotation['status'], string> = {
+  DRAFT: '작성중',
+  SENT: '발송완료',
+  ACCEPTED: '수주확정',
+  CONVERTED: '계약전환',
+  CANCELLED: '취소',
+};
+
+export const CONTRACT_STATUS_KO_LABELS: Record<FlContract['status'], string> = {
+  DRAFT: '임시저장',
+  ACTIVE: '진행중',
+  FULFILLING: '출고진행',
+  COMPLETED: '이행완료',
+  TERMINATED: '중도해지',
+  CANCELLED: '취소',
+};
+
+export const CONTRACT_LINE_STATUS_KO_LABELS: Record<FlContractLine['lineStatus'], string> = {
+  ACTIVE: '계약유효',
+  FULFILLED: '출고완료',
+  REPLACED_OUT: '교환회수',
+  RETURNED: '반납완료',
+  CANCELLED: '취소',
+};
+
+export const FULFILLMENT_STATUS_KO_LABELS: Record<FlFulfillment['status'], string> = {
+  REQUESTED: '처리대기',
+  COMPLETED: '실행완료',
+  CANCELLED: '취소',
+};
+
+export const AFTERCARE_STATUS_KO_LABELS: Record<FlTradeAftercareCase['status'], string> = {
+  OPEN: '접수',
+  IN_PROGRESS: '처리중',
+  COMPLETED: '처리완료',
+  CANCELLED: '취소',
+};
+
+export const MAINT_STATUS_KO_LABELS: Record<FlRentalMaintenance['status'], string> = {
+  OPEN: '정비접수',
+  COMPLETED: '정비완료',
+  CANCELLED: '취소',
+};
+
+export const BILLING_STATUS_KO_LABELS: Record<FlBilling['status'], string> = {
+  UNPAID: '미수',
+  PARTIAL: '부분수납',
+  PAID: '완납',
+  CANCELLED: '취소',
+};
+
+export const AP_STATUS_KO_LABELS: Record<FlApPayable['status'], string> = {
+  UNPAID: '미지급',
+  PARTIAL: '부분지급',
+  PAID: '지급완료',
+};
+
+export const PAYABLE_TYPE_KO_LABELS: Record<FlApPayable['payableType'], string> = {
+  PURCHASE: '매입채무',
+  LOGISTICS: '물류운송비',
+  FINANCE_LEASE: '금융리스',
+  SUBLEASE_RENT: '전대임차료',
+  EXTERNAL_REPAIR: '외주정비비',
+};
+
+export const ACQUISITION_TYPE_KO_LABELS: Record<FlInventoryUnit['acquisitionType'], string> = {
+  PURCHASE: '직접매입',
+  FINANCE_LEASE: '금융리스',
+  SUBLEASE: '전대임차',
+  ACCOUNT_TRANSFER: '계정대체',
+  RETURN: '반품입고',
+};
+
+export const BANK_MATCH_STATUS_KO_LABELS: Record<FlBankTransaction['matchStatus'], string> = {
+  UNMATCHED: '미대사',
+  MATCHED: '대사완료',
+  EXCLUDED: '대사제외',
+};
+
+export const LEASE_STATUS_KO_LABELS: Record<FlFinanceLease['status'], string> = {
+  ACTIVE: '상환중',
+  PAID_OFF: '완납종료',
+  TERMINATED: '중도해지',
+};
+
+export const APPROVAL_STATUS_KO_LABELS: Record<FlApprovalRequest['status'], string> = {
+  PENDING: '결재대기',
+  APPROVED: '승인완료',
+  REJECTED: '반려',
+  CANCELLED: '취소',
+};
+
+export const ACTION_CODE_KO_LABELS: Record<ApprovalActionCode, string> = {
+  PURCHASE_CONFIRM: '매입 입고 확정',
+  LEASE_CREATE: '금융리스 등록',
+  ACCOUNT_TRANSFER: '계정대체 실행',
+  TRADE_CONTRACT_CONFIRM: '유통 계약 확정',
+  RENTAL_CONTRACT_CONFIRM: '렌탈 계약 확정',
+  FULFILLMENT_COMPLETE: '출고·회수 완료',
+  EXCHANGE_EXECUTE: '렌탈 교환 실행',
+  TRADE_REFUND: '유통 반품 환불',
+  BILLING_CREATE: '월말 청구 발행',
+  AP_SETTLEMENT_PAY: '매입·물류 대금 지급',
+  ASSET_DISPOSAL: '자산 폐기 처분',
+  POLICY_CONFIG_SAVE: '권한·결재 기준 변경',
+  HR_APPOINTMENT: '인사 발령 확정',
+};
+
+export const TARGET_TABLE_KO_LABELS: Record<string, string> = {
+  fl_purchases: '매입통관 원장',
+  fl_finance_leases: '금융리스 원장',
+  fl_inventory_units: '재고·자산 원장',
+  fl_contracts: '계약 원장',
+  fl_fulfillments: '입출고 원장',
+  fl_trade_aftercare_cases: '유통 사후처리 원장',
+  fl_billings: '청구 원장',
+  fl_ap_payables: '매입채무 원장',
+  fl_approval_policies: '결재정책 원장',
+  fl_users: '인사 원장',
+};
+
+const UNIFIED_STATUS_KO_MAP: Record<string, string> = {
+  ...CURRENCY_KO_LABELS,
+  ...EMPLOYMENT_STATUS_LABELS,
+  ...PURCHASE_STATUS_KO_LABELS,
+  ...SETTLEMENT_STATUS_KO_LABELS,
+  ...QUOTATION_STATUS_KO_LABELS,
+  ...CONTRACT_STATUS_KO_LABELS,
+  ...CONTRACT_LINE_STATUS_KO_LABELS,
+  ...FULFILLMENT_STATUS_KO_LABELS,
+  ...AFTERCARE_STATUS_KO_LABELS,
+  ...MAINT_STATUS_KO_LABELS,
+  ...BILLING_STATUS_KO_LABELS,
+  ...AP_STATUS_KO_LABELS,
+  ...PAYABLE_TYPE_KO_LABELS,
+  ...ACQUISITION_TYPE_KO_LABELS,
+  ...BANK_MATCH_STATUS_KO_LABELS,
+  ...LEASE_STATUS_KO_LABELS,
+  ...APPROVAL_STATUS_KO_LABELS,
+  ...ACTION_CODE_KO_LABELS,
+  // ACTIVE 우선순위: 계약/라인 기본 표시('진행중')가 직관적이며 인사화면은 EMPLOYMENT_STATUS_LABELS 사용
+  ACTIVE: '진행중',
+  COMPLETED: '이행완료',
+};
+
+export function formatKoCurrency(code: string): string {
+  const key = String(code || '').trim().toUpperCase() as CurrencyCode;
+  return CURRENCY_KO_LABELS[key] || code;
+}
+
+export function formatKoPayableType(code: string): string {
+  const key = String(code || '').trim().toUpperCase() as FlApPayable['payableType'];
+  return PAYABLE_TYPE_KO_LABELS[key] || code;
+}
+
+export function formatKoAcquisitionType(code: string): string {
+  const key = String(code || '').trim().toUpperCase() as FlInventoryUnit['acquisitionType'];
+  return ACQUISITION_TYPE_KO_LABELS[key] || code;
+}
+
+export function formatKoActionCode(code: string): string {
+  const key = String(code || '').trim().toUpperCase() as ApprovalActionCode;
+  return ACTION_CODE_KO_LABELS[key] || code;
+}
+
+export function formatKoTargetTable(table: string): string {
+  const key = String(table || '').trim();
+  return TARGET_TABLE_KO_LABELS[key] || table;
+}
+
+export function formatKoStatus(code: string): string {
+  const raw = String(code ?? '');
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  const upper = trimmed.toUpperCase();
+  if (UNIFIED_STATUS_KO_MAP[trimmed]) return UNIFIED_STATUS_KO_MAP[trimmed];
+  if (UNIFIED_STATUS_KO_MAP[upper]) return UNIFIED_STATUS_KO_MAP[upper];
+  return raw;
+}
+
+export function koStatusTone(code: string): KoBadgeTone {
+  const upper = String(code || '').trim().toUpperCase();
+  if (
+    upper === 'CONFIRMED' ||
+    upper === 'COMPLETED' ||
+    upper === 'FULFILLED' ||
+    upper === 'SETTLED' ||
+    upper === 'PAID' ||
+    upper === 'APPROVED' ||
+    upper === 'MATCHED' ||
+    upper === 'PAID_OFF'
+  ) {
+    return 'success';
+  }
+  if (upper === 'ACTIVE' || upper === 'CONVERTED' || upper === 'ACCEPTED') {
+    return 'primary';
+  }
+  if (
+    upper === 'REQUESTED' ||
+    upper === 'PENDING' ||
+    upper === 'PARTIAL' ||
+    upper === 'UNSETTLED' ||
+    upper === 'IN_PROGRESS' ||
+    upper === 'FULFILLING' ||
+    upper === 'SENT'
+  ) {
+    return 'warning';
+  }
+  if (upper === 'REJECTED' || upper === 'TERMINATED' || upper === 'UNPAID') {
+    return 'danger';
+  }
+  return 'neutral';
 }

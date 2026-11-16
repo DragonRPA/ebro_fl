@@ -29,9 +29,18 @@ import {
   type GridColumn,
 } from '../components/UiPrimitives';
 import {
+  AP_STATUS_KO_LABELS,
+  BANK_MATCH_STATUS_KO_LABELS,
+  BILLING_STATUS_KO_LABELS,
   FL_MENU_GROUPS,
   TIER_LABELS,
   defaultTierPagePermission,
+  formatKoAcquisitionType,
+  formatKoActionCode,
+  formatKoCurrency,
+  formatKoPayableType,
+  formatKoStatus,
+  koStatusTone,
   type DocumentTemplateType,
   type FlApprovalPolicy,
   type FlBankTransaction,
@@ -456,7 +465,7 @@ export const ArBillingCollectionPage: React.FC = () => {
             </div>
           ) : (
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              선택 청구 수납상태: {selectedBilling.status} · 미수납잔액 {formatMoney(selectedBilling.unpaidBalanceKrw, { salesSensitive: true })}
+              선택 청구 수납상태: {BILLING_STATUS_KO_LABELS[selectedBilling.status] || formatKoStatus(selectedBilling.status)} · 미수납잔액 {formatMoney(selectedBilling.unpaidBalanceKrw, { salesSensitive: true })}
             </div>
           )}
         </SectionPanel>
@@ -541,9 +550,9 @@ export const ApSettlementsPage: React.FC = () => {
             <DataGrid
               columns={[
                 { key: 'no', header: '채무번호', width: 140, render: (a) => <span style={{ fontWeight: 700 }}>{a.payableNo}</span> },
-                { key: 'type', header: '구분', width: 115, render: (a) => <StatusBadge label={a.payableType} tone="info" /> },
+                { key: 'type', header: '구분', width: 115, render: (a) => <StatusBadge label={formatKoPayableType(a.payableType)} tone="info" /> },
                 { key: 'partnerName', header: '지급처', render: (a) => a.partnerName },
-                { key: 'cur', header: '통화', width: 65, align: 'center', render: (a) => a.currencyCode },
+                { key: 'cur', header: '통화', width: 90, align: 'center', render: (a) => formatKoCurrency(a.currencyCode) },
                 { key: 'fx', header: '장부환율', width: 95, align: 'right', render: (a) => a.bookedFxRate },
                 { key: 'tot', header: '원화채무액', width: 125, align: 'right', render: (a) => formatMoney(a.totalAmountKrw) },
                 { key: 'paid', header: '기지급액', width: 115, align: 'right', render: (a) => formatMoney(a.paidAmountKrw) },
@@ -551,12 +560,12 @@ export const ApSettlementsPage: React.FC = () => {
                 {
                   key: 'st',
                   header: '상태',
-                  width: 85,
+                  width: 90,
                   align: 'center',
                   render: (a) => (
                     <StatusBadge
-                      label={a.status}
-                      tone={a.status === 'PAID' ? 'success' : 'warning'}
+                      label={AP_STATUS_KO_LABELS[a.status] || formatKoStatus(a.status)}
+                      tone={koStatusTone(a.status)}
                     />
                   ),
                 },
@@ -606,7 +615,7 @@ export const ApSettlementsPage: React.FC = () => {
                   </VerticalField>
                 )}
                 <VerticalField
-                  label={selectedAp.currencyCode === 'KRW' ? '지급 원화금액' : `지급 외화금액 ${selectedAp.currencyCode}`}
+                  label={selectedAp.currencyCode === 'KRW' ? '지급 원화금액' : `지급 외화금액 · ${formatKoCurrency(selectedAp.currencyCode)}`}
                   width={165}
                 >
                   <input
@@ -967,8 +976,8 @@ export const BankMatchingPage: React.FC = () => {
                 align: 'center',
                 render: (t) => (
                   <StatusBadge
-                    label={t.matchStatus === 'MATCHED' ? '대사완료' : '미대사'}
-                    tone={t.matchStatus === 'MATCHED' ? 'success' : 'neutral'}
+                    label={BANK_MATCH_STATUS_KO_LABELS[t.matchStatus] || formatKoStatus(t.matchStatus)}
+                    tone={koStatusTone(t.matchStatus)}
                   />
                 ),
               },
@@ -1164,7 +1173,7 @@ export const FinancialStatementsPage: React.FC = () => {
               { key: 'code', header: '자산번호', width: 120, render: (a) => a.unitCode },
               { key: 'name', header: '기종명', render: (a) => a.itemName },
               { key: 'serial', header: '시리얼', width: 125, render: (a) => a.serialNo },
-              { key: 'acq', header: '취득방식', width: 110, render: (a) => a.acquisitionType },
+              { key: 'acq', header: '취득방식', width: 110, render: (a) => formatKoAcquisitionType(a.acquisitionType) },
               { key: 'cost', header: '취득원가', width: 120, align: 'right', render: (a) => formatMoney(a.acquisitionCostKrw) },
               { key: 'pdep', header: '기간상각비', width: 115, align: 'right', render: (a) => formatMoney(a.periodDepreciationKrw) },
               { key: 'adep', header: '누적상각액', width: 115, align: 'right', render: (a) => formatMoney(a.accumulatedDepreciationKrw) },
@@ -2024,9 +2033,9 @@ export const SystemSettingsPage: React.FC = () => {
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '13.5px' }}>{dt}</div>
+                      <div style={{ fontWeight: 700, fontSize: '13.5px' }}>{dt.replace('_', ' · ')}</div>
                       <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                        {tpl?.templateBase64 ? `사용자 양식 · ${tpl.templateName}` : tpl?.templatePath || '내장 표준양식'}
+                        {tpl?.templateBase64 ? `사용자 양식 · ${tpl.templateName}` : '내장 표준양식'}
                       </div>
                     </div>
                     <VerticalField label="특약 · 머리글 문구">
@@ -2176,7 +2185,7 @@ const PolicyEditorGrid: React.FC<{
   return (
     <DataGrid
       columns={[
-        { key: 'code', header: '정책코드', width: 185, render: (p) => p.actionCode },
+        { key: 'code', header: '업무구분', width: 155, render: (p) => formatKoActionCode(p.actionCode) },
         { key: 'name', header: '업무행위', width: 170, render: (p) => <span style={{ fontWeight: 700 }}>{p.actionName}</span> },
         { key: 'desc', header: '적용 설명', render: (p) => p.description || '-' },
         {
