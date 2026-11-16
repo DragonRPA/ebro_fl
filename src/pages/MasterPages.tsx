@@ -2543,78 +2543,90 @@ export const ExchangeRatesPage: React.FC = () => {
     try {
       const endDateStr = rateDate <= today ? rateDate : today;
       const startDateStr = shiftIsoDays(endDateStr, -90);
-      let series: Array<{ date: string; baseRate: number; ttsRate: number }> = [];
-      let fetchedSource = '국제외환시장 고시환율';
 
-      try {
-        const apiResp = await fetch(
-          `/api/exchange-rate?currency=${encodeURIComponent(currencyCode)}&date=${encodeURIComponent(endDateStr)}&days=90`
-        );
-        if (apiResp.ok) {
-          const apiJson = (await apiResp.json()) as {
-            success?: boolean;
-            data?: {
-              source?: string;
-              series?: Array<{ date: string; baseRate: number; ttsRate?: number }>;
+      const fetchCurrencySeries = async (targetCode: (typeof FX_CURRENCIES)[number]['code']) => {
+        let series: Array<{ date: string; baseRate: number; ttsRate: number }> = [];
+        let fetchedSource = '국제외환시장 고시환율';
+
+        try {
+          const apiResp = await fetch(
+            `/api/exchange-rate?currency=${encodeURIComponent(targetCode)}&date=${encodeURIComponent(endDateStr)}&days=90`
+          );
+          if (apiResp.ok) {
+            const apiJson = (await apiResp.json()) as {
+              success?: boolean;
+              data?: {
+                source?: string;
+                series?: Array<{ date: string; baseRate: number; ttsRate?: number }>;
+              };
             };
-          };
-          if (apiJson.success && Array.isArray(apiJson.data?.series) && apiJson.data.series.length > 0) {
-            series = apiJson.data.series.map((pt) => ({
-              date: pt.date,
-              baseRate: Number(pt.baseRate),
-              ttsRate: Number(pt.ttsRate || Number(pt.baseRate) * 1.01),
-            }));
-            if (apiJson.data.source) fetchedSource = apiJson.data.source;
+            if (apiJson.success && Array.isArray(apiJson.data?.series) && apiJson.data.series.length > 0) {
+              series = apiJson.data.series.map((pt) => ({
+                date: pt.date,
+                baseRate: Number(pt.baseRate),
+                ttsRate: Number(pt.ttsRate || Number(pt.baseRate) * 1.01),
+              }));
+              if (apiJson.data.source) fetchedSource = apiJson.data.source;
+            }
+          }
+        } catch {
+          // 정적 프리뷰 등 로컬 API 미지원 환경에서는 직접 시계열 조회
+        }
+
+        if (series.length === 0) {
+          const directResp = await fetch(
+            `https://api.frankfurter.dev/v1/${startDateStr}..${endDateStr}?base=${encodeURIComponent(targetCode)}&symbols=KRW`
+          );
+          if (directResp.ok) {
+            const directJson = (await directResp.json()) as {
+              rates?: Record<string, { KRW?: number }>;
+            };
+            const rateMap = directJson?.rates || {};
+            const factor = targetCode === 'JPY' ? 10000 : 100;
+            series = Object.keys(rateMap)
+              .sort()
+              .map((dt) => {
+                const baseRate = Math.round(Number(rateMap[dt]?.KRW || 0) * factor) / factor;
+                return {
+                  date: dt,
+                  baseRate,
+                  ttsRate: Math.round(baseRate * 1.01 * factor) / factor,
+                };
+              })
+              .filter((pt) => pt.baseRate > 0);
           }
         }
-      } catch {
-        // 정적 프리뷰 등 로컬 API 미지원 환경에서는 직접 시계열 조회
-      }
 
-      if (series.length === 0) {
-        const directResp = await fetch(
-          `https://api.frankfurter.dev/v1/${startDateStr}..${endDateStr}?base=${encodeURIComponent(currencyCode)}&symbols=KRW`
-        );
-        if (directResp.ok) {
-          const directJson = (await directResp.json()) as {
-            rates?: Record<string, { KRW?: number }>;
-          };
-          const rateMap = directJson?.rates || {};
-          const factor = currencyCode === 'JPY' ? 10000 : 100;
-          series = Object.keys(rateMap)
-            .sort()
-            .map((dt) => {
-              const baseRate = Math.round(Number(rateMap[dt]?.KRW || 0) * factor) / factor;
-              return {
-                date: dt,
-                baseRate,
-                ttsRate: Math.round(baseRate * 1.01 * factor) / factor,
-              };
-            })
-            .filter((pt) => pt.baseRate > 0);
-        }
-      }
+        return { targetCode, series, fetchedSource };
+      };
 
-      if (series.length === 0) {
-        throw new Error('3개월 고시환율 시계열 데이터를 수신하지 못했습니다.');
-      }
-
-      const savedCount = await upsertManagedExchangeRates({
-        rows: series.map((pt) => ({
+      const results = await Promise.all(FX_CURRENCIES.map((c) => fetchCurrencySeries(c.code)));
+      const allRows = results.flatMap(({ targetCode, series, fetchedSource }) =>
+        series.map((pt) => ({
           rateDate: pt.date,
-          currencyCode,
+          currencyCode: targetCode,
           baseRateKrw: pt.baseRate,
           ttSellingRate: pt.ttsRate,
           source: fetchedSource,
-        })),
-      });
-      const lastPt = series[series.length - 1];
-      setRateDate(lastPt.date);
-      setBaseRateKrw(lastPt.baseRate);
-      setTtSellingRate(lastPt.ttsRate);
-      setSource(fetchedSource);
+        }))
+      );
+
+      if (allRows.length === 0) {
+        throw new Error('3개월 고시환율 시계열 데이터를 수신하지 못했습니다.');
+      }
+
+      const savedCount = await upsertManagedExchangeRates({ rows: allRows });
+      const currentResult = results.find((r) => r.targetCode === currencyCode);
+      if (currentResult && currentResult.series.length > 0) {
+        const lastPt = currentResult.series[currentResult.series.length - 1];
+        setRateDate(lastPt.date);
+        setBaseRateKrw(lastPt.baseRate);
+        setTtSellingRate(lastPt.ttsRate);
+        setSource(currentResult.fetchedSource);
+      }
       await refreshAll();
-      notifyToast(`${currencyCode} 최근 3개월 관리 환율 ${savedCount}건 적재 완료`, 'success');
+      const loadedCurrencies = results.filter((r) => r.series.length > 0).length;
+      notifyToast(`전체 ${loadedCurrencies}개 통화 최근 3개월 관리 환율 ${savedCount}건 적재 완료`, 'success');
     } catch (err) {
       notifyToast(err instanceof Error ? err.message : '3개월 환율 적재 실패', 'error');
     } finally {
