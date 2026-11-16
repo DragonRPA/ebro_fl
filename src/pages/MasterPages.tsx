@@ -3338,7 +3338,7 @@ export const ExchangeRatesPage: React.FC = () => {
             setSource(r.source);
             setHoverIdx(null);
           }}
-          maxHeight="calc(100vh - 230px)"
+          maxHeight="clamp(220px, calc(100vh - 590px), 540px)"
         />
       </SectionPanel>
 
