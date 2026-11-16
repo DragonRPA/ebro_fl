@@ -16,6 +16,7 @@ import {
   type TierLevel,
 } from '../types/domain';
 import {
+  buildContractBillingLines,
   completeFulfillment,
   confirmPurchaseInbound,
   createFinanceLeaseWithAsset,
@@ -25,7 +26,6 @@ import {
   recordRentalMaintenance,
   recordTradeAftercare,
   settleApPayable,
-  calculateRentalProRataForMonth,
   updateEmployeeHrRecord,
 } from '../services/domainEngine';
 
@@ -301,22 +301,21 @@ export async function executeApprovedPayload(
       const contract = datasets.contracts.find((c) => c.id === p.contractId);
       const ym = String(p.billingYm);
       if (!contract) throw new Error('청구 대상 계약을 찾을 수 없습니다.');
-      const lines =
-        contract.contractDomain === 'RENTAL'
-          ? calculateRentalProRataForMonth({ contract, lines: datasets.contractLines, ym })
-          : datasets.contractLines
-              .filter((l) => l.contractId === contract.id)
-              .map((l) => ({
-                description: `${l.itemName} 공급대금`,
-                supplyAmountKrw: l.supplyAmountKrw,
-                vatAmountKrw: l.vatAmountKrw,
-                unitId: l.assignedUnitId || undefined,
-                contractLineId: l.id,
-              }));
+      const lines = buildContractBillingLines({
+        contract,
+        contractLines: datasets.contractLines,
+        fulfillments: datasets.fulfillments,
+        rentalMaintenances: datasets.rentalMaintenances,
+        logisticsDispatches: datasets.logisticsDispatches,
+        existingBillings: datasets.billings,
+        ym,
+      });
       const supply = lines.reduce((s, r) => s + r.supplyAmountKrw, 0);
       const vat = lines.reduce((s, r) => s + r.vatAmountKrw, 0);
       const total = supply + vat;
-      if (total <= 0) throw new Error('청구 가능한 금액이 없습니다.');
+      if (lines.length === 0 || total <= 0) {
+        throw new Error('출고 실행완료된 미청구 내역이 없습니다.');
+      }
       const bId = newId('BIL');
       await execDbMutation('청구 발행 저장', () =>
         flSupabase.from('billings').insert(
@@ -417,9 +416,13 @@ export async function executeApprovedPayload(
         const mp = req.payload.maintPayload as Record<string, unknown>;
         const unit = datasets.inventoryUnits.find((u) => u.id === mp.unitId);
         if (unit) {
+          const vendor = mp.vendorPartnerId
+            ? datasets.partners.find((pt) => pt.id === mp.vendorPartnerId) || null
+            : null;
           await recordRentalMaintenance({
             maintType: (mp.maintType as '주기장정비' | '현장정비' | '순회정비') || '순회정비',
             unit,
+            vendorPartner: vendor,
             mechanicId: approver.id,
             mechanicName: approver.name,
             operatingHours: Number(mp.operatingHours || 0),

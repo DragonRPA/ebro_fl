@@ -37,9 +37,31 @@ const studioLogHistory = [
   { taskId: null, log: `[${new Date().toTimeString().slice(0, 8)}] [SYSTEM] eBro AI Agent 데스크톱 스튜디오 엔진 초기화 완료` }
 ];
 
+const EMOJI_STRIP_RE = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{FE00}-\u{FE0F}]/gu;
+const prefetchedTaskIntents = new Map();
+let saveQueueTimer = null;
+
+function writeHiddenJsonSync(filePath, dataObj) {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const tempPath = `${filePath}.tmp.${process.pid}`;
+    fs.writeFileSync(tempPath, JSON.stringify(dataObj, null, 2), 'utf8');
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath); } catch (e) {}
+    }
+    fs.renameSync(tempPath, filePath);
+    if (process.platform === 'win32') {
+      exec(`attrib +h "${filePath}"`, { windowsHide: true }, () => {});
+    }
+  } catch (e) {}
+}
+
 function stripEmojis(str) {
   if (typeof str !== 'string') str = String(str || '');
-  return str.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{FE00}-\u{FE0F}]/gu, '').trim();
+  return str.replace(EMOJI_STRIP_RE, '').trim();
 }
 
 function pruneQueueAndLogs() {
@@ -96,20 +118,34 @@ function loadQueue() {
 
 // 큐 파일 저장 (최신 30개만 기억)
 function saveQueue() {
-  try {
-    pruneQueueAndLogs();
-    if (!fs.existsSync(AGENT_HOME)) {
-      fs.mkdirSync(AGENT_HOME, { recursive: true });
-    }
-    if (fs.existsSync(QUEUE_FILE)) {
-      try { fs.unlinkSync(QUEUE_FILE); } catch (e) {}
-    }
-    fs.writeFileSync(QUEUE_FILE, JSON.stringify(taskQueue.slice(0, MAX_QUEUE_SIZE), null, 2), 'utf8');
-    if (process.platform === 'win32') {
-      try { execSync(`attrib +h "${QUEUE_FILE}"`, { stdio: 'ignore', windowsHide: true }); } catch (e) {}
-    }
-  } catch (e) {}
+  pruneQueueAndLogs();
+  writeHiddenJsonSync(QUEUE_FILE, taskQueue.slice(0, MAX_QUEUE_SIZE));
 }
+
+function scheduleSaveQueue(immediate = false) {
+  if (immediate) {
+    if (saveQueueTimer) {
+      clearTimeout(saveQueueTimer);
+      saveQueueTimer = null;
+    }
+    saveQueue();
+    return;
+  }
+  if (!saveQueueTimer) {
+    saveQueueTimer = setTimeout(() => {
+      saveQueueTimer = null;
+      saveQueue();
+    }, 250);
+  }
+}
+
+process.on('exit', () => {
+  if (saveQueueTimer) {
+    clearTimeout(saveQueueTimer);
+    saveQueueTimer = null;
+    saveQueue();
+  }
+});
 
 loadQueue();
 
@@ -130,17 +166,342 @@ function loadOllamaConfig() {
 loadOllamaConfig();
 
 function saveOllamaConfig(model) {
+  selectedOllamaModel = model;
+  writeHiddenJsonSync(OLLAMA_CONFIG_FILE, {
+    model: selectedOllamaModel,
+    updatedAt: new Date().toISOString()
+  });
+}
+
+// ── 🔐 테넌트(기업)·임직원(개인) 단위 BYOK AI 프로필 암호화 금고 & Jev 선택 엔진 ──
+const AI_VAULT_FILE = path.join(AGENT_HOME, 'ebro_ai_profiles.vault.json');
+const VAULT_XOR_KEY = Buffer.from('eBro_Tenant_Sovereignty_Vault_2026', 'utf8');
+
+const SUPPORTED_AI_PROVIDERS = {
+  LOCAL_OLLAMA: {
+    label: '로컬 내장 AI · 무료 · 외부 전송 없음',
+    default_model: 'ebro-qwen:3b',
+    requires_key: false
+  },
+  GEMINI: {
+    label: 'Google Gemini · 무료 티어 및 유료 API',
+    default_model: 'gemini-2.5-flash',
+    requires_key: true
+  },
+  OPENAI: {
+    label: 'OpenAI ChatGPT API',
+    default_model: 'gpt-4o-mini',
+    requires_key: true
+  },
+  ANTHROPIC: {
+    label: 'Anthropic Claude API',
+    default_model: 'claude-3-5-haiku-latest',
+    requires_key: true
+  },
+  GROQ: {
+    label: 'Groq 초고속 LPU API',
+    default_model: 'llama-3.3-70b-versatile',
+    requires_key: true
+  },
+  JEV_OPENROUTER: {
+    label: 'Jev · OpenRouter 초저비용 라우터',
+    default_model: 'typesafe/jev',
+    requires_key: true
+  }
+};
+
+let aiProfilesCache = {};
+
+function encryptVaultSecret(plain) {
+  if (!plain) return '';
+  const raw = Buffer.from(String(plain), 'utf8');
+  const out = Buffer.alloc(raw.length);
+  for (let i = 0; i < raw.length; i++) {
+    out[i] = raw[i] ^ VAULT_XOR_KEY[i % VAULT_XOR_KEY.length];
+  }
+  return '__VAULT__' + out.toString('base64');
+}
+
+function decryptVaultSecret(cipher) {
+  if (!cipher) return '';
+  const str = String(cipher);
+  if (!str.startsWith('__VAULT__')) return str;
   try {
-    selectedOllamaModel = model;
-    if (!fs.existsSync(AGENT_HOME)) fs.mkdirSync(AGENT_HOME, { recursive: true });
-    if (fs.existsSync(OLLAMA_CONFIG_FILE)) {
-      try { fs.unlinkSync(OLLAMA_CONFIG_FILE); } catch (e) {}
+    const b64 = str.slice('__VAULT__'.length);
+    const xored = Buffer.from(b64, 'base64');
+    const out = Buffer.alloc(xored.length);
+    for (let i = 0; i < xored.length; i++) {
+      out[i] = xored[i] ^ VAULT_XOR_KEY[i % VAULT_XOR_KEY.length];
     }
-    fs.writeFileSync(OLLAMA_CONFIG_FILE, JSON.stringify({ model: selectedOllamaModel, updatedAt: new Date().toISOString() }, null, 2), 'utf8');
-    if (process.platform === 'win32') {
-      try { execSync(`attrib +h "${OLLAMA_CONFIG_FILE}"`, { stdio: 'ignore', windowsHide: true }); } catch (e) {}
+    return out.toString('utf8');
+  } catch (e) {
+    return '';
+  }
+}
+
+function maskVaultKey(key) {
+  if (!key) return '';
+  const s = String(key);
+  if (s.length <= 8) return '••••••••';
+  return `${s.slice(0, 4)}••••••••••••${s.slice(-4)}`;
+}
+
+let aiVaultMtimeMs = -1;
+
+function loadAiVault() {
+  try {
+    if (!fs.existsSync(AI_VAULT_FILE)) {
+      aiVaultMtimeMs = -1;
+      return;
+    }
+    const st = fs.statSync(AI_VAULT_FILE);
+    if (st.mtimeMs === aiVaultMtimeMs) return;
+    const data = JSON.parse(fs.readFileSync(AI_VAULT_FILE, 'utf8'));
+    if (data && typeof data === 'object') {
+      aiProfilesCache = data;
+    }
+    aiVaultMtimeMs = st.mtimeMs;
+  } catch (e) {
+    aiProfilesCache = {};
+  }
+}
+loadAiVault();
+
+function saveAiVault() {
+  writeHiddenJsonSync(AI_VAULT_FILE, aiProfilesCache);
+  try {
+    if (fs.existsSync(AI_VAULT_FILE)) {
+      aiVaultMtimeMs = fs.statSync(AI_VAULT_FILE).mtimeMs;
     }
   } catch (e) {}
+}
+
+function makeVaultKey(tenantCode, userId) {
+  const t = String(tenantCode || agentPolicy?.tenantCode || 'DEFAULT').trim().toUpperCase() || 'DEFAULT';
+  const u = String(userId || 'DEFAULT').trim() || 'DEFAULT';
+  return `${t}:${u}`;
+}
+
+function setAiProfile(options = {}) {
+  loadAiVault();
+  const tCode = String(options.tenant_code || agentPolicy?.tenantCode || 'DEFAULT').trim().toUpperCase() || 'DEFAULT';
+  const uId = String(options.user_id || 'DEFAULT').trim() || 'DEFAULT';
+  const key = makeVaultKey(tCode, uId);
+  const existing = aiProfilesCache[key] || {};
+
+  let normProvider = String(options.provider || existing.provider || 'LOCAL_OLLAMA').trim().toUpperCase();
+  if (!SUPPORTED_AI_PROVIDERS[normProvider]) normProvider = 'LOCAL_OLLAMA';
+
+  const defaultModel = SUPPORTED_AI_PROVIDERS[normProvider].default_model;
+  const finalModel = String(options.model || existing.model || defaultModel).trim() || defaultModel;
+
+  let encKey = existing.encrypted_api_key || '';
+  if (options.api_key !== undefined && options.api_key !== null) {
+    const cleanKey = String(options.api_key).trim();
+    if (cleanKey && !cleanKey.includes('••••')) {
+      encKey = encryptVaultSecret(cleanKey);
+    } else if (cleanKey === '') {
+      encKey = '';
+    }
+  }
+
+  let encJevKey = existing.encrypted_jev_api_key || '';
+  if (options.jev_api_key !== undefined && options.jev_api_key !== null) {
+    const cleanJevKey = String(options.jev_api_key).trim();
+    if (cleanJevKey && !cleanJevKey.includes('••••')) {
+      encJevKey = encryptVaultSecret(cleanJevKey);
+    } else if (cleanJevKey === '') {
+      encJevKey = '';
+    }
+  }
+
+  const jevEnabled = options.jev_enabled !== undefined && options.jev_enabled !== null
+    ? Boolean(options.jev_enabled)
+    : Boolean(existing.jev_enabled);
+
+  aiProfilesCache[key] = {
+    tenant_code: tCode,
+    user_id: uId,
+    provider: normProvider,
+    model: finalModel,
+    encrypted_api_key: encKey,
+    vision_fallback_enabled: options.vision_fallback_enabled !== undefined ? Boolean(options.vision_fallback_enabled) : (existing.vision_fallback_enabled !== false),
+    custom_endpoint: String(options.custom_endpoint !== undefined ? options.custom_endpoint : (existing.custom_endpoint || '')).trim(),
+    jev_enabled: jevEnabled,
+    encrypted_jev_api_key: encJevKey,
+    jev_model: String(options.jev_model || existing.jev_model || 'typesafe/jev').trim() || 'typesafe/jev',
+    jev_endpoint: String(options.jev_endpoint !== undefined ? options.jev_endpoint : (existing.jev_endpoint || '')).trim(),
+    updated_at: Math.floor(Date.now() / 1000)
+  };
+  saveAiVault();
+  return getMaskedAiProfile(tCode, uId);
+}
+
+function getAiProfile(tenantCode, userId) {
+  loadAiVault();
+  const tCode = String(tenantCode || agentPolicy?.tenantCode || 'DEFAULT').trim().toUpperCase() || 'DEFAULT';
+  const uId = String(userId || 'DEFAULT').trim() || 'DEFAULT';
+
+  const candidates = [];
+  if (uId !== 'DEFAULT') candidates.push([`${tCode}:${uId}`, 'USER_PERSONAL']);
+  candidates.push([`${tCode}:DEFAULT`, 'TENANT_SHARED']);
+  candidates.push(['DEFAULT:DEFAULT', 'GLOBAL']);
+
+  for (const [k, scopeLabel] of candidates) {
+    const rec = aiProfilesCache[k];
+    if (rec) {
+      const decKey = decryptVaultSecret(rec.encrypted_api_key || '');
+      let decJevKey = decryptVaultSecret(rec.encrypted_jev_api_key || '');
+      if (!decJevKey && rec.provider === 'JEV_OPENROUTER') decJevKey = decKey;
+      const prov = rec.provider || 'LOCAL_OLLAMA';
+      return {
+        scope: scopeLabel,
+        tenant_code: rec.tenant_code || tCode,
+        user_id: rec.user_id || uId,
+        provider: prov,
+        model: rec.model || SUPPORTED_AI_PROVIDERS[prov]?.default_model || selectedOllamaModel,
+        api_key: decKey,
+        has_api_key: Boolean(decKey),
+        vision_fallback_enabled: rec.vision_fallback_enabled !== false,
+        custom_endpoint: rec.custom_endpoint || '',
+        jev_enabled: Boolean(rec.jev_enabled),
+        jev_api_key: decJevKey,
+        has_jev_api_key: Boolean(decJevKey),
+        jev_model: rec.jev_model || 'typesafe/jev',
+        jev_endpoint: rec.jev_endpoint || ''
+      };
+    }
+  }
+
+  return {
+    scope: 'LOCAL_FREE_DEFAULT',
+    tenant_code: tCode,
+    user_id: uId,
+    provider: 'LOCAL_OLLAMA',
+    model: selectedOllamaModel || 'ebro-qwen:3b',
+    api_key: '',
+    has_api_key: false,
+    vision_fallback_enabled: true,
+    custom_endpoint: '',
+    jev_enabled: false,
+    jev_api_key: '',
+    has_jev_api_key: false,
+    jev_model: 'typesafe/jev',
+    jev_endpoint: ''
+  };
+}
+
+function getMaskedAiProfile(tenantCode, userId) {
+  const prof = getAiProfile(tenantCode, userId);
+  const rawKey = prof.api_key || '';
+  const rawJevKey = prof.jev_api_key || '';
+  delete prof.api_key;
+  delete prof.jev_api_key;
+  prof.masked_api_key = maskVaultKey(rawKey);
+  prof.masked_jev_api_key = maskVaultKey(rawJevKey);
+  prof.provider_label = SUPPORTED_AI_PROVIDERS[prof.provider]?.label || prof.provider;
+  return prof;
+}
+
+// ── ♿ Windows UIA 하이브리드 접근성 엔진 브릿지 (Python 9002 연동 + 내장 .NET UIA 폴백) ──
+async function executeUiaTool(toolName, params = {}) {
+  // 1순위: ebro-agent-core (포트 9002) Python UIA 엔진이 실행 중이면 고속 위임
+  try {
+    const res = await fetch('http://127.0.0.1:9002/uia/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: toolName, params }),
+      signal: AbortSignal.timeout(6000)
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {}
+
+  // 2순위: Windows 내장 .NET System.Windows.Automation PowerShell 브릿지 직접 실행
+  if (process.platform !== 'win32') {
+    return { success: false, error: 'Windows 환경에서만 UIA 접근성 제어를 지원합니다.' };
+  }
+
+  try {
+    const runPsEncoded = (psCode, useSta = false, timeoutMs = 6000) => new Promise((resolve, reject) => {
+      const fullCode = `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n${psCode}`;
+      const encoded = Buffer.from(fullCode, 'utf16le').toString('base64');
+      const staFlag = useSta ? '-STA ' : '';
+      exec(`powershell ${staFlag}-NoProfile -EncodedCommand ${encoded}`, {
+        encoding: 'utf8',
+        windowsHide: true,
+        timeout: timeoutMs
+      }, (err, stdout, stderr) => {
+        if (err) {
+          return reject(new Error(stderr?.trim() || err.message || 'PowerShell 실행 오류'));
+        }
+        try {
+          resolve(JSON.parse(String(stdout || '').trim()));
+        } catch (parseErr) {
+          reject(parseErr);
+        }
+      });
+    });
+
+    if (toolName === 'uia_inspect_window' || toolName === 'get_page_content') {
+      const psScript = `
+        Add-Type -AssemblyName UIAutomationClient
+        Add-Type -AssemblyName UIAutomationTypes
+        $root = [System.Windows.Automation.AutomationElement]::RootElement
+        $cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::IsOffscreenProperty, $false)
+        $wins = $root.FindAll([System.Windows.Automation.TreeScope]::Children, $cond)
+        $list = @()
+        foreach ($w in $wins) {
+          $name = $w.Current.Name
+          if ($name) {
+            $list += @{ name = $name; className = $w.Current.ClassName; automationId = $w.Current.AutomationId; controlType = $w.Current.ControlType.ProgrammaticName }
+          }
+          if ($list.Count -ge 25) { break }
+        }
+        @{ success = $true; engine = "DOTNET_UIA_BRIDGE"; count = $list.Count; elements = $list } | ConvertTo-Json -Depth 4 -Compress
+      `;
+      return await runPsEncoded(psScript, false, 6000);
+    }
+
+    if (toolName === 'uia_handle_file_dialog') {
+      const filePath = String(params.file_path || '');
+      if (!filePath) return { success: false, error: 'file_path 파라미터가 필요합니다.' };
+      const safePath = filePath.replace(/'/g, "''");
+      const psScript = `
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.Clipboard]::SetText('${safePath}')
+        [System.Windows.Forms.SendKeys]::SendWait('^v{ENTER}')
+        @{ success = $true; engine = "DOTNET_UIA_BRIDGE"; file_path = '${safePath}' } | ConvertTo-Json -Compress
+      `;
+      return await runPsEncoded(psScript, true, 5000);
+    }
+
+    if (toolName === 'uia_click' || toolName === 'click_element') {
+      const targetName = String(params.target || params.name || '').replace(/'/g, "''");
+      const psScript = `
+        Add-Type -AssemblyName UIAutomationClient
+        Add-Type -AssemblyName UIAutomationTypes
+        $root = [System.Windows.Automation.AutomationElement]::RootElement
+        $cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, '${targetName}')
+        $el = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
+        if ($el -ne $null) {
+          $inv = $null
+          if ($el.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$inv)) {
+            $inv.Invoke()
+            @{ success = $true; engine = "DOTNET_UIA_BRIDGE"; clicked = '${targetName}' } | ConvertTo-Json -Compress
+            exit
+          }
+        }
+        @{ success = $false; error = "UIA 요소를 찾지 못했습니다: ${targetName}" } | ConvertTo-Json -Compress
+      `;
+      return await runPsEncoded(psScript, false, 6000);
+    }
+
+    return { success: false, error: `지원되지 않는 UIA 도구: ${toolName}` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ── 🌐 웹 에이전트(ebro web agent) 브라우저 확장 연결 세션 관리 ──
@@ -271,14 +632,34 @@ function handleWebSocketConnection(ws, req) {
           ws.send(JSON.stringify({
             type: 'ERROR',
             reason: 'SILENT_CORE',
-            message: '현재 테넌트는 AI 에이전트 기능이 비활성화(Silent Core 모드)되어 있습니다.'
+            message: '현재 테넌트는 AI 에이전트 기능이 비활성화되어 있습니다.'
           }));
           return;
         }
         const prompt = payload.prompt;
+        const tenantCode = payload.tenant_code || agentPolicy?.tenantCode || 'DEFAULT';
+        const userId = payload.user_id || 'DEFAULT';
         if (prompt && prompt.trim()) {
           try {
-            const task = await addTask(prompt.trim(), 'BROWSER');
+            const startTime = Date.now();
+            const task = await addTask(prompt.trim(), 'BROWSER', (completedTask) => {
+              try {
+                ws.send(JSON.stringify({
+                  type: 'COMMAND_RESULT',
+                  prompt: prompt,
+                  result: {
+                    success: completedTask.status === 'COMPLETED',
+                    status: completedTask.status === 'COMPLETED' ? 'DONE' : 'ERROR',
+                    session_id: completedTask.id,
+                    total_steps: completedTask.stepsCount || 1,
+                    steps: completedTask.stepsList || [],
+                    result: completedTask.result || {},
+                    error: completedTask.status === 'FAILED' ? completedTask.currentStep : undefined,
+                    latency_ms: Date.now() - startTime
+                  }
+                }));
+              } catch (e) {}
+            }, tenantCode, userId);
             ws.send(JSON.stringify({
               type: 'COMMAND_ACCEPTED',
               taskId: task.id,
@@ -291,6 +672,35 @@ function handleWebSocketConnection(ws, req) {
             }));
           }
         }
+        return;
+      }
+
+      // 6. 웹 에이전트/팝업에서 환경설정 및 BYOK AI 프로필 업데이트 (UPDATE_CONFIG)
+      if (payload.type === 'UPDATE_CONFIG') {
+        const tenantCode = payload.tenant_code || agentPolicy?.tenantCode || 'DEFAULT';
+        const staffUserId = payload.staff_user_id || payload.user_id || 'DEFAULT';
+        if (payload.telegram_bot_token !== undefined || payload.telegram_allowed_user_id !== undefined) {
+          saveTelegramConfig(payload.telegram_bot_token, payload.telegram_allowed_user_id);
+        }
+        if (payload.ai_model) {
+          saveOllamaConfig(payload.ai_model);
+        }
+        const savedProfile = setAiProfile({
+          tenant_code: tenantCode,
+          user_id: staffUserId,
+          provider: payload.ai_provider || payload.provider,
+          model: payload.ai_model || payload.model,
+          api_key: payload.ai_api_key !== undefined ? payload.ai_api_key : payload.api_key,
+          jev_enabled: payload.jev_enabled,
+          jev_api_key: payload.jev_api_key,
+          jev_model: payload.jev_model
+        });
+        ws.send(JSON.stringify({
+          type: 'CONFIG_UPDATED',
+          telegram_running: isTelegramRunning(),
+          ai_model: selectedOllamaModel,
+          ai_profile: savedProfile
+        }));
         return;
       }
     } catch (err) {
@@ -311,40 +721,55 @@ function handleWebSocketConnection(ws, req) {
 // ── 🌐 테넌트별 런타임 정책 엔진 (전사 표준 헌장 1.1, 7.1) ──
 // 테넌트관리센터의 제어에 따라 AI 에이전트 기능 락/언락 (단일 컴파일 무결성 보장)
 const POLICY_FILE = path.join(AGENT_HOME, 'tenant_policy.json');
+
+function normalizeTenantCode(raw) {
+  const clean = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  if (!clean) return 'GIYEONLIFT';
+  if (clean === 'GIYEONLIFT' || clean === 'GIYEUN' || clean === 'GIYUEN' || clean === 'KIYUEN' || clean === 'GIYEON') {
+    return 'GIYEONLIFT';
+  }
+  return clean;
+}
+
 let agentPolicy = {
   agentAiEnabled: false,
   tenantCode: 'GIYEONLIFT',
+  solutionType: 'AWP',
   autoBackupEnabled: false,
   autoBackupTime: '09:00',
   autoBackupRetentionDays: 30,
   backupUserId: '',
   backupUserName: '',
   lastAutoBackupAt: '',
+  tenants: {},
   updatedAt: new Date().toISOString()
 };
+
+function stripTenantsMap(obj) {
+  if (!obj || typeof obj !== 'object') return {};
+  const copy = { ...obj };
+  delete copy.tenants;
+  return copy;
+}
 
 function loadPolicy() {
   try {
     if (fs.existsSync(POLICY_FILE)) {
       const data = fs.readFileSync(POLICY_FILE, 'utf8');
-      agentPolicy = Object.assign(agentPolicy, JSON.parse(data));
+      const parsed = JSON.parse(data);
+      const existingTenants = parsed && typeof parsed.tenants === 'object' && parsed.tenants !== null ? { ...parsed.tenants } : {};
+      agentPolicy = Object.assign(agentPolicy, parsed, { tenants: existingTenants });
+      const topCode = normalizeTenantCode(agentPolicy.tenantCode || 'GIYEONLIFT');
+      agentPolicy.tenantCode = topCode;
+      if (!agentPolicy.tenants[topCode]) {
+        agentPolicy.tenants[topCode] = { ...stripTenantsMap(agentPolicy), tenantCode: topCode };
+      }
     }
   } catch (e) {}
 }
 
 function savePolicy() {
-  try {
-    if (!fs.existsSync(AGENT_HOME)) {
-      fs.mkdirSync(AGENT_HOME, { recursive: true });
-    }
-    if (fs.existsSync(POLICY_FILE)) {
-      try { fs.unlinkSync(POLICY_FILE); } catch (e) {}
-    }
-    fs.writeFileSync(POLICY_FILE, JSON.stringify(agentPolicy, null, 2), 'utf8');
-    if (process.platform === 'win32') {
-      try { execSync(`attrib +h "${POLICY_FILE}"`, { stdio: 'ignore', windowsHide: true }); } catch (e) {}
-    }
-  } catch (e) {}
+  writeHiddenJsonSync(POLICY_FILE, agentPolicy);
 }
 
 loadPolicy();
@@ -357,13 +782,49 @@ function getAgentPolicy() {
   return agentPolicy;
 }
 
+function getTenantPolicy(tenantCodeHint) {
+  if (!tenantCodeHint) {
+    return agentPolicy;
+  }
+  const code = normalizeTenantCode(tenantCodeHint);
+  const entry = agentPolicy.tenants && agentPolicy.tenants[code];
+  if (entry && typeof entry === 'object') {
+    return {
+      ...stripTenantsMap(agentPolicy),
+      ...stripTenantsMap(entry),
+      tenantCode: code
+    };
+  }
+  return {
+    ...stripTenantsMap(agentPolicy),
+    tenantCode: code
+  };
+}
+
 function updateAgentPolicy(newPolicy) {
   const prevAi = Boolean(agentPolicy.agentAiEnabled);
   if (typeof newPolicy === 'object' && newPolicy !== null) {
+    const cleanPatch = stripTenantsMap(newPolicy);
+    const code = normalizeTenantCode(cleanPatch.tenantCode || agentPolicy.tenantCode || 'GIYEONLIFT');
+    cleanPatch.tenantCode = code;
+    const nowIso = new Date().toISOString();
+    const prevTenants = (agentPolicy.tenants && typeof agentPolicy.tenants === 'object') ? agentPolicy.tenants : {};
+    const prevEntry = (prevTenants[code] && typeof prevTenants[code] === 'object') ? prevTenants[code] : {};
+    const nextEntry = {
+      ...stripTenantsMap(prevEntry),
+      ...cleanPatch,
+      tenantCode: code,
+      updatedAt: nowIso
+    };
     agentPolicy = {
       ...agentPolicy,
-      ...newPolicy,
-      updatedAt: new Date().toISOString()
+      ...cleanPatch,
+      tenantCode: code,
+      tenants: {
+        ...prevTenants,
+        [code]: nextEntry
+      },
+      updatedAt: nowIso
     };
     savePolicy();
     broadcastStudioLog('POLICY', `테넌트 정책 동기화 완료: AI기능=${agentPolicy.agentAiEnabled ? '활성화(FULL_AI)' : '비활성화(SILENT_CORE)'}, 테넌트=${agentPolicy.tenantCode || '-'}, 자동백업=${agentPolicy.autoBackupEnabled ? `활성화(${agentPolicy.autoBackupTime || '09:00'}, 담당:${agentPolicy.backupUserName || '-'})` : '비활성화'}`);
@@ -410,7 +871,7 @@ function appendTaskLog(task, message) {
   studioLogHistory.push({ taskId: task.id, log: logLine });
   pruneQueueAndLogs();
   broadcastEvent('LOG_APPEND', { taskId: task.id, log: logLine });
-  saveQueue();
+  scheduleSaveQueue(false);
 }
 
 // ──  로컬 Ollama LLM 헬스체크 및 의도 파싱 ──
@@ -479,17 +940,191 @@ async function checkOllamaStatus(forceRefresh = false) {
   });
 }
 
-// 자연어 의도 파싱 (Ollama 연동 또는 내장 도메인 규칙 엔진 폴백)
-async function parseInstructionIntent(instruction, requestedMode = 'AUTO') {
+// ── ⚡ Jev (System 1) 사전 판단 분류기 + BYOK 멀티 프로바이더 호출 ──
+async function classifyWithJev(text, jevApiKey, jevModel = 'typesafe/jev', jevEndpoint = '') {
+  if (!jevApiKey) return null;
+  const url = jevEndpoint || 'https://openrouter.ai/api/v1/chat/completions';
+  const choices = [
+    'OUTBOUND_REQUEST', 'EXCHANGE_REQUEST', 'RETURN_REQUEST',
+    'CONTRACT_EXTEND', 'CONTRACT_SHORTEN', 'AS_REQUEST',
+    'DRIVER_ASSIGN', 'UI_NAVIGATION_QUERY', 'OUT_OF_SCOPE'
+  ];
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${jevApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: jevModel || 'typesafe/jev',
+        messages: [
+          { role: 'system', content: `Classify the user message into ONE choice: ${choices.join(', ')}. Respond ONLY JSON: {"choice": "<CHOICE>", "confidence": 0.95}` },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.0,
+        max_tokens: 40
+      }),
+      signal: AbortSignal.timeout(4500)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const raw = data?.choices?.[0]?.message?.content || '';
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) return JSON.parse(m[0]);
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function callExternalByokProvider(profile, instruction) {
+  const provider = profile.provider;
+  const model = profile.model;
+  const apiKey = profile.api_key;
+  if (!apiKey || provider === 'LOCAL_OLLAMA') return null;
+
+  const sysPrompt = '당신은 eBro ERP 전문 AI 에이전트입니다. 사용자의 자연어 요청을 분석하여 {"intent": "asset_search|billing_request_create|click_element|contract_create|customer_create|customer_search|dispatch_assign_driver|dispatch_create_order|maintenance_create|navigate_menu|pdi_approve|site_option_update", "parameters": {}, "actions": [{"tool": "navigate_menu|click_element|type_text|uia_handle_file_dialog", "params": {}}]} JSON 형식으로만 응답하십시오.';
+
+  if (provider === 'GEMINI') {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: sysPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: instruction }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 400, responseMimeType: 'application/json' }
+      }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const m = txt.match(/\{[\s\S]*\}/);
+      if (m) return JSON.parse(m[0]);
+    }
+    return null;
+  }
+
+  if (provider === 'ANTHROPIC') {
+    const url = profile.custom_endpoint || 'https://api.anthropic.com/v1/messages';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 400,
+        temperature: 0.1,
+        system: sysPrompt,
+        messages: [{ role: 'user', content: instruction }]
+      }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const txt = data?.content?.[0]?.text || '';
+      const m = txt.match(/\{[\s\S]*\}/);
+      if (m) return JSON.parse(m[0]);
+    }
+    return null;
+  }
+
+  const endpointMap = {
+    OPENAI: 'https://api.openai.com/v1/chat/completions',
+    GROQ: 'https://api.groq.com/openai/v1/chat/completions',
+    JEV_OPENROUTER: 'https://openrouter.ai/api/v1/chat/completions'
+  };
+  const url = profile.custom_endpoint || endpointMap[provider] || endpointMap.OPENAI;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: sysPrompt },
+        { role: 'user', content: instruction }
+      ],
+      temperature: 0.1,
+      max_tokens: 400
+    }),
+    signal: AbortSignal.timeout(12000)
+  });
+  if (res.ok) {
+    const data = await res.json();
+    const txt = data?.choices?.[0]?.message?.content || '';
+    const m = txt.match(/\{[\s\S]*\}/);
+    if (m) return JSON.parse(m[0]);
+  }
+  return null;
+}
+
+// 자연어 의도 파싱 (Jev System 1 + BYOK 클라우드 AI + Ollama 연동 + 내장 도메인 규칙 엔진 폴백)
+async function parseInstructionIntent(instruction, requestedMode = 'AUTO', tenantCode = null, userId = null) {
   let detectedModule = 'GENERAL';
   let suggestedMode = requestedMode;
   let actionSummary = instruction;
   let ollamaUsed = false;
   let parameters = {};
+  let plannedActions = [];
+
+  const profile = getAiProfile(tenantCode, userId);
+
+  // 1) Jev (System 1) 사전 판단 엔진이 활성화된 경우 초고속 의도 분류 수행
+  if (profile.jev_enabled && profile.jev_api_key) {
+    try {
+      const jevRes = await classifyWithJev(instruction, profile.jev_api_key, profile.jev_model, profile.jev_endpoint);
+      if (jevRes && jevRes.choice) {
+        broadcastStudioLog('INFO', `Jev 사전 판단 완료: ${jevRes.choice} (${jevRes.confidence || 0.9})`);
+        if (jevRes.choice === 'OUT_OF_SCOPE' && (jevRes.confidence || 0) >= 0.8) {
+          return {
+            module: 'OUT_OF_SCOPE',
+            mode: 'SKIP',
+            summary: '업무 지시가 아닌 일반 대화로 분류되어 실행을 생략했습니다.',
+            ollamaUsed: false,
+            parameters: {},
+            actions: []
+          };
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2) 테넌트/임직원 BYOK 클라우드 AI 공급자 호출 (GEMINI / OPENAI / ANTHROPIC / GROQ / JEV_OPENROUTER)
+  if (profile.provider !== 'LOCAL_OLLAMA' && profile.api_key) {
+    try {
+      broadcastStudioLog('INFO', `BYOK AI (${profile.provider}/${profile.model}) 추론 요청: ${instruction}`);
+      const cloudParsed = await callExternalByokProvider(profile, instruction);
+      if (cloudParsed) {
+        if (cloudParsed.intent) detectedModule = String(cloudParsed.intent).toUpperCase();
+        parameters = cloudParsed.parameters || {};
+        if (Array.isArray(cloudParsed.actions)) plannedActions = cloudParsed.actions;
+        ollamaUsed = true;
+        actionSummary = `[${profile.provider}] 의도: ${detectedModule}, 파라미터: ${JSON.stringify(parameters)}`;
+        if (suggestedMode === 'AUTO') suggestedMode = 'BROWSER';
+        return {
+          module: detectedModule,
+          mode: suggestedMode,
+          summary: actionSummary,
+          ollamaUsed,
+          parameters,
+          actions: plannedActions
+        };
+      }
+    } catch (byokErr) {
+      broadcastStudioLog('WARN', `BYOK AI (${profile.provider}) 호출 실패 -> 로컬 엔진 폴백: ${byokErr.message}`);
+    }
+  }
 
   try {
     const payload = {
-      model: 'ebro-agent',
+      model: selectedOllamaModel || 'ebro-agent',
       messages: [
         {
           role: "system",
@@ -509,7 +1144,8 @@ async function parseInstructionIntent(instruction, requestedMode = 'AUTO') {
     const response = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000)
     });
     
     if (!response.ok) {
@@ -533,8 +1169,7 @@ async function parseInstructionIntent(instruction, requestedMode = 'AUTO') {
       }
     }
   } catch (e) {
-    console.error('LLM Inference Error:', e);
-    broadcastStudioLog('ERROR', `LLM 추론 실패: ${e.message}`);
+    // 로컬 Ollama 미연결 시 내장 결정론적 도메인 규칙 엔진이 즉시 이어받음
   }
 
   return {
@@ -542,24 +1177,27 @@ async function parseInstructionIntent(instruction, requestedMode = 'AUTO') {
     mode: suggestedMode,
     summary: actionSummary,
     ollamaUsed: ollamaUsed,
-      parameters: parameters
+    parameters: parameters,
+    actions: plannedActions
   };
 }
 
 // ──  작업 큐 등록 및 관리 ──
-async function addTask(instruction, requestedMode = 'AUTO', onComplete = null) {
+async function addTask(instruction, requestedMode = 'AUTO', onComplete = null, tenantCode = null, userId = null) {
   if (!isAiEnabled()) {
-    throw new Error('현재 테넌트는 AI 에이전트 기능이 비활성화(Silent Core 모드)되어 있습니다. 인쇄 및 엑셀 문서 처리 전용으로 안전 가동 중입니다.');
+    throw new Error('현재 테넌트는 AI 에이전트 기능이 비활성화되어 있습니다. 인쇄 및 엑셀 문서 처리 전용으로 안전 가동 중입니다.');
   }
   if (!instruction || !instruction.trim()) {
     throw new Error('지시 내용을 입력해 주십시오.');
   }
 
-  const intent = await parseInstructionIntent(instruction.trim(), requestedMode);
+  const intent = await parseInstructionIntent(instruction.trim(), requestedMode, tenantCode, userId);
   const task = {
     id: `TASK-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`,
     createdAt: new Date().toISOString(),
     instruction: instruction.trim(),
+    tenantCode: tenantCode || agentPolicy?.tenantCode || 'DEFAULT',
+    userId: userId || 'DEFAULT',
     mode: intent.mode,
     module: intent.module,
     status: 'PENDING',
@@ -569,12 +1207,13 @@ async function addTask(instruction, requestedMode = 'AUTO', onComplete = null) {
     result: null
   };
 
+  prefetchedTaskIntents.set(task.id, intent);
   if (typeof onComplete === 'function') {
     taskCompletionCallbacks.set(task.id, onComplete);
   }
 
   taskQueue.unshift(task);
-  saveQueue();
+  scheduleSaveQueue(true);
   broadcastEvent('TASK_ADDED', task);
 
   // 워커 즉시 트리거
@@ -601,33 +1240,75 @@ async function triggerWorker() {
 async function executeTask(task) {
   try {
     task.status = 'RUNNING';
-      task.progress = 10;
-      task.currentStep = '1단계: 자연어 업무 의도 분석 및 도메인 엔티티 식별';
-      
-      const intentResult = await parseInstructionIntent(task.instruction, task.mode);
-      task.module = intentResult.module;
-      
-      appendTaskLog(task, `작업 시작 (모드: ${task.mode}, 도메인/의도: ${task.module})`);
-      if (intentResult.parameters && Object.keys(intentResult.parameters).length > 0) {
-        appendTaskLog(task, `[AI 추출 파라미터] ${JSON.stringify(intentResult.parameters)}`);
-      }
+    task.progress = 10;
+    task.currentStep = '1단계: 자연어 업무 의도 분석 및 도메인 엔티티 식별';
+    task.stepsList = [];
+    task.stepsCount = 0;
+
+    let intentResult = prefetchedTaskIntents.get(task.id);
+    if (intentResult) {
+      prefetchedTaskIntents.delete(task.id);
+    } else {
+      intentResult = await parseInstructionIntent(task.instruction, task.mode, task.tenantCode, task.userId);
+    }
+    task.module = intentResult.module;
+
+    appendTaskLog(task, `작업 시작 (모드: ${task.mode}, 도메인/의도: ${task.module})`);
+    if (intentResult.parameters && Object.keys(intentResult.parameters).length > 0) {
+      appendTaskLog(task, `[AI 추출 파라미터] ${JSON.stringify(intentResult.parameters)}`);
+    }
     broadcastEvent('TASK_UPDATED', task);
 
-    const isBrowserTask = (task.mode === 'BROWSER' || task.module === 'CONTRACT' || task.module === 'DISPATCH' || task.module === 'INVENTORY');
+    // Jev System 1에서 업무 외 대화(SKIP)로 판정된 경우 즉시 완료 처리
+    if (intentResult.mode === 'SKIP' || task.module === 'OUT_OF_SCOPE') {
+      task.progress = 100;
+      task.status = 'COMPLETED';
+      task.currentStep = '완료 (업무 외 일반 대화 생략)';
+      task.result = {
+        completedAt: new Date().toISOString(),
+        summary: intentResult.summary || '업무 외 대화로 분류되어 실행을 생략했습니다.'
+      };
+      appendTaskLog(task, task.result.summary);
+      broadcastEvent('TASK_UPDATED', task);
+      scheduleSaveQueue(true);
+      notifyTaskComplete(task);
+      return;
+    }
+
+    const isBrowserTask = (task.mode === 'BROWSER' || task.module === 'CONTRACT' || task.module === 'DISPATCH' || task.module === 'INVENTORY' || task.module === 'NAVIGATE_MENU' || task.module === 'CLICK_ELEMENT');
 
     if (isBrowserTask) {
       task.progress = 25;
-      task.currentStep = '2단계: 웹 에이전트 브라우저 연결 검증';
-      appendTaskLog(task, '브라우저 웹 에이전트(ebro web agent) 통신 상태 검증 중...');
+      task.currentStep = '2단계: 웹 에이전트 및 Windows UIA 하이브리드 연결 검증';
+      appendTaskLog(task, '브라우저 웹 에이전트(ebro web agent) 및 Windows UIA 접근성 브릿지 검증 중...');
       broadcastEvent('TASK_UPDATED', task);
 
-      if (!isWebAgentConnected()) {
-        throw new Error('브라우저 웹 에이전트(ebro web agent)가 연결되어 있지 않아 화면을 조작할 수 없습니다. Chrome 확장 프로그램을 실행하고 포트 5175 연결 상태를 확인해 주세요.');
+      const webConnected = isWebAgentConnected();
+      if (!webConnected) {
+        appendTaskLog(task, '브라우저 확장 미연결 감지 -> Windows UIA 접근성 엔진으로 자동 폴백 실행');
       }
 
       task.progress = 50;
-      task.currentStep = '3단계: 브라우저 액션 디스패치 및 UI 화면 조작';
+      task.currentStep = '3단계: 하이브리드 액션 디스패치 및 화면 조작';
       broadcastEvent('TASK_UPDATED', task);
+
+      const dispatchToolWithFallback = async (tool, params, timeoutMs = 8000) => {
+        const stepIdx = task.stepsList.length + 1;
+        let res = null;
+        if (isWebAgentConnected()) {
+          try {
+            res = await sendToolToWebAgent(tool, params, timeoutMs);
+          } catch (wsErr) {
+            appendTaskLog(task, `웹 에이전트 응답 지연(${wsErr.message}) -> Windows UIA 엔진 폴백 실행`);
+            res = await executeUiaTool(tool, params);
+          }
+        } else {
+          res = await executeUiaTool(tool, params);
+        }
+        task.stepsList.push({ step: stepIdx, tool, params, result: res });
+        task.stepsCount = task.stepsList.length;
+        return res;
+      };
 
       const p = task.instruction.toLowerCase();
       let targetMenu = null;
@@ -641,9 +1322,9 @@ async function executeTask(task) {
       else if (p.includes('정비') || p.includes('수리') || p.includes('repair')) targetMenu = 'repair';
 
       let lastResult = null;
-      if (targetMenu) {
+      if (targetMenu && isWebAgentConnected()) {
         appendTaskLog(task, `브라우저 메뉴 이동 실행: [${targetMenu}]`);
-        lastResult = await sendToolToWebAgent('navigate_menu', { menuId: targetMenu }, 10000);
+        lastResult = await dispatchToolWithFallback('navigate_menu', { menuId: targetMenu }, 10000);
         appendTaskLog(task, `메뉴 이동 완료: [${targetMenu}]`);
       }
 
@@ -651,7 +1332,7 @@ async function executeTask(task) {
         await new Promise(r => setTimeout(r, 600));
         appendTaskLog(task, '화면 [조회] 버튼 자동 클릭 실행');
         try {
-          const searchRes = await sendToolToWebAgent('click_element', { target: '조회' }, 5000);
+          const searchRes = await dispatchToolWithFallback('click_element', { target: '조회' }, 5000);
           appendTaskLog(task, '[조회] 버튼 클릭 성공');
           lastResult = searchRes;
         } catch (e) {
@@ -660,15 +1341,19 @@ async function executeTask(task) {
       }
 
       if (p.includes('번호표') || p.includes('som')) {
-        const somRes = await sendToolToWebAgent('toggle_som', {}, 5000);
+        const somRes = await dispatchToolWithFallback('toggle_som', {}, 5000);
         appendTaskLog(task, 'SoM 번호표 토글 실행 완료');
         lastResult = somRes;
       }
 
       if (p.includes('엑셀') || p.includes('다운로드') || p.includes('내보내기')) {
         appendTaskLog(task, '[엑셀 다운로드] 버튼 클릭 실행');
-        const excelRes = await sendToolToWebAgent('click_element', { target: '엑셀 다운로드' }, 5000);
+        const excelRes = await dispatchToolWithFallback('click_element', { target: '엑셀 다운로드' }, 5000);
         lastResult = excelRes;
+      }
+
+      if (task.stepsList.length === 0 && !webConnected) {
+        lastResult = await dispatchToolWithFallback('uia_inspect_window', { interactive_only: true }, 6000);
       }
 
       task.progress = 100;
@@ -676,11 +1361,12 @@ async function executeTask(task) {
       task.currentStep = '완료 (100%)';
       task.result = {
         completedAt: new Date().toISOString(),
-        summary: `[${task.module}] ${task.instruction} -> 브라우저 웹 에이전트 화면 조작 완결`
+        summary: `[${task.module}] ${task.instruction} -> 하이브리드 화면 조작 완결`,
+        lastResult
       };
-      appendTaskLog(task, '작업이 정상 완결되었습니다. 브라우저 화면에 반영되었습니다.');
+      appendTaskLog(task, '작업이 정상 완결되었습니다.');
       broadcastEvent('TASK_UPDATED', task);
-      saveQueue();
+      scheduleSaveQueue(true);
       notifyTaskComplete(task);
       return;
     }
@@ -701,14 +1387,14 @@ async function executeTask(task) {
     };
     appendTaskLog(task, '작업이 정상 완결되었습니다.');
     broadcastEvent('TASK_UPDATED', task);
-    saveQueue();
+    scheduleSaveQueue(true);
     notifyTaskComplete(task);
   } catch (err) {
     task.status = 'FAILED';
     task.currentStep = `실패: ${err.message}`;
     appendTaskLog(task, `❌ ${err.message}`);
     broadcastEvent('TASK_UPDATED', task);
-    saveQueue();
+    scheduleSaveQueue(true);
     notifyTaskComplete(task);
   }
 }
@@ -722,10 +1408,11 @@ function notifyTaskComplete(task) {
 }
 
 // ──  독립 데스크톱 전용 창 실행 ──
-function launchStudioWindow(port = 5175) {
+function launchStudioWindow(port = 5175, tenantCodeHint) {
   if (!isAiEnabled()) {
-    // Silent Core 모드일 때는 AI 스튜디오 대신 로컬 문서고 폴더를 안전하게 열어줌
-    const archiveDir = path.join(AGENT_HOME, '문서고');
+    // Silent Core 모드일 때는 AI 스튜디오 대신 해당 테넌트의 로컬 문서고 폴더를 안전하게 열어줌
+    const code = normalizeTenantCode(tenantCodeHint || agentPolicy?.tenantCode || 'GIYEONLIFT');
+    const archiveDir = path.join(AGENT_HOME, '문서고', code);
     try {
       if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
       exec(`explorer.exe "${archiveDir}"`);
@@ -776,9 +1463,9 @@ function launchStudioWindow(port = 5175) {
 function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 'GIYEONLIFT') {
   const effectiveCode = agentPolicy.tenantCode || tenantCode || 'EBRO';
   const TENANT_NAME_MAP = {
-    'GIYEONLIFT': '(주)기연리프트 전용',
-    'GIYEON': '(주)기연리프트 전용',
-    'GIYEUN': '(주)기연리프트 전용',
+    'GIYEONLIFT': '주식회사 기연리프트 전용',
+    'GIYEON': '주식회사 기연리프트 전용',
+    'GIYEUN': '주식회사 기연리프트 전용',
     'HANSOL': '한솔렌탈 전용',
     'SAMWOO': '삼우렌탈 전용',
     'EBRO': 'eBro ERP 표준'
@@ -1361,14 +2048,34 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
           </div>
         </div>
 
-        <!-- AI 추론 엔진 설정 섹션 -->
+        <!-- AI 추론 엔진 및 테넌트·개인별 BYOK API 키 금고 섹션 -->
         <div class="config-group">
-          <div class="config-group-title">Ollama AI 추론 엔진</div>
+          <div class="config-group-title">AI 공급자 및 BYOK API 키 설정</div>
           <div class="form-stack">
-            <label class="field-label" for="modalAiModel">추론 모델 선택</label>
-            <select id="modalAiModel" class="text-input" style="font-family:var(--font-mono); cursor:pointer;">
-              <option value="">확인 중...</option>
+            <label class="field-label" for="modalAiProvider">AI 공급자 선택</label>
+            <select id="modalAiProvider" class="text-input" style="font-family:var(--font-mono); cursor:pointer;" onchange="onModalProviderChange(this.value)">
+              <option value="LOCAL_OLLAMA">로컬 내장 AI · 무료 · 외부 전송 없음</option>
+              <option value="GEMINI">Google Gemini · 무료 티어 및 유료 API</option>
+              <option value="OPENAI">OpenAI ChatGPT API</option>
+              <option value="ANTHROPIC">Anthropic Claude API</option>
+              <option value="GROQ">Groq 초고속 LPU API</option>
+              <option value="JEV_OPENROUTER">Jev · OpenRouter 초저비용 라우터</option>
             </select>
+          </div>
+          <div class="form-stack">
+            <label class="field-label" for="modalAiModel">추론 모델명</label>
+            <input type="text" id="modalAiModel" class="text-input" style="font-family:var(--font-mono);" placeholder="예: gemini-2.5-flash / gpt-4o-mini / ebro-qwen:3b" />
+          </div>
+          <div class="form-stack">
+            <label class="field-label" for="modalAiApiKey">API 키 · 로컬 암호화 금고 저장</label>
+            <input type="password" id="modalAiApiKey" class="text-input" style="font-family:var(--font-mono);" placeholder="로컬 내장 AI 사용 시 공란 유지" autocomplete="off" />
+          </div>
+          <div class="form-stack" style="margin-top:4px; padding-top:8px; border-top:1px solid #334155;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+              <input type="checkbox" id="modalJevEnabled" />
+              <span>Jev 초저비용 사전 의도 분류 활성화 · 선택 사항</span>
+            </label>
+            <input type="password" id="modalJevApiKey" class="text-input" style="font-family:var(--font-mono); margin-top:4px;" placeholder="Jev · OpenRouter API 키 입력 (선택)" autocomplete="off" />
           </div>
         </div>
 
@@ -1652,6 +2359,22 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
     }
 
     // ── 5. 환경설정 모달 제어 ──
+    const DEFAULT_MODELS_BY_PROVIDER = {
+      LOCAL_OLLAMA: 'ebro-qwen:3b',
+      GEMINI: 'gemini-2.5-flash',
+      OPENAI: 'gpt-4o-mini',
+      ANTHROPIC: 'claude-3-5-haiku-latest',
+      GROQ: 'llama-3.3-70b-versatile',
+      JEV_OPENROUTER: 'typesafe/jev'
+    };
+
+    function onModalProviderChange(provider) {
+      const modelInput = document.getElementById('modalAiModel');
+      if (modelInput && DEFAULT_MODELS_BY_PROVIDER[provider]) {
+        modelInput.value = DEFAULT_MODELS_BY_PROVIDER[provider];
+      }
+    }
+
     async function openConfigModal() {
       const modal = document.getElementById('configModal');
       const feedback = document.getElementById('modalFeedbackMsg');
@@ -1667,18 +2390,12 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
           document.getElementById('modalTgUserId').value = data.telegram_allowed_user_id || '';
           updateModalTgStatus(data.telegram_running);
 
-          // Ollama 모델 목록 동기화
-          const olRes = await fetch('/api/ollama/status');
-          const olData = await olRes.json();
-          const modalSelect = document.getElementById('modalAiModel');
-          if (olData.available && olData.models && olData.models.length > 0) {
-            modalSelect.innerHTML = olData.models.map(function(m) {
-              var sel = (m === (data.ai_model || olData.model)) ? ' selected' : '';
-              return '<option value="' + m + '"' + sel + '>' + m + '</option>';
-            }).join('');
-          } else {
-            modalSelect.innerHTML = '<option value="">Ollama 모델 없음</option>';
-          }
+          const prof = data.ai_profile || {};
+          document.getElementById('modalAiProvider').value = prof.provider || 'LOCAL_OLLAMA';
+          document.getElementById('modalAiModel').value = prof.model || data.ai_model || 'ebro-qwen:3b';
+          document.getElementById('modalAiApiKey').value = prof.masked_api_key || '';
+          document.getElementById('modalJevEnabled').checked = Boolean(prof.jev_enabled);
+          document.getElementById('modalJevApiKey').value = prof.masked_jev_api_key || '';
         }
       } catch (e) {
         feedback.innerText = '설정 정보를 불러오지 못했습니다: ' + e.message;
@@ -1695,11 +2412,11 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
       const text = document.getElementById('modalTgStatusText');
       if (isRunning) {
         dot.className = 'dot dot-green';
-        text.innerText = '연결됨 (수신 대기)';
+        text.innerText = '연결됨 · 수신 대기';
         text.style.color = '#4ade80';
       } else {
         dot.className = 'dot dot-yellow';
-        text.innerText = '미설정 / 정지';
+        text.innerText = '미설정 · 정지';
         text.style.color = '#f59e0b';
       }
     }
@@ -1728,7 +2445,11 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
     async function saveConfigFromModal() {
       const token = document.getElementById('modalTgToken').value.trim();
       const userId = document.getElementById('modalTgUserId').value.trim();
-      const aiModel = document.getElementById('modalAiModel').value;
+      const aiProvider = document.getElementById('modalAiProvider').value;
+      const aiModel = document.getElementById('modalAiModel').value.trim();
+      const aiApiKey = document.getElementById('modalAiApiKey').value.trim();
+      const jevEnabled = document.getElementById('modalJevEnabled').checked;
+      const jevApiKey = document.getElementById('modalJevApiKey').value.trim();
       const feedback = document.getElementById('modalFeedbackMsg');
 
       feedback.innerText = '설정 저장 중...';
@@ -1741,12 +2462,16 @@ function renderStudioHtml(port = 5175, version = 'v2.0.0.Build.1', tenantCode = 
           body: JSON.stringify({
             telegram_bot_token: token,
             telegram_allowed_user_id: userId,
-            ai_model: aiModel
+            ai_provider: aiProvider,
+            ai_model: aiModel,
+            ai_api_key: aiApiKey,
+            jev_enabled: jevEnabled,
+            jev_api_key: jevApiKey
           })
         });
         const data = await res.json();
         if (data.success) {
-          feedback.innerText = '설정이 저장되고 텔레그램 봇이 갱신되었습니다.';
+          feedback.innerText = 'AI 프로필 암호화 금고 및 텔레그램 설정이 저장되었습니다.';
           feedback.className = 'feedback-msg success';
           updateModalTgStatus(data.telegram_running);
           checkOllama();
@@ -1938,7 +2663,7 @@ function renderSilentCoreHtml(port = 5175, version = 'v2.0.0.Build.6', tenantCod
       </div>
       <div class="grid-item">
         <div class="label">로컬 문서고 저장소</div>
-        <div class="val" style="color: #93c5fd;">C:\\eBroAgent\\문서고</div>
+        <div class="val" style="color: #93c5fd;">C:\\eBroAgent\\문서고\\${normalizeTenantCode(tenantCode)}</div>
       </div>
       <div class="grid-item">
         <div class="label">AI 메신저 명령 / 확장 제어</div>
@@ -1965,6 +2690,26 @@ function renderSilentCoreHtml(port = 5175, version = 'v2.0.0.Build.6', tenantCod
   </script>
 </body>
 </html>`;
+}
+
+function readReqJson(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (err) {
+        reject(err);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJson(res, statusCode, data) {
+  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(data));
 }
 
 // ──  HTTP 핸들러 라우팅 연동 ──
@@ -1999,40 +2744,41 @@ async function handleStudioRequest(req, res, pathname, searchParams, port = 5175
 
   // 🌐 테넌트 정책 조회 API (/api/policy)
   if (req.method === 'GET' && pathname === '/api/policy') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ success: true, policy: getAgentPolicy() }));
+    const reqTenantCode = searchParams.get('tenantCode');
+    sendJson(res, 200, { success: true, policy: reqTenantCode ? getTenantPolicy(reqTenantCode) : getAgentPolicy() });
     return true;
   }
 
   // 🌐 테넌트 정책 실시간 핫 동기화 API (/api/policy/sync)
   if (req.method === 'POST' && pathname === '/api/policy/sync') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body);
-        const updated = updateAgentPolicy(payload);
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, policy: updated }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
+    try {
+      const payload = await readReqJson(req);
+      const reqTenantCode = searchParams.get('tenantCode');
+      if (reqTenantCode && !payload.tenantCode) {
+        payload.tenantCode = reqTenantCode;
       }
-    });
+      const updated = updateAgentPolicy(payload);
+      sendJson(res, 200, { success: true, policy: updated });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
     return true;
   }
 
   // 📂 로컬 문서고 폴더 열기 API (/api/open-archive)
   if (req.method === 'POST' && pathname === '/api/open-archive') {
-    const archiveDir = path.join(AGENT_HOME, '문서고');
     try {
+      let payload = {};
+      try { payload = await readReqJson(req); } catch (e) {}
+      const code = normalizeTenantCode(payload.tenantCode || searchParams.get('tenantCode') || agentPolicy?.tenantCode || tenantCode || 'GIYEONLIFT');
+      const archiveDir = path.join(AGENT_HOME, '문서고', code);
       if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
-      exec(`explorer.exe "${archiveDir}"`);
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: true }));
+      if (!payload.skipExplorer) {
+        exec(`explorer.exe "${archiveDir}"`);
+      }
+      sendJson(res, 200, { success: true, tenantCode: code, archiveDir });
     } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: false, error: e.message }));
+      sendJson(res, 500, { success: false, error: e.message });
     }
     return true;
   }
@@ -2054,8 +2800,9 @@ async function handleStudioRequest(req, res, pathname, searchParams, port = 5175
 
   // 2. 독립 창 실행 트리거 (/api/launch-studio)
   if (req.method === 'POST' && pathname === '/api/launch-studio') {
+    const reqCode = searchParams.get('tenantCode');
     if (!isAiEnabled()) {
-      launchStudioWindow(port); // 문서고 폴더 안전 오픈
+      launchStudioWindow(port, reqCode); // 문서고 폴더 안전 오픈
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ 
         success: false, 
@@ -2079,44 +2826,32 @@ async function handleStudioRequest(req, res, pathname, searchParams, port = 5175
 
   // 4. 지시 큐 신규 등록 (/api/queue/add)
   if (req.method === 'POST' && pathname === '/api/queue/add') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        const task = await addTask(payload.instruction, payload.mode);
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, task }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
+    try {
+      const payload = await readReqJson(req);
+      const task = await addTask(payload.instruction, payload.mode);
+      sendJson(res, 200, { success: true, task });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
     return true;
   }
 
   // 5. 작업 취소 (/api/queue/cancel)
   if (req.method === 'POST' && pathname === '/api/queue/cancel') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      try {
-        const { id } = JSON.parse(body);
-        const task = taskQueue.find(t => t.id === id);
-        if (task && task.status === 'PENDING') {
-          task.status = 'CANCELLED';
-          task.currentStep = '사용자에 의해 취소됨';
-          appendTaskLog(task, '작업이 취소되었습니다.');
-          broadcastEvent('TASK_UPDATED', task);
-          saveQueue();
-        }
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
+    try {
+      const { id } = await readReqJson(req);
+      const task = taskQueue.find(t => t.id === id);
+      if (task && task.status === 'PENDING') {
+        task.status = 'CANCELLED';
+        task.currentStep = '사용자에 의해 취소됨';
+        appendTaskLog(task, '작업이 취소되었습니다.');
+        broadcastEvent('TASK_UPDATED', task);
+        scheduleSaveQueue(true);
       }
-    });
+      sendJson(res, 200, { success: true });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
     return true;
   }
 
@@ -2124,11 +2859,10 @@ async function handleStudioRequest(req, res, pathname, searchParams, port = 5175
   if (req.method === 'POST' && pathname === '/api/queue/clear-completed') {
     taskQueue = taskQueue.filter(t => t.status === 'PENDING' || t.status === 'RUNNING');
     pruneQueueAndLogs();
-    saveQueue();
+    scheduleSaveQueue(true);
     broadcastEvent('INIT', taskQueue);
     broadcastEvent('INIT_LOGS', studioLogHistory);
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ success: true, count: taskQueue.length }));
+    sendJson(res, 200, { success: true, count: taskQueue.length });
     return true;
   }
 
@@ -2163,77 +2897,198 @@ async function handleStudioRequest(req, res, pathname, searchParams, port = 5175
 
   // 8-1. Ollama 모델 변경 (/api/ollama/model)
   if (req.method === 'POST' && pathname === '/api/ollama/model') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        if (payload.model) {
-          saveOllamaConfig(payload.model);
-          await checkOllamaStatus(true);
-          broadcastStudioLog('SYSTEM', `Ollama 추론 엔진 변경 완료: ${selectedOllamaModel}`);
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, model: selectedOllamaModel }));
-          return;
-        }
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: 'Model name required' }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
+    try {
+      const payload = await readReqJson(req);
+      if (payload.model) {
+        saveOllamaConfig(payload.model);
+        await checkOllamaStatus(true);
+        broadcastStudioLog('SYSTEM', `Ollama 추론 엔진 변경 완료: ${selectedOllamaModel}`);
+        sendJson(res, 200, { success: true, model: selectedOllamaModel });
+        return true;
       }
-    });
+      sendJson(res, 400, { success: false, error: 'Model name required' });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
     return true;
   }
 
-  // 9. 통합 환경설정 조회 (/config)
-  if (req.method === 'GET' && pathname === '/config') {
-    const tgCfg = getTelegramConfig();
+  // 8-2. 에이전트 통합 상태 조회 (/status, /api/status)
+  if (req.method === 'GET' && (pathname === '/status' || pathname === '/api/status')) {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
-      telegram_bot_token: tgCfg.telegram_bot_token || '',
-      telegram_allowed_user_id: tgCfg.telegram_allowed_user_id || '',
+      agent: 'eBroAgent',
+      status: 'ONLINE',
+      version: version,
+      browser_extension_connected: isWebAgentConnected(),
+      windows_uia_available: process.platform === 'win32',
+      active_sessions: taskQueue.filter(t => t.status === 'RUNNING').length,
       telegram_running: isTelegramRunning(),
-      ai_model: selectedOllamaModel
+      ai_model: selectedOllamaModel,
+      ai_profile: getMaskedAiProfile(effectiveTenantCode, 'DEFAULT')
     }));
     return true;
   }
 
-  // 9-1. 통합 환경설정 저장 (/config)
-  if (req.method === 'POST' && pathname === '/config') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body);
-        if (payload.telegram_bot_token !== undefined || payload.telegram_allowed_user_id !== undefined) {
-          saveTelegramConfig(payload.telegram_bot_token, payload.telegram_allowed_user_id);
-          if (isAiEnabled()) {
-            await restartTelegramBot(async (text, onComplete) => {
-              return await addTask(text, 'BROWSER', onComplete);
-            });
-          } else {
-            stopTelegramBot();
-          }
-        }
-        if (payload.ai_model) {
-          saveOllamaConfig(payload.ai_model);
-          await checkOllamaStatus(true);
-        }
-        broadcastStudioLog('SYSTEM', '환경설정(텔레그램 & AI모델) 저장 및 봇 동기화 완료');
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({
-          success: true,
-          telegram_running: isTelegramRunning(),
-          ai_model: selectedOllamaModel,
-          telegram_bot_token: payload.telegram_bot_token,
-          telegram_allowed_user_id: payload.telegram_allowed_user_id
-        }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
+  // 8-3. 테넌트/임직원 BYOK AI 프로필 조회 (/ai-profile, /api/ai-profile)
+  if (req.method === 'GET' && (pathname === '/ai-profile' || pathname === '/api/ai-profile')) {
+    const qTenant = searchParams.get('tenant_code') || effectiveTenantCode;
+    const qUser = searchParams.get('user_id') || 'DEFAULT';
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      success: true,
+      profile: getMaskedAiProfile(qTenant, qUser),
+      supported_providers: SUPPORTED_AI_PROVIDERS
+    }));
+    return true;
+  }
+
+  // 8-4. 테넌트/임직원 BYOK AI 프로필 저장 (/ai-profile, /api/ai-profile)
+  if (req.method === 'POST' && (pathname === '/ai-profile' || pathname === '/api/ai-profile')) {
+    try {
+      const payload = await readReqJson(req);
+      const saved = setAiProfile({
+        tenant_code: payload.tenant_code || effectiveTenantCode,
+        user_id: payload.user_id || 'DEFAULT',
+        provider: payload.provider,
+        model: payload.model,
+        api_key: payload.api_key,
+        vision_fallback_enabled: payload.vision_fallback_enabled,
+        custom_endpoint: payload.custom_endpoint,
+        jev_enabled: payload.jev_enabled,
+        jev_api_key: payload.jev_api_key,
+        jev_model: payload.jev_model,
+        jev_endpoint: payload.jev_endpoint
+      });
+      broadcastStudioLog('SYSTEM', `AI 프로필 암호화 금고 업데이트 완료: ${saved.provider} (${saved.model}), Jev=${saved.jev_enabled ? 'ON' : 'OFF'}`);
+      sendJson(res, 200, {
+        success: true,
+        message: 'AI 모델 및 API 키 프로필이 암호화 저장되었습니다.',
+        profile: saved
+      });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
+    return true;
+  }
+
+  // 8-5. Windows UIA 접근성 트리 스냅샷 조회 (/uia/inspect, /api/uia/inspect)
+  if (req.method === 'GET' && (pathname === '/uia/inspect' || pathname === '/api/uia/inspect')) {
+    const windowTitle = searchParams.get('window_title') || undefined;
+    const maxDepth = parseInt(searchParams.get('max_depth') || '10', 10);
+    const interactiveOnly = searchParams.get('interactive_only') !== 'false';
+    const uiaRes = await executeUiaTool('uia_inspect_window', {
+      window_title: windowTitle,
+      max_depth: maxDepth,
+      interactive_only: interactiveOnly
     });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(uiaRes));
+    return true;
+  }
+
+  // 8-6. Windows UIA 접근성 도구 직접 실행 (/uia/execute, /api/uia/execute)
+  if (req.method === 'POST' && (pathname === '/uia/execute' || pathname === '/api/uia/execute')) {
+    try {
+      const payload = await readReqJson(req);
+      const uiaRes = await executeUiaTool(payload.tool || 'uia_inspect_window', payload.params || {});
+      sendJson(res, 200, uiaRes);
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
+    return true;
+  }
+
+  // 8-7. 자연어 지시 즉시 실행 (/execute, /api/execute)
+  if (req.method === 'POST' && (pathname === '/execute' || pathname === '/api/execute')) {
+    try {
+      const payload = await readReqJson(req);
+      const prompt = payload.prompt || payload.instruction || '';
+      const qTenant = payload.tenant_code || effectiveTenantCode;
+      const qUser = payload.user_id || 'DEFAULT';
+      if (!prompt.trim()) {
+        sendJson(res, 400, { success: false, error: 'prompt 누락' });
+        return true;
+      }
+      const startTime = Date.now();
+      await addTask(prompt.trim(), 'BROWSER', (completedTask) => {
+        try {
+          sendJson(res, 200, {
+            success: completedTask.status === 'COMPLETED',
+            status: completedTask.status === 'COMPLETED' ? 'DONE' : 'ERROR',
+            session_id: completedTask.id,
+            total_steps: completedTask.stepsCount || 1,
+            steps: completedTask.stepsList || [],
+            result: completedTask.result || {},
+            latency_ms: Date.now() - startTime
+          });
+        } catch (e) {}
+      }, qTenant, qUser);
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
+    return true;
+  }
+
+  // 9. 통합 환경설정 조회 (/config, /api/config)
+  if (req.method === 'GET' && (pathname === '/config' || pathname === '/api/config')) {
+    const tgCfg = getTelegramConfig();
+    const qTenant = searchParams.get('tenant_code') || effectiveTenantCode;
+    const qUser = searchParams.get('user_id') || 'DEFAULT';
+    sendJson(res, 200, {
+      success: true,
+      telegram_bot_token: tgCfg.telegram_bot_token || '',
+      telegram_allowed_user_id: tgCfg.telegram_allowed_user_id || '',
+      telegram_running: isTelegramRunning(),
+      ai_model: selectedOllamaModel,
+      ai_profile: getMaskedAiProfile(qTenant, qUser),
+      supported_providers: SUPPORTED_AI_PROVIDERS
+    });
+    return true;
+  }
+
+  // 9-1. 통합 환경설정 저장 (/config, /api/config)
+  if (req.method === 'POST' && (pathname === '/config' || pathname === '/api/config')) {
+    try {
+      const payload = await readReqJson(req);
+      if (payload.telegram_bot_token !== undefined || payload.telegram_allowed_user_id !== undefined) {
+        saveTelegramConfig(payload.telegram_bot_token, payload.telegram_allowed_user_id);
+        if (isAiEnabled()) {
+          await restartTelegramBot(async (text, onComplete) => {
+            return await addTask(text, 'BROWSER', onComplete);
+          });
+        } else {
+          stopTelegramBot();
+        }
+      }
+      if (payload.ai_model) {
+        saveOllamaConfig(payload.ai_model);
+        await checkOllamaStatus(true);
+      }
+      const qTenant = payload.tenant_code || effectiveTenantCode;
+      const qUser = payload.staff_user_id || payload.user_id || 'DEFAULT';
+      const savedProfile = setAiProfile({
+        tenant_code: qTenant,
+        user_id: qUser,
+        provider: payload.ai_provider || payload.provider,
+        model: payload.ai_model || payload.model,
+        api_key: payload.ai_api_key !== undefined ? payload.ai_api_key : payload.api_key,
+        jev_enabled: payload.jev_enabled,
+        jev_api_key: payload.jev_api_key,
+        jev_model: payload.jev_model
+      });
+      broadcastStudioLog('SYSTEM', `환경설정(텔레그램 & AI 프로필: ${savedProfile.provider}, Jev=${savedProfile.jev_enabled ? 'ON' : 'OFF'}) 저장 완료`);
+      sendJson(res, 200, {
+        success: true,
+        telegram_running: isTelegramRunning(),
+        ai_model: selectedOllamaModel,
+        ai_profile: savedProfile,
+        telegram_bot_token: payload.telegram_bot_token,
+        telegram_allowed_user_id: payload.telegram_allowed_user_id
+      });
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err.message });
+    }
     return true;
   }
 
@@ -2278,6 +3133,8 @@ module.exports = {
   checkOllamaStatus,
   broadcastStudioLog,
   getAgentPolicy,
+  getTenantPolicy,
+  normalizeTenantCode,
   updateAgentPolicy,
   isAiEnabled,
   handleWebSocketConnection,

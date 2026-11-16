@@ -2,7 +2,8 @@
 # eBro AI Agent Windows System Tray Icon Worker
 param(
     [int]$AgentPid = 0,
-    [int]$Port = 5175
+    [int]$Port = 5175,
+    [string]$AgentVersion = "v2.0.0"
 )
 
 # 🚀 Windows EcoQoS(효율 모드) 절전 스로틀링 원천 차단: 트레이 및 에이전트 프로세스 우선순위 AboveNormal 격상
@@ -39,9 +40,10 @@ public class StudioWindowManager {
     public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
-    public static IntPtr FindStudioWindow() {
+    public static IntPtr FindStudioWindow(bool visibleOnly = false) {
         IntPtr found = IntPtr.Zero;
         EnumWindows((hWnd, lParam) => {
+            if (visibleOnly && !IsWindowVisible(hWnd)) return true;
             StringBuilder sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, 256);
             string title = sb.ToString();
@@ -65,9 +67,15 @@ try {
     }
 } catch {}
 
-# 🌐 테넌트 정책에 따른 AI 기능 동적 분기
+# 🌐 테넌트 정책 및 버전 상태 파일 경로
 $policyPath = "C:\eBroAgent\tenant_policy.json"
+$statusPath = "C:\eBroAgent\agent_status.json"
 $script:aiEnabled = $false
+$script:currentVer = if ($AgentVersion) { $AgentVersion } else { "v2.0.0" }
+$script:targetVer = $script:currentVer
+$script:isMismatch = $false
+$script:updateStatus = "idle"
+
 if (Test-Path -LiteralPath $policyPath) {
     try {
         $policyJson = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
@@ -98,11 +106,71 @@ if (-not $loadedIco) {
     $notify.Icon = [System.Drawing.SystemIcons]::Application
 }
 
-if ($script:aiEnabled) {
-    $notify.Text = "eBro AI Agent (Port: $Port)"
-} else {
-    $notify.Text = "eBro Agent - 업무 지원 모드 (Port: $Port)"
+# Windows Forms NotifyIcon.Text 63자 제한 안전 설정 헬퍼
+function Set-SafeTrayTooltip([string]$rawText) {
+    if (-not $rawText) { return }
+    $safe = $rawText
+    if ($safe.Length -gt 63) {
+        $safe = $safe.Substring(0, 63)
+    }
+    try {
+        if ($notify.Text -ne $safe) {
+            $notify.Text = $safe
+        }
+    } catch {}
 }
+
+function Get-ShortBuildTag([string]$verStr) {
+    if (-not $verStr) { return "" }
+    if ($verStr -match "Build\.(\d+)") {
+        return "Build." + $Matches[1]
+    }
+    return $verStr
+}
+
+$script:lastPolicyMtime = [DateTime]::MinValue
+$script:lastStatusMtime = [DateTime]::MinValue
+
+function Sync-AgentVersionStatus([bool]$force = $false) {
+    if (Test-Path -LiteralPath $statusPath) {
+        try {
+            $mtime = [System.IO.File]::GetLastWriteTimeUtc($statusPath)
+            if ($force -or $mtime -ne $script:lastStatusMtime) {
+                $script:lastStatusMtime = $mtime
+                $st = Get-Content -LiteralPath $statusPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($st.currentVersion) { $script:currentVer = [string]$st.currentVersion }
+                if ($st.targetVersion) { $script:targetVer = [string]$st.targetVersion } else { $script:targetVer = $script:currentVer }
+                if ($null -ne $st.isMismatch) { $script:isMismatch = [bool]$st.isMismatch }
+                if ($st.status) { $script:updateStatus = [string]$st.status }
+            } else {
+                return
+            }
+        } catch {}
+    }
+
+    $tarShort = Get-ShortBuildTag $script:targetVer
+    if ($script:updateStatus -eq "downloading" -or $script:updateStatus -eq "installing") {
+        Set-SafeTrayTooltip "🔄업데이트중: $($script:currentVer) -> $tarShort"
+    } elseif ($script:isMismatch) {
+        Set-SafeTrayTooltip "⚠️버전불일치! 현재:$($script:currentVer) / 최신:$tarShort"
+    } else {
+        if ($script:aiEnabled) {
+            Set-SafeTrayTooltip "eBro AI 에이전트 $($script:currentVer) (최신·정상)"
+        } else {
+            Set-SafeTrayTooltip "eBro 에이전트 $($script:currentVer) (최신·정상)"
+        }
+    }
+
+    if ($null -ne $script:mVerInfo) {
+        if ($script:isMismatch) {
+            $script:mVerInfo.Text = "⚠️ 버전 불일치: 현재 $($script:currentVer) / 최신 $($script:targetVer)"
+        } else {
+            $script:mVerInfo.Text = "버전 정보: $($script:currentVer) (최신 버전 일치)"
+        }
+    }
+}
+
+Sync-AgentVersionStatus $true
 $notify.Visible = $true
 
 # 📌 Windows 11 작업표시줄 숨김 트레이(^) 자동 수납 방지: 시계 옆 항상 표시(IsPromoted=1) 자동 등록
@@ -129,7 +197,7 @@ function Ensure-TrayIconPromoted {
 Ensure-TrayIconPromoted | Out-Null
 
 function Open-Studio {
-    $studioHwnd = [StudioWindowManager]::FindStudioWindow()
+    $studioHwnd = [StudioWindowManager]::FindStudioWindow($false)
     if ($studioHwnd -ne [IntPtr]::Zero) {
         # 창이 이미 존재하면 (트레이로 숨겨져 있거나 최소화되어 있어도) 즉시 복원 및 화면 최상단 활성화
         [StudioWindowManager]::ShowWindow($studioHwnd, 9) | Out-Null # SW_RESTORE = 9
@@ -154,7 +222,21 @@ function Open-Studio {
 }
 
 function Open-Archive {
-    $dir = "C:\eBroAgent\문서고"
+    $tCode = "GIYEONLIFT"
+    if (Test-Path -LiteralPath $policyPath) {
+        try {
+            $pJson = Get-Content -LiteralPath $policyPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($pJson.tenantCode) {
+                $rawCode = ([string]$pJson.tenantCode).Trim().ToUpper() -replace '[^A-Z0-9_-]', ''
+                if ($rawCode -in @("GIYEONLIFT", "GIYEUN", "GIYUEN", "KIYUEN", "GIYEON")) {
+                    $tCode = "GIYEONLIFT"
+                } elseif ($rawCode) {
+                    $tCode = $rawCode
+                }
+            }
+        } catch {}
+    }
+    $dir = Join-Path "C:\eBroAgent\문서고" $tCode
     if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     Start-Process "explorer.exe" $dir
 }
@@ -169,7 +251,26 @@ $notify.add_DoubleClick({
 
 $menu = New-Object System.Windows.Forms.ContextMenuStrip
 
-$mStudio = $menu.Items.Add("eBro AI Studio 열기")
+$script:mVerInfo = $menu.Items.Add("버전 정보: $($script:currentVer) (최신 버전 일치)")
+$script:mVerInfo.Font = New-Object System.Drawing.Font($menu.Font, [System.Drawing.FontStyle]::Bold)
+$script:mVerInfo.add_Click({
+    try {
+        Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:$Port/api/check-update" -TimeoutSec 3 | Out-Null
+        Sync-AgentVersionStatus $true
+    } catch {}
+})
+
+$mCheckUpdate = $menu.Items.Add("최신 버전 확인 및 즉시 업데이트")
+$mCheckUpdate.add_Click({
+    try {
+        Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:$Port/api/check-update" -TimeoutSec 3 | Out-Null
+        Sync-AgentVersionStatus $true
+    } catch {}
+})
+
+$menu.Items.Add("-") | Out-Null
+
+$mStudio = $menu.Items.Add("eBro AI 스튜디오 열기")
 $mStudio.Font = New-Object System.Drawing.Font($menu.Font, [System.Drawing.FontStyle]::Bold)
 $mStudio.Visible = $script:aiEnabled
 $mStudio.add_Click({ Open-Studio })
@@ -215,7 +316,7 @@ $mErp.add_Click({
     Start-Process $targetUrl 
 })
 
-$mFolder = $menu.Items.Add("Local Archive (문서고)")
+$mFolder = $menu.Items.Add("로컬 문서고 열기")
 $mFolder.add_Click({ Open-Archive })
 
 $menu.Items.Add("-") | Out-Null
@@ -225,8 +326,9 @@ $appContext = New-Object System.Windows.Forms.ApplicationContext
 $script:userRequestedExit = $false
 $script:lastRestartTick = [DateTime]::MinValue
 $script:policyCheckTick = 0
+$script:promoteTick = 0
 
-$mExit = $menu.Items.Add("종료 (Exit eBro Agent)")
+$mExit = $menu.Items.Add("에이전트 종료")
 $mExit.add_Click({
     $script:userRequestedExit = $true
     $notify.Visible = $false
@@ -236,38 +338,45 @@ $mExit.add_Click({
 })
 
 $notify.ContextMenuStrip = $menu
+Sync-AgentVersionStatus $true
 
 # 백그라운드 데몬 기동 및 핫패치 시 윈도우 풍선 알림(ShowBalloonTip)으로 업무 화면을 방해하지 않음 (무소음 트레이 상주)
 $script:hasShownTip = $true
 
-# 350ms 주기 모니터링 타이머: 에이전트 무중단 Watchdog 자가 복구 & 정책 실시간 반영 & 스튜디오 창 최소화 시 트레이 수납
+# 750ms 주기 모니터링 타이머: 에이전트 무중단 Watchdog 자가 복구 & mtime 기반 정책/버전 감지 & 스튜디오 창 최소화 시 트레이 수납
 $timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = 350
+$timer.Interval = 750
 $timer.add_Tick({
     if ($script:userRequestedExit) { return }
 
-    # 0. 테넌트 정책(agentAiEnabled) 변경 실시간 감지 및 Windows 11 트레이 고정(IsPromoted=1) 보장 (약 2초 주기)
+    # 0. 테넌트 정책 및 버전 상태는 파일 mtime 변경 시에만 파싱 (~2.25초 주기)
     $script:policyCheckTick++
-    if ($script:policyCheckTick -ge 6) {
+    if ($script:policyCheckTick -ge 3) {
         $script:policyCheckTick = 0
-        Ensure-TrayIconPromoted | Out-Null
         if (Test-Path -LiteralPath $policyPath) {
             try {
-                $pJson = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
-                if ($null -ne $pJson.agentAiEnabled) {
-                    $newAi = [bool]$pJson.agentAiEnabled
-                    if ($newAi -ne $script:aiEnabled) {
-                        $script:aiEnabled = $newAi
-                        $mStudio.Visible = $script:aiEnabled
-                        if ($script:aiEnabled) {
-                            $notify.Text = "eBro AI Agent (Port: $Port)"
-                        } else {
-                            $notify.Text = "eBro Agent - 업무 지원 모드 (Port: $Port)"
+                $pMtime = [System.IO.File]::GetLastWriteTimeUtc($policyPath)
+                if ($pMtime -ne $script:lastPolicyMtime) {
+                    $script:lastPolicyMtime = $pMtime
+                    $pJson = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
+                    if ($null -ne $pJson.agentAiEnabled) {
+                        $newAi = [bool]$pJson.agentAiEnabled
+                        if ($newAi -ne $script:aiEnabled) {
+                            $script:aiEnabled = $newAi
+                            $mStudio.Visible = $script:aiEnabled
                         }
                     }
                 }
             } catch {}
         }
+        Sync-AgentVersionStatus $false
+    }
+
+    # 0-1. Windows 11 트레이 고정(IsPromoted=1) 보장 (~60초 주기)
+    $script:promoteTick++
+    if ($script:promoteTick -ge 80) {
+        $script:promoteTick = 0
+        Ensure-TrayIconPromoted | Out-Null
     }
 
     # 1. 부모 Agent 프로세스 감시 및 무중단 Watchdog 자동 복구
@@ -288,8 +397,8 @@ $timer.add_Tick({
         return
     }
 
-    # 2. 스튜디오 창 감시: 사용자가 창 우측 상단의 최소화(_) 버튼을 클릭하면 작업표시줄에서 숨김 (SW_HIDE)
-    $studioHwnd = [StudioWindowManager]::FindStudioWindow()
+    # 2. 스튜디오 창 감시: 보이는 창만 대상으로 최소화(_) 클릭 시 작업표시줄에서 숨김 (SW_HIDE)
+    $studioHwnd = [StudioWindowManager]::FindStudioWindow($true)
     if ($studioHwnd -ne [IntPtr]::Zero) {
         if ([StudioWindowManager]::IsIconic($studioHwnd)) {
             # SW_HIDE = 0 : 작업표시줄 버튼 및 창을 화면에서 완전히 숨김!

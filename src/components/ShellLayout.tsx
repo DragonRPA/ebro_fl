@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from '../manual/ManualContext';
@@ -50,6 +50,29 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const prevPageTitle = prevPageId ? FL_MANUAL_REGISTRY[prevPageId]?.pageTitle || '' : '';
   const nextPageTitle = nextPageId ? FL_MANUAL_REGISTRY[nextPageId]?.pageTitle || '' : '';
+
+  const rawCiUrl = (tenantProfile.ciUrl || tenantProfile.logoUrl || '').trim();
+  const [ciFallbackStage, setCiFallbackStage] = useState<'PRIMARY' | 'HUB' | 'HIDDEN'>('PRIMARY');
+
+  useEffect(() => {
+    setCiFallbackStage('PRIMARY');
+  }, [rawCiUrl]);
+
+  const resolvedCiSrc = useMemo(() => {
+    if (!rawCiUrl || ciFallbackStage === 'HIDDEN') return '';
+    if (ciFallbackStage === 'HUB' && rawCiUrl.startsWith('/')) {
+      return `https://ebro.run${rawCiUrl}`;
+    }
+    return rawCiUrl;
+  }, [rawCiUrl, ciFallbackStage]);
+
+  const handleCiImageError = () => {
+    if (ciFallbackStage === 'PRIMARY' && rawCiUrl.startsWith('/')) {
+      setCiFallbackStage('HUB');
+    } else {
+      setCiFallbackStage('HIDDEN');
+    }
+  };
 
   const openMyModal = (initialTab: 'INFO' | 'PASSWORD' = 'INFO') => {
     if (!currentUser) return;
@@ -152,33 +175,55 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             style={{
               padding: 'var(--space-sidebar-head-pad-y) var(--space-sidebar-head-pad-x)',
               borderBottom: '1px solid var(--border-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 'var(--space-inline-gap)',
             }}
           >
-            <div
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: 'var(--text-muted)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {tenantProfile.corporateName}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {tenantProfile.corporateName}
+              </div>
+              <div
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  color: 'var(--text-main)',
+                  marginTop: '2px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {tenantProfile.displayName || '이브로 지게차'}
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: '15px',
-                fontWeight: 800,
-                color: 'var(--text-main)',
-                marginTop: '2px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {tenantProfile.displayName || '이브로 지게차'}
-            </div>
+            {resolvedCiSrc && (
+              <img
+                src={resolvedCiSrc}
+                alt="회사 로고"
+                onError={handleCiImageError}
+                style={{
+                  height: '34px',
+                  width: 'auto',
+                  maxWidth: '68px',
+                  objectFit: 'contain',
+                  objectPosition: 'right center',
+                  flexShrink: 0,
+                  display: 'block',
+                }}
+              />
+            )}
           </div>
 
           <nav

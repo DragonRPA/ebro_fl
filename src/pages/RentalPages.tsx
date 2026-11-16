@@ -6,9 +6,11 @@ import {
   addDaysIso,
   calculateRentalProRataForMonth,
   completeFulfillment,
+  computeUnitDepreciationAsOf,
   createFinanceLeaseWithAsset,
   executeAccountTransfer,
   executeRentalExchange,
+  listMonthsBetween,
   recordRentalMaintenance,
   sortUnitsFifo,
 } from '../services/domainEngine';
@@ -51,24 +53,6 @@ import {
   type PaymentCycleType,
   type PaymentMethodType,
 } from '../types/domain';
-
-function listMonthsBetween(fromYm: string, toYm: string): string[] {
-  if (!fromYm || !toYm || fromYm > toYm) return [];
-  const [fy, fm] = fromYm.split('-').map(Number);
-  const [ty, tm] = toYm.split('-').map(Number);
-  const out: string[] = [];
-  let y = fy;
-  let m = fm;
-  while (y < ty || (y === ty && m <= tm)) {
-    out.push(`${y}-${String(m).padStart(2, '0')}`);
-    m++;
-    if (m > 12) {
-      m = 1;
-      y++;
-    }
-  }
-  return out;
-}
 
 export const RentalContractsPage: React.FC = () => {
   const {
@@ -171,33 +155,38 @@ export const RentalContractsPage: React.FC = () => {
       status: 'DRAFT',
       specialTerms: specialTerms.trim() || null,
     };
-    const line: FlContractLine = {
+    const lineUnitCount = item.managementType === 'SERIAL' ? cleanQty : 1;
+    const perLineQty = item.managementType === 'SERIAL' ? 1 : cleanQty;
+    const perLineSupply =
+      item.managementType === 'SERIAL' ? Math.round(monthlyPriceKrw || 0) : monthlySupply;
+    const perLineVat = Math.round(perLineSupply * 0.1);
+    const lines: FlContractLine[] = Array.from({ length: lineUnitCount }, (_, idx) => ({
       id: newId('CL'),
       tenantId: DEFAULT_TENANT_ID,
       contractId: ctrId,
-      lineNo: 1,
+      lineNo: idx + 1,
       itemId: item.id,
       sku: item.sku,
       itemName: item.name,
       itemCategory: item.itemCategory,
       managementType: item.managementType,
-      quantity: cleanQty,
+      quantity: perLineQty,
       fulfilledQty: 0,
       unitPriceKrw: Math.round(monthlyPriceKrw || 0),
-      supplyAmountKrw: monthlySupply,
-      vatAmountKrw: vat,
-      totalAmountKrw: monthlySupply + vat,
+      supplyAmountKrw: perLineSupply,
+      vatAmountKrw: perLineVat,
+      totalAmountKrw: perLineSupply + perLineVat,
       lineStatus: 'ACTIVE',
       effectiveStartDate: startDate,
       effectiveEndDate: endDate,
-    };
+    }));
     setBusy(true);
     try {
       await execDbMutation('렌탈 계약 등록', () =>
         flSupabase.from('contracts').insert(camelToSnakeRow({ ...ctr }))
       );
       await execDbMutation('렌탈 계약 품목 등록', () =>
-        flSupabase.from('contract_lines').insert(camelToSnakeRow({ ...line }))
+        flSupabase.from('contract_lines').insert(lines.map((ln) => camelToSnakeRow({ ...ln })))
       );
       setSelectedId(ctrId);
       await refreshAll();
@@ -232,10 +221,21 @@ export const RentalContractsPage: React.FC = () => {
       notifyToast('먼저 계약 확정을 진행해 주세요.', 'error');
       return;
     }
-    const targetLines =
+    const requestedLineIds = new Set(
+      datasets.fulfillments
+        .filter(
+          (f) =>
+            f.contractId === selectedContract.id &&
+            f.actionType === actionType &&
+            f.status === 'REQUESTED'
+        )
+        .map((f) => f.contractLineId)
+    );
+    const targetLines = (
       actionType === '렌탈출고'
         ? selectedLines.filter((l) => l.lineStatus === 'ACTIVE' && l.fulfilledQty < l.quantity)
-        : selectedLines.filter((l) => l.lineStatus === 'FULFILLED' && Boolean(l.assignedUnitId));
+        : selectedLines.filter((l) => l.lineStatus === 'FULFILLED' && Boolean(l.assignedUnitId))
+    ).filter((l) => !requestedLineIds.has(l.id));
     if (targetLines.length === 0) {
       notifyToast(
         actionType === '렌탈출고'
@@ -247,11 +247,13 @@ export const RentalContractsPage: React.FC = () => {
     }
     setBusy(true);
     try {
+      const baseTs = Date.now().toString(36).toUpperCase();
+      let seq = 1;
       for (const line of targetLines) {
         const ful: FlFulfillment = {
           id: newId('FUL'),
           tenantId: DEFAULT_TENANT_ID,
-          fulfillmentNo: `FUL-${Date.now().toString(36).toUpperCase()}`,
+          fulfillmentNo: `FUL-${baseTs}-${seq++}`,
           fulfillmentDomain: 'RENTAL',
           actionType,
           contractId: selectedContract.id,
@@ -268,6 +270,14 @@ export const RentalContractsPage: React.FC = () => {
         };
         await execDbMutation(`${actionType} 의뢰 발행`, () =>
           flSupabase.from('fulfillments').insert(camelToSnakeRow({ ...ful }))
+        );
+      }
+      if (actionType === '렌탈출고' && selectedContract.status === 'ACTIVE') {
+        await execDbMutation('계약 출고진행 상태 갱신', () =>
+          flSupabase
+            .from('contracts')
+            .update({ status: 'FULFILLING', updated_at: new Date().toISOString() })
+            .eq('id', selectedContract.id)
         );
       }
       await refreshAll();
@@ -613,9 +623,20 @@ export const RentalAssetsPage: React.FC = () => {
     [datasets.inventoryUnits]
   );
 
+  const curYm = today.slice(0, 7);
+  const depByUnitId = useMemo(() => {
+    const map = new Map<string, { accumDep: number; endingBookValue: number }>();
+    for (const u of rentalAssets) {
+      const res = computeUnitDepreciationAsOf(u, curYm, curYm, datasets.stockMovements);
+      map.set(u.id, { accumDep: res.accumDep, endingBookValue: res.endingBookValue });
+    }
+    return map;
+  }, [curYm, datasets.stockMovements, rentalAssets]);
+
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(rentalAssets[0]?.id || null);
   const selectedAsset =
     rentalAssets.find((u) => u.id === selectedAssetId) || rentalAssets[0] || null;
+  const selectedAssetDep = selectedAsset ? depByUnitId.get(selectedAsset.id) : undefined;
   const [transferDate, setTransferDate] = useState(today);
 
   // 전대자산 등록 모달 상태
@@ -814,14 +835,19 @@ export const RentalAssetsPage: React.FC = () => {
                   header: '상각누계',
                   width: 115,
                   align: 'right',
-                  render: (u) => formatMoney(u.accumulatedDepreciationKrw),
+                  render: (u) =>
+                    formatMoney(depByUnitId.get(u.id)?.accumDep ?? u.accumulatedDepreciationKrw),
                 },
                 {
                   key: 'bv',
                   header: '장부가액',
                   width: 120,
                   align: 'right',
-                  render: (u) => <span style={{ fontWeight: 700 }}>{formatMoney(u.bookValueKrw)}</span>,
+                  render: (u) => (
+                    <span style={{ fontWeight: 700 }}>
+                      {formatMoney(depByUnitId.get(u.id)?.endingBookValue ?? u.bookValueKrw)}
+                    </span>
+                  ),
                 },
                 {
                   key: 'hours',
@@ -865,7 +891,9 @@ export const RentalAssetsPage: React.FC = () => {
                 },
                 {
                   label: '승계 장부가액',
-                  value: selectedAsset ? formatMoney(selectedAsset.bookValueKrw) : '₩0',
+                  value: selectedAsset
+                    ? formatMoney(selectedAssetDep?.endingBookValue ?? selectedAsset.bookValueKrw)
+                    : '₩0',
                   tone: 'primary',
                 },
               ]}
@@ -890,8 +918,15 @@ export const RentalAssetsPage: React.FC = () => {
                     })}
                     onExecuteDirect={async () => {
                       if (!currentUser) return;
+                      const exactUnit: FlInventoryUnit = {
+                        ...selectedAsset,
+                        accumulatedDepreciationKrw:
+                          selectedAssetDep?.accumDep ?? selectedAsset.accumulatedDepreciationKrw,
+                        bookValueKrw:
+                          selectedAssetDep?.endingBookValue ?? selectedAsset.bookValueKrw,
+                      };
                       await executeAccountTransfer({
-                        unit: selectedAsset,
+                        unit: exactUnit,
                         toDomain: '유통재고',
                         effectiveDate: transferDate,
                         actorId: currentUser.id,
@@ -1551,13 +1586,27 @@ export const RentalMaintenancePage: React.FC = () => {
   const selectedUnit =
     rentalAssets.find((u) => u.id === (unitId || rentalAssets[0]?.id)) || null;
 
+  const maintSummary = useMemo(() => {
+    const partUnits = partLots.filter((u) => u.itemCategory === '부품');
+    const consUnits = partLots.filter((u) => u.itemCategory === '소모품');
+    return {
+      partLots: partUnits.length,
+      partQty: partUnits.reduce((s, u) => s + Number(u.qtyOnHand || 0), 0),
+      consLots: consUnits.length,
+      consQty: consUnits.reduce((s, u) => s + Number(u.qtyOnHand || 0), 0),
+      maintCount: datasets.rentalMaintenances.length,
+      maintCost: datasets.rentalMaintenances.reduce((s, m) => s + Number(m.totalCostKrw || 0), 0),
+    };
+  }, [datasets.rentalMaintenances, partLots]);
+
   const handleSave = async () => {
     if (!currentUser || !selectedUnit) {
       notifyToast('대상 렌탈자산을 선택해 주세요.', 'error');
       return;
     }
     const chosenPart = partLots.find((p) => p.id === partUnitId);
-    const vendor = externalVendors.find((v) => v.id === vendorPartnerId) || null;
+    const resolvedVendorId = vendorPartnerId || externalVendors[0]?.id || '';
+    const vendor = externalVendors.find((v) => v.id === resolvedVendorId) || null;
     const contract = selectedUnit.currentContractId
       ? datasets.contracts.find((c) => c.id === selectedUnit.currentContractId) || null
       : null;
@@ -1741,6 +1790,30 @@ export const RentalMaintenancePage: React.FC = () => {
         rowKey={(m) => m.id}
         maxHeight="420px"
       />
+
+      <ConservationBar
+        items={[
+          {
+            label: '가용 부품 재고',
+            value: `${maintSummary.partLots.toLocaleString('ko-KR')}로트 · ${maintSummary.partQty.toLocaleString('ko-KR')}개`,
+            tone: 'primary',
+          },
+          {
+            label: '가용 소모품 재고',
+            value: `${maintSummary.consLots.toLocaleString('ko-KR')}로트 · ${maintSummary.consQty.toLocaleString('ko-KR')}개`,
+            tone: 'primary',
+          },
+          {
+            label: '정비 누적건수',
+            value: `${maintSummary.maintCount.toLocaleString('ko-KR')}건`,
+          },
+          {
+            label: '총 정비원가',
+            value: formatMoney(maintSummary.maintCost),
+            tone: 'warning',
+          },
+        ]}
+      />
     </div>
   );
 };
@@ -1773,17 +1846,31 @@ export const RentalPerformancePage: React.FC = () => {
       }
     }
 
+    for (const b of datasets.billings) {
+      if (b.status === 'CANCELLED' || b.billingDomain !== 'RENTAL') continue;
+      if (!months.includes(b.billingYm)) continue;
+      for (const bl of b.lines || []) {
+        if ((bl.maintId || bl.dispatchId) && bl.unitId && !bl.contractLineId) {
+          revByUnit.set(bl.unitId, (revByUnit.get(bl.unitId) || 0) + Math.round(bl.supplyAmountKrw));
+        }
+      }
+    }
+
     return rentalAssets.map((u) => {
       const revenueKrw = revByUnit.get(u.id) || 0;
-      const monthlyDep =
-        u.ownershipDomain === '렌탈자산' && u.depreciationMonths > 0
-          ? Math.round(Math.max(0, u.unitCostKrw - u.residualValueKrw) / u.depreciationMonths)
-          : 0;
-      const depKrw = monthlyDep * months.length;
+      const depKrw = computeUnitDepreciationAsOf(u, startYm, endYm, datasets.stockMovements).periodDep;
+      const activeSubleaseMonths = months.filter((m) => m >= u.acquisitionDate.slice(0, 7)).length;
       const subleaseKrw =
-        u.ownershipDomain === '전대자산' ? Math.round(u.subleaseMonthlyCostKrw * months.length) : 0;
+        u.ownershipDomain === '전대자산'
+          ? Math.round(u.subleaseMonthlyCostKrw) * activeSubleaseMonths
+          : 0;
       const maintKrw = datasets.rentalMaintenances
-        .filter((m) => m.unitId === u.id && months.includes(m.effectiveDate.slice(0, 7)))
+        .filter(
+          (m) =>
+            m.status === 'COMPLETED' &&
+            m.unitId === u.id &&
+            months.includes(m.effectiveDate.slice(0, 7))
+        )
         .reduce((s, m) => s + m.totalCostKrw, 0);
 
       const leaseInterestKrw = datasets.financeLeases

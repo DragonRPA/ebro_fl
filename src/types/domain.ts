@@ -159,6 +159,14 @@ export type UnitStatus = '보유중' | '출고대기' | '대여중' | '정비중
 export type CurrencyCode = 'KRW' | 'USD' | 'CNY' | 'EUR' | 'JPY';
 export type DocumentTemplateType = '견적서_유통' | '견적서_렌탈' | '계약서_유통' | '계약서_렌탈' | '거래명세서';
 
+export interface TenantR2Config {
+  r2AccountId?: string;
+  r2BucketName?: string;
+  r2AccessKeyId?: string;
+  r2SecretAccessKey?: string;
+  r2PublicDomain?: string;
+}
+
 export interface OfficialMailConfig {
   smtpProvider?: 'GMAIL' | 'NAVER' | 'OUTLOOK' | 'CUSTOM';
   smtpHost?: string;
@@ -173,6 +181,10 @@ export interface OfficialMailConfig {
 export interface TenantFeatures {
   bankMatchingEnabled?: boolean;
   autoTaxInvoice?: boolean;
+  agentAiEnabled?: boolean;
+  tenantSupabaseUrl?: string;
+  customDomain?: string;
+  r2Config?: TenantR2Config;
   officialMailConfig?: OfficialMailConfig;
   specialFeatures?: string[];
   [key: string]: unknown;
@@ -193,8 +205,12 @@ export interface TenantProfile {
   tel: string;
   fax: string;
   taxEmail: string;
+  ciUrl?: string;
+  logoUrl?: string;
   stampImageUrl?: string;
   stampBase64?: string;
+  targetRepo?: string;
+  r2Config?: TenantR2Config;
   allowedPages: string[];
   hiddenPages: string[];
   features: TenantFeatures;
@@ -1019,6 +1035,10 @@ export interface BillingLine {
   vatAmountKrw: number;
   unitId?: string;
   contractLineId?: string;
+  fulfillmentId?: string;
+  maintId?: string;
+  dispatchId?: string;
+  billingYmTag?: string;
 }
 
 export interface FlBilling {

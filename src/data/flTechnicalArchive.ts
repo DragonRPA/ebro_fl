@@ -147,7 +147,8 @@ import {
   HELI_CPD25_GB2LI_BACKUP_SPEC,
 } from './flBackupProductSpecs';
 
-const R2_BASE = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/FL_doc';
+const buildFlDocR2Url = (fileName: string): string =>
+  `/api/r2?action=download&key=${encodeURIComponent(`FL_doc/${fileName}`)}&tenantCode=EBRO_FL&redirect=1`;
 
 export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
   {
@@ -215,7 +216,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '12 KB',
         issuedDate: '2026-03-15',
-        r2Url: `${R2_BASE}/HELI_CPD25_G2_Lithium_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('HELI_CPD25_G2_Lithium_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/HELI_CPD25_G2_Lithium_SpecSheet.pdf',
         summary: 'VDI 2198 국제규격 기준 CPD25-GB2Li 치수·하중·80V 리튬인산철 배터리 사양 및 일일/정기 점검 기준 수록'
       }
@@ -285,7 +286,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 4,
         fileSizeLabel: '710 KB',
         issuedDate: '2025-11-20',
-        r2Url: `${R2_BASE}/BYD_ECB30_Specification.pdf`,
+        r2Url: buildFlDocR2Url('BYD_ECB30_Specification.pdf'),
         localUrl: '/archive/fl-docs/BYD_ECB30_Specification.pdf',
         summary: '비와이디 본사 공식 발행 ECB30/ECB35 시리즈 카탈로그 원본. 2단/3단 마스트 높이별 잔여하중표 및 배터리 사양 수록'
       }
@@ -353,7 +354,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '12 KB',
         issuedDate: '2026-02-10',
-        r2Url: `${R2_BASE}/HANGCHA_CPCD35_XRG2_Diesel_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('HANGCHA_CPCD35_XRG2_Diesel_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/HANGCHA_CPCD35_XRG2_Diesel_SpecSheet.pdf',
         summary: 'CPCD35-XRG2 3.5톤 디젤지게차 치수·인상능력·Stage-V 엔진 제원 및 DPF 재생 주기 관리 수록'
       }
@@ -417,7 +418,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '11 KB',
         issuedDate: '2026-03-01',
-        r2Url: `${R2_BASE}/HANGCHA_CPD25_XEY2_Lithium_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('HANGCHA_CPD25_XEY2_Lithium_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/HANGCHA_CPD25_XEY2_Lithium_SpecSheet.pdf',
         summary: 'CATL 리튬인산철 셀과 영구자석 동기모터를 결합한 항차 XE시리즈 2.5톤 표준 제원서'
       }
@@ -481,7 +482,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 2,
         fileSizeLabel: '821 KB',
         issuedDate: '2025-09-01',
-        r2Url: `${R2_BASE}/EP_EPL1531_Pallet_Truck_Specification.pdf`,
+        r2Url: buildFlDocR2Url('EP_EPL1531_Pallet_Truck_Specification.pdf'),
         localUrl: '/archive/fl-docs/EP_EPL1531_Pallet_Truck_Specification.pdf',
         summary: 'EPL 시리즈 전동 파레트트럭 VDI 2198 치수 도면 및 플러그앤플레이 리튬배터리 상세 규격표 원본'
       },
@@ -495,7 +496,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '11 KB',
         issuedDate: '2026-03-20',
-        r2Url: `${R2_BASE}/EP_EPL205Z_EFL252_Lithium_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('EP_EPL205Z_EFL252_Lithium_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/EP_EPL205Z_EFL252_Lithium_SpecSheet.pdf',
         summary: 'EPL205Z 입승식 전동 파레트트럭과 EFL252 카운터밸런스 리튬지게차 표준 제원 및 일일점검 수칙'
       }
@@ -562,7 +563,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '12 KB',
         issuedDate: '2026-01-20',
-        r2Url: `${R2_BASE}/HYUNDAI_25B9U_Electric_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('HYUNDAI_25B9U_Electric_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/HYUNDAI_25B9U_Electric_SpecSheet.pdf',
         summary: '현대 9U 시리즈 25B-9U 전동지게차 치수·회전반경·ZAPI 듀얼 AC 모터 사양 및 배터리 관리 지침'
       }
@@ -628,7 +629,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 1,
         fileSizeLabel: '12 KB',
         issuedDate: '2026-01-25',
-        r2Url: `${R2_BASE}/HYUNDAI_30D9S_Diesel_SpecSheet.pdf`,
+        r2Url: buildFlDocR2Url('HYUNDAI_30D9S_Diesel_SpecSheet.pdf'),
         localUrl: '/archive/fl-docs/HYUNDAI_30D9S_Diesel_SpecSheet.pdf',
         summary: '현대 9S 시리즈 30D-9S 3톤 디젤지게차 치수·인상속도·Stage-V 엔진 사양 및 순정 소모품 교체 주기'
       }
@@ -695,7 +696,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 12,
         fileSizeLabel: '2.21 MB',
         issuedDate: '2025-10-12',
-        r2Url: `${R2_BASE}/DOOSAN_7Series_Diesel_D25S7_D30S7_Brochure.pdf`,
+        r2Url: buildFlDocR2Url('DOOSAN_7Series_Diesel_D25S7_D30S7_Brochure.pdf'),
         localUrl: '/archive/fl-docs/DOOSAN_7Series_Diesel_D25S7_D30S7_Brochure.pdf',
         summary: '두산 7시리즈 디젤지게차 12페이지 카탈로그 및 VDI 상세 제원표 원본 · G2 엔진·ODB 브레이크·마스트 조견표 포함'
       }
@@ -760,7 +761,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 136,
         fileSizeLabel: '13.20 MB',
         issuedDate: '2025-05-15',
-        r2Url: `${R2_BASE}/CLARK_GTS25_30_33_Operator_Manual.pdf`,
+        r2Url: buildFlDocR2Url('CLARK_GTS25_30_33_Operator_Manual.pdf'),
         summary: '클라크 본사 발행 136페이지 전체 운전·정비 매뉴얼 원본. 안전운전 수칙, 계기판 경고등 해설, 일상점검 절차, 윤활 도표 완비'
       }
     ]
@@ -825,7 +826,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 16,
         fileSizeLabel: '722 KB',
         issuedDate: '2025-12-01',
-        r2Url: `${R2_BASE}/TOYOTA_8FB25_Electric_Brochure.pdf`,
+        r2Url: buildFlDocR2Url('TOYOTA_8FB25_Electric_Brochure.pdf'),
         localUrl: '/archive/fl-docs/TOYOTA_8FB25_Electric_Brochure.pdf',
         summary: '도요타 머티리얼 핸들링 공식 발행 8FB 전동지게차 16페이지 브로슈어 원본 · SAS 전도방지 기술 및 전 모델 상세 제원 수록'
       }
@@ -888,7 +889,7 @@ export const FL_TECHNICAL_ARCHIVE: FlModelTechnicalSpec[] = [
         pageCount: 28,
         fileSizeLabel: '7.52 MB',
         issuedDate: '2025-11-10',
-        r2Url: `${R2_BASE}/TOYOTA_8FG_8FD30_Diesel_Brochure.pdf`,
+        r2Url: buildFlDocR2Url('TOYOTA_8FG_8FD30_Diesel_Brochure.pdf'),
         summary: '도요타 8시리즈 내연기관 지게차 28페이지 마스터 카탈로그 원본. 8FD25/8FD30 전 사양, 마스트별 인상하중표 및 안전사양 수록'
       }
     ]

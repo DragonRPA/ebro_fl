@@ -7,6 +7,7 @@ import {
   flSupabase,
   newId,
   registerErrorModalHandler,
+  selectAllFlRows,
   snakeToCamelRow,
 } from './supabase';
 import {
@@ -17,7 +18,14 @@ import {
   verifyPassword,
   verifySessionUser,
 } from '../utils/cryptoVault';
-import { startGlobalAgentHealthMonitor, subscribeAgentStatus, type AgentHealthInfo } from '../services/agentService';
+import {
+  setActiveAgentTenantCode,
+  startGlobalAgentHealthMonitor,
+  subscribeAgentStatus,
+  syncTenantPolicyToAgent,
+  type AgentHealthInfo,
+} from '../services/agentService';
+import { setR2TenantContext } from '../services/businessLicenseOcrService';
 import {
   ALL_FL_PAGE_IDS,
   FL_MENU_GROUPS,
@@ -297,12 +305,36 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const fetchTenantProfile = useCallback(async () => {
     const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
     const sub = host.includes('.ebro.run') ? host.split('.')[0] : 'fl-demo';
+    const tenantQuery =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('tenant')?.trim().toLowerCase() || ''
+        : '';
     const res = await centralSupabase.from('tenants').select('*');
     if (!res.error && Array.isArray(res.data)) {
+      const flRows = res.data.filter(
+        (t: Record<string, unknown>) => String(t.solutionType || '').toUpperCase() === 'FL'
+      );
       const matched =
-        res.data.find((t: Record<string, unknown>) => t.subdomain === sub && t.solutionType === 'FL') ||
+        (tenantQuery
+          ? flRows.find(
+              (t: Record<string, unknown>) =>
+                String(t.id || '').toLowerCase() === tenantQuery ||
+                String(t.tenantCode || '').toLowerCase() === tenantQuery ||
+                String(t.subdomain || '').toLowerCase() === tenantQuery
+            )
+          : undefined) ||
+        (host
+          ? flRows.find((t: Record<string, unknown>) => {
+              const featuresObj = t.features as Record<string, unknown> | undefined;
+              const customDomain = String(featuresObj?.customDomain || '').trim().toLowerCase();
+              return Boolean(customDomain) && customDomain === host;
+            })
+          : undefined) ||
+        flRows.find((t: Record<string, unknown>) => String(t.subdomain || '').toLowerCase() === sub) ||
         res.data.find((t: Record<string, unknown>) => t.id === DEFAULT_TENANT_ID);
       if (matched) {
+        const rawCiUrl = typeof matched.ciUrl === 'string' ? matched.ciUrl.trim() : '';
+        const rawLogoUrl = typeof matched.logoUrl === 'string' ? matched.logoUrl.trim() : '';
         setTenantProfile({
           id: String(matched.id || DEFAULT_TENANT_ID),
           tenantCode: String(matched.tenantCode || 'EBRO_FL'),
@@ -321,8 +353,12 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           tel: String(matched.tel || DEFAULT_TENANT_PROFILE.tel),
           fax: String(matched.fax || DEFAULT_TENANT_PROFILE.fax),
           taxEmail: String(matched.taxEmail || DEFAULT_TENANT_PROFILE.taxEmail),
+          ciUrl: rawCiUrl || undefined,
+          logoUrl: rawLogoUrl || undefined,
           stampImageUrl: matched.stampImageUrl ? String(matched.stampImageUrl) : undefined,
           stampBase64: matched.stampBase64 ? String(matched.stampBase64) : undefined,
+          targetRepo: matched.targetRepo ? String(matched.targetRepo) : undefined,
+          r2Config: ((matched.r2Config || (matched.features as Record<string, unknown> | undefined)?.r2Config) as TenantProfile['r2Config']) || undefined,
           allowedPages: Array.isArray(matched.allowedPages) && matched.allowedPages.length > 0
             ? matched.allowedPages
             : [...ALL_FL_PAGE_IDS],
@@ -335,6 +371,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const refreshAll = useCallback(async () => {
     const [
+      ,
       deptRes,
       usrRes,
       permRes,
@@ -365,40 +402,41 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       flsRes,
       flschRes,
     ] = await Promise.all([
-      flSupabase.from('departments').select('*').order('id'),
-      flSupabase.from('users').select('*').order('tier_level', { ascending: false }),
-      flSupabase.from('user_permissions').select('*'),
-      flSupabase.from('approval_policies').select('*').order('id'),
-      flSupabase.from('approval_requests').select('*').order('requested_at', { ascending: false }),
-      flSupabase.from('document_templates').select('*').order('id'),
-      flSupabase.from('partners').select('*').order('name'),
-      flSupabase.from('partner_sites').select('*').order('id'),
-      flSupabase.from('item_masters').select('*').order('item_category'),
-      flSupabase.from('catalog_packages').select('*').order('id'),
-      flSupabase.from('exchange_rates').select('*').order('rate_date', { ascending: false }).limit(2000),
-      flSupabase.from('purchases').select('*').order('effective_date', { ascending: false }),
-      flSupabase.from('purchase_lines').select('*'),
-      flSupabase.from('logistics_dispatches').select('*').order('dispatch_date', { ascending: false }),
-      flSupabase.from('ap_payables').select('*').order('accrual_date', { ascending: false }),
-      flSupabase.from('inventory_units').select('*').order('acquisition_date'),
-      flSupabase.from('stock_movements').select('*').order('effective_date', { ascending: false }),
-      flSupabase.from('quotations').select('*').order('quote_date', { ascending: false }),
-      flSupabase.from('contracts').select('*').order('contract_date', { ascending: false }),
-      flSupabase.from('contract_lines').select('*').order('line_no'),
-      flSupabase.from('fulfillments').select('*').order('created_at', { ascending: false }),
-      flSupabase.from('trade_aftercare_cases').select('*').order('effective_date', { ascending: false }),
-      flSupabase.from('rental_maintenances').select('*').order('effective_date', { ascending: false }),
-      flSupabase.from('asset_events').select('*').order('effective_date', { ascending: false }),
-      flSupabase.from('billings').select('*').order('billing_date', { ascending: false }),
-      flSupabase.from('collections').select('*').order('collection_date', { ascending: false }),
-      flSupabase.from('bank_transactions').select('*').order('tx_date', { ascending: false }),
-      flSupabase.from('finance_leases').select('*').order('start_date', { ascending: false }),
-      flSupabase.from('finance_lease_schedules').select('*').order('installment_no'),
+      fetchTenantProfile(),
+      selectAllFlRows('departments', { orderCol: 'id' }),
+      selectAllFlRows('users', { orderCol: 'tier_level', ascending: false }),
+      selectAllFlRows('user_permissions'),
+      selectAllFlRows('approval_policies', { orderCol: 'id' }),
+      selectAllFlRows('approval_requests', { orderCol: 'requested_at', ascending: false }),
+      selectAllFlRows('document_templates', { orderCol: 'id' }),
+      selectAllFlRows('partners', { orderCol: 'name' }),
+      selectAllFlRows('partner_sites', { orderCol: 'id' }),
+      selectAllFlRows('item_masters', { orderCol: 'item_category' }),
+      selectAllFlRows('catalog_packages', { orderCol: 'id' }),
+      selectAllFlRows('exchange_rates', { orderCol: 'rate_date', ascending: false }),
+      selectAllFlRows('purchases', { orderCol: 'effective_date', ascending: false }),
+      selectAllFlRows('purchase_lines'),
+      selectAllFlRows('logistics_dispatches', { orderCol: 'dispatch_date', ascending: false }),
+      selectAllFlRows('ap_payables', { orderCol: 'accrual_date', ascending: false }),
+      selectAllFlRows('inventory_units', { orderCol: 'acquisition_date' }),
+      selectAllFlRows('stock_movements', { orderCol: 'effective_date', ascending: false }),
+      selectAllFlRows('quotations', { orderCol: 'quote_date', ascending: false }),
+      selectAllFlRows('contracts', { orderCol: 'contract_date', ascending: false }),
+      selectAllFlRows('contract_lines', { orderCol: 'line_no' }),
+      selectAllFlRows('fulfillments', { orderCol: 'created_at', ascending: false }),
+      selectAllFlRows('trade_aftercare_cases', { orderCol: 'effective_date', ascending: false }),
+      selectAllFlRows('rental_maintenances', { orderCol: 'effective_date', ascending: false }),
+      selectAllFlRows('asset_events', { orderCol: 'effective_date', ascending: false }),
+      selectAllFlRows('billings', { orderCol: 'billing_date', ascending: false }),
+      selectAllFlRows('collections', { orderCol: 'collection_date', ascending: false }),
+      selectAllFlRows('bank_transactions', { orderCol: 'tx_date', ascending: false }),
+      selectAllFlRows('finance_leases', { orderCol: 'start_date', ascending: false }),
+      selectAllFlRows('finance_lease_schedules', { orderCol: 'installment_no' }),
     ]);
-    const hrHistRes = await flSupabase
-      .from('hr_histories')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const hrHistRes = await selectAllFlRows('hr_histories', {
+      orderCol: 'created_at',
+      ascending: false,
+    });
 
     const hrHistories = mapRows<FlHrHistory>(hrHistRes.data);
     const rawDepts = mapRows<FlDepartment>(deptRes.data, ['sortOrder']);
@@ -671,13 +709,13 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     }
-  }, []);
+  }, [fetchTenantProfile]);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        await Promise.all([fetchTenantProfile(), refreshAll()]);
+        await refreshAll();
       } finally {
         if (active) setIsLoading(false);
       }
@@ -685,7 +723,32 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => {
       active = false;
     };
-  }, [fetchTenantProfile, refreshAll]);
+  }, [refreshAll]);
+
+  useEffect(() => {
+    const ch = centralSupabase
+      .channel('fl-core-tenants-ci-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => {
+        void fetchTenantProfile();
+      })
+      .subscribe();
+    return () => {
+      void centralSupabase.removeChannel(ch);
+    };
+  }, [fetchTenantProfile]);
+
+  useEffect(() => {
+    const effectiveR2 = tenantProfile.r2Config || tenantProfile.features?.r2Config;
+    setActiveAgentTenantCode(tenantProfile.tenantCode);
+    setR2TenantContext({
+      tenantId: tenantProfile.id,
+      tenantCode: tenantProfile.tenantCode,
+      r2Config: effectiveR2,
+    });
+    if (agentOnline || tenantProfile.id) {
+      void syncTenantPolicyToAgent(tenantProfile);
+    }
+  }, [tenantProfile, agentOnline]);
 
   const loginWithCredentials = useCallback(
     async (loginId: string, password: string) => {

@@ -472,6 +472,93 @@ async function main() {
     await page.locator('[data-testid="prt-detail-nts-status"]').getByText('폐업 · 2023-10-19', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     console.log('[E2E 7i PASS] 거래처 관리 통장사본 modal, 결제/지급기일, 사업자휴폐업조회 버튼, 사업자상태(정상/폐업·일자) verified.');
 
+    // [E2E 7j] Verify Keep-Alive preservation of filters, sub-tabs, query results, and scroll across sidebar & back/forward navigation
+    const prtSearchInput = page.locator('input[placeholder="상호, 사업자등록번호, 대표자명"]').first();
+    const initialPartnerRows = await page.locator('[data-manual-id="prt-grid"] table tbody tr').count();
+    await prtSearchInput.fill('지게차코리아');
+    await page.waitForTimeout(150);
+    const filteredPartnerRows = await page.locator('[data-manual-id="prt-grid"] table tbody tr').count();
+    assert(
+      filteredPartnerRows >= 1 && filteredPartnerRows < initialPartnerRows,
+      `Expected filtered partner rows between 1 and ${initialPartnerRows - 1}, got ${filteredPartnerRows}`
+    );
+
+    await page.locator('aside nav button', { hasText: '환율 관리' }).first().click();
+    await page.waitForTimeout(200);
+    const fxSectionKeepAlive = page.locator('[data-manual-id="fx-chart"]');
+    await fxSectionKeepAlive.locator('button', { hasText: '유럽 유로' }).first().click();
+    await fxSectionKeepAlive.locator('button', { hasText: '1개월' }).first().click();
+    await fxSectionKeepAlive.getByText('관리 환율 1개월 추이 차트 · 유럽 유로', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await fxSectionKeepAlive.getByText('기준 단위: 1 유럽 유로 당 원화', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+
+    await page.locator('aside nav button', { hasText: '제원 카탈로그' }).first().click();
+    await page.waitForTimeout(200);
+    const partSearchInput = page.locator('input[placeholder="부품명, 품목코드, OEM 교차코드, 적용기종 검색"]').first();
+    await partSearchInput.waitFor({ state: 'visible', timeout: 5000 });
+    const initialPartRows = await page.locator('[data-manual-id="cat-detail"] table').first().locator('tbody tr').count();
+    await partSearchInput.fill('7.00-12');
+    await page.waitForTimeout(150);
+    const filteredPartRows = await page.locator('[data-manual-id="cat-detail"] table').first().locator('tbody tr').count();
+    assert(
+      filteredPartRows >= 1 && filteredPartRows < initialPartRows,
+      `Expected filtered parts rows between 1 and ${initialPartRows - 1}, got ${filteredPartRows}`
+    );
+    const catalogScrollTarget = await page.evaluate(() => {
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const target = Math.min(200, maxScroll);
+      window.scrollTo(0, target);
+      return target;
+    });
+    await page.waitForTimeout(150);
+
+    // Back 1: 제원 카탈로그 -> 환율 관리 (must keep 유럽 유로 + 1개월 without re-selection)
+    await page.locator('button[data-testid="nav-back-btn"]').first().click();
+    await page.waitForTimeout(220);
+    await fxSectionKeepAlive.getByText('관리 환율 1개월 추이 차트 · 유럽 유로', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await fxSectionKeepAlive.getByText('기준 단위: 1 유럽 유로 당 원화', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+
+    // Back 2 via Alt+ArrowLeft: 환율 관리 -> 거래처 관리 (must keep '지게차코리아' filter and filtered rows)
+    await page.keyboard.press('Alt+ArrowLeft');
+    await page.waitForTimeout(220);
+    assert.strictEqual(await prtSearchInput.inputValue(), '지게차코리아', 'Partner search input must persist after Alt+ArrowLeft back');
+    assert.strictEqual(
+      await page.locator('[data-manual-id="prt-grid"] table tbody tr').count(),
+      filteredPartnerRows,
+      'Partner filtered row count must persist after Alt+ArrowLeft back'
+    );
+
+    // Forward x2: 거래처 관리 -> 환율 관리 -> 제원 카탈로그 (must keep '7.00-12' search, PARTS tab, and scroll)
+    await page.locator('button[data-testid="nav-forward-btn"]').first().click();
+    await page.waitForTimeout(220);
+    await fxSectionKeepAlive.getByText('관리 환율 1개월 추이 차트 · 유럽 유로', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('button[data-testid="nav-forward-btn"]').first().click();
+    await page.waitForTimeout(220);
+    assert.strictEqual(await partSearchInput.inputValue(), '7.00-12', 'Catalog parts search keyword must persist after forward navigation');
+    assert.strictEqual(
+      await page.locator('[data-manual-id="cat-detail"] table').first().locator('tbody tr').count(),
+      filteredPartRows,
+      'Catalog filtered parts row count must persist after forward navigation'
+    );
+    if (catalogScrollTarget > 0) {
+      const restoredScrollY = await page.evaluate(() => window.scrollY);
+      assert(
+        Math.abs(restoredScrollY - catalogScrollTarget) <= 4,
+        `Expected restored catalog scrollY ~${catalogScrollTarget}, got ${restoredScrollY}`
+      );
+    }
+
+    // Sidebar direct navigation back to 거래처 관리 must also preserve filter & results
+    await page.locator('aside nav button', { hasText: '거래처 관리' }).first().click();
+    await page.waitForTimeout(200);
+    assert.strictEqual(await prtSearchInput.inputValue(), '지게차코리아', 'Partner search input must persist on sidebar navigation');
+    assert.strictEqual(
+      await page.locator('[data-manual-id="prt-grid"] table tbody tr').count(),
+      filteredPartnerRows,
+      'Partner filtered row count must persist on sidebar navigation'
+    );
+    await prtSearchInput.fill('');
+    console.log('[E2E 7j PASS] Keep-Alive state, filter, query results, sub-tabs, and scroll preservation verified across sidebar and back/forward navigation.');
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');

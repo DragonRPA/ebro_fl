@@ -37,6 +37,37 @@ export interface DbQueryResult<T = unknown> {
   error: { message?: string; code?: string; details?: string } | null;
 }
 
+export async function selectAllFlRows(
+  table: string,
+  options?: { orderCol?: string; ascending?: boolean; pageSize?: number }
+): Promise<DbQueryResult<Record<string, unknown>[]>> {
+  const pageSize = Math.max(100, options?.pageSize || 1000);
+  const rows: Record<string, unknown>[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = flSupabase.from(table).select('*');
+    if (options?.orderCol) {
+      query = query.order(options.orderCol, { ascending: options.ascending ?? true });
+      if (options.orderCol !== 'id') {
+        query = query.order('id', { ascending: true });
+      }
+    } else {
+      query = query.order('id', { ascending: true });
+    }
+    const res = await query.range(offset, offset + pageSize - 1);
+    if (res.error) {
+      return { data: rows, error: res.error };
+    }
+    const batch = Array.isArray(res.data) ? (res.data as Record<string, unknown>[]) : [];
+    rows.push(...batch);
+    if (batch.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return { data: rows, error: null };
+}
+
 // 무음 실패 원천 차단: 모든 쓰기 작업은 결과를 검증하고 실패 시 즉시 예외 + 모달 표출
 export async function execDbMutation<T>(
   actionLabel: string,

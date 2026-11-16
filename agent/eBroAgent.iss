@@ -6,11 +6,11 @@
 #endif
 
 #ifndef AppPublisher
-  #define AppPublisher "(주)기연리프트 / eBro ERP"
+  #define AppPublisher "주식회사 기연리프트 / eBro ERP"
 #endif
 
 #ifndef AppName
-  #define AppName "eBro AI Agent (기연리프트)"
+  #define AppName "eBro AI Agent (주식회사 기연리프트)"
 #endif
 
 #ifndef AppId
@@ -24,7 +24,7 @@
 [Setup]
 AppId={{#AppId}}
 AppName={#AppName}
-AppVersion=v2.0.0.Build.33
+AppVersion=v2.0.0.Build.49
 AppPublisher={#AppPublisher}
 AppPublisherURL=https://ebro.run
 AppSupportURL=https://ebro.run

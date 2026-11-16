@@ -1,6 +1,6 @@
 // agent/encrypt_core.cjs
 // eBro AI Agent 비즈니스 코어 번들링, AES-256-GCM 암호화 및 전 계층 버전/해시 SSOT 자동 동기화 스크립트
-const { execSync } = require('child_process');
+const { exec, execSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -41,7 +41,7 @@ function isVerNewer(a, b) {
   return false;
 }
 
-// 1. 코어 소스코드(eBroAgent.js + studioEngine.js + trayIcon.ps1)의 결정론적 SHA-256 해시 산출 (VERSION/CORE_HASH 상수 라인 제외)
+// 1. 코어 소스코드(eBroAgent.js + studioEngine.js + trayIcon.ps1 + ebro-agent-core/*.py + ebro-web-agent/*.js)의 결정론적 SHA-256 해시 산출
 function computeCoreSourceHash() {
   const normalize = (src) =>
     String(src || '')
@@ -53,7 +53,24 @@ function computeCoreSourceHash() {
   const agentSrc = fs.existsSync(ENTRY_FILE) ? normalize(fs.readFileSync(ENTRY_FILE, 'utf8')) : '';
   const studioSrc = fs.existsSync(STUDIO_FILE) ? normalize(fs.readFileSync(STUDIO_FILE, 'utf8')) : '';
   const traySrc = fs.existsSync(trayFile) ? normalize(fs.readFileSync(trayFile, 'utf8')) : '';
-  return crypto.createHash('sha256').update(agentSrc + '\n===STUDIO===\n' + studioSrc + '\n===TRAY===\n' + traySrc, 'utf8').digest('hex').slice(0, 12);
+
+  let pyAndExtSrc = '';
+  const pyDir = path.join(ROOT_DIR, 'ebro-agent-core');
+  if (fs.existsSync(pyDir)) {
+    const pyFiles = fs.readdirSync(pyDir).filter(f => f.endsWith('.py')).sort();
+    for (const f of pyFiles) {
+      pyAndExtSrc += `\n===PY:${f}===\n` + normalize(fs.readFileSync(path.join(pyDir, f), 'utf8'));
+    }
+  }
+  const extDir = path.join(ROOT_DIR, 'ebro-web-agent');
+  if (fs.existsSync(extDir)) {
+    const extFiles = fs.readdirSync(extDir).filter(f => f.endsWith('.js') || f.endsWith('.html')).sort();
+    for (const f of extFiles) {
+      pyAndExtSrc += `\n===EXT:${f}===\n` + normalize(fs.readFileSync(path.join(extDir, f), 'utf8'));
+    }
+  }
+
+  return crypto.createHash('sha256').update(agentSrc + '\n===STUDIO===\n' + studioSrc + '\n===TRAY===\n' + traySrc + pyAndExtSrc, 'utf8').digest('hex').slice(0, 12);
 }
 
 const computedHash = computeCoreSourceHash();
@@ -64,9 +81,9 @@ try {
 } catch (e) {
   versionMeta = {
     version: 'v2.0.0.Build.14',
-    coreUrl: 'https://raw.githubusercontent.com/DragonRPA/ebro_awp/main/public/downloads/engine.dat',
-    downloadUrl: 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0/eBroAgent_Setup.exe',
-    installerUrl: 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0/eBroAgent_Setup.exe',
+    coreUrl: 'https://ebro.run/downloads/engine.dat',
+    downloadUrl: 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe',
+    installerUrl: 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe',
     certUrl: 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Root.cer',
     minCompatibleVersion: 'v2.0.0.Build.1',
     fileSize: '2.2MB (core) / 24MB (installer)'
@@ -151,7 +168,10 @@ function syncVersionAndHashAcrossFiles(ver, hash) {
   versionMeta.version = ver;
   versionMeta.coreHash = hash;
   versionMeta.buildTime = new Date().toISOString();
-  versionMeta.coreUrl = 'https://raw.githubusercontent.com/DragonRPA/ebro_awp/main/public/downloads/engine.dat';
+  versionMeta.coreUrl = 'https://ebro.run/downloads/engine.dat';
+  versionMeta.downloadUrl = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe';
+  versionMeta.installerUrl = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev/downloads/eBroAgent_Setup.exe';
+  versionMeta.changelog = `${ver}: Windows UIA 하이브리드 접근성 엔진 + 테넌트·개인별 BYOK AI 모델/API 키 암호화 금고 + Jev 사전 판단 선택형 엔진 + 스마트 핫패치 업데이트 통합`;
   fs.writeFileSync(VERSION_JSON_PATH, JSON.stringify(versionMeta, null, 2) + '\n', 'utf8');
 }
 
@@ -200,8 +220,34 @@ fs.copyFileSync(OUTPUT_DAT, PUBLIC_DAT);
 
 if (fs.existsSync(path.dirname(LOCAL_INSTALLED_DAT))) {
   try {
+    try { if (fs.existsSync(LOCAL_INSTALLED_DAT)) fs.unlinkSync(LOCAL_INSTALLED_DAT); } catch (e) {}
     fs.copyFileSync(OUTPUT_DAT, LOCAL_INSTALLED_DAT);
-    console.log(`[SYNC] 로컬 에이전트 코어 갱신 완료: ${LOCAL_INSTALLED_DAT}`);
+    const localHome = 'C:\\eBroAgent';
+    const trayFileSrc = path.join(AGENT_DIR, 'trayIcon.ps1');
+    const trayFileDst = path.join(localHome, 'trayIcon.ps1');
+    if (fs.existsSync(trayFileSrc)) {
+      const cleanTray = fs.readFileSync(trayFileSrc, 'utf8').replace(/^\uFEFF/, '');
+      try { if (fs.existsSync(trayFileDst)) fs.unlinkSync(trayFileDst); } catch (e) {}
+      fs.writeFileSync(trayFileDst, Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), Buffer.from(cleanTray, 'utf8')]));
+    }
+    const statusFileDst = path.join(localHome, 'agent_status.json');
+    const statusTempDst = `${statusFileDst}.tmp.${process.pid}`;
+    try { if (fs.existsSync(statusFileDst)) fs.unlinkSync(statusFileDst); } catch (e) {}
+    fs.writeFileSync(statusTempDst, JSON.stringify({
+      currentVersion: targetVersion,
+      currentCoreHash: computedHash,
+      targetVersion: targetVersion,
+      targetCoreHash: computedHash,
+      isMismatch: false,
+      status: 'idle',
+      message: '최신 버전을 사용 중입니다.',
+      updatedAt: new Date().toISOString()
+    }, null, 2), 'utf8');
+    fs.renameSync(statusTempDst, statusFileDst);
+    if (process.platform === 'win32') {
+      try { exec(`attrib +h "${statusFileDst}"`, { windowsHide: true }, () => {}); } catch (e) {}
+    }
+    console.log(`[SYNC] 로컬 에이전트 코어 및 트레이 상태 갱신 완료: ${LOCAL_INSTALLED_DAT}`);
   } catch (localErr) {
     console.warn(`[WARN] 로컬 에이전트 코어 복사 건너뜀: ${localErr.message}`);
   }

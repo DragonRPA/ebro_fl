@@ -1,3 +1,4 @@
+import { computeUnitDepreciationAsOf, listMonthsBetween } from './domainEngine';
 import type {
   FlApPayable,
   FlBilling,
@@ -124,24 +125,6 @@ function tradeInvAcctForCategory(cat?: ItemCategory): string {
   return cat === '부품' || cat === '소모품' ? '부품소모품재고' : '상품재고(유통)';
 }
 
-function listMonthsBetween(fromYm: string, toYm: string): string[] {
-  if (!fromYm || !toYm || fromYm > toYm) return [];
-  const [fy, fm] = fromYm.split('-').map(Number);
-  const [ty, tm] = toYm.split('-').map(Number);
-  const out: string[] = [];
-  let y = fy;
-  let m = fm;
-  while (y < ty || (y === ty && m <= tm)) {
-    out.push(`${y}-${String(m).padStart(2, '0')}`);
-    m++;
-    if (m > 12) {
-      m = 1;
-      y++;
-    }
-  }
-  return out;
-}
-
 const BS_DEBIT_NORMAL = new Set([
   '현금및현금성자산',
   '외상매출금',
@@ -173,7 +156,7 @@ export function generateFinancialStatements(
     ym: '2026-01',
     debitAccount: '현금및현금성자산',
     creditAccount: '자본금',
-    amount: 300000000,
+    amount: 1500000000,
     categoryTag: 'FIN_CF',
     memo: '기초 자본금 납입',
   });
@@ -185,13 +168,19 @@ export function generateFinancialStatements(
     if (p.status !== 'CONFIRMED') continue;
     const ym = p.effectiveDate.slice(0, 7);
     const lines = data.purchaseLines.filter((l) => l.purchaseId === p.id);
-    if (p.targetDomain === 'TRADE' && lines.length > 0) {
+    if (lines.length > 0) {
       let postedMerch = 0;
       let postedAnc = 0;
       for (let i = 0; i < lines.length; i++) {
         const l = lines[i];
         const isLast = i === lines.length - 1;
-        const acct = tradeInvAcctForCategory(l.itemCategory);
+        const isPartOrCons = l.itemCategory === '부품' || l.itemCategory === '소모품';
+        const acct = isPartOrCons
+          ? '부품소모품재고'
+          : p.targetDomain === 'RENTAL'
+            ? '기계장치(렌탈자산)'
+            : '상품재고(유통)';
+        const cfTag = acct === '기계장치(렌탈자산)' ? 'INV_CF' : 'OP_CF';
         const merchAmt = isLast
           ? Math.round(p.krwMerchandiseTotal) - postedMerch
           : Math.round(l.allocatedMerchandiseKrw);
@@ -216,7 +205,7 @@ export function generateFinancialStatements(
             debitAccount: acct,
             creditAccount: '현금및현금성자산',
             amount: ancAmt,
-            categoryTag: 'OP_CF',
+            categoryTag: cfTag,
             memo: `${p.purchaseNo} 수입통관 부대비용`,
           });
         }
@@ -348,38 +337,44 @@ export function generateFinancialStatements(
     }
   }
 
-  // 4. 렌탈자산 월별 정액법 감가상각 및 자산명세
+  // 4. 렌탈자산 월별 정액법 감가상각 및 자산명세 (계정대체 이력 반영)
   const assetSchedule: AssetScheduleRow[] = [];
   for (const u of data.inventoryUnits) {
-    if (u.ownershipDomain !== '렌탈자산' || u.acquisitionType === 'SUBLEASE') continue;
-    const acqYm = u.acquisitionDate.slice(0, 7);
-    const monthsAll = listMonthsBetween(acqYm, endYm);
-    const monthsInPeriod = monthsAll.filter((m) => m >= startYm && m <= endYm);
-    const depMonths = Math.max(1, u.depreciationMonths || 60);
-    const depreciableBase = Math.max(0, Math.round(u.unitCostKrw - u.residualValueKrw));
-    const monthlyDep = Math.round(depreciableBase / depMonths);
+    if (u.itemCategory === '부품' || u.itemCategory === '소모품' || u.acquisitionType === 'SUBLEASE') continue;
+    const hadRentalTransfer = data.stockMovements.some(
+      (m) =>
+        m.unitId === u.id &&
+        m.movementType === 'ACCOUNT_TRANSFER' &&
+        (m.fromDomain === '렌탈자산' || m.toDomain === '렌탈자산')
+    );
+    if (u.ownershipDomain !== '렌탈자산' && !hadRentalTransfer) continue;
 
-    let accum = 0;
-    let periodDep = 0;
-    for (const m of monthsAll) {
-      const rem = depreciableBase - accum;
-      if (rem <= 0) break;
-      const d = Math.min(monthlyDep, rem);
-      accum += d;
-      if (m >= startYm && m <= endYm) {
-        periodDep += d;
-      }
+    const depInfo = computeUnitDepreciationAsOf(u, startYm, endYm, data.stockMovements);
+    for (const entry of depInfo.monthlyEntries) {
       postings.push({
-        ym: m,
+        ym: entry.ym,
         debitAccount: '감가상각비(렌탈)',
         creditAccount: '감가상각누계액',
-        amount: d,
+        amount: entry.amount,
         categoryTag: 'NON_CASH',
         memo: `감가상각 ${u.serialNo || u.unitCode}`,
       });
     }
+    for (const rst of depInfo.transferOutResets) {
+      if (rst.amount > 0) {
+        postings.push({
+          ym: rst.ym,
+          debitAccount: '감가상각누계액',
+          creditAccount: '기계장치(렌탈자산)',
+          amount: rst.amount,
+          categoryTag: 'NON_CASH',
+          memo: `계정대체 상각누계 상계 ${u.serialNo || u.unitCode}`,
+        });
+      }
+    }
 
-    if (monthsInPeriod.length > 0 || acqYm <= endYm) {
+    const acqYm = u.acquisitionDate.slice(0, 7);
+    if (depInfo.domainAtEndYm === '렌탈자산' && acqYm <= endYm) {
       assetSchedule.push({
         unitId: u.id,
         unitCode: u.unitCode,
@@ -388,13 +383,11 @@ export function generateFinancialStatements(
         acquisitionType: u.acquisitionType,
         acquisitionDate: u.acquisitionDate,
         acquisitionCostKrw: Math.round(u.unitCostKrw),
-        periodDepreciationKrw: periodDep,
-        accumulatedDepreciationKrw: accum,
-        endingBookValueKrw: Math.max(0, Math.round(u.unitCostKrw) - accum),
+        periodDepreciationKrw: depInfo.periodDep,
+        accumulatedDepreciationKrw: depInfo.accumDep,
+        endingBookValueKrw: depInfo.endingBookValue,
       });
     }
-
-    // 전대자산 임차료는 아래 별도 루프에서 반영
   }
 
   // 전대자산 월 임차료
@@ -457,40 +450,65 @@ export function generateFinancialStatements(
     }
   }
 
-  // 7. 유통 반품 환불 차감 (매출 · 부가세 · 매출원가 역분개)
+  // 7. 유통 반품 환불 · 반품교환 차감 (매출 · 부가세 · 매출원가 역분개 및 대품 원가 반영)
   for (const tc of data.tradeAftercareCases) {
-    if (tc.status !== 'COMPLETED' || tc.caseType !== '반품환불') continue;
+    if (tc.status !== 'COMPLETED') continue;
     const ym = tc.effectiveDate.slice(0, 7);
-    if (tc.refundSupplyKrw > 0) {
-      postings.push({
-        ym,
-        debitAccount: '상품매출(유통)',
-        creditAccount: '외상매출금',
-        amount: Math.round(tc.refundSupplyKrw),
-        categoryTag: 'NON_CASH',
-        memo: `반품환불 매출차감 ${tc.caseNo}`,
-      });
-    }
-    if (tc.refundVatKrw > 0) {
-      postings.push({
-        ym,
-        debitAccount: '부가세예수금',
-        creditAccount: '외상매출금',
-        amount: Math.round(tc.refundVatKrw),
-        categoryTag: 'NON_CASH',
-        memo: `반품환불 부가세차감 ${tc.caseNo}`,
-      });
-    }
-    const u = unitById.get(tc.unitId);
-    if (u && u.unitCostKrw > 0) {
-      postings.push({
-        ym,
-        debitAccount: tradeInvAcctForCategory(u.itemCategory),
-        creditAccount: '상품매출원가',
-        amount: Math.round(u.unitCostKrw),
-        categoryTag: 'NON_CASH',
-        memo: `반품입고 원가환입 ${tc.caseNo}`,
-      });
+    if (tc.caseType === '반품환불') {
+      if (tc.refundSupplyKrw > 0) {
+        postings.push({
+          ym,
+          debitAccount: '상품매출(유통)',
+          creditAccount: '외상매출금',
+          amount: Math.round(tc.refundSupplyKrw),
+          categoryTag: 'NON_CASH',
+          memo: `반품환불 매출차감 ${tc.caseNo}`,
+        });
+      }
+      if (tc.refundVatKrw > 0) {
+        postings.push({
+          ym,
+          debitAccount: '부가세예수금',
+          creditAccount: '외상매출금',
+          amount: Math.round(tc.refundVatKrw),
+          categoryTag: 'NON_CASH',
+          memo: `반품환불 부가세차감 ${tc.caseNo}`,
+        });
+      }
+      const u = unitById.get(tc.unitId);
+      if (u && u.unitCostKrw > 0) {
+        postings.push({
+          ym,
+          debitAccount: tradeInvAcctForCategory(u.itemCategory),
+          creditAccount: '상품매출원가',
+          amount: Math.round(u.unitCostKrw),
+          categoryTag: 'NON_CASH',
+          memo: `반품입고 원가환입 ${tc.caseNo}`,
+        });
+      }
+    } else if (tc.caseType === '반품교환') {
+      const u = unitById.get(tc.unitId);
+      if (u && u.unitCostKrw > 0) {
+        postings.push({
+          ym,
+          debitAccount: tradeInvAcctForCategory(u.itemCategory),
+          creditAccount: '상품매출원가',
+          amount: Math.round(u.unitCostKrw),
+          categoryTag: 'NON_CASH',
+          memo: `반품교환 회수 원가환입 ${tc.caseNo}`,
+        });
+      }
+      const rep = tc.replacementUnitId ? unitById.get(tc.replacementUnitId) : undefined;
+      if (rep && rep.unitCostKrw > 0) {
+        postings.push({
+          ym,
+          debitAccount: '상품매출원가',
+          creditAccount: tradeInvAcctForCategory(rep.itemCategory),
+          amount: Math.round(rep.unitCostKrw),
+          categoryTag: 'NON_CASH',
+          memo: `반품교환 대품 매출원가 ${tc.caseNo}`,
+        });
+      }
     }
   }
 

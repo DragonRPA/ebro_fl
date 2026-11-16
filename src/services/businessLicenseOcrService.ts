@@ -1,4 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { decryptSecret } from '../utils/cryptoVault';
+import { normalizeAgentTenantCode } from './agentService';
+import type { TenantR2Config } from '../types/domain';
 
 if (
   typeof window !== 'undefined' &&
@@ -25,36 +28,85 @@ export interface BusinessLicenseOcrResult {
   error?: string;
 }
 
-const R2_PUBLIC_BASE = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev';
+let activeR2Context: {
+  tenantId: string;
+  tenantCode: string;
+  r2Config?: TenantR2Config;
+} = {
+  tenantId: 'ebro-fl',
+  tenantCode: 'EBRO_FL',
+};
 
-export async function uploadBusinessLicenseImageToR2(
+export function setR2TenantContext(ctx: {
+  tenantId?: string;
+  tenantCode?: string;
+  r2Config?: TenantR2Config;
+}): void {
+  activeR2Context = {
+    tenantId: ctx.tenantId || activeR2Context.tenantId || 'ebro-fl',
+    tenantCode: normalizeAgentTenantCode(ctx.tenantCode || activeR2Context.tenantCode || 'EBRO_FL'),
+    r2Config: ctx.r2Config,
+  };
+}
+
+async function uploadImageToTenantR2(
+  keyPrefix: string,
+  defaultName: string,
   fileName: string,
   dataUrl: string
 ): Promise<string> {
   try {
     const base64Part = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
     const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.pdf$/i, '.jpg');
-    const key = `fl_partners/bizcert_${Date.now()}_${safeName || 'license.jpg'}`;
+    const key = `${keyPrefix}_${Date.now()}_${safeName || defaultName}`;
+    const r2 = activeR2Context.r2Config;
+    const rawSecret = r2?.r2SecretAccessKey?.trim();
+    const secretAccessKey = rawSecret
+      ? (rawSecret.startsWith('__EBRO_ENC__v1__') ? decryptSecret(rawSecret) : rawSecret)
+      : undefined;
+
     const res = await fetch('/api/r2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'upload',
+        tenantId: activeR2Context.tenantId,
+        tenantCode: activeR2Context.tenantCode,
+        accountId: r2?.r2AccountId?.trim() || undefined,
+        bucketName: r2?.r2BucketName?.trim() || undefined,
+        accessKeyId: r2?.r2AccessKeyId?.trim() || undefined,
+        secretAccessKey,
+        publicDomain: r2?.r2PublicDomain?.trim() || undefined,
         key,
-        contentBase64: base64Part,
+        base64Content: base64Part,
         contentType: 'image/jpeg',
       }),
     });
     if (res.ok) {
-      const json = await res.json();
+      const json = (await res.json()) as {
+        success?: boolean;
+        publicUrl?: string;
+        url?: string;
+      };
       if (json.success) {
-        return `${R2_PUBLIC_BASE}/${key}`;
+        return (
+          json.publicUrl ||
+          json.url ||
+          `/api/r2?action=download&key=${encodeURIComponent(key)}&tenantCode=${encodeURIComponent(activeR2Context.tenantCode)}`
+        );
       }
     }
   } catch {
-    // R2 업로드 실패 시 DataURL 폴백 사용
+    // R2 미설정 또는 업로드 실패 시 DataURL 폴백 사용
   }
   return dataUrl;
+}
+
+export async function uploadBusinessLicenseImageToR2(
+  fileName: string,
+  dataUrl: string
+): Promise<string> {
+  return uploadImageToTenantR2('fl_partners/bizcert', 'license.jpg', fileName, dataUrl);
 }
 
 export function formatBizRegNo(raw: string): string {
@@ -205,30 +257,7 @@ export async function uploadBankbookImageToR2(
   fileName: string,
   dataUrl: string
 ): Promise<string> {
-  try {
-    const base64Part = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
-    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.pdf$/i, '.jpg');
-    const key = `fl_partners/bankbook_${Date.now()}_${safeName || 'bankbook.jpg'}`;
-    const res = await fetch('/api/r2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'upload',
-        key,
-        contentBase64: base64Part,
-        contentType: 'image/jpeg',
-      }),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return `${R2_PUBLIC_BASE}/${key}`;
-      }
-    }
-  } catch {
-    // R2 업로드 실패 시 DataURL 폴백 사용
-  }
-  return dataUrl;
+  return uploadImageToTenantR2('fl_partners/bankbook', 'bankbook.jpg', fileName, dataUrl);
 }
 
 export interface BankbookOcrResult {

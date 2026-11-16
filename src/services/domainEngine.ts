@@ -4,9 +4,12 @@ import {
   execDbMutation,
   flSupabase,
   newId,
+  selectAllFlRows,
+  snakeToCamelRow,
 } from '../core/supabase';
 import { encryptSecret, hashPassword } from '../utils/cryptoVault';
 import {
+  type BillingLine,
   computeDueDateFromCycle,
   type CurrencyCode,
   FlApPayable,
@@ -59,6 +62,164 @@ export function diffDaysInclusive(startIso: string, endIso: string): number {
   const e = Date.parse(`${endIso}T00:00:00Z`);
   if (e < s) return 0;
   return Math.floor((e - s) / 86400000) + 1;
+}
+
+export function listMonthsBetween(fromYm: string, toYm: string): string[] {
+  if (!fromYm || !toYm || fromYm > toYm) return [];
+  const [fy, fm] = fromYm.split('-').map(Number);
+  const [ty, tm] = toYm.split('-').map(Number);
+  const out: string[] = [];
+  let y = fy;
+  let m = fm;
+  while (y < ty || (y === ty && m <= tm)) {
+    out.push(`${y}-${String(m).padStart(2, '0')}`);
+    m++;
+    if (m > 12) {
+      m = 1;
+      y++;
+    }
+  }
+  return out;
+}
+
+export function computeUnitDepreciationAsOf(
+  unit: FlInventoryUnit,
+  startYm: string,
+  endYm: string,
+  stockMovements: FlStockMovement[] = []
+): {
+  periodDep: number;
+  accumDep: number;
+  endingBookValue: number;
+  monthlyEntries: { ym: string; amount: number }[];
+  transferOutResets: { ym: string; amount: number }[];
+  domainAtEndYm: string;
+} {
+  if (
+    unit.itemCategory === '부품' ||
+    unit.itemCategory === '소모품' ||
+    unit.acquisitionType === 'SUBLEASE'
+  ) {
+    return {
+      periodDep: 0,
+      accumDep: 0,
+      endingBookValue: unit.ownershipDomain === '전대자산' ? 0 : Math.round(unit.unitCostKrw),
+      domainAtEndYm: unit.ownershipDomain,
+      monthlyEntries: [],
+      transferOutResets: [],
+    };
+  }
+
+  const transfers = stockMovements
+    .filter((m) => m.unitId === unit.id && m.movementType === 'ACCOUNT_TRANSFER')
+    .sort((a, b) => {
+      const d = a.effectiveDate.localeCompare(b.effectiveDate);
+      return d !== 0 ? d : a.recordedAt.localeCompare(b.recordedAt);
+    });
+
+  if (transfers.length === 0 && unit.ownershipDomain !== '렌탈자산') {
+    return {
+      periodDep: 0,
+      accumDep: 0,
+      endingBookValue: Math.round(unit.unitCostKrw),
+      domainAtEndYm: unit.ownershipDomain,
+      monthlyEntries: [],
+      transferOutResets: [],
+    };
+  }
+
+  const acqYm = unit.acquisitionDate.slice(0, 7);
+  const monthsAll = listMonthsBetween(acqYm, endYm);
+  const depMonths = Math.max(1, unit.depreciationMonths || 60);
+  const inboundMov = stockMovements.find((m) => m.unitId === unit.id && m.movementType === 'INBOUND');
+  const grossCost = Math.round(
+    unit.ownershipDomain === '렌탈자산'
+      ? unit.unitCostKrw
+      : inboundMov?.unitCostKrw || Math.max(unit.unitCostKrw + unit.accumulatedDepreciationKrw, unit.unitCostKrw)
+  );
+  const depreciableBase = Math.max(0, grossCost - Math.round(unit.residualValueKrw || 0));
+  const monthlyDep = Math.round(depreciableBase / depMonths);
+
+  let curDomain: string = transfers[0]?.fromDomain || unit.ownershipDomain;
+  let transferIdx = 0;
+  let accumTotal = 0;
+  let activeAccumForBalance = 0;
+  let periodDep = 0;
+  const monthlyEntries: { ym: string; amount: number }[] = [];
+  const transferOutResets: { ym: string; amount: number }[] = [];
+
+  for (const m of monthsAll) {
+    while (transferIdx < transfers.length && transfers[transferIdx].effectiveDate.slice(0, 7) <= m) {
+      const t = transfers[transferIdx];
+      const nextDom = t.toDomain || curDomain;
+      if (curDomain === '렌탈자산' && nextDom !== '렌탈자산' && activeAccumForBalance > 0) {
+        transferOutResets.push({ ym: t.effectiveDate.slice(0, 7), amount: activeAccumForBalance });
+        activeAccumForBalance = 0;
+      }
+      curDomain = nextDom;
+      transferIdx++;
+    }
+
+    if (curDomain !== '렌탈자산') continue;
+    const rem = depreciableBase - accumTotal;
+    if (rem <= 0) break;
+    const d = Math.min(monthlyDep, rem);
+    accumTotal += d;
+    activeAccumForBalance += d;
+    if (m >= startYm && m <= endYm) {
+      periodDep += d;
+    }
+    monthlyEntries.push({ ym: m, amount: d });
+  }
+
+  const finalAccum = curDomain === '렌탈자산' ? activeAccumForBalance : 0;
+  return {
+    periodDep,
+    accumDep: finalAccum,
+    endingBookValue:
+      curDomain === '렌탈자산'
+        ? Math.max(0, grossCost - finalAccum)
+        : Math.round(unit.unitCostKrw),
+    domainAtEndYm: curDomain,
+    monthlyEntries,
+    transferOutResets,
+  };
+}
+
+export async function syncRentalAssetsDepreciationInDb(asOfYm: string): Promise<number> {
+  const [unitRes, movRes] = await Promise.all([
+    selectAllFlRows('inventory_units', { orderCol: 'id' }),
+    selectAllFlRows('stock_movements', { orderCol: 'effective_date' }),
+  ]);
+  if (unitRes.error) {
+    throw new Error(`자산 원장 조회 실패: ${unitRes.error.message || '데이터베이스 오류'}`);
+  }
+  const units = (unitRes.data || []).map((r) => snakeToCamelRow<FlInventoryUnit>(r));
+  const movements = (movRes.data || []).map((r) => snakeToCamelRow<FlStockMovement>(r));
+  const nowIso = new Date().toISOString();
+  let updatedCount = 0;
+
+  for (const u of units) {
+    if (u.ownershipDomain !== '렌탈자산' || u.acquisitionType === 'SUBLEASE') continue;
+    if (u.itemCategory === '부품' || u.itemCategory === '소모품') continue;
+    const dep = computeUnitDepreciationAsOf(u, asOfYm, asOfYm, movements);
+    const prevAccum = Math.round(Number(u.accumulatedDepreciationKrw || 0));
+    const prevBook = Math.round(Number(u.bookValueKrw || 0));
+    if (prevAccum !== dep.accumDep || prevBook !== dep.endingBookValue) {
+      await execDbMutation('감가상각 원장 동기화', () =>
+        flSupabase
+          .from('inventory_units')
+          .update({
+            accumulated_depreciation_krw: dep.accumDep,
+            book_value_krw: dep.endingBookValue,
+            updated_at: nowIso,
+          })
+          .eq('id', u.id)
+      );
+      updatedCount++;
+    }
+  }
+  return updatedCount;
 }
 
 export function sortUnitsFifo(units: FlInventoryUnit[]): FlInventoryUnit[] {
@@ -210,7 +371,14 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
     };
     purchaseLines.push(lineRec);
 
-    const ownershipDomain = input.targetDomain === 'TRADE' ? '유통재고' : '렌탈자산';
+    // 부품·소모품은 렌탈 정비 목적 매입 시에도 기계장치 감가상각 대상이 아닌 유동재고(부품·소모품재고)로 귀속한다.
+    const isConsumableOrPart = l.itemCategory === '부품' || l.itemCategory === '소모품';
+    const ownershipDomain = isConsumableOrPart
+      ? '유통재고'
+      : input.targetDomain === 'TRADE'
+        ? '유통재고'
+        : '렌탈자산';
+    const depMonths = isConsumableOrPart ? 0 : 60;
 
     if (l.managementType === 'SERIAL') {
       let unitSum = 0;
@@ -236,7 +404,7 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
           unitCostKrw: unitCost,
           accumulatedDepreciationKrw: 0,
           bookValueKrw: unitCost,
-          depreciationMonths: 60,
+          depreciationMonths: depMonths,
           residualValueKrw: 0,
           status: '보유중',
           acquisitionType: 'PURCHASE',
@@ -311,7 +479,7 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
         unitCostKrw: landedUnitCost,
         accumulatedDepreciationKrw: 0,
         bookValueKrw: lineTotalLanded,
-        depreciationMonths: 60,
+        depreciationMonths: depMonths,
         residualValueKrw: 0,
         status: '보유중',
         acquisitionType: 'PURCHASE',
@@ -811,6 +979,75 @@ export async function executeAccountTransfer(params: {
 // 5. 출고·회수 실행완료 (희망완료일 vs 입력일시 분리) & 렌탈 교환
 // ============================================================================
 
+async function syncContractStatusAfterFulfillment(contractId: string): Promise<void> {
+  const [ctrRes, linesRes, fulRes] = await Promise.all([
+    flSupabase
+      .from('contracts')
+      .select('id, contract_domain, status')
+      .eq('id', contractId)
+      .maybeSingle(),
+    flSupabase
+      .from('contract_lines')
+      .select('id, quantity, fulfilled_qty, line_status')
+      .eq('contract_id', contractId),
+    flSupabase
+      .from('fulfillments')
+      .select('id, action_type, status')
+      .eq('contract_id', contractId),
+  ]);
+  if (ctrRes.error || !ctrRes.data) return;
+  const ctr = ctrRes.data as { id: string; contract_domain: string; status: string };
+  if (ctr.status === 'DRAFT' || ctr.status === 'CANCELLED' || ctr.status === 'TERMINATED') return;
+
+  const activeLines = ((linesRes.data || []) as Array<{
+    id: string;
+    quantity: number;
+    fulfilled_qty: number;
+    line_status: string;
+  }>).filter((l) => l.line_status !== 'CANCELLED');
+  if (activeLines.length === 0) return;
+
+  const hasRequested = ((fulRes.data || []) as Array<{ id: string; status: string }>).some(
+    (f) => f.status === 'REQUESTED'
+  );
+  let nextStatus = ctr.status;
+
+  if (ctr.contract_domain === 'TRADE') {
+    const allFulfilled = activeLines.every(
+      (l) => Number(l.fulfilled_qty || 0) >= Number(l.quantity || 1)
+    );
+    const anyFulfilled = activeLines.some((l) => Number(l.fulfilled_qty || 0) > 0);
+    if (allFulfilled && !hasRequested) {
+      nextStatus = 'COMPLETED';
+    } else if (anyFulfilled || hasRequested) {
+      nextStatus = 'FULFILLING';
+    } else {
+      nextStatus = 'ACTIVE';
+    }
+  } else {
+    const allReturned = activeLines.every((l) => l.line_status === 'RETURNED');
+    const anyUnfulfilled = activeLines.some(
+      (l) => l.line_status === 'ACTIVE' && Number(l.fulfilled_qty || 0) < Number(l.quantity || 1)
+    );
+    if (allReturned && !hasRequested) {
+      nextStatus = 'COMPLETED';
+    } else if (anyUnfulfilled && hasRequested) {
+      nextStatus = 'FULFILLING';
+    } else {
+      nextStatus = 'ACTIVE';
+    }
+  }
+
+  if (nextStatus !== ctr.status) {
+    await execDbMutation('계약 상태 자동 동기화', () =>
+      flSupabase
+        .from('contracts')
+        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .eq('id', contractId)
+    );
+  }
+}
+
 export async function completeFulfillment(params: {
   fulfillment: FlFulfillment;
   contractLine: FlContractLine;
@@ -839,6 +1076,12 @@ export async function completeFulfillment(params: {
   if (fulfillment.actionType === '유통출고') {
     if (unit.ownershipDomain !== '유통재고') {
       throw new Error('유통출고는 유통재고 소유 항목만 처리할 수 있습니다.');
+    }
+    if (unit.managementType === 'SERIAL' && qty !== 1) {
+      throw new Error('시리얼 개별추적 장비는 1대 단위로 출고 실행해 주세요.');
+    }
+    if (unit.qtyOnHand < qty) {
+      throw new Error(`선택한 재고의 가용수량 ${unit.qtyOnHand}개가 출고 수량 ${qty}개보다 부족합니다.`);
     }
     cogsAmount =
       unit.managementType === 'SERIAL'
@@ -974,6 +1217,8 @@ export async function completeFulfillment(params: {
     }))
   );
 
+  await syncContractStatusAfterFulfillment(fulfillment.contractId);
+
   return { fulfillment: updatedFulfillment, unit: updatedUnit };
 }
 
@@ -1065,7 +1310,7 @@ export async function executeRentalExchange(params: {
   const fulfillment: FlFulfillment = {
     id: newId('FUL'),
     tenantId: DEFAULT_TENANT_ID,
-    fulfillmentNo: `EX-${Date.now().toString(36).toUpperCase()}`,
+    fulfillmentNo: newId('EX'),
     fulfillmentDomain: 'RENTAL',
     actionType: '교환',
     contractId: contract.id,
@@ -1195,7 +1440,7 @@ export async function recordTradeAftercare(params: {
   const rec: FlTradeAftercareCase = {
     id: newId('TAC'),
     tenantId: DEFAULT_TENANT_ID,
-    caseNo: `TAC-${Date.now().toString(36).toUpperCase()}`,
+    caseNo: newId('TAC'),
     contractId: contract.id,
     partnerId: contract.partnerId,
     partnerName: contract.partnerName,
@@ -1309,6 +1554,14 @@ export async function recordRentalMaintenance(params: {
   if (params.unit.ownershipDomain === '유통재고') {
     throw new Error('정비는 렌탈자산 또는 전대자산에만 등록할 수 있습니다.');
   }
+  if (Number(params.externalCostKrw || 0) > 0 && !params.vendorPartner) {
+    throw new Error('외주 정비비가 있는 경우 외주정비처를 선택해 주세요.');
+  }
+  for (const p of params.partsUsed) {
+    if (p.qty > p.unit.qtyOnHand) {
+      throw new Error(`투입 부품 수량 ${p.qty}개가 가용 재고 ${p.unit.qtyOnHand}개를 초과했습니다.`);
+    }
+  }
   const recordedAt = new Date().toISOString();
   const partsRows = params.partsUsed.map((p) => ({
     unitId: p.unit.id,
@@ -1323,7 +1576,7 @@ export async function recordRentalMaintenance(params: {
   const maint: FlRentalMaintenance = {
     id: newId('MNT'),
     tenantId: DEFAULT_TENANT_ID,
-    maintNo: `MNT-${Date.now().toString(36).toUpperCase()}`,
+    maintNo: newId('MNT'),
     maintType: params.maintType,
     unitId: params.unit.id,
     serialNo: params.unit.serialNo || null,
@@ -1453,8 +1706,16 @@ export function calculateRentalProRataForMonth(params: {
   lines: FlContractLine[];
   ym: string;
 }): { unitId?: string; contractLineId: string; description: string; days: number; supplyAmountKrw: number; vatAmountKrw: number }[] {
+  if (params.contract.status === 'DRAFT' || params.contract.status === 'CANCELLED') {
+    return [];
+  }
   const { start: mStart, end: mEnd, days: daysInMonth } = getMonthBounds(params.ym);
-  const contractLines = params.lines.filter((l) => l.contractId === params.contract.id && l.lineStatus !== 'CANCELLED');
+  const contractLines = params.lines.filter(
+    (l) =>
+      l.contractId === params.contract.id &&
+      (l.lineStatus === 'FULFILLED' || l.lineStatus === 'REPLACED_OUT' || l.lineStatus === 'RETURNED') &&
+      (Boolean(l.assignedUnitId) || l.fulfilledQty > 0)
+  );
   const results: { unitId?: string; contractLineId: string; description: string; days: number; supplyAmountKrw: number; vatAmountKrw: number }[] = [];
 
   for (const line of contractLines) {
@@ -1474,7 +1735,7 @@ export function calculateRentalProRataForMonth(params: {
     results.push({
       unitId: line.assignedUnitId || undefined,
       contractLineId: line.id,
-      description: `${line.itemName}${line.assignedSerialNo ? ` (${line.assignedSerialNo})` : ''} [${winStart}~${winEnd}, ${activeDays}/${daysInMonth}일]`,
+      description: `${line.itemName}${line.assignedSerialNo ? ` · ${line.assignedSerialNo}` : ''} [${winStart}~${winEnd}, ${activeDays}/${daysInMonth}일]`,
       days: activeDays,
       supplyAmountKrw: supply,
       vatAmountKrw: Math.round(supply * 0.1),
@@ -1482,14 +1743,232 @@ export function calculateRentalProRataForMonth(params: {
   }
 
   // 동일 계약 내 교환 승계로 전월/후월 분할 시 월 전체 일수 합이 daysInMonth이면 합계 단수 1원 보정
-  const totalDays = results.reduce((s, r) => s + r.days, 0);
-  if (results.length === 2 && totalDays === daysInMonth && contractLines.length === 2 && contractLines[0].unitPriceKrw === contractLines[1].unitPriceKrw) {
-    const fullRate = Math.round(contractLines[0].unitPriceKrw * contractLines[0].quantity);
-    results[1].supplyAmountKrw = fullRate - results[0].supplyAmountKrw;
-    results[1].vatAmountKrw = Math.round(results[1].supplyAmountKrw * 0.1);
+  const resultByLineId = new Map(results.map((r) => [r.contractLineId, r]));
+  let adjustedViaPredecessor = false;
+  for (const line of contractLines) {
+    if (!line.predecessorUnitId) continue;
+    const succRes = resultByLineId.get(line.id);
+    const predLine = contractLines.find(
+      (p) => p.assignedUnitId === line.predecessorUnitId && p.lineStatus === 'REPLACED_OUT'
+    );
+    const predRes = predLine ? resultByLineId.get(predLine.id) : undefined;
+    if (
+      succRes &&
+      predRes &&
+      predLine &&
+      predRes.days + succRes.days === daysInMonth &&
+      predLine.unitPriceKrw === line.unitPriceKrw
+    ) {
+      const fullRate = Math.round(predLine.unitPriceKrw * predLine.quantity);
+      succRes.supplyAmountKrw = fullRate - predRes.supplyAmountKrw;
+      succRes.vatAmountKrw = Math.round(succRes.supplyAmountKrw * 0.1);
+      adjustedViaPredecessor = true;
+    }
+  }
+
+  if (!adjustedViaPredecessor) {
+    const totalDays = results.reduce((s, r) => s + r.days, 0);
+    if (
+      results.length === 2 &&
+      totalDays === daysInMonth &&
+      contractLines.length === 2 &&
+      contractLines[0].unitPriceKrw === contractLines[1].unitPriceKrw
+    ) {
+      const fullRate = Math.round(contractLines[0].unitPriceKrw * contractLines[0].quantity);
+      results[1].supplyAmountKrw = fullRate - results[0].supplyAmountKrw;
+      results[1].vatAmountKrw = Math.round(results[1].supplyAmountKrw * 0.1);
+    }
   }
 
   return results;
+}
+
+export function buildContractBillingLines(params: {
+  contract: FlContract;
+  contractLines: FlContractLine[];
+  fulfillments: FlFulfillment[];
+  rentalMaintenances?: FlRentalMaintenance[];
+  logisticsDispatches?: FlLogisticsDispatch[];
+  existingBillings?: FlBilling[];
+  ym: string;
+}): BillingLine[] {
+  if (params.contract.status === 'DRAFT' || params.contract.status === 'CANCELLED') {
+    return [];
+  }
+
+  const activeBillings = (params.existingBillings || []).filter(
+    (b) => b.status !== 'CANCELLED' && b.contractId === params.contract.id
+  );
+  const billedFulfillmentIds = new Set<string>();
+  const billedRentalLineYmKeys = new Set<string>();
+  const billedMaintIds = new Set<string>();
+  const billedDispatchIds = new Set<string>();
+  let legacyBilledSupplyForContract = 0;
+
+  for (const b of activeBillings) {
+    legacyBilledSupplyForContract += Number(b.supplyAmountKrw || 0);
+    for (const bl of b.lines || []) {
+      if (bl.fulfillmentId) billedFulfillmentIds.add(bl.fulfillmentId);
+      if (bl.maintId) billedMaintIds.add(bl.maintId);
+      if (bl.dispatchId) billedDispatchIds.add(bl.dispatchId);
+      if (bl.contractLineId) {
+        const ymTag = bl.billingYmTag || b.billingYm;
+        if (ymTag) billedRentalLineYmKeys.add(`${bl.contractLineId}__${ymTag}`);
+      }
+    }
+  }
+
+  const out: BillingLine[] = [];
+
+  if (params.contract.contractDomain === 'TRADE') {
+    const contractLines = params.contractLines.filter(
+      (l) => l.contractId === params.contract.id && l.lineStatus !== 'CANCELLED'
+    );
+    const lineMap = new Map(contractLines.map((l) => [l.id, l]));
+    const completedTradeFuls = params.fulfillments.filter(
+      (f) =>
+        f.contractId === params.contract.id &&
+        f.status === 'COMPLETED' &&
+        f.actionType === '유통출고' &&
+        (f.effectiveDate || '').slice(0, 7) <= params.ym
+    );
+
+    const hasStructuredFulfillmentBillings = activeBillings.some((b) =>
+      (b.lines || []).some((bl) => Boolean(bl.fulfillmentId))
+    );
+    const legacyAlreadyCoversAll =
+      !hasStructuredFulfillmentBillings &&
+      activeBillings.length > 0 &&
+      legacyBilledSupplyForContract >= params.contract.supplyAmountKrw;
+
+    if (completedTradeFuls.length > 0 && !legacyAlreadyCoversAll) {
+      for (const f of completedTradeFuls) {
+        if (billedFulfillmentIds.has(f.id)) continue;
+        const line = lineMap.get(f.contractLineId);
+        if (!line) continue;
+        const qty = Math.max(1, Number(f.quantity || 1));
+        const supply =
+          qty === line.quantity
+            ? Math.round(line.supplyAmountKrw)
+            : Math.round(line.unitPriceKrw * qty);
+        if (supply <= 0) continue;
+        out.push({
+          description: `${line.itemName} 출고공급대금`,
+          qty,
+          supplyAmountKrw: supply,
+          vatAmountKrw: Math.round(supply * 0.1),
+          unitId: f.unitId || line.assignedUnitId || undefined,
+          contractLineId: line.id,
+          fulfillmentId: f.id,
+          billingYmTag: params.ym,
+        });
+      }
+    }
+
+    if (completedTradeFuls.length > 0) {
+      for (const d of params.logisticsDispatches || []) {
+        if (
+          d.relatedRefId === params.contract.id &&
+          d.costBearer === 'CUSTOMER' &&
+          d.customerChargeKrw > 0 &&
+          d.dispatchDate.slice(0, 7) === params.ym &&
+          !billedDispatchIds.has(d.id)
+        ) {
+          const supply = Math.round(d.customerChargeKrw);
+          out.push({
+            description: `${d.dispatchPurpose} 고객부담 운송비 · ${d.dispatchNo}`,
+            qty: 1,
+            supplyAmountKrw: supply,
+            vatAmountKrw: Math.round(supply * 0.1),
+            dispatchId: d.id,
+            billingYmTag: params.ym,
+          });
+        }
+      }
+    }
+
+    return out;
+  }
+
+  // RENTAL 계약: 출고 완료 이후 가동 이력이 있는 라인만 일할 임대료 청구
+  const proRataRows = calculateRentalProRataForMonth({
+    contract: params.contract,
+    lines: params.contractLines,
+    ym: params.ym,
+  });
+  const legacySameYmBilled = activeBillings.some(
+    (b) =>
+      b.billingYm === params.ym &&
+      !(b.lines || []).some((bl) => Boolean(bl.contractLineId))
+  );
+
+  if (!legacySameYmBilled) {
+    for (const r of proRataRows) {
+      if (billedRentalLineYmKeys.has(`${r.contractLineId}__${params.ym}`)) continue;
+      out.push({
+        description: r.description,
+        qty: 1,
+        supplyAmountKrw: r.supplyAmountKrw,
+        vatAmountKrw: r.vatAmountKrw,
+        unitId: r.unitId,
+        contractLineId: r.contractLineId,
+        billingYmTag: params.ym,
+      });
+    }
+  }
+
+  const fulfilledRentalLines = params.contractLines.filter(
+    (l) =>
+      l.contractId === params.contract.id &&
+      (l.lineStatus === 'FULFILLED' || l.lineStatus === 'REPLACED_OUT' || l.lineStatus === 'RETURNED') &&
+      (Boolean(l.assignedUnitId) || l.fulfilledQty > 0)
+  );
+  if (fulfilledRentalLines.length > 0) {
+    const primaryUnitId = fulfilledRentalLines.find((l) => Boolean(l.assignedUnitId))?.assignedUnitId || undefined;
+    for (const m of params.rentalMaintenances || []) {
+      if (
+        m.contractId === params.contract.id &&
+        m.status === 'COMPLETED' &&
+        m.isCustomerBillable &&
+        m.customerChargeKrw > 0 &&
+        m.effectiveDate.slice(0, 7) === params.ym &&
+        !billedMaintIds.has(m.id)
+      ) {
+        const supply = Math.round(m.customerChargeKrw);
+        out.push({
+          description: `${m.maintType} 유상청구 · ${m.maintNo}`,
+          qty: 1,
+          supplyAmountKrw: supply,
+          vatAmountKrw: Math.round(supply * 0.1),
+          unitId: m.unitId,
+          maintId: m.id,
+          billingYmTag: params.ym,
+        });
+      }
+    }
+    for (const d of params.logisticsDispatches || []) {
+      if (
+        d.relatedRefId === params.contract.id &&
+        d.costBearer === 'CUSTOMER' &&
+        d.customerChargeKrw > 0 &&
+        d.dispatchDate.slice(0, 7) === params.ym &&
+        !billedDispatchIds.has(d.id)
+      ) {
+        const supply = Math.round(d.customerChargeKrw);
+        out.push({
+          description: `${d.dispatchPurpose} 고객부담 운송비 · ${d.dispatchNo}`,
+          qty: 1,
+          supplyAmountKrw: supply,
+          vatAmountKrw: Math.round(supply * 0.1),
+          unitId: primaryUnitId,
+          dispatchId: d.id,
+          billingYmTag: params.ym,
+        });
+      }
+    }
+  }
+
+  return out;
 }
 
 export async function recordBillingCollection(params: {
@@ -1508,7 +1987,7 @@ export async function recordBillingCollection(params: {
   const col: FlCollection = {
     id: newId('COL'),
     tenantId: DEFAULT_TENANT_ID,
-    collectionNo: `COL-${Date.now().toString(36).toUpperCase()}`,
+    collectionNo: newId('COL'),
     billingId: billing.id,
     partnerId: billing.partnerId,
     partnerName: billing.partnerName,
@@ -1578,7 +2057,7 @@ export async function recordLogisticsDispatch(params: {
   const dispatch: FlLogisticsDispatch = {
     id: newId('LOG'),
     tenantId: DEFAULT_TENANT_ID,
-    dispatchNo: `LOG-${Date.now().toString(36).toUpperCase()}`,
+    dispatchNo: newId('LOG'),
     dispatchPurpose: params.dispatchPurpose,
     carrierPartnerId: params.carrier.id,
     carrierName: params.carrier.name,

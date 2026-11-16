@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AppShellProvider, useAppShell } from './core/AppShellContext';
+import { PageActivityProvider } from './core/PageActivityContext';
 import { ManualProvider } from './manual/ManualContext';
 import { ManualOverlay } from './manual/ManualOverlay';
 import { LoginView } from './components/LoginView';
@@ -97,8 +99,198 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
   }
 }
 
+interface ScrollSnapshot {
+  el: HTMLElement;
+  top: number;
+  left: number;
+}
+
+const ActiveHostSynchronizer: React.FC<{
+  activePage: FlPageId;
+  slotRef: React.RefObject<HTMLDivElement | null>;
+  hostMapRef: React.RefObject<Map<FlPageId, HTMLDivElement>>;
+  mountedPageRef: React.RefObject<FlPageId | null>;
+  windowScrollMapRef: React.RefObject<Map<FlPageId, number>>;
+  innerScrollMapRef: React.RefObject<Map<FlPageId, ScrollSnapshot[]>>;
+  getOrCreateHost: (pid: FlPageId) => HTMLDivElement;
+}> = ({
+  activePage,
+  slotRef,
+  hostMapRef,
+  mountedPageRef,
+  windowScrollMapRef,
+  innerScrollMapRef,
+  getOrCreateHost,
+}) => {
+  useLayoutEffect(() => {
+    const slotEl = slotRef.current;
+    if (!slotEl) return;
+
+    const prevPage = mountedPageRef.current;
+    if (prevPage && prevPage !== activePage) {
+      windowScrollMapRef.current.set(prevPage, window.scrollY);
+      const prevHost = hostMapRef.current.get(prevPage);
+      if (prevHost) {
+        const snapshots: ScrollSnapshot[] = [];
+        const walker = document.createTreeWalker(prevHost, NodeFilter.SHOW_ELEMENT);
+        let node = walker.nextNode();
+        while (node) {
+          if (node instanceof HTMLElement && (node.scrollTop > 0 || node.scrollLeft > 0)) {
+            snapshots.push({ el: node, top: node.scrollTop, left: node.scrollLeft });
+          }
+          node = walker.nextNode();
+        }
+        innerScrollMapRef.current.set(prevPage, snapshots);
+        if (prevHost.parentNode === slotEl) {
+          slotEl.removeChild(prevHost);
+        }
+      }
+    }
+
+    const nextHost = getOrCreateHost(activePage);
+    for (const child of Array.from(slotEl.childNodes)) {
+      if (child !== nextHost) {
+        slotEl.removeChild(child);
+      }
+    }
+    if (nextHost.parentNode !== slotEl) {
+      slotEl.appendChild(nextHost);
+    }
+
+    if (prevPage !== activePage) {
+      const innerSnapshots = innerScrollMapRef.current.get(activePage);
+      if (innerSnapshots) {
+        for (const item of innerSnapshots) {
+          if (nextHost.contains(item.el)) {
+            item.el.scrollTop = item.top;
+            item.el.scrollLeft = item.left;
+          }
+        }
+      }
+      const targetWinScroll = windowScrollMapRef.current.get(activePage) ?? 0;
+      window.scrollTo(0, targetWinScroll);
+    }
+
+    mountedPageRef.current = activePage;
+  }, [
+    activePage,
+    getOrCreateHost,
+    hostMapRef,
+    innerScrollMapRef,
+    mountedPageRef,
+    slotRef,
+    windowScrollMapRef,
+  ]);
+
+  return null;
+};
+
+const KeepAlivePageOutlet: React.FC<{
+  activePage: FlPageId;
+  canViewPage: (pageId: FlPageId) => boolean;
+}> = ({ activePage, canViewPage }) => {
+  const [visitedPages, setVisitedPages] = useState<FlPageId[]>(() => [activePage]);
+  const slotRef = useRef<HTMLDivElement | null>(null);
+  const hostMapRef = useRef<Map<FlPageId, HTMLDivElement>>(new Map());
+  const mountedPageRef = useRef<FlPageId | null>(null);
+  const windowScrollMapRef = useRef<Map<FlPageId, number>>(new Map());
+  const innerScrollMapRef = useRef<Map<FlPageId, ScrollSnapshot[]>>(new Map());
+
+  const getOrCreateHost = React.useCallback((pid: FlPageId): HTMLDivElement => {
+    let host = hostMapRef.current.get(pid);
+    if (!host) {
+      host = document.createElement('div');
+      host.setAttribute('data-keepalive-page', pid);
+      host.style.cssText =
+        'display: flex; flex-direction: column; gap: var(--space-page-gap); min-width: 0;';
+      hostMapRef.current.set(pid, host);
+    }
+    return host;
+  }, []);
+
+  const pagesToRender = useMemo(() => {
+    const base = visitedPages.filter((p) => canViewPage(p));
+    if (canViewPage(activePage) && !base.includes(activePage)) {
+      return [...base, activePage];
+    }
+    return base;
+  }, [visitedPages, activePage, canViewPage]);
+
+  useEffect(() => {
+    setVisitedPages((prev) => {
+      const filtered = prev.filter((p) => canViewPage(p));
+      const next =
+        canViewPage(activePage) && !filtered.includes(activePage)
+          ? [...filtered, activePage]
+          : filtered;
+      if (next.length === prev.length && next.every((v, idx) => v === prev[idx])) {
+        return prev;
+      }
+      return next;
+    });
+
+    for (const pid of Array.from(hostMapRef.current.keys())) {
+      if (!canViewPage(pid)) {
+        const hostEl = hostMapRef.current.get(pid);
+        if (hostEl && hostEl.parentNode) {
+          hostEl.parentNode.removeChild(hostEl);
+        }
+        hostMapRef.current.delete(pid);
+        windowScrollMapRef.current.delete(pid);
+        innerScrollMapRef.current.delete(pid);
+        if (mountedPageRef.current === pid) {
+          mountedPageRef.current = null;
+        }
+      }
+    }
+  }, [activePage, canViewPage]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (mountedPageRef.current === activePage) {
+        windowScrollMapRef.current.set(activePage, window.scrollY);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [activePage]);
+
+  return (
+    <>
+      <div
+        ref={slotRef}
+        data-keepalive-slot="true"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-page-gap)',
+          minWidth: 0,
+        }}
+      />
+      <ActiveHostSynchronizer
+        activePage={activePage}
+        slotRef={slotRef}
+        hostMapRef={hostMapRef}
+        mountedPageRef={mountedPageRef}
+        windowScrollMapRef={windowScrollMapRef}
+        innerScrollMapRef={innerScrollMapRef}
+        getOrCreateHost={getOrCreateHost}
+      />
+      {pagesToRender.map((pid) =>
+        createPortal(
+          <PageActivityProvider active={pid === activePage}>
+            {renderActivePage(pid)}
+          </PageActivityProvider>,
+          getOrCreateHost(pid),
+          pid
+        )
+      )}
+    </>
+  );
+};
+
 const AppRouter: React.FC = () => {
-  const { isLoading, currentUser, activePage } = useAppShell();
+  const { isLoading, currentUser, activePage, canViewPage } = useAppShell();
 
   if (isLoading) {
     return (
@@ -125,7 +317,13 @@ const AppRouter: React.FC = () => {
 
   return (
     <>
-      <ShellLayout>{renderActivePage(activePage)}</ShellLayout>
+      <ShellLayout>
+        <KeepAlivePageOutlet
+          key={currentUser.id}
+          activePage={activePage}
+          canViewPage={canViewPage}
+        />
+      </ShellLayout>
       <ManualOverlay />
     </>
   );

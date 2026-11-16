@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
+import { usePageActive } from '../core/PageActivityContext';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
 import { formatKoStatus, koStatusTone, type FlItemMaster, type FlPartner } from '../types/domain';
 import {
@@ -624,14 +625,16 @@ export const ModalDialog: React.FC<{
   width?: number;
   children: React.ReactNode;
 }> = ({ open, title, onClose, width = 640, children }) => {
+  const isPageActive = usePageActive();
+
   useEffect(() => {
-    if (!open) return;
+    if (!open || !isPageActive) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, isPageActive, onClose]);
 
   if (!open) return null;
 
@@ -968,6 +971,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   dataTestId,
   minDropdownWidth = 280,
 }) => {
+  const isPageActive = usePageActive();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlightIdx, setHighlightIdx] = useState(0);
@@ -1039,6 +1043,12 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       window.removeEventListener('scroll', handleScrollOrResize, true);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!isPageActive && open) {
+      setOpen(false);
+    }
+  }, [isPageActive, open]);
 
   const handleSelect = (opt: SearchableSelectOption) => {
     onChange(opt.value);

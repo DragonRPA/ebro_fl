@@ -1,7 +1,7 @@
-import type { TenantFeatures } from '../types/domain';
+import type { TenantFeatures, TenantR2Config } from '../types/domain';
 
-export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.33';
-export const EXPECTED_CORE_HASH: string = 'eda932ea37c1';
+export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.49';
+export const EXPECTED_CORE_HASH: string = '5541aa41dce3';
 // GitHub Releases CDN
 export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
 // Cloudflare R2 보조 엔드포인트
@@ -52,13 +52,12 @@ export function getTenantAgentInstallerInfo(tenant?: {
   subdomain?: string;
   targetRepo?: string;
 } | null): TenantAgentInstallerInfo {
-  const rawCode = (tenant?.tenantCode || 'EBRO_FL').toUpperCase();
-  const code = rawCode;
+  const code = normalizeAgentTenantCode(tenant?.tenantCode || 'EBRO_FL');
   const name = tenant?.displayName || tenant?.tradeName || tenant?.corporateName || '이브로지게차';
   const sub = tenant?.subdomain || (code === 'EBRO_FL' ? 'fl-demo' : code.toLowerCase());
   
-  // 테넌트 전용 설치 파일명 (예: eBroAgent_Setup_EBRO_FL.exe, eBroAgent_Setup_HANSOL.exe)
-  const fileName = `eBroAgent_Setup_${code}.exe`;
+  // 전 테넌트 공용 통합 에이전트 설치 파일명
+  const fileName = 'eBroAgent_Setup.exe';
   
   //  GitHub Releases 글로벌 초고속 CDN 기반 (8~10MB/s, 16MB를 3초 만에 다운로드 완료)
   // currentTenant?.targetRepo가 존재하면 해당 레포지토리 동적 사용 (미지정 시 DragonRPA/ebro_awp 기본값)
@@ -164,13 +163,42 @@ export interface AgentHealthInfo {
   timestamp?: string;
 }
 
+let activeAgentTenantCode: string = 'EBRO_FL';
+
+export function normalizeAgentTenantCode(raw?: string | null): string {
+  const s = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_');
+  if (!s) return 'EBRO_FL';
+  if (s === 'GIYEUN' || s === 'GIYUEN' || s === 'KIYUEN' || s === 'GIYEON' || s === 'GIYEONLIFT') {
+    return 'GIYEONLIFT';
+  }
+  return s;
+}
+
+export function setActiveAgentTenantCode(code?: string | null): void {
+  if (!code || !String(code).trim()) return;
+  activeAgentTenantCode = normalizeAgentTenantCode(code);
+}
+
+export function getActiveAgentTenantCode(): string {
+  return activeAgentTenantCode;
+}
+
+export function appendTenantQueryParam(path: string, codeOverride?: string): string {
+  const code = normalizeAgentTenantCode(codeOverride || activeAgentTenantCode);
+  if (!path || /(?:[?&])tenantCode=/.test(path)) return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}tenantCode=${encodeURIComponent(code)}`;
+}
+
 /**
  *  테넌트 관리 센터의 기능 정책을 로컬 에이전트에 실시간 핫 동기화
  */
 export async function syncTenantPolicyToAgent(
   tenant?: {
+    id?: string;
     tenantCode?: string;
     subdomain?: string;
+    solutionType?: string;
     displayName?: string;
     tradeName?: string;
     corporateName?: string;
@@ -184,6 +212,7 @@ export async function syncTenantPolicyToAgent(
     businessItem?: string;
     bankAccounts?: Array<{ bankName: string; accountNumber: string; accountHolder: string }>;
     stampImageUrl?: string;
+    r2Config?: TenantR2Config;
     features?: TenantFeatures;
   } | null,
   backupPolicy?: {
@@ -192,20 +221,29 @@ export async function syncTenantPolicyToAgent(
     autoBackupRetentionDays?: number;
     backupUserId?: string;
     backupUserName?: string;
-  } | null
+  } | null,
+  options?: { setAsActiveTabTenant?: boolean }
 ): Promise<boolean> {
   if (!tenant && !backupPolicy) return false;
   try {
     const payload: Record<string, any> = {};
+    const resolvedCode = normalizeAgentTenantCode(tenant?.tenantCode || activeAgentTenantCode);
     if (tenant) {
+      if (tenant.tenantCode && options?.setAsActiveTabTenant !== false) {
+        setActiveAgentTenantCode(resolvedCode);
+      }
       const isAiEnabled = Boolean(tenant.features?.agentAiEnabled);
-      const code = tenant.tenantCode || 'EBRO_FL';
-      const sub = tenant.subdomain || 'fl-demo';
-      const tenantName = tenant.displayName || tenant.tradeName || tenant.corporateName || code;
+      const sub = tenant.subdomain || (resolvedCode === 'EBRO_FL' ? 'fl-demo' : resolvedCode.toLowerCase());
+      const tenantName = tenant.displayName || tenant.tradeName || tenant.corporateName || resolvedCode;
       const corporateName = tenant.corporateName || tenant.tradeName || tenantName;
+      const tenantR2 = tenant.r2Config || tenant.features?.r2Config || undefined;
       Object.assign(payload, {
+        tenantId: tenant.id || '',
+        solutionType: tenant.solutionType || 'FL',
+        tenantSupabaseUrl: tenant.features?.tenantSupabaseUrl || '',
+        r2Config: tenantR2,
         agentAiEnabled: isAiEnabled,
-        tenantCode: code,
+        tenantCode: resolvedCode,
         subdomain: sub,
         tenantName,
         corporateName,
@@ -220,6 +258,8 @@ export async function syncTenantPolicyToAgent(
         bankAccounts: tenant.bankAccounts || [],
         stampImageUrl: tenant.stampImageUrl || ''
       });
+    } else {
+      payload.tenantCode = resolvedCode;
     }
     if (backupPolicy) {
       if (backupPolicy.autoBackupEnabled !== undefined) payload.autoBackupEnabled = Boolean(backupPolicy.autoBackupEnabled);
@@ -228,7 +268,7 @@ export async function syncTenantPolicyToAgent(
       if (backupPolicy.backupUserId !== undefined) payload.backupUserId = backupPolicy.backupUserId || '';
       if (backupPolicy.backupUserName !== undefined) payload.backupUserName = backupPolicy.backupUserName || '';
     }
-    const res = await fetchWithAgentFallback('/api/policy/sync', {
+    const res = await fetchWithAgentFallback(appendTenantQueryParam('/api/policy/sync', resolvedCode), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -402,7 +442,9 @@ export interface AgentFetchOptions extends RequestInit {
 }
 
 export async function fetchWithAgentFallback(path: string, init?: AgentFetchOptions): Promise<Response> {
-  const isHealthCheck = path.startsWith('/health');
+  const scopedPath = appendTenantQueryParam(path);
+  const scopedHealthPath = appendTenantQueryParam('/health');
+  const isHealthCheck = scopedPath.startsWith('/health');
   // 헬스체크만 빠른 응답 확인용 기본 타임아웃을 두고, 실제 본 작업은 타임아웃 제한을 두지 않음(0)
   const effectiveTimeout = isHealthCheck ? (init?.timeout || 2500) : (init?.timeout ?? 0);
   const requireAgent = Boolean(init?.requireAgent);
@@ -422,7 +464,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
       try {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 2500);
-        const pingRes = await fetch(`${h}/health`, { method: 'GET', signal: ctrl.signal, cache: 'no-store' });
+        const pingRes = await fetch(`${h}${scopedHealthPath}`, { method: 'GET', signal: ctrl.signal, cache: 'no-store' });
         clearTimeout(tid);
         if (pingRes.ok) {
           alive = true;
@@ -474,7 +516,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
     // 0-2. 직접 루프백이 PNA 등으로 차단된 경우 확장 프로그램 브리지로 보조 핑 확인
     if (!alive && isHttps && hasExtension) {
       try {
-        const extPing = await fetchViaExtensionBridge('/health', {
+        const extPing = await fetchViaExtensionBridge(scopedHealthPath, {
           method: 'GET',
           timeout: 2500
         } as RequestInit & { timeout?: number });
@@ -522,7 +564,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
         signal: freshController.signal,
       };
 
-      const res = await fetch(`${host}${path}`, mergedInit);
+      const res = await fetch(`${host}${scopedPath}`, mergedInit);
       if (timeoutTimer) clearTimeout(timeoutTimer);
 
       activeAgentBaseUrl = host;
@@ -537,7 +579,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
   // 2-2. 직접 루프백 fetch가 브라우저 정책(PNA/CORS 등)으로 차단된 경우 확장 프로그램 브리지로 보조 시도
   if (hasExtension) {
     try {
-      const extRes = await fetchViaExtensionBridge(path, {
+      const extRes = await fetchViaExtensionBridge(scopedPath, {
         ...init,
         timeout: effectiveTimeout
       } as RequestInit & { timeout?: number });

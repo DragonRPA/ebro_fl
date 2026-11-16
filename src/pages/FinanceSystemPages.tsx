@@ -4,7 +4,7 @@ import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import {
   addDaysIso,
-  calculateRentalProRataForMonth,
+  buildContractBillingLines,
   createEmployeeUser,
   payLeaseInstallment,
   recordBillingCollection,
@@ -69,16 +69,44 @@ export const ArBillingCollectionPage: React.FC = () => {
   const canEdit = canEditPage('ar_billing_collection');
   const today = new Date().toISOString().slice(0, 10);
   const curYm = today.slice(0, 7);
-
-  const billableContracts = useMemo(
-    () =>
-      datasets.contracts.filter(
-        (c) => c.status === 'ACTIVE' || c.status === 'FULFILLING' || c.status === 'COMPLETED'
-      ),
-    [datasets.contracts]
-  );
-
   const [billingYm, setBillingYm] = useState(curYm);
+
+  const billableContracts = useMemo(() => {
+    const active = datasets.contracts.filter(
+      (c) => c.status === 'ACTIVE' || c.status === 'FULFILLING' || c.status === 'COMPLETED'
+    );
+    return [...active].sort((a, b) => {
+      const aAmt = buildContractBillingLines({
+        contract: a,
+        contractLines: datasets.contractLines,
+        fulfillments: datasets.fulfillments,
+        rentalMaintenances: datasets.rentalMaintenances,
+        logisticsDispatches: datasets.logisticsDispatches,
+        existingBillings: datasets.billings,
+        ym: billingYm,
+      }).reduce((s, r) => s + r.supplyAmountKrw, 0);
+      const bAmt = buildContractBillingLines({
+        contract: b,
+        contractLines: datasets.contractLines,
+        fulfillments: datasets.fulfillments,
+        rentalMaintenances: datasets.rentalMaintenances,
+        logisticsDispatches: datasets.logisticsDispatches,
+        existingBillings: datasets.billings,
+        ym: billingYm,
+      }).reduce((s, r) => s + r.supplyAmountKrw, 0);
+      if ((aAmt > 0) !== (bAmt > 0)) return aAmt > 0 ? -1 : 1;
+      return b.contractDate.localeCompare(a.contractDate);
+    });
+  }, [
+    billingYm,
+    datasets.billings,
+    datasets.contractLines,
+    datasets.contracts,
+    datasets.fulfillments,
+    datasets.logisticsDispatches,
+    datasets.rentalMaintenances,
+  ]);
+
   const [contractId, setContractId] = useState(billableContracts[0]?.id || '');
   const [billingDate, setBillingDate] = useState(today);
   const [dueDate, setDueDate] = useState(() => {
@@ -99,6 +127,26 @@ export const ArBillingCollectionPage: React.FC = () => {
 
   const selectedContract =
     billableContracts.find((c) => c.id === (contractId || billableContracts[0]?.id)) || null;
+  const previewSupply = useMemo(() => {
+    if (!selectedContract) return 0;
+    return buildContractBillingLines({
+      contract: selectedContract,
+      contractLines: datasets.contractLines,
+      fulfillments: datasets.fulfillments,
+      rentalMaintenances: datasets.rentalMaintenances,
+      logisticsDispatches: datasets.logisticsDispatches,
+      existingBillings: datasets.billings,
+      ym: billingYm,
+    }).reduce((s, r) => s + r.supplyAmountKrw, 0);
+  }, [
+    billingYm,
+    datasets.billings,
+    datasets.contractLines,
+    datasets.fulfillments,
+    datasets.logisticsDispatches,
+    datasets.rentalMaintenances,
+    selectedContract,
+  ]);
   const scCycle = selectedContract?.paymentCycle;
   const scOffset = selectedContract?.paymentMonthOffset;
   const scDueDay = selectedContract?.paymentDueDay;
@@ -121,36 +169,21 @@ export const ArBillingCollectionPage: React.FC = () => {
 
   const executeCreateBilling = async () => {
     if (!selectedContract) throw new Error('청구 대상 계약을 선택해 주세요.');
-    const lines =
-      selectedContract.contractDomain === 'RENTAL'
-        ? calculateRentalProRataForMonth({
-            contract: selectedContract,
-            lines: datasets.contractLines,
-            ym: billingYm,
-          }).map((r) => ({
-            description: r.description,
-            qty: 1,
-            supplyAmountKrw: r.supplyAmountKrw,
-            vatAmountKrw: r.vatAmountKrw,
-            unitId: r.unitId,
-            contractLineId: r.contractLineId,
-          }))
-        : datasets.contractLines
-            .filter((l) => l.contractId === selectedContract.id)
-            .map((l) => ({
-              description: `${l.itemName} 공급대금`,
-              qty: l.quantity,
-              supplyAmountKrw: l.supplyAmountKrw,
-              vatAmountKrw: l.vatAmountKrw,
-              unitId: l.assignedUnitId || undefined,
-              contractLineId: l.id,
-            }));
+    const lines = buildContractBillingLines({
+      contract: selectedContract,
+      contractLines: datasets.contractLines,
+      fulfillments: datasets.fulfillments,
+      rentalMaintenances: datasets.rentalMaintenances,
+      logisticsDispatches: datasets.logisticsDispatches,
+      existingBillings: datasets.billings,
+      ym: billingYm,
+    });
 
     const supply = lines.reduce((s, r) => s + r.supplyAmountKrw, 0);
     const vat = lines.reduce((s, r) => s + r.vatAmountKrw, 0);
     const total = supply + vat;
-    if (total <= 0) {
-      throw new Error('해당 계약의 선택 연월 청구 산출 금액이 0원입니다.');
+    if (lines.length === 0 || total <= 0) {
+      throw new Error('출고 실행완료된 미청구 내역이 없습니다.');
     }
     const bId = newId('BIL');
     await execDbMutation('청구서 생성 저장', () =>
@@ -375,14 +408,29 @@ export const ArBillingCollectionPage: React.FC = () => {
               </select>
             </VerticalField>
             {selectedContract && (
-              <VerticalField label="계약 지급조건" width={165}>
-                <input
-                  type="text"
-                  readOnly
-                  value={`${normalizePaymentMethod(selectedContract.paymentMethod)} · ${formatPaymentTermsLabel(selectedContract.paymentCycle, selectedContract.paymentDueDay, selectedContract.paymentMonthOffset)}`}
-                  style={{ ...controlInputStyle, backgroundColor: 'var(--bg-secondary)' }}
-                />
-              </VerticalField>
+              <>
+                <VerticalField label="계약 지급조건" width={165}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${normalizePaymentMethod(selectedContract.paymentMethod)} · ${formatPaymentTermsLabel(selectedContract.paymentCycle, selectedContract.paymentDueDay, selectedContract.paymentMonthOffset)}`}
+                    style={{ ...controlInputStyle, backgroundColor: 'var(--bg-secondary)' }}
+                  />
+                </VerticalField>
+                <VerticalField label="예정 청구 공급가" width={145}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={formatMoney(previewSupply, { salesSensitive: true })}
+                    style={{
+                      ...controlInputStyle,
+                      backgroundColor: 'var(--bg-secondary)',
+                      fontWeight: 700,
+                      color: previewSupply > 0 ? 'var(--primary)' : 'var(--text-muted)',
+                    }}
+                  />
+                </VerticalField>
+              </>
             )}
             <VerticalField label="청구일자" required width={145}>
               <input
@@ -806,13 +854,24 @@ export const BankMatchingPage: React.FC = () => {
           label: `미수청구 · ${b.billingNo} · ${b.partnerName} · 미수 ${b.unpaidBalanceKrw.toLocaleString('ko-KR')}원`,
         }));
     }
-    return datasets.apPayables
+    const apOptions = datasets.apPayables
       .filter((a) => a.status !== 'PAID')
       .map((a) => ({
-        id: a.id,
+        id: `AP::${a.id}`,
         label: `매입채무 · ${a.payableNo} · ${a.partnerName} · ${(a.totalAmountKrw - a.paidAmountKrw).toLocaleString('ko-KR')}원`,
       }));
-  }, [datasets.apPayables, datasets.billings, selectedTx]);
+    const leaseOptions = datasets.financeLeaseSchedules
+      .filter((s) => !s.isPaid)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+      .map((s) => {
+        const lease = datasets.financeLeases.find((l) => l.id === s.leaseId);
+        return {
+          id: `LEASE::${s.id}`,
+          label: `금융리스회차 · ${lease?.lenderName || s.leaseId} · ${s.installmentNo}회차 · ${s.dueDate} · ${s.totalInstallmentKrw.toLocaleString('ko-KR')}원`,
+        };
+      });
+    return [...apOptions, ...leaseOptions];
+  }, [datasets.apPayables, datasets.billings, datasets.financeLeaseSchedules, datasets.financeLeases, selectedTx]);
 
   const handleAddTx = async () => {
     if (!counterpartyName.trim() || amountKrw <= 0) {
@@ -869,8 +928,33 @@ export const BankMatchingPage: React.FC = () => {
           bankTxId: selectedTx.id,
           recordedBy: currentUser.name,
         });
+      } else if (matchId.startsWith('LEASE::')) {
+        const schId = matchId.slice('LEASE::'.length);
+        const sch = datasets.financeLeaseSchedules.find((s) => s.id === schId);
+        const lease = sch ? datasets.financeLeases.find((l) => l.id === sch.leaseId) : undefined;
+        if (!sch || !lease) throw new Error('금융리스 회차를 찾을 수 없습니다.');
+        await payLeaseInstallment({
+          lease,
+          schedule: sch,
+          paidDate: selectedTx.txDate,
+          bankTxId: selectedTx.id,
+        });
+        await execDbMutation('리스출금 통장대사 연결', () =>
+          flSupabase
+            .from('bank_transactions')
+            .update(
+              camelToSnakeRow({
+                matchedType: 'LEASE_INSTALLMENT',
+                matchedId: sch.id,
+                matchStatus: 'MATCHED',
+                updatedAt: new Date().toISOString(),
+              })
+            )
+            .eq('id', selectedTx.id)
+        );
       } else {
-        const ap = datasets.apPayables.find((a) => a.id === matchId);
+        const apId = matchId.startsWith('AP::') ? matchId.slice('AP::'.length) : matchId;
+        const ap = datasets.apPayables.find((a) => a.id === apId);
         if (!ap) throw new Error('매입채무를 찾을 수 없습니다.');
         await settleApPayable({
           payable: ap,

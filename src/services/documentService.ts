@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import { PDFDocument } from 'pdf-lib';
-import { fetchWithAgentFallback, notifyAgentRequired } from './agentService';
+import { fetchWithAgentFallback, getActiveAgentTenantCode, notifyAgentRequired } from './agentService';
+import { decryptSecret } from '../utils/cryptoVault';
 import type {
   DocumentTemplateType,
   FlBilling,
@@ -467,7 +468,11 @@ export async function openExcelInAgent(fileName: string, base64Content: string):
   const resp = await fetchWithAgentFallback('/api/open-excel-binary', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fileName, fileContent: base64Content }),
+    body: JSON.stringify({
+      tenantCode: getActiveAgentTenantCode(),
+      fileName,
+      fileContent: base64Content,
+    }),
   });
   if (!resp.ok) {
     notifyAgentRequired('엑셀 문서 편집');
@@ -500,16 +505,19 @@ export async function sendDocumentEmailViaAgent(params: {
       ? [{ filename: params.fileName, content: params.base64Content }]
       : [];
 
+  const resolvedPassword = decryptSecret(mail.gmailAppPassword);
+
   const resp = await fetchWithAgentFallback('/api/send-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      tenantCode: params.tenant.tenantCode || getActiveAgentTenantCode(),
       to: params.to,
       cc: params.cc,
       subject: params.subject,
       body: params.body,
       googleEmail: mail.googleEmail,
-      gmailAppPassword: mail.gmailAppPassword,
+      gmailAppPassword: resolvedPassword,
       smtpProvider: mail.smtpProvider || 'GMAIL',
       smtpHost: mail.smtpHost || 'smtp.gmail.com',
       smtpPort: mail.smtpPort || 465,

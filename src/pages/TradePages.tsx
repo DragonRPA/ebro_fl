@@ -269,33 +269,43 @@ export const QuotationsPage: React.FC = () => {
         flSupabase.from('contracts').insert(camelToSnakeRow({ ...ctr }))
       );
 
+      let lineSeq = 1;
       for (let i = 0; i < qt.lines.length; i++) {
         const l = qt.lines[i];
-        const vat = Math.round(l.supplyAmountKrw * 0.1);
-        const lineRec: FlContractLine = {
-          id: newId('CL'),
-          tenantId: DEFAULT_TENANT_ID,
-          contractId: ctrId,
-          lineNo: i + 1,
-          itemId: l.itemId,
-          sku: l.sku,
-          itemName: l.itemName,
-          itemCategory: l.itemCategory || '완제품',
-          managementType: l.managementType || 'SERIAL',
-          quantity: l.qty,
-          fulfilledQty: 0,
-          unitPriceKrw: l.unitPriceKrw,
-          supplyAmountKrw: l.supplyAmountKrw,
-          vatAmountKrw: vat,
-          totalAmountKrw: l.supplyAmountKrw + vat,
-          optionSummary: l.optionSummary || null,
-          lineStatus: 'ACTIVE',
-          effectiveStartDate: today,
-          effectiveEndDate: endDt,
-        };
-        await execDbMutation('계약 품목 생성', () =>
-          flSupabase.from('contract_lines').insert(camelToSnakeRow({ ...lineRec }))
-        );
+        const isSplitRentalSerial =
+          qt.quoteDomain === 'RENTAL' &&
+          (l.managementType || 'SERIAL') === 'SERIAL' &&
+          l.qty > 1;
+        const unitCount = isSplitRentalSerial ? Math.max(1, Math.round(l.qty)) : 1;
+        for (let k = 0; k < unitCount; k++) {
+          const lineQty = isSplitRentalSerial ? 1 : l.qty;
+          const lineSupply = isSplitRentalSerial ? Math.round(l.unitPriceKrw) : l.supplyAmountKrw;
+          const vat = Math.round(lineSupply * 0.1);
+          const lineRec: FlContractLine = {
+            id: newId('CL'),
+            tenantId: DEFAULT_TENANT_ID,
+            contractId: ctrId,
+            lineNo: lineSeq++,
+            itemId: l.itemId,
+            sku: l.sku,
+            itemName: l.itemName,
+            itemCategory: l.itemCategory || '완제품',
+            managementType: l.managementType || 'SERIAL',
+            quantity: lineQty,
+            fulfilledQty: 0,
+            unitPriceKrw: l.unitPriceKrw,
+            supplyAmountKrw: lineSupply,
+            vatAmountKrw: vat,
+            totalAmountKrw: lineSupply + vat,
+            optionSummary: l.optionSummary || null,
+            lineStatus: 'ACTIVE',
+            effectiveStartDate: today,
+            effectiveEndDate: endDt,
+          };
+          await execDbMutation('계약 품목 생성', () =>
+            flSupabase.from('contract_lines').insert(camelToSnakeRow({ ...lineRec }))
+          );
+        }
       }
 
       await execDbMutation('견적 전환상태 갱신', () =>
@@ -681,33 +691,66 @@ export const TradeContractsPage: React.FC = () => {
       notifyToast('먼저 계약 확정을 진행해 주세요.', 'error');
       return;
     }
-    const openLines = selectedLines.filter((l) => l.fulfilledQty < l.quantity);
+    const requestedQtyByLine = new Map<string, number>();
+    for (const f of datasets.fulfillments) {
+      if (
+        f.contractId === selectedContract.id &&
+        f.actionType === '유통출고' &&
+        f.status === 'REQUESTED'
+      ) {
+        requestedQtyByLine.set(
+          f.contractLineId,
+          (requestedQtyByLine.get(f.contractLineId) || 0) + Number(f.quantity || 0)
+        );
+      }
+    }
+    const openLines = selectedLines
+      .map((l) => ({
+        line: l,
+        remainingQty: l.quantity - l.fulfilledQty - (requestedQtyByLine.get(l.id) || 0),
+      }))
+      .filter((x) => x.line.lineStatus !== 'CANCELLED' && x.remainingQty > 0);
     if (openLines.length === 0) {
       notifyToast('출고 의뢰할 잔여 품목이 없습니다.', 'error');
       return;
     }
     setBusy(true);
     try {
-      for (const line of openLines) {
-        const ful: FlFulfillment = {
-          id: newId('FUL'),
-          tenantId: DEFAULT_TENANT_ID,
-          fulfillmentNo: `FUL-${Date.now().toString(36).toUpperCase()}`,
-          fulfillmentDomain: 'TRADE',
-          actionType: '유통출고',
-          contractId: selectedContract.id,
-          contractLineId: line.id,
-          partnerId: selectedContract.partnerId,
-          partnerName: selectedContract.partnerName,
-          siteId: selectedContract.siteId || null,
-          itemId: line.itemId,
-          quantity: line.quantity - line.fulfilledQty,
-          cogsAmountKrw: 0,
-          status: 'REQUESTED',
-          effectiveDate: selectedContract.contractDate,
-        };
-        await execDbMutation('유통 출고의뢰 발행', () =>
-          flSupabase.from('fulfillments').insert(camelToSnakeRow({ ...ful }))
+      let seq = 1;
+      const baseTs = Date.now().toString(36).toUpperCase();
+      for (const { line, remainingQty } of openLines) {
+        const splitSerial = line.managementType === 'SERIAL' && remainingQty > 1;
+        const count = splitSerial ? Math.round(remainingQty) : 1;
+        for (let k = 0; k < count; k++) {
+          const reqQty = splitSerial ? 1 : remainingQty;
+          const ful: FlFulfillment = {
+            id: newId('FUL'),
+            tenantId: DEFAULT_TENANT_ID,
+            fulfillmentNo: `FUL-${baseTs}-${seq++}`,
+            fulfillmentDomain: 'TRADE',
+            actionType: '유통출고',
+            contractId: selectedContract.id,
+            contractLineId: line.id,
+            partnerId: selectedContract.partnerId,
+            partnerName: selectedContract.partnerName,
+            siteId: selectedContract.siteId || null,
+            itemId: line.itemId,
+            quantity: reqQty,
+            cogsAmountKrw: 0,
+            status: 'REQUESTED',
+            effectiveDate: selectedContract.contractDate,
+          };
+          await execDbMutation('유통 출고의뢰 발행', () =>
+            flSupabase.from('fulfillments').insert(camelToSnakeRow({ ...ful }))
+          );
+        }
+      }
+      if (selectedContract.status === 'ACTIVE') {
+        await execDbMutation('계약 출고진행 상태 갱신', () =>
+          flSupabase
+            .from('contracts')
+            .update({ status: 'FULFILLING', updated_at: new Date().toISOString() })
+            .eq('id', selectedContract.id)
         );
       }
       await refreshAll();
@@ -1162,12 +1205,13 @@ export const TradeFulfillmentPage: React.FC = () => {
 
   const candidateUnits = useMemo<FlInventoryUnit[]>(() => {
     if (!selectedFul) return [];
+    const reqQty = Math.max(1, Number(selectedFul.quantity || 1));
     const matching = datasets.inventoryUnits.filter(
       (u) =>
         u.ownershipDomain === '유통재고' &&
         u.status === '보유중' &&
         u.itemId === selectedFul.itemId &&
-        u.qtyOnHand > 0
+        u.qtyOnHand >= reqQty
     );
     return sortUnitsFifo(matching);
   }, [datasets.inventoryUnits, selectedFul]);
@@ -1537,7 +1581,11 @@ export const TradePerformancePage: React.FC = () => {
       const d = f.effectiveDate || '';
       if (d < startDate || d > endDate) continue;
       const line = datasets.contractLines.find((l) => l.id === f.contractLineId);
-      const sales = line ? Math.round((line.supplyAmountKrw * f.quantity) / Math.max(1, line.quantity)) : 0;
+      const sales = line
+        ? f.quantity === line.quantity
+          ? Math.round(line.supplyAmountKrw)
+          : Math.round((line.supplyAmountKrw * f.quantity) / Math.max(1, line.quantity))
+        : 0;
       const cogs = f.cogsAmountKrw;
       out.push({
         id: f.id,
@@ -1551,21 +1599,58 @@ export const TradePerformancePage: React.FC = () => {
       });
     }
 
+    for (const b of datasets.billings) {
+      if (b.status === 'CANCELLED' || b.billingDomain !== 'TRADE') continue;
+      const bYm = b.billingYm;
+      if (bYm < startDate.slice(0, 7) || bYm > endDate.slice(0, 7)) continue;
+      for (const bl of b.lines || []) {
+        if (!bl.dispatchId) continue;
+        out.push({
+          id: `${b.id}-${bl.dispatchId}`,
+          date: b.billingDate,
+          partnerName: b.partnerName,
+          itemName: bl.description,
+          salesKrw: bl.supplyAmountKrw,
+          cogsKrw: 0,
+          refundKrw: 0,
+          grossProfit: bl.supplyAmountKrw,
+        });
+      }
+    }
+
     for (const ac of datasets.tradeAftercareCases) {
-      if (ac.caseType !== '반품환불') continue;
+      if (ac.status !== 'COMPLETED') continue;
       if (ac.effectiveDate < startDate || ac.effectiveDate > endDate) continue;
       const u = datasets.inventoryUnits.find((x) => x.id === ac.unitId);
       const revCogs = u ? u.unitCostKrw : 0;
-      out.push({
-        id: ac.id,
-        date: ac.effectiveDate,
-        partnerName: ac.partnerName,
-        itemName: `반품환불 · ${u?.itemName || ac.caseNo}`,
-        salesKrw: 0,
-        cogsKrw: -revCogs,
-        refundKrw: ac.refundSupplyKrw,
-        grossProfit: -ac.refundSupplyKrw + revCogs,
-      });
+      if (ac.caseType === '반품환불') {
+        out.push({
+          id: ac.id,
+          date: ac.effectiveDate,
+          partnerName: ac.partnerName,
+          itemName: `반품환불 · ${u?.itemName || ac.caseNo}`,
+          salesKrw: 0,
+          cogsKrw: -revCogs,
+          refundKrw: ac.refundSupplyKrw,
+          grossProfit: -ac.refundSupplyKrw + revCogs,
+        });
+      } else if (ac.caseType === '반품교환') {
+        const rep = ac.replacementUnitId
+          ? datasets.inventoryUnits.find((x) => x.id === ac.replacementUnitId)
+          : undefined;
+        const repCogs = rep ? rep.unitCostKrw : 0;
+        const netCogsDelta = repCogs - revCogs;
+        out.push({
+          id: ac.id,
+          date: ac.effectiveDate,
+          partnerName: ac.partnerName,
+          itemName: `반품교환 · ${u?.itemName || ac.caseNo}`,
+          salesKrw: 0,
+          cogsKrw: netCogsDelta,
+          refundKrw: 0,
+          grossProfit: -netCogsDelta,
+        });
+      }
     }
 
     return out.sort((a, b) => b.date.localeCompare(a.date));
