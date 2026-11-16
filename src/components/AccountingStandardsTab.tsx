@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import "./AccountingStandardsTab.css";
 import {
   Search,
   BookOpen,
@@ -322,7 +323,7 @@ export default function AccountingStandardsTab() {
   }, [commentarySections]);
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="acc-std-root flex flex-col gap-3 w-full">
       {/* 상단 스코프 및 통합 검색 컨트롤 바 */}
       <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">

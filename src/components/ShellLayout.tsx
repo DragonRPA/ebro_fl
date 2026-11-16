@@ -238,9 +238,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               <div key={grp.groupId} style={{ marginBottom: 'var(--space-sidebar-group-mb)' }}>
                 <div
                   style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
+                    fontSize: '13.5px',
+                    fontWeight: 800,
+                    color: 'var(--text-main)',
                     padding: 'var(--space-sidebar-group-label-pad-y) var(--space-sidebar-group-label-pad-x)',
                     whiteSpace: 'nowrap',
                   }}
@@ -263,16 +263,16 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                           gap: 'var(--space-inline-gap)',
                           width: '100%',
                           textAlign: 'left',
-                          padding: 'var(--space-sidebar-item-pad-y) var(--space-sidebar-item-pad-x)',
+                          padding: 'var(--space-sidebar-item-pad-y) var(--space-sidebar-item-pad-x) var(--space-sidebar-item-pad-y) 20px',
                           borderRadius: '6px',
                           border: 'none',
                           borderLeft: isActive
                             ? '3px solid var(--primary)'
                             : '3px solid transparent',
                           backgroundColor: isActive ? 'var(--bg-active)' : 'transparent',
-                          color: isActive ? 'var(--primary)' : 'var(--text-main)',
+                          color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
                           fontWeight: isActive ? 700 : 500,
-                          fontSize: '13px',
+                          fontSize: '12.5px',
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           boxShadow: 'none',

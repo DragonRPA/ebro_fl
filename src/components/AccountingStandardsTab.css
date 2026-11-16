@@ -1,0 +1,198 @@
+/* Scoped Tailwind utility styles for AccountingStandardsTab (mirrors dragonrpa/erp) */
+.acc-std-root,
+.acc-std-root * {
+  box-sizing: border-box;
+}
+
+.acc-std-root .relative { position: relative; }
+.acc-std-root .absolute { position: absolute; }
+.acc-std-root .pointer-events-none { pointer-events: none; }
+
+.acc-std-root .left-2\.5 { left: 0.625rem; }
+.acc-std-root .left-3 { left: 0.75rem; }
+.acc-std-root .right-1\.5 { right: 0.375rem; }
+.acc-std-root .right-2 { right: 0.5rem; }
+
+.acc-std-root .flex { display: flex; }
+.acc-std-root .inline-flex { display: inline-flex; }
+.acc-std-root .grid { display: grid; }
+.acc-std-root .flex-1 { flex: 1 1 0%; }
+.acc-std-root .flex-col { flex-direction: column; }
+.acc-std-root .flex-wrap { flex-wrap: wrap; }
+.acc-std-root .shrink-0 { flex-shrink: 0; }
+.acc-std-root .items-center { align-items: center; }
+.acc-std-root .justify-between { justify-content: space-between; }
+.acc-std-root .justify-center { justify-content: center; }
+.acc-std-root .justify-end { justify-content: flex-end; }
+.acc-std-root .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+
+@media (min-width: 640px) {
+  .acc-std-root .sm\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .acc-std-root .sm\:col-span-2 { grid-column: span 2 / span 2; }
+  .acc-std-root .sm\:col-span-5 { grid-column: span 5 / span 5; }
+}
+
+@media (min-width: 1024px) {
+  .acc-std-root .lg\:flex-row { flex-direction: row; }
+  .acc-std-root .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acc-std-root .lg\:items-end { align-items: flex-end; }
+  .acc-std-root .lg\:max-w-md { max-width: 28rem; }
+}
+
+.acc-std-root .gap-1 { gap: 0.25rem; }
+.acc-std-root .gap-1\.5 { gap: 0.375rem; }
+.acc-std-root .gap-2 { gap: 0.5rem; }
+.acc-std-root .gap-2\.5 { gap: 0.625rem; }
+.acc-std-root .gap-3 { gap: 0.75rem; }
+
+.acc-std-root .space-y-1 > :not(:first-child) { margin-top: 0.25rem; }
+.acc-std-root .space-y-1\.5 > :not(:first-child) { margin-top: 0.375rem; }
+.acc-std-root .space-y-2 > :not(:first-child) { margin-top: 0.5rem; }
+.acc-std-root .space-y-2\.5 > :not(:first-child) { margin-top: 0.625rem; }
+.acc-std-root .space-y-3 > :not(:first-child) { margin-top: 0.75rem; }
+
+.acc-std-root .w-3 { width: 0.75rem; }
+.acc-std-root .w-3\.5 { width: 0.875rem; }
+.acc-std-root .w-4 { width: 1rem; }
+.acc-std-root .w-8 { width: 2rem; }
+.acc-std-root .w-full { width: 100%; }
+.acc-std-root .min-w-0 { min-width: 0; }
+
+.acc-std-root .h-3 { height: 0.75rem; }
+.acc-std-root .h-3\.5 { height: 0.875rem; }
+.acc-std-root .h-4 { height: 1rem; }
+.acc-std-root .h-8 { height: 2rem; }
+.acc-std-root .h-full { height: 100%; }
+.acc-std-root .h-\[calc\(100vh-230px\)\] { height: calc(100vh - 230px); }
+.acc-std-root .min-h-\[640px\] { min-height: 640px; }
+
+.acc-std-root .overflow-hidden { overflow: hidden; }
+.acc-std-root .overflow-y-auto { overflow-y: auto; }
+
+.acc-std-root .p-1 { padding: 0.25rem; }
+.acc-std-root .p-2\.5 { padding: 0.625rem; }
+.acc-std-root .p-3 { padding: 0.75rem; }
+.acc-std-root .p-3\.5 { padding: 0.875rem; }
+.acc-std-root .px-0\.5 { padding-left: 0.125rem; padding-right: 0.125rem; }
+.acc-std-root .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+.acc-std-root .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+.acc-std-root .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.acc-std-root .px-3\.5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+.acc-std-root .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.acc-std-root .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+.acc-std-root .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+.acc-std-root .py-16 { padding-top: 4rem; padding-bottom: 4rem; }
+.acc-std-root .pb-3 { padding-bottom: 0.75rem; }
+.acc-std-root .pl-1 { padding-left: 0.25rem; }
+.acc-std-root .pl-2 { padding-left: 0.5rem; }
+.acc-std-root .pl-8 { padding-left: 2rem; }
+.acc-std-root .pl-9 { padding-left: 2.25rem; }
+.acc-std-root .pr-14 { padding-right: 3.5rem; }
+.acc-std-root .pr-20 { padding-right: 5rem; }
+.acc-std-root .pt-2 { padding-top: 0.5rem; }
+.acc-std-root .pt-3 { padding-top: 0.75rem; }
+
+.acc-std-root .mb-1 { margin-bottom: 0.25rem; }
+.acc-std-root .mb-2 { margin-bottom: 0.5rem; }
+.acc-std-root .mb-2\.5 { margin-bottom: 0.625rem; }
+.acc-std-root .mb-3 { margin-bottom: 0.75rem; }
+.acc-std-root .mr-0\.5 { margin-right: 0.125rem; }
+.acc-std-root .mt-0\.5 { margin-top: 0.125rem; }
+.acc-std-root .mt-2\.5 { margin-top: 0.625rem; }
+.acc-std-root .mt-3 { margin-top: 0.75rem; }
+
+.acc-std-root .rounded-sm { border-radius: 0.125rem; }
+.acc-std-root .rounded { border-radius: 0.25rem; }
+.acc-std-root .rounded-md { border-radius: 0.375rem; }
+.acc-std-root .rounded-lg { border-radius: 0.5rem; }
+.acc-std-root .shadow-xs { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+
+.acc-std-root .border { border: 1px solid #e2e8f0; }
+.acc-std-root .border-b { border-bottom: 1px solid #e2e8f0; }
+.acc-std-root .border-t { border-top: 1px solid #e2e8f0; }
+.acc-std-root .border-l-2 { border-left: 2px solid #e2e8f0; }
+.acc-std-root .border-l-4 { border-left: 4px solid #e2e8f0; }
+
+.acc-std-root .border-slate-100 { border-color: #f1f5f9; }
+.acc-std-root .border-slate-200 { border-color: #e2e8f0; }
+.acc-std-root .border-slate-300 { border-color: #cbd5e1; }
+.acc-std-root .border-slate-600 { border-color: #475569; }
+.acc-std-root .border-blue-200 { border-color: #bfdbfe; }
+.acc-std-root .border-blue-300 { border-color: #93c5fd; }
+.acc-std-root .border-emerald-200 { border-color: #a7f3d0; }
+.acc-std-root .border-emerald-300 { border-color: #6ee7b7; }
+.acc-std-root .border-amber-200 { border-color: #fde68a; }
+
+.acc-std-root .bg-white { background-color: #ffffff; }
+.acc-std-root .bg-slate-50 { background-color: #f8fafc; }
+.acc-std-root .bg-slate-50\/50 { background-color: rgba(248, 250, 252, 0.5); }
+.acc-std-root .bg-slate-100 { background-color: #f1f5f9; }
+.acc-std-root .bg-slate-100\/90 { background-color: rgba(241, 245, 249, 0.9); }
+.acc-std-root .bg-slate-200\/70 { background-color: rgba(226, 232, 240, 0.7); }
+.acc-std-root .bg-slate-800 { background-color: #1e293b; }
+.acc-std-root .bg-slate-900 { background-color: #0f172a; }
+.acc-std-root .bg-blue-50 { background-color: #eff6ff; }
+.acc-std-root .bg-blue-50\/70 { background-color: rgba(239, 246, 255, 0.7); }
+.acc-std-root .bg-blue-100 { background-color: #dbeafe; }
+.acc-std-root .bg-emerald-50 { background-color: #ecfdf5; }
+.acc-std-root .bg-emerald-100 { background-color: #d1fae5; }
+.acc-std-root .bg-emerald-900 { background-color: #064e3b; }
+.acc-std-root .bg-emerald-950 { background-color: #022c22; }
+.acc-std-root .bg-amber-50\/70 { background-color: rgba(255, 251, 235, 0.7); }
+.acc-std-root .bg-amber-300 { background-color: #fcd34d; }
+.acc-std-root .bg-amber-400 { background-color: #fbbf24; }
+
+.acc-std-root .text-\[10px\] { font-size: 10px; line-height: 1.35; }
+.acc-std-root .text-\[11px\] { font-size: 11px; line-height: 1.4; }
+.acc-std-root .text-xs { font-size: 0.75rem; line-height: 1rem; }
+.acc-std-root .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.acc-std-root .text-base { font-size: 1rem; line-height: 1.5rem; }
+
+.acc-std-root .font-medium { font-weight: 500; }
+.acc-std-root .font-semibold { font-weight: 600; }
+.acc-std-root .font-bold { font-weight: 700; }
+.acc-std-root .font-extrabold { font-weight: 800; }
+.acc-std-root .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.acc-std-root .leading-relaxed { line-height: 1.625; }
+.acc-std-root .text-center { text-align: center; }
+.acc-std-root .whitespace-nowrap { white-space: nowrap; }
+.acc-std-root .whitespace-pre-line { white-space: pre-line; }
+
+.acc-std-root .text-white { color: #ffffff; }
+.acc-std-root .text-slate-300 { color: #cbd5e1; }
+.acc-std-root .text-slate-400 { color: #94a3b8; }
+.acc-std-root .text-slate-500 { color: #64748b; }
+.acc-std-root .text-slate-600 { color: #475569; }
+.acc-std-root .text-slate-700 { color: #334155; }
+.acc-std-root .text-slate-800 { color: #1e293b; }
+.acc-std-root .text-slate-900 { color: #0f172a; }
+.acc-std-root .text-slate-950 { color: #020617; }
+.acc-std-root .text-blue-400 { color: #60a5fa; }
+.acc-std-root .text-blue-600 { color: #2563eb; }
+.acc-std-root .text-blue-700 { color: #1d4ed8; }
+.acc-std-root .text-blue-800 { color: #1e40af; }
+.acc-std-root .text-blue-900 { color: #1e3a8a; }
+.acc-std-root .text-emerald-200 { color: #a7f3d0; }
+.acc-std-root .text-emerald-400 { color: #34d399; }
+.acc-std-root .text-emerald-600 { color: #059669; }
+.acc-std-root .text-emerald-800 { color: #065f46; }
+.acc-std-root .text-emerald-950 { color: #022c22; }
+.acc-std-root .text-amber-700 { color: #b45309; }
+.acc-std-root .text-amber-950 { color: #451a03; }
+
+.acc-std-root .transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+
+.acc-std-root .hover\:bg-blue-100:hover { background-color: #dbeafe; }
+.acc-std-root .hover\:bg-emerald-100:hover { background-color: #d1fae5; }
+.acc-std-root .hover\:bg-emerald-800:hover { background-color: #065f46; }
+.acc-std-root .hover\:bg-slate-100:hover { background-color: #f1f5f9; }
+.acc-std-root .hover\:bg-slate-200:hover { background-color: #e2e8f0; }
+.acc-std-root .hover\:bg-slate-700:hover { background-color: #334155; }
+.acc-std-root .hover\:text-slate-800:hover { color: #1e293b; }
+
+.acc-std-root .focus\:bg-white:focus { background-color: #ffffff; }
+.acc-std-root .focus\:outline-none:focus { outline: none; }
+.acc-std-root .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3); }
+.acc-std-root .focus\:ring-blue-600:focus { box-shadow: 0 0 0 2px #2563eb; }
+.acc-std-root .focus\:ring-emerald-600:focus { box-shadow: 0 0 0 2px #059669; }
+.acc-std-root .disabled\:opacity-40:disabled { opacity: 0.4; }
