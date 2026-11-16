@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Download, Eye, EyeOff, Monitor, RefreshCw } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
+import {
+  EXPECTED_AGENT_VERSION,
+  triggerAgentSelfUpdate,
+  triggerTenantAgentDownload,
+} from '../services/agentService';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 
 const SAVED_LOGIN_ID_KEY = 'ebro_fl_saved_login_id';
@@ -14,7 +20,7 @@ function readSavedLoginId(): string {
 }
 
 export const LoginView: React.FC = () => {
-  const { tenantProfile, loginWithCredentials } = useAppShell();
+  const { tenantProfile, agentOnline, agentInfo, loginWithCredentials, notifyToast } = useAppShell();
   const initialSavedId = readSavedLoginId();
   const [loginId, setLoginId] = useState(initialSavedId);
   const [rememberId, setRememberId] = useState(Boolean(initialSavedId));
@@ -22,6 +28,35 @@ export const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [updatingAgent, setUpdatingAgent] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+
+  const latestAgentVer = EXPECTED_AGENT_VERSION;
+  const localAgentVer = agentInfo?.version || '';
+  const isVerMatch = agentOnline && Boolean(localAgentVer) && localAgentVer === latestAgentVer;
+  const isVerMismatch = agentOnline && Boolean(localAgentVer) && localAgentVer !== latestAgentVer;
+
+  const handleAgentDownload = () => {
+    triggerTenantAgentDownload({
+      tenantCode: tenantProfile.tenantCode,
+      displayName: tenantProfile.displayName,
+      corporateName: tenantProfile.corporateName,
+      subdomain: tenantProfile.subdomain,
+    });
+    notifyToast(`통합 에이전트 설치 프로그램(${latestAgentVer}) 다운로드를 시작합니다.`, 'info');
+  };
+
+  const handleAgentQuickUpdate = async () => {
+    setUpdatingAgent(true);
+    try {
+      const res = await triggerAgentSelfUpdate(true);
+      notifyToast(res.message || '에이전트 업데이트 요청을 전송했습니다.', res.success ? 'success' : 'error');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '에이전트 업데이트 요청에 실패했습니다.', 'error');
+    } finally {
+      setUpdatingAgent(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +236,188 @@ export const LoginView: React.FC = () => {
         >
           {busy ? '인증 처리중' : '로그인'}
         </button>
+
+        {/* 에이전트 버전 정보 및 설치 프로그램 다운로드 */}
+        <div
+          data-testid="login-agent-card"
+          style={{
+            marginTop: '2px',
+            padding: '12px 14px',
+            borderRadius: '8px',
+            backgroundColor: 'var(--bg-app)',
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '8px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Monitor size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                에이전트 설치 프로그램
+              </span>
+            </div>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                backgroundColor: 'var(--primary-light)',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-color)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tenantProfile.displayName || '이브로지게차'}
+            </span>
+          </div>
+
+          <div
+            style={{
+              padding: '8px 10px',
+              borderRadius: '6px',
+              backgroundColor: isVerMismatch
+                ? 'var(--warning-light)'
+                : isVerMatch
+                  ? 'var(--success-light)'
+                  : 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              fontSize: '11.5px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>최신 배포 버전</span>
+              <span data-testid="login-agent-latest-ver" style={{ color: 'var(--primary)', fontWeight: 800 }}>
+                {latestAgentVer}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>내 단말 실행 버전</span>
+              <span
+                data-testid="login-agent-local-ver"
+                style={{
+                  fontWeight: 800,
+                  color: isVerMismatch ? 'var(--warning)' : isVerMatch ? 'var(--success)' : 'var(--text-muted)',
+                }}
+              >
+                {agentOnline ? localAgentVer || '확인 중' : '미실행'}
+              </span>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: '4px',
+                marginTop: '2px',
+                borderTop: '1px dashed var(--border-color)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>버전 대조 상태</span>
+              <span
+                style={{
+                  fontWeight: 800,
+                  color: isVerMismatch ? 'var(--danger)' : isVerMatch ? 'var(--success)' : 'var(--text-secondary)',
+                }}
+              >
+                {isVerMismatch ? '버전 불일치 · 업데이트 필요' : isVerMatch ? '최신 버전 일치' : '에이전트 미실행'}
+              </span>
+            </div>
+            {isVerMismatch && (
+              <button
+                type="button"
+                disabled={updatingAgent}
+                onClick={handleAgentQuickUpdate}
+                style={{
+                  ...actionBtnStyle('secondary', true),
+                  width: '100%',
+                  marginTop: '4px',
+                  backgroundColor: 'var(--warning)',
+                  color: '#ffffff',
+                  borderColor: 'var(--warning)',
+                }}
+              >
+                <RefreshCw size={13} />
+                <span>{updatingAgent ? '업데이트 진행 중' : `최신 버전(${latestAgentVer}) 즉시 업데이트`}</span>
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            data-testid="login-agent-download-btn"
+            onClick={handleAgentDownload}
+            style={{
+              ...actionBtnStyle('primary'),
+              width: '100%',
+              height: 'calc(34px - 2pt)',
+            }}
+            title="단말 백그라운드 에이전트 설치 패키지 다운로드"
+          >
+            <Download size={14} />
+            <span>이브로 통합 에이전트 설치 ({latestAgentVer})</span>
+          </button>
+        </div>
+
+        {/* 개인정보처리방침 법정 고지 및 저작권 안내 */}
+        <div
+          style={{
+            marginTop: '2px',
+            paddingTop: '10px',
+            borderTop: '1px dashed var(--border-color)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}
+        >
+          <div>
+            <button
+              type="button"
+              data-testid="login-privacy-policy-btn"
+              onClick={() => setShowPrivacyPolicy(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: '2px 8px',
+                fontWeight: 600,
+              }}
+            >
+              개인정보처리방침
+            </button>
+          </div>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', lineHeight: 1.45, wordBreak: 'keep-all' }}>
+            <div style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
+              © 2026 드래곤알피에이
+            </div>
+            <div>
+              본 소프트웨어 및 데이터베이스 스키마는 저작권법과 부정경쟁방지법에 의해 보호되는 영업비밀이며, 무단 복제·배포·역공학을 엄격히 금지합니다.
+            </div>
+          </div>
+        </div>
       </form>
+
+      {showPrivacyPolicy && (
+        <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+      )}
     </div>
   );
 };

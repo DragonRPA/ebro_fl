@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { matchesKoreanQuery } from '../utils/hangulSearch';
 import { useAppShell } from '../core/AppShellContext';
 import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
@@ -98,6 +99,53 @@ export const QuotationsPage: React.FC = () => {
     datasets.quotations[0]?.id || null
   );
   const [busy, setBusy] = useState(false);
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterDomain, setFilterDomain] = useState('');
+  const [filterPartnerId, setFilterPartnerId] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState('');
+
+  const quotePartnerFilterOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const q of datasets.quotations) {
+      if (q.partnerId && !seen.has(q.partnerId)) {
+        seen.set(q.partnerId, q.partnerName);
+      }
+    }
+    return [
+      { value: '', label: '전체 거래처' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [datasets.quotations]);
+
+  const filteredQuotations = useMemo(() => {
+    const kw = filterKeyword.trim().toLowerCase();
+    return datasets.quotations
+      .filter((q) => {
+        if (filterStartDate && q.quoteDate < filterStartDate) return false;
+        if (filterEndDate && q.quoteDate > filterEndDate) return false;
+        if (filterDomain && q.quoteDomain !== filterDomain) return false;
+        if (filterPartnerId && q.partnerId !== filterPartnerId) return false;
+        if (filterStatus && q.status !== filterStatus) return false;
+        if (kw) {
+          const text = `${q.quoteNo} ${q.partnerName} ${q.memo || ''}`.toLowerCase();
+          if (!text.includes(kw)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.quoteDate.localeCompare(a.quoteDate));
+  }, [
+    datasets.quotations,
+    filterDomain,
+    filterEndDate,
+    filterKeyword,
+    filterPartnerId,
+    filterStartDate,
+    filterStatus,
+  ]);
 
   const handleSelectItem = (nextId: string, nextDomain: 'TRADE' | 'RENTAL' = quoteDomain) => {
     setItemId(nextId);
@@ -490,44 +538,162 @@ export const QuotationsPage: React.FC = () => {
         </SectionPanel>
       )}
 
-      <DataGrid
-        columns={[
-          { key: 'quoteNo', header: '견적번호', width: 140, render: (r) => <span style={{ fontWeight: 700 }}>{r.quoteNo}</span> },
-          {
-            key: 'domain',
-            header: '구분',
-            width: 85,
-            align: 'center',
-            render: (r) => <StatusBadge label={r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'} tone="info" />,
-          },
-          { key: 'partnerName', header: '거래처', render: (r) => r.partnerName },
-          { key: 'quoteDate', header: '견적일', width: 105, render: (r) => r.quoteDate },
-          {
-            key: 'total',
-            header: '합계금액',
-            width: 130,
-            align: 'right',
-            render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
-          },
-          {
-            key: 'status',
-            header: '상태',
-            width: 95,
-            align: 'center',
-            render: (r) => (
-              <StatusBadge
-                label={QUOTATION_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
-                tone={koStatusTone(r.status)}
-              />
-            ),
-          },
-        ]}
-        rows={[...datasets.quotations].sort((a, b) => b.quoteDate.localeCompare(a.quoteDate))}
-        rowKey={(r) => r.id}
-        selectedRowId={selectedQuote?.id || null}
-        onRowClick={(r) => setSelectedQuoteId(r.id)}
-        maxHeight="360px"
-      />
+      <SectionPanel
+        title={`견적 원장 · ${filteredQuotations.length}건`}
+        rightSlot={
+          (filterStartDate || filterEndDate || filterDomain || filterPartnerId || filterStatus || filterKeyword) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterDomain('');
+                setFilterPartnerId('');
+                setFilterStatus('');
+                setFilterKeyword('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 'var(--space-field-grid-gap)',
+            marginBottom: 'var(--space-stack-gap)',
+            alignItems: 'end',
+          }}
+        >
+          <VerticalField label="조회 시작일" minWidth={0}>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="조회 종료일" minWidth={0}>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="견적 구분" minWidth={0}>
+            <select
+              value={filterDomain}
+              onChange={(e) => setFilterDomain(e.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">전체 구분</option>
+              <option value="TRADE">유통</option>
+              <option value="RENTAL">렌탈</option>
+            </select>
+          </VerticalField>
+          <VerticalField label="거래처" minWidth={0}>
+            <SearchableSelect
+              value={filterPartnerId}
+              onChange={setFilterPartnerId}
+              options={quotePartnerFilterOptions}
+              placeholder="전체 거래처"
+              searchPlaceholder="거래처명 · 초성 검색"
+            />
+          </VerticalField>
+          <VerticalField label="상태" minWidth={0}>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">전체 상태</option>
+              <option value="DRAFT">작성중</option>
+              <option value="SENT">발송완료</option>
+              <option value="ACCEPTED">수주확정</option>
+              <option value="CONVERTED">계약전환</option>
+              <option value="CANCELLED">취소</option>
+            </select>
+          </VerticalField>
+          <VerticalField label="견적번호 검색" minWidth={0}>
+            <input
+              type="text"
+              value={filterKeyword}
+              onChange={(e) => setFilterKeyword(e.target.value)}
+              placeholder="견적번호, 비고"
+              style={controlInputStyle}
+            />
+          </VerticalField>
+        </div>
+
+        <DataGrid
+          columns={[
+            {
+              key: 'quoteNo',
+              header: '견적번호',
+              width: 140,
+              sortable: true,
+              sortValue: (r) => r.quoteNo,
+              render: (r) => <span style={{ fontWeight: 700 }}>{r.quoteNo}</span>,
+            },
+            {
+              key: 'domain',
+              header: '구분',
+              width: 85,
+              align: 'center',
+              sortable: true,
+              sortValue: (r) => (r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'),
+              render: (r) => <StatusBadge label={r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'} tone="info" />,
+            },
+            {
+              key: 'partnerName',
+              header: '거래처',
+              sortable: true,
+              sortValue: (r) => r.partnerName,
+              render: (r) => r.partnerName,
+            },
+            {
+              key: 'quoteDate',
+              header: '견적일',
+              width: 105,
+              sortable: true,
+              sortValue: (r) => r.quoteDate,
+              render: (r) => r.quoteDate,
+            },
+            {
+              key: 'total',
+              header: '합계금액',
+              width: 130,
+              align: 'right',
+              sortable: true,
+              sortValue: (r) => Number(r.totalAmountKrw || 0),
+              render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
+            },
+            {
+              key: 'status',
+              header: '상태',
+              width: 95,
+              align: 'center',
+              sortable: true,
+              sortValue: (r) => QUOTATION_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status),
+              render: (r) => (
+                <StatusBadge
+                  label={QUOTATION_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+                  tone={koStatusTone(r.status)}
+                />
+              ),
+            },
+          ]}
+          rows={filteredQuotations}
+          rowKey={(r) => r.id}
+          selectedRowId={selectedQuote?.id || null}
+          onRowClick={(r) => setSelectedQuoteId(r.id)}
+          maxHeight="360px"
+        />
+      </SectionPanel>
     </div>
   );
 };
@@ -592,6 +758,41 @@ export const TradeContractsPage: React.FC = () => {
   });
   const [specialTerms, setSpecialTerms] = useState('');
   const [busy, setBusy] = useState(false);
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterPartnerId, setFilterPartnerId] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState('');
+
+  const tradePartnerFilterOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of tradeContracts) {
+      if (c.partnerId && !seen.has(c.partnerId)) {
+        seen.set(c.partnerId, c.partnerName);
+      }
+    }
+    return [
+      { value: '', label: '전체 매출처' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [tradeContracts]);
+
+  const filteredTradeContracts = useMemo(() => {
+    const kw = filterKeyword.trim().toLowerCase();
+    return tradeContracts.filter((c) => {
+      if (filterStartDate && c.contractDate < filterStartDate) return false;
+      if (filterEndDate && c.contractDate > filterEndDate) return false;
+      if (filterPartnerId && c.partnerId !== filterPartnerId) return false;
+      if (filterStatus && c.status !== filterStatus) return false;
+      if (kw) {
+        const text = `${c.contractNo} ${c.partnerName} ${c.memo || ''}`.toLowerCase();
+        if (!text.includes(kw)) return false;
+      }
+      return true;
+    });
+  }, [tradeContracts, filterStartDate, filterEndDate, filterPartnerId, filterStatus, filterKeyword]);
 
   const handleCreateContract = async () => {
     const partner = customers.find((c) => c.id === (partnerId || customers[0]?.id));
@@ -996,48 +1197,159 @@ export const TradeContractsPage: React.FC = () => {
         </SectionPanel>
       )}
 
-      <DataGrid
-        columns={[
-          { key: 'contractNo', header: '계약번호', width: 140, render: (r) => <span style={{ fontWeight: 700 }}>{r.contractNo}</span> },
-          { key: 'partnerName', header: '매출처', render: (r) => r.partnerName },
-          { key: 'contractDate', header: '계약일', width: 105, render: (r) => r.contractDate },
-          {
-            key: 'paymentTerms',
-            header: '결제 · 지급기일',
-            width: 155,
-            render: (r) =>
-              `${normalizePaymentMethod(r.paymentMethod)} · ${formatPaymentTermsLabel(
-                r.paymentCycle,
-                r.paymentDueDay,
-                r.paymentMonthOffset
-              )}`,
-          },
-          {
-            key: 'total',
-            header: '계약합계',
-            width: 135,
-            align: 'right',
-            render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
-          },
-          {
-            key: 'status',
-            header: '상태',
-            width: 100,
-            align: 'center',
-            render: (r) => (
-              <StatusBadge
-                label={CONTRACT_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
-                tone={koStatusTone(r.status)}
-              />
-            ),
-          },
-        ]}
-        rows={tradeContracts}
-        rowKey={(r) => r.id}
-        selectedRowId={selectedContract?.id || null}
-        onRowClick={(r) => setSelectedId(r.id)}
-        maxHeight="340px"
-      />
+      <SectionPanel
+        title={`유통 계약 원장 · ${filteredTradeContracts.length}건`}
+        rightSlot={
+          (filterStartDate || filterEndDate || filterPartnerId || filterStatus || filterKeyword) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterPartnerId('');
+                setFilterStatus('');
+                setFilterKeyword('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))',
+            gap: 'var(--space-field-grid-gap)',
+            marginBottom: 'var(--space-stack-gap)',
+            alignItems: 'end',
+          }}
+        >
+          <VerticalField label="조회 시작일" minWidth={0}>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="조회 종료일" minWidth={0}>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="매출처" minWidth={0}>
+            <SearchableSelect
+              value={filterPartnerId}
+              onChange={setFilterPartnerId}
+              options={tradePartnerFilterOptions}
+              placeholder="전체 매출처"
+              searchPlaceholder="매출처명 · 초성 검색"
+            />
+          </VerticalField>
+          <VerticalField label="상태" minWidth={0}>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">전체 상태</option>
+              <option value="DRAFT">임시저장</option>
+              <option value="ACTIVE">진행중</option>
+              <option value="FULFILLING">출고진행</option>
+              <option value="COMPLETED">완료</option>
+              <option value="CANCELLED">취소</option>
+            </select>
+          </VerticalField>
+          <VerticalField label="계약번호 검색" minWidth={0}>
+            <input
+              type="text"
+              value={filterKeyword}
+              onChange={(e) => setFilterKeyword(e.target.value)}
+              placeholder="계약번호, 비고"
+              style={controlInputStyle}
+            />
+          </VerticalField>
+        </div>
+
+        <DataGrid
+          columns={[
+            {
+              key: 'contractNo',
+              header: '계약번호',
+              width: 140,
+              sortable: true,
+              sortValue: (r) => r.contractNo,
+              render: (r) => <span style={{ fontWeight: 700 }}>{r.contractNo}</span>,
+            },
+            {
+              key: 'partnerName',
+              header: '매출처',
+              sortable: true,
+              sortValue: (r) => r.partnerName,
+              render: (r) => r.partnerName,
+            },
+            {
+              key: 'contractDate',
+              header: '계약일',
+              width: 105,
+              sortable: true,
+              sortValue: (r) => r.contractDate,
+              render: (r) => r.contractDate,
+            },
+            {
+              key: 'paymentTerms',
+              header: '결제 · 지급기일',
+              width: 155,
+              sortable: true,
+              sortValue: (r) =>
+                `${normalizePaymentMethod(r.paymentMethod)} · ${formatPaymentTermsLabel(
+                  r.paymentCycle,
+                  r.paymentDueDay,
+                  r.paymentMonthOffset
+                )}`,
+              render: (r) =>
+                `${normalizePaymentMethod(r.paymentMethod)} · ${formatPaymentTermsLabel(
+                  r.paymentCycle,
+                  r.paymentDueDay,
+                  r.paymentMonthOffset
+                )}`,
+            },
+            {
+              key: 'total',
+              header: '계약합계',
+              width: 135,
+              align: 'right',
+              sortable: true,
+              sortValue: (r) => Number(r.totalAmountKrw || 0),
+              render: (r) => formatMoney(r.totalAmountKrw, { salesSensitive: true }),
+            },
+            {
+              key: 'status',
+              header: '상태',
+              width: 100,
+              align: 'center',
+              sortable: true,
+              sortValue: (r) => CONTRACT_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status),
+              render: (r) => (
+                <StatusBadge
+                  label={CONTRACT_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
+                  tone={koStatusTone(r.status)}
+                />
+              ),
+            },
+          ]}
+          rows={filteredTradeContracts}
+          rowKey={(r) => r.id}
+          selectedRowId={selectedContract?.id || null}
+          onRowClick={(r) => setSelectedId(r.id)}
+          maxHeight="340px"
+        />
+      </SectionPanel>
     </div>
   );
 };
@@ -1049,18 +1361,49 @@ export const TradeInventoryPage: React.FC = () => {
 
   const [catFilter, setCatFilter] = useState<'ALL' | ItemCategory>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | '보유중' | '판매완료'>('보유중');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterItemId, setFilterItemId] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState('');
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [transferDate, setTransferDate] = useState(today);
 
+  const tradeItemFilterOptions = useMemo(() => {
+    const seen = new Map<string, { label: string; searchText: string }>();
+    for (const u of datasets.inventoryUnits) {
+      if (u.ownershipDomain !== '유통재고') continue;
+      if (!seen.has(u.itemId)) {
+        seen.set(u.itemId, {
+          label: `${u.sku} · ${u.itemName}`,
+          searchText: `${u.itemName} ${u.sku}`,
+        });
+      }
+    }
+    return [
+      { value: '', label: '전체 품목' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].label.localeCompare(b[1].label, 'ko'))
+        .map(([value, info]) => ({ value, label: info.label, searchText: info.searchText })),
+    ];
+  }, [datasets.inventoryUnits]);
+
   const tradeUnits = useMemo(() => {
+    const kw = filterKeyword.trim().toLowerCase();
     const base = datasets.inventoryUnits.filter((u) => u.ownershipDomain === '유통재고');
     const filtered = base.filter((u) => {
       if (catFilter !== 'ALL' && u.itemCategory !== catFilter) return false;
       if (statusFilter !== 'ALL' && u.status !== statusFilter) return false;
+      if (filterStartDate && u.acquisitionDate < filterStartDate) return false;
+      if (filterEndDate && u.acquisitionDate > filterEndDate) return false;
+      if (filterItemId && u.itemId !== filterItemId) return false;
+      if (kw) {
+        const text = `${u.unitCode} ${u.sku} ${u.itemName} ${u.serialNo || ''} ${u.lotNo || ''}`.toLowerCase();
+        if (!text.includes(kw)) return false;
+      }
       return true;
     });
     return sortUnitsFifo(filtered);
-  }, [catFilter, datasets.inventoryUnits, statusFilter]);
+  }, [catFilter, datasets.inventoryUnits, filterEndDate, filterItemId, filterKeyword, filterStartDate, statusFilter]);
 
   const selectedUnit =
     tradeUnits.find((u) => u.id === selectedUnitId) || tradeUnits[0] || null;
@@ -1073,51 +1416,161 @@ export const TradeInventoryPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
-      <SectionPanel title="유통재고 선입선출 조회 · 계정대체" manualId="tinv-filter">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end' }}>
-          <SegmentedTabs
-            tabs={[
-              { id: 'ALL', label: '전체 품목' },
-              { id: '완제품', label: '완제품' },
-              { id: '어태치먼트', label: '어태치먼트' },
-              { id: '부품', label: '부품' },
-              { id: '소모품', label: '소모품' },
-            ]}
-            activeId={catFilter}
-            onChange={(id) => setCatFilter(id as typeof catFilter)}
-          />
-          <SegmentedTabs
-            tabs={[
-              { id: '보유중', label: '보유중' },
-              { id: '판매완료', label: '판매완료' },
-              { id: 'ALL', label: '전체상태' },
-            ]}
-            activeId={statusFilter}
-            onChange={(id) => setStatusFilter(id as typeof statusFilter)}
-          />
+      <SectionPanel
+        title="유통재고 선입선출 조회 · 계정대체"
+        manualId="tinv-filter"
+        rightSlot={
+          (filterStartDate || filterEndDate || filterItemId || filterKeyword) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterItemId('');
+                setFilterKeyword('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end' }}>
+            <SegmentedTabs
+              tabs={[
+                { id: 'ALL', label: '전체 품목' },
+                { id: '완제품', label: '완제품' },
+                { id: '어태치먼트', label: '어태치먼트' },
+                { id: '부품', label: '부품' },
+                { id: '소모품', label: '소모품' },
+              ]}
+              activeId={catFilter}
+              onChange={(id) => setCatFilter(id as typeof catFilter)}
+            />
+            <SegmentedTabs
+              tabs={[
+                { id: '보유중', label: '보유중' },
+                { id: '판매완료', label: '판매완료' },
+                { id: 'ALL', label: '전체상태' },
+              ]}
+              activeId={statusFilter}
+              onChange={(id) => setStatusFilter(id as typeof statusFilter)}
+            />
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 'var(--space-field-grid-gap)',
+              alignItems: 'end',
+            }}
+          >
+            <VerticalField label="입고 시작일" minWidth={0}>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => setFilterStartDate(e.target.value)}
+                style={controlInputStyle}
+              />
+            </VerticalField>
+            <VerticalField label="입고 종료일" minWidth={0}>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => setFilterEndDate(e.target.value)}
+                style={controlInputStyle}
+              />
+            </VerticalField>
+            <VerticalField label="품명 · 모델" minWidth={0}>
+              <SearchableSelect
+                value={filterItemId}
+                onChange={setFilterItemId}
+                options={tradeItemFilterOptions}
+                placeholder="전체 품목"
+                searchPlaceholder="품명 · 품번 · 초성 검색"
+              />
+            </VerticalField>
+            <VerticalField label="시리얼 · 로트 · 재고번호" minWidth={0}>
+              <input
+                type="text"
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                placeholder="시리얼, 로트, 재고번호"
+                style={controlInputStyle}
+              />
+            </VerticalField>
+          </div>
         </div>
       </SectionPanel>
 
       <DataGrid
         manualId="tinv-grid"
         columns={[
-          { key: 'acqDate', header: '입고일 순번', width: 105, render: (u) => u.acquisitionDate },
-          { key: 'unitCode', header: '재고번호', width: 135, render: (u) => <span style={{ fontWeight: 700 }}>{u.unitCode}</span> },
-          { key: 'cat', header: '품목군', width: 95, render: (u) => <StatusBadge label={u.itemCategory} /> },
-          { key: 'sku', header: '품목코드', width: 125, render: (u) => u.sku },
-          { key: 'itemName', header: '품명', render: (u) => u.itemName },
+          {
+            key: 'acqDate',
+            header: '입고일 순번',
+            width: 105,
+            sortable: true,
+            sortValue: (u) => u.acquisitionDate,
+            render: (u) => u.acquisitionDate,
+          },
+          {
+            key: 'unitCode',
+            header: '재고번호',
+            width: 135,
+            sortable: true,
+            sortValue: (u) => u.unitCode,
+            render: (u) => <span style={{ fontWeight: 700 }}>{u.unitCode}</span>,
+          },
+          {
+            key: 'cat',
+            header: '품목군',
+            width: 95,
+            sortable: true,
+            sortValue: (u) => u.itemCategory,
+            render: (u) => <StatusBadge label={u.itemCategory} />,
+          },
+          {
+            key: 'sku',
+            header: '품목코드',
+            width: 125,
+            sortable: true,
+            sortValue: (u) => u.sku,
+            render: (u) => u.sku,
+          },
+          {
+            key: 'itemName',
+            header: '품명',
+            sortable: true,
+            sortValue: (u) => u.itemName,
+            render: (u) => u.itemName,
+          },
           {
             key: 'serialOrLot',
             header: '시리얼 · 로트',
             width: 140,
+            sortable: true,
+            sortValue: (u) => u.serialNo || u.lotNo || '',
             render: (u) => u.serialNo || u.lotNo || '-',
           },
-          { key: 'qty', header: '가용수량', width: 85, align: 'right', render: (u) => u.qtyOnHand },
+          {
+            key: 'qty',
+            header: '가용수량',
+            width: 85,
+            align: 'right',
+            sortable: true,
+            sortValue: (u) => Number(u.qtyOnHand || 0),
+            render: (u) => u.qtyOnHand,
+          },
           {
             key: 'cost',
             header: '장부단가',
             width: 120,
             align: 'right',
+            sortable: true,
+            sortValue: (u) => Number(u.unitCostKrw || 0),
             render: (u) => formatMoney(u.unitCostKrw),
           },
           {
@@ -1125,6 +1578,8 @@ export const TradeInventoryPage: React.FC = () => {
             header: '상태',
             width: 90,
             align: 'center',
+            sortable: true,
+            sortValue: (u) => formatKoStatus(u.status),
             render: (u) => (
               <StatusBadge label={formatKoStatus(u.status)} tone={u.status === '보유중' ? 'success' : 'neutral'} />
             ),
@@ -1192,16 +1647,63 @@ export const TradeFulfillmentPage: React.FC = () => {
   const canEdit = canEditPage('trade_fulfillment');
   const today = new Date().toISOString().slice(0, 10);
 
+  const [pendingKeyword, setPendingKeyword] = useState('');
+  const [completedKeyword, setCompletedKeyword] = useState('');
+
+  const contractMap = useMemo(
+    () => new Map(datasets.contracts.map((c) => [c.id, c])),
+    [datasets.contracts]
+  );
+  const itemMap = useMemo(
+    () => new Map(datasets.itemMasters.map((it) => [it.id, it])),
+    [datasets.itemMasters]
+  );
+
   const tradeFulfillments = useMemo(
     () => datasets.fulfillments.filter((f) => f.fulfillmentDomain === 'TRADE'),
     [datasets.fulfillments]
   );
 
-  const [selectedFulId, setSelectedFulId] = useState<string | null>(
-    tradeFulfillments.find((f) => f.status === 'REQUESTED')?.id || tradeFulfillments[0]?.id || null
-  );
+  const pendingFulfillments = useMemo(() => {
+    const base = tradeFulfillments.filter((f) => f.status !== 'COMPLETED');
+    const q = pendingKeyword.trim();
+    if (!q) return base;
+    return base.filter((f) => {
+      const ctr = contractMap.get(f.contractId);
+      const it = itemMap.get(f.itemId);
+      return matchesKoreanQuery(
+        `${f.fulfillmentNo} ${f.partnerName} ${ctr?.contractNo || ''} ${it?.modelName || ''} ${it?.itemCategory || ''}`,
+        q
+      );
+    });
+  }, [tradeFulfillments, pendingKeyword, contractMap, itemMap]);
+
+  const completedFulfillments = useMemo(() => {
+    const base = tradeFulfillments.filter((f) => f.status === 'COMPLETED');
+    const q = completedKeyword.trim();
+    if (!q) return base;
+    return base.filter((f) => {
+      const ctr = contractMap.get(f.contractId);
+      const it = itemMap.get(f.itemId);
+      const unit = datasets.inventoryUnits.find(
+        (u) => u.currentContractId === f.contractId && u.itemId === f.itemId
+      );
+      return matchesKoreanQuery(
+        `${f.fulfillmentNo} ${f.partnerName} ${ctr?.contractNo || ''} ${it?.modelName || ''} ${it?.itemCategory || ''} ${unit?.unitCode || ''} ${unit?.serialNo || ''}`,
+        q
+      );
+    });
+  }, [tradeFulfillments, completedKeyword, contractMap, itemMap, datasets.inventoryUnits]);
+
+  const [selectedFulId, setSelectedFulId] = useState<string | null>(null);
   const selectedFul =
-    tradeFulfillments.find((f) => f.id === selectedFulId) || tradeFulfillments[0] || null;
+    pendingFulfillments.find((f) => f.id === selectedFulId) || pendingFulfillments[0] || null;
+
+  const [selectedCompletedFulId, setSelectedCompletedFulId] = useState<string | null>(null);
+  const selectedCompletedFul =
+    completedFulfillments.find((f) => f.id === selectedCompletedFulId) ||
+    completedFulfillments[0] ||
+    null;
 
   const candidateUnits = useMemo<FlInventoryUnit[]>(() => {
     if (!selectedFul) return [];
@@ -1223,7 +1725,7 @@ export const TradeFulfillmentPage: React.FC = () => {
   const [effectiveDate, setEffectiveDate] = useState(today);
   const [fulMemo, setFulMemo] = useState('');
 
-  // 사후처리 상태
+  // 사후처리 상태 (출고완료된 건 기준 자동 매핑)
   const completedTradeUnits = useMemo(
     () =>
       datasets.inventoryUnits.filter(
@@ -1240,22 +1742,34 @@ export const TradeFulfillmentPage: React.FC = () => {
 
   const [acCaseType, setAcCaseType] =
     useState<FlTradeAftercareCase['caseType']>('공급사 정비중개');
-  const [acUnitId, setAcUnitId] = useState(completedTradeUnits[0]?.id || '');
   const [acSupplierId, setAcSupplierId] = useState(dealers[0]?.id || '');
   const [acRefundSupply, setAcRefundSupply] = useState(0);
   const [acReplacementId, setAcReplacementId] = useState('');
   const [acDate, setAcDate] = useState(today);
   const [acMemo, setAcMemo] = useState('');
 
-  const selectedAcUnit =
-    completedTradeUnits.find((u) => u.id === (acUnitId || completedTradeUnits[0]?.id)) || null;
-  const selectedAcContract = useMemo(
-    () =>
-      selectedAcUnit?.currentContractId
-        ? datasets.contracts.find((c) => c.id === selectedAcUnit.currentContractId) || null
-        : datasets.contracts.find((c) => c.contractDomain === 'TRADE') || null,
-    [datasets.contracts, selectedAcUnit]
-  );
+  const selectedAcUnit = useMemo(() => {
+    if (!selectedCompletedFul) return null;
+    return (
+      completedTradeUnits.find(
+        (u) =>
+          u.currentContractId === selectedCompletedFul.contractId &&
+          u.itemId === selectedCompletedFul.itemId
+      ) ||
+      completedTradeUnits.find((u) => u.itemId === selectedCompletedFul.itemId) ||
+      completedTradeUnits[0] ||
+      null
+    );
+  }, [selectedCompletedFul, completedTradeUnits]);
+
+  const selectedAcContract = useMemo(() => {
+    if (selectedCompletedFul) {
+      return contractMap.get(selectedCompletedFul.contractId) || null;
+    }
+    return selectedAcUnit?.currentContractId
+      ? contractMap.get(selectedAcUnit.currentContractId) || null
+      : null;
+  }, [selectedCompletedFul, selectedAcUnit, contractMap]);
 
   const replacementCandidates = useMemo(
     () =>
@@ -1273,22 +1787,46 @@ export const TradeFulfillmentPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
-      <SectionPanel title="유통 출고의뢰 실행완료 · 희망완료일과 입력일시 분리 저장" manualId="tful-exec">
+      <SectionPanel
+        title="출고 대기 유통 계약 · 초성·키워드 검색 및 출고 완료 처리"
+        manualId="tful-exec"
+        rightSlot={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <StatusBadge label={`대기 ${pendingFulfillments.length}건`} tone="warning" />
+          </div>
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
+            <VerticalField label="출고 대기 계약 검색" minWidth={280} flex={1}>
+              <input
+                type="text"
+                data-testid="tful-pending-search"
+                value={pendingKeyword}
+                onChange={(e) => setPendingKeyword(e.target.value)}
+                placeholder="매출처, 의뢰번호, 계약번호, 품목명, 초성 검색"
+                style={controlInputStyle}
+              />
+            </VerticalField>
+          </div>
+
           <DataGrid
             columns={[
               { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
+              {
+                key: 'contractNo',
+                header: '계약번호',
+                width: 135,
+                render: (f) => contractMap.get(f.contractId)?.contractNo || '-',
+              },
               { key: 'partnerName', header: '매출처', render: (f) => f.partnerName },
+              {
+                key: 'itemName',
+                header: '품목명',
+                render: (f) => itemMap.get(f.itemId)?.modelName || '-',
+              },
               { key: 'qty', header: '수량', width: 70, align: 'right', render: (f) => f.quantity },
               { key: 'eff', header: '희망완료일', width: 110, render: (f) => f.effectiveDate || '-' },
-              { key: 'rec', header: '입력일시', width: 150, render: (f) => f.recordedAt ? f.recordedAt.slice(0, 16).replace('T', ' ') : '-' },
-              {
-                key: 'cogs',
-                header: '인식매출원가',
-                width: 120,
-                align: 'right',
-                render: (f) => formatMoney(f.cogsAmountKrw),
-              },
               {
                 key: 'st',
                 header: '상태',
@@ -1302,17 +1840,18 @@ export const TradeFulfillmentPage: React.FC = () => {
                 ),
               },
             ]}
-            rows={tradeFulfillments}
+            rows={pendingFulfillments}
             rowKey={(f) => f.id}
             selectedRowId={selectedFul?.id || null}
             onRowClick={(f) => {
               setSelectedFulId(f.id);
               setChosenUnitId('');
             }}
-            maxHeight="260px"
+            emptyText="출고 대기 중인 유통 계약이 없습니다."
+            maxHeight="220px"
           />
 
-          {canEdit && selectedFul && selectedFul.status === 'REQUESTED' && selectedLine && (
+          {canEdit && selectedFul && selectedLine && (
             <div
               style={{
                 display: 'flex',
@@ -1397,10 +1936,103 @@ export const TradeFulfillmentPage: React.FC = () => {
         </div>
       </SectionPanel>
 
-      <SectionPanel title="유통 사후처리 · 공급사 정비중개 · 반품환불 · 반품교환" manualId="tful-aftercare">
+      <SectionPanel
+        title="출고 완료 건 조회 · 공급사 정비중개 · 반품환불 · 반품교환"
+        manualId="tful-aftercare"
+        rightSlot={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <StatusBadge label={`완료 ${completedFulfillments.length}건`} tone="success" />
+          </div>
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-          {canEdit && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
+            <VerticalField label="출고 완료 건 검색" minWidth={280} flex={1}>
+              <input
+                type="text"
+                data-testid="tful-completed-search"
+                value={completedKeyword}
+                onChange={(e) => setCompletedKeyword(e.target.value)}
+                placeholder="매출처, 의뢰번호, 계약번호, 품목명, 제조번호, 초성 검색"
+                style={controlInputStyle}
+              />
+            </VerticalField>
+          </div>
+
+          <DataGrid
+            columns={[
+              { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
+              {
+                key: 'contractNo',
+                header: '계약번호',
+                width: 135,
+                render: (f) => contractMap.get(f.contractId)?.contractNo || '-',
+              },
+              { key: 'partnerName', header: '매출처', render: (f) => f.partnerName },
+              {
+                key: 'itemName',
+                header: '품목명',
+                render: (f) => itemMap.get(f.itemId)?.modelName || '-',
+              },
+              { key: 'qty', header: '수량', width: 65, align: 'right', render: (f) => f.quantity },
+              { key: 'eff', header: '완료기준일', width: 105, render: (f) => f.effectiveDate || '-' },
+              {
+                key: 'cogs',
+                header: '인식매출원가',
+                width: 115,
+                align: 'right',
+                render: (f) => formatMoney(f.cogsAmountKrw),
+              },
+              {
+                key: 'st',
+                header: '상태',
+                width: 85,
+                align: 'center',
+                render: (f) => (
+                  <StatusBadge
+                    label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
+                    tone={koStatusTone(f.status)}
+                  />
+                ),
+              },
+            ]}
+            rows={completedFulfillments}
+            rowKey={(f) => f.id}
+            selectedRowId={selectedCompletedFul?.id || null}
+            onRowClick={(f) => setSelectedCompletedFulId(f.id)}
+            emptyText="출고 완료된 유통 건이 없습니다."
+            maxHeight="200px"
+          />
+
+          {canEdit && selectedCompletedFul && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gap: 'var(--space-field-grid-gap)',
+                alignItems: 'end',
+                padding: 'var(--space-subbox-pad-x)',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-header)',
+              }}
+            >
+              <VerticalField label="선택된 출고완료 건">
+                <div
+                  style={{
+                    ...controlInputStyle,
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--bg-card)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {selectedCompletedFul.fulfillmentNo} · {selectedCompletedFul.partnerName}
+                </div>
+              </VerticalField>
               <VerticalField label="처리유형" required>
                 <select
                   value={acCaseType}
@@ -1412,23 +2044,6 @@ export const TradeFulfillmentPage: React.FC = () => {
                   <option value="공급사 정비중개">공급사 정비중개</option>
                   <option value="반품환불">반품환불</option>
                   <option value="반품교환">반품교환</option>
-                </select>
-              </VerticalField>
-              <VerticalField label="판매완료 대상 장비" required>
-                <select
-                  value={selectedAcUnit?.id || ''}
-                  onChange={(e) => setAcUnitId(e.target.value)}
-                  style={controlInputStyle}
-                >
-                  {completedTradeUnits.length === 0 ? (
-                    <option value="">판매완료 장비 없음</option>
-                  ) : (
-                    completedTradeUnits.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.unitCode} · {u.itemName} · {u.serialNo || u.lotNo || ''}
-                      </option>
-                    ))
-                  )}
                 </select>
               </VerticalField>
               {acCaseType === '공급사 정비중개' && (
@@ -1483,7 +2098,7 @@ export const TradeFulfillmentPage: React.FC = () => {
               <CommitActionButton
                 actionCode="TRADE_REFUND"
                 targetTable="fl_trade_aftercare_cases"
-                targetId={selectedAcUnit?.id || 'NEW'}
+                targetId={selectedAcUnit?.id || selectedCompletedFul.id}
                 title={`유통 사후처리 · ${acCaseType}`}
                 disabled={!selectedAcUnit || !selectedAcContract}
                 buildPayload={() =>
@@ -1548,7 +2163,7 @@ export const TradeFulfillmentPage: React.FC = () => {
               b.effectiveDate.localeCompare(a.effectiveDate)
             )}
             rowKey={(r) => r.id}
-            maxHeight="240px"
+            maxHeight="220px"
           />
         </div>
       </SectionPanel>
@@ -1563,6 +2178,8 @@ export const TradePerformancePage: React.FC = () => {
 
   const [startDate, setStartDate] = useState(ymStart);
   const [endDate, setEndDate] = useState(today);
+  const [filterPartnerName, setFilterPartnerName] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState('');
 
   const rows = useMemo(() => {
     const out: {
@@ -1656,21 +2273,58 @@ export const TradePerformancePage: React.FC = () => {
     return out.sort((a, b) => b.date.localeCompare(a.date));
   }, [datasets, endDate, startDate]);
 
+  const partnerFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    for (const r of rows) {
+      if (r.partnerName) seen.add(r.partnerName);
+    }
+    return [
+      { value: '', label: '전체 매출처' },
+      ...[...seen].sort((a, b) => a.localeCompare(b, 'ko')).map((name) => ({ value: name, label: name })),
+    ];
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const kw = filterKeyword.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (filterPartnerName && r.partnerName !== filterPartnerName) return false;
+      if (kw && !`${r.partnerName} ${r.itemName}`.toLowerCase().includes(kw)) return false;
+      return true;
+    });
+  }, [filterKeyword, filterPartnerName, rows]);
+
   const totals = useMemo(() => {
-    const netSales = rows.reduce((s, r) => s + r.salesKrw - r.refundKrw, 0);
-    const netCogs = rows.reduce((s, r) => s + r.cogsKrw, 0);
+    const netSales = filteredRows.reduce((s, r) => s + r.salesKrw - r.refundKrw, 0);
+    const netCogs = filteredRows.reduce((s, r) => s + r.cogsKrw, 0);
     return {
-      sales: rows.reduce((s, r) => s + r.salesKrw, 0),
-      refund: rows.reduce((s, r) => s + r.refundKrw, 0),
+      sales: filteredRows.reduce((s, r) => s + r.salesKrw, 0),
+      refund: filteredRows.reduce((s, r) => s + r.refundKrw, 0),
       cogs: netCogs,
       gp: netSales - netCogs,
     };
-  }, [rows]);
+  }, [filteredRows]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
-      <SectionPanel title="유통 실적 조회 조건" manualId="tperf-period">
-        <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap' }}>
+      <SectionPanel
+        title="유통 실적 조회 조건"
+        manualId="tperf-period"
+        rightSlot={
+          (filterPartnerName || filterKeyword) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterPartnerName('');
+                setFilterKeyword('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <VerticalField label="시작일" width={150}>
             <input
               type="date"
@@ -1687,20 +2341,60 @@ export const TradePerformancePage: React.FC = () => {
               style={controlInputStyle}
             />
           </VerticalField>
+          <VerticalField label="매출처" width={220}>
+            <SearchableSelect
+              value={filterPartnerName}
+              onChange={setFilterPartnerName}
+              options={partnerFilterOptions}
+              placeholder="전체 매출처"
+              searchPlaceholder="매출처명 · 초성 검색"
+            />
+          </VerticalField>
+          <VerticalField label="품명 · 내역 검색" width={240}>
+            <input
+              type="text"
+              value={filterKeyword}
+              onChange={(e) => setFilterKeyword(e.target.value)}
+              placeholder="품명, 모델, 반품/운송 내역"
+              style={controlInputStyle}
+            />
+          </VerticalField>
         </div>
       </SectionPanel>
 
       <DataGrid
         manualId="tperf-grid"
         columns={[
-          { key: 'date', header: '귀속기준일', width: 105, render: (r) => r.date },
-          { key: 'partnerName', header: '매출처', width: 160, render: (r) => r.partnerName },
-          { key: 'itemName', header: '품명 · 내역', render: (r) => r.itemName },
+          {
+            key: 'date',
+            header: '귀속기준일',
+            width: 105,
+            sortable: true,
+            sortValue: (r) => r.date,
+            render: (r) => r.date,
+          },
+          {
+            key: 'partnerName',
+            header: '매출처',
+            width: 160,
+            sortable: true,
+            sortValue: (r) => r.partnerName,
+            render: (r) => r.partnerName,
+          },
+          {
+            key: 'itemName',
+            header: '품명 · 내역',
+            sortable: true,
+            sortValue: (r) => r.itemName,
+            render: (r) => r.itemName,
+          },
           {
             key: 'sales',
             header: '유통매출액',
             width: 125,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.salesKrw || 0),
             render: (r) => formatMoney(r.salesKrw, { salesSensitive: true }),
           },
           {
@@ -1708,6 +2402,8 @@ export const TradePerformancePage: React.FC = () => {
             header: '반품차감',
             width: 115,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.refundKrw || 0),
             render: (r) => formatMoney(r.refundKrw, { salesSensitive: true }),
           },
           {
@@ -1715,6 +2411,8 @@ export const TradePerformancePage: React.FC = () => {
             header: '매출원가',
             width: 125,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.cogsKrw || 0),
             render: (r) => formatMoney(r.cogsKrw),
           },
           {
@@ -1722,6 +2420,8 @@ export const TradePerformancePage: React.FC = () => {
             header: '매출총이익',
             width: 125,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.grossProfit || 0),
             render: (r) => (
               <span style={{ fontWeight: 700, color: r.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatMoney(r.grossProfit, { salesSensitive: true })}
@@ -1729,7 +2429,7 @@ export const TradePerformancePage: React.FC = () => {
             ),
           },
         ]}
-        rows={rows}
+        rows={filteredRows}
         rowKey={(r) => r.id}
         maxHeight="480px"
       />

@@ -172,6 +172,10 @@ export const PurchasesPage: React.FC = () => {
   });
 
   const [detailPurchase, setDetailPurchase] = useState<FlPurchase | null>(null);
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterSupplierId, setFilterSupplierId] = useState('');
+  const [filterItemId, setFilterItemId] = useState('');
 
   useEffect(() => {
     if (fxRateManuallyEdited.current || currencyCode === 'KRW') return;
@@ -368,6 +372,99 @@ export const PurchasesPage: React.FC = () => {
     return datasets.purchaseLines.filter((l) => l.purchaseId === detailPurchase.id);
   }, [datasets.purchaseLines, detailPurchase]);
 
+  const itemMasterById = useMemo(
+    () => new Map(datasets.itemMasters.map((m) => [m.id, m])),
+    [datasets.itemMasters]
+  );
+
+  const purchaseLinesByPurchaseId = useMemo(() => {
+    const map = new Map<string, FlPurchaseLine[]>();
+    for (const l of datasets.purchaseLines) {
+      const arr = map.get(l.purchaseId);
+      if (arr) arr.push(l);
+      else map.set(l.purchaseId, [l]);
+    }
+    return map;
+  }, [datasets.purchaseLines]);
+
+  const purchaseSummaryMap = useMemo(() => {
+    const map = new Map<string, { modelLabel: string; totalQty: number; unitCostKrw: number }>();
+    for (const p of datasets.purchases) {
+      const lines = purchaseLinesByPurchaseId.get(p.id) || [];
+      const totalQty = lines.reduce((s, l) => s + Number(l.quantity || 0), 0);
+      const firstLine = lines[0];
+      const firstMaster = firstLine ? itemMasterById.get(firstLine.itemId) : undefined;
+      const baseModel = firstMaster?.modelName?.trim() || firstLine?.itemName || '-';
+      const modelLabel = lines.length > 1 ? `${baseModel} 외 ${lines.length - 1}건` : baseModel;
+      const unitCostKrw =
+        lines.length === 1 && firstLine
+          ? Number(firstLine.landedUnitCostKrw || 0)
+          : totalQty > 0
+            ? Math.round(Number(p.totalLandedCostKrw || 0) / totalQty)
+            : 0;
+      map.set(p.id, { modelLabel, totalQty, unitCostKrw });
+    }
+    return map;
+  }, [datasets.purchases, itemMasterById, purchaseLinesByPurchaseId]);
+
+  const purchaseSupplierFilterOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of datasets.purchases) {
+      if (p.supplierId && !seen.has(p.supplierId)) {
+        seen.set(p.supplierId, p.supplierName);
+      }
+    }
+    return [
+      { value: '', label: '전체 매입처' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [datasets.purchases]);
+
+  const purchaseModelFilterOptions = useMemo(() => {
+    const seen = new Map<string, { label: string; searchText: string }>();
+    for (const l of datasets.purchaseLines) {
+      if (l.itemId && !seen.has(l.itemId)) {
+        const master = itemMasterById.get(l.itemId);
+        const model = master?.modelName?.trim();
+        const label = model ? `${model} · ${l.itemName}` : l.itemName;
+        seen.set(l.itemId, {
+          label,
+          searchText: `${model || ''} ${l.itemName} ${l.sku}`.trim(),
+        });
+      }
+    }
+    return [
+      { value: '', label: '전체 모델' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].label.localeCompare(b[1].label, 'ko'))
+        .map(([value, info]) => ({ value, label: info.label, searchText: info.searchText })),
+    ];
+  }, [datasets.purchaseLines, itemMasterById]);
+
+  const filteredPurchases = useMemo(() => {
+    return datasets.purchases
+      .filter((p) => {
+        if (filterStartDate && p.effectiveDate < filterStartDate) return false;
+        if (filterEndDate && p.effectiveDate > filterEndDate) return false;
+        if (filterSupplierId && p.supplierId !== filterSupplierId) return false;
+        if (filterItemId) {
+          const lines = purchaseLinesByPurchaseId.get(p.id) || [];
+          if (!lines.some((l) => l.itemId === filterItemId)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
+  }, [
+    datasets.purchases,
+    filterEndDate,
+    filterItemId,
+    filterStartDate,
+    filterSupplierId,
+    purchaseLinesByPurchaseId,
+  ]);
+
   const purchaseCols: GridColumn<FlPurchase>[] = [
     {
       key: 'view',
@@ -381,13 +478,29 @@ export const PurchasesPage: React.FC = () => {
         </button>
       ),
     },
-    { key: 'purchaseNo', header: '전표번호', width: 145, render: (r) => <span style={{ fontWeight: 700 }}>{r.purchaseNo}</span> },
-    { key: 'effectiveDate', header: '입고기준일', width: 105, render: (r) => r.effectiveDate },
+    {
+      key: 'purchaseNo',
+      header: '전표번호',
+      width: 145,
+      sortable: true,
+      sortValue: (r) => r.purchaseNo,
+      render: (r) => <span style={{ fontWeight: 700 }}>{r.purchaseNo}</span>,
+    },
+    {
+      key: 'effectiveDate',
+      header: '입고기준일',
+      width: 105,
+      sortable: true,
+      sortValue: (r) => r.effectiveDate,
+      render: (r) => r.effectiveDate,
+    },
     {
       key: 'purchaseType',
       header: '구분',
       width: 80,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => (r.purchaseType === 'IMPORT' ? '수입' : '내수'),
       render: (r) => <StatusBadge label={r.purchaseType === 'IMPORT' ? '수입' : '내수'} tone="info" />,
     },
     {
@@ -395,16 +508,59 @@ export const PurchasesPage: React.FC = () => {
       header: '계정',
       width: 90,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => (r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'),
       render: (r) => (
         <StatusBadge label={r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'} tone="primary" />
       ),
     },
-    { key: 'supplierName', header: '매입처', render: (r) => r.supplierName },
-    { key: 'currencyCode', header: '통화', width: 90, align: 'center', render: (r) => formatKoCurrency(r.currencyCode) },
+    {
+      key: 'supplierName',
+      header: '매입처',
+      sortable: true,
+      sortValue: (r) => r.supplierName,
+      render: (r) => r.supplierName,
+    },
+    {
+      key: 'modelName',
+      header: '모델명',
+      sortable: true,
+      sortValue: (r) => purchaseSummaryMap.get(r.id)?.modelLabel || '',
+      render: (r) => purchaseSummaryMap.get(r.id)?.modelLabel || '-',
+    },
+    {
+      key: 'quantity',
+      header: '수량',
+      width: 78,
+      align: 'right',
+      sortable: true,
+      sortValue: (r) => purchaseSummaryMap.get(r.id)?.totalQty ?? 0,
+      render: (r) => (purchaseSummaryMap.get(r.id)?.totalQty ?? 0).toLocaleString('ko-KR'),
+    },
+    {
+      key: 'unitCostKrw',
+      header: '단가',
+      width: 120,
+      align: 'right',
+      sortable: true,
+      sortValue: (r) => purchaseSummaryMap.get(r.id)?.unitCostKrw ?? 0,
+      render: (r) => formatMoney(purchaseSummaryMap.get(r.id)?.unitCostKrw ?? 0),
+    },
+    {
+      key: 'currencyCode',
+      header: '통화',
+      width: 90,
+      align: 'center',
+      sortable: true,
+      sortValue: (r) => formatKoCurrency(r.currencyCode),
+      render: (r) => formatKoCurrency(r.currencyCode),
+    },
     {
       key: 'fxDate',
       header: '환율적용일',
       width: 105,
+      sortable: true,
+      sortValue: (r) => (r.currencyCode === 'KRW' ? '' : r.fxDate || r.effectiveDate),
       render: (r) => (r.currencyCode === 'KRW' ? '-' : r.fxDate || r.effectiveDate),
     },
     {
@@ -412,6 +568,8 @@ export const PurchasesPage: React.FC = () => {
       header: '적용환율',
       width: 105,
       align: 'right',
+      sortable: true,
+      sortValue: (r) => Number(r.fxRate || 0),
       render: (r) => Number(r.fxRate).toLocaleString('ko-KR', { maximumFractionDigits: 4 }),
     },
     {
@@ -419,6 +577,8 @@ export const PurchasesPage: React.FC = () => {
       header: '총입고원가',
       width: 135,
       align: 'right',
+      sortable: true,
+      sortValue: (r) => Number(r.totalLandedCostKrw || 0),
       render: (r) => <span style={{ fontWeight: 700 }}>{formatMoney(r.totalLandedCostKrw)}</span>,
     },
     {
@@ -426,6 +586,8 @@ export const PurchasesPage: React.FC = () => {
       header: '상태',
       width: 85,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => PURCHASE_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status),
       render: (r) => (
         <StatusBadge
           label={PURCHASE_STATUS_KO_LABELS[r.status] || formatKoStatus(r.status)}
@@ -727,10 +889,73 @@ export const PurchasesPage: React.FC = () => {
         </SectionPanel>
       )}
 
-      <SectionPanel title={`매입 통관 원장 · ${datasets.purchases.length}건`} manualId="pur-grid">
+      <SectionPanel
+        title={`매입 통관 원장 · ${filteredPurchases.length}건`}
+        manualId="pur-grid"
+        rightSlot={
+          (filterStartDate || filterEndDate || filterSupplierId || filterItemId) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterSupplierId('');
+                setFilterItemId('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+            gap: 'var(--space-field-grid-gap)',
+            marginBottom: 'var(--space-stack-gap)',
+            alignItems: 'end',
+          }}
+        >
+          <VerticalField label="조회 시작일" minWidth={0}>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="조회 종료일" minWidth={0}>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="매입처" minWidth={0}>
+            <SearchableSelect
+              value={filterSupplierId}
+              onChange={setFilterSupplierId}
+              options={purchaseSupplierFilterOptions}
+              placeholder="전체 매입처"
+              searchPlaceholder="매입처명 · 초성 검색"
+            />
+          </VerticalField>
+          <VerticalField label="모델명" minWidth={0}>
+            <SearchableSelect
+              value={filterItemId}
+              onChange={setFilterItemId}
+              options={purchaseModelFilterOptions}
+              placeholder="전체 모델"
+              searchPlaceholder="모델명 · 품명 · 초성 검색"
+            />
+          </VerticalField>
+        </div>
         <DataGrid
           columns={purchaseCols}
-          rows={[...datasets.purchases].sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate))}
+          rows={filteredPurchases}
           rowKey={(r) => r.id}
           maxHeight="420px"
         />
@@ -866,14 +1091,62 @@ export const LogisticsCostsPage: React.FC = () => {
     }
   };
 
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterPurpose, setFilterPurpose] = useState('');
+  const [filterCarrierId, setFilterCarrierId] = useState('');
+  const [filterBearer, setFilterBearer] = useState('');
+  const [filterRouteKeyword, setFilterRouteKeyword] = useState('');
+
+  const carrierFilterOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const d of datasets.logisticsDispatches) {
+      if (d.carrierPartnerId && !seen.has(d.carrierPartnerId)) {
+        seen.set(d.carrierPartnerId, d.carrierName);
+      }
+    }
+    return [
+      { value: '', label: '전체 운송사' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [datasets.logisticsDispatches]);
+
+  const filteredDispatches = useMemo(() => {
+    const kw = filterRouteKeyword.trim().toLowerCase();
+    return datasets.logisticsDispatches
+      .filter((d) => {
+        if (filterStartDate && d.dispatchDate < filterStartDate) return false;
+        if (filterEndDate && d.dispatchDate > filterEndDate) return false;
+        if (filterPurpose && d.dispatchPurpose !== filterPurpose) return false;
+        if (filterCarrierId && d.carrierPartnerId !== filterCarrierId) return false;
+        if (filterBearer && d.costBearer !== filterBearer) return false;
+        if (kw) {
+          const text = `${d.dispatchNo} ${d.originAddress} ${d.destinationAddress} ${d.memo || ''}`.toLowerCase();
+          if (!text.includes(kw)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.dispatchDate.localeCompare(a.dispatchDate));
+  }, [
+    datasets.logisticsDispatches,
+    filterBearer,
+    filterCarrierId,
+    filterEndDate,
+    filterPurpose,
+    filterRouteKeyword,
+    filterStartDate,
+  ]);
+
   const totals = useMemo(() => {
-    const supply = datasets.logisticsDispatches.reduce((s, d) => s + d.transportCostKrw, 0);
-    const ours = datasets.logisticsDispatches
+    const supply = filteredDispatches.reduce((s, d) => s + d.transportCostKrw, 0);
+    const ours = filteredDispatches
       .filter((d) => d.costBearer === 'OURS')
       .reduce((s, d) => s + d.transportCostKrw, 0);
-    const customer = datasets.logisticsDispatches.reduce((s, d) => s + d.customerChargeKrw, 0);
+    const customer = filteredDispatches.reduce((s, d) => s + d.customerChargeKrw, 0);
     return { supply, ours, customer };
-  }, [datasets.logisticsDispatches]);
+  }, [filteredDispatches]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
@@ -1010,50 +1283,183 @@ export const LogisticsCostsPage: React.FC = () => {
         </SectionPanel>
       )}
 
-      <DataGrid
-        manualId="log-grid"
-        columns={[
-          { key: 'dispatchNo', header: '배차번호', width: 145, render: (r) => <span style={{ fontWeight: 700 }}>{r.dispatchNo}</span> },
-          { key: 'dispatchDate', header: '일자', width: 100, render: (r) => r.dispatchDate },
-          { key: 'purpose', header: '목적', width: 95, render: (r) => <StatusBadge label={r.dispatchPurpose} tone="info" /> },
-          { key: 'carrierName', header: '운송사', width: 130, render: (r) => r.carrierName },
-          { key: 'route', header: '구간', render: (r) => `${r.originAddress} · ${r.destinationAddress}` },
-          {
-            key: 'cost',
-            header: '운송비',
-            width: 115,
-            align: 'right',
-            render: (r) => formatMoney(r.transportCostKrw),
-          },
-          {
-            key: 'bearer',
-            header: '부담주체',
-            width: 95,
-            align: 'center',
-            render: (r) => (
-              <StatusBadge
-                label={r.costBearer === 'OURS' ? '당사부담' : r.costBearer === 'CUSTOMER' ? '고객청구' : '공급사'}
-                tone={r.costBearer === 'OURS' ? 'warning' : 'success'}
-              />
-            ),
-          },
-          {
-            key: 'status',
-            header: '정산',
-            width: 95,
-            align: 'center',
-            render: (r) => (
-              <StatusBadge
-                label={SETTLEMENT_STATUS_KO_LABELS[r.settlementStatus] || formatKoStatus(r.settlementStatus)}
-                tone={koStatusTone(r.settlementStatus)}
-              />
-            ),
-          },
-        ]}
-        rows={[...datasets.logisticsDispatches].sort((a, b) => b.dispatchDate.localeCompare(a.dispatchDate))}
-        rowKey={(r) => r.id}
-        maxHeight="430px"
-      />
+      <SectionPanel
+        title={`물류 배차 원장 · ${filteredDispatches.length}건`}
+        rightSlot={
+          (filterStartDate || filterEndDate || filterPurpose || filterCarrierId || filterBearer || filterRouteKeyword) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+                setFilterPurpose('');
+                setFilterCarrierId('');
+                setFilterBearer('');
+                setFilterRouteKeyword('');
+              }}
+              style={actionBtnStyle('secondary', true)}
+            >
+              필터 초기화
+            </button>
+          ) : undefined
+        }
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 'var(--space-field-grid-gap)',
+            marginBottom: 'var(--space-stack-gap)',
+            alignItems: 'end',
+          }}
+        >
+          <VerticalField label="조회 시작일" minWidth={0}>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="조회 종료일" minWidth={0}>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+              style={controlInputStyle}
+            />
+          </VerticalField>
+          <VerticalField label="운송목적" minWidth={0}>
+            <select
+              value={filterPurpose}
+              onChange={(e) => setFilterPurpose(e.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">전체 목적</option>
+              <option value="납품운송">납품운송</option>
+              <option value="회수운송">회수운송</option>
+              <option value="교환">교환</option>
+              <option value="자체이동">자체이동</option>
+              <option value="일반운송">일반운송</option>
+            </select>
+          </VerticalField>
+          <VerticalField label="운송사" minWidth={0}>
+            <SearchableSelect
+              value={filterCarrierId}
+              onChange={setFilterCarrierId}
+              options={carrierFilterOptions}
+              placeholder="전체 운송사"
+              searchPlaceholder="운송사명 · 초성 검색"
+            />
+          </VerticalField>
+          <VerticalField label="부담주체" minWidth={0}>
+            <select
+              value={filterBearer}
+              onChange={(e) => setFilterBearer(e.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">전체</option>
+              <option value="OURS">당사부담</option>
+              <option value="CUSTOMER">고객청구</option>
+              <option value="SUPPLIER">공급사부담</option>
+            </select>
+          </VerticalField>
+          <VerticalField label="구간 · 배차번호 검색" minWidth={0}>
+            <input
+              type="text"
+              value={filterRouteKeyword}
+              onChange={(e) => setFilterRouteKeyword(e.target.value)}
+              placeholder="출발지, 도착지, 배차번호"
+              style={controlInputStyle}
+            />
+          </VerticalField>
+        </div>
+
+        <DataGrid
+          manualId="log-grid"
+          columns={[
+            {
+              key: 'dispatchNo',
+              header: '배차번호',
+              width: 145,
+              sortable: true,
+              sortValue: (r) => r.dispatchNo,
+              render: (r) => <span style={{ fontWeight: 700 }}>{r.dispatchNo}</span>,
+            },
+            {
+              key: 'dispatchDate',
+              header: '일자',
+              width: 100,
+              sortable: true,
+              sortValue: (r) => r.dispatchDate,
+              render: (r) => r.dispatchDate,
+            },
+            {
+              key: 'purpose',
+              header: '목적',
+              width: 95,
+              sortable: true,
+              sortValue: (r) => r.dispatchPurpose,
+              render: (r) => <StatusBadge label={r.dispatchPurpose} tone="info" />,
+            },
+            {
+              key: 'carrierName',
+              header: '운송사',
+              width: 130,
+              sortable: true,
+              sortValue: (r) => r.carrierName,
+              render: (r) => r.carrierName,
+            },
+            {
+              key: 'route',
+              header: '구간',
+              sortable: true,
+              sortValue: (r) => `${r.originAddress} · ${r.destinationAddress}`,
+              render: (r) => `${r.originAddress} · ${r.destinationAddress}`,
+            },
+            {
+              key: 'cost',
+              header: '운송비',
+              width: 115,
+              align: 'right',
+              sortable: true,
+              sortValue: (r) => Number(r.transportCostKrw || 0),
+              render: (r) => formatMoney(r.transportCostKrw),
+            },
+            {
+              key: 'bearer',
+              header: '부담주체',
+              width: 95,
+              align: 'center',
+              sortable: true,
+              sortValue: (r) => (r.costBearer === 'OURS' ? '당사부담' : r.costBearer === 'CUSTOMER' ? '고객청구' : '공급사'),
+              render: (r) => (
+                <StatusBadge
+                  label={r.costBearer === 'OURS' ? '당사부담' : r.costBearer === 'CUSTOMER' ? '고객청구' : '공급사'}
+                  tone={r.costBearer === 'OURS' ? 'warning' : 'success'}
+                />
+              ),
+            },
+            {
+              key: 'status',
+              header: '정산',
+              width: 95,
+              align: 'center',
+              sortable: true,
+              sortValue: (r) => SETTLEMENT_STATUS_KO_LABELS[r.settlementStatus] || formatKoStatus(r.settlementStatus),
+              render: (r) => (
+                <StatusBadge
+                  label={SETTLEMENT_STATUS_KO_LABELS[r.settlementStatus] || formatKoStatus(r.settlementStatus)}
+                  tone={koStatusTone(r.settlementStatus)}
+                />
+              ),
+            },
+          ]}
+          rows={filteredDispatches}
+          rowKey={(r) => r.id}
+          maxHeight="430px"
+        />
+      </SectionPanel>
 
       <ConservationBar
         items={[

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown } from 'lucide-react';
+import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { usePageActive } from '../core/PageActivityContext';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
@@ -341,6 +341,8 @@ export interface GridColumn<T> {
   width?: string | number;
   align?: 'left' | 'center' | 'right';
   stickyLeft?: boolean;
+  sortable?: boolean;
+  sortValue?: (row: T) => string | number | null | undefined;
   render: (row: T, index: number) => React.ReactNode;
 }
 
@@ -365,6 +367,38 @@ export function DataGrid<T>({
   maxHeight = '600px',
   manualId,
 }: DataGridProps<T>) {
+  const [sortState, setSortState] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
+
+  const toggleSort = (col: GridColumn<T>) => {
+    if (!col.sortable && !col.sortValue) return;
+    setSortState((prev) => {
+      if (!prev || prev.key !== col.key) return { key: col.key, dir: 'asc' };
+      if (prev.dir === 'asc') return { key: col.key, dir: 'desc' };
+      return null;
+    });
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortState) return rows;
+    const col = columns.find((c) => c.key === sortState.key);
+    if (!col || (!col.sortable && !col.sortValue)) return rows;
+    const getVal = col.sortValue
+      ? col.sortValue
+      : (row: T) => (row as Record<string, unknown>)[col.key] as string | number | null | undefined;
+    const factor = sortState.dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (typeof va === 'number' && typeof vb === 'number') {
+        return (va - vb) * factor;
+      }
+      return String(va).localeCompare(String(vb), 'ko') * factor;
+    });
+  }, [columns, rows, sortState]);
+
   return (
     <div
       data-manual-id={manualId}
@@ -388,33 +422,62 @@ export function DataGrid<T>({
       >
         <thead>
           <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                style={{
-                  position: col.stickyLeft ? 'sticky' : 'sticky',
-                  top: 0,
-                  left: col.stickyLeft ? 0 : undefined,
-                  zIndex: col.stickyLeft ? 4 : 3,
-                  backgroundColor: 'var(--bg-header)',
-                  color: 'var(--text-secondary)',
-                  fontWeight: 700,
-                  fontSize: '12px',
-                  textAlign: col.align || 'left',
-                  padding: 'var(--space-table-th-pad-y) var(--space-table-th-pad-x)',
-                  borderBottom: '1px solid var(--table-border-color)',
-                  borderRight: '1px solid var(--table-row-border)',
-                  whiteSpace: 'nowrap',
-                  width: typeof col.width === 'number' ? `${col.width}px` : col.width,
-                }}
-              >
-                {col.header}
-              </th>
-            ))}
+            {columns.map((col) => {
+              const isSortable = Boolean(col.sortable || col.sortValue);
+              const activeDir = sortState?.key === col.key ? sortState.dir : null;
+              return (
+                <th
+                  key={col.key}
+                  onClick={isSortable ? () => toggleSort(col) : undefined}
+                  title={isSortable ? '클릭하여 오름차순 · 내림차순 · 정렬안함 전환' : undefined}
+                  style={{
+                    position: col.stickyLeft ? 'sticky' : 'sticky',
+                    top: 0,
+                    left: col.stickyLeft ? 0 : undefined,
+                    zIndex: col.stickyLeft ? 4 : 3,
+                    backgroundColor: 'var(--bg-header)',
+                    color: activeDir ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    textAlign: col.align || 'left',
+                    padding: 'var(--space-table-th-pad-y) var(--space-table-th-pad-x)',
+                    borderBottom: '1px solid var(--table-border-color)',
+                    borderRight: '1px solid var(--table-row-border)',
+                    whiteSpace: 'nowrap',
+                    width: typeof col.width === 'number' ? `${col.width}px` : col.width,
+                    cursor: isSortable ? 'pointer' : 'default',
+                    userSelect: isSortable ? 'none' : undefined,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      justifyContent:
+                        col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start',
+                    }}
+                  >
+                    <span>{col.header}</span>
+                    {isSortable && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', opacity: activeDir ? 1 : 0.45 }}>
+                        {activeDir === 'asc' ? (
+                          <ArrowUp size={12} />
+                        ) : activeDir === 'desc' ? (
+                          <ArrowDown size={12} />
+                        ) : (
+                          <ArrowUpDown size={11} />
+                        )}
+                      </span>
+                    )}
+                  </span>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 ? (
+          {sortedRows.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
@@ -429,7 +492,7 @@ export function DataGrid<T>({
               </td>
             </tr>
           ) : (
-            rows.map((row, idx) => {
+            sortedRows.map((row, idx) => {
               const id = rowKey(row, idx);
               const isSelected = selectedRowId != null && selectedRowId === id;
               const rowBg = isSelected ? 'var(--bg-active)' : 'var(--bg-card)';

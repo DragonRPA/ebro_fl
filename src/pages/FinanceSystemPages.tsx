@@ -15,7 +15,7 @@ import { generateFinancialStatements } from '../services/financialStatementEngin
 import { generateTransactionStatementExcel } from '../services/documentService';
 import { useManual } from '../manual/ManualContext';
 import { ALL_MANUAL_ENTRIES } from '../manual/manualRegistry';
-import { COMMENTARY_SECTIONS, STANDARD_ARTICLES } from '../data/accountingStandardsData';
+import AccountingStandardsTab from '../components/AccountingStandardsTab';
 import {
   CommaNumberInput,
   ConservationBar,
@@ -1143,33 +1143,11 @@ export const FinancialStatementsPage: React.FC = () => {
   const [startYm, setStartYm] = useState(yearStartYm);
   const [endYm, setEndYm] = useState(curYm);
   const [tab, setTab] = useState<'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD'>('BS');
-  const [stdSearch, setStdSearch] = useState('');
 
   const report = useMemo(
     () => generateFinancialStatements(datasets, startYm, endYm),
     [datasets, endYm, startYm]
   );
-
-  const filteredArticles = useMemo(() => {
-    const q = stdSearch.trim().toLowerCase();
-    if (!q) return STANDARD_ARTICLES.slice(0, 20);
-    return STANDARD_ARTICLES.filter(
-      (a) =>
-        a.articleTitle.toLowerCase().includes(q) ||
-        a.articleNo.toLowerCase().includes(q) ||
-        a.paragraphs.some((p) => p.toLowerCase().includes(q))
-    );
-  }, [stdSearch]);
-
-  const filteredCommentaries = useMemo(() => {
-    const q = stdSearch.trim().toLowerCase();
-    if (!q) return COMMENTARY_SECTIONS.slice(0, 12);
-    return COMMENTARY_SECTIONS.filter(
-      (c) =>
-        c.sectionTitle.toLowerCase().includes(q) ||
-        c.quotedArticles.some((p) => p.toLowerCase().includes(q))
-    );
-  }, [stdSearch]);
 
   const renderStatementRows = (
     items: { code: string; label: string; amount: number; indent?: number; isSubtotal?: boolean }[]
@@ -1312,63 +1290,7 @@ export const FinancialStatementsPage: React.FC = () => {
           />
         )}
 
-        {tab === 'STANDARD' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-            <VerticalField label="중소기업회계기준 조문 · 해설 검색" width={360}>
-              <input
-                type="text"
-                value={stdSearch}
-                onChange={(e) => setStdSearch(e.target.value)}
-                placeholder="리스, 감가상각, 외환차손익, 수익인식 등"
-                style={controlInputStyle}
-              />
-            </VerticalField>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-stack-gap)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)', maxHeight: '460px', overflowY: 'auto' }}>
-                {filteredArticles.map((art) => (
-                  <div
-                    key={art.id}
-                    style={{
-                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
-                      border: '1px solid var(--table-border-color)',
-                      borderRadius: '6px',
-                      backgroundColor: 'var(--bg-app)',
-                      fontSize: '12.5px',
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>
-                      {art.articleNo} · {art.articleTitle}
-                    </div>
-                    <div style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                      {art.paragraphs.join(' ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)', maxHeight: '460px', overflowY: 'auto' }}>
-                {filteredCommentaries.map((sec) => (
-                  <div
-                    key={sec.id}
-                    style={{
-                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
-                      border: '1px solid var(--table-border-color)',
-                      borderRadius: '6px',
-                      backgroundColor: 'var(--bg-app)',
-                      fontSize: '12.5px',
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>
-                      {sec.sectionNo} · {sec.sectionTitle}
-                    </div>
-                    <div style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                      {sec.quotedArticles.slice(0, 2).join(' ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {tab === 'STANDARD' && <AccountingStandardsTab />}
       </SectionPanel>
 
       <ConservationBar
