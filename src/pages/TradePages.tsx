@@ -691,7 +691,7 @@ export const QuotationsPage: React.FC = () => {
           rowKey={(r) => r.id}
           selectedRowId={selectedQuote?.id || null}
           onRowClick={(r) => setSelectedQuoteId(r.id)}
-          maxHeight="calc(100vh - 260px)"
+          maxHeight="clamp(280px, calc(100vh - 420px), 680px)"
         />
       </SectionPanel>
     </div>
@@ -1347,7 +1347,7 @@ export const TradeContractsPage: React.FC = () => {
           rowKey={(r) => r.id}
           selectedRowId={selectedContract?.id || null}
           onRowClick={(r) => setSelectedId(r.id)}
-          maxHeight="calc(100vh - 260px)"
+          maxHeight="clamp(280px, calc(100vh - 440px), 680px)"
         />
       </SectionPanel>
     </div>
@@ -1589,7 +1589,7 @@ export const TradeInventoryPage: React.FC = () => {
         rowKey={(u) => u.id}
         selectedRowId={selectedUnit?.id || null}
         onRowClick={(u) => setSelectedUnitId(u.id)}
-        maxHeight="calc(100vh - 230px)"
+        maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
 
       <ConservationBar
