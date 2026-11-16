@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { BookOpen, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from '../manual/ManualContext';
+import { FL_MANUAL_REGISTRY } from '../manual/manualRegistry';
 import { EMPLOYMENT_STATUS_LABELS, formatKoStatus, type EmploymentStatus } from '../types/domain';
 import { ModalDialog, StatusBadge, VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
+import { WeatherWidget } from './WeatherWidget';
 
 export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -15,6 +17,12 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     visibleMenuGroups,
     errorModalMessage,
     toasts,
+    canGoBack,
+    canGoForward,
+    prevPageId,
+    nextPageId,
+    goBack,
+    goForward,
     navigateTo,
     logout,
     refreshAll,
@@ -39,6 +47,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [myError, setMyError] = useState<string | null>(null);
   const [myBusy, setMyBusy] = useState(false);
+
+  const prevPageTitle = prevPageId ? FL_MANUAL_REGISTRY[prevPageId]?.pageTitle || '' : '';
+  const nextPageTitle = nextPageId ? FL_MANUAL_REGISTRY[nextPageId]?.pageTitle || '' : '';
 
   const openMyModal = (initialTab: 'INFO' | 'PASSWORD' = 'INFO') => {
     if (!currentUser) return;
@@ -287,6 +298,45 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             >
               {activeEntry.pageTitle}
             </h2>
+
+            <WeatherWidget />
+
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+              <button
+                type="button"
+                data-testid="nav-back-btn"
+                onClick={goBack}
+                disabled={!canGoBack}
+                aria-label="뒤로가기"
+                title={canGoBack && prevPageTitle ? `뒤로가기 · ${prevPageTitle}` : '이전 화면 없음'}
+                style={{
+                  ...actionBtnStyle('secondary', true),
+                  width: '28px',
+                  padding: 0,
+                  opacity: canGoBack ? 1 : 0.38,
+                  cursor: canGoBack ? 'pointer' : 'not-allowed',
+                }}
+              >
+                <ChevronLeft size={15} />
+              </button>
+              <button
+                type="button"
+                data-testid="nav-forward-btn"
+                onClick={goForward}
+                disabled={!canGoForward}
+                aria-label="앞으로가기"
+                title={canGoForward && nextPageTitle ? `앞으로가기 · ${nextPageTitle}` : '다음 화면 없음'}
+                style={{
+                  ...actionBtnStyle('secondary', true),
+                  width: '28px',
+                  padding: 0,
+                  opacity: canGoForward ? 1 : 0.38,
+                  cursor: canGoForward ? 'pointer' : 'not-allowed',
+                }}
+              >
+                <ChevronRight size={15} />
+              </button>
+            </div>
           </div>
 
           <div

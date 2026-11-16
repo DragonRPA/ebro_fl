@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DEFAULT_TENANT_ID,
   camelToSnakeRow,
@@ -188,6 +188,12 @@ export interface AppShellContextValue {
   visiblePageSet: Set<FlPageId>;
   errorModalMessage: string | null;
   toasts: ToastItem[];
+  canGoBack: boolean;
+  canGoForward: boolean;
+  prevPageId: FlPageId | null;
+  nextPageId: FlPageId | null;
+  goBack: () => void;
+  goForward: () => void;
   navigateTo: (pageId: FlPageId) => void;
   loginWithCredentials: (loginId: string, password: string) => Promise<void>;
   logout: () => void;
@@ -211,16 +217,51 @@ export interface AppShellContextValue {
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
 
+const MAX_NAV_HISTORY = 50;
+
 export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<FlUser | null>(null);
   const [tenantProfile, setTenantProfile] = useState<TenantProfile>(DEFAULT_TENANT_PROFILE);
   const [datasets, setDatasets] = useState<FlDatasets>(EMPTY_DATASETS);
   const [activePage, setActivePage] = useState<FlPageId>('dashboard');
+  const [historyStack, setHistoryStack] = useState<FlPageId[]>(['dashboard']);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const historyStackRef = useRef<FlPageId[]>(['dashboard']);
+  const historyIndexRef = useRef<number>(0);
+  const activePageRef = useRef<FlPageId>('dashboard');
+  const lastNavActionAtRef = useRef<number>(0);
   const [agentOnline, setAgentOnline] = useState(false);
   const [agentInfo, setAgentInfo] = useState<AgentHealthInfo | null>(null);
   const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const resetNavHistory = useCallback(() => {
+    const initial: FlPageId[] = ['dashboard'];
+    historyStackRef.current = initial;
+    historyIndexRef.current = 0;
+    activePageRef.current = 'dashboard';
+    setHistoryStack(initial);
+    setHistoryIndex(0);
+    setActivePage('dashboard');
+    if (typeof window !== 'undefined' && window.history) {
+      window.history.replaceState(
+        { pageId: 'dashboard', historyIndex: 0, ebroFlNav: true },
+        '',
+        ''
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.history && !window.history.state?.ebroFlNav) {
+      window.history.replaceState(
+        { pageId: 'dashboard', historyIndex: 0, ebroFlNav: true },
+        '',
+        ''
+      );
+    }
+  }, []);
 
   useEffect(() => {
     registerErrorModalHandler((msg) => setErrorModalMessage(msg));
@@ -673,17 +714,17 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const signed = signSessionUser({ id: target.id, role: `T${target.tierLevel}` });
       safeLocalStorageSet(SESSION_STORAGE_KEY, signed);
       setCurrentUser(target);
-      setActivePage('dashboard');
+      resetNavHistory();
       notifyToast(`${target.name} · ${TIER_LABELS[target.tierLevel]} 로그인 완료`, 'success');
     },
-    [datasets.users, notifyToast]
+    [datasets.users, notifyToast, resetNavHistory]
   );
 
   const logout = useCallback(() => {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
     setCurrentUser(null);
-    setActivePage('dashboard');
-  }, []);
+    resetNavHistory();
+  }, [resetNavHistory]);
 
   const canViewPage = useCallback(
     (pageId: FlPageId): boolean => {
@@ -759,10 +800,161 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         notifyToast('현재 직급 티어에서는 해당 화면 조회 권한이 없습니다.', 'error');
         return;
       }
+      if (pageId === activePageRef.current) return;
+      const base = historyStackRef.current.slice(0, historyIndexRef.current + 1);
+      base.push(pageId);
+      if (base.length > MAX_NAV_HISTORY) {
+        base.shift();
+      }
+      const nextIdx = base.length - 1;
+      historyStackRef.current = base;
+      historyIndexRef.current = nextIdx;
+      activePageRef.current = pageId;
+      setHistoryStack(base);
+      setHistoryIndex(nextIdx);
       setActivePage(pageId);
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.pushState(
+          { pageId, historyIndex: nextIdx, ebroFlNav: true },
+          '',
+          ''
+        );
+      }
     },
     [canViewPage, notifyToast]
   );
+
+  const stepHistory = useCallback(
+    (delta: -1 | 1) => {
+      const stack = historyStackRef.current;
+      for (
+        let i = historyIndexRef.current + delta;
+        i >= 0 && i < stack.length;
+        i += delta
+      ) {
+        const target = stack[i];
+        if (target && canViewPage(target)) {
+          historyIndexRef.current = i;
+          activePageRef.current = target;
+          setHistoryIndex(i);
+          setActivePage(target);
+          if (typeof window !== 'undefined' && window.history) {
+            window.history.replaceState(
+              { pageId: target, historyIndex: i, ebroFlNav: true },
+              '',
+              ''
+            );
+          }
+          break;
+        }
+      }
+    },
+    [canViewPage]
+  );
+
+  const goBack = useCallback(() => stepHistory(-1), [stepHistory]);
+  const goForward = useCallback(() => stepHistory(1), [stepHistory]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const triggerHardwareNav = (fn: () => void) => {
+      const now = Date.now();
+      if (now - lastNavActionAtRef.current < 120) return;
+      lastNavActionAtRef.current = now;
+      fn();
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      const now = Date.now();
+      if (now - lastNavActionAtRef.current < 120) return;
+      const state = e.state as { ebroFlNav?: boolean; pageId?: FlPageId; historyIndex?: number } | null;
+      if (state?.ebroFlNav && state.pageId && canViewPage(state.pageId)) {
+        lastNavActionAtRef.current = now;
+        if (
+          typeof state.historyIndex === 'number' &&
+          historyStackRef.current[state.historyIndex]
+        ) {
+          historyIndexRef.current = state.historyIndex;
+          setHistoryIndex(state.historyIndex);
+        }
+        activePageRef.current = state.pageId;
+        setActivePage(state.pageId);
+      }
+    };
+
+    const handleMouseSideButtonBlock = (e: MouseEvent) => {
+      if (e.button === 3 || e.button === 4) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const handleMouseSideButtonUp = (e: MouseEvent) => {
+      if (e.button === 3) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerHardwareNav(goBack);
+      } else if (e.button === 4) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerHardwareNav(goForward);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === 'BrowserBack' ||
+        e.code === 'BrowserBack' ||
+        (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key === 'ArrowLeft')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerHardwareNav(goBack);
+      } else if (
+        e.key === 'BrowserForward' ||
+        e.code === 'BrowserForward' ||
+        (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key === 'ArrowRight')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerHardwareNav(goForward);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('mousedown', handleMouseSideButtonBlock, { capture: true });
+    window.addEventListener('auxclick', handleMouseSideButtonBlock, { capture: true });
+    window.addEventListener('mouseup', handleMouseSideButtonUp, { capture: true });
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('mousedown', handleMouseSideButtonBlock, { capture: true });
+      window.removeEventListener('auxclick', handleMouseSideButtonBlock, { capture: true });
+      window.removeEventListener('mouseup', handleMouseSideButtonUp, { capture: true });
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+    };
+  }, [currentUser, canViewPage, goBack, goForward]);
+
+  const prevPageId = useMemo(() => {
+    for (let i = historyIndex - 1; i >= 0; i--) {
+      const target = historyStack[i];
+      if (target && canViewPage(target)) return target;
+    }
+    return null;
+  }, [historyStack, historyIndex, canViewPage]);
+
+  const nextPageId = useMemo(() => {
+    for (let i = historyIndex + 1; i < historyStack.length; i++) {
+      const target = historyStack[i];
+      if (target && canViewPage(target)) return target;
+    }
+    return null;
+  }, [historyStack, historyIndex, canViewPage]);
+
+  const canGoBack = prevPageId !== null;
+  const canGoForward = nextPageId !== null;
 
   const formatMoney = useCallback(
     (amount: number | null | undefined, options?: { salesSensitive?: boolean }) => {
@@ -881,6 +1073,12 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     visiblePageSet,
     errorModalMessage,
     toasts,
+    canGoBack,
+    canGoForward,
+    prevPageId,
+    nextPageId,
+    goBack,
+    goForward,
     navigateTo,
     loginWithCredentials,
     logout,
