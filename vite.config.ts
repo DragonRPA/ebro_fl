@@ -84,6 +84,46 @@ function developerDevicePlugin(): Plugin {
           return;
         }
 
+        if (req.url && req.url.startsWith('/api/vision-ocr')) {
+          let bodyStr = '';
+          req.on('data', chunk => { bodyStr += chunk; });
+          req.on('end', async () => {
+            try {
+              const parsed = bodyStr ? JSON.parse(bodyStr) : {};
+              const mod = (await server.ssrLoadModule('./api/vision-ocr.ts')) as {
+                default: (mockReq: unknown, mockRes: unknown) => Promise<void>;
+              };
+              let statusCode = 200;
+              const headers: Record<string, string> = { 'Content-Type': 'application/json; charset=utf-8' };
+              const mockRes = {
+                setHeader: (k: string, v: string) => {
+                  headers[k] = v;
+                },
+                status: (code: number) => {
+                  statusCode = code;
+                  return mockRes;
+                },
+                json: (data: unknown) => {
+                  Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+                  res.statusCode = statusCode;
+                  res.end(JSON.stringify(data));
+                },
+                end: (chunk?: string) => {
+                  Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+                  res.statusCode = statusCode;
+                  res.end(chunk);
+                },
+              };
+              await mod.default({ method: req.method || 'POST', body: parsed }, mockRes);
+            } catch (e: any) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.statusCode = 200;
+              res.end(JSON.stringify({ success: false, error: e?.message || String(e), data: null }));
+            }
+          });
+          return;
+        }
+
         if (req.url && req.url.startsWith('/api/popbill-taxinvoice')) {
           let body = '';
           req.on('data', chunk => { body += chunk; });

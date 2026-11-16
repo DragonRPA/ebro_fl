@@ -6,8 +6,9 @@ import {
   newId,
 } from '../core/supabase';
 import { encryptSecret, hashPassword } from '../utils/cryptoVault';
-import type {
-  CurrencyCode,
+import {
+  computeDueDateFromCycle,
+  type CurrencyCode,
   FlApPayable,
   FlAssetEvent,
   FlBilling,
@@ -389,7 +390,13 @@ export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promis
     settledFxRate: null,
     fxGainLossKrw: 0,
     status: 'UNPAID',
-    dueDate: addDaysIso(input.effectiveDate, 30),
+    dueDate: computeDueDateFromCycle(
+      input.effectiveDate.slice(0, 7),
+      input.supplier.defaultPaymentCycle,
+      input.supplier.defaultPaymentMonthOffset,
+      input.supplier.defaultPaymentDueDay,
+      input.effectiveDate
+    ),
     accrualDate: input.effectiveDate,
     paidDate: null,
     memo: `${purchaseNo} 물품대금 매입채무`,

@@ -82,20 +82,23 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'partners',
     pageTitle: '거래처 관리',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '매출처, 대리점, 금융사, 매입처, 전대공급처, 운송사, 외주정비처 역할을 단일 거래처 원장으로 통합 관리하고 사업장 및 담당자를 등록한다.',
+    basicDescription: '매출처, 대리점, 금융사, 매입처, 전대공급처, 운송사, 외주정비처 역할을 단일 거래처 원장으로 통합 관리하고 사업자등록증·통장사본 판독 및 결제수단·지급기일 조건을 설정한다.',
     anchors: [
       { anchorId: 'prt-search', title: '거래처 검색·역할 필터', summary: '상호, 사업자등록번호, 거래처 역할로 목록을 조회한다.' },
-      { anchorId: 'prt-grid', title: '거래처 목록·상세 패널', summary: '좌측 목록에서 거래처를 선택하고 우측에서 사업장 및 담당자를 편집한다.' },
-      { anchorId: 'prt-save', title: '거래처 저장 버튼', summary: '거래처 기본정보, 마감일 조건, 역할을 저장한다.' },
+      { anchorId: 'prt-grid', title: '거래처 목록·상세 패널', summary: '좌측 목록에서 거래처를 선택하고 우측에서 계좌정보, 지급기일 조건, 사업장을 편집한다.' },
+      { anchorId: 'prt-view-bizcert', title: '사업자등록증 보기', summary: '등록된 사업자등록증 원본과 사업자 기본정보를 대조 수정한다.' },
+      { anchorId: 'prt-view-bankbook', title: '통장사본 보기', summary: '등록된 통장사본 이미지와 은행명, 계좌번호, 예금주를 대조 수정한다.' },
+      { anchorId: 'prt-save', title: '거래처 저장 버튼', summary: '거래처 기본정보, 입금계좌, 결제수단, 청구마감일 및 월별 지급기일 조건을 저장한다.' },
     ],
     processes: [
       {
-        processName: '신규 거래처 및 역할 등록',
-        purpose: '하나의 사업자등록번호에 복수 거래 역할을 부여하고 정산 기준일을 설정한다.',
+        processName: '사업자등록증·통장사본 등록 및 결제·지급기일 설정',
+        purpose: '증빙 서류로 기본정보와 입금계좌를 등록하고 결제수단과 월구분 지급기일을 분리 설정한다.',
         steps: [
-          { stepNo: 1, targetLabel: '신규 등록 버튼', manualAnchorId: 'prt-search', actionDetail: '우측 상단 신규 등록 버튼을 눌러 입력 양식을 연다.' },
-          { stepNo: 2, targetLabel: '역할 체크박스 및 기본정보', manualAnchorId: 'prt-grid', actionDetail: '상호, 사업자등록번호, 청구마감일, 지급기일과 거래처 역할을 선택한다.' },
-          { stepNo: 3, targetLabel: '저장 버튼', manualAnchorId: 'prt-save', actionDetail: '저장 버튼을 눌러 거래처 원장을 데이터베이스에 기록한다.' },
+          { stepNo: 1, targetLabel: '신규 거래처 버튼', manualAnchorId: 'prt-search', actionDetail: '우측 상단 신규 거래처 버튼을 눌러 입력 양식을 연다.' },
+          { stepNo: 2, targetLabel: '서류 등록 영역', manualAnchorId: 'prt-grid', actionDetail: '사업자등록증 등록 또는 통장사본 등록 영역에 파일을 올려 상호·계좌정보를 반영한다.' },
+          { stepNo: 3, targetLabel: '결제수단·지급기일 선택칸', manualAnchorId: 'prt-grid', actionDetail: '결제수단, 청구마감일, 지급기일 월구분, 지급기일 일자를 순서대로 지정한다.' },
+          { stepNo: 4, targetLabel: '거래처 저장 버튼', manualAnchorId: 'prt-save', actionDetail: '저장 버튼을 눌러 거래처 원장을 데이터베이스에 기록한다.' },
         ],
       },
       {
@@ -188,10 +191,10 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'catalogs',
     pageTitle: '제원 카탈로그',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '지게차 모델별 VDI 2198 기술제원·마스트·배터리 사양과 대리점 배포용 호환 부품 카탈로그 패키지를 조회한다.',
+    basicDescription: '지게차 모델별 VDI 2198 기술제원·마스트·배터리 사양과 최대 5개 모델 제원비교표 PDF 작성, 호환 부품 카탈로그 패키지를 조회한다.',
     anchors: [
-      { anchorId: 'cat-tabs', title: '제원·부품 전환 탭', summary: '장비 기술제원표와 호환부품 카탈로그를 전환한다.' },
-      { anchorId: 'cat-detail', title: '기술제원·카탈로그 본문', summary: '마스트 높이별 하중표, 배터리 옵션, 호환품번을 확인한다.' },
+      { anchorId: 'cat-tabs', title: '제원·부품 전환 탭', summary: '장비 기술제원표, 모델 제원 비교, 호환부품 카탈로그를 전환한다.' },
+      { anchorId: 'cat-detail', title: '기술제원·비교·카탈로그 본문', summary: '마스트 높이별 하중표, 배터리 옵션, 최대 5개 기종 비교표 및 PDF 출력, 호환품번을 관리한다.' },
     ],
     processes: [
       {
@@ -199,7 +202,16 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
         purpose: '영업 견적 및 현장 투입 전 작업통로폭, 마스트 전고, 호환부품을 대조한다.',
         steps: [
           { stepNo: 1, targetLabel: '카탈로그 구분 탭', manualAnchorId: 'cat-tabs', actionDetail: '장비 제원표 또는 호환부품 카탈로그 탭을 선택한다.' },
-          { stepNo: 2, targetLabel: '기종·품번 목록', manualAnchorId: 'cat-detail', actionDetail: '기종이나 부품을 선택하여 세부 제원 및 표준 단가를 확인한다.' },
+          { stepNo: 2, targetLabel: '기종·품번 목록', manualAnchorId: 'cat-detail', actionDetail: '기종이나 부품을 선택하여 세부 제원, 공식 제원표 PDF 및 표준 단가를 확인한다.' },
+        ],
+      },
+      {
+        processName: '최대 5개 기종 제원비교표 작성 및 PDF 출력',
+        purpose: '고객사 제안용 최대 5개 지게차 모델 제원비교표를 구성하고 A4 가로 PDF로 미리보기 또는 출력한다.',
+        steps: [
+          { stepNo: 1, targetLabel: '비교 기종 선택 및 순서 조정', manualAnchorId: 'cat-detail', actionDetail: '장비 제원표에서 담거나 모델 제원 비교 탭 검색창에서 최대 5종을 추가하고 열 순서를 조정한다.' },
+          { stepNo: 2, targetLabel: '수신처 · 비교항목 편집', manualAnchorId: 'cat-detail', actionDetail: '제원비교표 제목, 수신처, 검토 의견을 입력하고 요약·상세 프리셋 또는 행 제외로 항목을 정리한다.' },
+          { stepNo: 3, targetLabel: 'PDF 미리보기 · 출력', manualAnchorId: 'cat-detail', actionDetail: 'PDF 미리보기 버튼으로 인쇄 레이아웃을 점검하거나 제원비교표 PDF 출력 버튼으로 다운로드한다.' },
         ],
       },
     ],

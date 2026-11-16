@@ -31,10 +31,17 @@ import {
 import {
   CONTRACT_LINE_STATUS_KO_LABELS,
   CONTRACT_STATUS_KO_LABELS,
+  DAY_OF_MONTH_OPTIONS,
   FULFILLMENT_STATUS_KO_LABELS,
+  PAYMENT_CYCLES,
+  PAYMENT_METHODS,
   QUOTATION_STATUS_KO_LABELS,
+  cycleToMonthOffset,
   formatKoStatus,
+  formatPaymentTermsLabel,
   koStatusTone,
+  normalizePaymentMethod,
+  offsetToPaymentCycle,
   type FlContract,
   type FlContractLine,
   type FlFulfillment,
@@ -42,6 +49,8 @@ import {
   type FlQuotation,
   type FlTradeAftercareCase,
   type ItemCategory,
+  type PaymentCycleType,
+  type PaymentMethodType,
   type QuotationLine,
 } from '../types/domain';
 
@@ -214,6 +223,10 @@ export const QuotationsPage: React.FC = () => {
       return;
     }
     const partner = datasets.partners.find((p) => p.id === qt.partnerId);
+    const ptCycle = offsetToPaymentCycle(
+      partner?.defaultPaymentMonthOffset,
+      partner?.defaultPaymentCycle
+    );
     setBusy(true);
     try {
       const ctrId = newId('CTR');
@@ -240,9 +253,10 @@ export const QuotationsPage: React.FC = () => {
         startDate: today,
         endDate: endDt,
         closingDay: partner?.defaultClosingDay || 31,
-        paymentDueDay: partner?.defaultPaymentDueDay || 15,
-        paymentMonthOffset: partner?.defaultPaymentMonthOffset ?? 1,
-        paymentMethod: partner?.paymentMethod || '계좌이체',
+        paymentCycle: ptCycle,
+        paymentDueDay: ptCycle === '선입금' ? 0 : partner?.defaultPaymentDueDay || 10,
+        paymentMonthOffset: cycleToMonthOffset(ptCycle),
+        paymentMethod: normalizePaymentMethod(partner?.paymentMethod),
         supplyAmountKrw: qt.supplyAmountKrw,
         vatAmountKrw: qt.vatAmountKrw,
         totalAmountKrw: qt.totalAmountKrw,
@@ -552,6 +566,20 @@ export const TradeContractsPage: React.FC = () => {
     tradeItems[0]?.retailPriceKrw || 0
   );
   const [contractDate, setContractDate] = useState(today);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(() =>
+    normalizePaymentMethod(customers[0]?.paymentMethod)
+  );
+  const [closingDay, setClosingDay] = useState<number>(() => customers[0]?.defaultClosingDay || 31);
+  const [paymentCycle, setPaymentCycle] = useState<PaymentCycleType>(() =>
+    offsetToPaymentCycle(customers[0]?.defaultPaymentMonthOffset, customers[0]?.defaultPaymentCycle)
+  );
+  const [paymentDueDay, setPaymentDueDay] = useState<number>(() => {
+    const cy = offsetToPaymentCycle(
+      customers[0]?.defaultPaymentMonthOffset,
+      customers[0]?.defaultPaymentCycle
+    );
+    return cy === '선입금' ? 0 : customers[0]?.defaultPaymentDueDay || 10;
+  });
   const [specialTerms, setSpecialTerms] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -566,6 +594,7 @@ export const TradeContractsPage: React.FC = () => {
     const supply = Math.round(cleanQty * Number(unitPriceKrw || 0));
     const vat = Math.round(supply * 0.1);
     const ctrId = newId('CTR');
+    const resolvedDueDay = paymentCycle === '선입금' ? 0 : Math.min(31, Math.max(1, Number(paymentDueDay || 10)));
     const ctr: FlContract = {
       id: ctrId,
       tenantId: DEFAULT_TENANT_ID,
@@ -578,10 +607,11 @@ export const TradeContractsPage: React.FC = () => {
       contractDate,
       startDate: contractDate,
       endDate: addDaysIso(contractDate, 14),
-      closingDay: partner.defaultClosingDay || 31,
-      paymentDueDay: partner.defaultPaymentDueDay || 15,
-      paymentMonthOffset: partner.defaultPaymentMonthOffset ?? 1,
-      paymentMethod: partner.paymentMethod || '계좌이체',
+      closingDay: Math.min(31, Math.max(1, Number(closingDay || 31))),
+      paymentCycle,
+      paymentDueDay: resolvedDueDay,
+      paymentMonthOffset: cycleToMonthOffset(paymentCycle),
+      paymentMethod: normalizePaymentMethod(paymentMethod),
       supplyAmountKrw: supply,
       vatAmountKrw: vat,
       totalAmountKrw: supply + vat,
@@ -712,7 +742,17 @@ export const TradeContractsPage: React.FC = () => {
               <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
                 options={toPartnerSelectOptions(customers)}
-                onChange={(nextId) => setPartnerId(nextId)}
+                onChange={(nextId) => {
+                  setPartnerId(nextId);
+                  const pt = customers.find((p) => p.id === nextId);
+                  if (pt) {
+                    const cy = offsetToPaymentCycle(pt.defaultPaymentMonthOffset, pt.defaultPaymentCycle);
+                    setPaymentMethod(normalizePaymentMethod(pt.paymentMethod));
+                    setClosingDay(pt.defaultClosingDay || 31);
+                    setPaymentCycle(cy);
+                    setPaymentDueDay(cy === '선입금' ? 0 : pt.defaultPaymentDueDay || 10);
+                  }
+                }}
                 placeholder="매출처 선택"
                 searchPlaceholder="매출처명 · 초성 · 사업자번호 검색"
                 minDropdownWidth={280}
@@ -749,6 +789,69 @@ export const TradeContractsPage: React.FC = () => {
                 onChange={(e) => setContractDate(e.target.value)}
                 style={controlInputStyle}
               />
+            </VerticalField>
+            <VerticalField label="결제수단">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                style={controlInputStyle}
+              >
+                {PAYMENT_METHODS.map((pm) => (
+                  <option key={pm} value={pm}>
+                    {pm}
+                  </option>
+                ))}
+              </select>
+            </VerticalField>
+            <VerticalField label="청구마감일">
+              <select
+                value={closingDay}
+                onChange={(e) => setClosingDay(Number(e.target.value))}
+                style={controlInputStyle}
+              >
+                {DAY_OF_MONTH_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </VerticalField>
+            <VerticalField label="지급기일 월구분">
+              <select
+                value={paymentCycle}
+                onChange={(e) => {
+                  const nextCycle = e.target.value as PaymentCycleType;
+                  setPaymentCycle(nextCycle);
+                  setPaymentDueDay((prev) =>
+                    nextCycle === '선입금' ? 0 : prev >= 1 ? prev : 10
+                  );
+                }}
+                style={controlInputStyle}
+              >
+                {PAYMENT_CYCLES.map((cy) => (
+                  <option key={cy} value={cy}>
+                    {cy}
+                  </option>
+                ))}
+              </select>
+            </VerticalField>
+            <VerticalField label="지급기일 일자">
+              <select
+                disabled={paymentCycle === '선입금'}
+                value={paymentCycle === '선입금' ? 0 : paymentDueDay}
+                onChange={(e) => setPaymentDueDay(Number(e.target.value))}
+                style={controlInputStyle}
+              >
+                {paymentCycle === '선입금' ? (
+                  <option value={0}>출고 전 선입금</option>
+                ) : (
+                  DAY_OF_MONTH_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))
+                )}
+              </select>
             </VerticalField>
             <VerticalField label="특약사항">
               <input
@@ -855,6 +958,17 @@ export const TradeContractsPage: React.FC = () => {
           { key: 'contractNo', header: '계약번호', width: 140, render: (r) => <span style={{ fontWeight: 700 }}>{r.contractNo}</span> },
           { key: 'partnerName', header: '매출처', render: (r) => r.partnerName },
           { key: 'contractDate', header: '계약일', width: 105, render: (r) => r.contractDate },
+          {
+            key: 'paymentTerms',
+            header: '결제 · 지급기일',
+            width: 155,
+            render: (r) =>
+              `${normalizePaymentMethod(r.paymentMethod)} · ${formatPaymentTermsLabel(
+                r.paymentCycle,
+                r.paymentDueDay,
+                r.paymentMonthOffset
+              )}`,
+          },
           {
             key: 'total',
             header: '계약합계',

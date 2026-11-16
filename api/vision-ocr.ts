@@ -6,7 +6,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || String.fromCharCode(...[103,115
 // Gemini API Key (선택적 페일오버 엔진)
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 
-export type VisionTaskType = 'ODOMETER' | 'FUEL_RECEIPT' | 'BUSINESS_LICENSE' | 'CONTACT_CARD' | 'ASSET_NO';
+export type VisionTaskType = 'ODOMETER' | 'FUEL_RECEIPT' | 'BUSINESS_LICENSE' | 'BANKBOOK' | 'CONTACT_CARD' | 'ASSET_NO';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -42,12 +42,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       result = await analyzeReceiptWithAI(cleanImage, vehicleContext);
     } else if (taskType === 'BUSINESS_LICENSE') {
       result = await analyzeBusinessLicenseWithAI(cleanImage, textHint);
+    } else if (taskType === 'BANKBOOK') {
+      result = await analyzeBankbookWithAI(cleanImage, textHint);
     } else if (taskType === 'CONTACT_CARD') {
       result = await analyzeContactCardWithAI(cleanImage, textHint);
     } else if (taskType === 'ASSET_NO') {
       result = await analyzeAssetNoWithAI(cleanImage, assetContext);
     } else {
-      return res.status(400).json({ error: 'Invalid taskType. Must be ODOMETER, FUEL_RECEIPT, BUSINESS_LICENSE, CONTACT_CARD, or ASSET_NO' });
+      return res.status(400).json({ error: 'Invalid taskType. Must be ODOMETER, FUEL_RECEIPT, BUSINESS_LICENSE, BANKBOOK, CONTACT_CARD, or ASSET_NO' });
     }
 
     const elapsedMs = Date.now() - t0;
@@ -174,6 +176,35 @@ JSON 응답 포맷:
   "repContact": "031-667-0000",
   "isCorporate": true,
   "confidence": 0.95
+}`;
+
+  return await callVisionChat(prompt, imageUrl);
+}
+
+/**
+ * 3-2. 대한민국 은행 통장사본 · 계좌개설확인서 3대 핵심 항목 정밀 인식
+ */
+async function analyzeBankbookWithAI(imageUrl: string, textHint?: string): Promise<any> {
+  const hintClause = textHint ? `\n[추출 보조 텍스트 힌트]:\n${textHint.slice(0, 1500)}` : '';
+
+  const prompt = `당신은 대한민국 금융기관 통장사본 및 계좌개설확인서 문서 분석 전문 AI입니다.
+제공된 통장사본 이미지(또는 계좌개설확인서 스캔본/사진)에서 아래 3가지 핵심 입금 계좌 정보를 추출하세요.${hintClause}
+
+[추출 항목 및 포맷 규칙]:
+1. bankName (은행명): 한국 표준 은행명 ("국민은행", "신한은행", "기업은행", "우리은행", "하나은행", "농협은행", "산업은행", "아이엠뱅크", "부산은행", "경남은행", "광주은행", "전북은행", "제주은행", "수협은행", "새마을금고", "신협", "우체국", "카카오뱅크", "케이뱅크", "토스뱅크", "제일은행" 중 하나로 정규화). KB국민->국민은행, IBK기업->기업은행, NH농협->농협은행, KEB하나->하나은행, SC제일->제일은행.
+2. bankAccount (계좌번호): 하이픈(-)이 있는 경우 유지하고 계좌번호 숫자열을 정확히 추출. 전화번호·사업자등록번호(10자리 XXX-XX-XXXXX)와 혼동하지 마세요.
+3. bankHolder (예금주): 통장에 기재된 예금주 성명 또는 법인/상호명 (주식회사 표기 포함).
+
+[주의사항]:
+- 확인되지 않는 항목은 null 또는 빈 문자열로 반환하고 추측하지 마세요.
+- 반드시 유효한 JSON 형식으로만 응답하세요. 백틱이나 마크다운 설명은 일절 포함하지 마세요.
+
+JSON 응답 포맷:
+{
+  "bankName": "국민은행",
+  "bankAccount": "123-45-678901",
+  "bankHolder": "주식회사 기연리프트",
+  "confidence": "HIGH"
 }`;
 
   return await callVisionChat(prompt, imageUrl);

@@ -1,10 +1,12 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import { syncPartnerNameAcrossTables, upsertManagedExchangeRates } from '../services/domainEngine';
 import {
+  analyzeBankbookFile,
   analyzeBusinessLicenseFile,
+  uploadBankbookImageToR2,
   uploadBusinessLicenseImageToR2,
 } from '../services/businessLicenseOcrService';
 import {
@@ -26,7 +28,16 @@ import {
   type GridColumn,
 } from '../components/UiPrimitives';
 import {
+  DAY_OF_MONTH_OPTIONS,
+  KOREAN_BANK_LIST,
+  PAYMENT_CYCLES,
+  PAYMENT_METHODS,
+  cycleToMonthOffset,
+  formatClosingDayLabel,
   formatKoCurrency,
+  formatPaymentTermsLabel,
+  normalizePaymentMethod,
+  offsetToPaymentCycle,
   type CurrencyCode,
   type FlCatalogPackage,
   type FlExchangeRate,
@@ -37,6 +48,8 @@ import {
   type ItemDomain,
   type ManagementType,
   type PartnerRole,
+  type PaymentCycleType,
+  type PaymentMethodType,
 } from '../types/domain';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
 import {
@@ -61,6 +74,272 @@ const ALL_ROLES: PartnerRole[] = [
   '외주정비처',
 ];
 
+const PartnerPaymentTermsRow: React.FC<{
+  value: Partial<FlPartner>;
+  onChange: React.Dispatch<React.SetStateAction<Partial<FlPartner>>>;
+  onCycleChange: (setter: React.Dispatch<React.SetStateAction<Partial<FlPartner>>>, cycle: string) => void;
+  testIdPrefix?: string;
+  columns?: string;
+}> = ({ value, onChange, onCycleChange, testIdPrefix = 'prt', columns = 'repeat(4, minmax(110px, 1fr))' }) => {
+  const resolvedCycle = offsetToPaymentCycle(value.defaultPaymentMonthOffset, value.defaultPaymentCycle);
+  const isPrepay = resolvedCycle === '선입금';
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: columns, gap: '10px' }}>
+      <VerticalField label="결제수단" minWidth={0}>
+        <select
+          data-testid={`${testIdPrefix}-payment-method`}
+          value={normalizePaymentMethod(value.paymentMethod)}
+          onChange={(e) =>
+            onChange((p) => ({ ...p, paymentMethod: e.target.value as PaymentMethodType }))
+          }
+          style={controlInputStyle}
+        >
+          {PAYMENT_METHODS.map((pm) => (
+            <option key={pm} value={pm}>
+              {pm}
+            </option>
+          ))}
+        </select>
+      </VerticalField>
+      <VerticalField label="청구마감일" minWidth={0}>
+        <select
+          data-testid={`${testIdPrefix}-closing-day`}
+          value={Number(value.defaultClosingDay ?? 31)}
+          onChange={(e) =>
+            onChange((p) => ({ ...p, defaultClosingDay: Number(e.target.value) }))
+          }
+          style={controlInputStyle}
+        >
+          {DAY_OF_MONTH_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </VerticalField>
+      <VerticalField label="지급기일 월구분" minWidth={0}>
+        <select
+          data-testid={`${testIdPrefix}-payment-cycle`}
+          value={resolvedCycle}
+          onChange={(e) => onCycleChange(onChange, e.target.value)}
+          style={controlInputStyle}
+        >
+          {PAYMENT_CYCLES.map((cy) => (
+            <option key={cy} value={cy}>
+              {cy}
+            </option>
+          ))}
+        </select>
+      </VerticalField>
+      <VerticalField label="지급기일 일자" minWidth={0}>
+        <select
+          data-testid={`${testIdPrefix}-payment-due-day`}
+          disabled={isPrepay}
+          value={isPrepay ? 0 : Number(value.defaultPaymentDueDay || 10)}
+          onChange={(e) =>
+            onChange((p) => ({ ...p, defaultPaymentDueDay: Number(e.target.value) }))
+          }
+          style={controlInputStyle}
+        >
+          {isPrepay ? (
+            <option value={0}>출고 전 선입금</option>
+          ) : (
+            DAY_OF_MONTH_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))
+          )}
+        </select>
+      </VerticalField>
+    </div>
+  );
+};
+
+const PartnerDocViewerPane: React.FC<{
+  docTitle: string;
+  fileName: string;
+  imageUrl: string | null | undefined;
+  zoom: number;
+  onZoomChange: React.Dispatch<React.SetStateAction<number>>;
+  analyzing: boolean;
+  canEdit: boolean;
+  emptyText: string;
+  selectBtnLabel: string;
+  onSelectFileClick: () => void;
+  onFileDrop: (file: File) => void;
+}> = ({
+  docTitle,
+  fileName,
+  imageUrl,
+  zoom,
+  onZoomChange,
+  analyzing,
+  canEdit,
+  emptyText,
+  selectBtnLabel,
+  onSelectFileClick,
+  onFileDrop,
+}) => (
+  <div
+    onDragOver={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }}
+    onDrop={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const file = e.dataTransfer?.files?.[0];
+      if (file) {
+        onFileDrop(file);
+      }
+    }}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      border: '1px solid var(--border-color)',
+      borderRadius: '8px',
+      padding: '10px',
+      backgroundColor: 'var(--bg-app)',
+    }}
+  >
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '6px',
+        flexWrap: 'wrap',
+      }}
+    >
+      <span
+        style={{
+          fontSize: '12px',
+          fontWeight: 700,
+          color: 'var(--text-secondary)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {fileName || docTitle}
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <button
+          type="button"
+          onClick={() => onZoomChange((z) => Math.max(50, z - 25))}
+          style={actionBtnStyle('secondary', true)}
+          title="축소"
+        >
+          <ZoomOut size={13} />
+        </button>
+        <span
+          style={{
+            fontSize: '11.5px',
+            fontWeight: 700,
+            minWidth: '42px',
+            textAlign: 'center',
+            color: 'var(--text-main)',
+          }}
+        >
+          {zoom}%
+        </span>
+        <button
+          type="button"
+          onClick={() => onZoomChange((z) => Math.min(250, z + 25))}
+          style={actionBtnStyle('secondary', true)}
+          title="확대"
+        >
+          <ZoomIn size={13} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onZoomChange(100)}
+          style={actionBtnStyle('secondary', true)}
+          title="원래 크기"
+        >
+          <RotateCcw size={12} />
+        </button>
+        {imageUrl && (
+          <button
+            type="button"
+            onClick={() => {
+              window.open(imageUrl, '_blank', 'noopener,noreferrer');
+            }}
+            style={actionBtnStyle('secondary', true)}
+          >
+            <ExternalLink size={12} />
+            새창
+          </button>
+        )}
+        {canEdit && (
+          <button
+            type="button"
+            onClick={onSelectFileClick}
+            disabled={analyzing}
+            style={actionBtnStyle('secondary', true)}
+          >
+            <Upload size={12} />
+            {analyzing ? '판독중' : '파일 등록'}
+          </button>
+        )}
+      </div>
+    </div>
+
+    <div
+      style={{
+        height: '470px',
+        overflow: 'auto',
+        border: '1px solid var(--table-border-color)',
+        borderRadius: '6px',
+        backgroundColor: 'var(--bg-secondary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '8px',
+      }}
+    >
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={docTitle}
+          style={{
+            width: `${zoom}%`,
+            maxWidth: 'none',
+            height: 'auto',
+            objectFit: 'contain',
+            borderRadius: '4px',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+            fontSize: '12.5px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '24px',
+          }}
+        >
+          <span>{emptyText}</span>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={onSelectFileClick}
+              style={actionBtnStyle('primary', true)}
+            >
+              <Upload size={13} />
+              {selectBtnLabel}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export const PartnersPage: React.FC = () => {
   const { datasets, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('partners');
@@ -69,28 +348,37 @@ export const PartnersPage: React.FC = () => {
   const [keyword, setKeyword] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(datasets.partners[0]?.id || null);
 
-  const [form, setForm] = useState<Partial<FlPartner>>({
-    name: '',
-    bizRegNo: '',
-    representative: '',
-    bizType: '',
-    bizItem: '',
-    address: '',
-    phone: '',
-    email: '',
-    taxEmail: '',
-    partnerRoles: ['매출처'],
-    defaultClosingDay: 31,
-    defaultPaymentDueDay: 15,
-    defaultPaymentMonthOffset: 1,
-    paymentMethod: '계좌이체',
-    bankName: '',
-    bankAccount: '',
-    bankHolder: '',
-    creditGrade: '정상',
-    memo: '',
-    isActive: true,
-  });
+  const [form, setForm] = useState<Partial<FlPartner>>(() =>
+    datasets.partners[0]
+      ? { ...datasets.partners[0] }
+      : {
+          name: '',
+          bizRegNo: '',
+          representative: '',
+          bizType: '',
+          bizItem: '',
+          address: '',
+          phone: '',
+          email: '',
+          taxEmail: '',
+          partnerRoles: ['매출처'],
+          defaultClosingDay: 31,
+          defaultPaymentCycle: '익월',
+          defaultPaymentDueDay: 10,
+          defaultPaymentMonthOffset: 1,
+          paymentMethod: '계좌이체',
+          bankName: '',
+          bankAccount: '',
+          bankHolder: '',
+          creditGrade: '정상',
+          memo: '',
+          bizCertUrl: null,
+          bizCertName: null,
+          bankbookUrl: null,
+          bankbookName: null,
+          isActive: true,
+        }
+  );
 
   const [siteForm, setSiteForm] = useState({
     siteName: '',
@@ -102,11 +390,130 @@ export const PartnersPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [isDraggingBizCert, setIsDraggingBizCert] = useState(false);
   const [analyzingBizCert, setAnalyzingBizCert] = useState(false);
-  const [bizCertFileName, setBizCertFileName] = useState<string>('');
+  const [bizCertFileName, setBizCertFileName] = useState<string>(datasets.partners[0]?.bizCertName || '');
   const [isBizCertModalOpen, setIsBizCertModalOpen] = useState(false);
   const [bizCertZoom, setBizCertZoom] = useState(100);
+  const [isDraggingBankbook, setIsDraggingBankbook] = useState(false);
+  const [analyzingBankbook, setAnalyzingBankbook] = useState(false);
+  const [bankbookFileName, setBankbookFileName] = useState<string>(datasets.partners[0]?.bankbookName || '');
+  const [isBankbookModalOpen, setIsBankbookModalOpen] = useState(false);
+  const [bankbookZoom, setBankbookZoom] = useState(100);
   const [modalForm, setModalForm] = useState<Partial<FlPartner>>({});
   const bizCertInputRef = useRef<HTMLInputElement | null>(null);
+  const bankbookInputRef = useRef<HTMLInputElement | null>(null);
+  const didInitPartnerRef = useRef(Boolean(datasets.partners[0]));
+
+  useEffect(() => {
+    if (!didInitPartnerRef.current && datasets.partners.length > 0) {
+      didInitPartnerRef.current = true;
+      const first = datasets.partners[0];
+      setSelectedId(first.id);
+      setForm({ ...first });
+      setBizCertFileName(first.bizCertName || '');
+      setBankbookFileName(first.bankbookName || '');
+    }
+  }, [datasets.partners]);
+
+  const isSupportedDocFile = (file: File) => {
+    const lowerName = file.name.toLowerCase();
+    return (
+      file.type.startsWith('image/') ||
+      file.type === 'application/pdf' ||
+      lowerName.endsWith('.pdf') ||
+      lowerName.endsWith('.jpg') ||
+      lowerName.endsWith('.jpeg') ||
+      lowerName.endsWith('.png') ||
+      lowerName.endsWith('.webp')
+    );
+  };
+
+  const applyPaymentCycleChange = (
+    setter: React.Dispatch<React.SetStateAction<Partial<FlPartner>>>,
+    nextCycleRaw: string
+  ) => {
+    const nextCycle = nextCycleRaw as PaymentCycleType;
+    setter((p) => ({
+      ...p,
+      defaultPaymentCycle: nextCycle,
+      defaultPaymentMonthOffset: cycleToMonthOffset(nextCycle),
+      defaultPaymentDueDay:
+        nextCycle === '선입금'
+          ? 0
+          : p.defaultPaymentDueDay && p.defaultPaymentDueDay >= 1
+            ? p.defaultPaymentDueDay
+            : 10,
+    }));
+  };
+
+  const handleBankbookFile = async (file: File) => {
+    if (!canEdit) return;
+    if (!isSupportedDocFile(file)) {
+      notifyToast('이미지 또는 문서 형식의 통장사본 파일을 올려주세요.', 'error');
+      return;
+    }
+
+    setAnalyzingBankbook(true);
+    setBankbookFileName(file.name);
+    notifyToast(`통장사본 판독 중 · ${file.name}`, 'info');
+
+    try {
+      const res = await analyzeBankbookFile(file);
+      const previewUrl = res.previewImageDataUrl;
+
+      if (previewUrl) {
+        setForm((prev) => ({
+          ...prev,
+          bankbookUrl: previewUrl,
+          bankbookName: file.name,
+        }));
+        setModalForm((prev) => ({
+          ...prev,
+          bankbookUrl: previewUrl,
+          bankbookName: file.name,
+        }));
+
+        void uploadBankbookImageToR2(file.name, previewUrl).then((storedUrl) => {
+          if (storedUrl && storedUrl !== previewUrl) {
+            setForm((prev) =>
+              prev.bankbookUrl === previewUrl ? { ...prev, bankbookUrl: storedUrl } : prev
+            );
+            setModalForm((prev) =>
+              prev.bankbookUrl === previewUrl ? { ...prev, bankbookUrl: storedUrl } : prev
+            );
+          }
+        });
+      }
+
+      const applyBankOcr = (prev: Partial<FlPartner>): Partial<FlPartner> => ({
+        ...prev,
+        bankName: res.bankName || prev.bankName || '',
+        bankAccount: res.bankAccount || prev.bankAccount || '',
+        bankHolder: res.bankHolder || prev.bankHolder || '',
+      });
+      setForm(applyBankOcr);
+      setModalForm((prev) => ({
+        ...(Object.keys(prev).length > 0 ? prev : form),
+        ...applyBankOcr(Object.keys(prev).length > 0 ? prev : form),
+        bankbookUrl: prev.bankbookUrl || previewUrl || form.bankbookUrl || null,
+        bankbookName: file.name,
+      }));
+      setBankbookZoom(100);
+      setIsBankbookModalOpen(true);
+
+      if (res.success) {
+        notifyToast('통장사본 등록 및 계좌 판독 완료 · 확인 후 저장해 주세요.', 'success');
+      } else {
+        notifyToast('통장사본 첨부 완료 · 모달에서 계좌정보를 확인·입력해 주세요.', 'info');
+      }
+    } catch (err) {
+      notifyToast(
+        err instanceof Error ? err.message : '통장사본 처리 중 오류가 발생했습니다.',
+        'error'
+      );
+    } finally {
+      setAnalyzingBankbook(false);
+    }
+  };
 
   const handleBizLicenseFile = async (file: File) => {
     if (!canEdit) return;
@@ -198,11 +605,13 @@ export const PartnersPage: React.FC = () => {
     setSelectedId(p.id);
     setForm({ ...p });
     setBizCertFileName(p.bizCertName || '');
+    setBankbookFileName(p.bankbookName || '');
   };
 
   const resetToNew = () => {
     setSelectedId(null);
     setBizCertFileName('');
+    setBankbookFileName('');
     setForm({
       name: '',
       bizRegNo: '',
@@ -215,7 +624,8 @@ export const PartnersPage: React.FC = () => {
       taxEmail: '',
       partnerRoles: ['매출처'],
       defaultClosingDay: 31,
-      defaultPaymentDueDay: 15,
+      defaultPaymentCycle: '익월',
+      defaultPaymentDueDay: 10,
       defaultPaymentMonthOffset: 1,
       paymentMethod: '계좌이체',
       bankName: '',
@@ -225,6 +635,8 @@ export const PartnersPage: React.FC = () => {
       memo: '',
       bizCertUrl: null,
       bizCertName: null,
+      bankbookUrl: null,
+      bankbookName: null,
       isActive: true,
     });
   };
@@ -242,6 +654,17 @@ export const PartnersPage: React.FC = () => {
       return false;
     }
     const roles = target.partnerRoles && target.partnerRoles.length > 0 ? target.partnerRoles : ['매출처' as PartnerRole];
+    const resolvedCycle = offsetToPaymentCycle(
+      target.defaultPaymentMonthOffset,
+      target.defaultPaymentCycle
+    );
+    const resolvedOffset = cycleToMonthOffset(resolvedCycle);
+    const resolvedDueDay =
+      resolvedCycle === '선입금'
+        ? 0
+        : Math.min(31, Math.max(1, Number(target.defaultPaymentDueDay || 10)));
+    const resolvedMethod = normalizePaymentMethod(target.paymentMethod);
+
     setSaving(true);
     try {
       const payload = {
@@ -256,10 +679,11 @@ export const PartnersPage: React.FC = () => {
         email: target.email || null,
         taxEmail: target.taxEmail || null,
         partnerRoles: roles,
-        defaultClosingDay: Number(target.defaultClosingDay || 31),
-        defaultPaymentDueDay: Number(target.defaultPaymentDueDay || 15),
-        defaultPaymentMonthOffset: Number(target.defaultPaymentMonthOffset || 1),
-        paymentMethod: target.paymentMethod || '계좌이체',
+        defaultClosingDay: Math.min(31, Math.max(1, Number(target.defaultClosingDay || 31))),
+        defaultPaymentCycle: resolvedCycle,
+        defaultPaymentDueDay: resolvedDueDay,
+        defaultPaymentMonthOffset: resolvedOffset,
+        paymentMethod: resolvedMethod,
         bankName: target.bankName || null,
         bankAccount: target.bankAccount || null,
         bankHolder: target.bankHolder || null,
@@ -267,6 +691,8 @@ export const PartnersPage: React.FC = () => {
         memo: target.memo || null,
         bizCertUrl: target.bizCertUrl || null,
         bizCertName: target.bizCertName || null,
+        bankbookUrl: target.bankbookUrl || null,
+        bankbookName: target.bankbookName || null,
         isActive: target.isActive ?? true,
         updatedAt: new Date().toISOString(),
       };
@@ -289,7 +715,16 @@ export const PartnersPage: React.FC = () => {
         );
         setSelectedId(id);
       }
-      setForm((prev) => ({ ...prev, ...target, partnerRoles: roles }));
+      setForm((prev) => ({
+        ...prev,
+        ...target,
+        partnerRoles: roles,
+        defaultClosingDay: payload.defaultClosingDay,
+        defaultPaymentCycle: resolvedCycle,
+        defaultPaymentDueDay: resolvedDueDay,
+        defaultPaymentMonthOffset: resolvedOffset,
+        paymentMethod: resolvedMethod,
+      }));
       await refreshAll();
       notifyToast('거래처 저장 완료', 'success');
       return true;
@@ -305,6 +740,12 @@ export const PartnersPage: React.FC = () => {
     setModalForm({ ...form });
     setBizCertZoom(100);
     setIsBizCertModalOpen(true);
+  };
+
+  const openBankbookModal = () => {
+    setModalForm({ ...form });
+    setBankbookZoom(100);
+    setIsBankbookModalOpen(true);
   };
 
   const handleAddSite = async () => {
@@ -386,6 +827,25 @@ export const PartnersPage: React.FC = () => {
         </div>
       ),
     },
+    {
+      key: 'paymentMethod',
+      header: '결제수단',
+      width: 82,
+      align: 'center',
+      render: (r) => normalizePaymentMethod(r.paymentMethod),
+    },
+    {
+      key: 'paymentTerms',
+      header: '지급기일',
+      width: 96,
+      align: 'center',
+      render: (r) =>
+        formatPaymentTermsLabel(
+          r.defaultPaymentCycle,
+          r.defaultPaymentDueDay,
+          r.defaultPaymentMonthOffset
+        ),
+    },
     { key: 'bizRegNo', header: '사업자번호', width: 120, render: (r) => r.bizRegNo || '-' },
     { key: 'phone', header: '연락처', width: 120, render: (r) => r.phone || '-' },
   ];
@@ -446,29 +906,7 @@ export const PartnersPage: React.FC = () => {
           maxHeight="620px"
         />
 
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!isDraggingBizCert) setIsDraggingBizCert(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-            setIsDraggingBizCert(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsDraggingBizCert(false);
-            const file = e.dataTransfer?.files?.[0];
-            if (file) {
-              void handleBizLicenseFile(file);
-            }
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <input
             ref={bizCertInputRef}
             type="file"
@@ -482,10 +920,28 @@ export const PartnersPage: React.FC = () => {
               e.target.value = '';
             }}
           />
+          <input
+            ref={bankbookInputRef}
+            type="file"
+            accept="image/*,.pdf,application/pdf"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                void handleBankbookFile(file);
+              }
+              e.target.value = '';
+            }}
+          />
+          <datalist id="kr-bank-datalist">
+            {KOREAN_BANK_LIST.map((bank) => (
+              <option key={bank} value={bank} />
+            ))}
+          </datalist>
           <SectionPanel
             title={selectedId ? `거래처 상세 · ${form.name || ''}` : '신규 거래처 등록'}
             style={
-              isDraggingBizCert
+              isDraggingBizCert || isDraggingBankbook
                 ? {
                     border: '2px dashed var(--primary)',
                     backgroundColor: 'var(--primary-light)',
@@ -494,76 +950,152 @@ export const PartnersPage: React.FC = () => {
             }
             titleSlot={
               canEdit ? (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => bizCertInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    data-testid="prt-drop-bizcert"
+                    onClick={() => bizCertInputRef.current?.click()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        bizCertInputRef.current?.click();
+                      }
+                    }}
+                    onDragOver={(e) => {
                       e.preventDefault();
-                      bizCertInputRef.current?.click();
-                    }
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!isDraggingBizCert) setIsDraggingBizCert(true);
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsDraggingBizCert(false);
-                    const file = e.dataTransfer?.files?.[0];
-                    if (file) {
-                      void handleBizLicenseFile(file);
-                    }
-                  }}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '4px 12px',
-                    borderRadius: '6px',
-                    border: `1px dashed ${isDraggingBizCert ? 'var(--primary)' : '#2563eb'}`,
-                    backgroundColor: isDraggingBizCert ? '#dbeafe' : '#eff6ff',
-                    color: '#1d4ed8',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: analyzingBizCert ? 'wait' : 'pointer',
-                    whiteSpace: 'nowrap',
-                    userSelect: 'none',
-                  }}
-                >
-                  <Upload size={13} />
-                  <span>
-                    {analyzingBizCert
-                      ? `사업자등록증 판독 중 · ${bizCertFileName}`
-                      : '사업자등록증 파일을 끌어다 놓으세요'}
-                  </span>
+                      e.stopPropagation();
+                      if (!isDraggingBizCert) setIsDraggingBizCert(true);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDraggingBizCert(false);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDraggingBizCert(false);
+                      const file = e.dataTransfer?.files?.[0];
+                      if (file) {
+                        void handleBizLicenseFile(file);
+                      }
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: '1px dashed var(--primary)',
+                      backgroundColor: isDraggingBizCert ? 'var(--primary-light)' : 'var(--bg-app)',
+                      color: 'var(--primary)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: analyzingBizCert ? 'wait' : 'pointer',
+                      whiteSpace: 'nowrap',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <Upload size={13} />
+                    <span>
+                      {analyzingBizCert
+                        ? `사업자 판독 중 · ${bizCertFileName}`
+                        : '사업자등록증 등록'}
+                    </span>
+                  </div>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    data-testid="prt-drop-bankbook"
+                    onClick={() => bankbookInputRef.current?.click()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        bankbookInputRef.current?.click();
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!isDraggingBankbook) setIsDraggingBankbook(true);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDraggingBankbook(false);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDraggingBankbook(false);
+                      const file = e.dataTransfer?.files?.[0];
+                      if (file) {
+                        void handleBankbookFile(file);
+                      }
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: `1px dashed ${isDraggingBankbook ? 'var(--primary)' : 'var(--border-color)'}`,
+                      backgroundColor: isDraggingBankbook ? 'var(--primary-light)' : 'var(--bg-app)',
+                      color: form.bankbookUrl ? 'var(--primary)' : 'var(--text-main)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: analyzingBankbook ? 'wait' : 'pointer',
+                      whiteSpace: 'nowrap',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <Upload size={13} />
+                    <span>
+                      {analyzingBankbook
+                        ? `통장 판독 중 · ${bankbookFileName}`
+                        : '통장사본 등록'}
+                    </span>
+                  </div>
                 </div>
               ) : undefined
             }
             rightSlot={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   data-manual-id="prt-view-bizcert"
                   onClick={openBizCertModal}
                   style={{
                     ...actionBtnStyle('secondary', true),
-                    borderColor: form.bizCertUrl ? '#2563eb' : 'var(--border-color)',
-                    backgroundColor: form.bizCertUrl ? '#eff6ff' : 'var(--bg-card)',
-                    color: form.bizCertUrl ? '#1d4ed8' : 'var(--text-secondary)',
+                    borderColor: form.bizCertUrl ? 'var(--primary)' : 'var(--border-color)',
+                    backgroundColor: form.bizCertUrl ? 'var(--primary-light)' : 'var(--bg-card)',
+                    color: form.bizCertUrl ? 'var(--primary)' : 'var(--text-secondary)',
                   }}
                 >
                   <Eye size={13} />
                   사업자등록증 보기
                 </button>
+                <button
+                  type="button"
+                  data-manual-id="prt-view-bankbook"
+                  data-testid="prt-view-bankbook"
+                  onClick={openBankbookModal}
+                  style={{
+                    ...actionBtnStyle('secondary', true),
+                    borderColor: form.bankbookUrl ? 'var(--primary)' : 'var(--border-color)',
+                    backgroundColor: form.bankbookUrl ? 'var(--primary-light)' : 'var(--bg-card)',
+                    color: form.bankbookUrl ? 'var(--primary)' : 'var(--text-secondary)',
+                  }}
+                >
+                  <Eye size={13} />
+                  통장사본 보기
+                </button>
                 {canEdit && (
                   <button
                     type="button"
                     data-manual-id="prt-save"
-                    disabled={saving || analyzingBizCert}
+                    disabled={saving || analyzingBizCert || analyzingBankbook}
                     onClick={() => {
                       void handleSavePartner();
                     }}
@@ -661,11 +1193,11 @@ export const PartnersPage: React.FC = () => {
                     style={controlInputStyle}
                   />
                 </VerticalField>
-                <VerticalField label="결제수단">
+                <VerticalField label="대표 이메일">
                   <input
-                    type="text"
-                    value={form.paymentMethod || ''}
-                    onChange={(e) => setForm((p) => ({ ...p, paymentMethod: e.target.value }))}
+                    type="email"
+                    value={form.email || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                     style={controlInputStyle}
                   />
                 </VerticalField>
@@ -680,43 +1212,63 @@ export const PartnersPage: React.FC = () => {
                 />
               </VerticalField>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                <VerticalField label="청구마감일">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                <VerticalField label="은행명" minWidth={0}>
                   <input
-                    type="number"
-                    min={1}
-                    max={31}
-                    value={form.defaultClosingDay ?? 31}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, defaultClosingDay: Number(e.target.value) }))
-                    }
+                    type="text"
+                    list="kr-bank-datalist"
+                    data-testid="prt-bank-name"
+                    placeholder="은행 선택 또는 입력"
+                    value={form.bankName || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, bankName: e.target.value }))}
                     style={controlInputStyle}
                   />
                 </VerticalField>
-                <VerticalField label="지급기일">
+                <VerticalField label="계좌번호" minWidth={0}>
                   <input
-                    type="number"
-                    min={1}
-                    max={31}
-                    value={form.defaultPaymentDueDay ?? 15}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, defaultPaymentDueDay: Number(e.target.value) }))
-                    }
+                    type="text"
+                    data-testid="prt-bank-account"
+                    placeholder="숫자 및 하이픈 입력"
+                    value={form.bankAccount || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, bankAccount: e.target.value }))}
                     style={controlInputStyle}
                   />
                 </VerticalField>
-                <VerticalField label="익월오프셋">
+                <VerticalField label="예금주" minWidth={0}>
                   <input
-                    type="number"
-                    min={0}
-                    max={6}
-                    value={form.defaultPaymentMonthOffset ?? 1}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, defaultPaymentMonthOffset: Number(e.target.value) }))
-                    }
+                    type="text"
+                    data-testid="prt-bank-holder"
+                    placeholder="예금주명"
+                    value={form.bankHolder || ''}
+                    onChange={(e) => setForm((p) => ({ ...p, bankHolder: e.target.value }))}
                     style={controlInputStyle}
                   />
                 </VerticalField>
+              </div>
+
+              <PartnerPaymentTermsRow
+                value={form}
+                onChange={setForm}
+                onCycleChange={applyPaymentCycleChange}
+                testIdPrefix="prt"
+              />
+
+              <div
+                data-testid="prt-payment-summary"
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-secondary)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {`정산 기준: 마감 ${formatClosingDayLabel(form.defaultClosingDay)} · 지급 ${formatPaymentTermsLabel(form.defaultPaymentCycle, form.defaultPaymentDueDay, form.defaultPaymentMonthOffset)} · 결제수단 ${normalizePaymentMethod(form.paymentMethod)}`}
               </div>
 
               <VerticalField label="특이 메모">
@@ -791,167 +1343,22 @@ export const PartnersPage: React.FC = () => {
             alignItems: 'start',
           }}
         >
-          {/* 좌측: 사업자등록증 원본 뷰어 */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+          <PartnerDocViewerPane
+            docTitle="사업자등록증 사본"
+            fileName={modalForm.bizCertName || form.bizCertName || '사업자등록증 사본'}
+            imageUrl={modalForm.bizCertUrl || form.bizCertUrl}
+            zoom={bizCertZoom}
+            onZoomChange={setBizCertZoom}
+            analyzing={analyzingBizCert}
+            canEdit={canEdit}
+            emptyText="등록된 사업자등록증 파일이 없습니다."
+            selectBtnLabel="사업자등록증 파일 선택"
+            onSelectFileClick={() => bizCertInputRef.current?.click()}
+            onFileDrop={(file) => {
+              void handleBizLicenseFile(file);
             }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const file = e.dataTransfer?.files?.[0];
-              if (file) {
-                void handleBizLicenseFile(file);
-              }
-            }}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              padding: '10px',
-              backgroundColor: 'var(--bg-app)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '6px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: 'var(--text-secondary)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {modalForm.bizCertName || form.bizCertName || '사업자등록증 사본'}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => setBizCertZoom((z) => Math.max(50, z - 25))}
-                  style={actionBtnStyle('secondary', true)}
-                  title="축소"
-                >
-                  <ZoomOut size={13} />
-                </button>
-                <span
-                  style={{
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    minWidth: '42px',
-                    textAlign: 'center',
-                    color: 'var(--text-main)',
-                  }}
-                >
-                  {bizCertZoom}%
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setBizCertZoom((z) => Math.min(250, z + 25))}
-                  style={actionBtnStyle('secondary', true)}
-                  title="확대"
-                >
-                  <ZoomIn size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBizCertZoom(100)}
-                  style={actionBtnStyle('secondary', true)}
-                  title="원래 크기"
-                >
-                  <RotateCcw size={12} />
-                </button>
-                {(modalForm.bizCertUrl || form.bizCertUrl) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const url = modalForm.bizCertUrl || form.bizCertUrl;
-                      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-                    }}
-                    style={actionBtnStyle('secondary', true)}
-                  >
-                    <ExternalLink size={12} />
-                    새창
-                  </button>
-                )}
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => bizCertInputRef.current?.click()}
-                    disabled={analyzingBizCert}
-                    style={actionBtnStyle('secondary', true)}
-                  >
-                    <Upload size={12} />
-                    {analyzingBizCert ? '판독중' : '파일 등록'}
-                  </button>
-                )}
-              </div>
-            </div>
+          />
 
-            <div
-              style={{
-                height: '470px',
-                overflow: 'auto',
-                border: '1px solid var(--table-border-color)',
-                borderRadius: '6px',
-                backgroundColor: '#f8fafc',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '8px',
-              }}
-            >
-              {modalForm.bizCertUrl || form.bizCertUrl ? (
-                <img
-                  src={modalForm.bizCertUrl || form.bizCertUrl || ''}
-                  alt="사업자등록증 사본"
-                  style={{
-                    width: `${bizCertZoom}%`,
-                    maxWidth: 'none',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    borderRadius: '4px',
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    color: 'var(--text-muted)',
-                    fontSize: '12.5px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '24px',
-                  }}
-                >
-                  <span>등록된 사업자등록증 파일이 없습니다.</span>
-                  {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => bizCertInputRef.current?.click()}
-                      style={actionBtnStyle('primary', true)}
-                    >
-                      <Upload size={13} />
-                      사업자등록증 파일 선택
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 우측: 거래처 정보 수정 · 저장 폼 (판독 오류 대비) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <VerticalField label="상호" required>
@@ -1010,24 +1417,23 @@ export const PartnersPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="결제수단">
+              <VerticalField label="주소">
                 <input
                   type="text"
-                  value={modalForm.paymentMethod || ''}
-                  onChange={(e) => setModalForm((p) => ({ ...p, paymentMethod: e.target.value }))}
+                  value={modalForm.address || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, address: e.target.value }))}
                   style={controlInputStyle}
                 />
               </VerticalField>
             </div>
 
-            <VerticalField label="주소">
-              <input
-                type="text"
-                value={modalForm.address || ''}
-                onChange={(e) => setModalForm((p) => ({ ...p, address: e.target.value }))}
-                style={controlInputStyle}
-              />
-            </VerticalField>
+            <PartnerPaymentTermsRow
+              value={modalForm}
+              onChange={setModalForm}
+              onCycleChange={applyPaymentCycleChange}
+              testIdPrefix="prt-modal"
+              columns="1fr 1fr"
+            />
 
             <VerticalField label="특이 메모">
               <textarea
@@ -1062,6 +1468,130 @@ export const PartnersPage: React.FC = () => {
                     const ok = await handleSavePartner(modalForm);
                     if (ok) {
                       setIsBizCertModalOpen(false);
+                    }
+                  }}
+                  style={actionBtnStyle('primary')}
+                >
+                  {saving ? '저장중' : '수정 내용 저장'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </ModalDialog>
+
+      <ModalDialog
+        open={isBankbookModalOpen}
+        title={`통장사본 보기 · ${modalForm.name || form.name || '신규 거래처'}`}
+        onClose={() => setIsBankbookModalOpen(false)}
+        width={1020}
+      >
+        <div
+          data-testid="prt-bankbook-modal"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(360px, 1.15fr) minmax(320px, 1fr)',
+            gap: '16px',
+            alignItems: 'start',
+          }}
+        >
+          <PartnerDocViewerPane
+            docTitle="통장사본 이미지"
+            fileName={modalForm.bankbookName || form.bankbookName || '통장사본 이미지'}
+            imageUrl={modalForm.bankbookUrl || form.bankbookUrl}
+            zoom={bankbookZoom}
+            onZoomChange={setBankbookZoom}
+            analyzing={analyzingBankbook}
+            canEdit={canEdit}
+            emptyText="등록된 통장사본 파일이 없습니다."
+            selectBtnLabel="통장사본 파일 선택"
+            onSelectFileClick={() => bankbookInputRef.current?.click()}
+            onFileDrop={(file) => {
+              void handleBankbookFile(file);
+            }}
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <VerticalField label="상호" required>
+                <input
+                  type="text"
+                  value={modalForm.name || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, name: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="은행명">
+                <input
+                  type="text"
+                  list="kr-bank-datalist"
+                  placeholder="은행 선택 또는 입력"
+                  value={modalForm.bankName || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bankName: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="계좌번호">
+                <input
+                  type="text"
+                  placeholder="숫자 및 하이픈 입력"
+                  value={modalForm.bankAccount || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bankAccount: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="예금주">
+                <input
+                  type="text"
+                  placeholder="예금주명"
+                  value={modalForm.bankHolder || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bankHolder: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+            </div>
+
+            <PartnerPaymentTermsRow
+              value={modalForm}
+              onChange={setModalForm}
+              onCycleChange={applyPaymentCycleChange}
+              testIdPrefix="prt-bank-modal"
+              columns="1fr 1fr"
+            />
+
+            <VerticalField label="특이 메모">
+              <textarea
+                rows={3}
+                value={modalForm.memo || ''}
+                onChange={(e) => setModalForm((p) => ({ ...p, memo: e.target.value }))}
+                style={controlTextareaStyle}
+              />
+            </VerticalField>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '8px',
+                paddingTop: '10px',
+                borderTop: '1px solid var(--table-row-border)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsBankbookModalOpen(false)}
+                style={actionBtnStyle('secondary')}
+              >
+                닫기
+              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  disabled={saving || analyzingBankbook}
+                  onClick={async () => {
+                    const ok = await handleSavePartner(modalForm);
+                    if (ok) {
+                      setIsBankbookModalOpen(false);
                     }
                   }}
                   style={actionBtnStyle('primary')}

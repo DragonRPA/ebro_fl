@@ -120,6 +120,7 @@ async function main() {
     hrDeptIds: [],
     hrUserIds: [],
     fxRateIds: [],
+    partnerIds: [],
   };
 
   let preCounts = {};
@@ -380,6 +381,7 @@ async function main() {
       startDate: '2026-11-01',
       endDate: '2026-11-30',
       closingDay: 25,
+      paymentCycle: '익월',
       paymentDueDay: 10,
       paymentMonthOffset: 1,
       paymentMethod: '계좌이체',
@@ -807,6 +809,71 @@ async function main() {
     console.log(`[WTT 9 PASS] Managed FX 3-month series (${fxCovRes.rows.map((r) => `${r.currency_code}:${r.cnt}`).join(', ')}) & 1-JPY precision verified.`);
 
     // =========================================================================
+    // Test 10: Partner Payment Separation (결제수단 vs 월구분 지급기일) & Bankbook Schema
+    // =========================================================================
+    const invalidPmRes = await pgClient.query(`
+      SELECT COUNT(*)::int AS cnt FROM public.fl_partners
+      WHERE payment_method NOT IN ('계좌이체', '전자어음', '약속어음', '법인카드', '현금')
+    `);
+    assert.strictEqual(
+      invalidPmRes.rows[0].cnt,
+      0,
+      'fl_partners must contain 0 due-date strings inside payment_method'
+    );
+
+    const invalidDueRes = await pgClient.query(`
+      SELECT COUNT(*)::int AS cnt FROM public.fl_partners
+      WHERE (default_payment_cycle = '선입금' AND default_payment_due_day <> 0)
+         OR (default_payment_cycle <> '선입금' AND (default_payment_due_day < 1 OR default_payment_due_day > 31))
+    `);
+    assert.strictEqual(invalidDueRes.rows[0].cnt, 0, 'fl_partners payment cycle/day invariant violated');
+
+    const domainMod = await viteServer.ssrLoadModule('/src/types/domain.ts');
+    const { computeDueDateFromCycle, formatPaymentTermsLabel } = domainMod;
+    assert.strictEqual(computeDueDateFromCycle('2026-11', '당월', 0, 31), '2026-11-30');
+    assert.strictEqual(formatPaymentTermsLabel('당월', 31, 0), '당월 말일');
+    assert.strictEqual(computeDueDateFromCycle('2026-11', '익월', 1, 10), '2026-12-10');
+    assert.strictEqual(formatPaymentTermsLabel('익월', 10, 1), '익월 10일');
+    assert.strictEqual(computeDueDateFromCycle('2027-01', '익월', 1, 31), '2027-02-28');
+    assert.strictEqual(computeDueDateFromCycle('2026-11', '선입금', 0, 0, '2026-11-16'), '2026-11-16');
+    assert.strictEqual(formatPaymentTermsLabel('선입금', 0, 0), '선입금');
+
+    const testPartnerId = `PRT-WTT-${Date.now()}`;
+    const testPartnerRes = await flSupabase.from('partners').insert(
+      camelToSnakeRow({
+        id: testPartnerId,
+        tenantId: DEFAULT_TENANT_ID,
+        name: 'WTT통장검증거래처',
+        partnerRoles: ['매출처'],
+        defaultClosingDay: 31,
+        defaultPaymentCycle: '당월',
+        defaultPaymentMonthOffset: 0,
+        defaultPaymentDueDay: 31,
+        paymentMethod: '전자어음',
+        bankName: '국민은행',
+        bankAccount: '123-45-678901',
+        bankHolder: 'WTT예금주',
+        bankbookUrl: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==',
+        bankbookName: 'bankbook_test.jpg',
+        isActive: true,
+      })
+    );
+    assert(!testPartnerRes.error, `WTT test partner insert failed: ${testPartnerRes.error?.message}`);
+    tracked.partnerIds.push(testPartnerId);
+    const prtRow = (
+      await pgClient.query(
+        'SELECT payment_method, default_payment_cycle, default_payment_due_day, bank_name, bank_account, bank_holder, bankbook_name FROM public.fl_partners WHERE id = $1',
+        [testPartnerId]
+      )
+    ).rows[0];
+    assert.strictEqual(prtRow.payment_method, '전자어음');
+    assert.strictEqual(prtRow.default_payment_cycle, '당월');
+    assert.strictEqual(Number(prtRow.default_payment_due_day), 31);
+    assert.strictEqual(prtRow.bank_name, '국민은행');
+    assert.strictEqual(prtRow.bankbook_name, 'bankbook_test.jpg');
+    console.log('[WTT 10 PASS] Partner payment separation, 당월/익월/선입금 due-date calendar math, and bankbook storage verified.');
+
+    // =========================================================================
     // Test 7: Balanced Financial Statements (with WTT mutations active)
     // =========================================================================
     const dsActive = await loadFinancialDataset(flSupabase, snakeToCamelRow);
@@ -837,6 +904,7 @@ async function main() {
     };
 
     try {
+      await safeDel(`DELETE FROM public.fl_partners WHERE id = ANY($1)`, tracked.partnerIds);
       await safeDel(`DELETE FROM public.fl_exchange_rates WHERE id = ANY($1)`, tracked.fxRateIds);
       await safeDel(`DELETE FROM public.fl_approval_requests WHERE id = ANY($1)`, tracked.approvalIds);
       await safeDel(`DELETE FROM public.fl_hr_histories WHERE user_id = ANY($1)`, tracked.hrUserIds);

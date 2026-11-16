@@ -201,6 +201,104 @@ async function callDirectVisionFallback(prompt: string, imageBase64: string): Pr
   return null;
 }
 
+export async function uploadBankbookImageToR2(
+  fileName: string,
+  dataUrl: string
+): Promise<string> {
+  try {
+    const base64Part = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.pdf$/i, '.jpg');
+    const key = `fl_partners/bankbook_${Date.now()}_${safeName || 'bankbook.jpg'}`;
+    const res = await fetch('/api/r2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'upload',
+        key,
+        contentBase64: base64Part,
+        contentType: 'image/jpeg',
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return `${R2_PUBLIC_BASE}/${key}`;
+      }
+    }
+  } catch {
+    // R2 업로드 실패 시 DataURL 폴백 사용
+  }
+  return dataUrl;
+}
+
+export interface BankbookOcrResult {
+  success: boolean;
+  bankName: string;
+  bankAccount: string;
+  bankHolder: string;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  previewImageDataUrl?: string;
+}
+
+export async function analyzeBankbookFile(file: File): Promise<BankbookOcrResult> {
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  let imageBase64 = '';
+  let textHint = '';
+
+  if (isPdf) {
+    const pdfProcessed = await processPdfFile(file);
+    imageBase64 = pdfProcessed.base64Image;
+    textHint = pdfProcessed.textHint;
+  } else {
+    imageBase64 = await processImageFile(file, 1600);
+  }
+
+  let data: any = null;
+  try {
+    const res = await fetch('/api/vision-ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        taskType: 'BANKBOOK',
+        imageBase64,
+        textHint: textHint || undefined,
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        data = json.data;
+      }
+    }
+  } catch {
+    // fallback below
+  }
+
+  if (!data) {
+    try {
+      const hintClause = textHint ? `\n[추출 보조 텍스트]:\n${textHint.slice(0, 1200)}` : '';
+      const prompt = `대한민국 은행 통장사본 또는 계좌개설확인서 이미지에서 bankName(은행명 예: 국민은행, 신한은행, 기업은행, 우리은행, 하나은행, 농협은행), bankAccount(계좌번호 숫자와 하이픈), bankHolder(예금주 성명 또는 상호)를 추출하여 JSON 객체로만 응답하세요.${hintClause}`;
+      data = await callDirectVisionFallback(prompt, imageBase64);
+    } catch {
+      data = null;
+    }
+  }
+
+  const bankName = data?.bankName ? String(data.bankName).trim() : '';
+  const bankAccount = data?.bankAccount ? String(data.bankAccount).trim() : '';
+  const bankHolder = data?.bankHolder ? String(data.bankHolder).trim() : '';
+  const hasAny = Boolean(bankName || bankAccount || bankHolder);
+
+  return {
+    success: hasAny,
+    bankName,
+    bankAccount,
+    bankHolder,
+    confidence: hasAny ? 'HIGH' : 'LOW',
+    previewImageDataUrl: imageBase64 || undefined,
+  };
+}
+
 export async function analyzeBusinessLicenseFile(file: File): Promise<BusinessLicenseOcrResult> {
   try {
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');

@@ -161,10 +161,11 @@ CREATE TABLE IF NOT EXISTS public.fl_partners (
   email TEXT,
   tax_email TEXT,
   partner_roles JSONB NOT NULL DEFAULT '["매출처"]'::jsonb,
-  default_closing_day INTEGER NOT NULL DEFAULT 25,
+  default_closing_day INTEGER NOT NULL DEFAULT 31 CHECK (default_closing_day BETWEEN 1 AND 31),
+  default_payment_cycle TEXT NOT NULL DEFAULT '익월' CHECK (default_payment_cycle IN ('선입금', '당월', '익월', '익익월', '3개월후')),
+  default_payment_month_offset INTEGER NOT NULL DEFAULT 1 CHECK (default_payment_month_offset BETWEEN 0 AND 6),
   default_payment_due_day INTEGER NOT NULL DEFAULT 10,
-  default_payment_month_offset INTEGER NOT NULL DEFAULT 1,
-  payment_method TEXT NOT NULL DEFAULT '계좌이체',
+  payment_method TEXT NOT NULL DEFAULT '계좌이체' CHECK (payment_method IN ('계좌이체', '전자어음', '약속어음', '법인카드', '현금')),
   bank_name TEXT,
   bank_account TEXT,
   bank_holder TEXT,
@@ -173,8 +174,14 @@ CREATE TABLE IF NOT EXISTS public.fl_partners (
   memo TEXT,
   biz_cert_url TEXT,
   biz_cert_name TEXT,
+  bankbook_url TEXT,
+  bankbook_name TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_partners_payment_due_day_check CHECK (
+    (default_payment_cycle = '선입금' AND default_payment_due_day = 0) OR
+    (default_payment_cycle <> '선입금' AND default_payment_due_day BETWEEN 1 AND 31)
+  )
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_partner_sites (
@@ -481,10 +488,11 @@ CREATE TABLE IF NOT EXISTS public.fl_contracts (
   contract_date DATE NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  closing_day INTEGER NOT NULL DEFAULT 25,
+  closing_day INTEGER NOT NULL DEFAULT 31 CHECK (closing_day BETWEEN 1 AND 31),
+  payment_cycle TEXT NOT NULL DEFAULT '익월' CHECK (payment_cycle IN ('선입금', '당월', '익월', '익익월', '3개월후')),
+  payment_month_offset INTEGER NOT NULL DEFAULT 1 CHECK (payment_month_offset BETWEEN 0 AND 6),
   payment_due_day INTEGER NOT NULL DEFAULT 10,
-  payment_month_offset INTEGER NOT NULL DEFAULT 1,
-  payment_method TEXT NOT NULL DEFAULT '계좌이체',
+  payment_method TEXT NOT NULL DEFAULT '계좌이체' CHECK (payment_method IN ('계좌이체', '전자어음', '약속어음', '법인카드', '현금')),
   supply_amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   vat_amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   total_amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
@@ -494,7 +502,11 @@ CREATE TABLE IF NOT EXISTS public.fl_contracts (
   special_terms TEXT,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_contracts_payment_due_day_check CHECK (
+    (payment_cycle = '선입금' AND payment_due_day = 0) OR
+    (payment_cycle <> '선입금' AND payment_due_day BETWEEN 1 AND 31)
+  )
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_contract_lines (
@@ -662,7 +674,7 @@ CREATE TABLE IF NOT EXISTS public.fl_collections (
   partner_name TEXT NOT NULL,
   collection_date DATE NOT NULL,
   amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
-  payment_method TEXT NOT NULL DEFAULT '계좌이체',
+  payment_method TEXT NOT NULL DEFAULT '계좌이체' CHECK (payment_method IN ('계좌이체', '전자어음', '약속어음', '법인카드', '현금')),
   bank_tx_id TEXT,
   recorded_by TEXT NOT NULL,
   memo TEXT,

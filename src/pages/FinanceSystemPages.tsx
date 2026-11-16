@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppShell } from '../core/AppShellContext';
 import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
@@ -34,14 +34,18 @@ import {
   BANK_MATCH_STATUS_KO_LABELS,
   BILLING_STATUS_KO_LABELS,
   FL_MENU_GROUPS,
+  PAYMENT_METHODS,
   TIER_LABELS,
+  computeDueDateFromCycle,
   defaultTierPagePermission,
   formatKoAcquisitionType,
   formatKoActionCode,
   formatKoCurrency,
   formatKoPayableType,
   formatKoStatus,
+  formatPaymentTermsLabel,
   koStatusTone,
+  normalizePaymentMethod,
   type DocumentTemplateType,
   type FlApprovalPolicy,
   type FlBankTransaction,
@@ -77,7 +81,12 @@ export const ArBillingCollectionPage: React.FC = () => {
   const [billingYm, setBillingYm] = useState(curYm);
   const [contractId, setContractId] = useState(billableContracts[0]?.id || '');
   const [billingDate, setBillingDate] = useState(today);
-  const [dueDate, setDueDate] = useState(addDaysIso(today, 30));
+  const [dueDate, setDueDate] = useState(() => {
+    const first = billableContracts[0];
+    return first
+      ? computeDueDateFromCycle(curYm, first.paymentCycle, first.paymentMonthOffset, first.paymentDueDay, today)
+      : addDaysIso(today, 30);
+  });
 
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
     datasets.billings[0]?.id || null
@@ -90,6 +99,15 @@ export const ArBillingCollectionPage: React.FC = () => {
 
   const selectedContract =
     billableContracts.find((c) => c.id === (contractId || billableContracts[0]?.id)) || null;
+  const scCycle = selectedContract?.paymentCycle;
+  const scOffset = selectedContract?.paymentMonthOffset;
+  const scDueDay = selectedContract?.paymentDueDay;
+  const hasSelectedContract = Boolean(selectedContract);
+
+  useEffect(() => {
+    if (!hasSelectedContract) return;
+    setDueDate(computeDueDateFromCycle(billingYm, scCycle, scOffset, scDueDay, today));
+  }, [billingYm, hasSelectedContract, scCycle, scDueDay, scOffset, today]);
 
   const selectedBilling =
     datasets.billings.find((b) => b.id === selectedBillingId) || datasets.billings[0] || null;
@@ -206,7 +224,7 @@ export const ArBillingCollectionPage: React.FC = () => {
         billing: selectedBilling,
         amountKrw: amt,
         collectionDate: colDate,
-        paymentMethod: colMethod,
+        paymentMethod: normalizePaymentMethod(colMethod),
         recordedBy: currentUser.name,
       });
       setColAmount(0);
@@ -351,11 +369,21 @@ export const ArBillingCollectionPage: React.FC = () => {
               >
                 {billableContracts.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.contractNo} · {c.contractDomain === 'RENTAL' ? '렌탈' : '유통'} · {c.partnerName}
+                    {c.contractNo} · {c.contractDomain === 'RENTAL' ? '렌탈' : '유통'} · {c.partnerName} · {formatPaymentTermsLabel(c.paymentCycle, c.paymentDueDay, c.paymentMonthOffset)}
                   </option>
                 ))}
               </select>
             </VerticalField>
+            {selectedContract && (
+              <VerticalField label="계약 지급조건" width={165}>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${normalizePaymentMethod(selectedContract.paymentMethod)} · ${formatPaymentTermsLabel(selectedContract.paymentCycle, selectedContract.paymentDueDay, selectedContract.paymentMonthOffset)}`}
+                  style={{ ...controlInputStyle, backgroundColor: 'var(--bg-secondary)' }}
+                />
+              </VerticalField>
+            )}
             <VerticalField label="청구일자" required width={145}>
               <input
                 type="date"
@@ -448,10 +476,11 @@ export const ArBillingCollectionPage: React.FC = () => {
                   onChange={(e) => setColMethod(e.target.value)}
                   style={controlInputStyle}
                 >
-                  <option value="계좌이체">계좌이체</option>
-                  <option value="카드">카드</option>
-                  <option value="어음">어음</option>
-                  <option value="현금">현금</option>
+                  {PAYMENT_METHODS.map((pm) => (
+                    <option key={pm} value={pm}>
+                      {pm}
+                    </option>
+                  ))}
                 </select>
               </VerticalField>
               <button

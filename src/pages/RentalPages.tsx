@@ -32,15 +32,24 @@ import {
 import {
   CONTRACT_LINE_STATUS_KO_LABELS,
   CONTRACT_STATUS_KO_LABELS,
+  DAY_OF_MONTH_OPTIONS,
   FULFILLMENT_STATUS_KO_LABELS,
+  PAYMENT_CYCLES,
+  PAYMENT_METHODS,
+  cycleToMonthOffset,
   formatKoAcquisitionType,
   formatKoStatus,
+  formatPaymentTermsLabel,
   koStatusTone,
+  normalizePaymentMethod,
+  offsetToPaymentCycle,
   type FlContract,
   type FlContractLine,
   type FlFulfillment,
   type FlInventoryUnit,
   type FlRentalMaintenance,
+  type PaymentCycleType,
+  type PaymentMethodType,
 } from '../types/domain';
 
 function listMonthsBetween(fromYm: string, toYm: string): string[] {
@@ -108,8 +117,20 @@ export const RentalContractsPage: React.FC = () => {
   );
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addDaysIso(today, 365));
-  const [closingDay, setClosingDay] = useState(31);
-  const [paymentDueDay, setPaymentDueDay] = useState(15);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(() =>
+    normalizePaymentMethod(customers[0]?.paymentMethod)
+  );
+  const [closingDay, setClosingDay] = useState<number>(() => customers[0]?.defaultClosingDay || 31);
+  const [paymentCycle, setPaymentCycle] = useState<PaymentCycleType>(() =>
+    offsetToPaymentCycle(customers[0]?.defaultPaymentMonthOffset, customers[0]?.defaultPaymentCycle)
+  );
+  const [paymentDueDay, setPaymentDueDay] = useState<number>(() => {
+    const cy = offsetToPaymentCycle(
+      customers[0]?.defaultPaymentMonthOffset,
+      customers[0]?.defaultPaymentCycle
+    );
+    return cy === '선입금' ? 0 : customers[0]?.defaultPaymentDueDay || 10;
+  });
   const [specialTerms, setSpecialTerms] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -124,6 +145,7 @@ export const RentalContractsPage: React.FC = () => {
     const monthlySupply = Math.round(cleanQty * Number(monthlyPriceKrw || 0));
     const vat = Math.round(monthlySupply * 0.1);
     const ctrId = newId('CTR');
+    const resolvedDueDay = paymentCycle === '선입금' ? 0 : Math.min(31, Math.max(1, Number(paymentDueDay || 10)));
     const ctr: FlContract = {
       id: ctrId,
       tenantId: DEFAULT_TENANT_ID,
@@ -136,10 +158,11 @@ export const RentalContractsPage: React.FC = () => {
       contractDate: today,
       startDate,
       endDate,
-      closingDay: Number(closingDay || partner.defaultClosingDay || 31),
-      paymentDueDay: Number(paymentDueDay || partner.defaultPaymentDueDay || 15),
-      paymentMonthOffset: partner.defaultPaymentMonthOffset ?? 1,
-      paymentMethod: partner.paymentMethod || '계좌이체',
+      closingDay: Math.min(31, Math.max(1, Number(closingDay || 31))),
+      paymentCycle,
+      paymentDueDay: resolvedDueDay,
+      paymentMonthOffset: cycleToMonthOffset(paymentCycle),
+      paymentMethod: normalizePaymentMethod(paymentMethod),
       supplyAmountKrw: monthlySupply,
       vatAmountKrw: vat,
       totalAmountKrw: monthlySupply + vat,
@@ -283,8 +306,11 @@ export const RentalContractsPage: React.FC = () => {
                   setPartnerId(id);
                   const pt = customers.find((p) => p.id === id);
                   if (pt) {
+                    const cy = offsetToPaymentCycle(pt.defaultPaymentMonthOffset, pt.defaultPaymentCycle);
+                    setPaymentMethod(normalizePaymentMethod(pt.paymentMethod));
                     setClosingDay(pt.defaultClosingDay || 31);
-                    setPaymentDueDay(pt.defaultPaymentDueDay || 15);
+                    setPaymentCycle(cy);
+                    setPaymentDueDay(cy === '선입금' ? 0 : pt.defaultPaymentDueDay || 10);
                   }
                 }}
                 placeholder="임차 거래처 선택"
@@ -332,25 +358,68 @@ export const RentalContractsPage: React.FC = () => {
                 style={controlInputStyle}
               />
             </VerticalField>
+            <VerticalField label="결제수단">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                style={controlInputStyle}
+              >
+                {PAYMENT_METHODS.map((pm) => (
+                  <option key={pm} value={pm}>
+                    {pm}
+                  </option>
+                ))}
+              </select>
+            </VerticalField>
             <VerticalField label="청구마감일">
-              <input
-                type="number"
-                min={1}
-                max={31}
+              <select
                 value={closingDay}
                 onChange={(e) => setClosingDay(Number(e.target.value))}
                 style={controlInputStyle}
-              />
+              >
+                {DAY_OF_MONTH_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </VerticalField>
-            <VerticalField label="납부기일">
-              <input
-                type="number"
-                min={1}
-                max={31}
-                value={paymentDueDay}
+            <VerticalField label="지급기일 월구분">
+              <select
+                value={paymentCycle}
+                onChange={(e) => {
+                  const nextCycle = e.target.value as PaymentCycleType;
+                  setPaymentCycle(nextCycle);
+                  setPaymentDueDay((prev) =>
+                    nextCycle === '선입금' ? 0 : prev >= 1 ? prev : 10
+                  );
+                }}
+                style={controlInputStyle}
+              >
+                {PAYMENT_CYCLES.map((cy) => (
+                  <option key={cy} value={cy}>
+                    {cy}
+                  </option>
+                ))}
+              </select>
+            </VerticalField>
+            <VerticalField label="지급기일 일자">
+              <select
+                disabled={paymentCycle === '선입금'}
+                value={paymentCycle === '선입금' ? 0 : paymentDueDay}
                 onChange={(e) => setPaymentDueDay(Number(e.target.value))}
                 style={controlInputStyle}
-              />
+              >
+                {paymentCycle === '선입금' ? (
+                  <option value={0}>출고 전 선입금</option>
+                ) : (
+                  DAY_OF_MONTH_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))
+                )}
+              </select>
             </VerticalField>
             <VerticalField label="특약사항">
               <input
@@ -487,6 +556,17 @@ export const RentalContractsPage: React.FC = () => {
             header: '계약기간',
             width: 190,
             render: (r) => `${r.startDate} ~ ${r.endDate}`,
+          },
+          {
+            key: 'paymentTerms',
+            header: '결제 · 지급기일',
+            width: 155,
+            render: (r) =>
+              `${normalizePaymentMethod(r.paymentMethod)} · ${formatPaymentTermsLabel(
+                r.paymentCycle,
+                r.paymentDueDay,
+                r.paymentMonthOffset
+              )}`,
           },
           {
             key: 'monthlyRentalKrw',

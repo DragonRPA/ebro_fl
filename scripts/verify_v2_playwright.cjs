@@ -342,6 +342,50 @@ async function main() {
     await page.locator('[data-testid="part-detail-specs"]').getByText('OEM 교차품번 목록', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     console.log(`[E2E 7h PASS] Restored 제원 카탈로그 (${leftModelRows} models, ${coreCardCount} spec cells, VDI 2198/kg/mm/OEM, mast/battery, compare & parts detail) verified.`);
 
+    // [E2E 7i] Verify 거래처 관리 bankbook viewer modal, separated 결제수단, and 월구분/일자 지급기일 controls
+    await page.locator('aside nav button', { hasText: '거래처 관리' }).first().click();
+    const viewBankbookBtn = page.locator('button[data-testid="prt-view-bankbook"]').first();
+    const bankNameInput = page.locator('input[data-testid="prt-bank-name"]').first();
+    const bankAccInput = page.locator('input[data-testid="prt-bank-account"]').first();
+    const bankHolderInput = page.locator('input[data-testid="prt-bank-holder"]').first();
+    const payMethodSel = page.locator('select[data-testid="prt-payment-method"]').first();
+    const closingDaySel = page.locator('select[data-testid="prt-closing-day"]').first();
+    const payCycleSel = page.locator('select[data-testid="prt-payment-cycle"]').first();
+    const payDueDaySel = page.locator('select[data-testid="prt-payment-due-day"]').first();
+    const paySummaryBar = page.locator('[data-testid="prt-payment-summary"]').first();
+
+    await viewBankbookBtn.waitFor({ state: 'visible', timeout: 8000 });
+    await bankNameInput.waitFor({ state: 'visible', timeout: 5000 });
+    await bankAccInput.waitFor({ state: 'visible', timeout: 5000 });
+    await bankHolderInput.waitFor({ state: 'visible', timeout: 5000 });
+    await payMethodSel.waitFor({ state: 'visible', timeout: 5000 });
+    await closingDaySel.waitFor({ state: 'visible', timeout: 5000 });
+    await payCycleSel.waitFor({ state: 'visible', timeout: 5000 });
+    await payDueDaySel.waitFor({ state: 'visible', timeout: 5000 });
+
+    const pmOptions = await payMethodSel.locator('option').allInnerTexts();
+    assert.deepStrictEqual(
+      pmOptions.map((s) => s.trim()),
+      ['계좌이체', '전자어음', '약속어음', '법인카드', '현금'],
+      `결제수단 options must strictly be payment instruments, got: ${pmOptions.join(', ')}`
+    );
+
+    await payCycleSel.selectOption('선입금');
+    assert.strictEqual(await payDueDaySel.isDisabled(), true, '지급기일 일자 must be disabled when 지급기일 월구분=선입금');
+    await paySummaryBar.getByText('지급 선입금', { exact: false }).waitFor({ state: 'visible', timeout: 3000 });
+
+    await payCycleSel.selectOption('당월');
+    assert.strictEqual(await payDueDaySel.isDisabled(), false, '지급기일 일자 must be enabled when 지급기일 월구분=당월');
+    await payDueDaySel.selectOption('31');
+    await paySummaryBar.getByText('지급 당월 말일', { exact: false }).waitFor({ state: 'visible', timeout: 3000 });
+
+    await viewBankbookBtn.click();
+    const bankModal = page.locator('[data-testid="prt-bankbook-modal"]').first();
+    await bankModal.waitFor({ state: 'visible', timeout: 5000 });
+    await bankModal.locator('button', { hasText: '닫기' }).first().click();
+    await bankModal.waitFor({ state: 'hidden', timeout: 5000 });
+    console.log('[E2E 7i PASS] 거래처 관리 통장사본 modal, 계좌 inputs, 결제수단 options, and 월구분/일자 지급기일 verified.');
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');

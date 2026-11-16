@@ -385,6 +385,142 @@ export interface FlDocumentTemplate {
   updatedAt?: string;
 }
 
+export type PaymentMethodType = '계좌이체' | '전자어음' | '약속어음' | '법인카드' | '현금';
+
+export const PAYMENT_METHODS: readonly PaymentMethodType[] = [
+  '계좌이체',
+  '전자어음',
+  '약속어음',
+  '법인카드',
+  '현금',
+] as const;
+
+export type PaymentCycleType = '선입금' | '당월' | '익월' | '익익월' | '3개월후';
+
+export const PAYMENT_CYCLES: readonly PaymentCycleType[] = [
+  '선입금',
+  '당월',
+  '익월',
+  '익익월',
+  '3개월후',
+] as const;
+
+export const KOREAN_BANK_LIST: readonly string[] = [
+  '국민은행',
+  '신한은행',
+  '기업은행',
+  '우리은행',
+  '하나은행',
+  '농협은행',
+  '산업은행',
+  '아이엠뱅크',
+  '부산은행',
+  '경남은행',
+  '광주은행',
+  '전북은행',
+  '제주은행',
+  '수협은행',
+  '새마을금고',
+  '신협',
+  '우체국',
+  '카카오뱅크',
+  '케이뱅크',
+  '토스뱅크',
+  '제일은행',
+  '씨티은행',
+] as const;
+
+export function normalizePaymentMethod(raw?: string | null): PaymentMethodType {
+  const s = String(raw || '').trim();
+  if (s === '계좌이체' || s === '전자어음' || s === '약속어음' || s === '법인카드' || s === '현금') {
+    return s;
+  }
+  if (s === '어음') return '약속어음';
+  if (s === '카드') return '법인카드';
+  return '계좌이체';
+}
+
+export function cycleToMonthOffset(cycle?: string | null): number {
+  const s = String(cycle || '').trim();
+  if (s === '선입금' || s === '당월') return 0;
+  if (s === '익월') return 1;
+  if (s === '익익월') return 2;
+  if (s === '3개월후') return 3;
+  return 1;
+}
+
+export function offsetToPaymentCycle(
+  offset?: number | null,
+  currentCycle?: string | null
+): PaymentCycleType {
+  const cur = String(currentCycle || '').trim();
+  if (cur === '선입금' || cur === '당월' || cur === '익월' || cur === '익익월' || cur === '3개월후') {
+    return cur;
+  }
+  const n = Number(offset);
+  if (n === 0) return '당월';
+  if (n === 1) return '익월';
+  if (n === 2) return '익익월';
+  if (n >= 3) return '3개월후';
+  return '익월';
+}
+
+export const DAY_OF_MONTH_OPTIONS: readonly { value: number; label: string }[] = [
+  { value: 31, label: '말일' },
+  ...Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: `${i + 1}일` })),
+];
+
+export function formatDayOfMonthLabel(day?: number | null): string {
+  const d = Number(day);
+  if (!Number.isFinite(d) || d >= 31) return '말일';
+  if (d <= 0) return '1일';
+  return `${Math.trunc(d)}일`;
+}
+
+export function formatClosingDayLabel(day?: number | null): string {
+  return `매월 ${formatDayOfMonthLabel(day ?? 31)}`;
+}
+
+export function formatPaymentTermsLabel(
+  cycle?: string | null,
+  dueDay?: number | null,
+  monthOffset?: number | null
+): string {
+  const resolved = offsetToPaymentCycle(monthOffset, cycle);
+  if (resolved === '선입금') return '선입금';
+  return `${resolved} ${formatDayOfMonthLabel(dueDay ?? 10)}`;
+}
+
+export function computeDueDateFromCycle(
+  baseYmOrDate: string,
+  cycle?: string | null,
+  monthOffset?: number | null,
+  dueDay?: number | null,
+  fallbackDate?: string
+): string {
+  const resolved = offsetToPaymentCycle(monthOffset, cycle);
+  if (resolved === '선입금') {
+    if (fallbackDate && /^\d{4}-\d{2}-\d{2}$/.test(fallbackDate)) return fallbackDate;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(baseYmOrDate)) return baseYmOrDate;
+  }
+  const m = /^(\d{4})-(\d{2})/.exec(String(baseYmOrDate || ''));
+  if (!m) {
+    return fallbackDate && /^\d{4}-\d{2}-\d{2}$/.test(fallbackDate)
+      ? fallbackDate
+      : new Date().toISOString().slice(0, 10);
+  }
+  const baseYear = Number(m[1]);
+  const baseMonth = Number(m[2]);
+  const addMonths = resolved === '선입금' ? 0 : cycleToMonthOffset(resolved);
+  const targetUtc = new Date(Date.UTC(baseYear, baseMonth - 1 + addMonths, 1));
+  const targetYear = targetUtc.getUTCFullYear();
+  const targetMonth = targetUtc.getUTCMonth() + 1;
+  const lastDay = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate();
+  const rawDay = resolved === '선입금' ? 1 : Number(dueDay ?? 10);
+  const finalDay = rawDay >= 31 ? lastDay : Math.min(lastDay, Math.max(1, Math.trunc(rawDay || 10)));
+  return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(finalDay).padStart(2, '0')}`;
+}
+
 export interface FlPartner {
   id: string;
   tenantId: string;
@@ -399,9 +535,10 @@ export interface FlPartner {
   taxEmail?: string | null;
   partnerRoles: PartnerRole[];
   defaultClosingDay: number;
+  defaultPaymentCycle: PaymentCycleType;
   defaultPaymentDueDay: number;
   defaultPaymentMonthOffset: number;
-  paymentMethod: string;
+  paymentMethod: PaymentMethodType | string;
   bankName?: string | null;
   bankAccount?: string | null;
   bankHolder?: string | null;
@@ -410,6 +547,8 @@ export interface FlPartner {
   memo?: string | null;
   bizCertUrl?: string | null;
   bizCertName?: string | null;
+  bankbookUrl?: string | null;
+  bankbookName?: string | null;
 }
 
 export interface FlPartnerSite {
@@ -705,9 +844,10 @@ export interface FlContract {
   startDate: string;
   endDate: string;
   closingDay: number;
+  paymentCycle: PaymentCycleType;
   paymentDueDay: number;
   paymentMonthOffset: number;
-  paymentMethod: string;
+  paymentMethod: PaymentMethodType | string;
   supplyAmountKrw: number;
   vatAmountKrw: number;
   totalAmountKrw: number;

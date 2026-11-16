@@ -25,6 +25,8 @@ import {
   FL_MENU_GROUPS,
   TIER_LABELS,
   defaultTierPagePermission,
+  normalizePaymentMethod,
+  offsetToPaymentCycle,
   type FlApPayable,
   type FlApprovalPolicy,
   type FlApprovalRequest,
@@ -408,7 +410,11 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       'defaultClosingDay',
       'defaultPaymentDueDay',
       'defaultPaymentMonthOffset',
-    ]);
+    ]).map((p) => ({
+      ...p,
+      defaultPaymentCycle: offsetToPaymentCycle(p.defaultPaymentMonthOffset, p.defaultPaymentCycle),
+      paymentMethod: normalizePaymentMethod(p.paymentMethod),
+    }));
     const partnerNameMap = new Map(partners.map((p) => [p.id, p.name]));
 
     const purchases = mapRows<FlPurchase>(purRes.data, [
@@ -487,6 +493,8 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       'dailyRentalKrw',
     ]).map((r) => ({
       ...r,
+      paymentCycle: offsetToPaymentCycle(r.paymentMonthOffset, r.paymentCycle),
+      paymentMethod: normalizePaymentMethod(r.paymentMethod),
       partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
     }));
 
