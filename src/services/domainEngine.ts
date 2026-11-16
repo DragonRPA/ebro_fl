@@ -2306,3 +2306,47 @@ export async function upsertManagedExchangeRates(params: {
   );
   return snakeRows.length;
 }
+
+/**
+ * 거래처 마스터 상호명 변경 시 전 메뉴 13개 연관 테이블의 비정규화 거래처 명칭 컬럼을 일괄 동기화한다.
+ */
+export async function syncPartnerNameAcrossTables(params: {
+  partnerId: string;
+  newName: string;
+  prevName?: string | null;
+}): Promise<void> {
+  const cleanName = params.newName.trim();
+  if (!params.partnerId || !cleanName) return;
+
+  const fkUpdates: Array<[string, string, string, string]> = [
+    ['매입 원장 거래처명 동기화', 'purchases', 'supplier_id', 'supplier_name'],
+    ['물류 운송 거래처명 동기화', 'logistics_dispatches', 'carrier_partner_id', 'carrier_name'],
+    ['매입채무 거래처명 동기화', 'ap_payables', 'partner_id', 'partner_name'],
+    ['전대자산 공급처명 동기화', 'inventory_units', 'sublease_supplier_id', 'sublease_supplier_name'],
+    ['견적서 거래처명 동기화', 'quotations', 'partner_id', 'partner_name'],
+    ['계약서 거래처명 동기화', 'contracts', 'partner_id', 'partner_name'],
+    ['출고·회수 거래처명 동기화', 'fulfillments', 'partner_id', 'partner_name'],
+    ['사후처리 고객사명 동기화', 'trade_aftercare_cases', 'partner_id', 'partner_name'],
+    ['사후처리 공급사명 동기화', 'trade_aftercare_cases', 'supplier_partner_id', 'supplier_name'],
+    ['렌탈 정비 거래처명 동기화', 'rental_maintenances', 'partner_id', 'partner_name'],
+    ['청구 내역 거래처명 동기화', 'billings', 'partner_id', 'partner_name'],
+    ['수납 내역 거래처명 동기화', 'collections', 'partner_id', 'partner_name'],
+    ['금융리스 여신사명 동기화', 'finance_leases', 'lender_partner_id', 'lender_name'],
+  ];
+
+  for (const [label, table, idCol, nameCol] of fkUpdates) {
+    await execDbMutation(label, () =>
+      flSupabase.from(table).update({ [nameCol]: cleanName }).eq(idCol, params.partnerId)
+    );
+  }
+
+  const prevClean = (params.prevName || '').trim();
+  if (prevClean && prevClean !== cleanName) {
+    await execDbMutation('통장거래 적요 거래처명 동기화', () =>
+      flSupabase
+        .from('bank_transactions')
+        .update({ counterparty_name: cleanName })
+        .eq('counterparty_name', prevClean)
+    );
+  }
+}

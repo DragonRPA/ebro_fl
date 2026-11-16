@@ -401,6 +401,145 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
 
+    const partners = mapRows<FlPartner>(prtRes.data, [
+      'defaultClosingDay',
+      'defaultPaymentDueDay',
+      'defaultPaymentMonthOffset',
+    ]);
+    const partnerNameMap = new Map(partners.map((p) => [p.id, p.name]));
+
+    const purchases = mapRows<FlPurchase>(purRes.data, [
+      'fxRate',
+      'foreignMerchandiseTotal',
+      'krwMerchandiseTotal',
+      'customsDutyKrw',
+      'oceanFreightKrw',
+      'clearanceFeeKrw',
+      'inlandFreightKrw',
+      'totalLandedCostKrw',
+    ]).map((r) => ({
+      ...r,
+      supplierName: partnerNameMap.get(r.supplierId) || r.supplierName,
+    }));
+
+    const logisticsDispatches = mapRows<FlLogisticsDispatch>(logRes.data, [
+      'transportCostKrw',
+      'vatKrw',
+      'customerChargeKrw',
+    ]).map((r) => ({
+      ...r,
+      carrierName: (r.carrierPartnerId && partnerNameMap.get(r.carrierPartnerId)) || r.carrierName,
+    }));
+
+    const apPayables = mapRows<FlApPayable>(apRes.data, [
+      'bookedFxRate',
+      'foreignAmount',
+      'supplyAmountKrw',
+      'vatAmountKrw',
+      'totalAmountKrw',
+      'paidAmountKrw',
+      'settledFxRate',
+      'fxGainLossKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const inventoryUnits = mapRows<FlInventoryUnit>(unitRes.data, [
+      'qtyOnHand',
+      'qtyReserved',
+      'unitCostKrw',
+      'accumulatedDepreciationKrw',
+      'bookValueKrw',
+      'depreciationMonths',
+      'residualValueKrw',
+      'subleaseMonthlyCostKrw',
+      'operatingHours',
+      'monthlyRentalFeeKrw',
+      'dailyRentalFeeKrw',
+    ]).map((r) => ({
+      ...r,
+      subleaseSupplierName:
+        (r.subleaseSupplierId && partnerNameMap.get(r.subleaseSupplierId)) || r.subleaseSupplierName,
+    }));
+
+    const quotations = mapRows<FlQuotation>(qtRes.data, [
+      'rentalMonths',
+      'supplyAmountKrw',
+      'vatAmountKrw',
+      'totalAmountKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const contracts = mapRows<FlContract>(ctrRes.data, [
+      'closingDay',
+      'paymentDueDay',
+      'paymentMonthOffset',
+      'supplyAmountKrw',
+      'vatAmountKrw',
+      'totalAmountKrw',
+      'monthlyRentalKrw',
+      'dailyRentalKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const fulfillments = mapRows<FlFulfillment>(fulRes.data, ['quantity', 'cogsAmountKrw']).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const tradeAftercareCases = mapRows<FlTradeAftercareCase>(tacRes.data, [
+      'refundSupplyKrw',
+      'refundVatKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+      supplierName: (r.supplierPartnerId && partnerNameMap.get(r.supplierPartnerId)) || r.supplierName,
+    }));
+
+    const rentalMaintenances = mapRows<FlRentalMaintenance>(mntRes.data, [
+      'operatingHours',
+      'partsCostKrw',
+      'laborCostKrw',
+      'externalCostKrw',
+      'totalCostKrw',
+      'customerChargeKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: (r.partnerId && partnerNameMap.get(r.partnerId)) || r.partnerName,
+    }));
+
+    const billings = mapRows<FlBilling>(bilRes.data, [
+      'supplyAmountKrw',
+      'vatAmountKrw',
+      'totalAmountKrw',
+      'paidAmountKrw',
+      'unpaidBalanceKrw',
+    ]).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const collections = mapRows<FlCollection>(colRes.data, ['amountKrw']).map((r) => ({
+      ...r,
+      partnerName: partnerNameMap.get(r.partnerId) || r.partnerName,
+    }));
+
+    const financeLeases = mapRows<FlFinanceLease>(flsRes.data, [
+      'principalAmountKrw',
+      'annualInterestRate',
+      'termMonths',
+      'paymentDay',
+      'remainingPrincipalKrw',
+    ]).map((r) => ({
+      ...r,
+      lenderName: partnerNameMap.get(r.lenderPartnerId) || r.lenderName,
+    }));
+
     setDatasets({
       departments: depts,
       hrHistories,
@@ -409,7 +548,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       approvalPolicies: mapRows<FlApprovalPolicy>(polRes.data, ['requiredTier']),
       approvalRequests: mapRows<FlApprovalRequest>(reqRes.data, ['requiredTier', 'requesterTier', 'approverTier']),
       documentTemplates: mapRows<FlDocumentTemplate>(tplRes.data),
-      partners: mapRows<FlPartner>(prtRes.data, ['defaultClosingDay', 'defaultPaymentDueDay', 'defaultPaymentMonthOffset']),
+      partners,
       partnerSites: mapRows<FlPartnerSite>(siteRes.data),
       itemMasters: mapRows<FlItemMaster>(itemRes.data, [
         'tonnage',
@@ -424,16 +563,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ]),
       catalogPackages: mapRows<FlCatalogPackage>(catRes.data),
       exchangeRates: mapRows<FlExchangeRate>(fxRes.data, ['baseRateKrw', 'ttSellingRate']),
-      purchases: mapRows<FlPurchase>(purRes.data, [
-        'fxRate',
-        'foreignMerchandiseTotal',
-        'krwMerchandiseTotal',
-        'customsDutyKrw',
-        'oceanFreightKrw',
-        'clearanceFeeKrw',
-        'inlandFreightKrw',
-        'totalLandedCostKrw',
-      ]),
+      purchases,
       purchaseLines: mapRows<FlPurchaseLine>(purlRes.data, [
         'quantity',
         'foreignUnitPrice',
@@ -443,42 +573,12 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'landedUnitCostKrw',
         'landedTotalCostKrw',
       ]),
-      logisticsDispatches: mapRows<FlLogisticsDispatch>(logRes.data, ['transportCostKrw', 'vatKrw', 'customerChargeKrw']),
-      apPayables: mapRows<FlApPayable>(apRes.data, [
-        'bookedFxRate',
-        'foreignAmount',
-        'supplyAmountKrw',
-        'vatAmountKrw',
-        'totalAmountKrw',
-        'paidAmountKrw',
-        'settledFxRate',
-        'fxGainLossKrw',
-      ]),
-      inventoryUnits: mapRows<FlInventoryUnit>(unitRes.data, [
-        'qtyOnHand',
-        'qtyReserved',
-        'unitCostKrw',
-        'accumulatedDepreciationKrw',
-        'bookValueKrw',
-        'depreciationMonths',
-        'residualValueKrw',
-        'subleaseMonthlyCostKrw',
-        'operatingHours',
-        'monthlyRentalFeeKrw',
-        'dailyRentalFeeKrw',
-      ]),
+      logisticsDispatches,
+      apPayables,
+      inventoryUnits,
       stockMovements: mapRows<FlStockMovement>(movRes.data, ['qtyDelta', 'unitCostKrw', 'amountKrw']),
-      quotations: mapRows<FlQuotation>(qtRes.data, ['rentalMonths', 'supplyAmountKrw', 'vatAmountKrw', 'totalAmountKrw']),
-      contracts: mapRows<FlContract>(ctrRes.data, [
-        'closingDay',
-        'paymentDueDay',
-        'paymentMonthOffset',
-        'supplyAmountKrw',
-        'vatAmountKrw',
-        'totalAmountKrw',
-        'monthlyRentalKrw',
-        'dailyRentalKrw',
-      ]),
+      quotations,
+      contracts,
       contractLines: mapRows<FlContractLine>(ctrlRes.data, [
         'lineNo',
         'quantity',
@@ -488,33 +588,14 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'vatAmountKrw',
         'totalAmountKrw',
       ]),
-      fulfillments: mapRows<FlFulfillment>(fulRes.data, ['quantity', 'cogsAmountKrw']),
-      tradeAftercareCases: mapRows<FlTradeAftercareCase>(tacRes.data, ['refundSupplyKrw', 'refundVatKrw']),
-      rentalMaintenances: mapRows<FlRentalMaintenance>(mntRes.data, [
-        'operatingHours',
-        'partsCostKrw',
-        'laborCostKrw',
-        'externalCostKrw',
-        'totalCostKrw',
-        'customerChargeKrw',
-      ]),
+      fulfillments,
+      tradeAftercareCases,
+      rentalMaintenances,
       assetEvents: mapRows<FlAssetEvent>(evtRes.data, ['operatingHours', 'deltaAmountKrw']),
-      billings: mapRows<FlBilling>(bilRes.data, [
-        'supplyAmountKrw',
-        'vatAmountKrw',
-        'totalAmountKrw',
-        'paidAmountKrw',
-        'unpaidBalanceKrw',
-      ]),
-      collections: mapRows<FlCollection>(colRes.data, ['amountKrw']),
+      billings,
+      collections,
       bankTransactions: mapRows<FlBankTransaction>(btxRes.data, ['amountKrw']),
-      financeLeases: mapRows<FlFinanceLease>(flsRes.data, [
-        'principalAmountKrw',
-        'annualInterestRate',
-        'termMonths',
-        'paymentDay',
-        'remainingPrincipalKrw',
-      ]),
+      financeLeases,
       financeLeaseSchedules: mapRows<FlFinanceLeaseSchedule>(flschRes.data, [
         'installmentNo',
         'openingPrincipalKrw',

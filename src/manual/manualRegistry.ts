@@ -248,7 +248,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'trade_contracts',
     pageTitle: '유통 계약 관리',
     groupLabel: '유통 관리',
-    basicDescription: '지게차 및 부품 유통 계약을 등록·확정하고 기연리프트 표준 물품공급 계약서 발송과 유통 출고 의뢰를 발행한다.',
+    basicDescription: '지게차 및 부품 유통 계약을 등록·확정하고 표준 물품공급 계약서 발송과 유통 출고 요청을 발행한다.',
     anchors: [
       { anchorId: 'tc-form', title: '유통 계약 생성', summary: '거래처, 품목, 판매단가, 결제조건을 입력해 유통 계약을 등록한다.' },
       { anchorId: 'tc-docs', title: '유통 계약서 발송', summary: '물품공급 계약서 엑셀 편집 및 공식 이메일 발송을 실행한다.' },
@@ -340,7 +340,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'rental_contracts',
     pageTitle: '렌탈 계약 관리',
     groupLabel: '렌탈 · 정비',
-    basicDescription: '렌탈 계약을 등록하고 기연리프트 임대차 계약서 발송과 함께 렌탈출고, 렌탈회수, 교환 의뢰를 관리한다.',
+    basicDescription: '렌탈 계약을 등록하고 표준 임대차 계약서 발송과 함께 렌탈출고, 렌탈회수, 교환 요청을 관리한다.',
     anchors: [
       { anchorId: 'rctr-form', title: '렌탈 계약 등록', summary: '임차 거래처, 기간, 월 임대료, 품목을 입력해 렌탈 계약을 생성한다.' },
       { anchorId: 'rctr-docs', title: '임대차 계약서 발송', summary: '렌탈 계약서 엑셀 편집 및 공식 이메일 발송을 수행한다.' },

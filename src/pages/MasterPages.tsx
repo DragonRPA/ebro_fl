@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
-import { upsertManagedExchangeRates } from '../services/domainEngine';
+import { syncPartnerNameAcrossTables, upsertManagedExchangeRates } from '../services/domainEngine';
 import {
   analyzeBusinessLicenseFile,
   uploadBusinessLicenseImageToR2,
@@ -254,9 +254,17 @@ export const PartnersPage: React.FC = () => {
         updatedAt: new Date().toISOString(),
       };
       if (selectedId) {
+        const prevPartner = datasets.partners.find((p) => p.id === selectedId);
         await execDbMutation('거래처 정보 수정', () =>
           flSupabase.from('partners').update(camelToSnakeRow(payload)).eq('id', selectedId)
         );
+        if (prevPartner && prevPartner.name !== payload.name) {
+          await syncPartnerNameAcrossTables({
+            partnerId: selectedId,
+            newName: payload.name,
+            prevName: prevPartner.name,
+          });
+        }
       } else {
         const id = newId('PRT');
         await execDbMutation('거래처 신규 등록', () =>

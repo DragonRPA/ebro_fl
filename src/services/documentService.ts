@@ -241,8 +241,8 @@ export async function generateContractExcel(params: {
 
     ws.mergeCells('A1:G1');
     ws.getCell('A1').value = isTrade
-      ? '기 연 리 프 트  지 게 차  물 품 공 급  계 약 서'
-      : '기 연 리 프 트  지 게 차  임 대 차  계 약 서';
+      ? '지 게 차  물 품 공 급  표 준 계 약 서'
+      : '지 게 차  임 대 차  표 준 계 약 서';
     ws.getCell('A1').font = { size: 15, bold: true };
     ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(1).height = 30;
@@ -316,17 +316,31 @@ export async function generateContractExcel(params: {
     const ws = wb.worksheets[0];
     if (ws) {
       applyTokenReplacements(ws, {
+        '{Today}': contract.contractDate,
         '{계약번호}': contract.contractNo,
         '{계약일자}': contract.contractDate,
         '{거래처명}': contract.partnerName,
         '{고객상호}': contract.partnerName,
+        '{고객명}': contract.partnerName,
+        '{사업자등록번호}': partner?.bizRegNo || '',
         '{고객사업자등록번호}': partner?.bizRegNo || '',
+        '{대표자}': partner?.representative || '',
+        '{현장명}': contract.siteName || '',
+        '{현장주소}': contract.siteAddress || partner?.address || '',
         '{테넌트상호}': tenant.corporateName,
+        '{테넌트사업자등록번호}': tenant.businessNumber,
         '{테넌트대표}': tenant.representativeName,
+        '{테넌트주소}': tenant.businessAddress,
+        '{테넌트전화}': tenant.tel,
+        '{테넌트팩스}': tenant.fax,
+        '{영업담당자}': tenant.representativeName,
+        '{영업담당자연락처}': tenant.tel,
         '{시작일}': contract.startDate,
         '{종료일}': contract.endDate,
         '{공급가액}': contract.supplyAmountKrw.toLocaleString('ko-KR'),
         '{합계금액}': contract.totalAmountKrw.toLocaleString('ko-KR'),
+        '주식회사 기연리프트': tenant.corporateName,
+        기연리프트: tenant.displayName,
       });
       await embedCorporateStamp(wb, ws, tenant, 5.2, 5.0);
     }

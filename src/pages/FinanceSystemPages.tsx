@@ -2026,7 +2026,7 @@ export const SystemSettingsPage: React.FC = () => {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: '13.5px' }}>{dt}</div>
                       <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                        {tpl?.templateBase64 ? `사용자 양식 · ${tpl.templateName}` : tpl?.templatePath || '내장 기연리프트 표준양식'}
+                        {tpl?.templateBase64 ? `사용자 양식 · ${tpl.templateName}` : tpl?.templatePath || '내장 표준양식'}
                       </div>
                     </div>
                     <VerticalField label="특약 · 머리글 문구">

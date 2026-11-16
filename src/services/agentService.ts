@@ -52,15 +52,12 @@ export function getTenantAgentInstallerInfo(tenant?: {
   subdomain?: string;
   targetRepo?: string;
 } | null): TenantAgentInstallerInfo {
-  let rawCode = (tenant?.tenantCode || 'GIYEONLIFT').toUpperCase();
-  if (rawCode === 'GIYEUN' || rawCode === 'GIYUEN' || rawCode === 'KIYUEN') {
-    rawCode = 'GIYEONLIFT';
-  }
+  const rawCode = (tenant?.tenantCode || 'EBRO_FL').toUpperCase();
   const code = rawCode;
-  const name = tenant?.displayName || tenant?.tradeName || tenant?.corporateName || '기연리프트';
-  const sub = (tenant?.subdomain || code.toLowerCase());
+  const name = tenant?.displayName || tenant?.tradeName || tenant?.corporateName || '이브로지게차';
+  const sub = tenant?.subdomain || (code === 'EBRO_FL' ? 'fl-demo' : code.toLowerCase());
   
-  // 테넌트 전용 설치 파일명 (예: eBroAgent_Setup_GIYEUN.exe, eBroAgent_Setup_HANSOL.exe)
+  // 테넌트 전용 설치 파일명 (예: eBroAgent_Setup_EBRO_FL.exe, eBroAgent_Setup_HANSOL.exe)
   const fileName = `eBroAgent_Setup_${code}.exe`;
   
   //  GitHub Releases 글로벌 초고속 CDN 기반 (8~10MB/s, 16MB를 3초 만에 다운로드 완료)
@@ -202,8 +199,8 @@ export async function syncTenantPolicyToAgent(
     const payload: Record<string, any> = {};
     if (tenant) {
       const isAiEnabled = Boolean(tenant.features?.agentAiEnabled);
-      const code = tenant.tenantCode || 'GIYEONLIFT';
-      const sub = tenant.subdomain || (code === 'GIYEONLIFT' || code === 'GIYEUN' ? 'giyeon' : code.toLowerCase());
+      const code = tenant.tenantCode || 'EBRO_FL';
+      const sub = tenant.subdomain || 'fl-demo';
       const tenantName = tenant.displayName || tenant.tradeName || tenant.corporateName || code;
       const corporateName = tenant.corporateName || tenant.tradeName || tenantName;
       Object.assign(payload, {

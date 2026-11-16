@@ -166,10 +166,11 @@ async function main() {
   // ==========================================================================
   const oldDepts = await safeQueryTable(client, 'fl_backup_departments');
   for (const d of oldDepts) {
+    const cleanDeptName = d.name === '기연리프트' ? '이브로지게차 본사' : d.name;
     await client.query(
       `INSERT INTO public.fl_departments (id, tenant_id, name, parent_department_id, manager_id, functional_tags, is_active)
        VALUES ($1, $2, $3, $4, $5, $6::jsonb, true) ON CONFLICT (id) DO NOTHING`,
-      [d.id, TENANT_ID, d.name, d.parentDepartmentId || null, d.managerId || null, JSON.stringify(d.functional_tags || [])]
+      [d.id, TENANT_ID, cleanDeptName, d.parentDepartmentId || null, d.managerId || null, JSON.stringify(d.functional_tags || [])]
     );
   }
 
@@ -332,19 +333,74 @@ async function main() {
     });
   }
 
-  const oldTransports = await safeQueryTable(client, 'fl_backup_transport_companies');
-  for (const t of oldTransports) {
-    upsertPartner({
-      id: t.id,
-      name: t.name,
-      biz_reg_no: t.businessNo,
-      phone: t.contact,
+  const sampleCarriers = [
+    {
+      id: 'TCOM-0000001',
+      name: '평택항만중량화물',
+      biz_reg_no: '125-81-99001',
+      representative: '박상현',
+      biz_type: '운수업',
+      biz_item: '특수화물 및 지게차 탁송',
+      address: '경기도 평택시 포승읍 평택항만길 142',
+      phone: '031-682-4401',
+      email: 'dispatch1@sample-freight.kr',
       roles: ['운송사'],
-      bankName: t.bankName,
-      bankAccount: t.bankAccount,
-      bankHolder: t.bankHolder,
-      memo: t.memo,
-    });
+      bankName: '기업은행',
+      bankAccount: '010-990011-01-011',
+      bankHolder: '평택항만중량화물',
+      memo: '수도권·충청권 지게차 셀프로더 및 카캐리어 샘플 운송사',
+    },
+    {
+      id: 'TCOM-0000002',
+      name: '서해특수운송',
+      biz_reg_no: '131-86-99002',
+      representative: '최진우',
+      biz_type: '운수업',
+      biz_item: '중량기계 및 산업차량 운송',
+      address: '인천광역시 중구 서해대로 218',
+      phone: '032-884-4402',
+      email: 'dispatch2@sample-freight.kr',
+      roles: ['운송사'],
+      bankName: '국민은행',
+      bankAccount: '412-990022-04-012',
+      bankHolder: '서해특수운송',
+      memo: '인천항·경인권 수입 지게차 보세운송 샘플 운송사',
+    },
+    {
+      id: 'TCOM-0000003',
+      name: '중부카캐리어물류',
+      biz_reg_no: '312-81-99003',
+      representative: '정태호',
+      biz_type: '운수업',
+      biz_item: '산업장비 전국 탁송',
+      address: '충청남도 천안시 서북구 직산읍 산단로 55',
+      phone: '041-583-4403',
+      email: 'dispatch3@sample-freight.kr',
+      roles: ['운송사'],
+      bankName: '신한은행',
+      bankAccount: '110-990-033403',
+      bankHolder: '중부카캐리어물류',
+      memo: '중부·호남권 지게차 광역 배차 샘플 운송사',
+    },
+    {
+      id: 'TCOM-0000004',
+      name: '남부로우베드탁송',
+      biz_reg_no: '605-81-99004',
+      representative: '강민규',
+      biz_type: '운수업',
+      biz_item: '대형 지게차 로우베드 특수운송',
+      address: '경상남도 김해시 주촌면 서부로 1120',
+      phone: '055-338-4404',
+      email: 'dispatch4@sample-freight.kr',
+      roles: ['운송사'],
+      bankName: '우리은행',
+      bankAccount: '1005-990-044404',
+      bankHolder: '남부로우베드탁송',
+      memo: '5톤~10톤급 대형 지게차 저상트레일러 샘플 운송사',
+    },
+  ];
+  for (const t of sampleCarriers) {
+    upsertPartner(t);
   }
 
   // Seed core finance lease & sublease counterparties
@@ -708,8 +764,8 @@ async function main() {
   const docTemplates = [
     ['DOC-TPL-QT-TRADE', '견적서_유통', '표준 유통 견적서 양식', '/거래명세서양식.xlsx', '부가세 별도 · 발주 확정 후 납기 협의', '주식회사 이브로지게차렌탈 영업본부'],
     ['DOC-TPL-QT-RENTAL', '견적서_렌탈', '표준 렌탈 견적서 양식', '/거래명세서양식.xlsx', '월간 임대료 · 무상 정기점검 포함', '주식회사 이브로지게차렌탈 렌탈영업본부'],
-    ['DOC-TPL-CT-TRADE', '계약서_유통', '기연리프트 물품공급 표준 계약서', '/01.계약서.xlsx', '매도인과 매수인은 하기 특약에 합의한다', '기연리프트 · 이브로 유통사업부'],
-    ['DOC-TPL-CT-RENTAL', '계약서_렌탈', '기연리프트 건설기계 임대차 표준 계약서', '/01.계약서.xlsx', '임대인과 임차인은 지게차 임대차 계약을 체결한다', '기연리프트 · 이브로 렌탈사업부'],
+    ['DOC-TPL-CT-TRADE', '계약서_유통', '표준 물품공급 계약서', '/01.계약서.xlsx', '매도인과 매수인은 하기 특약에 합의한다', '주식회사 이브로지게차렌탈 유통사업부'],
+    ['DOC-TPL-CT-RENTAL', '계약서_렌탈', '표준 건설기계 임대차 계약서', '/01.계약서.xlsx', '임대인과 임차인은 지게차 임대차 계약을 체결한다', '주식회사 이브로지게차렌탈 렌탈사업부'],
     ['DOC-TPL-STMT', '거래명세서', '표준 거래명세서 양식', '/거래명세서양식.xlsx', '청구 내역 및 공급가액·세액 명세', '계산서 문의: 회계팀'],
   ];
   for (const [id, dtype, name, tpath, head, foot] of docTemplates) {
