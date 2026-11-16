@@ -108,7 +108,7 @@ const PartnerPaymentTermsRow: React.FC<{
   const resolvedCycle = offsetToPaymentCycle(value.defaultPaymentMonthOffset, value.defaultPaymentCycle);
   const isPrepay = resolvedCycle === '선입금';
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: columns, gap: '10px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: columns, gap: 'var(--space-field-grid-gap)' }}>
       <VerticalField label="결제수단" minWidth={0}>
         <select
           data-testid={`${testIdPrefix}-payment-method`}
@@ -221,10 +221,10 @@ const PartnerDocViewerPane: React.FC<{
     style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
+      gap: 'var(--space-inline-gap)',
       border: '1px solid var(--border-color)',
       borderRadius: '8px',
-      padding: '10px',
+      padding: 'var(--space-compact-pad-x)',
       backgroundColor: 'var(--bg-app)',
     }}
   >
@@ -233,7 +233,7 @@ const PartnerDocViewerPane: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '6px',
+        gap: 'var(--space-tight-gap)',
         flexWrap: 'wrap',
       }}
     >
@@ -247,7 +247,7 @@ const PartnerDocViewerPane: React.FC<{
       >
         {fileName || docTitle}
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-label-gap)' }}>
         <button
           type="button"
           onClick={() => onZoomChange((z) => Math.max(50, z - 25))}
@@ -319,7 +319,7 @@ const PartnerDocViewerPane: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '8px',
+        padding: 'var(--space-compact-pad-y)',
       }}
     >
       {imageUrl ? (
@@ -343,8 +343,8 @@ const PartnerDocViewerPane: React.FC<{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '10px',
-            padding: '24px',
+            gap: 'var(--space-field-grid-gap)',
+            padding: 'calc(24px - 2pt)',
           }}
         >
           <span>{emptyText}</span>
@@ -1026,7 +1026,7 @@ export const PartnersPage: React.FC = () => {
       key: 'roles',
       header: '역할',
       render: (r) => (
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-label-gap)' }}>
           {r.partnerRoles.slice(0, 3).map((role) => (
             <StatusBadge key={role} label={role} tone="neutral" />
           ))}
@@ -1057,12 +1057,12 @@ export const PartnersPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="거래처 조회 · 역할 필터"
         manualId="prt-search"
         rightSlot={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
             <button
               type="button"
               data-testid="prt-nts-check-btn"
@@ -1084,7 +1084,7 @@ export const PartnersPage: React.FC = () => {
           </div>
         }
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end' }}>
           <VerticalField label="검색어" minWidth={220} flex={1}>
             <input
               type="text"
@@ -1114,7 +1114,7 @@ export const PartnersPage: React.FC = () => {
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(380px, 1.15fr) minmax(360px, 1fr)',
-          gap: '14px',
+          gap: 'var(--space-page-gap)',
           alignItems: 'start',
         }}
       >
@@ -1127,7 +1127,7 @@ export const PartnersPage: React.FC = () => {
           maxHeight="620px"
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
           <input
             ref={bizCertInputRef}
             type="file"
@@ -1171,7 +1171,7 @@ export const PartnersPage: React.FC = () => {
             }
             titleSlot={
               canEdit ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                   <div
                     role="button"
                     tabIndex={0}
@@ -1205,8 +1205,8 @@ export const PartnersPage: React.FC = () => {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
-                      padding: '4px 10px',
+                      gap: 'max(2px, calc(5px - 2pt))',
+                      padding: 'max(1px, calc(4px - 2pt)) var(--space-compact-pad-x)',
                       borderRadius: '6px',
                       border: '1px dashed var(--primary)',
                       backgroundColor: isDraggingBizCert ? 'var(--primary-light)' : 'var(--bg-app)',
@@ -1258,8 +1258,8 @@ export const PartnersPage: React.FC = () => {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
-                      padding: '4px 10px',
+                      gap: 'max(2px, calc(5px - 2pt))',
+                      padding: 'max(1px, calc(4px - 2pt)) var(--space-compact-pad-x)',
                       borderRadius: '6px',
                       border: `1px dashed ${isDraggingBankbook ? 'var(--primary)' : 'var(--border-color)'}`,
                       backgroundColor: isDraggingBankbook ? 'var(--primary-light)' : 'var(--bg-app)',
@@ -1282,7 +1282,7 @@ export const PartnersPage: React.FC = () => {
               ) : undefined
             }
             rightSlot={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   data-manual-id="prt-view-bizcert"
@@ -1328,9 +1328,9 @@ export const PartnersPage: React.FC = () => {
               </div>
             }
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="거래처 역할 다중선택" required>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-tight-gap)' }}>
                   {ALL_ROLES.map((role) => {
                     const checked = (form.partnerRoles || []).includes(role);
                     return (
@@ -1339,7 +1339,7 @@ export const PartnersPage: React.FC = () => {
                         type="button"
                         onClick={() => toggleRole(role)}
                         style={{
-                          padding: '5px 10px',
+                          padding: 'var(--space-tab-item-pad-y) var(--space-compact-pad-x)',
                           borderRadius: '5px',
                           border: `1px solid ${checked ? 'var(--primary)' : 'var(--border-color)'}`,
                           backgroundColor: checked ? 'var(--primary-light)' : 'var(--bg-app)',
@@ -1357,7 +1357,7 @@ export const PartnersPage: React.FC = () => {
                 </div>
               </VerticalField>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="상호" required>
                   <input
                     type="text"
@@ -1433,7 +1433,7 @@ export const PartnersPage: React.FC = () => {
                 />
               </VerticalField>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="은행명" minWidth={0}>
                   <input
                     type="text"
@@ -1477,7 +1477,7 @@ export const PartnersPage: React.FC = () => {
               <div
                 data-testid="prt-payment-summary"
                 style={{
-                  padding: '6px 10px',
+                  padding: 'var(--space-table-td-pad-y) var(--space-compact-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-secondary)',
@@ -1498,15 +1498,15 @@ export const PartnersPage: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '8px',
-                  padding: '6px 10px',
+                  gap: 'var(--space-inline-gap)',
+                  padding: 'var(--space-table-td-pad-y) var(--space-compact-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--table-row-border)',
                   backgroundColor: 'var(--bg-app)',
                   fontSize: '12px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     국세청 사업자 상태
                   </span>
@@ -1543,9 +1543,9 @@ export const PartnersPage: React.FC = () => {
           </SectionPanel>
 
           <SectionPanel title={`소속 사업장 · 현장 목록 · ${partnerSites.length}건`}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
               {canEdit && selectedId && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 'var(--space-inline-gap)', alignItems: 'end' }}>
                   <VerticalField label="현장명" required>
                     <input
                       type="text"
@@ -1616,7 +1616,7 @@ export const PartnersPage: React.FC = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(360px, 1.15fr) minmax(320px, 1fr)',
-            gap: '16px',
+            gap: 'var(--space-conservation-gap)',
             alignItems: 'start',
           }}
         >
@@ -1636,8 +1636,8 @@ export const PartnersPage: React.FC = () => {
             }}
           />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-inline-gap)' }}>
               <VerticalField label="상호" required>
                 <input
                   type="text"
@@ -1725,8 +1725,8 @@ export const PartnersPage: React.FC = () => {
               style={{
                 display: 'flex',
                 justifyContent: 'flex-end',
-                gap: '8px',
-                paddingTop: '10px',
+                gap: 'var(--space-inline-gap)',
+                paddingTop: 'var(--space-compact-pad-x)',
                 borderTop: '1px solid var(--table-row-border)',
               }}
             >
@@ -1768,7 +1768,7 @@ export const PartnersPage: React.FC = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(360px, 1.15fr) minmax(320px, 1fr)',
-            gap: '16px',
+            gap: 'var(--space-conservation-gap)',
             alignItems: 'start',
           }}
         >
@@ -1788,8 +1788,8 @@ export const PartnersPage: React.FC = () => {
             }}
           />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-inline-gap)' }}>
               <VerticalField label="상호" required>
                 <input
                   type="text"
@@ -1849,8 +1849,8 @@ export const PartnersPage: React.FC = () => {
               style={{
                 display: 'flex',
                 justifyContent: 'flex-end',
-                gap: '8px',
-                paddingTop: '10px',
+                gap: 'var(--space-inline-gap)',
+                paddingTop: 'var(--space-compact-pad-x)',
                 borderTop: '1px solid var(--table-row-border)',
               }}
             >
@@ -2151,7 +2151,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title={isTrade ? '유통 품목 · 판매단가 검색' : '렌탈 품목 · 임대료 기준 검색'}
         manualId="itm-filter"
@@ -2168,7 +2168,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
           )
         }
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end' }}>
           <VerticalField label="품명 · 품번 · 초성 검색" minWidth={220} flex={1}>
             <input
               type="text"
@@ -2244,8 +2244,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
         width={720}
       >
         {editing && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="품목코드" required>
                 <input
                   type="text"
@@ -2293,7 +2293,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
               </VerticalField>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="품명" required>
                 <input
                   type="text"
@@ -2329,7 +2329,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             </div>
 
             {isTrade ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="표준원가">
                   <CommaNumberInput
                     value={Number(editing.standardCostKrw ?? 0)}
@@ -2355,7 +2355,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
                 </VerticalField>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="취득기준원가">
                   <CommaNumberInput
                     value={Number(editing.standardCostKrw ?? 0)}
@@ -2410,7 +2410,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)', marginTop: 'var(--space-tight-gap)' }}>
               <button
                 type="button"
                 onClick={() => setEditing(null)}
@@ -2810,9 +2810,9 @@ export const ExchangeRatesPage: React.FC = () => {
   const currentPeriodLabel = FX_PERIOD_OPTIONS.find((p) => p.days === periodDays)?.label || '3개월';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="고시환율 조회 · 등록" manualId="fx-fetch">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
           <VerticalField label="적용일자" width={145}>
             <input
               type="date"
@@ -2897,7 +2897,7 @@ export const ExchangeRatesPage: React.FC = () => {
         title={`관리 환율 ${currentPeriodLabel} 추이 차트 · ${currentCurrencyMeta.name}`}
         manualId="fx-chart"
         rightSlot={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
             <SegmentedTabs
               tabs={FX_CURRENCIES.map((c) => ({
                 id: c.code,
@@ -2931,7 +2931,7 @@ export const ExchangeRatesPage: React.FC = () => {
         {activeChartSeries.length === 0 ? (
           <div
             style={{
-              padding: '32px 16px',
+              padding: 'calc(32px - 2pt) var(--space-panel-pad-x)',
               textAlign: 'center',
               color: 'var(--text-muted)',
               fontSize: '13px',
@@ -2940,22 +2940,22 @@ export const ExchangeRatesPage: React.FC = () => {
             등록된 관리 환율 데이터가 없습니다. 상단 3개월 고시환율 적재 또는 환율 저장을 실행하십시오.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: '12px',
-                paddingBottom: '8px',
+                gap: 'var(--space-stack-gap)',
+                paddingBottom: 'var(--space-inline-gap)',
                 borderBottom: '1px solid var(--table-row-border)',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
               }}
             >
               {chartStats && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-page-gap)', flexWrap: 'wrap' }}>
                   <span style={{ whiteSpace: 'nowrap' }}>
                     구간 {activeChartSeries[0].rateDate} ~ {activeChartSeries[activeChartSeries.length - 1].rateDate}
                   </span>
@@ -2980,7 +2980,7 @@ export const ExchangeRatesPage: React.FC = () => {
               )}
 
               {inspectedPoint && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-stack-gap)', fontWeight: 700, flexWrap: 'wrap' }}>
                   <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap' }}>일자 {inspectedPoint.rateDate}</span>
                   <span style={{ color: 'var(--primary)', whiteSpace: 'nowrap' }}>
                     매매기준율 {formatFxRate(inspectedPoint.baseRate, currencyCode)} 원
@@ -3242,24 +3242,24 @@ export const ExchangeRatesPage: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '12px',
+                gap: 'var(--space-stack-gap)',
                 fontSize: '11.5px',
                 color: 'var(--text-secondary)',
               }}
             >
               <span>기준 단위: 1 {currentCurrencyMeta.name} 당 원화 · 차트 일자 클릭 시 상단 편집칸 반영</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-page-gap)', flexWrap: 'wrap' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontWeight: 700, color: 'var(--primary)' }}>
                   <span style={{ width: '14px', height: '2.5px', backgroundColor: 'var(--primary)', display: 'inline-block' }} />
                   매매기준율
                 </span>
                 {showTtsLine && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--danger)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontWeight: 700, color: 'var(--danger)' }}>
                     <span style={{ width: '14px', height: '2px', borderTop: '2px dashed var(--danger)', display: 'inline-block' }} />
                     전신환매도율
                   </span>
                 )}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   <span style={{ width: '14px', height: '2px', borderTop: '2px dashed var(--text-muted)', display: 'inline-block' }} />
                   {currentPeriodLabel} 평균선
                 </span>
@@ -3357,30 +3357,47 @@ export const ExchangeRatesPage: React.FC = () => {
 
 const MAX_COMPARE_MODELS = 5;
 
+function formatSpecMetric(val: unknown, unit = ''): string {
+  if (val === undefined || val === null) return '-';
+  const raw = String(val).trim();
+  if (!raw || raw === '-') return '-';
+  const formattedNumbers = raw.replace(/\b(\d{4,})(?:\.\d+)?\b/g, (m) => {
+    const [intPart, decPart] = m.split('.');
+    const intFormatted = Number(intPart).toLocaleString('ko-KR');
+    return decPart !== undefined ? `${intFormatted}.${decPart}` : intFormatted;
+  });
+  const trimmedUnit = unit.trim();
+  if (!trimmedUnit) return formattedNumbers;
+  if (formattedNumbers.toLowerCase().endsWith(trimmedUnit.toLowerCase())) {
+    return formattedNumbers;
+  }
+  return `${formattedNumbers} ${trimmedUnit}`;
+}
+
 function buildCoreSpecCells(spec: FlModelTechnicalSpec): { label: string; value: string }[] {
   const cells: { label: string; value: string }[] = [
-    { label: '정격 적재하중 Q', value: `${spec.ratedCapacityKg.toLocaleString('ko-KR')} kg` },
-    { label: '하중중심 거리 c', value: `${spec.loadCenterMm.toLocaleString('ko-KR')} mm` },
-    { label: '표준 인상고 h3', value: `${spec.standardLiftHeightMm.toLocaleString('ko-KR')} mm` },
-    { label: '최대 옵션 인상고', value: `${spec.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
-    { label: '자유 인상고 h2', value: `${spec.freeLiftHeightMm.toLocaleString('ko-KR')} mm` },
-    { label: '표준 포크 규격 s×e×l', value: `${spec.forkDimensionsMm} mm` },
-    { label: '본체 전장 l2', value: `${spec.overallLengthMm.toLocaleString('ko-KR')} mm` },
-    { label: '전폭 b1', value: `${spec.overallWidthMm.toLocaleString('ko-KR')} mm` },
-    { label: '헤드가드 높이 h6', value: `${spec.overheadGuardHeightMm.toLocaleString('ko-KR')} mm` },
-    { label: '최소 회전반경 Wa', value: `${spec.turningRadiusMm.toLocaleString('ko-KR')} mm` },
-    { label: '직각통로폭 1000×1200 Ast', value: `${spec.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
-    { label: '주행속도 적재/공차', value: spec.travelSpeedKmh.includes('km/h') ? spec.travelSpeedKmh : `${spec.travelSpeedKmh} km/h` },
-    { label: '인상속도 적재/공차', value: spec.liftingSpeedMms.includes('mm/s') ? spec.liftingSpeedMms : `${spec.liftingSpeedMms} mm/s` },
-    { label: '최대 등판능력', value: `${spec.gradeabilityPercent} %` },
-    { label: '장비 자중', value: `${spec.serviceWeightKg.toLocaleString('ko-KR')} kg` },
+    { label: '정격 적재하중 Q', value: formatSpecMetric(spec.ratedCapacityKg, 'kg') },
+    { label: '하중중심 거리 c', value: formatSpecMetric(spec.loadCenterMm, 'mm') },
+    { label: '표준 인상고 h3', value: formatSpecMetric(spec.standardLiftHeightMm, 'mm') },
+    { label: '최대 옵션 인상고', value: formatSpecMetric(spec.maxOptionLiftHeightMm, 'mm') },
+    { label: '자유 인상고 h2', value: formatSpecMetric(spec.freeLiftHeightMm, 'mm') },
+    { label: '표준 포크 규격 s×e×l', value: formatSpecMetric(spec.forkDimensionsMm, 'mm') },
+    { label: '본체 전장 l2', value: formatSpecMetric(spec.overallLengthMm, 'mm') },
+    { label: '전폭 b1', value: formatSpecMetric(spec.overallWidthMm, 'mm') },
+    { label: '헤드가드 높이 h6', value: formatSpecMetric(spec.overheadGuardHeightMm, 'mm') },
+    { label: '최소 회전반경 Wa', value: formatSpecMetric(spec.turningRadiusMm, 'mm') },
+    { label: '직각통로폭 1000×1200 Ast', value: formatSpecMetric(spec.aisleWidth1000x1200Mm, 'mm') },
+    { label: '주행속도 적재/공차', value: formatSpecMetric(spec.travelSpeedKmh, 'km/h') },
+    { label: '인상속도 적재/공차', value: formatSpecMetric(spec.liftingSpeedMms, 'mm/s') },
+    { label: '최대 등판능력', value: formatSpecMetric(spec.gradeabilityPercent, '%') },
+    { label: '장비 자중', value: formatSpecMetric(spec.serviceWeightKg, 'kg') },
     { label: '방수 등급', value: spec.waterproofRating },
   ];
 
   const optPush = (label: string, val: unknown, suffix = '') => {
-    if (val === undefined || val === null || val === '') return;
-    const str = typeof val === 'number' ? val.toLocaleString('ko-KR') : String(val);
-    cells.push({ label, value: suffix && !str.endsWith(suffix.trim()) ? `${str}${suffix}` : str });
+    const formatted = formatSpecMetric(val, suffix);
+    if (formatted === '-') return;
+    cells.push({ label, value: formatted });
   };
 
   optPush('하중거리 x', spec.loadDistanceXMm, ' mm');
@@ -3409,8 +3426,8 @@ function buildCoreSpecCells(spec: FlModelTechnicalSpec): { label: string; value:
   optPush('주행 / 인양모터 출력', spec.driveMotorKw && spec.liftMotorKw ? `${spec.driveMotorKw} kW / ${spec.liftMotorKw} kW` : undefined);
   optPush('배터리 전압·용량 / 중량', spec.batteryVoltageCapacity ? `${spec.batteryVoltageCapacity}${spec.batteryWeightKg ? ` · ${spec.batteryWeightKg} kg` : ''}` : undefined);
   optPush('구동 제어 / 컨트롤러', spec.driveControlType && spec.controllerMaker ? `${spec.driveControlType} · ${spec.controllerMaker}` : spec.driveControlType || spec.controllerMaker);
-  optPush('유압 작동압력 / 토출유량', spec.operatingPressureMpa || spec.oilFlowLmin ? `${spec.operatingPressureMpa || '-'} MPa / ${spec.oilFlowLmin || '-'} l/min` : undefined);
-  optPush('운전원귀 소음도 / 유압탱크', spec.soundLevelDb || spec.hydraulicTankLiter ? `${spec.soundLevelDb || '-'} dB / ${spec.hydraulicTankLiter || '-'} L` : undefined);
+  optPush('유압 작동압력 / 토출유량', spec.operatingPressureMpa || spec.oilFlowLmin ? `${formatSpecMetric(spec.operatingPressureMpa, 'MPa')} / ${formatSpecMetric(spec.oilFlowLmin, 'l/min')}` : undefined);
+  optPush('운전원귀 소음도 / 유압탱크', spec.soundLevelDb || spec.hydraulicTankLiter ? `${formatSpecMetric(spec.soundLevelDb, 'dB')} / ${formatSpecMetric(spec.hydraulicTankLiter, 'L')}` : undefined);
 
   return cells.slice(0, 36);
 }
@@ -3427,14 +3444,7 @@ export const CatalogsPage: React.FC = () => {
   const [classFilter, setClassFilter] = useState('ALL');
   const [vdiCatFilter, setVdiCatFilter] = useState('ALL');
   const [selectedSpecId, setSelectedSpecId] = useState(FL_TECHNICAL_ARCHIVE[0]?.id || '');
-  const [compareIds, setCompareIds] = useState<string[]>([
-    'FL-SPEC-HELI-CPD25-GB2LI',
-    'FL-SPEC-BYD-ECB30C',
-    'FL-SPEC-HANGCHA-CPD25-XEY2',
-    'ARC-MJ-CPD25-K3',
-  ]
-    .filter((id) => FL_TECHNICAL_ARCHIVE.some((m) => m.id === id))
-    .slice(0, MAX_COMPARE_MODELS));
+  const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareMode, setCompareMode] = useState<'FULL' | 'SUMMARY'>('FULL');
   const [excludedCompareLabels, setExcludedCompareLabels] = useState<string[]>([]);
   const [compareTitle, setCompareTitle] = useState('지게차 모델별 상세 제원 비교표');
@@ -3448,6 +3458,19 @@ export const CatalogsPage: React.FC = () => {
     downloadFileName?: string;
     isBlob?: boolean;
   } | null>(null);
+  const previewDocBlobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    previewDocBlobUrlRef.current = previewDoc?.isBlob ? previewDoc.url : null;
+  }, [previewDoc]);
+
+  useEffect(() => {
+    return () => {
+      if (previewDocBlobUrlRef.current) {
+        URL.revokeObjectURL(previewDocBlobUrlRef.current);
+      }
+    };
+  }, []);
 
   const closePreviewDoc = () => {
     setPreviewDoc((prev) => {
@@ -3551,24 +3574,34 @@ export const CatalogsPage: React.FC = () => {
     () => [
       { label: '시리즈명', core: true, render: (m: FlModelTechnicalSpec) => m.seriesName },
       { label: '차종 · 동력방식', core: true, render: (m: FlModelTechnicalSpec) => `${m.equipmentClass} · ${m.powerType}` },
-      { label: '정격하중 Q · 하중중심 c', core: true, render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString('ko-KR')} kg · ${m.loadCenterMm} mm` },
-      { label: '축거 y · 하중거리 x', core: false, render: (m: FlModelTechnicalSpec) => `${m.wheelbaseMm || '-'} mm · ${m.loadDistanceXMm || '-'} mm` },
-      { label: '표준 · 최대 인상고 h3', core: true, render: (m: FlModelTechnicalSpec) => `${m.standardLiftHeightMm.toLocaleString('ko-KR')} mm · ${m.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
-      { label: '자유인상고 h2 · 전고 h1', core: false, render: (m: FlModelTechnicalSpec) => `${m.freeLiftHeightMm.toLocaleString('ko-KR')} mm · ${(m.mastLoweredH1Mm || m.overheadGuardHeightMm).toLocaleString('ko-KR')} mm` },
-      { label: '포크 규격 s×e×l', core: true, render: (m: FlModelTechnicalSpec) => `${m.forkDimensionsMm} mm` },
-      { label: '본체 전장×전폭×헤드가드고', core: true, render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
-      { label: '포크포함 전장 l1', core: false, render: (m: FlModelTechnicalSpec) => `${m.overallLengthWithForkL1Mm ? m.overallLengthWithForkL1Mm.toLocaleString('ko-KR') : '-'} mm` },
-      { label: '최소 회전반경 Wa', core: true, render: (m: FlModelTechnicalSpec) => `${m.turningRadiusMm.toLocaleString('ko-KR')} mm` },
-      { label: '직각 적재 통로폭 Ast', core: true, render: (m: FlModelTechnicalSpec) => `${m.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
-      { label: '주행속도 · 인상속도', core: true, render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h · ${m.liftingSpeedMms} mm/s` },
-      { label: '하강속도 · 최대 견인력', core: false, render: (m: FlModelTechnicalSpec) => `${m.loweringSpeedMms || '-'} mm/s · ${m.maxDrawbarPullN || '-'} N` },
-      { label: '최대 등판능력', core: true, render: (m: FlModelTechnicalSpec) => `${m.maxGradeabilityPercent || m.gradeabilityPercent} %` },
-      { label: '장비 자중 · 적재·공차 축중', core: true, render: (m: FlModelTechnicalSpec) => `${m.serviceWeightKg.toLocaleString('ko-KR')} kg · ${m.axleLoadingLadenKg || '-'}` },
+      { label: '정격하중 Q · 하중중심 c', core: true, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.ratedCapacityKg, 'kg')} · ${formatSpecMetric(m.loadCenterMm, 'mm')}` },
+      { label: '축거 y · 하중거리 x', core: false, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.wheelbaseMm, 'mm')} · ${formatSpecMetric(m.loadDistanceXMm, 'mm')}` },
+      { label: '표준 · 최대 인상고 h3', core: true, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.standardLiftHeightMm, 'mm')} · ${formatSpecMetric(m.maxOptionLiftHeightMm, 'mm')}` },
+      { label: '자유인상고 h2 · 전고 h1', core: false, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.freeLiftHeightMm, 'mm')} · ${formatSpecMetric(m.mastLoweredH1Mm || m.overheadGuardHeightMm, 'mm')}` },
+      { label: '포크 규격 s×e×l', core: true, render: (m: FlModelTechnicalSpec) => formatSpecMetric(m.forkDimensionsMm, 'mm') },
+      { label: '본체 전장×전폭×헤드가드고', core: true, render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm.toLocaleString('ko-KR')} × ${m.overallWidthMm.toLocaleString('ko-KR')} × ${m.overheadGuardHeightMm.toLocaleString('ko-KR')} mm` },
+      { label: '포크포함 전장 l1', core: false, render: (m: FlModelTechnicalSpec) => formatSpecMetric(m.overallLengthWithForkL1Mm, 'mm') },
+      { label: '최소 회전반경 Wa', core: true, render: (m: FlModelTechnicalSpec) => formatSpecMetric(m.turningRadiusMm, 'mm') },
+      { label: '직각 적재 통로폭 Ast', core: true, render: (m: FlModelTechnicalSpec) => formatSpecMetric(m.aisleWidth1000x1200Mm, 'mm') },
+      { label: '주행속도 · 인상속도', core: true, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.travelSpeedKmh, 'km/h')} · ${formatSpecMetric(m.liftingSpeedMms, 'mm/s')}` },
+      { label: '하강속도 · 최대 견인력', core: false, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.loweringSpeedMms, 'mm/s')} · ${formatSpecMetric(m.maxDrawbarPullN, 'N')}` },
+      { label: '최대 등판능력', core: true, render: (m: FlModelTechnicalSpec) => formatSpecMetric(m.maxGradeabilityPercent || m.gradeabilityPercent, '%') },
+      {
+        label: '장비 자중 · 적재·공차 축중',
+        core: true,
+        render: (m: FlModelTechnicalSpec) => {
+          const base = formatSpecMetric(m.serviceWeightKg, 'kg');
+          const laden = formatSpecMetric(m.axleLoadingLadenKg, 'kg');
+          const unladen = formatSpecMetric(m.axleLoadingUnladenKg, 'kg');
+          if (laden === '-' && unladen === '-') return base;
+          return `${base} · 적재 ${laden} / 공차 ${unladen}`;
+        },
+      },
       { label: '배터리 · 엔진 상세 사양', core: true, render: (m: FlModelTechnicalSpec) => m.powerSpecDetail },
       { label: '주행·인양 출력 · 제어', core: false, render: (m: FlModelTechnicalSpec) => `${m.motorOrEngineDetail}${m.controllerMaker ? ` · ${m.controllerMaker}` : ''}` },
       { label: '충전기 · 연료계통', core: true, render: (m: FlModelTechnicalSpec) => m.chargerOrFuelDetail },
       { label: '타이어 규격 전/후', core: false, render: (m: FlModelTechnicalSpec) => m.tireSpecFrontRear },
-      { label: '작동압력 · 유량 · 소음도', core: false, render: (m: FlModelTechnicalSpec) => `${m.operatingPressureMpa || '-'} MPa · ${m.oilFlowLmin || '-'} l/min · ${m.soundLevelDb || '-'} dB` },
+      { label: '작동압력 · 유량 · 소음도', core: false, render: (m: FlModelTechnicalSpec) => `${formatSpecMetric(m.operatingPressureMpa, 'MPa')} · ${formatSpecMetric(m.oilFlowLmin, 'l/min')} · ${formatSpecMetric(m.soundLevelDb, 'dB')}` },
       { label: '제동장치 · 방수등급', core: true, render: (m: FlModelTechnicalSpec) => `${m.brakeType} · ${m.waterproofRating}` },
       { label: '공식 보증기간', core: true, render: (m: FlModelTechnicalSpec) => m.warrantyTerms },
     ],
@@ -3694,7 +3727,7 @@ export const CatalogsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="VDI 2198 제원 · 호환 부품 카탈로그"
         manualId="cat-tabs"
@@ -3712,8 +3745,8 @@ export const CatalogsPage: React.FC = () => {
         }
       >
         {subTab === 'SPECS' && (
-          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="장비 기종 · 제조사 검색" minWidth={240} flex={1}>
                 <input
                   type="text"
@@ -3759,7 +3792,7 @@ export const CatalogsPage: React.FC = () => {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(350px, 1fr) minmax(520px, 1.85fr)',
-                gap: '14px',
+                gap: 'var(--space-page-gap)',
                 alignItems: 'start',
               }}
             >
@@ -3826,14 +3859,14 @@ export const CatalogsPage: React.FC = () => {
                 <SectionPanel
                   title={`${activeSpec.manufacturerName} · ${activeSpec.modelName}`}
                   titleSlot={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                       <StatusBadge label={activeSpec.originCountry} tone="neutral" />
                       <StatusBadge label={activeSpec.equipmentClass} tone="info" />
                       <StatusBadge label={activeSpec.powerType} tone="success" />
                     </div>
                   }
                   rightSlot={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                       <button
                         type="button"
                         onClick={() => toggleCompareId(activeSpec.id)}
@@ -3905,15 +3938,15 @@ export const CatalogsPage: React.FC = () => {
                     </div>
                   }
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '12.5px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)', fontSize: '12.5px' }}>
                     <div
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        gap: '10px',
+                        gap: 'var(--space-field-grid-gap)',
                         flexWrap: 'wrap',
-                        paddingBottom: '8px',
+                        paddingBottom: 'var(--space-inline-gap)',
                         borderBottom: '1px solid var(--table-row-border)',
                       }}
                     >
@@ -3940,14 +3973,14 @@ export const CatalogsPage: React.FC = () => {
                           style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                            gap: '8px',
+                            gap: 'var(--space-inline-gap)',
                           }}
                         >
                           {activeCoreCells.map((cell) => (
                             <div
                               key={cell.label}
                               style={{
-                                padding: '8px 10px',
+                                padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
                                 borderRadius: '6px',
                                 border: '1px solid var(--table-row-border)',
                                 backgroundColor: 'var(--bg-app)',
@@ -3961,7 +3994,7 @@ export const CatalogsPage: React.FC = () => {
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
-                                  marginBottom: '2px',
+                                  marginBottom: '1px',
                                 }}
                               >
                                 {cell.label}
@@ -3987,7 +4020,7 @@ export const CatalogsPage: React.FC = () => {
                           style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                            gap: '8px',
+                            gap: 'var(--space-inline-gap)',
                           }}
                         >
                           {[
@@ -4001,13 +4034,13 @@ export const CatalogsPage: React.FC = () => {
                             <div
                               key={info.label}
                               style={{
-                                padding: '9px 12px',
+                                padding: 'var(--space-table-th-pad-y) var(--space-subbox-pad-x)',
                                 borderRadius: '6px',
                                 border: '1px solid var(--table-row-border)',
                                 backgroundColor: 'var(--bg-header)',
                               }}
                             >
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', marginBottom: '3px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', marginBottom: '1px' }}>
                                 {info.label}
                               </div>
                               <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.45 }}>
@@ -4020,12 +4053,12 @@ export const CatalogsPage: React.FC = () => {
                     )}
 
                     {(detailSection === 'ALL' || detailSection === 'VDI') && (
-                      <div data-testid="cat-vdi-section" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div data-testid="cat-vdi-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
                             VDI 2198 표준 기술제원표 · {filteredVdiRows.length}항목
                           </span>
-                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: 'var(--space-label-gap)', flexWrap: 'wrap' }}>
                             <button
                               type="button"
                               onClick={() => setVdiCatFilter('ALL')}
@@ -4065,7 +4098,7 @@ export const CatalogsPage: React.FC = () => {
                     {(detailSection === 'ALL' || detailSection === 'MAST') && (
                       <>
                         {activeMastRows.length > 0 && (
-                          <div data-testid="cat-mast-section" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div data-testid="cat-mast-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-tight-gap)' }}>
                             <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
                               마스트 단수 · 인상높이별 상세 제원표 · {activeMastRows.length}종
                             </span>
@@ -4098,7 +4131,7 @@ export const CatalogsPage: React.FC = () => {
                         )}
 
                         {activeSpec.batteryOptions && activeSpec.batteryOptions.length > 0 && (
-                          <div data-testid="cat-battery-section" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div data-testid="cat-battery-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-tight-gap)' }}>
                             <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-main)' }}>
                               배터리 셀 브랜드 · 용량 옵션 및 호환 충전기 매트릭스 · {activeSpec.batteryOptions.length}종
                             </span>
@@ -4136,22 +4169,22 @@ export const CatalogsPage: React.FC = () => {
                       <>
                         {((activeSpec.standardEquipments && activeSpec.standardEquipments.length > 0) ||
                           (activeSpec.optionalEquipments && activeSpec.optionalEquipments.length > 0)) && (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
-                              <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--text-main)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
+                            <div style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                              <div style={{ fontWeight: 800, marginBottom: 'var(--space-tight-gap)', color: 'var(--text-main)' }}>
                                 기본 출고 사양 · {(activeSpec.standardEquipments || []).length}항목
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-label-gap)', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                 {(activeSpec.standardEquipments || []).map((eq, i) => (
                                   <div key={i}>• {eq}</div>
                                 ))}
                               </div>
                             </div>
-                            <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
-                              <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--primary)' }}>
+                            <div style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                              <div style={{ fontWeight: 800, marginBottom: 'var(--space-tight-gap)', color: 'var(--primary)' }}>
                                 선택 장착 옵션 사양 · {(activeSpec.optionalEquipments || []).length}항목
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-label-gap)', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                 {(activeSpec.optionalEquipments || []).map((eq, i) => (
                                   <div key={i}>• {eq}</div>
                                 ))}
@@ -4160,12 +4193,12 @@ export const CatalogsPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                          <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
-                            <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--success)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
+                          <div style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                            <div style={{ fontWeight: 800, marginBottom: 'var(--space-tight-gap)', color: 'var(--success)' }}>
                               안전 사양 및 운전자 일일점검 수칙
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-main)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-label-gap)', fontSize: '12px', color: 'var(--text-main)' }}>
                               {activeSpec.safetyFeatures.map((sf, idx) => (
                                 <div key={`sf-${idx}`}>• [안전] {sf}</div>
                               ))}
@@ -4175,17 +4208,17 @@ export const CatalogsPage: React.FC = () => {
                             </div>
                           </div>
 
-                          <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
-                            <div style={{ fontWeight: 800, marginBottom: '6px', color: 'var(--warning)' }}>
+                          <div style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                            <div style={{ fontWeight: 800, marginBottom: 'var(--space-tight-gap)', color: 'var(--warning)' }}>
                               가동시간별 예방정비 주기 및 호환 부품
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-main)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-label-gap)', fontSize: '12px', color: 'var(--text-main)' }}>
                               {activeSpec.periodicMaintenance.map((pm, idx) => (
                                 <div key={`pm-${idx}`}>• {pm}</div>
                               ))}
                               {activeSpec.compatibleParts.length > 0 && (
-                                <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed var(--border-color)' }}>
-                                  <div style={{ fontWeight: 700, marginBottom: '3px', color: 'var(--text-secondary)' }}>연동 호환 부품 목록</div>
+                                <div style={{ marginTop: 'var(--space-tight-gap)', paddingTop: 'var(--space-tight-gap)', borderTop: '1px dashed var(--border-color)' }}>
+                                  <div style={{ fontWeight: 700, marginBottom: '1px', color: 'var(--text-secondary)' }}>연동 호환 부품 목록</div>
                                   {activeSpec.compatibleParts.map((cp) => (
                                     <div key={cp.partCode} style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                                       • [{cp.partCode}] {cp.partName} · {cp.category} · {cp.replacementCycle}
@@ -4236,7 +4269,7 @@ export const CatalogsPage: React.FC = () => {
                                     href={d.r2Url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    style={{ color: 'var(--primary)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                    style={{ color: 'var(--primary)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '1px' }}
                                   >
                                     열기
                                     <ExternalLink size={12} />
@@ -4259,8 +4292,8 @@ export const CatalogsPage: React.FC = () => {
         )}
 
         {subTab === 'COMPARE' && (
-          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label={`비교 기종 추가 · ${comparedModels.length}/${MAX_COMPARE_MODELS}종`} width={300}>
                 <SearchableSelect
                   value=""
@@ -4323,22 +4356,27 @@ export const CatalogsPage: React.FC = () => {
                 flexWrap: 'wrap',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '10px 12px',
+                gap: 'var(--space-field-grid-gap)',
+                padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                 borderRadius: '8px',
                 border: '1px solid var(--table-row-border)',
                 backgroundColor: 'var(--bg-header)',
               }}
             >
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', flex: 1 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-tight-gap)', alignItems: 'center', flex: 1 }}>
+                {comparedModels.length === 0 && (
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    선택된 비교 기종이 없습니다. 상단 비교 기종 추가 또는 장비 제원표 탭의 담기 버튼으로 최대 5종을 선택하십시오.
+                  </span>
+                )}
                 {comparedModels.map((m, idx) => (
                   <div
                     key={m.id}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      padding: '4px 8px',
+                      gap: 'var(--space-label-gap)',
+                      padding: 'max(1px, calc(4px - 2pt)) var(--space-inline-gap)',
                       borderRadius: '6px',
                       border: '1px solid var(--primary)',
                       backgroundColor: 'var(--bg-card)',
@@ -4442,7 +4480,7 @@ export const CatalogsPage: React.FC = () => {
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-inline-gap)', flexShrink: 0 }}>
                 <SegmentedTabs
                   tabs={[
                     { id: 'FULL', label: '전체 상세', count: compareRows.length },
@@ -4482,6 +4520,9 @@ export const CatalogsPage: React.FC = () => {
                           label: r.label,
                           values: comparedModels.map((m) => r.render(m)),
                         })),
+                        title: compareTitle,
+                        recipientName: compareRecipient,
+                        authorNote: compareNote,
                       });
                       notifyToast('모델 제원 비교표 엑셀 생성 완료', 'success');
                     } catch (err) {
@@ -4497,7 +4538,7 @@ export const CatalogsPage: React.FC = () => {
             </div>
 
             {comparedModels.length === 0 ? (
-              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+              <div style={{ padding: 'calc(32px - 2pt)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                 비교할 장비 기종을 1종 이상 선택하십시오.
               </div>
             ) : (
@@ -4505,12 +4546,12 @@ export const CatalogsPage: React.FC = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', color: 'var(--text-main)' }}>
                   <thead>
                     <tr style={{ backgroundColor: 'var(--bg-header)', borderBottom: '1px solid var(--table-border-color)' }}>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', width: '220px', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
+                      <th style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', textAlign: 'left', width: '220px', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
                         비교 제원 항목 · {activeCompareRows.length}행
                       </th>
                       {comparedModels.map((m, idx) => (
-                        <th key={m.id} style={{ padding: '10px 12px', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap', borderRight: '1px solid var(--table-row-border)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                        <th key={m.id} style={{ padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap', borderRight: '1px solid var(--table-row-border)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-tight-gap)' }}>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
                               {idx + 1}열 · {m.manufacturerName} · {m.originCountry}
                             </div>
@@ -4542,8 +4583,8 @@ export const CatalogsPage: React.FC = () => {
                   <tbody>
                     {activeCompareRows.map((row) => (
                       <tr key={row.label} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
-                        <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                        <td style={{ padding: 'var(--space-compact-pad-y) var(--space-subbox-pad-x)', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-tight-gap)' }}>
                             <span>{row.label}</span>
                             <button
                               type="button"
@@ -4568,7 +4609,7 @@ export const CatalogsPage: React.FC = () => {
                           </div>
                         </td>
                         {comparedModels.map((m) => (
-                          <td key={`${row.label}-${m.id}`} style={{ padding: '8px 12px', borderRight: '1px solid var(--table-row-border)' }}>
+                          <td key={`${row.label}-${m.id}`} style={{ padding: 'var(--space-compact-pad-y) var(--space-subbox-pad-x)', borderRight: '1px solid var(--table-row-border)' }}>
                             {row.render(m)}
                           </td>
                         ))}
@@ -4582,8 +4623,8 @@ export const CatalogsPage: React.FC = () => {
         )}
 
         {subTab === 'PARTS' && (
-          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="부품명 · 품번 · OEM 교차코드 검색" minWidth={240} flex={1}>
                 <input
                   type="text"
@@ -4613,7 +4654,7 @@ export const CatalogsPage: React.FC = () => {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(480px, 1.35fr) minmax(360px, 1fr)',
-                gap: '14px',
+                gap: 'var(--space-page-gap)',
                 alignItems: 'start',
               }}
             >
@@ -4649,14 +4690,14 @@ export const CatalogsPage: React.FC = () => {
                 <SectionPanel
                   title={activePart.partName}
                   titleSlot={
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                       <StatusBadge label={activePart.partGrade} tone="info" />
                       <StatusBadge label={activePart.originCountry} tone="neutral" />
                     </div>
                   }
                 >
-                  <div data-testid="part-detail-specs" style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12.5px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+                  <div data-testid="part-detail-specs" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)', fontSize: '12.5px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-inline-gap)' }}>
                       {[
                         { label: '자사 품목코드', value: activePart.sku },
                         { label: '참조 품번 · 브랜드', value: `${activePart.tvhRefNo || '-'} · ${activePart.tvhBrand || activePart.manufacturer}` },
@@ -4668,7 +4709,7 @@ export const CatalogsPage: React.FC = () => {
                         <div
                           key={row.label}
                           style={{
-                            padding: '8px 10px',
+                            padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
                             borderRadius: '6px',
                             border: '1px solid var(--table-row-border)',
                             backgroundColor: 'var(--bg-app)',
@@ -4680,14 +4721,14 @@ export const CatalogsPage: React.FC = () => {
                       ))}
                     </div>
 
-                    <div style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px' }}>표준 요약 규격</div>
+                    <div style={{ padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '1px' }}>표준 요약 규격</div>
                       <div style={{ fontWeight: 600 }}>{activePart.specSummary}</div>
                     </div>
 
                     {activePart.detailedSpecs && activePart.detailedSpecs.length > 0 && (
                       <div>
-                        <div style={{ fontWeight: 800, marginBottom: '6px' }}>실측 치수 · 상세 규격표</div>
+                        <div style={{ fontWeight: 800, marginBottom: 'var(--space-tight-gap)' }}>실측 치수 · 상세 규격표</div>
                         <DataGrid
                           columns={[
                             { key: 'label', header: '규격 항목', width: 150, render: (s) => <span style={{ fontWeight: 700 }}>{s.label}</span> },
@@ -4700,16 +4741,16 @@ export const CatalogsPage: React.FC = () => {
                       </div>
                     )}
 
-                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
-                      <div style={{ fontWeight: 800, marginBottom: '4px', color: 'var(--primary)' }}>OEM 교차품번 목록</div>
+                    <div style={{ padding: 'var(--space-table-th-pad-y) calc(11px - 2pt)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                      <div style={{ fontWeight: 800, marginBottom: 'var(--space-label-gap)', color: 'var(--primary)' }}>OEM 교차품번 목록</div>
                       <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
                         {activePart.oemCrossRefCodes.join(', ') || '-'}
                       </div>
                     </div>
 
-                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
-                      <div style={{ fontWeight: 800, marginBottom: '4px' }}>호환 제조사 · 적용 기종</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <div style={{ padding: 'var(--space-table-th-pad-y) calc(11px - 2pt)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-app)' }}>
+                      <div style={{ fontWeight: 800, marginBottom: 'var(--space-label-gap)' }}>호환 제조사 · 적용 기종</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '1px' }}>
                         제조사: {activePart.compatibleBrands.join(', ')}
                       </div>
                       <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
@@ -4717,8 +4758,8 @@ export const CatalogsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ padding: '9px 11px', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)', fontSize: '12px' }}>
-                      <div style={{ fontWeight: 700, marginBottom: '3px' }}>기술 노트 · {activePart.referenceSource}</div>
+                    <div style={{ padding: 'var(--space-table-th-pad-y) calc(11px - 2pt)', borderRadius: '6px', border: '1px solid var(--table-row-border)', backgroundColor: 'var(--bg-header)', fontSize: '12px' }}>
+                      <div style={{ fontWeight: 700, marginBottom: '1px' }}>기술 노트 · {activePart.referenceSource}</div>
                       <div style={{ color: 'var(--text-secondary)', lineHeight: 1.45 }}>{activePart.technicalNote}</div>
                     </div>
                   </div>
@@ -4729,9 +4770,9 @@ export const CatalogsPage: React.FC = () => {
         )}
 
         {subTab === 'PACKAGES' && (
-          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             {canEdit && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
                 <VerticalField label="패키지 제목" minWidth={240} flex={1}>
                   <input
                     type="text"
@@ -4766,6 +4807,7 @@ export const CatalogsPage: React.FC = () => {
               columns={[
                 { key: 'code', header: '카탈로그코드', width: 150, render: (r) => r.catalogCode },
                 { key: 'title', header: '제목', render: (r) => r.title },
+                { key: 'models', header: '대상 기종', width: 220, render: (r) => r.targetModels.join(', ') || '-' },
                 { key: 'role', header: '대상역할', width: 100, render: (r) => r.targetPartnerRole },
                 {
                   key: 'cnt',
@@ -4803,8 +4845,8 @@ export const CatalogsPage: React.FC = () => {
         width={960}
       >
         {previewDoc && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
               {previewDoc.isBlob && previewDoc.downloadFileName ? (
                 <a
                   href={previewDoc.url}

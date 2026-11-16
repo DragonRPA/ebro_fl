@@ -178,7 +178,7 @@ export const DashboardPage: React.FC = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title={`담당 과제 목록 · ${currentUser?.name || ''} · ${tierLabel(currentUser?.tierLevel)}`}
         manualId="dash-filter"
@@ -286,7 +286,7 @@ export const ApprovalInboxPage: React.FC = () => {
       render: (row) => {
         const eligible = (currentUser?.tierLevel || 1) >= row.requiredTier;
         return (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-label-gap)' }}>
             <button
               type="button"
               onClick={() => setSelectedReq(row)}
@@ -366,7 +366,7 @@ export const ApprovalInboxPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="결재함"
         manualId="apr-tabs"
@@ -400,8 +400,8 @@ export const ApprovalInboxPage: React.FC = () => {
         width={680}
       >
         {selectedReq && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '13px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', fontSize: '13px' }}>
               <span>요청번호: {selectedReq.id}</span>
               <span>대상원장: {formatKoTargetTable(selectedReq.targetTable)}</span>
               <span>필요티어: {TIER_LABELS[selectedReq.requiredTier]}</span>
@@ -409,7 +409,7 @@ export const ApprovalInboxPage: React.FC = () => {
             {selectedReq.rejectReason && (
               <div
                 style={{
-                  padding: '8px 10px',
+                  padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
                   border: '1px solid var(--danger)',
                   borderRadius: '6px',
                   color: 'var(--danger)',
@@ -433,7 +433,7 @@ export const ApprovalInboxPage: React.FC = () => {
                       <td
                         style={{
                           width: '180px',
-                          padding: '7px 10px',
+                          padding: 'calc(7px - 2pt) var(--space-compact-pad-x)',
                           fontWeight: 700,
                           backgroundColor: 'var(--bg-header)',
                           whiteSpace: 'nowrap',
@@ -441,7 +441,7 @@ export const ApprovalInboxPage: React.FC = () => {
                       >
                         {k}
                       </td>
-                      <td style={{ padding: '7px 10px', wordBreak: 'break-all' }}>
+                      <td style={{ padding: 'calc(7px - 2pt) var(--space-compact-pad-x)', wordBreak: 'break-all' }}>
                         {typeof v === 'object' ? JSON.stringify(v) : String(v ?? '-')}
                       </td>
                     </tr>
@@ -459,7 +459,7 @@ export const ApprovalInboxPage: React.FC = () => {
         onClose={() => setRejectTarget(null)}
         width={480}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <VerticalField label="반려 사유" required>
             <textarea
               rows={4}
@@ -469,7 +469,7 @@ export const ApprovalInboxPage: React.FC = () => {
               style={controlTextareaStyle}
             />
           </VerticalField>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
             <button
               type="button"
               onClick={() => setRejectTarget(null)}

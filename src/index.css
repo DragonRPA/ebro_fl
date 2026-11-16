@@ -1,71 +1,66 @@
 @import url('./tailwind_polyfill.css');
-/* d:\Kiyeun_Lift\src\index.css */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
-:root,
-[data-theme='light'] {
-  /* 🌟 라이트 테마 토큰: 완전한 웜 코튼 페이퍼(Warm Cotton Paper) 종이질감 및 무그림자 표준 */
-  --bg-app: #ebe5d8;              /* 차분하고 따뜻한 크라프트/한지 캔버스 배경 */
-  --bg-sidebar: #e2dbcd;          /* 가죽 바인더/장부 표지 톤 사이드바 */
-  --bg-card: #ebe5d8;             /* 눈부심 0%의 온화한 웜 코튼 서식지 표면 (완전한 종이질감 일체화) */
-  --bg-header: #e2dbcd;           /* 장부 상단 바인더 헤더 */
-  --border-color: #b5a894;        /* 확실하고 선명한 장부 테두리선 */
-  --table-border-color: #a89a84;  /* 표 외곽선 및 헤더 하단 경계선 */
-  --table-row-border: #c4b6a0;    /* 선명하게 눈에 들어오는 장부 횡선 (가로 행 구분선) */
-  
+:root {
+  color-scheme: light;
+
+  /* 전사 단일 Warm Cotton Paper 표준 토큰 */
+  --bg-app: #ebe5d8;
+  --bg-sidebar: #e2dbcd;
+  --bg-card: #ebe5d8;
+  --bg-header: #e2dbcd;
+  --bg-hover: #e2dbcd;
+  --border-color: #b5a894;
+  --table-border-color: #a89a84;
+  --table-row-border: #c4b6a0;
+
   --scrollbar-track: #ded8cb;
-  --scrollbar-thumb: #928a7b;     /* 부드러운 먹색/흑연 썸 */
+  --scrollbar-thumb: #928a7b;
   --scrollbar-thumb-hover: #504a3f;
   --scrollbar-thumb-border: #ebe5d8;
-  
-  /* 5색 표준: 
-     1) 먹색 잉크 (Text): #0f172a
-     2) 블루 액션 (Primary): #1d4ed8
-     3) 에메랄드 플러스/수익 (Success): #047857
-     4) 크림슨 마이너스/위험 (Danger): #dc2626
-     5) 웜 페이퍼 캔버스 (Background): #ebe5d8
-  */
+
+  /* 5색 표준 */
   --primary: #1d4ed8;
   --primary-hover: #1e40af;
   --primary-light: #eff6ff;
-  
+
   --success: #047857;
   --success-hover: #065f46;
   --success-light: #ecfdf5;
-  
+
   --warning: #b45309;
   --warning-hover: #92400e;
   --warning-light: #fffbeb;
-  
+
   --danger: #dc2626;
   --danger-hover: #b91c1c;
   --danger-light: #fef2f2;
 
   --info: #0284c7;
   --info-light: #f0f9ff;
-  
+
   --text-main: #0f172a;
   --text-secondary: #334155;
   --text-muted: #475569;
   --text-on-primary: #ffffff;
-  
-  /* 📜 테두리 그림자 효과 전면 제거 (Zero Box-Shadow Standard) */
+
+  /* 무그림자 표준 */
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
-  
+
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  
+
   --font-sans: 'Outfit', 'Noto Sans KR', sans-serif;
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
 
-  /* 📜 종이질감(Warm Cotton Paper Micro-grain) 노이즈 텍스처 (SVG 무손실 벡터 데이터 URI) */
+  /* Warm Cotton Paper 노이즈 텍스처 */
   --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='paperNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0.038 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperNoise)'/%3E%3C/svg%3E");
 
-  /* 🎨 호환성 및 전사 통일 별칭 토큰 (라이트 테마: 종이질감 웜 페이퍼 계열) */
+  /* 별칭 토큰 */
   --text-primary: #0f172a;
   --border: #b5a894;
   --bg-body: #ebe5d8;
@@ -81,257 +76,214 @@
   --accent: #1d4ed8;
   --accent-bg: #eff6ff;
   --accent-border: #1d4ed8;
+
+  /* ─────────────────────────────────────────────────────────────
+     전사 고밀도 CSS 정책: 박스 내·외 패딩 및 마진 2pt 일괄 축소 SSOT
+     ───────────────────────────────────────────────────────────── */
+  --density-trim: 2pt;
+
+  /* 셸 및 페이지 외곽 패딩·박스 간 마진/간격 (-2pt) */
+  --space-main-pad-top: calc(16px - 2pt);
+  --space-main-pad-x: calc(20px - 2pt);
+  --space-main-pad-bottom: calc(28px - 2pt);
+  --space-page-gap: calc(14px - 2pt);
+  --space-header-h: calc(52px - 2pt);
+  --space-header-pad-x: calc(16px - 2pt);
+  --space-header-gap: calc(12px - 2pt);
+  --space-sidebar-head-pad-y: calc(14px - 2pt);
+  --space-sidebar-head-pad-x: calc(16px - 2pt);
+  --space-sidebar-nav-pad-y: calc(10px - 2pt);
+  --space-sidebar-nav-pad-x: calc(8px - 2pt);
+  --space-sidebar-group-mb: calc(14px - 2pt);
+  --space-sidebar-group-label-pad-y: max(1px, calc(4px - 2pt));
+  --space-sidebar-group-label-pad-x: calc(10px - 2pt);
+  --space-sidebar-item-pad-y: calc(8px - 2pt);
+  --space-sidebar-item-pad-x: calc(10px - 2pt);
+
+  /* 섹션 패널·카드·서브박스 내·외 패딩 및 마진 (-2pt) */
+  --space-panel-pad-y: calc(14px - 2pt);
+  --space-panel-pad-x: calc(16px - 2pt);
+  --space-panel-head-mb: calc(12px - 2pt);
+  --space-panel-head-pb: calc(8px - 2pt);
+  --space-panel-head-gap: calc(12px - 2pt);
+  --space-subbox-pad-y: calc(10px - 2pt);
+  --space-subbox-pad-x: calc(12px - 2pt);
+  --space-compact-pad-y: calc(8px - 2pt);
+  --space-compact-pad-x: calc(10px - 2pt);
+  --space-stack-gap: calc(12px - 2pt);
+  --space-field-grid-gap: calc(10px - 2pt);
+  --space-inline-gap: calc(8px - 2pt);
+  --space-tight-gap: calc(6px - 2pt);
+  --space-label-gap: max(1px, calc(4px - 2pt));
+
+  /* 고밀도 데이터 그리드·합계 검증 바·모달·컨트롤·버튼·탭·배지 (-2pt) */
+  --space-table-th-pad-y: calc(9px - 2pt);
+  --space-table-th-pad-x: calc(10px - 2pt);
+  --space-table-td-pad-y: calc(6px - 2pt);
+  --space-table-td-pad-x: calc(10px - 2pt);
+  --space-table-row-h: calc(40px - 2pt);
+  --space-conservation-pad-y: calc(12px - 2pt);
+  --space-conservation-pad-x: calc(16px - 2pt);
+  --space-conservation-gap: calc(16px - 2pt);
+  --space-conservation-item-gap: calc(18px - 2pt);
+  --space-modal-backdrop-pad: calc(20px - 2pt);
+  --space-modal-head-pad-y: calc(12px - 2pt);
+  --space-modal-head-pad-x: calc(16px - 2pt);
+  --space-modal-body-pad: calc(16px - 2pt);
+  --space-control-h: calc(34px - 2pt);
+  --space-control-h-sm: calc(28px - 2pt);
+  --space-control-pad-x: calc(10px - 2pt);
+  --space-textarea-pad-y: calc(8px - 2pt);
+  --space-btn-pad-x: calc(14px - 2pt);
+  --space-btn-sm-pad-x: calc(10px - 2pt);
+  --space-tab-group-pad: max(1px, calc(3px - 2pt));
+  --space-tab-item-pad-y: max(2px, calc(5px - 2pt));
+  --space-tab-item-pad-x: calc(12px - 2pt);
+  --space-badge-pad-y: 1px;
+  --space-badge-pad-x: calc(8px - 2pt);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   📜 [전사 테두리 그림자 효과 전면 제거 - Flat Paper Ledger Standard]
-   카드, 모달, 테이블, 컨테이너 테두리의 부자연스러운 그림자를 100% 제거하고
-   정갈한 1px 연필선 테두리로만 평면적으로 표현하여 눈의 피로를 최소화
-   ───────────────────────────────────────────────────────────── */
-[data-theme='light'] *,
-[data-theme='light'] *::before,
-[data-theme='light'] *::after,
-:root:not([data-theme='dark']) *,
-:root:not([data-theme='dark']) *::before,
-:root:not([data-theme='dark']) *::after {
+/* 전사 무그림자 평면 장부 표준 */
+*,
+*::before,
+*::after {
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
   text-shadow: none !important;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   📜 [전사 "밝은화면모드 모든배경" 단일 표준 SSOT (Light Mode All Backgrounds Standard)]
-   화면 전체의 모든 순백색/아이보리/밝은회색 면적을 100% 제거하고
-   온화한 웜 코튼 페이퍼(Warm Cotton Paper: #ebe5d8) 텍스처로 전사 일괄 일체화
-   카드, 모달, 패널, 컨테이너, 테이블, 입력창, 버튼 전체에 예외 없이 단일 적용
-   ───────────────────────────────────────────────────────────── */
-[data-theme='light'] .bg-white,
-[data-theme='light'] .bg-slate-50,
-[data-theme='light'] .bg-gray-50,
-[data-theme='light'] .bg-zinc-50,
-[data-theme='light'] .bg-neutral-50,
-[data-theme='light'] .bg-stone-50,
-[data-theme='light'] .bg-card,
-[data-theme='light'] .card,
-[data-theme='light'] .kpi-card,
-[data-theme='light'] .panel,
-:root:not([data-theme='dark']) .bg-white,
-:root:not([data-theme='dark']) .bg-slate-50,
-:root:not([data-theme='dark']) .bg-gray-50,
-:root:not([data-theme='dark']) .bg-zinc-50,
-:root:not([data-theme='dark']) .bg-neutral-50,
-:root:not([data-theme='dark']) .bg-stone-50,
-:root:not([data-theme='dark']) .bg-card,
-:root:not([data-theme='dark']) .card,
-:root:not([data-theme='dark']) .kpi-card,
-:root:not([data-theme='dark']) .panel {
+/* 전사 Warm Cotton Paper 배경 일체화 */
+.bg-white,
+.bg-slate-50,
+.bg-gray-50,
+.bg-zinc-50,
+.bg-neutral-50,
+.bg-stone-50,
+.bg-card,
+.card,
+.kpi-card,
+.panel {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
   border-color: var(--border-color) !important;
 }
 
-/* 인라인 스타일로 유입되는 백색 및 밝은 회색 계열 배경 원천 차단 (배경만 타깃, 고유 유색은 보존) */
-[data-theme='light'] [style*="background: #ffffff"],
-[data-theme='light'] [style*="background: #fff"],
-[data-theme='light'] [style*="background: white"],
-[data-theme='light'] [style*="background:#ffffff"],
-[data-theme='light'] [style*="background:#fff"],
-[data-theme='light'] [style*="background:white"],
-[data-theme='light'] [style*="background-color: #ffffff"],
-[data-theme='light'] [style*="background-color: #fff"],
-[data-theme='light'] [style*="background-color: white"],
-[data-theme='light'] [style*="background-color:#ffffff"],
-[data-theme='light'] [style*="background-color:#fff"],
-[data-theme='light'] [style*="background-color:white"],
-[data-theme='light'] [style*="background: #fbf9f5"],
-[data-theme='light'] [style*="background:#fbf9f5"],
-[data-theme='light'] [style*="background-color: #fbf9f5"],
-[data-theme='light'] [style*="background-color:#fbf9f5"],
-[data-theme='light'] [style*="background: #f5f2eb"],
-[data-theme='light'] [style*="background:#f5f2eb"],
-[data-theme='light'] [style*="background-color: #f5f2eb"],
-[data-theme='light'] [style*="background-color:#f5f2eb"],
-[data-theme='light'] [style*="background: #f8fafc"],
-[data-theme='light'] [style*="background:#f8fafc"],
-[data-theme='light'] [style*="background-color: #f8fafc"],
-[data-theme='light'] [style*="background-color:#f8fafc"],
-[data-theme='light'] [style*="background: #f1f5f9"],
-[data-theme='light'] [style*="background:#f1f5f9"],
-[data-theme='light'] [style*="background-color: #f1f5f9"],
-[data-theme='light'] [style*="background-color:#f1f5f9"],
-[data-theme='light'] [style*="background: #f3f4f6"],
-[data-theme='light'] [style*="background:#f3f4f6"],
-[data-theme='light'] [style*="background-color: #f3f4f6"],
-[data-theme='light'] [style*="background-color:#f3f4f6"],
-[data-theme='light'] [style*="background-color: rgb(255, 255, 255)"],
-[data-theme='light'] [style*="background: rgb(255, 255, 255)"],
-[data-theme='light'] [style*="background-color: rgb(251, 249, 245)"],
-[data-theme='light'] [style*="background: rgb(251, 249, 245)"],
-[data-theme='light'] [style*="background-color: rgb(245, 242, 235)"],
-[data-theme='light'] [style*="background: rgb(245, 242, 235)"],
-[data-theme='light'] [style*="background-color: rgb(248, 250, 252)"],
-[data-theme='light'] [style*="background: rgb(248, 250, 252)"],
-[data-theme='light'] [style*="background-color: rgb(241, 245, 249)"],
-[data-theme='light'] [style*="background: rgb(241, 245, 249)"],
-:root:not([data-theme='dark']) [style*="background: #ffffff"],
-:root:not([data-theme='dark']) [style*="background: #fff"],
-:root:not([data-theme='dark']) [style*="background: white"],
-:root:not([data-theme='dark']) [style*="background:#ffffff"],
-:root:not([data-theme='dark']) [style*="background:#fff"],
-:root:not([data-theme='dark']) [style*="background:white"],
-:root:not([data-theme='dark']) [style*="background-color: #ffffff"],
-:root:not([data-theme='dark']) [style*="background-color: #fff"],
-:root:not([data-theme='dark']) [style*="background-color: white"],
-:root:not([data-theme='dark']) [style*="background-color:#ffffff"],
-:root:not([data-theme='dark']) [style*="background-color:#fff"],
-:root:not([data-theme='dark']) [style*="background-color:white"],
-:root:not([data-theme='dark']) [style*="background: #fbf9f5"],
-:root:not([data-theme='dark']) [style*="background:#fbf9f5"],
-:root:not([data-theme='dark']) [style*="background-color: #fbf9f5"],
-:root:not([data-theme='dark']) [style*="background-color:#fbf9f5"],
-:root:not([data-theme='dark']) [style*="background: #f5f2eb"],
-:root:not([data-theme='dark']) [style*="background:#f5f2eb"],
-:root:not([data-theme='dark']) [style*="background-color: #f5f2eb"],
-:root:not([data-theme='dark']) [style*="background-color:#f5f2eb"],
-:root:not([data-theme='dark']) [style*="background: #f8fafc"],
-:root:not([data-theme='dark']) [style*="background:#f8fafc"],
-:root:not([data-theme='dark']) [style*="background-color: #f8fafc"],
-:root:not([data-theme='dark']) [style*="background-color:#f8fafc"],
-:root:not([data-theme='dark']) [style*="background: #f1f5f9"],
-:root:not([data-theme='dark']) [style*="background:#f1f5f9"],
-:root:not([data-theme='dark']) [style*="background-color: #f1f5f9"],
-:root:not([data-theme='dark']) [style*="background-color:#f1f5f9"],
-:root:not([data-theme='dark']) [style*="background: #f3f4f6"],
-:root:not([data-theme='dark']) [style*="background:#f3f4f6"],
-:root:not([data-theme='dark']) [style*="background-color: #f3f4f6"],
-:root:not([data-theme='dark']) [style*="background-color:#f3f4f6"],
-:root:not([data-theme='dark']) [style*="background-color: rgb(255, 255, 255)"],
-:root:not([data-theme='dark']) [style*="background: rgb(255, 255, 255)"],
-:root:not([data-theme='dark']) [style*="background-color: rgb(251, 249, 245)"],
-:root:not([data-theme='dark']) [style*="background: rgb(251, 249, 245)"],
-:root:not([data-theme='dark']) [style*="background-color: rgb(245, 242, 235)"],
-:root:not([data-theme='dark']) [style*="background: rgb(245, 242, 235)"],
-:root:not([data-theme='dark']) [style*="background-color: rgb(248, 250, 252)"],
-:root:not([data-theme='dark']) [style*="background: rgb(248, 250, 252)"],
-:root:not([data-theme='dark']) [style*="background-color: rgb(241, 245, 249)"],
-:root:not([data-theme='dark']) [style*="background: rgb(241, 245, 249)"] {
+/* 인라인 백색·밝은 회색 배경 Warm Cotton Paper 통일 */
+[style*="background: #ffffff"],
+[style*="background: #fff"],
+[style*="background: white"],
+[style*="background:#ffffff"],
+[style*="background:#fff"],
+[style*="background:white"],
+[style*="background-color: #ffffff"],
+[style*="background-color: #fff"],
+[style*="background-color: white"],
+[style*="background-color:#ffffff"],
+[style*="background-color:#fff"],
+[style*="background-color:white"],
+[style*="background: #fbf9f5"],
+[style*="background:#fbf9f5"],
+[style*="background-color: #fbf9f5"],
+[style*="background-color:#fbf9f5"],
+[style*="background: #f5f2eb"],
+[style*="background:#f5f2eb"],
+[style*="background-color: #f5f2eb"],
+[style*="background-color:#f5f2eb"],
+[style*="background: #f8fafc"],
+[style*="background:#f8fafc"],
+[style*="background-color: #f8fafc"],
+[style*="background-color:#f8fafc"],
+[style*="background: #f1f5f9"],
+[style*="background:#f1f5f9"],
+[style*="background-color: #f1f5f9"],
+[style*="background-color:#f1f5f9"],
+[style*="background: #f3f4f6"],
+[style*="background:#f3f4f6"],
+[style*="background-color: #f3f4f6"],
+[style*="background-color:#f3f4f6"],
+[style*="background-color: rgb(255, 255, 255)"],
+[style*="background: rgb(255, 255, 255)"],
+[style*="background-color: rgb(251, 249, 245)"],
+[style*="background: rgb(251, 249, 245)"],
+[style*="background-color: rgb(245, 242, 235)"],
+[style*="background: rgb(245, 242, 235)"],
+[style*="background-color: rgb(248, 250, 252)"],
+[style*="background: rgb(248, 250, 252)"],
+[style*="background-color: rgb(241, 245, 249)"],
+[style*="background: rgb(241, 245, 249)"] {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
 }
 
-[data-theme='dark'] {
-  /* 다크 테마 토큰: 5색 고시인성 표준 (종이질감 제외: OLED 최적화 다크 캔버스) */
-  --paper-texture: none;
-  --bg-app: #0b0f19;
-  --bg-sidebar: #111827;
-  --bg-card: #1f2937;
-  --bg-header: #111827;
-  --border-color: #475569;        /* 선명한 슬레이트 테두리선 */
-  --table-border-color: #64748b;  /* 또렷한 표 외곽선 및 헤더 하단 경계선 */
-  --table-row-border: #3f4e64;    /* 확실하게 구분되는 다크모드 횡선 */
-  
-  --scrollbar-track: #1e293b;
-  --scrollbar-thumb: #64748b;
-  --scrollbar-thumb-hover: #60a5fa;
-  --scrollbar-thumb-border: #1f2937;
-  
-  /* 5색 표준: 
-     1) 백묵 잉크 (Text): #f1f5f9
-     2) 딥 오션 사파이어 액션 (Primary): #0284c7 (눈부심 0%, 순백 텍스트 100% 일치)
-     3) 에메랄드 플러스/수익 (Success): #34d399
-     4) 크림슨 마이너스/위험 (Danger): #f87171
-     5) 다크 슬레이트 캔버스 (Background): #0b0f19
-  */
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --primary-light: #075985;
-  --primary-border: #0369a1;
-  --text-on-primary: #ffffff;
-  
-  --success: #34d399;
-  --success-hover: #059669;
-  --success-light: #064e3b;
-  
-  --warning: #f59e0b;
-  --warning-hover: #d97706;
-  --warning-light: #78350f;
-  
-  --danger: #f87171;
-  --danger-hover: #dc2626;
-  --danger-light: #7f1d1d;
-
-  --info: #0284c7;
-  --info-light: #075985;
-  
-  --text-main: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3af;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
-
-  /* 🎨 호환성 및 전사 통일 별칭 토큰 (다크 테마) */
-  --text-primary: #f1f5f9;
-  --border: #374151;
-  --bg-body: #0b0f19;
-  --bg-main: #0b0f19;
-  --bg-secondary: #1e293b;
-  --bg-surface: #1f2937;
-  --card-bg: #1f2937;
-  --body-bg: #0b0f19;
-  --bg-card-header: #111827;
-  --bg-active: #0c4a6e;
-  --primary-rgb: 2, 132, 199;
-  --primary-border: #0369a1;
-  --accent: #0284c7;
-  --accent-bg: #0c4a6e;
-  --accent-border: #0369a1;
+/* 전사 고밀도 레이아웃 정책 유틸리티 클래스 */
+.fl-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-page-gap);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   📜 [전사 다크 모드 하드코딩 백색 차단 가드 (Anti-Light-Island Guard)]
-   다크 테마 환경에서 개발자의 라이트 색상 하드코딩(#f1f5f9, #f8fafc, #ffffff 등)으로
-   인한 눈부신 흰색 돌출 결함을 전역 CSS 수준에서 원천 차단
-   ───────────────────────────────────────────────────────────── */
-[data-theme='dark'] [style*="background: #f1f5f9"],
-[data-theme='dark'] [style*="background:#f1f5f9"],
-[data-theme='dark'] [style*="background-color: #f1f5f9"],
-[data-theme='dark'] [style*="background-color:#f1f5f9"],
-[data-theme='dark'] [style*="background: #f8fafc"],
-[data-theme='dark'] [style*="background:#f8fafc"],
-[data-theme='dark'] [style*="background-color: #f8fafc"],
-[data-theme='dark'] [style*="background-color:#f8fafc"],
-[data-theme='dark'] [style*="background: #f3f4f6"],
-[data-theme='dark'] [style*="background:#f3f4f6"],
-[data-theme='dark'] [style*="background-color: #f3f4f6"],
-[data-theme='dark'] [style*="background-color:#f3f4f6"],
-[data-theme='dark'] [style*="background: #e2e8f0"],
-[data-theme='dark'] [style*="background:#e2e8f0"],
-[data-theme='dark'] [style*="background-color: #e2e8f0"],
-[data-theme='dark'] [style*="background-color:#e2e8f0"] {
-  background-color: var(--bg-secondary) !important;
-  color: var(--text-main) !important;
+.fl-section-panel {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  padding: var(--space-panel-pad-y) var(--space-panel-pad-x);
+  box-shadow: none;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   📜 [전사 표준 세그먼트 컨트롤 / 필터 탭 바 (Segmented Tabs SSOT)]
-   라이트(종이질감) / 다크(OLED 슬레이트) 테마 100% 자동 동기화 표준 컴포넌트
-   ───────────────────────────────────────────────────────────── */
+.fl-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-panel-head-gap);
+  margin-bottom: var(--space-panel-head-mb);
+  padding-bottom: var(--space-panel-head-pb);
+  border-bottom: 1px solid var(--table-row-border);
+}
+
+.fl-subbox {
+  padding: var(--space-subbox-pad-y) var(--space-subbox-pad-x);
+  border-radius: 6px;
+  border: 1px solid var(--table-row-border);
+}
+
+.fl-compact-box {
+  padding: var(--space-compact-pad-y) var(--space-compact-pad-x);
+  border-radius: 6px;
+  border: 1px solid var(--table-row-border);
+}
+
+.fl-form-grid {
+  display: grid;
+  gap: var(--space-field-grid-gap);
+}
+
+.fl-conservation-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-conservation-gap);
+  padding: var(--space-conservation-pad-y) var(--space-conservation-pad-x);
+  border-radius: 8px;
+  background-color: var(--bg-header);
+  box-shadow: none;
+}
+
+/* 전사 표준 세그먼트 컨트롤 / 필터 탭 바 */
 .segmented-tab-group {
   display: inline-flex;
   align-items: center;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 3px;
+  padding: var(--space-tab-group-pad);
   gap: 2px;
 }
 .segmented-tab-item {
   border: none;
-  padding: 5px 12px;
+  padding: var(--space-tab-item-pad-y) var(--space-tab-item-pad-x);
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
@@ -364,7 +316,7 @@ html, body, #root {
   overflow-x: hidden !important;
 }
 
-/* 터치 및 모바일 수동 스크롤 영역 호환성 설정 (가로 스크롤 완전 차단 및 100vw 밀착) */
+/* 모바일 수동 스크롤 호환성 */
 @media (max-width: 768px) {
   html, body, #root {
     width: 100%;
@@ -376,7 +328,6 @@ html, body, #root {
   }
 }
 
-/* 📱 모바일 웹앱(.mobile-app-root) 상하 스크롤 100% 보장 및 다중 중첩 스크롤 잠김 원천 해제 */
 html:has(.mobile-app-root),
 body:has(.mobile-app-root) {
   height: auto !important;
@@ -405,7 +356,6 @@ body:has(.mobile-app-root) {
   overflow-y: visible !important;
 }
 
-/* 🌟 모바일 수평 슬라이드/스크롤바 숨김 유틸리티 */
 .scrollbar-none::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
@@ -416,14 +366,12 @@ body:has(.mobile-app-root) {
   -ms-overflow-style: none !important;
 }
 
-/* 사이드바 독자 스크롤 영역 */
 .sidebar-nav {
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch;
 }
 
-/* 메인 작업 화면 독자 스크롤 영역 */
 .main-content-area {
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
@@ -434,13 +382,12 @@ body:has(.mobile-app-root) {
   background-repeat: repeat;
 }
 
-/* 표(테이블) 및 모달 독자 스크롤 */
 table, .table-container, .table-wrapper, .modal-content, .card {
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch;
 }
 
-/* 🎨 도드라진 선명한 횡/종 커스텀 스크롤바 (전사 18px 통일) */
+/* 전사 18px 커스텀 스크롤바 */
 ::-webkit-scrollbar,
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
@@ -497,34 +444,30 @@ body {
   background-repeat: repeat;
   color: var(--text-main);
   height: 100vh;
-  line-height: 1.5;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
-/* 폼 스타일 */
+/* 폼 스타일 (-2pt 고밀도 적용) */
 input:not([type="checkbox"]):not([type="radio"]), select, textarea {
   font-family: inherit;
   width: 100%;
-  padding: 10px 14px;
+  padding: calc(10px - 2pt) calc(14px - 2pt);
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 13.5px;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  /* 브라우저 기본 배경/색상 오버라이드 강제 적용 */
   -webkit-appearance: none;
   appearance: none;
 }
 
-[data-theme='light']:not([data-mobile-view='true']) input:not([type="checkbox"]):not([type="radio"]):not(.system-error-terminal),
-[data-theme='light']:not([data-mobile-view='true']) select,
-[data-theme='light']:not([data-mobile-view='true']) textarea:not(.system-error-terminal),
-:root:not([data-theme='dark']):not([data-mobile-view='true']) input:not([type="checkbox"]):not([type="radio"]):not(.system-error-terminal),
-:root:not([data-theme='dark']):not([data-mobile-view='true']) select,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) textarea:not(.system-error-terminal) {
+:root:not([data-mobile-view='true']) input:not([type="checkbox"]):not([type="radio"]):not(.system-error-terminal),
+:root:not([data-mobile-view='true']) select,
+:root:not([data-mobile-view='true']) textarea:not(.system-error-terminal) {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
@@ -532,7 +475,7 @@ input:not([type="checkbox"]):not([type="radio"]), select, textarea {
   border: 1px solid var(--border-color) !important;
 }
 
-/* 🚨 개발팀 제보용 시스템 오류 모달 다크 콘솔 터미널 (High-Impact Developer Crash Console) */
+/* 개발팀 제보용 시스템 오류 모달 콘솔 터미널 */
 .system-error-terminal,
 textarea.system-error-terminal,
 pre.system-error-terminal {
@@ -544,16 +487,12 @@ pre.system-error-terminal {
   letter-spacing: -0.01em;
 }
 
-[data-theme='light']:not([data-mobile-view='true']) select option,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) select option {
+:root:not([data-mobile-view='true']) select option {
   background-color: #ebe5d8 !important;
   color: #0f172a !important;
 }
 
-/* ───────────────────────────────────────────────────
-   전사 표준 체크박스 (Crisp "V" Checkmark Component)
-   박스 안에 V 표시가 선명하게 보이는 전사 통일 스타일
-─────────────────────────────────────────────────── */
+/* 전사 표준 체크박스 */
 input[type="checkbox"] {
   -webkit-appearance: none !important;
   appearance: none !important;
@@ -576,17 +515,11 @@ input[type="checkbox"] {
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-[data-theme='dark'] input[type="checkbox"] {
-  border-color: #64748b !important;
-  background-color: #1e293b !important;
-}
-
 input[type="checkbox"]:hover {
   border-color: var(--primary, #2563eb) !important;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
 }
 
-/* 체크 시: 선명한 V (체크마크) 표시 */
 input[type="checkbox"]:checked {
   background-color: var(--primary, #2563eb) !important;
   border-color: var(--primary, #2563eb) !important;
@@ -606,7 +539,6 @@ input[type="checkbox"]:disabled {
   cursor: not-allowed !important;
 }
 
-/* select는 화살표 아이콘 유지를 위해 appearance 따로 처리 */
 select {
   -webkit-appearance: auto;
   appearance: auto;
@@ -625,163 +557,67 @@ input:disabled, select:disabled, textarea:disabled {
   background-color: var(--bg-app);
 }
 
-/* ───────────────────────────────────────────────────
-   다크 테마 - 입력폼 일관성 강제 오버라이드
-   브라우저가 기본적으로 날짜/선택박스에 흰색 배경을
-   강제 적용하는 것을 color-scheme으로 차단
-─────────────────────────────────────────────────── */
-[data-theme='dark'] input:not([type="checkbox"]):not([type="radio"]),
-[data-theme='dark'] select,
-[data-theme='dark'] textarea,
-[data-theme='dark'] input[type="date"],
-[data-theme='dark'] input[type="month"],
-[data-theme='dark'] input[type="time"],
-[data-theme='dark'] input[type="datetime-local"],
-[data-theme='dark'] input[type="number"],
-[data-theme='dark'] input[type="text"],
-[data-theme='dark'] input[type="search"],
-[data-theme='dark'] input[type="email"],
-[data-theme='dark'] input[type="password"] {
-  background-color: var(--bg-card) !important;
-  color: var(--text-main) !important;
-  border-color: var(--border-color) !important;
-  color-scheme: dark; /* 브라우저 날짜 피커 팝업도 다크 테마로 */
-}
-
-[data-theme='dark'] input::placeholder,
-[data-theme='dark'] textarea::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 1;
-}
-
-[data-theme='dark'] input:disabled,
-[data-theme='dark'] select:disabled,
-[data-theme='dark'] textarea:disabled {
-  background-color: var(--bg-app) !important;
-  color: var(--text-muted) !important;
-  opacity: 0.6;
-}
-
-/* 라이트 테마 - color-scheme 명시 */
-:root {
-  color-scheme: light;
-}
-[data-theme='dark'] {
-  color-scheme: dark;
-}
-
 label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: calc(6px - 2pt);
   font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
 }
 
-/* 🌟 라이트 모드 고시인성 먹색(Deep Slate Ink) 표준: 회색 글씨 라이트 모드에서만 고대비 먹색 변환 (다크 모드 및 모바일 웹앱 침범 방지, 버튼/배경 라벨 제외) */
-[data-theme='light']:not([data-mobile-view='true']) label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
-:root:not([data-theme='dark']):not([data-mobile-view='true']) label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]) {
+/* 고시인성 먹색 텍스트 표준 */
+:root:not([data-mobile-view='true']) label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]) {
   color: #0f172a !important;
 }
 
-[data-theme='light']:not([data-mobile-view='true']) th,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) th {
+:root:not([data-mobile-view='true']) th {
   color: #0f172a !important;
 }
 
-[data-theme='light']:not([data-mobile-view='true']) .text-muted,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-muted,
-[data-theme='light']:not([data-mobile-view='true']) .text-secondary,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-secondary,
-[data-theme='light']:not([data-mobile-view='true']) .text-slate-300,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-300,
-[data-theme='light']:not([data-mobile-view='true']) .text-slate-400,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-400,
-[data-theme='light']:not([data-mobile-view='true']) .text-slate-500,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-500,
-[data-theme='light']:not([data-mobile-view='true']) .text-slate-600,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-slate-600,
-[data-theme='light']:not([data-mobile-view='true']) .text-gray-300,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-300,
-[data-theme='light']:not([data-mobile-view='true']) .text-gray-400,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-400,
-[data-theme='light']:not([data-mobile-view='true']) .text-gray-500,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-500,
-[data-theme='light']:not([data-mobile-view='true']) .text-gray-600,
-:root:not([data-theme='dark']):not([data-mobile-view='true']) .text-gray-600 {
+:root:not([data-mobile-view='true']) .text-muted,
+:root:not([data-mobile-view='true']) .text-secondary,
+:root:not([data-mobile-view='true']) .text-slate-300,
+:root:not([data-mobile-view='true']) .text-slate-400,
+:root:not([data-mobile-view='true']) .text-slate-500,
+:root:not([data-mobile-view='true']) .text-slate-600,
+:root:not([data-mobile-view='true']) .text-gray-300,
+:root:not([data-mobile-view='true']) .text-gray-400,
+:root:not([data-mobile-view='true']) .text-gray-500,
+:root:not([data-mobile-view='true']) .text-gray-600 {
   color: #0f172a !important;
 }
 
-/* 인라인 스타일로 지정된 흐린 회색 글씨: 오직 PC 라이트 모드에서만 먹색 변환 */
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #64748b"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #475569"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #94a3b8"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #334155"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #6b7280"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: #9ca3af"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(100, 116, 139)"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(71, 85, 105)"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(148, 163, 184)"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(51, 65, 85)"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(107, 114, 128)"],
-[data-theme='light']:not([data-mobile-view='true']) [style*="color: rgb(156, 163, 175)"] {
+:root:not([data-mobile-view='true']) [style*="color: #64748b"],
+:root:not([data-mobile-view='true']) [style*="color: #475569"],
+:root:not([data-mobile-view='true']) [style*="color: #94a3b8"],
+:root:not([data-mobile-view='true']) [style*="color: #334155"],
+:root:not([data-mobile-view='true']) [style*="color: #6b7280"],
+:root:not([data-mobile-view='true']) [style*="color: #9ca3af"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(100, 116, 139)"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(71, 85, 105)"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(148, 163, 184)"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(51, 65, 85)"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(107, 114, 128)"],
+:root:not([data-mobile-view='true']) [style*="color: rgb(156, 163, 175)"] {
   color: #0f172a !important;
 }
 
-/* 🌙 다크 모드 고시인성 보장: 검은 글씨 오염 방지 및 명확한 라이트 슬레이트 가독성 */
-[data-theme='dark'] label {
-  color: #f1f5f9 !important;
-}
-
-[data-theme='dark'] th {
-  color: #f8fafc !important;
-}
-
-[data-theme='dark'] .text-slate-100,
-[data-theme='dark'] .text-gray-100 {
-  color: #f8fafc !important;
-}
-
-[data-theme='dark'] .text-slate-200,
-[data-theme='dark'] .text-gray-200 {
-  color: #e2e8f0 !important;
-}
-
-[data-theme='dark'] .text-slate-300,
-[data-theme='dark'] .text-gray-300,
-[data-theme='dark'] .text-secondary {
-  color: #cbd5e1 !important;
-}
-
-[data-theme='dark'] .text-slate-400,
-[data-theme='dark'] .text-gray-400,
-[data-theme='dark'] .text-muted {
-  color: #94a3b8 !important;
-}
-
-[data-theme='dark'] .text-slate-500,
-[data-theme='dark'] .text-gray-500 {
-  color: #64748b !important;
-}
-
-
-/* 버튼 기본 및 엔터프라이즈 통합 버튼 시스템 */
+/* 버튼 기본 및 엔터프라이즈 통합 버튼 시스템 (-2pt 고밀도 적용) */
 button {
   font-family: inherit;
   font-weight: 500;
   font-size: 13px;
-  padding: 8px 14px;
+  padding: calc(8px - 2pt) var(--space-btn-pad-x);
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-tight-gap);
   transition: all var(--transition-fast);
 }
 
-/* 전사 엔터프라이즈 통합 버튼 시스템 (Enterprise Unified Button System) */
 .btn-action-base,
 .btn-query,
 .btn-search,
@@ -794,24 +630,24 @@ button {
 .btn-download,
 .btn-reset,
 .btn-cancel {
-  height: 34px !important;
-  padding: 0 14px !important;
+  height: var(--space-control-h) !important;
+  padding: 0 var(--space-btn-pad-x) !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: var(--space-tight-gap) !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
   cursor: pointer !important;
   transition: all 0.15s ease-in-out !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: none !important;
   line-height: 1 !important;
 }
 
-/* 1. 조회 기능 (Query / Search) : 전사 대표 액션 클래식 로열 블루 솔리드 (#1d4ed8) */
+/* 1. 조회 기능 */
 .btn-query,
 .btn-search {
   background-color: #1d4ed8 !important;
@@ -830,18 +666,8 @@ button {
   border-color: #172554 !important;
   color: #ffffff !important;
 }
-[data-theme='dark'] .btn-query,
-[data-theme='dark'] .btn-search {
-  background-color: #475569 !important;
-  color: #ffffff !important;
-  border: 1px solid #334155 !important;
-}
-[data-theme='dark'] .btn-query:hover,
-[data-theme='dark'] .btn-search:hover {
-  background-color: #334155 !important;
-}
 
-/* 2. 저장/등록 기능 (Save / Register / Submit) : 신뢰감 있는 Enterprise Cobalt Blue */
+/* 2. 저장/등록 기능 */
 .btn-save,
 .btn-submit,
 .btn-register {
@@ -855,22 +681,8 @@ button {
   background-color: #1e40af !important;
   border-color: #172554 !important;
 }
-[data-theme='dark'] .btn-save,
-[data-theme='dark'] .btn-submit,
-[data-theme='dark'] .btn-register {
-  background-color: #0284c7 !important;
-  color: #ffffff !important;
-  border: 1px solid #0369a1 !important;
-}
-[data-theme='dark'] .btn-save:hover,
-[data-theme='dark'] .btn-submit:hover,
-[data-theme='dark'] .btn-register:hover {
-  background-color: #0369a1 !important;
-  color: #ffffff !important;
-  border-color: #075985 !important;
-}
 
-/* 3. 엑셀 업로드 기능 (Excel Ingestion / Upload) : 차분한 Forest Emerald Solid */
+/* 3. 엑셀 업로드 기능 */
 .btn-excel-upload,
 .btn-upload {
   background-color: #047857 !important;
@@ -882,28 +694,10 @@ button {
   background-color: #065f46 !important;
   border-color: #064e3b !important;
 }
-[data-theme='dark'] .btn-excel-upload,
-[data-theme='dark'] .btn-upload {
-  background-color: #059669 !important;
-  color: #ffffff !important;
-  border-color: #047857 !important;
-}
-[data-theme='dark'] .btn-excel-upload:hover,
-[data-theme='dark'] .btn-upload:hover {
-  background-color: #047857 !important;
-}
 
-/* 4. 엑셀 다운로드 기능 (Excel Export / Download) : 단정하고 세련된 Emerald Outline/Subtle */
+/* 4. 엑셀 다운로드 기능 */
 .btn-excel-download,
 .btn-download {
-  background-color: var(--bg-card) !important;
-  color: #047857 !important;
-  border: 1px solid #059669 !important;
-}
-[data-theme='light'] .btn-excel-download,
-[data-theme='light'] .btn-download,
-:root:not([data-theme='dark']) .btn-excel-download,
-:root:not([data-theme='dark']) .btn-download {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
@@ -912,39 +706,14 @@ button {
 }
 .btn-excel-download:hover,
 .btn-download:hover {
-  background-color: #ecfdf5 !important;
-  color: #065f46 !important;
-  border-color: #047857 !important;
-}
-[data-theme='light'] .btn-excel-download:hover,
-[data-theme='light'] .btn-download:hover,
-:root:not([data-theme='dark']) .btn-excel-download:hover,
-:root:not([data-theme='dark']) .btn-download:hover {
   background-color: #e2dbcd !important;
   color: #047857 !important;
-}
-[data-theme='dark'] .btn-excel-download,
-[data-theme='dark'] .btn-download {
-  background-color: #1e293b !important;
-  color: #34d399 !important;
-  border: 1px solid #059669 !important;
-}
-[data-theme='dark'] .btn-excel-download:hover,
-[data-theme='dark'] .btn-download:hover {
-  background-color: #0f172a !important;
+  border-color: #047857 !important;
 }
 
-/* 5. 초기화/취소/보조 기능 (Reset / Cancel / Secondary) : 단정한 Slate Border */
+/* 5. 초기화/취소/보조 기능 */
 .btn-reset,
 .btn-cancel {
-  background-color: var(--bg-card) !important;
-  color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
-}
-[data-theme='light'] .btn-reset,
-[data-theme='light'] .btn-cancel,
-:root:not([data-theme='dark']) .btn-reset,
-:root:not([data-theme='dark']) .btn-cancel {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
@@ -953,32 +722,15 @@ button {
 }
 .btn-reset:hover,
 .btn-cancel:hover {
-  background-color: #f1f5f9 !important;
+  background-color: #e2dbcd !important;
   color: #0f172a !important;
   border-color: #94a3b8 !important;
 }
-[data-theme='light'] .btn-reset:hover,
-[data-theme='light'] .btn-cancel:hover,
-:root:not([data-theme='dark']) .btn-reset:hover,
-:root:not([data-theme='dark']) .btn-cancel:hover {
-  background-color: #e2dbcd !important;
-  color: #0f172a !important;
-}
-[data-theme='dark'] .btn-reset,
-[data-theme='dark'] .btn-cancel {
-  background-color: #1e293b !important;
-  color: #cbd5e1 !important;
-  border-color: #475569 !important;
-}
-[data-theme='dark'] .btn-reset:hover,
-[data-theme='dark'] .btn-cancel:hover {
-  background-color: #334155 !important;
-}
 
-/* 6. 삭제/위험 기능 (Danger / Delete) : 차분하고 절제된 Crimson Red */
+/* 6. 삭제/위험 기능 */
 .btn-danger {
-  height: 34px;
-  padding: 0 14px;
+  height: var(--space-control-h);
+  padding: 0 var(--space-btn-pad-x);
   font-size: 12.5px !important;
   font-weight: 600 !important;
   border-radius: 6px !important;
@@ -989,28 +741,20 @@ button {
 .btn-danger:hover {
   background-color: #b91c1c !important;
 }
-[data-theme='dark'] .btn-danger {
-  background-color: #ef4444 !important;
-  color: #ffffff !important;
-  border-color: #dc2626 !important;
-}
-[data-theme='dark'] .btn-danger:hover {
-  background-color: #dc2626 !important;
-}
 
-/* 소형 컴팩트 버튼 (.btn-sm) */
+/* 소형 컴팩트 버튼 */
 .btn-sm {
-  height: 28px !important;
-  padding: 0 10px !important;
+  height: var(--space-control-h-sm) !important;
+  padding: 0 var(--space-btn-sm-pad-x) !important;
   font-size: 11.5px !important;
-  gap: 4px !important;
+  gap: 3px !important;
 }
 
-/* 툴바 버튼 그룹 컨테이너 - 횡배치 표준 */
+/* 툴바 버튼 그룹 컨테이너 */
 .toolbar-actions {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: var(--space-inline-gap) !important;
   flex-wrap: nowrap !important;
 }
 
@@ -1024,12 +768,7 @@ button.btn-primary {
   background-color: var(--primary-hover);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   🌟 [전사 단일 표준] 파란계열 바탕색 UI 요소 글자색/아이콘 화이트(#ffffff) 절대 보장 (Light/Dark SSOT)
-   파란계열 바탕색(primary, #1d4ed8, #2563eb, #3b82f6, #0284c7, #0ea5e9, #0070c0 등)을 가진
-   모든 버튼, 라벨, 배지, 컨테이너 및 그 자식 텍스트와 SVG 아이콘은
-   라이트 모드/다크 모드 불문하고 100% 순백색(#ffffff)으로 렌더링되도록 절대 강제
-   ───────────────────────────────────────────────────────────── */
+/* 파란계열 바탕색 UI 요소 순백 텍스트 및 아이콘 보장 */
 :root [style*="background-color: var(--primary)"],
 :root [style*="background-color:var(--primary)"],
 :root [style*="background: var(--primary)"],
@@ -1080,54 +819,6 @@ button.btn-primary {
 :root [style*="background-color:rgb(2,132,199)"],
 :root [style*="background-color: rgb(0, 112, 192)"],
 :root [style*="background-color:rgb(0,112,192)"],
-[data-theme='light'] [style*="background-color: var(--primary)"],
-[data-theme='light'] [style*="background-color:var(--primary)"],
-[data-theme='light'] [style*="background: var(--primary)"],
-[data-theme='light'] [style*="background:var(--primary)"],
-[data-theme='light'] [style*="background-color: #1d4ed8"],
-[data-theme='light'] [style*="background-color:#1d4ed8"],
-[data-theme='light'] [style*="background: #1d4ed8"],
-[data-theme='light'] [style*="background:#1d4ed8"],
-[data-theme='light'] [style*="background-color: #2563eb"],
-[data-theme='light'] [style*="background-color:#2563eb"],
-[data-theme='light'] [style*="background: #2563eb"],
-[data-theme='light'] [style*="background:#2563eb"],
-[data-theme='light'] [style*="background-color: #1e40af"],
-[data-theme='light'] [style*="background-color:#1e40af"],
-[data-theme='light'] [style*="background: #1e40af"],
-[data-theme='light'] [style*="background:#1e40af"],
-[data-theme='light'] [style*="background-color: #3b82f6"],
-[data-theme='light'] [style*="background-color:#3b82f6"],
-[data-theme='light'] [style*="background: #3b82f6"],
-[data-theme='light'] [style*="background:#3b82f6"],
-[data-theme='light'] [style*="background-color: #0284c7"],
-[data-theme='light'] [style*="background-color:#0284c7"],
-[data-theme='light'] [style*="background: #0284c7"],
-[data-theme='light'] [style*="background:#0284c7"],
-[data-theme='light'] [style*="background-color: #0ea5e9"],
-[data-theme='light'] [style*="background-color:#0ea5e9"],
-[data-theme='light'] [style*="background: #0ea5e9"],
-[data-theme='light'] [style*="background:#0ea5e9"],
-[data-theme='light'] [style*="background-color: #0070c0"],
-[data-theme='light'] [style*="background-color:#0070c0"],
-[data-theme='light'] [style*="background: #0070c0"],
-[data-theme='light'] [style*="background:#0070c0"],
-[data-theme='light'] [style*="background-color: #0070C0"],
-[data-theme='light'] [style*="background-color:#0070C0"],
-[data-theme='light'] [style*="background: #0070C0"],
-[data-theme='light'] [style*="background:#0070C0"],
-[data-theme='light'] [style*="background-color: rgb(29, 78, 216)"],
-[data-theme='light'] [style*="background-color:rgb(29,78,216)"],
-[data-theme='light'] [style*="background-color: rgb(29,78,216)"],
-[data-theme='light'] [style*="background-color: rgb(37, 99, 235)"],
-[data-theme='light'] [style*="background-color:rgb(37,99,235)"],
-[data-theme='light'] [style*="background-color: rgb(37,99,235)"],
-[data-theme='light'] [style*="background-color: rgb(59, 130, 246)"],
-[data-theme='light'] [style*="background-color:rgb(59,130,246)"],
-[data-theme='light'] [style*="background-color: rgb(2, 132, 199)"],
-[data-theme='light'] [style*="background-color:rgb(2,132,199)"],
-[data-theme='light'] [style*="background-color: rgb(0, 112, 192)"],
-[data-theme='light'] [style*="background-color:rgb(0,112,192)"],
 .btn-primary,
 label.btn-primary,
 button.btn-primary,
@@ -1147,7 +838,6 @@ button.btn-primary,
   color: #ffffff !important;
 }
 
-/* 파란계열 배경 요소 내부의 텍스트 노드 및 자식 요소 전체 화이트 강제 */
 :root [style*="background-color: var(--primary)"] *:not(input):not(textarea):not(select),
 :root [style*="background-color:var(--primary)"] *:not(input):not(textarea):not(select),
 :root [style*="background: var(--primary)"] *:not(input):not(textarea):not(select),
@@ -1189,47 +879,6 @@ button.btn-primary,
 :root [style*="background-color: rgb(59, 130, 246)"] *:not(input):not(textarea):not(select),
 :root [style*="background-color: rgb(2, 132, 199)"] *:not(input):not(textarea):not(select),
 :root [style*="background-color: rgb(0, 112, 192)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: var(--primary)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:var(--primary)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: var(--primary)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:var(--primary)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #1d4ed8"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#1d4ed8"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #1d4ed8"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#1d4ed8"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #2563eb"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#2563eb"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #2563eb"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#2563eb"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #1e40af"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#1e40af"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #1e40af"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#1e40af"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #3b82f6"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#3b82f6"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #3b82f6"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#3b82f6"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #0284c7"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#0284c7"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #0284c7"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#0284c7"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #0ea5e9"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#0ea5e9"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #0ea5e9"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#0ea5e9"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #0070c0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#0070c0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #0070c0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#0070c0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: #0070C0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color:#0070C0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background: #0070C0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background:#0070C0"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: rgb(29, 78, 216)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: rgb(37, 99, 235)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: rgb(59, 130, 246)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: rgb(2, 132, 199)"] *:not(input):not(textarea):not(select),
-[data-theme='light'] [style*="background-color: rgb(0, 112, 192)"] *:not(input):not(textarea):not(select),
 .btn-primary *:not(input):not(textarea):not(select),
 .btn-save *:not(input):not(textarea):not(select),
 .btn-submit *:not(input):not(textarea):not(select),
@@ -1247,7 +896,6 @@ button.btn-primary,
   color: #ffffff !important;
 }
 
-/* 파란계열 배경 요소 내부의 SVG 아이콘 화이트 스트로크/컬러 강제 */
 [style*="background-color: var(--primary)"] svg,
 [style*="background: var(--primary)"] svg,
 [style*="background-color: #1d4ed8"] svg,
@@ -1284,12 +932,6 @@ button.btn-primary,
 }
 
 .btn-secondary {
-  background-color: var(--bg-app);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-}
-[data-theme='light'] .btn-secondary,
-:root:not([data-theme='dark']) .btn-secondary {
   background-color: var(--bg-app) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
@@ -1297,11 +939,6 @@ button.btn-primary,
   color: var(--text-main) !important;
 }
 .btn-secondary:hover {
-  background-color: var(--border-color);
-  color: var(--text-main);
-}
-[data-theme='light'] .btn-secondary:hover,
-:root:not([data-theme='dark']) .btn-secondary:hover {
   background-color: var(--bg-header) !important;
   color: var(--text-main) !important;
 }
@@ -1319,7 +956,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* 테이블 공통 스타일 & 다이나믹 컴팩트 밀도 적용 (종/횡 스크롤바 완벽 지원: 헌장 3.2 & 3.6) */
+/* 테이블 공통 스타일 & -2pt 고밀도 정책 적용 */
 .table-container {
   width: 100%;
   overflow-x: auto !important;
@@ -1328,41 +965,31 @@ button:disabled {
   border: 1px solid var(--table-border-color) !important;
   border-radius: var(--radius-md);
   background-color: var(--bg-card);
+  background-image: var(--paper-texture);
+  background-repeat: repeat;
   box-shadow: var(--shadow-sm);
   margin-bottom: 0;
   position: relative;
-  max-height: calc(100vh - 260px);
+  max-height: calc(100vh - 220px);
 }
 
-[data-theme='light'] .table-container,
-:root:not([data-theme='dark']) .table-container,
-[data-theme='light'] .table-wrapper,
-:root:not([data-theme='dark']) .table-wrapper,
-[data-theme='light'] table,
-:root:not([data-theme='dark']) table {
+.table-wrapper,
+table {
   background-color: var(--bg-card);
   background-image: var(--paper-texture);
   background-repeat: repeat;
 }
 
-/* 세로 스크롤 시 헤더 고정 (Sticky Thead) */
 .table-container thead th,
 table thead th {
   position: sticky;
   top: 0;
   z-index: 5;
   background-color: var(--bg-app);
-  border-bottom: 2px solid var(--table-border-color) !important;
-  box-shadow: 0 1px 0 var(--table-border-color);
-}
-
-[data-theme='light'] table thead th,
-:root:not([data-theme='dark']) table thead th,
-[data-theme='light'] .table-container thead th,
-:root:not([data-theme='dark']) .table-container thead th {
-  background-color: var(--bg-app);
   background-image: var(--paper-texture);
   background-repeat: repeat;
+  border-bottom: 2px solid var(--table-border-color) !important;
+  box-shadow: 0 1px 0 var(--table-border-color);
 }
 
 table {
@@ -1381,7 +1008,7 @@ th {
   background-color: var(--bg-app);
   color: var(--text-secondary);
   font-weight: 700;
-  padding: 8px 12px;
+  padding: calc(8px - 2pt) calc(12px - 2pt);
   border-bottom: 2px solid var(--table-border-color) !important;
   font-size: 12px;
   text-transform: uppercase;
@@ -1390,7 +1017,7 @@ th {
 }
 
 td {
-  padding: 8px 12px;
+  padding: calc(8px - 2pt) calc(12px - 2pt);
   border-bottom: 1px solid var(--table-row-border) !important;
   color: var(--text-main);
   vertical-align: middle;
@@ -1407,8 +1034,7 @@ tbody tr:last-child {
   border-bottom: none !important;
 }
 
-[data-theme='light'] table tbody td,
-:root:not([data-theme='dark']) table tbody td {
+table tbody td {
   background-color: transparent;
 }
 
@@ -1419,27 +1045,21 @@ tr:hover td,
   transition: background-color var(--transition-fast);
 }
 
-[data-theme='dark'] tr:hover td,
-[data-theme='dark'] .hover-row:hover td,
-[data-theme='dark'] .hover-row:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* 카드 컴포넌트 */
+/* 카드 컴포넌트 (-2pt 내·외 패딩·마진 축소 적용) */
 .card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: calc(24px - 2pt);
   box-shadow: var(--shadow-sm);
-  margin-bottom: 24px;
+  margin-bottom: calc(24px - 2pt);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: calc(20px - 2pt);
 }
 
 .card-title {
@@ -1448,12 +1068,7 @@ tr:hover td,
   color: var(--text-main);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   전사 엔터프라이즈 모달 표준 시스템 (Unified Enterprise Modal Standard)
-   5색 고시인성 & 웜 페이퍼/다크 모드 100% 자동 연동 (헌장 3.1, 3.6, 3.7)
-   ───────────────────────────────────────────────────────────── */
-
-/* 1. 모달 오버레이/백드롭 (Modal Backdrop) */
+/* 전사 엔터프라이즈 모달 표준 시스템 */
 .modal-overlay,
 .modal-backdrop,
 div[style*="position: fixed"][style*="rgba(0,0,0"],
@@ -1461,75 +1076,42 @@ div[style*="position: fixed"][style*="rgba(0, 0, 0"] {
   backdrop-filter: blur(3px) !important;
 }
 
-/* 2. 모달 컨테이너 (Modal Surface - 서식지 일체화) */
 .modal-content,
 .modal-container,
 .modal-dialog,
-.modal-card {
-  background-color: var(--bg-card) !important;
+.modal-card,
+.modal-body,
+div[style*="position: fixed"] > div:not([style*="position: fixed"]):not(.modal-overlay):not(.modal-backdrop),
+div[style*="position:fixed"] > div:not([style*="position:fixed"]):not(.modal-overlay):not(.modal-backdrop) {
+  background-color: var(--bg-app) !important;
+  background-image: var(--paper-texture) !important;
+  background-repeat: repeat !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-lg) !important;
 }
 
-[data-theme='light'] .modal-content,
-[data-theme='light'] .modal-container,
-[data-theme='light'] .modal-dialog,
-[data-theme='light'] .modal-card,
-[data-theme='light'] .modal-body,
-[data-theme='light'] div[style*="position: fixed"] > div:not([style*="position: fixed"]):not(.modal-overlay):not(.modal-backdrop),
-[data-theme='light'] div[style*="position:fixed"] > div:not([style*="position:fixed"]):not(.modal-overlay):not(.modal-backdrop),
-:root:not([data-theme='dark']) .modal-content,
-:root:not([data-theme='dark']) .modal-container,
-:root:not([data-theme='dark']) .modal-dialog,
-:root:not([data-theme='dark']) .modal-card,
-:root:not([data-theme='dark']) .modal-body,
-:root:not([data-theme='dark']) div[style*="position: fixed"] > div:not([style*="position: fixed"]):not(.modal-overlay):not(.modal-backdrop),
-:root:not([data-theme='dark']) div[style*="position:fixed"] > div:not([style*="position:fixed"]):not(.modal-overlay):not(.modal-backdrop) {
-  background-color: var(--bg-app) !important;
-  background-image: var(--paper-texture) !important;
-  background-repeat: repeat !important;
-  color: var(--text-main) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-/* 3. 모달 헤더 (Modal Header - 바인더 일체화) */
 .modal-header {
   background-color: var(--bg-header) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-[data-theme='light'] .modal-header,
-:root:not([data-theme='dark']) .modal-header {
-  background-color: var(--bg-header) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
   border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
 }
 
-/* 4. 모달 본문 (Modal Body) */
 .modal-body {
-  background-color: var(--bg-card) !important;
-  color: var(--text-main) !important;
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
 }
 
-/* 5. 모달 푸터 (Modal Footer) */
 .modal-footer {
-  background-color: var(--bg-header) !important;
-  border-top: 1px solid var(--border-color) !important;
-}
-[data-theme='light'] .modal-footer,
-:root:not([data-theme='dark']) .modal-footer {
   background-color: var(--bg-header) !important;
   background-image: var(--paper-texture) !important;
   background-repeat: repeat !important;
   border-top: 1px solid var(--border-color) !important;
 }
 
-/* 6. 모달 닫기 버튼 (Modal Close Button) */
 .modal-close-btn,
 button.modal-close {
   background: transparent !important;
@@ -1539,7 +1121,7 @@ button.modal-close {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 4px !important;
+  padding: 2px !important;
   border-radius: 6px !important;
   transition: color 0.15s ease, background-color 0.15s ease !important;
 }
@@ -1549,7 +1131,6 @@ button.modal-close:hover {
   background-color: var(--primary-light) !important;
 }
 
-/* 7. 모달 내부 폼 라벨 가독성 보장 */
 .modal-content label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
 .modal-container label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]),
 .modal-card label:not(.btn):not([class*="btn"]):not([style*="background"]):not([class*="bg-"]):not([style*="color: #fff"]):not([style*="color: #FFF"]):not([style*="color: white"]):not([style*="color: rgb(255"]) {
@@ -1557,12 +1138,12 @@ button.modal-close:hover {
   font-weight: 700 !important;
 }
 
-/* 🏷️ 전사 배지 표준화 (High-Contrast Bordered Badges SSOT) */
+/* 전사 배지 표준 (-2pt 고밀도 적용) */
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 7px;
+  padding: var(--space-badge-pad-y) calc(7px - 2pt);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
@@ -1573,99 +1154,54 @@ button.modal-close:hover {
   transition: all var(--transition-fast);
 }
 
-/* 1. Primary 배지 (파랑 / 자산 수량 / R2 문서 등) */
 .badge-primary {
   background-color: rgba(29, 78, 216, 0.08) !important;
   color: #1d4ed8 !important;
   border: 1px solid #93c5fd !important;
 }
-[data-theme='dark'] .badge-primary {
-  background-color: rgba(2, 132, 199, 0.22) !important;
-  color: #38bdf8 !important;
-  border: 1px solid rgba(56, 189, 248, 0.6) !important;
-}
 
-/* 2. Secondary 배지 (회색 / 미보유 / 기본 등) */
 .badge-secondary {
   background-color: rgba(100, 116, 139, 0.08) !important;
   color: #475569 !important;
   border: 1px solid #cbd5e1 !important;
   opacity: 1 !important;
 }
-[data-theme='dark'] .badge-secondary {
-  background-color: rgba(148, 163, 184, 0.15) !important;
-  color: #cbd5e1 !important;
-  border: 1px solid rgba(148, 163, 184, 0.4) !important;
-  opacity: 1 !important;
-}
 
-/* 3. Success 배지 (초록 / 정상 / 사용 / 활성 등) */
 .badge-success {
   background-color: rgba(4, 120, 87, 0.08) !important;
   color: #047857 !important;
   border: 1px solid #86efac !important;
 }
-[data-theme='dark'] .badge-success {
-  background-color: rgba(52, 211, 153, 0.18) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(52, 211, 153, 0.55) !important;
-}
 
-/* 4. Warning 배지 (주황/황색 / 주의 / 대기 등) */
 .badge-warning {
   background-color: rgba(180, 83, 9, 0.08) !important;
   color: #b45309 !important;
   border: 1px solid #fcd34d !important;
 }
-[data-theme='dark'] .badge-warning {
-  background-color: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.55) !important;
-}
 
-/* 5. Danger 배지 (빨강 / 위험 / 오류 등) */
 .badge-danger {
   background-color: rgba(220, 38, 38, 0.08) !important;
   color: #dc2626 !important;
   border: 1px solid #fca5a5 !important;
 }
-[data-theme='dark'] .badge-danger {
-  background-color: rgba(248, 113, 113, 0.18) !important;
-  color: #f87171 !important;
-  border: 1px solid rgba(248, 113, 113, 0.55) !important;
-}
 
-/* 6. Info 배지 */
 .badge-info {
   background-color: rgba(2, 132, 199, 0.08) !important;
   color: #0284c7 !important;
   border: 1px solid #7dd3fc !important;
 }
-[data-theme='dark'] .badge-info {
-  background-color: rgba(2, 132, 199, 0.22) !important;
-  color: #38bdf8 !important;
-  border: 1px solid rgba(56, 189, 248, 0.6) !important;
-}
 
-/* 7. Dark/Muted 배지 (폐기, 매각, 비활성 등) */
 .badge-dark {
   background-color: rgba(15, 23, 42, 0.08) !important;
   color: #0f172a !important;
   border: 1px solid #94a3b8 !important;
-}
-[data-theme='dark'] .badge-dark {
-  background-color: rgba(15, 23, 42, 0.5) !important;
-  color: #94a3b8 !important;
-  border: 1px solid #475569 !important;
 }
 
 .hover-row:hover {
   background-color: var(--bg-hover) !important;
 }
 
-
-
-/* 모바일 다이나믹 반응형 헬퍼 클래스 */
+/* 모바일 반응형 헬퍼 (-2pt 축소 반영) */
 @media (max-width: 640px) {
   .mobile-grid-1col {
     grid-template-columns: 1fr !important;
@@ -1680,14 +1216,13 @@ button.modal-close:hover {
     width: 100% !important;
   }
   .mobile-p-sm {
-    padding: 12px !important;
+    padding: calc(12px - 2pt) !important;
   }
   .mobile-gap-sm {
-    gap: 8px !important;
+    gap: calc(8px - 2pt) !important;
   }
 }
 
-/* Drag & Drop UX Animations */
 .drop-target-active {
   background-color: var(--primary-light) !important;
   border-color: var(--primary) !important;
@@ -1697,7 +1232,6 @@ button.modal-close:hover {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Slide-out Panel Animations */
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
@@ -1713,7 +1247,6 @@ button.modal-close:hover {
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Table Container & Sticky Header Controls */
 .table-container {
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
@@ -1732,13 +1265,11 @@ button.modal-close:hover {
   background-color: var(--bg-app) !important;
 }
 
-/* ──────────────────────────────────────────────
-   Toggle Switch (토글 버튼) 디자인 시스템
-   ────────────────────────────────────────────── */
+/* 토글 스위치 */
 .toggle-switch-container {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: calc(10px - 2pt);
   cursor: pointer;
   user-select: none;
 }
@@ -1828,11 +1359,7 @@ button.modal-close:hover {
   }
 }
 
-/* 사이드바 메뉴 호환 호버 스타일 */
+/* 사이드바 메뉴 호버 스타일 (단일 라이트 모드) */
 .sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]) {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-}
-[data-theme='light'] .sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]),
-:root:not([data-theme='dark']) .sidebar-nav button:hover:not([style*="background-color: var(--primary)"]):not([style*="background: var(--primary)"]) {
   background-color: rgba(0, 0, 0, 0.04) !important;
 }

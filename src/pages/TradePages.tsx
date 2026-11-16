@@ -322,13 +322,13 @@ export const QuotationsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="신규 견적 작성"
           manualId="qt-create"
           rightSlot={
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-inline-gap)' }}>
               <button type="button" onClick={addLine} style={actionBtnStyle('secondary', true)}>
                 품목 행 추가
               </button>
@@ -343,7 +343,7 @@ export const QuotationsPage: React.FC = () => {
             </div>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="견적 구분" required>
               <select
                 value={quoteDomain}
@@ -429,7 +429,7 @@ export const QuotationsPage: React.FC = () => {
           </div>
 
           {draftLines.length > 0 && (
-            <div style={{ marginTop: '10px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            <div style={{ marginTop: 'var(--space-compact-pad-x)', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
               추가된 견적 행: {draftLines.map((l) => `${l.itemName} ${l.qty}건`).join(' / ')}
             </div>
           )}
@@ -440,7 +440,7 @@ export const QuotationsPage: React.FC = () => {
         <SectionPanel
           title={`선택 견적 · ${selectedQuote.quoteNo} · ${selectedQuote.partnerName}`}
           rightSlot={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
               <DocumentActionBar
                 manualId="qt-docs"
                 docLabel={selectedQuote.quoteDomain === 'TRADE' ? '유통 견적서' : '렌탈 견적서'}
@@ -470,7 +470,7 @@ export const QuotationsPage: React.FC = () => {
             </div>
           }
         >
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-conservation-gap)', flexWrap: 'wrap', fontSize: '13px' }}>
             <span>구분: {selectedQuote.quoteDomain === 'TRADE' ? '유통' : '렌탈'}</span>
             <span>견적일자: {selectedQuote.quoteDate}</span>
             <span>공급가액: {formatMoney(selectedQuote.supplyAmountKrw, { salesSensitive: true })}</span>
@@ -721,7 +721,7 @@ export const TradeContractsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="유통 계약 등록"
@@ -737,7 +737,7 @@ export const TradeContractsPage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="매출처" required>
               <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
@@ -869,7 +869,7 @@ export const TradeContractsPage: React.FC = () => {
         <SectionPanel
           title={`선택 유통 계약 · ${selectedContract.contractNo} · ${selectedContract.partnerName}`}
           rightSlot={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
               {canEdit && selectedContract.status === 'DRAFT' && (
                 <CommitActionButton
                   actionCode="TRADE_CONTRACT_CONFIRM"
@@ -1029,9 +1029,9 @@ export const TradeInventoryPage: React.FC = () => {
     (selectedUnit.itemCategory === '완제품' || selectedUnit.itemCategory === '어태치먼트');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="유통재고 선입선출 조회 · 계정대체" manualId="tinv-filter">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end' }}>
           <SegmentedTabs
             tabs={[
               { id: 'ALL', label: '전체 품목' },
@@ -1106,7 +1106,7 @@ export const TradeInventoryPage: React.FC = () => {
         ]}
       >
         {canTransfer && selectedUnit && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)' }}>
             <input
               type="date"
               value={transferDate}
@@ -1228,9 +1228,9 @@ export const TradeFulfillmentPage: React.FC = () => {
     : undefined;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="유통 출고의뢰 실행완료 · 희망완료일과 입력일시 분리 저장" manualId="tful-exec">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <DataGrid
             columns={[
               { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
@@ -1273,9 +1273,9 @@ export const TradeFulfillmentPage: React.FC = () => {
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: '10px',
+                gap: 'var(--space-field-grid-gap)',
                 alignItems: 'flex-end',
-                padding: '12px',
+                padding: 'var(--space-subbox-pad-x)',
                 borderRadius: '6px',
                 border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-header)',
@@ -1354,9 +1354,9 @@ export const TradeFulfillmentPage: React.FC = () => {
       </SectionPanel>
 
       <SectionPanel title="유통 사후처리 · 공급사 정비중개 · 반품환불 · 반품교환" manualId="tful-aftercare">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           {canEdit && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
               <VerticalField label="처리유형" required>
                 <select
                   value={acCaseType}
@@ -1583,9 +1583,9 @@ export const TradePerformancePage: React.FC = () => {
   }, [rows]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="유통 실적 조회 조건" manualId="tperf-period">
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap' }}>
           <VerticalField label="시작일" width={150}>
             <input
               type="date"

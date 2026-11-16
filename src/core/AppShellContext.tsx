@@ -11,10 +11,8 @@ import {
 } from './supabase';
 import {
   decryptSecret,
-  getVaultItem,
   hashPassword,
   safeLocalStorageSet,
-  setVaultItem,
   signSessionUser,
   verifyPassword,
   verifySessionUser,
@@ -64,7 +62,6 @@ import {
 } from '../types/domain';
 
 const SESSION_STORAGE_KEY = 'ebro_fl_v2_session';
-const THEME_STORAGE_KEY = 'ebro_fl_v2_theme';
 
 export interface ToastItem {
   id: string;
@@ -185,7 +182,6 @@ export interface AppShellContextValue {
   tenantProfile: TenantProfile;
   datasets: FlDatasets;
   activePage: FlPageId;
-  theme: 'light' | 'dark';
   agentOnline: boolean;
   agentInfo: AgentHealthInfo | null;
   visibleMenuGroups: MenuGroupDef[];
@@ -193,7 +189,6 @@ export interface AppShellContextValue {
   errorModalMessage: string | null;
   toasts: ToastItem[];
   navigateTo: (pageId: FlPageId) => void;
-  toggleTheme: () => void;
   loginWithCredentials: (loginId: string, password: string) => Promise<void>;
   logout: () => void;
   refreshAll: () => Promise<void>;
@@ -222,10 +217,6 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [tenantProfile, setTenantProfile] = useState<TenantProfile>(DEFAULT_TENANT_PROFILE);
   const [datasets, setDatasets] = useState<FlDatasets>(EMPTY_DATASETS);
   const [activePage, setActivePage] = useState<FlPageId>('dashboard');
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = getVaultItem(THEME_STORAGE_KEY, 'light');
-    return saved === 'dark' ? 'dark' : 'light';
-  });
   const [agentOnline, setAgentOnline] = useState(false);
   const [agentInfo, setAgentInfo] = useState<AgentHealthInfo | null>(null);
   const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
@@ -236,9 +227,14 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    setVaultItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+    document.documentElement.removeAttribute('data-theme');
+    try {
+      window.localStorage.removeItem('ebro_fl_v2_theme');
+      window.localStorage.removeItem('theme');
+    } catch {
+      // 무시
+    }
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeAgentStatus((online, info) => {
@@ -879,7 +875,6 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     tenantProfile,
     datasets,
     activePage,
-    theme,
     agentOnline,
     agentInfo,
     visibleMenuGroups,
@@ -887,7 +882,6 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     errorModalMessage,
     toasts,
     navigateTo,
-    toggleTheme: () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light')),
     loginWithCredentials,
     logout,
     refreshAll,

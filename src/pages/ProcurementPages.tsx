@@ -436,7 +436,7 @@ export const PurchasesPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="신규 매입 · 수입 통관 입고 등록"
@@ -447,8 +447,8 @@ export const PurchasesPage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="매입구분" minWidth={0} required>
                 <select
                   value={purchaseType}
@@ -547,7 +547,7 @@ export const PurchasesPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="관세" minWidth={0}>
                 <CommaNumberInput
                   allowDecimal={false}
@@ -590,7 +590,7 @@ export const PurchasesPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowX: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)', overflowX: 'auto' }}>
               {lines.map((l) => (
                 <div
                   key={l.key}
@@ -599,9 +599,9 @@ export const PurchasesPage: React.FC = () => {
                     gridTemplateColumns:
                       'minmax(220px, 2.1fr) minmax(104px, 0.75fr) minmax(150px, 1.05fr) minmax(170px, 1.35fr) minmax(130px, 0.9fr) 68px',
                     minWidth: '890px',
-                    gap: '10px',
+                    gap: 'var(--space-field-grid-gap)',
                     alignItems: 'end',
-                    padding: '8px 10px',
+                    padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
                     borderRadius: '6px',
                     border: '1px solid var(--table-row-border)',
                     backgroundColor: 'var(--bg-app)',
@@ -695,7 +695,7 @@ export const PurchasesPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLines((prev) => prev.filter((x) => x.key !== l.key))}
-                    style={{ ...actionBtnStyle('danger', true), height: '34px' }}
+                    style={{ ...actionBtnStyle('danger', true), height: 'var(--space-control-h)' }}
                   >
                     삭제
                   </button>
@@ -876,7 +876,7 @@ export const LogisticsCostsPage: React.FC = () => {
   }, [datasets.logisticsDispatches]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="물류 운송비 등록 · 비용 정산 전용"
@@ -892,7 +892,7 @@ export const LogisticsCostsPage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="운송목적" required>
               <select
                 value={dispatchPurpose}

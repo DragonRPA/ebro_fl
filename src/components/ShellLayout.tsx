@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { BookOpen, KeyRound, Menu, RefreshCw, Search, Sun, Moon, LogOut, UserCog } from 'lucide-react';
+import { BookOpen, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from '../manual/ManualContext';
 import { EMPLOYMENT_STATUS_LABELS, formatKoStatus, type EmploymentStatus } from '../types/domain';
@@ -11,13 +11,11 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     tenantProfile,
     datasets,
     activePage,
-    theme,
     agentOnline,
     visibleMenuGroups,
     errorModalMessage,
     toasts,
     navigateTo,
-    toggleTheme,
     logout,
     refreshAll,
     closeErrorModal,
@@ -141,7 +139,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         >
           <div
             style={{
-              padding: '14px 16px',
+              padding: 'var(--space-sidebar-head-pad-y) var(--space-sidebar-head-pad-x)',
               borderBottom: '1px solid var(--border-color)',
             }}
           >
@@ -172,15 +170,22 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             </div>
           </div>
 
-          <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 8px' }}>
+          <nav
+            className="sidebar-nav"
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: 'var(--space-sidebar-nav-pad-y) var(--space-sidebar-nav-pad-x)',
+            }}
+          >
             {visibleMenuGroups.map((grp) => (
-              <div key={grp.groupId} style={{ marginBottom: '14px' }}>
+              <div key={grp.groupId} style={{ marginBottom: 'var(--space-sidebar-group-mb)' }}>
                 <div
                   style={{
                     fontSize: '11px',
                     fontWeight: 700,
                     color: 'var(--text-muted)',
-                    padding: '4px 10px',
+                    padding: 'var(--space-sidebar-group-label-pad-y) var(--space-sidebar-group-label-pad-x)',
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -199,10 +204,10 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '8px',
+                          gap: 'var(--space-inline-gap)',
                           width: '100%',
                           textAlign: 'left',
-                          padding: '8px 10px',
+                          padding: 'var(--space-sidebar-item-pad-y) var(--space-sidebar-item-pad-x)',
                           borderRadius: '6px',
                           border: 'none',
                           borderLeft: isActive
@@ -248,20 +253,20 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <header
           style={{
-            height: '52px',
+            height: 'var(--space-header-h)',
             backgroundColor: 'var(--bg-header)',
             borderBottom: '1px solid var(--border-color)',
-            padding: '0 16px',
+            padding: '0 var(--space-header-pad-x)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: 'var(--space-header-gap)',
             position: 'sticky',
             top: 0,
             zIndex: 50,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-field-grid-gap)', minWidth: 0 }}>
             <button
               type="button"
               onClick={() => setSidebarOpen((p) => !p)}
@@ -288,7 +293,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: 'var(--space-inline-gap)',
               flexShrink: 0,
               overflowX: 'auto',
             }}
@@ -327,15 +332,6 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               매뉴얼 오버레이
             </button>
 
-            <button
-              type="button"
-              onClick={toggleTheme}
-              style={actionBtnStyle('secondary', true)}
-            >
-              {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
-              {theme === 'light' ? '다크' : '라이트'}
-            </button>
-
             {currentUser && (
               <StatusBadge
                 label={`${currentUser.name} · ${tierLabel(currentUser.tierLevel)}`}
@@ -364,11 +360,11 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <main
           style={{
             flex: 1,
-            padding: '16px 20px 28px',
+            padding: 'var(--space-main-pad-top) var(--space-main-pad-x) var(--space-main-pad-bottom)',
             minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: '14px',
+            gap: 'var(--space-page-gap)',
           }}
         >
           {currentUser?.mustChangePassword && (
@@ -377,8 +373,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '12px',
-                padding: '10px 14px',
+                gap: 'var(--space-panel-head-gap)',
+                padding: 'var(--space-compact-pad-y) var(--space-btn-pad-x)',
                 borderRadius: '6px',
                 border: '1px solid var(--warning)',
                 backgroundColor: 'var(--warning-light)',
@@ -407,7 +403,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         onClose={closeErrorModal}
         width={460}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
           <div style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'var(--danger)', fontWeight: 600 }}>
             {errorModalMessage}
           </div>
@@ -426,13 +422,13 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         onClose={() => setMyModalOpen(false)}
       >
         {currentUser && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                gap: '8px',
-                padding: '10px 12px',
+                gap: 'var(--space-inline-gap)',
+                padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '6px',
                 backgroundColor: 'var(--bg-secondary)',
@@ -468,7 +464,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-inline-gap)', borderBottom: '1px solid var(--border-color)', paddingBottom: 'var(--space-inline-gap)' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -494,8 +490,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             </div>
 
             {myTab === 'INFO' ? (
-              <form onSubmit={handleSaveMyContact} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <form onSubmit={handleSaveMyContact} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-stack-gap)' }}>
                   <VerticalField label="연락처">
                     <input
                       type="text"
@@ -538,7 +534,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                     {myError}
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)', marginTop: '2px' }}>
                   <button type="button" onClick={() => setMyModalOpen(false)} style={actionBtnStyle('secondary')}>
                     취소
                   </button>
@@ -548,7 +544,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleSaveMyPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <form onSubmit={handleSaveMyPassword} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
                 <VerticalField label="현재 비밀번호" required>
                   <input
                     type="password"
@@ -584,7 +580,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                     {myError}
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)', marginTop: '2px' }}>
                   <button type="button" onClick={() => setMyModalOpen(false)} style={actionBtnStyle('secondary')}>
                     취소
                   </button>
@@ -602,12 +598,12 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <div
           style={{
             position: 'fixed',
-            right: '20px',
-            bottom: '20px',
+            right: 'var(--space-modal-backdrop-pad)',
+            bottom: 'var(--space-modal-backdrop-pad)',
             zIndex: 9500,
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: 'var(--space-inline-gap)',
             maxWidth: '380px',
           }}
         >
@@ -628,7 +624,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               <div
                 key={t.id}
                 style={{
-                  padding: '10px 14px',
+                  padding: 'var(--space-subbox-pad-y) var(--space-btn-pad-x)',
                   borderRadius: '8px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: bgColor,

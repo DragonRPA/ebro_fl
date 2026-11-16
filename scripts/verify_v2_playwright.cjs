@@ -82,6 +82,25 @@ async function main() {
     }
     console.log('[E2E 2 PASS] Logged in as admin and sidebar navigation rendered.');
 
+    // [E2E 2b] Verify dark mode toggle UI removal, no data-theme attribute, and -2pt CSS density policy
+    const darkToggleCount = await page.locator('header button', { hasText: /다크|라이트/ }).count();
+    assert.strictEqual(darkToggleCount, 0, `Dark mode toggle button must NOT exist in header, found ${darkToggleCount}`);
+    const densityMetrics = await page.evaluate(() => {
+      const rootStyle = getComputedStyle(document.documentElement);
+      const mainEl = document.querySelector('main');
+      const mainStyle = mainEl ? getComputedStyle(mainEl) : null;
+      return {
+        dataTheme: document.documentElement.getAttribute('data-theme'),
+        densityTrim: rootStyle.getPropertyValue('--density-trim').trim(),
+        mainPadTop: mainStyle ? parseFloat(mainStyle.paddingTop) : 0,
+        mainRowGap: mainStyle ? parseFloat(mainStyle.rowGap || mainStyle.gap) : 0,
+      };
+    });
+    assert.strictEqual(densityMetrics.dataTheme, null, `Expected data-theme attribute to be absent, got ${densityMetrics.dataTheme}`);
+    assert.strictEqual(densityMetrics.densityTrim, '2pt', `Expected --density-trim CSS token '2pt', got '${densityMetrics.densityTrim}'`);
+    assert(densityMetrics.mainPadTop > 10 && densityMetrics.mainPadTop < 14, `Expected main paddingTop reduced by 2pt (~13.33px < 14px), got ${densityMetrics.mainPadTop}`);
+    console.log(`[E2E 2b PASS] Single light mode & -2pt density CSS policy verified (paddingTop=${densityMetrics.mainPadTop.toFixed(2)}px, gap=${densityMetrics.mainRowGap.toFixed(2)}px).`);
+
     const sidebarText = await page.locator('aside').innerText();
     assert(!sidebarText.includes('테넌트 관리'), 'Sidebar must NOT contain 테넌트 관리');
     console.log('[E2E 3 PASS] Confirmed 테넌트 관리 is absent from tenant ERP sidebar.');
@@ -328,21 +347,29 @@ async function main() {
     await page.locator('[data-testid="cat-vdi-section"]').getByText('55항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     await specSearchInput.fill('');
 
-    // Compare tab (up to 5 models, recipient/note authoring, PDF preview & PDF download)
+    // Compare tab (starts with 0 preselected models; manual addition up to 5 models, recipient/note authoring, PDF preview & PDF download)
     const catTabs = page.locator('[data-manual-id="cat-tabs"]');
     await catTabs.locator('button', { hasText: '모델 제원 비교' }).first().click();
-    await page.getByText('비교 제원 항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
-    await page.getByText('비교 기종 추가 · 4/5종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
-    const cmpColCount = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
-    assert.strictEqual(cmpColCount, 5, `Expected 1 label + 4 default model columns, got ${cmpColCount}`);
+    await page.getByText('비교 기종 추가 · 0/5종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByText('비교할 장비 기종을 1종 이상 선택하십시오.', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const cmpColCountInit = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
+    assert.strictEqual(cmpColCountInit, 0, `Expected 0 default compare model columns (no 4-model preselection), got ${cmpColCountInit}`);
+    assert.strictEqual(await page.locator('button[data-testid="cat-compare-pdf-preview"]').first().isDisabled(), true, 'PDF preview button must be disabled when 0 models selected');
+    assert.strictEqual(await page.locator('button[data-testid="cat-compare-pdf-download"]').first().isDisabled(), true, 'PDF download button must be disabled when 0 models selected');
 
     const cmpSelectBtn = page.locator('[data-testid="cat-compare-select"]').first();
-    await cmpSelectBtn.click();
-    await page.locator('div[style*="z-index: 9500"] div[style*="max-height: 250px"] button').first().click();
-    await page.getByText('비교 기종 추가 · 5/5종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    for (let k = 1; k <= 5; k++) {
+      await cmpSelectBtn.click();
+      await page.locator('div[style*="z-index: 9500"] div[style*="max-height: 250px"] button').first().click();
+      await page.getByText(`비교 기종 추가 · ${k}/5종`, { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    }
     assert.strictEqual(await cmpSelectBtn.isDisabled(), true, 'Compare model selector must disable when 5/5 models reached');
     const cmpColCount5 = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
     assert.strictEqual(cmpColCount5, 6, `Expected 1 label + 5 model columns, got ${cmpColCount5}`);
+
+    const cmpTableText = await page.locator('[data-manual-id="cat-detail"] table').first().innerText();
+    assert(!cmpTableText.includes('mm/s mm/s'), 'Comparison table must not duplicate mm/s units');
+    assert(!cmpTableText.includes('- mm') && !cmpTableText.includes('- N') && !cmpTableText.includes('- MPa'), 'Comparison table must not attach units to missing dash values');
 
     await page.locator('input[data-testid="cat-compare-recipient"]').first().fill('동성물류 평택센터');
     await page.locator('input[data-testid="cat-compare-note"]').first().fill('전동 2.5톤~3.0톤 실내 주력 기종 비교');

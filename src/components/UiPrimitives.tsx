@@ -11,8 +11,8 @@ import {
 } from '../services/documentService';
 
 export const controlInputStyle: React.CSSProperties = {
-  height: '34px',
-  padding: '0 10px',
+  height: 'var(--space-control-h)',
+  padding: '0 var(--space-control-pad-x)',
   borderRadius: '6px',
   border: '1px solid var(--border-color)',
   backgroundColor: 'var(--bg-app)',
@@ -140,7 +140,7 @@ export const CommaNumberInput: React.FC<CommaNumberInputProps> = ({
 };
 
 export const controlTextareaStyle: React.CSSProperties = {
-  padding: '8px 10px',
+  padding: 'var(--space-textarea-pad-y) var(--space-control-pad-x)',
   borderRadius: '6px',
   border: '1px solid var(--border-color)',
   backgroundColor: 'var(--bg-app)',
@@ -176,9 +176,9 @@ export function actionBtnStyle(
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '5px',
-    height: small ? '28px' : '34px',
-    padding: small ? '0 10px' : '0 14px',
+    gap: '4px',
+    height: small ? 'var(--space-control-h-sm)' : 'var(--space-control-h)',
+    padding: small ? '0 var(--space-btn-sm-pad-x)' : '0 var(--space-btn-pad-x)',
     borderRadius: '6px',
     border: variant === 'secondary' ? '1px solid var(--border-color)' : '1px solid transparent',
     backgroundColor: bgMap[variant],
@@ -216,7 +216,7 @@ export const VerticalField: React.FC<VerticalFieldProps> = ({
     style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '4px',
+      gap: 'var(--space-label-gap)',
       minWidth: typeof minWidth === 'number' ? `${minWidth}px` : minWidth,
       width: typeof width === 'number' ? `${width}px` : width,
       flex,
@@ -229,7 +229,7 @@ export const VerticalField: React.FC<VerticalFieldProps> = ({
         color: 'var(--text-secondary)',
         whiteSpace: 'nowrap',
         flexShrink: 0,
-        lineHeight: 1.3,
+        lineHeight: 1.25,
       }}
     >
       {label}
@@ -317,14 +317,14 @@ export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        padding: '2px 8px',
+        padding: 'var(--space-badge-pad-y) var(--space-badge-pad-x)',
         borderRadius: '4px',
         border: `1px solid ${palette.border}`,
         backgroundColor: palette.bg,
         color: palette.fg,
         fontSize: '11.5px',
         fontWeight: 700,
-        lineHeight: 1.4,
+        lineHeight: 1.3,
         whiteSpace: 'nowrap',
         flexShrink: 0,
       }}
@@ -361,7 +361,7 @@ export function DataGrid<T>({
   onRowClick,
   selectedRowId,
   emptyText = '조회된 데이터가 없습니다.',
-  maxHeight = '540px',
+  maxHeight = '600px',
   manualId,
 }: DataGridProps<T>) {
   return (
@@ -400,7 +400,7 @@ export function DataGrid<T>({
                   fontWeight: 700,
                   fontSize: '12px',
                   textAlign: col.align || 'left',
-                  padding: '9px 10px',
+                  padding: 'var(--space-table-th-pad-y) var(--space-table-th-pad-x)',
                   borderBottom: '1px solid var(--table-border-color)',
                   borderRight: '1px solid var(--table-row-border)',
                   whiteSpace: 'nowrap',
@@ -418,7 +418,7 @@ export function DataGrid<T>({
               <td
                 colSpan={columns.length}
                 style={{
-                  padding: '32px 16px',
+                  padding: 'calc(32px - 2pt) var(--space-panel-pad-x)',
                   textAlign: 'center',
                   color: 'var(--text-muted)',
                   fontSize: '13px',
@@ -437,7 +437,7 @@ export function DataGrid<T>({
                   key={id}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   style={{
-                    height: '40px',
+                    height: 'var(--space-table-row-h)',
                     backgroundColor: rowBg,
                     cursor: onRowClick ? 'pointer' : 'default',
                   }}
@@ -451,7 +451,7 @@ export function DataGrid<T>({
                         zIndex: col.stickyLeft ? 2 : undefined,
                         backgroundColor: col.stickyLeft ? rowBg : undefined,
                         textAlign: col.align || 'left',
-                        padding: '6px 10px',
+                        padding: 'var(--space-table-td-pad-y) var(--space-table-td-pad-x)',
                         borderBottom: '1px solid var(--table-row-border)',
                         borderRight: '1px solid var(--table-row-border)',
                         whiteSpace: 'nowrap',
@@ -480,29 +480,31 @@ export const SectionPanel: React.FC<{
   style?: React.CSSProperties;
 }> = ({ title, titleSlot, rightSlot, children, manualId, style }) => (
   <div
+    className="fl-section-panel"
     data-manual-id={manualId}
     style={{
       border: '1px solid var(--border-color)',
       borderRadius: '8px',
       backgroundColor: 'var(--bg-card)',
-      padding: '14px 16px',
+      padding: 'var(--space-panel-pad-y) var(--space-panel-pad-x)',
       boxShadow: 'none',
       ...style,
     }}
   >
     {(title || titleSlot || rightSlot) && (
       <div
+        className="fl-section-header"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
-          marginBottom: '12px',
-          paddingBottom: '8px',
+          gap: 'var(--space-panel-head-gap)',
+          marginBottom: 'var(--space-panel-head-mb)',
+          paddingBottom: 'var(--space-panel-head-pb)',
           borderBottom: '1px solid var(--table-row-border)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-field-grid-gap)', flexWrap: 'wrap', minWidth: 0 }}>
           {title ? (
             <h3
               style={{
@@ -520,7 +522,7 @@ export const SectionPanel: React.FC<{
           {titleSlot}
         </div>
         {rightSlot && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
             {rightSlot}
           </div>
         )}
@@ -553,29 +555,30 @@ export const ConservationBar: React.FC<{
 
   return (
     <div
+      className="fl-conservation-bar"
       data-manual-id={manualId}
       style={{
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '16px',
-        padding: '12px 16px',
+        gap: 'var(--space-conservation-gap)',
+        padding: 'var(--space-conservation-pad-y) var(--space-conservation-pad-x)',
         border: `1px solid ${balanced ? 'var(--border-color)' : 'var(--danger)'}`,
         borderRadius: '8px',
         backgroundColor: 'var(--bg-header)',
         boxShadow: 'none',
       }}
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '18px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-conservation-item-gap)' }}>
         {items.map((item, idx) => (
           <div
             key={item.label}
             style={{
               display: 'flex',
               alignItems: 'baseline',
-              gap: '8px',
-              paddingRight: idx < items.length - 1 ? '18px' : 0,
+              gap: 'var(--space-inline-gap)',
+              paddingRight: idx < items.length - 1 ? 'var(--space-conservation-item-gap)' : 0,
               borderRight: idx < items.length - 1 ? '1px solid var(--table-row-border)' : 'none',
             }}
           >
@@ -606,7 +609,7 @@ export const ConservationBar: React.FC<{
         )}
       </div>
       {children && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', marginLeft: 'auto' }}>
           {children}
         </div>
       )}
@@ -642,7 +645,7 @@ export const ModalDialog: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px',
+        padding: 'var(--space-modal-backdrop-pad)',
       }}
     >
       <div
@@ -664,7 +667,7 @@ export const ModalDialog: React.FC<{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '12px 16px',
+            padding: 'var(--space-modal-head-pad-y) var(--space-modal-head-pad-x)',
             backgroundColor: 'var(--bg-header)',
             borderBottom: '1px solid var(--border-color)',
           }}
@@ -675,7 +678,7 @@ export const ModalDialog: React.FC<{
             닫기
           </button>
         </div>
-        <div style={{ padding: '16px', overflowY: 'auto' }}>{children}</div>
+        <div style={{ padding: 'var(--space-modal-body-pad)', overflowY: 'auto' }}>{children}</div>
       </div>
     </div>
   );
@@ -782,7 +785,7 @@ export const DocumentActionBar: React.FC<{
     <>
       <div
         data-manual-id={manualId}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}
       >
         <button
           type="button"
@@ -820,8 +823,8 @@ export const DocumentActionBar: React.FC<{
         onClose={() => setMailModalOpen(false)}
         width={560}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', flexWrap: 'wrap' }}>
             <VerticalField label="받는사람 이메일" required flex={1} minWidth={200}>
               <input
                 type="email"
@@ -859,7 +862,7 @@ export const DocumentActionBar: React.FC<{
           </VerticalField>
           <div
             style={{
-              padding: '8px 10px',
+              padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
               borderRadius: '6px',
               border: '1px solid var(--border-color)',
               backgroundColor: 'var(--bg-secondary)',
@@ -871,7 +874,7 @@ export const DocumentActionBar: React.FC<{
               ? `편집 파일 첨부 대상: ${editedFileName} · ${editedPath}`
               : `발송 시 ${docLabel} 최신 양식 파일 생성 후 첨부`}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
             {editedPath && (
               <button
                 type="button"
@@ -1123,8 +1126,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '8px 10px',
+                gap: 'var(--space-tight-gap)',
+                padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
                 borderBottom: '1px solid var(--table-row-border)',
                 backgroundColor: 'var(--bg-app)',
               }}
@@ -1172,11 +1175,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               )}
             </div>
 
-            <div style={{ maxHeight: '250px', overflowY: 'auto', padding: '4px' }}>
+            <div style={{ maxHeight: '250px', overflowY: 'auto', padding: 'max(1px, calc(4px - 2pt))' }}>
               {filteredOptions.length === 0 ? (
                 <div
                   style={{
-                    padding: '14px 10px',
+                    padding: 'var(--space-panel-pad-y) var(--space-compact-pad-x)',
                     textAlign: 'center',
                     fontSize: '12px',
                     color: 'var(--text-muted)',
@@ -1197,14 +1200,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                       style={{
                         width: '100%',
                         textAlign: 'left',
-                        padding: '7px 10px',
+                        padding: 'calc(7px - 2pt) var(--space-compact-pad-x)',
                         border: 'none',
                         borderRadius: '5px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        gap: '8px',
+                        gap: 'var(--space-inline-gap)',
                         backgroundColor: isSelected
                           ? 'var(--primary-light)'
                           : isHighlighted

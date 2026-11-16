@@ -116,6 +116,10 @@
 - **DB 영문 상태코드·통화코드·일반 영문 UI·화살표 직접 노출 영구 금지**: `CONFIRMED`, `SETTLED`, `FULFILLED`, `ACTIVE`, `PENDING`, `PARTIAL`, `PAID`, `UNPAID`, `USD`, `CNY`, `EUR`, `JPY`, `KRW` 등 DB 내부 코드값과 `BL`, `LC`, `FIFO`, `UI` 등 일반 업무 약어 및 ASCII 텍스트 화살표(`->`)를 배지(`StatusBadge`), 셀, 드롭다운 `<option>`, 탭, 제목, 레이블에 직접 렌더링하는 것을 절대 금지한다. 모든 내부 코드는 `src/types/domain.ts` 단일 한글 표준 매핑(`formatKoStatus`, `formatKoCurrency` 등)을 경유하여 100% 한국어로만 출력한다. (단, 제원·부품 카탈로그에서 사용하는 국제 공학 단위 및 규격 기호 `kg`, `mm`, `km/h`, `mm/s`, `l/min`, `kW`, `MPa`, `dB`, `V`, `A`, `Ah`, `N`, `OEM`, `VDI 2198`, `ISO 5053`, `ISO 2328`, `h1~h10`, `l1~l2`, `b1~b13`, `m1~m2`, `Wa`, `Ast` 등 실무 기술 표준 표기는 원형 유지를 허용한다.)
 - **빌드 전 한국어 UI 정적 감사 게이트 의무화**: 배포 전 `scripts/check-korean-ui.cjs`를 통해 TypeScript AST 기반으로 괄호 영문 병기, 금지 영문 헤더, 원시 영문 배지/열 반환, 허용 기술 단위를 제외한 JSX/UI 속성 영문 단어 및 `->` 화살표가 0건임을 의무 검증한다.
 
+### 3.8 단일 라이트 모드 전용 운영 및 `-2pt` 전사 고밀도 CSS 정책
+- **다크모드 전환 UI 및 CSS 영구 배제**: 전사 UI는 Warm Cotton Paper 단일 라이트 모드(`:root`, `color-scheme: light`)로만 운영하며, 다크모드 전환 버튼·`theme` 상태·`data-theme` 속성 및 `[data-theme='dark']` CSS 분기 코드를 전면 금지한다.
+- **박스 내·외 패딩·마진 `-2pt` 일괄 축소 전사 CSS 정책**: 화면의 정보 표시량을 극대화하기 위해 `src/index.css`의 `:root`에 `--density-trim: 2pt;` 및 `--space-*` 표준 간격·패딩·마진 변수를 선언하고, 셸·모달·패널·서브박스·폼 그리드·테이블·컨트롤 전체의 박스 내·외 패딩과 마진을 기준 대비 `2pt` 일괄 축소하여 단일 CSS 정책(SSOT)으로 유지한다.
+
 ---
 
 ## 💰 [카테고리 IV] 회계 정산 및 이력 추적성 (Accounting & Audit Trail)

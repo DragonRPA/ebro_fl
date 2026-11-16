@@ -281,7 +281,7 @@ export const RentalContractsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="렌탈 계약 등록 · 기종 단위 지정"
@@ -297,7 +297,7 @@ export const RentalContractsPage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="임차 거래처" required>
               <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
@@ -437,7 +437,7 @@ export const RentalContractsPage: React.FC = () => {
         <SectionPanel
           title={`선택 렌탈 계약 · ${selectedContract.contractNo} · ${selectedContract.partnerName}`}
           rightSlot={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
               {canEdit && selectedContract.status === 'DRAFT' && (
                 <CommitActionButton
                   actionCode="RENTAL_CONTRACT_CONFIRM"
@@ -475,7 +475,7 @@ export const RentalContractsPage: React.FC = () => {
                 }
               />
               {canEdit && (
-                <div data-manual-id="rctr-actions" style={{ display: 'inline-flex', gap: '6px' }}>
+                <div data-manual-id="rctr-actions" style={{ display: 'inline-flex', gap: 'var(--space-tight-gap)' }}>
                   <button
                     type="button"
                     disabled={busy}
@@ -756,12 +756,12 @@ export const RentalAssetsPage: React.FC = () => {
     selectedAsset.acquisitionType !== 'FINANCE_LEASE';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="렌탈 자산 · 금융리스 관리"
         manualId="rast-tabs"
         rightSlot={
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-inline-gap)', alignItems: 'center', flexWrap: 'wrap' }}>
             {canEdit && tab === 'LEDGER' && (
               <button
                 type="button"
@@ -783,7 +783,7 @@ export const RentalAssetsPage: React.FC = () => {
         }
       >
         {tab === 'LEDGER' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <DataGrid
               columns={[
                 { key: 'unitCode', header: '자산번호', width: 130, render: (u) => <span style={{ fontWeight: 700 }}>{u.unitCode}</span> },
@@ -871,7 +871,7 @@ export const RentalAssetsPage: React.FC = () => {
               ]}
             >
               {canTransferToTrade && selectedAsset && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)' }}>
                   <input
                     type="date"
                     value={transferDate}
@@ -907,16 +907,16 @@ export const RentalAssetsPage: React.FC = () => {
             </ConservationBar>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
             {canEdit && (
               <div
                 data-manual-id="rast-lease"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))',
-                  gap: '10px',
+                  gap: 'var(--space-field-grid-gap)',
                   alignItems: 'end',
-                  padding: '12px',
+                  padding: 'var(--space-subbox-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--table-border-color)',
                   backgroundColor: 'var(--bg-header)',
@@ -1031,7 +1031,7 @@ export const RentalAssetsPage: React.FC = () => {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(420px, 1.4fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(420px, 1.4fr)', gap: 'var(--space-stack-gap)' }}>
               <DataGrid
                 columns={[
                   { key: 'leaseNo', header: '리스번호', width: 120, render: (l) => l.leaseNo },
@@ -1115,7 +1115,7 @@ export const RentalAssetsPage: React.FC = () => {
         onClose={() => setSubleaseOpen(false)}
         width={520}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <VerticalField label="전대공급처" required>
             <SearchableSelect
               value={subSupplierId || subleaseSuppliers[0]?.id || ''}
@@ -1147,7 +1147,7 @@ export const RentalAssetsPage: React.FC = () => {
           <VerticalField label="월 전대임차원가" required>
             <CommaNumberInput min={0} value={subCost} onChange={setSubCost} />
           </VerticalField>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
             <button
               type="button"
               onClick={() => setSubleaseOpen(false)}
@@ -1249,9 +1249,9 @@ export const RentalFulfillmentPage: React.FC = () => {
     null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="렌탈 출고 · 회수 실행완료" manualId="rful-exec">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <DataGrid
             columns={[
               { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
@@ -1303,9 +1303,9 @@ export const RentalFulfillmentPage: React.FC = () => {
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: '10px',
+                gap: 'var(--space-field-grid-gap)',
                 alignItems: 'flex-end',
-                padding: '12px',
+                padding: 'var(--space-subbox-pad-x)',
                 borderRadius: '6px',
                 border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-header)',
@@ -1330,9 +1330,9 @@ export const RentalFulfillmentPage: React.FC = () => {
                   </select>
                 </VerticalField>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-stack-gap)' }}>
                   <span>회수 대상 장비: {resolvedUnit?.unitCode || '-'} · {resolvedUnit?.serialNo || '-'}</span>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '13px' }}>
                     <input
                       type="checkbox"
                       checked={returnToRepair}
@@ -1394,7 +1394,7 @@ export const RentalFulfillmentPage: React.FC = () => {
         manualId="rful-exchange"
       >
         {canEdit ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
             <VerticalField label="교환 대상 대여중 계약 · 전자산" required>
               <select
                 value={oldLineObj?.id || ''}
@@ -1449,7 +1449,7 @@ export const RentalFulfillmentPage: React.FC = () => {
                 style={controlInputStyle}
               />
             </VerticalField>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px', fontSize: '13px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', height: 'var(--space-control-h)', fontSize: '13px' }}>
               <input
                 type="checkbox"
                 checked={exRepair}
@@ -1596,7 +1596,7 @@ export const RentalMaintenancePage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="렌탈 장비 정비 등록 · 주기장 · 현장 · 순회정비"
@@ -1612,7 +1612,7 @@ export const RentalMaintenancePage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
             <VerticalField label="정비 구분" required>
               <select
                 value={maintType}
@@ -1696,7 +1696,7 @@ export const RentalMaintenancePage: React.FC = () => {
                 />
               </VerticalField>
             )}
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px', fontSize: '13px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', height: 'var(--space-control-h)', fontSize: '13px' }}>
               <input
                 type="checkbox"
                 checked={isBillable}
@@ -1828,9 +1828,9 @@ export const RentalPerformancePage: React.FC = () => {
   }, [rows]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="렌탈 실적 조회 연월" manualId="rperf-period">
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap' }}>
           <VerticalField label="시작 연월" width={150}>
             <input
               type="month"

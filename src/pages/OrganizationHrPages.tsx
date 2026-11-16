@@ -903,7 +903,7 @@ export const OrganizationHrPage: React.FC = () => {
       header: '성명',
       width: 120,
       render: (u) => (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(7px - 2pt)' }}>
           {u.profileImageUrl ? (
             <img
               src={u.profileImageUrl}
@@ -1055,7 +1055,7 @@ export const OrganizationHrPage: React.FC = () => {
       width: 280,
       render: ({ dept }) =>
         dept.functionalTags.length > 0 ? (
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-label-gap)', alignItems: 'center' }}>
             {dept.functionalTags.map((t) => (
               <StatusBadge key={t} label={t} tone="info" />
             ))}
@@ -1107,7 +1107,7 @@ export const OrganizationHrPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
       <SectionPanel
         title="조직 인사 관리"
         manualId="hr-tabs"
@@ -1124,7 +1124,7 @@ export const OrganizationHrPage: React.FC = () => {
         }
       >
         {tab === 'USERS' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <div
               data-manual-id="hr-filter"
               style={{
@@ -1132,10 +1132,10 @@ export const OrganizationHrPage: React.FC = () => {
                 flexWrap: 'wrap',
                 alignItems: 'flex-end',
                 justifyContent: 'space-between',
-                gap: '12px',
+                gap: 'var(--space-stack-gap)',
               }}
             >
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
                 <VerticalField label="소속 부서 필터" width={170}>
                   <select
                     value={selectedDeptId}
@@ -1183,7 +1183,7 @@ export const OrganizationHrPage: React.FC = () => {
                 </VerticalField>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   disabled={busy}
@@ -1218,17 +1218,17 @@ export const OrganizationHrPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: '12px', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: 'var(--space-stack-gap)', alignItems: 'start' }}>
               <div
                 data-manual-id="hr-dept-tree"
                 style={{
                   border: '1px solid var(--border-color)',
                   borderRadius: '8px',
                   backgroundColor: 'var(--bg-secondary)',
-                  padding: '10px',
+                  padding: 'var(--space-compact-pad-x)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '4px',
+                  gap: 'var(--space-label-gap)',
                 }}
               >
                 <div
@@ -1236,15 +1236,15 @@ export const OrganizationHrPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    paddingBottom: '6px',
-                    marginBottom: '4px',
+                    paddingBottom: 'var(--space-tight-gap)',
+                    marginBottom: 'var(--space-label-gap)',
                     borderBottom: '1px solid var(--table-row-border)',
                     fontSize: '12px',
                     fontWeight: 700,
                     color: 'var(--text-secondary)',
                   }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'max(2px, calc(5px - 2pt))', whiteSpace: 'nowrap' }}>
                     <Users size={13} />
                     조직 계층도
                   </span>
@@ -1258,7 +1258,7 @@ export const OrganizationHrPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '6px 8px',
+                    padding: 'var(--space-table-td-pad-y) var(--space-inline-gap)',
                     borderRadius: '5px',
                     border: '1px solid transparent',
                     backgroundColor: selectedDeptId === 'ALL' ? 'var(--primary-light)' : 'transparent',
@@ -1285,7 +1285,7 @@ export const OrganizationHrPage: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: `6px 8px 6px ${8 + depth * 12}px`,
+                        padding: `var(--space-table-td-pad-y) var(--space-inline-gap) var(--space-table-td-pad-y) ${6 + depth * 12}px`,
                         borderRadius: '5px',
                         border: '1px solid transparent',
                         backgroundColor: active ? 'var(--primary-light)' : 'transparent',
@@ -1313,7 +1313,7 @@ export const OrganizationHrPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '6px 8px',
+                    padding: 'var(--space-table-td-pad-y) var(--space-inline-gap)',
                     borderRadius: '5px',
                     border: '1px solid transparent',
                     backgroundColor: selectedDeptId === 'UNASSIGNED' ? 'var(--primary-light)' : 'transparent',
@@ -1357,8 +1357,8 @@ export const OrganizationHrPage: React.FC = () => {
         )}
 
         {tab === 'DEPTS' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
               {canEdit && (
                 <button type="button" onClick={() => openDeptModal()} style={actionBtnStyle('primary')}>
                   <Plus size={14} />
@@ -1391,8 +1391,8 @@ export const OrganizationHrPage: React.FC = () => {
         )}
 
         {tab === 'HISTORY' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="발령 구분" width={160}>
                 <select
                   value={histEventFilter}
@@ -1433,8 +1433,8 @@ export const OrganizationHrPage: React.FC = () => {
         width={760}
         onClose={() => setNewUserModalOpen(false)}
       >
-        <form onSubmit={handleCreateEmployee} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+        <form onSubmit={handleCreateEmployee} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="로그인 아이디" required>
               <input
                 type="text"
@@ -1463,7 +1463,7 @@ export const OrganizationHrPage: React.FC = () => {
             </VerticalField>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="성명" required>
               <input
                 type="text"
@@ -1498,7 +1498,7 @@ export const OrganizationHrPage: React.FC = () => {
             </VerticalField>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="직급 티어" required>
               <select
                 value={nuTier}
@@ -1530,7 +1530,7 @@ export const OrganizationHrPage: React.FC = () => {
             </VerticalField>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="연락처">
               <input
                 type="text"
@@ -1578,7 +1578,7 @@ export const OrganizationHrPage: React.FC = () => {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: canResetPassword ? '2fr 1fr' : '1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: canResetPassword ? '2fr 1fr' : '1fr', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="주소">
               <input
                 type="text"
@@ -1599,7 +1599,7 @@ export const OrganizationHrPage: React.FC = () => {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="부여 연차일수">
               <input
                 type="number"
@@ -1625,8 +1625,8 @@ export const OrganizationHrPage: React.FC = () => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px',
-                padding: '10px 12px',
+                gap: 'var(--space-field-grid-gap)',
+                padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '6px',
                 backgroundColor: 'var(--bg-secondary)',
@@ -1635,7 +1635,7 @@ export const OrganizationHrPage: React.FC = () => {
               <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                 초기 급여 · 수동 통상임금 · 4대보험 · 계좌
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="월 기본급">
                   <CommaNumberInput
                     min={0}
@@ -1659,7 +1659,7 @@ export const OrganizationHrPage: React.FC = () => {
                   />
                 </VerticalField>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="식대">
                   <CommaNumberInput
                     min={0}
@@ -1675,7 +1675,7 @@ export const OrganizationHrPage: React.FC = () => {
                   />
                 </VerticalField>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="급여 은행명">
                   <input
                     type="text"
@@ -1704,20 +1704,20 @@ export const OrganizationHrPage: React.FC = () => {
                   />
                 </VerticalField>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', paddingTop: '2px' }}>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-page-gap)', paddingTop: '1px' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'max(2px, calc(5px - 2pt))', fontSize: '12px', whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={nuInsPension} onChange={(e) => setNuInsPension(e.target.checked)} />
                   국민연금
                 </label>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'max(2px, calc(5px - 2pt))', fontSize: '12px', whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={nuInsHealth} onChange={(e) => setNuInsHealth(e.target.checked)} />
                   건강보험
                 </label>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'max(2px, calc(5px - 2pt))', fontSize: '12px', whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={nuInsEmployment} onChange={(e) => setNuInsEmployment(e.target.checked)} />
                   고용보험
                 </label>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'max(2px, calc(5px - 2pt))', fontSize: '12px', whiteSpace: 'nowrap' }}>
                   <input type="checkbox" checked={nuInsAccident} onChange={(e) => setNuInsAccident(e.target.checked)} />
                   산재보험
                 </label>
@@ -1725,8 +1725,8 @@ export const OrganizationHrPage: React.FC = () => {
             </div>
           )}
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-conservation-gap)' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
               <input
                 type="checkbox"
                 checked={nuMaskPrice}
@@ -1734,7 +1734,7 @@ export const OrganizationHrPage: React.FC = () => {
               />
               판매 단가 비공개 대상 지정
             </label>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
               <input
                 type="checkbox"
                 checked={nuMustChangePw}
@@ -1744,7 +1744,7 @@ export const OrganizationHrPage: React.FC = () => {
             </label>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)', marginTop: 'var(--space-label-gap)' }}>
             <button type="button" onClick={() => setNewUserModalOpen(false)} style={actionBtnStyle('secondary')}>
               취소
             </button>
@@ -1761,8 +1761,8 @@ export const OrganizationHrPage: React.FC = () => {
         width={580}
         onClose={() => setDeptModalOpen(false)}
       >
-        <form onSubmit={handleSaveDepartment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <form onSubmit={handleSaveDepartment} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="부서명" required>
               <input
                 type="text"
@@ -1791,7 +1791,7 @@ export const OrganizationHrPage: React.FC = () => {
             </VerticalField>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
             <VerticalField label="부서장 지정">
               <select
                 value={dManagerId}
@@ -1816,7 +1816,7 @@ export const OrganizationHrPage: React.FC = () => {
                 style={controlInputStyle}
               />
             </VerticalField>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', height: 'var(--space-control-h)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
               <input
                 type="checkbox"
                 checked={dActive}
@@ -1827,7 +1827,7 @@ export const OrganizationHrPage: React.FC = () => {
           </div>
 
           <VerticalField label="담당 업무 기능">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingTop: '4px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-inline-gap)', paddingTop: 'var(--space-label-gap)' }}>
               {ALL_DEPARTMENT_FUNC_TAGS.map((tag) => {
                 const checked = dTags.includes(tag);
                 return (
@@ -1836,8 +1836,8 @@ export const OrganizationHrPage: React.FC = () => {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
-                      padding: '4px 10px',
+                      gap: 'max(2px, calc(5px - 2pt))',
+                      padding: 'max(1px, calc(4px - 2pt)) var(--space-compact-pad-x)',
                       borderRadius: '4px',
                       border: `1px solid ${checked ? 'var(--primary)' : 'var(--border-color)'}`,
                       backgroundColor: checked ? 'var(--primary-light)' : 'var(--bg-secondary)',
@@ -1872,7 +1872,7 @@ export const OrganizationHrPage: React.FC = () => {
             />
           </VerticalField>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
             <button type="button" onClick={() => setDeptModalOpen(false)} style={actionBtnStyle('secondary')}>
               취소
             </button>
@@ -1890,19 +1890,19 @@ export const OrganizationHrPage: React.FC = () => {
         onClose={() => setDetailModalOpen(false)}
       >
         {selectedUser && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: '8px',
-                paddingBottom: '10px',
+                gap: 'var(--space-inline-gap)',
+                paddingBottom: 'var(--space-compact-pad-x)',
                 borderBottom: '1px solid var(--border-color)',
               }}
             >
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => setDetailTab('HR')}
@@ -1942,21 +1942,21 @@ export const OrganizationHrPage: React.FC = () => {
             </div>
 
             {detailTab === 'HR' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
-                    gap: '12px',
-                    padding: '10px 12px',
+                    gap: 'var(--space-stack-gap)',
+                    padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     backgroundColor: 'var(--bg-secondary)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-stack-gap)' }}>
                     {eProfileImageUrl ? (
                       <img
                         src={eProfileImageUrl}
@@ -1990,7 +1990,7 @@ export const OrganizationHrPage: React.FC = () => {
                         {(eName || selectedUser.name).slice(0, 1)}
                       </div>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                         {selectedUser.name} · {selectedUser.employeeNo || '사번 미지정'}
                       </span>
@@ -2001,7 +2001,7 @@ export const OrganizationHrPage: React.FC = () => {
                     </div>
                   </div>
                   {canEdit && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)' }}>
                       <label style={{ ...actionBtnStyle('secondary', true), cursor: 'pointer' }}>
                         <Upload size={12} />
                         사진 첨부
@@ -2026,7 +2026,7 @@ export const OrganizationHrPage: React.FC = () => {
                   )}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="사번">
                     <input
                       type="text"
@@ -2063,7 +2063,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="직책">
                     <input
                       type="text"
@@ -2110,7 +2110,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="입사일">
                     <input
                       type="date"
@@ -2144,7 +2144,7 @@ export const OrganizationHrPage: React.FC = () => {
                         권한 제한
                       </div>
                     ) : !eResidentVisible && eResidentRegNo ? (
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 'var(--space-label-gap)', alignItems: 'center' }}>
                         <div
                           style={{
                             ...controlInputStyle,
@@ -2167,7 +2167,7 @@ export const OrganizationHrPage: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 'var(--space-label-gap)', alignItems: 'center' }}>
                         <input
                           type="text"
                           disabled={!canEdit}
@@ -2191,7 +2191,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="연락처">
                     <input
                       type="text"
@@ -2212,7 +2212,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="주소">
                     <input
                       type="text"
@@ -2233,7 +2233,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px', alignItems: 'end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
                   <VerticalField label="부여 연차일수">
                     <input
                       type="number"
@@ -2287,19 +2287,19 @@ export const OrganizationHrPage: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
-                    gap: '10px',
-                    padding: '8px 12px',
+                    gap: 'var(--space-field-grid-gap)',
+                    padding: 'var(--space-compact-pad-y) var(--space-subbox-pad-x)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     backgroundColor: 'var(--bg-secondary)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', fontSize: '12.5px' }}>
                     <FileText size={14} />
                     <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>보안서약서 스캔본</span>
                     <span style={{ color: 'var(--text-secondary)' }}>{ePledgeScanName || '미첨부'}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-tight-gap)' }}>
                     {ePledgeScanUrl && (
                       <button
                         type="button"
@@ -2342,7 +2342,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                   <VerticalField label="발령 시행일">
                     <input
                       type="date"
@@ -2373,9 +2373,9 @@ export const OrganizationHrPage: React.FC = () => {
                   </VerticalField>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', paddingTop: '4px' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', paddingTop: 'var(--space-label-gap)' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-page-gap)' }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                       <input
                         type="checkbox"
                         disabled={!canEdit}
@@ -2384,7 +2384,7 @@ export const OrganizationHrPage: React.FC = () => {
                       />
                       판매 단가 비공개 적용
                     </label>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                       <input
                         type="checkbox"
                         disabled={!canEdit}
@@ -2396,7 +2396,7 @@ export const OrganizationHrPage: React.FC = () => {
                   </div>
 
                   {canEdit && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)' }}>
                       <button
                         type="button"
                         onClick={() => setDetailModalOpen(false)}
@@ -2451,13 +2451,13 @@ export const OrganizationHrPage: React.FC = () => {
 
             {detailTab === 'PAYROLL' && (
               canViewPayroll ? (
-                <form onSubmit={handleSavePayroll} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <form onSubmit={handleSavePayroll} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
                   <div
                     style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                      gap: '10px',
-                      padding: '10px 12px',
+                      gap: 'var(--space-field-grid-gap)',
+                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                       border: '1px solid var(--border-color)',
                       borderRadius: '6px',
                       backgroundColor: 'var(--bg-secondary)',
@@ -2500,7 +2500,7 @@ export const OrganizationHrPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                     <VerticalField label="월 기본급" required>
                       <CommaNumberInput
                         min={0}
@@ -2526,7 +2526,7 @@ export const OrganizationHrPage: React.FC = () => {
                     </VerticalField>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                     <VerticalField label="식대">
                       <CommaNumberInput
                         min={0}
@@ -2545,7 +2545,7 @@ export const OrganizationHrPage: React.FC = () => {
 
                   <div
                     style={{
-                      padding: '8px 12px',
+                      padding: 'var(--space-compact-pad-y) var(--space-subbox-pad-x)',
                       border: '1px solid var(--border-color)',
                       borderRadius: '6px',
                       backgroundColor: 'var(--bg-secondary)',
@@ -2558,7 +2558,7 @@ export const OrganizationHrPage: React.FC = () => {
                       : '통상임금은 자동계산되지 않으며 직접 입력한 금액만 저장됩니다.'}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
                     <VerticalField label="급여 은행명">
                       <input
                         type="text"
@@ -2589,19 +2589,19 @@ export const OrganizationHrPage: React.FC = () => {
 
                   <div
                     style={{
-                      padding: '10px 12px',
+                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                       border: '1px solid var(--border-color)',
                       borderRadius: '6px',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '8px',
+                      gap: 'var(--space-inline-gap)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         4대보험 가입여부
                       </span>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: 'var(--space-tight-gap)' }}>
                         <button
                           type="button"
                           onClick={() => {
@@ -2628,8 +2628,8 @@ export const OrganizationHrPage: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 'var(--space-inline-gap)' }}>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                         <input
                           type="checkbox"
                           checked={eInsPension}
@@ -2637,7 +2637,7 @@ export const OrganizationHrPage: React.FC = () => {
                         />
                         국민연금
                       </label>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                         <input
                           type="checkbox"
                           checked={eInsHealth}
@@ -2645,7 +2645,7 @@ export const OrganizationHrPage: React.FC = () => {
                         />
                         건강보험
                       </label>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                         <input
                           type="checkbox"
                           checked={eInsEmployment}
@@ -2653,7 +2653,7 @@ export const OrganizationHrPage: React.FC = () => {
                         />
                         고용보험
                       </label>
-                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                         <input
                           type="checkbox"
                           checked={eInsAccident}
@@ -2664,7 +2664,7 @@ export const OrganizationHrPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 'var(--space-field-grid-gap)' }}>
                     <VerticalField label="적용일">
                       <input
                         type="date"
@@ -2683,14 +2683,14 @@ export const OrganizationHrPage: React.FC = () => {
                       />
                     </VerticalField>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
                     <button type="submit" disabled={busy} style={actionBtnStyle('primary')}>
                       {busy ? '저장 중' : '급여 · 계좌 저장'}
                     </button>
                   </div>
                 </form>
               ) : (
-                <div style={{ padding: '24px', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center' }}>
+                <div style={{ padding: 'calc(24px - 2pt)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center' }}>
                   급여 및 계좌 정보는 6단계 본부장급 이상 또는 최고 관리자만 조회 및 수정할 수 있습니다.
                 </div>
               )
@@ -2698,8 +2698,8 @@ export const OrganizationHrPage: React.FC = () => {
 
             {detailTab === 'PW' && (
               canResetPassword ? (
-                <form onSubmit={handleAdminResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <form onSubmit={handleAdminResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                     <VerticalField label="새 임시 비밀번호" required>
                       <input
                         type="password"
@@ -2727,14 +2727,14 @@ export const OrganizationHrPage: React.FC = () => {
                       style={controlInputStyle}
                     />
                   </VerticalField>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
                     <button type="submit" disabled={busy} style={actionBtnStyle('danger')}>
                       {busy ? '처리 중' : '비밀번호 초기화 실행'}
                     </button>
                   </div>
                 </form>
               ) : (
-                <div style={{ padding: '24px', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center' }}>
+                <div style={{ padding: 'calc(24px - 2pt)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center' }}>
                   비밀번호 초기화는 4단계 부서장급 이상 권한이 필요합니다.
                 </div>
               )

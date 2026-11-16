@@ -58,7 +58,7 @@ export const LoginView: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: 'calc(24px - 2pt)',
       }}
     >
       <form
@@ -68,17 +68,17 @@ export const LoginView: React.FC = () => {
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
           borderRadius: '10px',
-          padding: '28px 24px',
+          padding: 'calc(28px - 2pt) calc(24px - 2pt)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: 'var(--space-conservation-gap)',
           boxShadow: 'none',
         }}
       >
         <div
           style={{
             borderBottom: '1px solid var(--table-row-border)',
-            paddingBottom: '12px',
+            paddingBottom: 'calc(12px - 2pt)',
           }}
         >
           <div
@@ -86,7 +86,7 @@ export const LoginView: React.FC = () => {
               fontSize: '11.5px',
               fontWeight: 700,
               color: 'var(--text-muted)',
-              marginBottom: '4px',
+              marginBottom: 'var(--space-label-gap)',
             }}
           >
             {tenantProfile.corporateName}
@@ -176,7 +176,7 @@ export const LoginView: React.FC = () => {
           <div
             role="alert"
             style={{
-              padding: '9px 12px',
+              padding: 'calc(9px - 2pt) var(--space-subbox-pad-x)',
               borderRadius: '6px',
               border: '1px solid var(--danger)',
               backgroundColor: 'var(--danger-light)',
@@ -195,8 +195,8 @@ export const LoginView: React.FC = () => {
           style={{
             ...actionBtnStyle('primary'),
             width: '100%',
-            height: '38px',
-            marginTop: '4px',
+            height: 'calc(38px - 2pt)',
+            marginTop: '2px',
           }}
         >
           {busy ? '인증 처리중' : '로그인'}

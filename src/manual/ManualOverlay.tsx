@@ -195,16 +195,16 @@ export const ManualOverlay: React.FC = () => {
           >
             <div
               style={{
-                padding: '12px 14px',
+                padding: 'var(--space-modal-head-pad-y) var(--space-btn-pad-x)',
                 backgroundColor: 'var(--bg-header)',
                 borderBottom: '1px solid var(--border-color)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '8px',
+                gap: 'var(--space-inline-gap)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', minWidth: 0 }}>
                 <BookOpen size={16} />
                 <span style={{ fontWeight: 800, fontSize: '14px', whiteSpace: 'nowrap' }}>
                   화면 조작 매뉴얼 · {activeEntry.pageTitle}
@@ -214,7 +214,7 @@ export const ManualOverlay: React.FC = () => {
                 type="button"
                 onClick={() => setOverlayOpen(false)}
                 style={{
-                  padding: '4px 8px',
+                  padding: '2px 6px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-app)',
@@ -233,9 +233,9 @@ export const ManualOverlay: React.FC = () => {
               </button>
             </div>
 
-            <div style={{ padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
+            <div style={{ padding: 'var(--space-panel-pad-y)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)', flex: 1 }}>
               <div>
-                <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px' }}>
                   기본기능 설명
                 </div>
                 <div
@@ -243,7 +243,7 @@ export const ManualOverlay: React.FC = () => {
                     fontSize: '13px',
                     lineHeight: 1.5,
                     color: 'var(--text-main)',
-                    padding: '10px 12px',
+                    padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                     borderRadius: '6px',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-app)',
@@ -254,17 +254,17 @@ export const ManualOverlay: React.FC = () => {
               </div>
 
               <div>
-                <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px' }}>
                   업무 프로세스 명칭
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-tight-gap)' }}>
                   {activeEntry.processes.map((proc, idx) => (
                     <button
                       key={proc.processName}
                       type="button"
                       onClick={() => setSelectedProcessIdx(idx)}
                       style={{
-                        padding: '5px 10px',
+                        padding: 'var(--space-tab-item-pad-y) var(--space-compact-pad-x)',
                         borderRadius: '6px',
                         border: selectedProcessIdx === idx ? '1px solid var(--primary)' : '1px solid var(--border-color)',
                         backgroundColor: selectedProcessIdx === idx ? 'var(--primary)' : 'var(--bg-app)',
@@ -282,7 +282,7 @@ export const ManualOverlay: React.FC = () => {
               </div>
 
               {activeProcess && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)' }}>
                   <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
                     화면 조작 순서
                   </div>
@@ -295,14 +295,14 @@ export const ManualOverlay: React.FC = () => {
                         key={st.stepNo}
                         onClick={() => setHighlightedAnchorId(st.manualAnchorId)}
                         style={{
-                          padding: '10px 12px',
+                          padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                           borderRadius: '6px',
                           border: isHl ? '1.5px solid #dc2626' : '1px solid var(--border-color)',
                           backgroundColor: isHl ? 'var(--danger-light)' : 'var(--bg-app)',
                           cursor: 'pointer',
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '4px',
+                          gap: 'var(--space-label-gap)',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
@@ -388,7 +388,7 @@ export const ManualOverlay: React.FC = () => {
 
             <div
               style={{
-                padding: '10px 14px',
+                padding: 'var(--space-subbox-pad-y) var(--space-btn-pad-x)',
                 borderTop: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-header)',
                 display: 'flex',
@@ -403,7 +403,7 @@ export const ManualOverlay: React.FC = () => {
                   setSearchModalOpen(true);
                 }}
                 style={{
-                  padding: '6px 12px',
+                  padding: 'calc(6px - 2pt) var(--space-subbox-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-card)',
@@ -413,7 +413,7 @@ export const ManualOverlay: React.FC = () => {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -426,7 +426,7 @@ export const ManualOverlay: React.FC = () => {
                   navigateTo('operation_manual');
                 }}
                 style={{
-                  padding: '6px 12px',
+                  padding: 'calc(6px - 2pt) var(--space-subbox-pad-x)',
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: 'var(--primary)',
@@ -456,7 +456,7 @@ export const ManualOverlay: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '24px',
+            padding: 'calc(24px - 2pt)',
           }}
           onClick={() => setSearchModalOpen(false)}
         >
@@ -476,12 +476,12 @@ export const ManualOverlay: React.FC = () => {
           >
             <div
               style={{
-                padding: '12px 16px',
+                padding: 'var(--space-modal-head-pad-y) var(--space-modal-head-pad-x)',
                 backgroundColor: 'var(--bg-header)',
                 borderBottom: '1px solid var(--border-color)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: 'var(--space-field-grid-gap)',
               }}
             >
               <Search size={16} />
@@ -493,7 +493,7 @@ export const ManualOverlay: React.FC = () => {
                 placeholder="메뉴명, 업무 프로세스 명칭, 화면 조작 키워드 검색"
                 style={{
                   flex: 1,
-                  padding: '7px 10px',
+                  padding: 'calc(7px - 2pt) var(--space-control-pad-x)',
                   fontSize: '13px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
@@ -505,7 +505,7 @@ export const ManualOverlay: React.FC = () => {
                 type="button"
                 onClick={() => setSearchModalOpen(false)}
                 style={{
-                  padding: '6px 10px',
+                  padding: 'calc(6px - 2pt) var(--space-compact-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-app)',
@@ -519,18 +519,18 @@ export const ManualOverlay: React.FC = () => {
                 닫기
               </button>
             </div>
-            <div style={{ overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ overflowY: 'auto', padding: 'var(--space-modal-head-pad-y) var(--space-modal-head-pad-x)', display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
               {searchResults.map((entry) => (
                 <div
                   key={entry.pageId}
                   style={{
-                    padding: '10px 12px',
+                    padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                     borderRadius: '6px',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-app)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '6px',
+                    gap: 'var(--space-tight-gap)',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>

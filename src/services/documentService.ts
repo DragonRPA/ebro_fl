@@ -597,16 +597,39 @@ export async function generateModelSpecExcel(params: {
 export async function generateCompareSpecsExcel(params: {
   models: FlModelTechnicalSpec[];
   rows: { label: string; values: string[] }[];
+  title?: string;
+  recipientName?: string;
+  authorNote?: string;
 }): Promise<void> {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('모델 제원 비교');
-  ws.addRow(['비교 제원 항목', ...params.models.map((m) => `${m.manufacturerName} ${m.modelName}`)]);
-  ws.getRow(1).font = { bold: true };
+  const titleText = (params.title || '지게차 모델별 상세 제원 비교표').trim();
+  const recipientText = (params.recipientName || '').trim();
+  const noteText = (params.authorNote || '').trim();
+
+  const titleRow = ws.addRow([titleText]);
+  titleRow.font = { bold: true, size: 13 };
+  if (recipientText) {
+    const recRow = ws.addRow(['수신처 · 고객사', recipientText]);
+    recRow.font = { bold: true };
+  }
+  ws.addRow([]);
+
+  const headerRow = ws.addRow([
+    '비교 제원 항목',
+    ...params.models.map((m) => `${m.manufacturerName} ${m.modelName}`),
+  ]);
+  headerRow.font = { bold: true };
   ws.getColumn(1).width = 28;
   params.models.forEach((_, i) => {
     ws.getColumn(i + 2).width = 30;
   });
   params.rows.forEach((r) => ws.addRow([r.label, ...r.values]));
+  if (noteText) {
+    ws.addRow([]);
+    const noteRow = ws.addRow(['검토 의견 · 특기사항', noteText]);
+    noteRow.getCell(1).font = { bold: true };
+  }
   const ab = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
   downloadExcelFile(`지게차_모델별_제원비교_${params.models.length}종.xlsx`, new Uint8Array(ab));
 }

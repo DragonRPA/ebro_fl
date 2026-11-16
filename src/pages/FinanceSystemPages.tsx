@@ -303,7 +303,7 @@ export const ArBillingCollectionPage: React.FC = () => {
       width: 245,
       render: (b) => (
         <div
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)' }}
           onClick={(e) => e.stopPropagation()}
         >
           <input
@@ -349,10 +349,10 @@ export const ArBillingCollectionPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel title="계약 근거 청구 생성" manualId="ar-gen">
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
             <VerticalField label="청구 연월" required width={145}>
               <input
                 type="month"
@@ -454,7 +454,7 @@ export const ArBillingCollectionPage: React.FC = () => {
           }
         >
           {canEdit && selectedBilling.unpaidBalanceKrw > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="수납 입금액" required width={160}>
                 <CommaNumberInput
                   min={0}
@@ -555,7 +555,7 @@ export const ApSettlementsPage: React.FC = () => {
   }, [selectedAp, settleAmount, settledFxRate]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="매입채무 · 금융리스 원리금 정산"
         manualId="ap-tabs"
@@ -575,7 +575,7 @@ export const ApSettlementsPage: React.FC = () => {
         }
       >
         {tab === 'AP' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <DataGrid
               columns={[
                 { key: 'no', header: '채무번호', width: 140, render: (a) => <span style={{ fontWeight: 700 }}>{a.payableNo}</span> },
@@ -616,9 +616,9 @@ export const ApSettlementsPage: React.FC = () => {
                 style={{
                   display: 'flex',
                   flexWrap: 'wrap',
-                  gap: '10px',
+                  gap: 'var(--space-field-grid-gap)',
                   alignItems: 'flex-end',
-                  padding: '12px',
+                  padding: 'var(--space-subbox-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-header)',
@@ -696,7 +696,7 @@ export const ApSettlementsPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <DataGrid
               columns={[
                 { key: 'leaseId', header: '리스번호', width: 120, render: (s) => s.leaseId },
@@ -727,9 +727,9 @@ export const ApSettlementsPage: React.FC = () => {
                 style={{
                   display: 'flex',
                   flexWrap: 'wrap',
-                  gap: '10px',
+                  gap: 'var(--space-field-grid-gap)',
                   alignItems: 'flex-end',
-                  padding: '12px',
+                  padding: 'var(--space-subbox-pad-x)',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-header)',
@@ -902,7 +902,7 @@ export const BankMatchingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       {canEdit && (
         <SectionPanel
           title="통장 입출금 거래 등록"
@@ -918,7 +918,7 @@ export const BankMatchingPage: React.FC = () => {
             </button>
           }
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="거래일자" required>
               <input
                 type="date"
@@ -977,7 +977,7 @@ export const BankMatchingPage: React.FC = () => {
       )}
 
       <SectionPanel title="통장 입출금 1대1 대사 연결" manualId="btx-match">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <DataGrid
             columns={[
               { key: 'txDate', header: '거래일', width: 105, render: (t) => t.txDate },
@@ -1017,7 +1017,7 @@ export const BankMatchingPage: React.FC = () => {
           />
 
           {canEdit && selectedTx && selectedTx.matchStatus === 'UNMATCHED' && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="매칭할 미수청구 · 매입채무" required minWidth={320} flex={1}>
                 <select
                   value={targetMatchId || candidateTargets[0]?.id || ''}
@@ -1126,12 +1126,12 @@ export const FinancialStatementsPage: React.FC = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="재무제표 · 회계기준 조회"
         manualId="fs-period"
         rightSlot={
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <VerticalField label="시작 연월" width={140}>
               <input
                 type="month"
@@ -1151,7 +1151,7 @@ export const FinancialStatementsPage: React.FC = () => {
           </div>
         }
       >
-        <div data-manual-id="fs-tabs" style={{ marginBottom: '12px' }}>
+        <div data-manual-id="fs-tabs" style={{ marginBottom: 'var(--space-panel-head-mb)' }}>
           <SegmentedTabs
             tabs={[
               { id: 'BS', label: '재무상태표' },
@@ -1167,15 +1167,15 @@ export const FinancialStatementsPage: React.FC = () => {
         </div>
 
         {tab === 'BS' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-page-gap)' }}>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: 'var(--space-tight-gap)' }}>
                 자산 · 합계 {formatMoney(report.balanceSheet.totalAssets)}
               </div>
               {renderStatementRows(report.balanceSheet.assets)}
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: 'var(--space-tight-gap)' }}>
                 부채 및 자본 · 합계{' '}
                 {formatMoney(report.balanceSheet.totalLiabilities + report.balanceSheet.totalEquity)}
               </div>
@@ -1229,7 +1229,7 @@ export const FinancialStatementsPage: React.FC = () => {
         )}
 
         {tab === 'STANDARD' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <VerticalField label="중소기업회계기준 조문 · 해설 검색" width={360}>
               <input
                 type="text"
@@ -1239,20 +1239,20 @@ export const FinancialStatementsPage: React.FC = () => {
                 style={controlInputStyle}
               />
             </VerticalField>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '460px', overflowY: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-stack-gap)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)', maxHeight: '460px', overflowY: 'auto' }}>
                 {filteredArticles.map((art) => (
                   <div
                     key={art.id}
                     style={{
-                      padding: '10px 12px',
+                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                       border: '1px solid var(--table-border-color)',
                       borderRadius: '6px',
                       backgroundColor: 'var(--bg-app)',
                       fontSize: '12.5px',
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                    <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>
                       {art.articleNo} · {art.articleTitle}
                     </div>
                     <div style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
@@ -1261,19 +1261,19 @@ export const FinancialStatementsPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '460px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-inline-gap)', maxHeight: '460px', overflowY: 'auto' }}>
                 {filteredCommentaries.map((sec) => (
                   <div
                     key={sec.id}
                     style={{
-                      padding: '10px 12px',
+                      padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                       border: '1px solid var(--table-border-color)',
                       borderRadius: '6px',
                       backgroundColor: 'var(--bg-app)',
                       fontSize: '12.5px',
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                    <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>
                       {sec.sectionNo} · {sec.sectionTitle}
                     </div>
                     <div style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>
@@ -1359,7 +1359,7 @@ export const OperationManualPage: React.FC = () => {
   const activeNotes = activeEntry ? customNotes[activeEntry.pageId] || [] : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel title="업무 매뉴얼 검색" manualId="man-search">
         <VerticalField label="화면명 · 업무프로세스 · 조작 대상 검색" width={420}>
           <input
@@ -1377,7 +1377,7 @@ export const OperationManualPage: React.FC = () => {
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(280px, 1fr) minmax(380px, 1.5fr)',
-          gap: '14px',
+          gap: 'var(--space-page-gap)',
           alignItems: 'start',
         }}
       >
@@ -1398,7 +1398,7 @@ export const OperationManualPage: React.FC = () => {
           <SectionPanel
             title={`${activeEntry.groupLabel} · ${activeEntry.pageTitle}`}
             rightSlot={
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-inline-gap)' }}>
                 <button
                   type="button"
                   onClick={() => navigateTo(activeEntry.pageId)}
@@ -1419,16 +1419,16 @@ export const OperationManualPage: React.FC = () => {
               </div>
             }
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)', fontSize: '13px' }}>
               <div
                 style={{
-                  padding: '10px 12px',
+                  padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                   border: '1px solid var(--table-border-color)',
                   borderRadius: '6px',
                   backgroundColor: 'var(--bg-app)',
                 }}
               >
-                <div style={{ fontWeight: 700, marginBottom: '4px' }}>기본기능 설명</div>
+                <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>기본기능 설명</div>
                 <div style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   {activeEntry.basicDescription}
                 </div>
@@ -1438,7 +1438,7 @@ export const OperationManualPage: React.FC = () => {
                 <div
                   key={proc.processName}
                   style={{
-                    padding: '12px',
+                    padding: 'var(--space-subbox-pad-x)',
                     border: '1px solid var(--table-border-color)',
                     borderRadius: '6px',
                     backgroundColor: 'var(--bg-app)',
@@ -1447,10 +1447,10 @@ export const OperationManualPage: React.FC = () => {
                   <div style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--primary)' }}>
                     {proc.processName}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '1px', marginBottom: 'var(--space-inline-gap)' }}>
                     {proc.purpose}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-tight-gap)' }}>
                     {proc.steps.map((st) => (
                       <div key={st.stepNo} style={{ lineHeight: 1.5 }}>
                         <span style={{ fontWeight: 700 }}>
@@ -1466,13 +1466,13 @@ export const OperationManualPage: React.FC = () => {
               {activeNotes.length > 0 && (
                 <div
                   style={{
-                    padding: '10px 12px',
+                    padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     backgroundColor: 'var(--bg-header)',
                   }}
                 >
-                  <div style={{ fontWeight: 700, marginBottom: '4px' }}>현장 추가 주석</div>
+                  <div style={{ fontWeight: 700, marginBottom: 'var(--space-label-gap)' }}>현장 추가 주석</div>
                   {activeNotes.map((n) => (
                     <div key={n.anchorId}>
                       {n.anchorId}: {n.note}
@@ -1760,7 +1760,7 @@ export const SystemSettingsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
         title="시스템 권한 · 7단계 티어 · 문서 설정"
         manualId="sys-tabs"
@@ -1780,9 +1780,9 @@ export const SystemSettingsPage: React.FC = () => {
       >
         <div data-manual-id="sys-body">
           {tab === 'USERS' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               {canEdit && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', alignItems: 'end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-field-grid-gap)', alignItems: 'end' }}>
                   <VerticalField label="아이디" required>
                     <input
                       type="text"
@@ -1820,7 +1820,7 @@ export const SystemSettingsPage: React.FC = () => {
                       ))}
                     </select>
                   </VerticalField>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px', fontSize: '13px' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', height: 'var(--space-control-h)', fontSize: '13px' }}>
                     <input
                       type="checkbox"
                       checked={newMaskPrice}
@@ -1928,7 +1928,7 @@ export const SystemSettingsPage: React.FC = () => {
           )}
 
           {tab === 'PERMS' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               <VerticalField label="편집할 기준 직급 티어 선택" width={240}>
                 <select
                   value={permTier}
@@ -2017,17 +2017,17 @@ export const SystemSettingsPage: React.FC = () => {
           )}
 
           {tab === 'TEMPLATES' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               <div
                 style={{
-                  padding: '10px 12px',
+                  padding: 'var(--space-subbox-pad-y) var(--space-subbox-pad-x)',
                   border: '1px solid var(--table-border-color)',
                   borderRadius: '6px',
                   backgroundColor: 'var(--bg-app)',
                   fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '16px',
+                  gap: 'var(--space-conservation-gap)',
                   flexWrap: 'wrap',
                 }}
               >
@@ -2046,13 +2046,13 @@ export const SystemSettingsPage: React.FC = () => {
                   <div
                     key={dt}
                     style={{
-                      padding: '12px',
+                      padding: 'var(--space-subbox-pad-x)',
                       border: '1px solid var(--table-border-color)',
                       borderRadius: '6px',
                       backgroundColor: 'var(--bg-app)',
                       display: 'grid',
                       gridTemplateColumns: '140px 1fr 1fr auto',
-                      gap: '10px',
+                      gap: 'var(--space-field-grid-gap)',
                       alignItems: 'end',
                     }}
                   >
@@ -2088,7 +2088,7 @@ export const SystemSettingsPage: React.FC = () => {
                         style={controlInputStyle}
                       />
                     </VerticalField>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 'var(--space-tight-gap)', alignItems: 'center' }}>
                       {canEdit && (
                         <>
                           <label style={{ ...actionBtnStyle('secondary', true), cursor: 'pointer' }}>
@@ -2121,8 +2121,8 @@ export const SystemSettingsPage: React.FC = () => {
           )}
 
           {tab === 'MAIL' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '640px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)', maxWidth: '640px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
                 <VerticalField label="메일 서버 구분">
                   <select
                     value={smtpProvider}
