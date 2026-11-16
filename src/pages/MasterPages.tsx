@@ -1127,7 +1127,16 @@ export const PartnersPage: React.FC = () => {
           maxHeight="calc(100vh - 200px)"
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-page-gap)',
+            maxHeight: 'calc(100vh - 200px)',
+            overflowY: 'auto',
+            paddingRight: '2px',
+          }}
+        >
           <input
             ref={bizCertInputRef}
             type="file"
