@@ -13,7 +13,10 @@
     "db:backup": "node scripts/backup_fl_golden_snapshot.cjs",
     "db:restore": "node scripts/restore_fl_golden_snapshot.cjs",
     "devops:central-migrate": "node scripts/devops/migrate_data_to_central.cjs",
-    "devops:tenants-inspect": "node scripts/devops/sync_tenant_schemas.cjs"
+    "devops:tenants-inspect": "node scripts/devops/sync_tenant_schemas.cjs",
+    "purge:vercel": "node scripts/auto_purge_vercel.cjs --keep=3",
+    "deploy": "npx vercel --prod --yes && node scripts/auto_purge_vercel.cjs --keep=3",
+    "deploy:prod": "npm run build && npx vercel --prod --yes && node scripts/auto_purge_vercel.cjs --keep=3"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1112.0",

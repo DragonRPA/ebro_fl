@@ -1,6 +1,7 @@
 ﻿const { execSync } = require('child_process');
 
 const PROJECT_POLICIES = [
+  { name: 'ebro_fl', keep: 3 },              // 최신 배포 3개만 보존
   { name: 'space-consult-assist', keep: 3 }, // 3일 전 최종 빌드된 최신 3개만 보존
   { name: 'homepage', keep: 5 },             // 최신 5개만 보존
   { name: 'giyuen-lift', keep: 10 }          // 헌장 6.3 준수 (최근 10개 보존)

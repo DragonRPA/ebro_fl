@@ -18,24 +18,10 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Run purge (ebro_awp - 최근 5개 보존)
+      - name: Run purge (ebro_fl - 최근 3개 보존)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: dragonrpa
         run: |
-          echo "=== ebro_awp 배포 목록 ==="
-          vercel list ebro_awp --token $VERCEL_TOKEN --limit 100 || true
-          
-          # 최근 5개 제외하고 나머지 삭제
-          URLS=$(vercel list ebro_awp --token $VERCEL_TOKEN --limit 100 2>/dev/null \
-            | grep -oP 'https://(ebro|ebro_awp|giyeun-lift|giyuen-lift)-[a-z0-9]+-dragonrpa\.vercel\.app' \
-            | tail -n +6)
-          
-          if [ -z "$URLS" ]; then
-            echo "삭제 대상 없음 (5개 이하)"
-          else
-            echo "$URLS" | while read url; do
-              echo "삭제: $url"
-              vercel rm "$url" --token $VERCEL_TOKEN --yes || true
-            done
-            echo "정리 완료"
-          fi
+          sleep 20
+          node scripts/auto_purge_vercel.cjs --keep=3
