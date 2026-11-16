@@ -5,6 +5,7 @@ import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import {
   addDaysIso,
+  allocateNextContractNo,
   completeFulfillment,
   executeAccountTransfer,
   recordTradeAftercare,
@@ -287,10 +288,11 @@ export const QuotationsPage: React.FC = () => {
           ? qt.lines.reduce((s, l) => s + l.supplyAmountKrw, 0)
           : 0;
 
+      const contractNo = await allocateNextContractNo(qt.quoteDomain, today);
       const ctr: FlContract = {
         id: ctrId,
         tenantId: DEFAULT_TENANT_ID,
-        contractNo: ctrId,
+        contractNo,
         contractDomain: qt.quoteDomain,
         quotationId: qt.id,
         partnerId: qt.partnerId,
@@ -805,11 +807,12 @@ export const TradeContractsPage: React.FC = () => {
     const supply = Math.round(cleanQty * Number(unitPriceKrw || 0));
     const vat = Math.round(supply * 0.1);
     const ctrId = newId('CTR');
+    const contractNo = await allocateNextContractNo('TRADE', contractDate);
     const resolvedDueDay = paymentCycle === '선입금' ? 0 : Math.min(31, Math.max(1, Number(paymentDueDay || 10)));
     const ctr: FlContract = {
       id: ctrId,
       tenantId: DEFAULT_TENANT_ID,
-      contractNo: ctrId,
+      contractNo,
       contractDomain: 'TRADE',
       partnerId: partner.id,
       partnerName: partner.name,
@@ -2675,6 +2678,26 @@ export const TradePerformancePage: React.FC = () => {
               </span>
             ),
           },
+          {
+            key: 'marginRate',
+            header: '이익율',
+            width: 90,
+            align: 'right',
+            sortable: true,
+            sortValue: (r) => {
+              const netSales = Number(r.salesKrw || 0) - Number(r.refundKrw || 0);
+              return netSales > 0 ? (Number(r.grossProfit || 0) / netSales) * 100 : 0;
+            },
+            render: (r) => {
+              const netSales = Number(r.salesKrw || 0) - Number(r.refundKrw || 0);
+              const rate = netSales > 0 ? (Number(r.grossProfit || 0) / netSales) * 100 : 0;
+              return (
+                <span style={{ fontWeight: 700, color: rate >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {`${rate.toFixed(2)}%`}
+                </span>
+              );
+            },
+          },
         ]}
         rows={filteredRows}
         rowKey={(r) => r.id}
@@ -2689,6 +2712,11 @@ export const TradePerformancePage: React.FC = () => {
           {
             label: '매출총이익',
             value: formatMoney(totals.gp, { salesSensitive: true }),
+            tone: totals.gp >= 0 ? 'success' : 'danger',
+          },
+          {
+            label: '이익율',
+            value: `${((totals.sales - totals.refund) > 0 ? (totals.gp / (totals.sales - totals.refund)) * 100 : 0).toFixed(2)}%`,
             tone: totals.gp >= 0 ? 'success' : 'danger',
           },
         ]}

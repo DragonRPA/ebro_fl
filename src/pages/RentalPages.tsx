@@ -4,6 +4,7 @@ import { CommitActionButton } from '../core/ActionCommandGateway';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import {
   addDaysIso,
+  allocateNextContractNo,
   allocateSequentialUnitCodes,
   calculateRentalProRataForMonth,
   completeFulfillment,
@@ -130,11 +131,12 @@ export const RentalContractsPage: React.FC = () => {
     const monthlySupply = Math.round(cleanQty * Number(monthlyPriceKrw || 0));
     const vat = Math.round(monthlySupply * 0.1);
     const ctrId = newId('CTR');
+    const contractNo = await allocateNextContractNo('RENTAL', startDate);
     const resolvedDueDay = paymentCycle === '선입금' ? 0 : Math.min(31, Math.max(1, Number(paymentDueDay || 10)));
     const ctr: FlContract = {
       id: ctrId,
       tenantId: DEFAULT_TENANT_ID,
-      contractNo: ctrId,
+      contractNo,
       contractDomain: 'RENTAL',
       partnerId: partner.id,
       partnerName: partner.name,

@@ -290,6 +290,29 @@ export async function allocateSequentialUnitCodes(
   });
 }
 
+export async function allocateNextContractNo(
+  domain: 'TRADE' | 'RENTAL',
+  contractDate: string
+): Promise<string> {
+  const cleanDate = (contractDate || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  const yymm = `${cleanDate.slice(2, 4)}${cleanDate.slice(5, 7)}`;
+  const prefix = `${domain === 'RENTAL' ? 'R' : 'T'}-${yymm}-`;
+  const res = await flSupabase
+    .from('contracts')
+    .select('contract_no')
+    .like('contract_no', `${prefix}%`);
+  let maxSeq = 0;
+  if (!res.error && Array.isArray(res.data)) {
+    for (const row of res.data as { contract_no?: string }[]) {
+      const code = row.contract_no || '';
+      if (!code.startsWith(prefix)) continue;
+      const num = Number(code.slice(prefix.length));
+      if (Number.isFinite(num) && num > maxSeq) maxSeq = num;
+    }
+  }
+  return `${prefix}${String(maxSeq + 1).padStart(4, '0')}`;
+}
+
 export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promise<{
   purchase: FlPurchase;
   lines: FlPurchaseLine[];
