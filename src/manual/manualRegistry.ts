@@ -184,18 +184,18 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'purchases',
     pageTitle: '매입 통관 관리',
     groupLabel: '조달 · 물류',
-    basicDescription: '수입 및 내수 매입을 등록하고 관세·해상운임·통관비·내륙운임을 품목별 금액 비율로 배분하여 총입고원가와 재고·자산 원장을 생성한다.',
+    basicDescription: '수입 및 내수 매입을 등록하고 환율적용일 기준 환율과 관세·해상운임·통관비·내륙운임을 품목별 금액 비율로 배분하여 총입고원가와 재고·자산 원장을 생성한다.',
     anchors: [
-      { anchorId: 'pur-form', title: '매입·통관 입력 패널', summary: '매입구분, 거래처, 통화, 환율, 부대비용과 품목 행을 입력한다.' },
-      { anchorId: 'pur-grid', title: '매입 입고 내역', summary: '확정된 매입 전표와 배분 단가 내역을 조회한다.' },
+      { anchorId: 'pur-form', title: '매입·통관 입력 패널', summary: '매입구분, 거래처, 통화, 환율적용일, 적용환율, 부대비용과 품목 행을 입력한다.' },
+      { anchorId: 'pur-grid', title: '매입 입고 내역', summary: '확정된 매입 전표와 환율적용일·배분 단가 내역을 조회한다.' },
       { anchorId: 'pur-commit', title: '매입 입고 확정 버튼', summary: '원화 환산액과 부대비용 합계 일치 검증 후 재고 원장과 채무를 생성한다.' },
     ],
     processes: [
       {
         processName: '수입 매입 입고 및 부대비용 배분',
-        purpose: '외화 물품가액과 수입 부대비용을 품목에 정확히 배분하고 1원 단수까지 일치시킨다.',
+        purpose: '환율적용일 기준 외화 물품가액과 수입 부대비용을 품목에 정확히 배분하고 1원 단수까지 일치시킨다.',
         steps: [
-          { stepNo: 1, targetLabel: '기본 조건 입력칸', manualAnchorId: 'pur-form', actionDetail: '수입 구분, 매입처, 입고계정, 통화, 적용환율, 희망입고일을 입력한다.' },
+          { stepNo: 1, targetLabel: '통화 · 환율적용일 입력칸', manualAnchorId: 'pur-form', actionDetail: '수입 구분, 매입처, 입고계정, 통화와 환율적용일을 지정하면 해당 일자 환율이 기본 입력되며 직접 수정할 수 있다.' },
           { stepNo: 2, targetLabel: '부대비용·품목 행', manualAnchorId: 'pur-form', actionDetail: '관세, 해상운임, 통관비, 내륙운임과 품목별 수량·외화단가·시리얼을 입력한다.' },
           { stepNo: 3, targetLabel: '입고 확정 버튼', manualAnchorId: 'pur-commit', actionDetail: '하단 원가 합계 검증 후 확정 또는 결재 상신을 실행한다.' },
         ],

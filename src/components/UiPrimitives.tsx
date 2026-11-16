@@ -21,6 +21,118 @@ export const controlInputStyle: React.CSSProperties = {
   boxShadow: 'none',
 };
 
+function formatCommaDisplayValue(value: number, allowDecimal: boolean, maxDecimals: number): string {
+  if (!Number.isFinite(value)) return '0';
+  const decimals = allowDecimal ? maxDecimals : 0;
+  const rounded = Number(value.toFixed(decimals));
+  const [intPart, decPart] = String(rounded).split('.');
+  const formattedInt = Number(intPart || '0').toLocaleString('ko-KR');
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+}
+
+function parseAndFormatCommaDraft(
+  raw: string,
+  allowDecimal: boolean,
+  maxDecimals: number
+): { display: string; numeric: number } {
+  const cleaned = raw.replace(/[^\d.]/g, '');
+  if (!cleaned) return { display: '', numeric: 0 };
+  if (!allowDecimal) {
+    const digits = cleaned.replace(/\./g, '');
+    if (!digits) return { display: '', numeric: 0 };
+    const n = Number(digits);
+    return {
+      display: Number.isFinite(n) ? n.toLocaleString('ko-KR') : '',
+      numeric: Number.isFinite(n) ? n : 0,
+    };
+  }
+  const dotIdx = cleaned.indexOf('.');
+  if (dotIdx === -1) {
+    const n = Number(cleaned);
+    return {
+      display: Number.isFinite(n) ? n.toLocaleString('ko-KR') : '',
+      numeric: Number.isFinite(n) ? n : 0,
+    };
+  }
+  const intRaw = cleaned.slice(0, dotIdx);
+  const decRaw = cleaned.slice(dotIdx + 1).replace(/\./g, '').slice(0, maxDecimals);
+  const intNum = intRaw ? Number(intRaw) : 0;
+  const formattedInt = Number.isFinite(intNum) ? intNum.toLocaleString('ko-KR') : '0';
+  const parsed = Number(`${intRaw || '0'}.${decRaw || '0'}`);
+  return {
+    display: `${formattedInt}.${decRaw}`,
+    numeric: Number.isFinite(parsed) ? parsed : 0,
+  };
+}
+
+export interface CommaNumberInputProps {
+  value: number;
+  onChange: (nextValue: number) => void;
+  allowDecimal?: boolean;
+  maxDecimals?: number;
+  min?: number;
+  disabled?: boolean;
+  placeholder?: string;
+  style?: React.CSSProperties;
+  dataTestId?: string;
+}
+
+export const CommaNumberInput: React.FC<CommaNumberInputProps> = ({
+  value,
+  onChange,
+  allowDecimal = false,
+  maxDecimals = 4,
+  min,
+  disabled = false,
+  placeholder,
+  style,
+  dataTestId,
+}) => {
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const displayValue = focused
+    ? draft
+    : formatCommaDisplayValue(Number(value || 0), allowDecimal, maxDecimals);
+
+  return (
+    <input
+      type="text"
+      inputMode={allowDecimal ? 'decimal' : 'numeric'}
+      disabled={disabled}
+      placeholder={placeholder}
+      data-testid={dataTestId}
+      value={displayValue}
+      onFocus={() => {
+        setFocused(true);
+        setDraft(formatCommaDisplayValue(Number(value || 0), allowDecimal, maxDecimals));
+      }}
+      onChange={(e) => {
+        const { display, numeric } = parseAndFormatCommaDraft(
+          e.target.value,
+          allowDecimal,
+          maxDecimals
+        );
+        setDraft(display);
+        onChange(numeric);
+      }}
+      onBlur={() => {
+        setFocused(false);
+        const current = Number(value || 0);
+        if (min !== undefined && (!Number.isFinite(current) || current < min)) {
+          onChange(min);
+        }
+      }}
+      style={{
+        ...controlInputStyle,
+        textAlign: 'right',
+        fontVariantNumeric: 'tabular-nums',
+        ...style,
+      }}
+    />
+  );
+};
+
 export const controlTextareaStyle: React.CSSProperties = {
   padding: '8px 10px',
   borderRadius: '6px',

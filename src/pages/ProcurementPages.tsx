@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppShell } from '../core/AppShellContext';
 import { CommitActionButton } from '../core/ActionCommandGateway';
 import { confirmPurchaseInbound, recordLogisticsDispatch } from '../services/domainEngine';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   ModalDialog,
@@ -15,12 +16,61 @@ import {
 } from '../components/UiPrimitives';
 import type {
   CurrencyCode,
+  FlExchangeRate,
   FlLogisticsDispatch,
   FlPurchase,
   FlPurchaseLine,
   ItemCategory,
   ManagementType,
 } from '../types/domain';
+
+const DEFAULT_FX_RATES: Record<Exclude<CurrencyCode, 'KRW'>, number> = {
+  USD: 1395.5,
+  CNY: 196.8,
+  EUR: 1518.0,
+  JPY: 9.24,
+};
+
+function resolveManagedRateForDate(
+  exchangeRates: FlExchangeRate[],
+  currencyCode: CurrencyCode,
+  targetDate: string
+): { rate: number; matchedDate: string | null; exactMatch: boolean } {
+  if (currencyCode === 'KRW') {
+    return { rate: 1, matchedDate: targetDate, exactMatch: true };
+  }
+  const rows = exchangeRates
+    .filter((r) => r.currencyCode === currencyCode && Number(r.baseRateKrw) > 0)
+    .sort((a, b) => a.rateDate.localeCompare(b.rateDate));
+  if (rows.length === 0) {
+    return {
+      rate: DEFAULT_FX_RATES[currencyCode],
+      matchedDate: null,
+      exactMatch: false,
+    };
+  }
+  const exact = rows.find((r) => r.rateDate === targetDate);
+  if (exact) {
+    return {
+      rate: Number(exact.baseRateKrw),
+      matchedDate: exact.rateDate,
+      exactMatch: true,
+    };
+  }
+  const onOrBefore = [...rows].reverse().find((r) => r.rateDate <= targetDate);
+  if (onOrBefore) {
+    return {
+      rate: Number(onOrBefore.baseRateKrw),
+      matchedDate: onOrBefore.rateDate,
+      exactMatch: false,
+    };
+  }
+  return {
+    rate: Number(rows[0].baseRateKrw),
+    matchedDate: rows[0].rateDate,
+    exactMatch: false,
+  };
+}
 
 interface DraftPurchaseLine {
   key: string;
@@ -52,7 +102,12 @@ export const PurchasesPage: React.FC = () => {
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
   const [targetDomain, setTargetDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>('USD');
-  const [fxRate, setFxRate] = useState<number>(1380);
+  const [fxDate, setFxDate] = useState(today);
+  const [fxRate, setFxRate] = useState<number>(() =>
+    resolveManagedRateForDate(datasets.exchangeRates, 'USD', today).rate
+  );
+  const fxRateManuallyEdited = useRef(false);
+  const fxFetchSeqRef = useRef(0);
   const [effectiveDate, setEffectiveDate] = useState(today);
   const [blNo, setBlNo] = useState('');
   const [lcNo, setLcNo] = useState('');
@@ -84,18 +139,47 @@ export const PurchasesPage: React.FC = () => {
 
   const [detailPurchase, setDetailPurchase] = useState<FlPurchase | null>(null);
 
-  const handleCurrencyChange = (nextCur: CurrencyCode) => {
-    setCurrencyCode(nextCur);
+  useEffect(() => {
+    if (fxRateManuallyEdited.current || currencyCode === 'KRW') return;
+    const resolved = resolveManagedRateForDate(datasets.exchangeRates, currencyCode, fxDate);
+    if (resolved.rate > 0) {
+      setFxRate(resolved.rate);
+    }
+  }, [currencyCode, datasets.exchangeRates, fxDate]);
+
+  const applyDefaultRateFor = (nextCur: CurrencyCode, nextFxDate: string) => {
+    fxRateManuallyEdited.current = false;
+    const reqSeq = ++fxFetchSeqRef.current;
     if (nextCur === 'KRW') {
       setFxRate(1);
       return;
     }
-    const latest = [...datasets.exchangeRates]
-      .filter((r) => r.currencyCode === nextCur)
-      .sort((a, b) => b.rateDate.localeCompare(a.rateDate))[0];
-    if (latest) {
-      setFxRate(Number(latest.baseRateKrw));
+    const resolved = resolveManagedRateForDate(datasets.exchangeRates, nextCur, nextFxDate);
+    setFxRate(resolved.rate);
+    if (!resolved.exactMatch && /^\d{4}-\d{2}-\d{2}$/.test(nextFxDate)) {
+      void fetch(`/api/exchange-rate?currency=${encodeURIComponent(nextCur)}&date=${encodeURIComponent(nextFxDate)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((json: { success?: boolean; data?: { baseRate?: number } } | null) => {
+          if (reqSeq !== fxFetchSeqRef.current || fxRateManuallyEdited.current) return;
+          const fetchedRate = Number(json?.data?.baseRate || 0);
+          if (fetchedRate > 0) {
+            setFxRate(fetchedRate);
+          }
+        })
+        .catch(() => {
+          // 오프라인·프리뷰 환경에서는 관리 환율 원장 최근접값 유지
+        });
     }
+  };
+
+  const handleCurrencyChange = (nextCur: CurrencyCode) => {
+    setCurrencyCode(nextCur);
+    applyDefaultRateFor(nextCur, fxDate);
+  };
+
+  const handleFxDateChange = (nextFxDate: string) => {
+    setFxDate(nextFxDate);
+    applyDefaultRateFor(currencyCode, nextFxDate);
   };
 
   const addDraftLine = () => {
@@ -177,7 +261,7 @@ export const PurchasesPage: React.FC = () => {
       lcNo: lcNo.trim() || undefined,
       currencyCode,
       fxRate: currencyCode === 'KRW' ? 1 : Number(fxRate || 1),
-      fxDate: effectiveDate,
+      fxDate: currencyCode === 'KRW' ? effectiveDate : fxDate || effectiveDate,
       customsDutyKrw: Math.round(customsDutyKrw || 0),
       oceanFreightKrw: Math.round(oceanFreightKrw || 0),
       clearanceFeeKrw: Math.round(clearanceFeeKrw || 0),
@@ -258,11 +342,17 @@ export const PurchasesPage: React.FC = () => {
     { key: 'supplierName', header: '매입처', render: (r) => r.supplierName },
     { key: 'currencyCode', header: '통화', width: 70, align: 'center', render: (r) => r.currencyCode },
     {
+      key: 'fxDate',
+      header: '환율적용일',
+      width: 105,
+      render: (r) => (r.currencyCode === 'KRW' ? '-' : r.fxDate || r.effectiveDate),
+    },
+    {
       key: 'fxRate',
       header: '적용환율',
-      width: 95,
+      width: 105,
       align: 'right',
-      render: (r) => Number(r.fxRate).toLocaleString('ko-KR'),
+      render: (r) => Number(r.fxRate).toLocaleString('ko-KR', { maximumFractionDigits: 4 }),
     },
     {
       key: 'totalLandedCostKrw',
@@ -288,7 +378,7 @@ export const PurchasesPage: React.FC = () => {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '10px' }}>
-              <VerticalField label="매입구분" required>
+              <VerticalField label="매입구분" minWidth={0} required>
                 <select
                   value={purchaseType}
                   onChange={(e) => {
@@ -302,7 +392,7 @@ export const PurchasesPage: React.FC = () => {
                   <option value="DOMESTIC">내수 매입</option>
                 </select>
               </VerticalField>
-              <VerticalField label="매입처" required>
+              <VerticalField label="매입처" minWidth={0} required>
                 <select
                   value={supplierId || suppliers[0]?.id || ''}
                   onChange={(e) => setSupplierId(e.target.value)}
@@ -315,7 +405,7 @@ export const PurchasesPage: React.FC = () => {
                   ))}
                 </select>
               </VerticalField>
-              <VerticalField label="귀속계정" required>
+              <VerticalField label="귀속계정" minWidth={0} required>
                 <select
                   value={targetDomain}
                   onChange={(e) => setTargetDomain(e.target.value as 'TRADE' | 'RENTAL')}
@@ -325,7 +415,7 @@ export const PurchasesPage: React.FC = () => {
                   <option value="RENTAL">렌탈자산</option>
                 </select>
               </VerticalField>
-              <VerticalField label="입고기준일" required>
+              <VerticalField label="입고기준일" minWidth={0} required>
                 <input
                   type="date"
                   value={effectiveDate}
@@ -333,8 +423,9 @@ export const PurchasesPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="통화" required>
+              <VerticalField label="통화" minWidth={0} required>
                 <select
+                  data-testid="pur-currency"
                   value={currencyCode}
                   onChange={(e) => handleCurrencyChange(e.target.value as CurrencyCode)}
                   style={controlInputStyle}
@@ -346,17 +437,31 @@ export const PurchasesPage: React.FC = () => {
                   <option value="KRW">KRW</option>
                 </select>
               </VerticalField>
-              <VerticalField label="적용환율" required>
+              <VerticalField label="환율적용일" minWidth={0} required>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="date"
+                  data-testid="pur-fx-date"
                   disabled={currencyCode === 'KRW'}
-                  value={currencyCode === 'KRW' ? 1 : fxRate}
-                  onChange={(e) => setFxRate(Number(e.target.value))}
+                  value={currencyCode === 'KRW' ? effectiveDate : fxDate}
+                  onChange={(e) => handleFxDateChange(e.target.value)}
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="BL 번호">
+              <VerticalField label="적용환율" minWidth={0} required>
+                <CommaNumberInput
+                  dataTestId="pur-fx-rate"
+                  allowDecimal
+                  maxDecimals={4}
+                  min={0}
+                  disabled={currencyCode === 'KRW'}
+                  value={currencyCode === 'KRW' ? 1 : fxRate}
+                  onChange={(val) => {
+                    fxRateManuallyEdited.current = true;
+                    setFxRate(val);
+                  }}
+                />
+              </VerticalField>
+              <VerticalField label="BL 번호" minWidth={0}>
                 <input
                   type="text"
                   value={blNo}
@@ -364,7 +469,7 @@ export const PurchasesPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="LC 번호">
+              <VerticalField label="LC 번호" minWidth={0}>
                 <input
                   type="text"
                   value={lcNo}
@@ -375,39 +480,39 @@ export const PurchasesPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
-              <VerticalField label="관세">
-                <input
-                  type="number"
+              <VerticalField label="관세" minWidth={0}>
+                <CommaNumberInput
+                  allowDecimal={false}
+                  min={0}
                   value={customsDutyKrw}
-                  onChange={(e) => setCustomsDutyKrw(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setCustomsDutyKrw}
                 />
               </VerticalField>
-              <VerticalField label="해상운임">
-                <input
-                  type="number"
+              <VerticalField label="해상운임" minWidth={0}>
+                <CommaNumberInput
+                  allowDecimal={false}
+                  min={0}
                   value={oceanFreightKrw}
-                  onChange={(e) => setOceanFreightKrw(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setOceanFreightKrw}
                 />
               </VerticalField>
-              <VerticalField label="통관수수료">
-                <input
-                  type="number"
+              <VerticalField label="통관수수료" minWidth={0}>
+                <CommaNumberInput
+                  allowDecimal={false}
+                  min={0}
                   value={clearanceFeeKrw}
-                  onChange={(e) => setClearanceFeeKrw(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setClearanceFeeKrw}
                 />
               </VerticalField>
-              <VerticalField label="국내내륙운임">
-                <input
-                  type="number"
+              <VerticalField label="국내내륙운임" minWidth={0}>
+                <CommaNumberInput
+                  allowDecimal={false}
+                  min={0}
                   value={inlandFreightKrw}
-                  onChange={(e) => setInlandFreightKrw(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setInlandFreightKrw}
                 />
               </VerticalField>
-              <VerticalField label="비고">
+              <VerticalField label="비고" minWidth={0}>
                 <input
                   type="text"
                   value={memo}
@@ -417,14 +522,16 @@ export const PurchasesPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowX: 'auto' }}>
               {lines.map((l) => (
                 <div
                   key={l.key}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '2fr 80px 130px 1.4fr 110px 65px',
-                    gap: '8px',
+                    gridTemplateColumns:
+                      'minmax(220px, 2.1fr) minmax(104px, 0.75fr) minmax(150px, 1.05fr) minmax(170px, 1.35fr) minmax(130px, 0.9fr) 68px',
+                    minWidth: '890px',
+                    gap: '10px',
                     alignItems: 'end',
                     padding: '8px 10px',
                     borderRadius: '6px',
@@ -432,7 +539,7 @@ export const PurchasesPage: React.FC = () => {
                     backgroundColor: 'var(--bg-app)',
                   }}
                 >
-                  <VerticalField label="입고 품목">
+                  <VerticalField label="입고 품목" minWidth={0}>
                     <select
                       value={l.itemId}
                       onChange={(e) => updateLineItem(l.key, e.target.value)}
@@ -445,40 +552,38 @@ export const PurchasesPage: React.FC = () => {
                       ))}
                     </select>
                   </VerticalField>
-                  <VerticalField label="수량">
-                    <input
-                      type="number"
+                  <VerticalField label="수량" minWidth={0}>
+                    <CommaNumberInput
+                      dataTestId="pur-line-qty"
+                      allowDecimal={false}
                       min={1}
                       value={l.quantity}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         setLines((prev) =>
-                          prev.map((x) =>
-                            x.key === l.key ? { ...x, quantity: Number(e.target.value) } : x
-                          )
+                          prev.map((x) => (x.key === l.key ? { ...x, quantity: val } : x))
                         )
                       }
-                      style={controlInputStyle}
                     />
                   </VerticalField>
-                  <VerticalField label={`단가 ${currencyCode}`}>
-                    <input
-                      type="number"
-                      step="0.01"
+                  <VerticalField label={`단가 ${currencyCode}`} minWidth={0}>
+                    <CommaNumberInput
+                      dataTestId="pur-line-price"
+                      allowDecimal={currencyCode !== 'KRW'}
+                      maxDecimals={4}
+                      min={0}
                       value={l.foreignUnitPrice}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         setLines((prev) =>
                           prev.map((x) =>
-                            x.key === l.key
-                              ? { ...x, foreignUnitPrice: Number(e.target.value) }
-                              : x
+                            x.key === l.key ? { ...x, foreignUnitPrice: val } : x
                           )
                         )
                       }
-                      style={controlInputStyle}
                     />
                   </VerticalField>
                   <VerticalField
                     label={l.managementType === 'SERIAL' ? '시리얼번호 쉼표구분' : '로트번호'}
+                    minWidth={0}
                   >
                     {l.managementType === 'SERIAL' ? (
                       <input
@@ -508,7 +613,7 @@ export const PurchasesPage: React.FC = () => {
                       />
                     )}
                   </VerticalField>
-                  <VerticalField label="입고창고">
+                  <VerticalField label="입고창고" minWidth={0}>
                     <input
                       type="text"
                       value={l.warehouseLocation}
@@ -525,7 +630,7 @@ export const PurchasesPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLines((prev) => prev.filter((x) => x.key !== l.key))}
-                    style={actionBtnStyle('danger', true)}
+                    style={{ ...actionBtnStyle('danger', true), height: '34px' }}
                   >
                     삭제
                   </button>
@@ -577,7 +682,20 @@ export const PurchasesPage: React.FC = () => {
             columns={[
               { key: 'sku', header: '품목코드', width: 120, render: (l) => l.sku },
               { key: 'itemName', header: '품명', render: (l) => l.itemName },
-              { key: 'qty', header: '수량', width: 65, align: 'right', render: (l) => l.quantity },
+              {
+                key: 'qty',
+                header: '수량',
+                width: 80,
+                align: 'right',
+                render: (l) => Number(l.quantity).toLocaleString('ko-KR'),
+              },
+              {
+                key: 'foreignUnitPrice',
+                header: '외화단가',
+                width: 115,
+                align: 'right',
+                render: (l) => Number(l.foreignUnitPrice).toLocaleString('ko-KR', { maximumFractionDigits: 4 }),
+              },
               {
                 key: 'merch',
                 header: '배분물품대',
@@ -788,11 +906,11 @@ export const LogisticsCostsPage: React.FC = () => {
               />
             </VerticalField>
             <VerticalField label="운송비 공급가액" required>
-              <input
-                type="number"
+              <CommaNumberInput
+                allowDecimal={false}
+                min={0}
                 value={transportCostKrw}
-                onChange={(e) => setTransportCostKrw(Number(e.target.value))}
-                style={controlInputStyle}
+                onChange={setTransportCostKrw}
               />
             </VerticalField>
             <VerticalField label="부담주체" required>
@@ -810,11 +928,11 @@ export const LogisticsCostsPage: React.FC = () => {
             </VerticalField>
             {costBearer === 'CUSTOMER' && (
               <VerticalField label="고객 청구금액">
-                <input
-                  type="number"
+                <CommaNumberInput
+                  allowDecimal={false}
+                  min={0}
                   value={customerChargeKrw || transportCostKrw}
-                  onChange={(e) => setCustomerChargeKrw(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setCustomerChargeKrw}
                 />
               </VerticalField>
             )}

@@ -206,6 +206,43 @@ async function main() {
     await page.getByText('관리 환율 원장 정상', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
     console.log('[E2E 7d PASS] 환율 관리 3-month chart, currency/period tabs, and conservation bar verified.');
 
+    // Visit 매입 통관 관리 and verify fxDate auto-fill + manual edit, comma inputs, and zero qty/price UI overlap
+    await page.locator('aside nav button', { hasText: '매입 통관 관리' }).first().click();
+    const fxDateInput = page.locator('input[data-testid="pur-fx-date"]').first();
+    const fxRateInput = page.locator('input[data-testid="pur-fx-rate"]').first();
+    const currencySelect = page.locator('select[data-testid="pur-currency"]').first();
+    const qtyInput = page.locator('input[data-testid="pur-line-qty"]').first();
+    const priceInput = page.locator('input[data-testid="pur-line-price"]').first();
+    await fxDateInput.waitFor({ state: 'visible', timeout: 8000 });
+
+    await currencySelect.selectOption('CNY');
+    await fxDateInput.fill('2026-10-15');
+    await page.waitForTimeout(200);
+    const autoCnyRate = await fxRateInput.inputValue();
+    assert.strictEqual(autoCnyRate, '194.2', `Expected CNY 2026-10-15 default rate 194.2, got ${autoCnyRate}`);
+
+    await fxRateInput.fill('198.5');
+    await fxRateInput.blur();
+    assert.strictEqual(await fxRateInput.inputValue(), '198.5', 'FX rate must remain manually editable');
+
+    await qtyInput.fill('1250');
+    await qtyInput.blur();
+    assert.strictEqual(await qtyInput.inputValue(), '1,250', 'Quantity input must format thousand commas');
+
+    await priceInput.fill('158240');
+    await priceInput.blur();
+    assert.strictEqual(await priceInput.inputValue(), '158,240', 'Unit price input must format thousand commas');
+
+    const qtyBox = await qtyInput.boundingBox();
+    const priceBox = await priceInput.boundingBox();
+    assert(
+      qtyBox && priceBox && qtyBox.x + qtyBox.width + 6 <= priceBox.x,
+      `Qty and unit price inputs must NOT overlap (qtyEnd=${qtyBox ? qtyBox.x + qtyBox.width : 0}, priceX=${priceBox ? priceBox.x : 0})`
+    );
+    console.log(
+      `[E2E 7e PASS] 매입 통관 관리 fxDate auto-rate (${autoCnyRate}->198.5), comma format (1,250 / 158,240), and zero overlap (gap=${Math.round(priceBox.x - (qtyBox.x + qtyBox.width))}px) verified.`
+    );
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');
