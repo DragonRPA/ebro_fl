@@ -2493,6 +2493,82 @@ export const ExchangeRatesPage: React.FC = () => {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [gridFilter, setGridFilter] = useState<'ALL' | Exclude<CurrencyCode, 'KRW'>>('ALL');
   const [busy, setBusy] = useState(false);
+  const [liveRates, setLiveRates] = useState<
+    Record<Exclude<CurrencyCode, 'KRW'>, { rate: number; ttsRate: number }> | null
+  >(null);
+  const [liveUpdatedAt, setLiveUpdatedAt] = useState<string>('');
+  const [liveLoading, setLiveLoading] = useState(false);
+
+  const fetchLiveRates = async () => {
+    setLiveLoading(true);
+    try {
+      let rateMap: Record<string, number> | null = null;
+      let updatedLabel = '';
+
+      try {
+        const resp = await fetch('https://open.er-api.com/v6/latest/KRW');
+        if (resp.ok) {
+          const json = (await resp.json()) as {
+            result?: string;
+            time_last_update_utc?: string;
+            rates?: Record<string, number>;
+          };
+          if (json.result === 'success' && json.rates) {
+            rateMap = json.rates;
+            updatedLabel = new Date().toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            });
+          }
+        }
+      } catch {
+        // fallback below
+      }
+
+      if (!rateMap) {
+        const fbResp = await fetch(
+          'https://api.frankfurter.dev/v1/latest?base=KRW&symbols=USD,CNY,EUR,JPY'
+        );
+        if (fbResp.ok) {
+          const fbJson = (await fbResp.json()) as {
+            date?: string;
+            rates?: Record<string, number>;
+          };
+          if (fbJson.rates) {
+            rateMap = fbJson.rates;
+            updatedLabel = fbJson.date || today;
+          }
+        }
+      }
+
+      if (rateMap) {
+        const nextRates = {} as Record<
+          Exclude<CurrencyCode, 'KRW'>,
+          { rate: number; ttsRate: number }
+        >;
+        for (const c of FX_CURRENCIES) {
+          const krwToForeign = Number(rateMap[c.code] || 0);
+          if (krwToForeign > 0) {
+            const factor = c.code === 'JPY' ? 10000 : 100;
+            const rate = Math.round((1 / krwToForeign) * factor) / factor;
+            const ttsRate = Math.round(rate * 1.01 * factor) / factor;
+            nextRates[c.code] = { rate, ttsRate };
+          }
+        }
+        if (Object.keys(nextRates).length > 0) {
+          setLiveRates(nextRates);
+          setLiveUpdatedAt(updatedLabel);
+        }
+      }
+    } finally {
+      setLiveLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchLiveRates();
+  }, []);
 
   const selectCurrency = (nextCode: Exclude<CurrencyCode, 'KRW'>) => {
     setCurrencyCode(nextCode);
@@ -2911,6 +2987,81 @@ export const ExchangeRatesPage: React.FC = () => {
               </button>
             </>
           )}
+        </div>
+      </SectionPanel>
+
+      <SectionPanel
+        title="핵심 통화 현재 환율"
+        manualId="fx-live"
+        rightSlot={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)' }}>
+            {liveUpdatedAt && (
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+                기준시각 {liveUpdatedAt}
+              </span>
+            )}
+            <button
+              type="button"
+              disabled={liveLoading}
+              onClick={() => void fetchLiveRates()}
+              style={actionBtnStyle('secondary')}
+            >
+              {liveLoading ? '조회중' : '현재 환율 갱신'}
+            </button>
+          </div>
+        }
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 'var(--space-inline-gap)',
+          }}
+        >
+          {FX_CURRENCIES.map((c) => {
+            const live = liveRates?.[c.code];
+            const isSelected = currencyCode === c.code;
+            return (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => {
+                  selectCurrency(c.code);
+                  if (live) {
+                    setRateDate(today);
+                    setBaseRateKrw(live.rate);
+                    setTtSellingRate(live.ttsRate);
+                    setSource('국제외환시장 현재환율');
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                  background: isSelected ? 'rgba(13, 71, 161, 0.06)' : 'var(--surface-panel)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                    {c.name}
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    전신환 {live ? `${formatFxRate(live.ttsRate, c.code)}원` : '-'}
+                  </span>
+                </div>
+                <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                  {live ? `${formatFxRate(live.rate, c.code)}원` : liveLoading ? '조회중' : '-'}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </SectionPanel>
 
