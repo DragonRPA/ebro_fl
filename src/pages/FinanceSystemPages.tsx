@@ -476,7 +476,7 @@ export const ArBillingCollectionPage: React.FC = () => {
             setSelectedBillingId(b.id);
             setColAmount(b.unpaidBalanceKrw);
           }}
-          maxHeight="calc(100vh - 260px)"
+          maxHeight="clamp(280px, calc(100vh - 380px), 680px)"
         />
       </div>
 
@@ -655,7 +655,7 @@ export const ApSettlementsPage: React.FC = () => {
                 setSettledFxRate(a.bookedFxRate || 1);
                 setSettleAmount(0);
               }}
-              maxHeight="calc(100vh - 260px)"
+              maxHeight="clamp(280px, calc(100vh - 380px), 680px)"
             />
 
             {canEdit && selectedAp && selectedAp.status !== 'PAID' && (
@@ -766,7 +766,7 @@ export const ApSettlementsPage: React.FC = () => {
               rowKey={(s) => s.id}
               selectedRowId={selectedSch?.id || null}
               onRowClick={(s) => setSelectedSchId(s.id)}
-              maxHeight="calc(100vh - 260px)"
+              maxHeight="clamp(280px, calc(100vh - 380px), 680px)"
             />
 
             {canEdit && selectedSch && !selectedSch.isPaid && (
@@ -1097,7 +1097,7 @@ export const BankMatchingPage: React.FC = () => {
               setSelectedTxId(t.id);
               setTargetMatchId('');
             }}
-            maxHeight="calc(100vh - 260px)"
+            maxHeight="clamp(280px, calc(100vh - 380px), 680px)"
           />
 
           {canEdit && selectedTx && selectedTx.matchStatus === 'UNMATCHED' && (
@@ -1183,7 +1183,7 @@ export const FinancialStatementsPage: React.FC = () => {
       ]}
       rows={items}
       rowKey={(r) => r.code}
-      maxHeight="calc(100vh - 200px)"
+      maxHeight="clamp(340px, calc(100vh - 250px), 800px)"
     />
   );
 
@@ -1267,7 +1267,7 @@ export const FinancialStatementsPage: React.FC = () => {
             ]}
             rows={report.assetSchedule}
             rowKey={(a) => a.unitId}
-            maxHeight="calc(100vh - 230px)"
+            maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
           />
         )}
 
@@ -1286,7 +1286,7 @@ export const FinancialStatementsPage: React.FC = () => {
             ]}
             rows={report.leaseSummary}
             rowKey={(l) => l.leaseId}
-            maxHeight="calc(100vh - 230px)"
+            maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
           />
         )}
 
@@ -1397,7 +1397,7 @@ export const OperationManualPage: React.FC = () => {
           rowKey={(e) => e.pageId}
           selectedRowId={activeEntry?.pageId || null}
           onRowClick={(e) => setSelectedPageId(e.pageId)}
-          maxHeight="calc(100vh - 200px)"
+          maxHeight="clamp(340px, calc(100vh - 250px), 800px)"
         />
 
         {activeEntry && (
@@ -1557,7 +1557,7 @@ export const SystemSettingsPage: React.FC = () => {
       await updateEmployeeHrRecord({
         prevUser: u,
         patch: { tierLevel, maskSalesPrice },
-        reason: '시스템 설정 권한 변경',
+        reason: '권한 설정 변경',
         actor: {
           id: currentUser?.id || 'u-1',
           name: currentUser?.name || '관리자',
@@ -1919,7 +1919,7 @@ export const SystemSettingsPage: React.FC = () => {
                 ]}
                 rows={datasets.users}
                 rowKey={(u) => u.id}
-                maxHeight="calc(100vh - 230px)"
+                maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
               />
             </div>
           )}
@@ -2017,7 +2017,7 @@ export const SystemSettingsPage: React.FC = () => {
                   g.items.map((it) => ({ ...it, groupLabel: g.groupLabel }))
                 )}
                 rowKey={(r) => r.pageId}
-                maxHeight="calc(100vh - 230px)"
+                maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
               />
             </div>
           )}
@@ -2320,7 +2320,7 @@ const PolicyEditorGrid: React.FC<{
       ]}
       rows={policies}
       rowKey={(p) => p.id}
-      maxHeight="calc(100vh - 230px)"
+      maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
     />
   );
 };

@@ -1337,7 +1337,7 @@ export const OrganizationHrPage: React.FC = () => {
                 rowKey={(u) => u.id}
                 onRowClick={openUserDetailModal}
                 selectedRowId={selectedUserId}
-                maxHeight="calc(100vh - 200px)"
+                maxHeight="clamp(320px, calc(100vh - 260px), 780px)"
               />
             </div>
 
@@ -1371,7 +1371,7 @@ export const OrganizationHrPage: React.FC = () => {
               columns={deptColumns}
               rows={deptTree}
               rowKey={({ dept }) => dept.id}
-              maxHeight="calc(100vh - 200px)"
+              maxHeight="clamp(320px, calc(100vh - 260px), 780px)"
             />
             <ConservationBar
               manualId="hr-conservation"
@@ -1421,7 +1421,7 @@ export const OrganizationHrPage: React.FC = () => {
               columns={historyColumns}
               rows={filteredAllHistories}
               rowKey={(h) => h.id}
-              maxHeight="calc(100vh - 200px)"
+              maxHeight="clamp(320px, calc(100vh - 260px), 780px)"
             />
           </div>
         )}
@@ -2745,7 +2745,7 @@ export const OrganizationHrPage: React.FC = () => {
                 columns={historyColumns.filter((c) => c.key !== 'userName')}
                 rows={selectedUserHistories}
                 rowKey={(h) => h.id}
-                maxHeight="calc(100vh - 260px)"
+                maxHeight="clamp(280px, calc(100vh - 340px), 700px)"
               />
             )}
           </div>

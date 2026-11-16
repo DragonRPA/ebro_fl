@@ -628,7 +628,7 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
   },
   system_settings: {
     pageId: 'system_settings',
-    pageTitle: '시스템 설정',
+    pageTitle: '권한 설정',
     groupLabel: '정산 · 회계 · 설정',
     basicDescription: '7단계 직급 티어 부여, 정비직 단가 비공개, 12종 결재기준 티어, 티어별 화면권한, 5종 문서양식 및 공식 이메일 연동을 관리한다.',
     anchors: [

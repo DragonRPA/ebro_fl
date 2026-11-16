@@ -107,7 +107,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'financial_statements', label: '재무제표 조회', shortDesc: '재무상태표 · 손익계산서 · 리스명세 · 회계기준' },
       { pageId: 'organization_hr', label: '조직 인사 관리', shortDesc: '부서 조직도 · 임직원 인사원장 · 발령 이력' },
       { pageId: 'operation_manual', label: '업무 매뉴얼', shortDesc: '화면별 기본기능 · 조작순서 검색' },
-      { pageId: 'system_settings', label: '시스템 설정', shortDesc: '7단계 티어 · 결재선 · 양식 · 문서발송 설정' },
+      { pageId: 'system_settings', label: '권한 설정', shortDesc: '7단계 티어 · 결재선 · 양식 · 문서발송 설정' },
     ],
   },
 ];

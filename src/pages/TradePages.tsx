@@ -2431,7 +2431,7 @@ export const TradePerformancePage: React.FC = () => {
         ]}
         rows={filteredRows}
         rowKey={(r) => r.id}
-        maxHeight="calc(100vh - 230px)"
+        maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
 
       <ConservationBar

@@ -879,7 +879,7 @@ export const RentalAssetsPage: React.FC = () => {
               rowKey={(u) => u.id}
               selectedRowId={selectedAsset?.id || null}
               onRowClick={(u) => setSelectedAssetId(u.id)}
-              maxHeight="calc(100vh - 230px)"
+              maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
             />
 
             <ConservationBar
@@ -1788,7 +1788,7 @@ export const RentalMaintenancePage: React.FC = () => {
           b.effectiveDate.localeCompare(a.effectiveDate)
         )}
         rowKey={(m) => m.id}
-        maxHeight="calc(100vh - 230px)"
+        maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
 
       <ConservationBar
@@ -1968,7 +1968,7 @@ export const RentalPerformancePage: React.FC = () => {
         ]}
         rows={rows}
         rowKey={(r) => r.id}
-        maxHeight="calc(100vh - 230px)"
+        maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
 
       <ConservationBar
