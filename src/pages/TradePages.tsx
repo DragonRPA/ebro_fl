@@ -2249,7 +2249,7 @@ export const TradeFulfillmentPage: React.FC = () => {
               b.effectiveDate.localeCompare(a.effectiveDate)
             )}
             rowKey={(r) => r.id}
-            maxHeight="220px"
+            maxHeight="clamp(180px, calc(100vh - 580px), 420px)"
           />
         </div>
       </SectionPanel>
