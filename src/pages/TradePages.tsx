@@ -14,6 +14,7 @@ import {
   generateQuotationExcel,
 } from '../services/documentService';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   DocumentActionBar,
@@ -24,6 +25,7 @@ import {
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
+  toItemMasterSelectOptions,
   toPartnerSelectOptions,
 } from '../components/UiPrimitives';
 import {
@@ -375,44 +377,31 @@ export const QuotationsPage: React.FC = () => {
             </VerticalField>
             {quoteDomain === 'RENTAL' && (
               <VerticalField label="임대 개월수">
-                <input
-                  type="number"
+                <CommaNumberInput
                   min={1}
                   value={rentalMonths}
-                  onChange={(e) => setRentalMonths(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setRentalMonths}
                 />
               </VerticalField>
             )}
             <VerticalField label="품목" minWidth={220}>
-              <select
+              <SearchableSelect
                 value={itemId || domainItems[0]?.id || ''}
-                onChange={(e) => handleSelectItem(e.target.value)}
-                style={controlInputStyle}
-              >
-                {domainItems.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.sku} · {it.name}
-                  </option>
-                ))}
-              </select>
-            </VerticalField>
-            <VerticalField label="수량">
-              <input
-                type="number"
-                min={1}
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                style={controlInputStyle}
+                options={toItemMasterSelectOptions(domainItems)}
+                onChange={(nextId) => handleSelectItem(nextId)}
+                placeholder="품목 선택"
+                searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+                minDropdownWidth={320}
               />
             </VerticalField>
+            <VerticalField label="수량">
+              <CommaNumberInput min={1} value={qty} onChange={setQty} />
+            </VerticalField>
             <VerticalField label={quoteDomain === 'RENTAL' ? '월 임대단가' : '판매단가'}>
-              <input
-                type="number"
+              <CommaNumberInput
                 disabled={Boolean(currentUser?.maskSalesPrice)}
                 value={currentUser?.maskSalesPrice ? 0 : unitPriceKrw}
-                onChange={(e) => setUnitPriceKrw(Number(e.target.value))}
-                style={controlInputStyle}
+                onChange={setUnitPriceKrw}
               />
             </VerticalField>
             <VerticalField label="특이사항">
@@ -730,39 +719,27 @@ export const TradeContractsPage: React.FC = () => {
               />
             </VerticalField>
             <VerticalField label="품목" required minWidth={220}>
-              <select
+              <SearchableSelect
                 value={itemId || tradeItems[0]?.id || ''}
-                onChange={(e) => {
-                  const id = e.target.value;
+                options={toItemMasterSelectOptions(tradeItems)}
+                onChange={(id) => {
                   setItemId(id);
                   const it = tradeItems.find((x) => x.id === id);
                   if (it) setUnitPriceKrw(it.retailPriceKrw);
                 }}
-                style={controlInputStyle}
-              >
-                {tradeItems.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.sku} · {it.name}
-                  </option>
-                ))}
-              </select>
-            </VerticalField>
-            <VerticalField label="수량">
-              <input
-                type="number"
-                min={1}
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                style={controlInputStyle}
+                placeholder="품목 선택"
+                searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+                minDropdownWidth={320}
               />
             </VerticalField>
+            <VerticalField label="수량">
+              <CommaNumberInput min={1} value={qty} onChange={setQty} />
+            </VerticalField>
             <VerticalField label="계약단가">
-              <input
-                type="number"
+              <CommaNumberInput
                 disabled={Boolean(currentUser?.maskSalesPrice)}
                 value={currentUser?.maskSalesPrice ? 0 : unitPriceKrw}
-                onChange={(e) => setUnitPriceKrw(Number(e.target.value))}
-                style={controlInputStyle}
+                onChange={setUnitPriceKrw}
               />
             </VerticalField>
             <VerticalField label="계약일자">
@@ -1310,27 +1287,23 @@ export const TradeFulfillmentPage: React.FC = () => {
               )}
               {acCaseType === '반품환불' && (
                 <VerticalField label="환불 공급가액">
-                  <input
-                    type="number"
-                    value={acRefundSupply}
-                    onChange={(e) => setAcRefundSupply(Number(e.target.value))}
-                    style={controlInputStyle}
-                  />
+                  <CommaNumberInput min={0} value={acRefundSupply} onChange={setAcRefundSupply} />
                 </VerticalField>
               )}
               {acCaseType === '반품교환' && (
                 <VerticalField label="대체 출고 재고">
-                  <select
+                  <SearchableSelect
                     value={acReplacementId || replacementCandidates[0]?.id || ''}
-                    onChange={(e) => setAcReplacementId(e.target.value)}
-                    style={controlInputStyle}
-                  >
-                    {replacementCandidates.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.unitCode} · {u.itemName} · {u.serialNo || u.lotNo || ''}
-                      </option>
-                    ))}
-                  </select>
+                    options={replacementCandidates.map((u) => ({
+                      value: u.id,
+                      label: `${u.unitCode} · ${u.itemName} · ${u.serialNo || u.lotNo || ''}`,
+                      searchText: `${u.unitCode} ${u.itemName} ${u.serialNo || ''} ${u.lotNo || ''}`,
+                    }))}
+                    onChange={(nextId) => setAcReplacementId(nextId)}
+                    placeholder="대체 출고 재고 선택"
+                    searchPlaceholder="품명 · 초성 · 차대번호 검색"
+                    minDropdownWidth={320}
+                  />
                 </VerticalField>
               )}
               <VerticalField label="처리 기준일">

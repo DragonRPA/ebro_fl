@@ -36,6 +36,7 @@ import {
   type TierLevel,
 } from '../types/domain';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   ModalDialog,
@@ -1636,51 +1637,41 @@ export const OrganizationHrPage: React.FC = () => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                 <VerticalField label="월 기본급">
-                  <input
-                    type="number"
+                  <CommaNumberInput
                     min={0}
-                    value={nuSalary}
-                    onChange={(e) => setNuSalary(e.target.value)}
-                    style={controlInputStyle}
+                    value={Number(nuSalary || 0)}
+                    onChange={(v) => setNuSalary(String(v))}
                   />
                 </VerticalField>
                 <VerticalField label="통상임금 · 수동 입력">
-                  <input
-                    type="number"
+                  <CommaNumberInput
                     min={0}
-                    value={nuHourlyWage}
-                    onChange={(e) => setNuHourlyWage(e.target.value)}
+                    value={Number(nuHourlyWage || 0)}
+                    onChange={(v) => setNuHourlyWage(v > 0 ? String(v) : '')}
                     placeholder="직접 입력"
-                    style={controlInputStyle}
                   />
                 </VerticalField>
                 <VerticalField label="용역계약금액">
-                  <input
-                    type="number"
+                  <CommaNumberInput
                     min={0}
-                    value={nuServiceContract}
-                    onChange={(e) => setNuServiceContract(e.target.value)}
-                    style={controlInputStyle}
+                    value={Number(nuServiceContract || 0)}
+                    onChange={(v) => setNuServiceContract(String(v))}
                   />
                 </VerticalField>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                 <VerticalField label="식대">
-                  <input
-                    type="number"
+                  <CommaNumberInput
                     min={0}
-                    value={nuMealAllowance}
-                    onChange={(e) => setNuMealAllowance(e.target.value)}
-                    style={controlInputStyle}
+                    value={Number(nuMealAllowance || 0)}
+                    onChange={(v) => setNuMealAllowance(String(v))}
                   />
                 </VerticalField>
                 <VerticalField label="차량보조금">
-                  <input
-                    type="number"
+                  <CommaNumberInput
                     min={0}
-                    value={nuVehicleAllowance}
-                    onChange={(e) => setNuVehicleAllowance(e.target.value)}
-                    style={controlInputStyle}
+                    value={Number(nuVehicleAllowance || 0)}
+                    onChange={(v) => setNuVehicleAllowance(String(v))}
                   />
                 </VerticalField>
               </div>
@@ -2511,53 +2502,42 @@ export const OrganizationHrPage: React.FC = () => {
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                     <VerticalField label="월 기본급" required>
-                      <input
-                        type="number"
+                      <CommaNumberInput
                         min={0}
-                        value={eSalary}
-                        onChange={(e) => setESalary(e.target.value)}
-                        style={controlInputStyle}
+                        value={Number(eSalary || 0)}
+                        onChange={(v) => setESalary(String(v))}
                       />
                     </VerticalField>
                     <VerticalField label="통상임금 · 수동 입력">
-                      <input
-                        type="number"
+                      <CommaNumberInput
                         min={0}
-                        data-manual-wage="true"
-                        value={eHourlyWage}
-                        onChange={(e) => setEHourlyWage(e.target.value)}
+                        value={Number(eHourlyWage || 0)}
+                        onChange={(v) => setEHourlyWage(v > 0 ? String(v) : '')}
                         placeholder="시간당 통상임금 직접 입력"
-                        style={controlInputStyle}
                       />
                     </VerticalField>
                     <VerticalField label="용역계약금액">
-                      <input
-                        type="number"
+                      <CommaNumberInput
                         min={0}
-                        value={eServiceContract}
-                        onChange={(e) => setEServiceContract(e.target.value)}
-                        style={controlInputStyle}
+                        value={Number(eServiceContract || 0)}
+                        onChange={(v) => setEServiceContract(String(v))}
                       />
                     </VerticalField>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                     <VerticalField label="식대">
-                      <input
-                        type="number"
+                      <CommaNumberInput
                         min={0}
-                        value={eMealAllowance}
-                        onChange={(e) => setEMealAllowance(e.target.value)}
-                        style={controlInputStyle}
+                        value={Number(eMealAllowance || 0)}
+                        onChange={(v) => setEMealAllowance(String(v))}
                       />
                     </VerticalField>
                     <VerticalField label="차량보조금">
-                      <input
-                        type="number"
+                      <CommaNumberInput
                         min={0}
-                        value={eVehicleAllowance}
-                        onChange={(e) => setEVehicleAllowance(e.target.value)}
-                        style={controlInputStyle}
+                        value={Number(eVehicleAllowance || 0)}
+                        onChange={(v) => setEVehicleAllowance(String(v))}
                       />
                     </VerticalField>
                   </div>

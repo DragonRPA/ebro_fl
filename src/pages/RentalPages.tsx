@@ -14,6 +14,7 @@ import {
 } from '../services/domainEngine';
 import { generateContractExcel } from '../services/documentService';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   DocumentActionBar,
@@ -25,6 +26,7 @@ import {
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
+  toItemMasterSelectOptions,
   toPartnerSelectOptions,
 } from '../components/UiPrimitives';
 import {
@@ -291,39 +293,27 @@ export const RentalContractsPage: React.FC = () => {
               />
             </VerticalField>
             <VerticalField label="계약 기종 품목" required minWidth={210}>
-              <select
+              <SearchableSelect
                 value={itemId || rentalItems[0]?.id || ''}
-                onChange={(e) => {
-                  const id = e.target.value;
+                options={toItemMasterSelectOptions(rentalItems)}
+                onChange={(id) => {
                   setItemId(id);
                   const it = rentalItems.find((x) => x.id === id);
                   if (it) setMonthlyPriceKrw(it.standardMonthlyRentalKrw);
                 }}
-                style={controlInputStyle}
-              >
-                {rentalItems.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.sku} · {it.name}
-                  </option>
-                ))}
-              </select>
-            </VerticalField>
-            <VerticalField label="수량">
-              <input
-                type="number"
-                min={1}
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                style={controlInputStyle}
+                placeholder="계약 기종 품목 선택"
+                searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+                minDropdownWidth={320}
               />
             </VerticalField>
+            <VerticalField label="수량">
+              <CommaNumberInput min={1} value={qty} onChange={setQty} />
+            </VerticalField>
             <VerticalField label="월 임대단가">
-              <input
-                type="number"
+              <CommaNumberInput
                 disabled={Boolean(currentUser?.maskSalesPrice)}
                 value={currentUser?.maskSalesPrice ? 0 : monthlyPriceKrw}
-                onChange={(e) => setMonthlyPriceKrw(Number(e.target.value))}
-                style={controlInputStyle}
+                onChange={setMonthlyPriceKrw}
               />
             </VerticalField>
             <VerticalField label="계약 시작일" required>
@@ -863,17 +853,14 @@ export const RentalAssetsPage: React.FC = () => {
                   />
                 </VerticalField>
                 <VerticalField label="취득 장비 기종" required>
-                  <select
+                  <SearchableSelect
                     value={leaseItemId || equipItems[0]?.id || ''}
-                    onChange={(e) => setLeaseItemId(e.target.value)}
-                    style={controlInputStyle}
-                  >
-                    {equipItems.map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.sku} · {it.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={toItemMasterSelectOptions(equipItems)}
+                    onChange={(nextId) => setLeaseItemId(nextId)}
+                    placeholder="취득 장비 기종 선택"
+                    searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+                    minDropdownWidth={300}
+                  />
                 </VerticalField>
                 <VerticalField label="시리얼번호" required>
                   <input
@@ -885,12 +872,7 @@ export const RentalAssetsPage: React.FC = () => {
                   />
                 </VerticalField>
                 <VerticalField label="리스원금" required>
-                  <input
-                    type="number"
-                    value={principal}
-                    onChange={(e) => setPrincipal(Number(e.target.value))}
-                    style={controlInputStyle}
-                  />
+                  <CommaNumberInput min={0} value={principal} onChange={setPrincipal} />
                 </VerticalField>
                 <VerticalField label="연이자율 %" required>
                   <input
@@ -902,14 +884,7 @@ export const RentalAssetsPage: React.FC = () => {
                   />
                 </VerticalField>
                 <VerticalField label="상환개월수" required>
-                  <input
-                    type="number"
-                    min={1}
-                    max={120}
-                    value={termMonths}
-                    onChange={(e) => setTermMonths(Number(e.target.value))}
-                    style={controlInputStyle}
-                  />
+                  <CommaNumberInput min={1} value={termMonths} onChange={setTermMonths} />
                 </VerticalField>
                 <VerticalField label="상환방식" required>
                   <select
@@ -1072,17 +1047,14 @@ export const RentalAssetsPage: React.FC = () => {
             />
           </VerticalField>
           <VerticalField label="기종 품목" required>
-            <select
+            <SearchableSelect
               value={subItemId || equipItems[0]?.id || ''}
-              onChange={(e) => setSubItemId(e.target.value)}
-              style={controlInputStyle}
-            >
-              {equipItems.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.sku} · {i.name}
-                </option>
-              ))}
-            </select>
+              options={toItemMasterSelectOptions(equipItems)}
+              onChange={(nextId) => setSubItemId(nextId)}
+              placeholder="기종 품목 선택"
+              searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+              minDropdownWidth={300}
+            />
           </VerticalField>
           <VerticalField label="장비 시리얼" required>
             <input
@@ -1093,12 +1065,7 @@ export const RentalAssetsPage: React.FC = () => {
             />
           </VerticalField>
           <VerticalField label="월 전대임차원가" required>
-            <input
-              type="number"
-              value={subCost}
-              onChange={(e) => setSubCost(Number(e.target.value))}
-              style={controlInputStyle}
-            />
+            <CommaNumberInput min={0} value={subCost} onChange={setSubCost} />
           </VerticalField>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <button
@@ -1595,12 +1562,7 @@ export const RentalMaintenancePage: React.FC = () => {
               </select>
             </VerticalField>
             <VerticalField label="누적 가동시간" required>
-              <input
-                type="number"
-                value={operatingHours}
-                onChange={(e) => setOperatingHours(Number(e.target.value))}
-                style={controlInputStyle}
-              />
+              <CommaNumberInput min={0} value={operatingHours} onChange={setOperatingHours} />
             </VerticalField>
             <VerticalField label="정비일자" required>
               <input
@@ -1611,44 +1573,36 @@ export const RentalMaintenancePage: React.FC = () => {
               />
             </VerticalField>
             <VerticalField label="투입 부품 로트" minWidth={190}>
-              <select
+              <SearchableSelect
                 value={partUnitId}
-                onChange={(e) => setPartUnitId(e.target.value)}
-                style={controlInputStyle}
-              >
-                <option value="">부품 투입 없음</option>
-                {partLots.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.itemName} · 잔여 {p.qtyOnHand}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '부품 투입 없음', searchText: '부품 투입 없음' },
+                  ...partLots.map((p) => ({
+                    value: p.id,
+                    label: `${p.itemName} · 잔여 ${p.qtyOnHand.toLocaleString('ko-KR')}`,
+                    subLabel: p.lotNo || p.unitCode,
+                    searchText: `${p.itemName} ${p.lotNo || ''} ${p.unitCode}`,
+                  })),
+                ]}
+                onChange={(nextId) => setPartUnitId(nextId)}
+                placeholder="부품 투입 없음"
+                searchPlaceholder="부품명 · 초성 · 로트 검색"
+                minDropdownWidth={300}
+              />
             </VerticalField>
             <VerticalField label="부품 수량">
-              <input
-                type="number"
+              <CommaNumberInput
                 min={1}
                 disabled={!partUnitId}
                 value={partQty}
-                onChange={(e) => setPartQty(Number(e.target.value))}
-                style={controlInputStyle}
+                onChange={setPartQty}
               />
             </VerticalField>
             <VerticalField label="자사 노무비">
-              <input
-                type="number"
-                value={laborCostKrw}
-                onChange={(e) => setLaborCostKrw(Number(e.target.value))}
-                style={controlInputStyle}
-              />
+              <CommaNumberInput min={0} value={laborCostKrw} onChange={setLaborCostKrw} />
             </VerticalField>
             <VerticalField label="외주 정비비">
-              <input
-                type="number"
-                value={externalCostKrw}
-                onChange={(e) => setExternalCostKrw(Number(e.target.value))}
-                style={controlInputStyle}
-              />
+              <CommaNumberInput min={0} value={externalCostKrw} onChange={setExternalCostKrw} />
             </VerticalField>
             {externalCostKrw > 0 && (
               <VerticalField label="외주정비처">
@@ -1672,12 +1626,7 @@ export const RentalMaintenancePage: React.FC = () => {
             </label>
             {isBillable && (
               <VerticalField label="고객 청구액">
-                <input
-                  type="number"
-                  value={customerChargeKrw}
-                  onChange={(e) => setCustomerChargeKrw(Number(e.target.value))}
-                  style={controlInputStyle}
-                />
+                <CommaNumberInput min={0} value={customerChargeKrw} onChange={setCustomerChargeKrw} />
               </VerticalField>
             )}
             <VerticalField label="정비 내용">

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
-import { formatKoStatus, koStatusTone, type FlPartner } from '../types/domain';
+import { formatKoStatus, koStatusTone, type FlItemMaster, type FlPartner } from '../types/domain';
 import {
   downloadExcelFile,
   openExcelInAgent,
@@ -916,6 +916,24 @@ export function toPartnerSelectOptions(partners: FlPartner[]): SearchableSelectO
     label: p.name,
     subLabel: p.bizRegNo || p.partnerRoles?.[0] || undefined,
     searchText: [p.name, p.bizRegNo, p.representative, ...(p.partnerRoles || [])]
+      .filter(Boolean)
+      .join(' '),
+  }));
+}
+
+export function toItemMasterSelectOptions(items: FlItemMaster[]): SearchableSelectOption[] {
+  return items.map((it) => ({
+    value: it.id,
+    label: `${it.sku} · ${it.name}`,
+    subLabel: it.manufacturer || it.itemCategory,
+    searchText: [
+      it.sku,
+      it.name,
+      it.manufacturer,
+      it.modelName,
+      it.itemCategory,
+      it.specSummary,
+    ]
       .filter(Boolean)
       .join(' '),
   }));

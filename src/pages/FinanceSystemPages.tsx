@@ -17,6 +17,7 @@ import { useManual } from '../manual/ManualContext';
 import { ALL_MANUAL_ENTRIES } from '../manual/manualRegistry';
 import { COMMENTARY_SECTIONS, STANDARD_ARTICLES } from '../data/accountingStandardsData';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   DocumentActionBar,
@@ -427,11 +428,10 @@ export const ArBillingCollectionPage: React.FC = () => {
           {canEdit && selectedBilling.unpaidBalanceKrw > 0 ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
               <VerticalField label="수납 입금액" required width={160}>
-                <input
-                  type="number"
+                <CommaNumberInput
+                  min={0}
                   value={colAmount || selectedBilling.unpaidBalanceKrw}
-                  onChange={(e) => setColAmount(Number(e.target.value))}
-                  style={controlInputStyle}
+                  onChange={setColAmount}
                 />
               </VerticalField>
               <VerticalField label="수납일자" required width={145}>
@@ -618,13 +618,13 @@ export const ApSettlementsPage: React.FC = () => {
                   label={selectedAp.currencyCode === 'KRW' ? '지급 원화금액' : `지급 외화금액 · ${formatKoCurrency(selectedAp.currencyCode)}`}
                   width={165}
                 >
-                  <input
-                    type="number"
-                    step="0.01"
+                  <CommaNumberInput
+                    allowDecimal={selectedAp.currencyCode !== 'KRW'}
+                    maxDecimals={2}
+                    min={0}
                     value={settleAmount}
-                    onChange={(e) => setSettleAmount(Number(e.target.value))}
+                    onChange={setSettleAmount}
                     placeholder="0 입력 시 잔액 전액 지급"
-                    style={controlInputStyle}
                   />
                 </VerticalField>
                 {selectedAp.currencyCode !== 'KRW' && (
@@ -933,12 +933,7 @@ export const BankMatchingPage: React.FC = () => {
               />
             </VerticalField>
             <VerticalField label="거래금액" required>
-              <input
-                type="number"
-                value={amountKrw}
-                onChange={(e) => setAmountKrw(Number(e.target.value))}
-                style={controlInputStyle}
-              />
+              <CommaNumberInput min={0} value={amountKrw} onChange={setAmountKrw} />
             </VerticalField>
             <VerticalField label="비고">
               <input
