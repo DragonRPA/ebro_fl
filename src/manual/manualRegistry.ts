@@ -640,11 +640,31 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
       },
     ],
   },
-  system_settings: {
-    pageId: 'system_settings',
+  permission_settings: {
+    pageId: 'permission_settings',
     pageTitle: '권한 설정',
     groupLabel: '정산 · 회계 · 설정',
-    basicDescription: '7단계 직급 티어 부여, 정비직 단가 비공개, 12종 결재기준 티어, 티어별 화면권한, 5종 문서양식 및 공식 이메일 연동을 관리한다.',
+    basicDescription: '7단계 직급 티어 부여, 정비직 단가 비공개, 결재기준 티어, 티어별 화면권한 및 임직원 개인별 화면권한을 관리한다.',
+    anchors: [
+      { anchorId: 'perm-tabs', title: '권한 영역 전환 탭', summary: '사용자 티어, 결재 기준, 티어별 권한, 개인별 권한을 전환한다.' },
+      { anchorId: 'perm-body', title: '권한 편집 영역', summary: '각 행의 티어, 필요 결재단계, 티어/개인별 권한 토글을 수정 저장한다.' },
+    ],
+    processes: [
+      {
+        processName: '사용자 7단계 티어 및 티어·개인별 화면 권한 설정',
+        purpose: '사용자별 직급 티어와 핵심 업무 행위의 최소 결재 티어 및 임직원 개인별 화면 접근 권한을 구성한다.',
+        steps: [
+          { stepNo: 1, targetLabel: '권한 구분 탭', manualAnchorId: 'perm-tabs', actionDetail: '사용자 티어, 결재 기준, 티어별 또는 개인별 권한 탭을 선택한다.' },
+          { stepNo: 2, targetLabel: '권한 선택 및 저장 버튼', manualAnchorId: 'perm-body', actionDetail: '티어·결재단계·조회/편집/결재 권한을 변경하고 저장한다.' },
+        ],
+      },
+    ],
+  },
+  system_settings: {
+    pageId: 'system_settings',
+    pageTitle: '시스템 설정',
+    groupLabel: '정산 · 회계 · 설정',
+    basicDescription: '5종 문서양식·직인 도장 및 공식 이메일 연동을 관리한다.',
     anchors: [
       { anchorId: 'sys-tabs', title: '설정 영역 전환 탭', summary: '사용자 티어, 결재 기준, 티어 권한, 문서 양식, 이메일 설정을 전환한다.' },
       { anchorId: 'sys-body', title: '설정 편집 영역', summary: '각 행의 티어, 필요 결재단계, 권한 토글, 양식 파일을 수정 저장한다.' },

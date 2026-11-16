@@ -313,6 +313,32 @@ export async function allocateNextContractNo(
   return `${prefix}${String(maxSeq + 1).padStart(4, '0')}`;
 }
 
+export async function allocateNextFulfillmentNos(
+  refDate: string,
+  count: number
+): Promise<string[]> {
+  const cleanDate = (refDate || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  const yymm = `${cleanDate.slice(2, 4)}${cleanDate.slice(5, 7)}`;
+  const prefix = `F-${yymm}-`;
+  const res = await flSupabase
+    .from('fulfillments')
+    .select('fulfillment_no')
+    .like('fulfillment_no', `${prefix}%`);
+  let maxSeq = 0;
+  if (!res.error && Array.isArray(res.data)) {
+    for (const row of res.data as { fulfillment_no?: string }[]) {
+      const code = row.fulfillment_no || '';
+      if (!code.startsWith(prefix)) continue;
+      const num = Number(code.slice(prefix.length));
+      if (Number.isFinite(num) && num > maxSeq) maxSeq = num;
+    }
+  }
+  return Array.from({ length: Math.max(1, count) }, (_, i) => {
+    const seq = String(maxSeq + 1 + i).padStart(4, '0');
+    return `${prefix}${seq}`;
+  });
+}
+
 export async function confirmPurchaseInbound(input: CreatePurchaseInput): Promise<{
   purchase: FlPurchase;
   lines: FlPurchaseLine[];
@@ -1363,10 +1389,11 @@ export async function executeRentalExchange(params: {
     })).eq('id', newUnit.id)
   );
 
+  const [exFulfillmentNo] = await allocateNextFulfillmentNos(exchangeDate, 1);
   const fulfillment: FlFulfillment = {
     id: newId('FUL'),
     tenantId: DEFAULT_TENANT_ID,
-    fulfillmentNo: newId('EX'),
+    fulfillmentNo: exFulfillmentNo,
     fulfillmentDomain: 'RENTAL',
     actionType: '교환',
     contractId: contract.id,

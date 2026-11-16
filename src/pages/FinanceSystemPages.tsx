@@ -1863,20 +1863,18 @@ const ALL_DOC_TYPES: DocumentTemplateType[] = [
   '거래명세서',
 ];
 
-export const SystemSettingsPage: React.FC = () => {
+export const PermissionSettingsPage: React.FC = () => {
   const {
     currentUser,
-    tenantProfile,
     datasets,
     refreshAll,
     notifyToast,
-    updateTenantConfig,
     canEditPage,
     navigateTo,
   } = useAppShell();
-  const canEdit = canEditPage('system_settings');
+  const canEdit = canEditPage('permission_settings');
 
-  const [tab, setTab] = useState<'USERS' | 'POLICIES' | 'PERMS' | 'TEMPLATES' | 'MAIL'>('USERS');
+  const [tab, setTab] = useState<'USERS' | 'POLICIES' | 'PERMS' | 'USER_PERMS'>('USERS');
   const [busy, setBusy] = useState(false);
 
   // 신규 사용자 등록
@@ -1888,29 +1886,10 @@ export const SystemSettingsPage: React.FC = () => {
 
   // 티어 권한 매트릭스 편집
   const [permTier, setPermTier] = useState<TierLevel>(2);
-
-  // 공식 이메일 연동 설정
-  const [smtpProvider, setSmtpProvider] = useState<'GMAIL' | 'NAVER' | 'OUTLOOK' | 'CUSTOM'>(
-    tenantProfile.features?.officialMailConfig?.smtpProvider || 'GMAIL'
-  );
-  const [smtpHost, setSmtpHost] = useState(
-    tenantProfile.features?.officialMailConfig?.smtpHost || 'smtp.gmail.com'
-  );
-  const [smtpPort, setSmtpPort] = useState(
-    tenantProfile.features?.officialMailConfig?.smtpPort || 465
-  );
-  const [googleEmail, setGoogleEmail] = useState(
-    tenantProfile.features?.officialMailConfig?.googleEmail || ''
-  );
-  const [gmailAppPassword, setGmailAppPassword] = useState(
-    tenantProfile.features?.officialMailConfig?.gmailAppPassword || ''
-  );
-  const [senderName, setSenderName] = useState(
-    tenantProfile.features?.officialMailConfig?.senderName || tenantProfile.corporateName
-  );
-
-  // 양식 노트 편집
-  const [tplNotes, setTplNotes] = useState<Record<string, { headerNote: string; footerNote: string }>>({});
+  // 임직원 개인별 권한 편집
+  const [permUserId, setPermUserId] = useState<string>(() => datasets.users[0]?.id || '');
+  const selectedPermUser =
+    datasets.users.find((u) => u.id === permUserId) || datasets.users[0] || null;
 
   const handleUpdateUserTier = async (u: FlUser, tierLevel: TierLevel, maskSalesPrice: boolean) => {
     setBusy(true);
@@ -2004,148 +1983,90 @@ export const SystemSettingsPage: React.FC = () => {
     }
   };
 
-  const handleUploadTemplateFile = async (docType: DocumentTemplateType, file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const result = String(reader.result || '');
-      const base64 = result.includes(',') ? result.split(',')[1] : result;
-      setBusy(true);
-      try {
-        const existing = datasets.documentTemplates.find((t) => t.docType === docType);
-        const nowIso = new Date().toISOString();
-        if (existing) {
-          await execDbMutation('문서 양식 업로드 갱신', () =>
-            flSupabase
-              .from('document_templates')
-              .update(
-                camelToSnakeRow({
-                  templateName: file.name,
-                  templateBase64: base64,
-                  updatedBy: currentUser?.name || '관리자',
-                  updatedAt: nowIso,
-                })
-              )
-              .eq('id', existing.id)
-          );
-        } else {
-          const rec: FlDocumentTemplate = {
-            id: newId('TPL'),
-            tenantId: DEFAULT_TENANT_ID,
-            docType,
-            templateName: file.name,
-            templateBase64: base64,
-            isDefault: true,
-            updatedBy: currentUser?.name || '관리자',
-            updatedAt: nowIso,
-          };
-          await execDbMutation('문서 양식 신규 등록', () =>
-            flSupabase.from('document_templates').insert(camelToSnakeRow({ ...rec }))
-          );
-        }
-        await refreshAll();
-        notifyToast(`${docType} 양식 파일 저장 완료`, 'success');
-      } catch (err) {
-        notifyToast(err instanceof Error ? err.message : '양식 업로드 실패', 'error');
-      } finally {
-        setBusy(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveTemplateNotes = async (docType: DocumentTemplateType) => {
-    const existing = datasets.documentTemplates.find((t) => t.docType === docType);
-    const notes = tplNotes[docType] || {
-      headerNote: existing?.headerNote || '',
-      footerNote: existing?.footerNote || '',
-    };
+  const handleToggleUserPerm = async (
+    pageId: FlPageId,
+    field: 'canView' | 'canEdit' | 'canApprove',
+    val: boolean
+  ) => {
+    if (!selectedPermUser) return;
     setBusy(true);
     try {
-      const nowIso = new Date().toISOString();
+      const existing = datasets.userPermissions.find(
+        (p) => p.userId === selectedPermUser.id && p.pageId === pageId
+      );
       if (existing) {
-        await execDbMutation('문서 문구 저장', () =>
+        await execDbMutation('개인별 화면 권한 수정', () =>
           flSupabase
-            .from('document_templates')
-            .update(
-              camelToSnakeRow({
-                headerNote: notes.headerNote,
-                footerNote: notes.footerNote,
-                updatedBy: currentUser?.name || '관리자',
-                updatedAt: nowIso,
-              })
-            )
+            .from('user_permissions')
+            .update(camelToSnakeRow({ [field]: val }))
             .eq('id', existing.id)
         );
       } else {
-        await execDbMutation('문서 문구 등록', () =>
-          flSupabase.from('document_templates').insert(
+        const tierRule = datasets.userPermissions.find(
+          (p) => !p.userId && p.tierLevel === selectedPermUser.tierLevel && p.pageId === pageId
+        );
+        const fallback = tierRule || defaultTierPagePermission(pageId, selectedPermUser.tierLevel);
+        await execDbMutation('개인별 화면 권한 등록', () =>
+          flSupabase.from('user_permissions').insert(
             camelToSnakeRow({
-              id: newId('TPL'),
+              id: newId('PERM'),
               tenantId: DEFAULT_TENANT_ID,
-              docType,
-              templateName: `${docType} 기본양식`,
-              headerNote: notes.headerNote,
-              footerNote: notes.footerNote,
-              isDefault: true,
-              updatedBy: currentUser?.name || '관리자',
-              updatedAt: nowIso,
+              userId: selectedPermUser.id,
+              tierLevel: selectedPermUser.tierLevel,
+              pageId,
+              canView: field === 'canView' ? val : fallback.canView,
+              canEdit: field === 'canEdit' ? val : fallback.canEdit,
+              canApprove: field === 'canApprove' ? val : fallback.canApprove,
             })
           )
         );
       }
       await refreshAll();
-      notifyToast(`${docType} 특약 문구 저장 완료`, 'success');
+      notifyToast(`${selectedPermUser.name} 개인별 화면 권한 저장 완료`, 'success');
     } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '양식 문구 저장 실패', 'error');
+      notifyToast(err instanceof Error ? err.message : '개인별 권한 저장 실패', 'error');
     } finally {
       setBusy(false);
     }
   };
 
-  const handleSaveMailConfig = async () => {
+  const handleResetUserPerms = async () => {
+    if (!selectedPermUser) return;
     setBusy(true);
     try {
-      await updateTenantConfig({
-        features: {
-          ...tenantProfile.features,
-          officialMailConfig: {
-            smtpProvider,
-            smtpHost,
-            smtpPort: Number(smtpPort || 465),
-            googleEmail: googleEmail.trim(),
-            gmailAppPassword: gmailAppPassword.trim(),
-            senderName: senderName.trim(),
-            updatedAt: new Date().toISOString(),
-          },
-        },
-      });
+      await execDbMutation('개인별 화면 권한 초기화', () =>
+        flSupabase.from('user_permissions').delete().eq('user_id', selectedPermUser.id)
+      );
+      await refreshAll();
+      notifyToast(`${selectedPermUser.name} 개인별 권한이 티어 기본값으로 초기화되었습니다.`, 'success');
     } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '이메일 설정 저장 실패', 'error');
+      notifyToast(err instanceof Error ? err.message : '개인별 권한 초기화 실패', 'error');
     } finally {
       setBusy(false);
     }
   };
+
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
-        title="시스템 권한 · 7단계 티어 · 문서 설정"
-        manualId="sys-tabs"
+        title="권한 설정 · 7단계 티어 · 결재선 · 화면 권한"
+        manualId="perm-tabs"
         rightSlot={
           <SegmentedTabs
             tabs={[
               { id: 'USERS', label: '사용자 7단계 티어' },
               { id: 'POLICIES', label: '결재 기준 정책' },
               { id: 'PERMS', label: '티어별 화면 권한' },
-              { id: 'TEMPLATES', label: '문서 양식 · 도장' },
-              { id: 'MAIL', label: '공식 이메일 연동' },
+              { id: 'USER_PERMS', label: '임직원 개인별 권한' },
             ]}
             activeId={tab}
             onChange={(id) => setTab(id as typeof tab)}
           />
         }
       >
-        <div data-manual-id="sys-body">
+        <div data-manual-id="perm-body">
           {tab === 'USERS' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               {canEdit && (
@@ -2383,6 +2304,326 @@ export const SystemSettingsPage: React.FC = () => {
             </div>
           )}
 
+          {tab === 'USER_PERMS' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <VerticalField label="권한을 설정할 임직원 선택" width={300}>
+                  <select
+                    value={selectedPermUser?.id || ''}
+                    onChange={(e) => setPermUserId(e.target.value)}
+                    style={controlInputStyle}
+                  >
+                    {datasets.users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} · {u.loginId} ({TIER_LABELS[u.tierLevel]})
+                      </option>
+                    ))}
+                  </select>
+                </VerticalField>
+                {canEdit && selectedPermUser && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={handleResetUserPerms}
+                    style={actionBtnStyle('secondary', true)}
+                  >
+                    개인별 권한 전체 초기화
+                  </button>
+                )}
+              </div>
+
+              {selectedPermUser && (
+                <DataGrid
+                  columns={[
+                    { key: 'grp', header: '메뉴 그룹', width: 150, render: (r) => r.groupLabel },
+                    { key: 'label', header: '화면명', render: (r) => r.label },
+                    {
+                      key: 'source',
+                      header: '적용 기준',
+                      width: 100,
+                      align: 'center',
+                      render: (r) => {
+                        const userRule = datasets.userPermissions.find(
+                          (x) => x.userId === selectedPermUser.id && x.pageId === r.pageId
+                        );
+                        return (
+                          <StatusBadge
+                            label={userRule ? '개별설정' : '티어기준'}
+                            tone={userRule ? 'primary' : 'neutral'}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: 'view',
+                      header: '조회',
+                      width: 80,
+                      align: 'center',
+                      render: (r) => {
+                        const userRule = datasets.userPermissions.find(
+                          (x) => x.userId === selectedPermUser.id && x.pageId === r.pageId
+                        );
+                        const tierRule = datasets.userPermissions.find(
+                          (x) => !x.userId && x.tierLevel === selectedPermUser.tierLevel && x.pageId === r.pageId
+                        );
+                        const checked = userRule
+                          ? userRule.canView
+                          : tierRule
+                            ? tierRule.canView
+                            : defaultTierPagePermission(r.pageId, selectedPermUser.tierLevel).canView;
+                        return (
+                          <input
+                            type="checkbox"
+                            disabled={!canEdit || busy || selectedPermUser.tierLevel >= 7}
+                            checked={selectedPermUser.tierLevel >= 7 ? true : checked}
+                            onChange={(e) => handleToggleUserPerm(r.pageId, 'canView', e.target.checked)}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: 'edit',
+                      header: '편집',
+                      width: 80,
+                      align: 'center',
+                      render: (r) => {
+                        const userRule = datasets.userPermissions.find(
+                          (x) => x.userId === selectedPermUser.id && x.pageId === r.pageId
+                        );
+                        const tierRule = datasets.userPermissions.find(
+                          (x) => !x.userId && x.tierLevel === selectedPermUser.tierLevel && x.pageId === r.pageId
+                        );
+                        const checked = userRule
+                          ? userRule.canEdit
+                          : tierRule
+                            ? tierRule.canEdit
+                            : defaultTierPagePermission(r.pageId, selectedPermUser.tierLevel).canEdit;
+                        return (
+                          <input
+                            type="checkbox"
+                            disabled={!canEdit || busy || selectedPermUser.tierLevel >= 7}
+                            checked={selectedPermUser.tierLevel >= 7 ? true : checked}
+                            onChange={(e) => handleToggleUserPerm(r.pageId, 'canEdit', e.target.checked)}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: 'approve',
+                      header: '승인',
+                      width: 80,
+                      align: 'center',
+                      render: (r) => {
+                        const userRule = datasets.userPermissions.find(
+                          (x) => x.userId === selectedPermUser.id && x.pageId === r.pageId
+                        );
+                        const tierRule = datasets.userPermissions.find(
+                          (x) => !x.userId && x.tierLevel === selectedPermUser.tierLevel && x.pageId === r.pageId
+                        );
+                        const checked = userRule
+                          ? userRule.canApprove
+                          : tierRule
+                            ? tierRule.canApprove
+                            : defaultTierPagePermission(r.pageId, selectedPermUser.tierLevel).canApprove;
+                        return (
+                          <input
+                            type="checkbox"
+                            disabled={!canEdit || busy || selectedPermUser.tierLevel >= 7}
+                            checked={selectedPermUser.tierLevel >= 7 ? true : checked}
+                            onChange={(e) => handleToggleUserPerm(r.pageId, 'canApprove', e.target.checked)}
+                          />
+                        );
+                      },
+                    },
+                  ]}
+                  rows={FL_MENU_GROUPS.flatMap((g) =>
+                    g.items.map((it) => ({ ...it, groupLabel: g.groupLabel }))
+                  )}
+                  rowKey={(r) => r.pageId}
+                  maxHeight="clamp(300px, calc(100vh - 320px), 760px)"
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </SectionPanel>
+    </div>
+  );
+};
+
+export const SystemSettingsPage: React.FC = () => {
+  const {
+    currentUser,
+    tenantProfile,
+    datasets,
+    refreshAll,
+    notifyToast,
+    updateTenantConfig,
+    canEditPage,
+  } = useAppShell();
+  const canEdit = canEditPage('system_settings');
+  const [tab, setTab] = useState<'TEMPLATES' | 'MAIL'>('TEMPLATES');
+  const [busy, setBusy] = useState(false);
+
+  // 공식 이메일 연동 설정
+  const [smtpProvider, setSmtpProvider] = useState<'GMAIL' | 'NAVER' | 'OUTLOOK' | 'CUSTOM'>(
+    tenantProfile.features?.officialMailConfig?.smtpProvider || 'GMAIL'
+  );
+  const [smtpHost, setSmtpHost] = useState(
+    tenantProfile.features?.officialMailConfig?.smtpHost || 'smtp.gmail.com'
+  );
+  const [smtpPort, setSmtpPort] = useState(
+    tenantProfile.features?.officialMailConfig?.smtpPort || 465
+  );
+  const [googleEmail, setGoogleEmail] = useState(
+    tenantProfile.features?.officialMailConfig?.googleEmail || ''
+  );
+  const [gmailAppPassword, setGmailAppPassword] = useState(
+    tenantProfile.features?.officialMailConfig?.gmailAppPassword || ''
+  );
+  const [senderName, setSenderName] = useState(
+    tenantProfile.features?.officialMailConfig?.senderName || tenantProfile.corporateName
+  );
+  const [tplNotes, setTplNotes] = useState<Record<string, { headerNote: string; footerNote: string }>>({});
+
+  const handleUploadTemplateFile = async (docType: DocumentTemplateType, file: File) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const result = String(reader.result || '');
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      setBusy(true);
+      try {
+        const existing = datasets.documentTemplates.find((t) => t.docType === docType);
+        const nowIso = new Date().toISOString();
+        if (existing) {
+          await execDbMutation('문서 양식 업로드 갱신', () =>
+            flSupabase
+              .from('document_templates')
+              .update(
+                camelToSnakeRow({
+                  templateName: file.name,
+                  templateBase64: base64,
+                  updatedBy: currentUser?.name || '관리자',
+                  updatedAt: nowIso,
+                })
+              )
+              .eq('id', existing.id)
+          );
+        } else {
+          const rec: FlDocumentTemplate = {
+            id: newId('TPL'),
+            tenantId: DEFAULT_TENANT_ID,
+            docType,
+            templateName: file.name,
+            templateBase64: base64,
+            isDefault: true,
+            updatedBy: currentUser?.name || '관리자',
+            updatedAt: nowIso,
+          };
+          await execDbMutation('문서 양식 신규 등록', () =>
+            flSupabase.from('document_templates').insert(camelToSnakeRow({ ...rec }))
+          );
+        }
+        await refreshAll();
+        notifyToast(`${docType} 양식 파일 저장 완료`, 'success');
+      } catch (err) {
+        notifyToast(err instanceof Error ? err.message : '양식 업로드 실패', 'error');
+      } finally {
+        setBusy(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveTemplateNotes = async (docType: DocumentTemplateType) => {
+    const existing = datasets.documentTemplates.find((t) => t.docType === docType);
+    const notes = tplNotes[docType] || {
+      headerNote: existing?.headerNote || '',
+      footerNote: existing?.footerNote || '',
+    };
+    setBusy(true);
+    try {
+      const nowIso = new Date().toISOString();
+      if (existing) {
+        await execDbMutation('문서 문구 저장', () =>
+          flSupabase
+            .from('document_templates')
+            .update(
+              camelToSnakeRow({
+                headerNote: notes.headerNote,
+                footerNote: notes.footerNote,
+                updatedBy: currentUser?.name || '관리자',
+                updatedAt: nowIso,
+              })
+            )
+            .eq('id', existing.id)
+        );
+      } else {
+        await execDbMutation('문서 문구 등록', () =>
+          flSupabase.from('document_templates').insert(
+            camelToSnakeRow({
+              id: newId('TPL'),
+              tenantId: DEFAULT_TENANT_ID,
+              docType,
+              templateName: `${docType} 기본양식`,
+              headerNote: notes.headerNote,
+              footerNote: notes.footerNote,
+              isDefault: true,
+              updatedBy: currentUser?.name || '관리자',
+              updatedAt: nowIso,
+            })
+          )
+        );
+      }
+      await refreshAll();
+      notifyToast(`${docType} 특약 문구 저장 완료`, 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '양식 문구 저장 실패', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSaveMailConfig = async () => {
+    setBusy(true);
+    try {
+      await updateTenantConfig({
+        features: {
+          ...tenantProfile.features,
+          officialMailConfig: {
+            smtpProvider,
+            smtpHost,
+            smtpPort,
+            googleEmail: googleEmail.trim(),
+            gmailAppPassword: gmailAppPassword.trim(),
+            senderName: senderName.trim() || tenantProfile.corporateName,
+          },
+        },
+      });
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '메일 설정 저장 실패', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
+      <SectionPanel
+        title="시스템 설정 · 문서 양식 · 도장 · 공식 이메일 연동"
+        manualId="sys-tabs"
+        rightSlot={
+          <SegmentedTabs
+            tabs={[
+              { id: 'TEMPLATES', label: '문서 양식 · 도장' },
+              { id: 'MAIL', label: '공식 이메일 연동' },
+            ]}
+            activeId={tab}
+            onChange={(id) => setTab(id as typeof tab)}
+          />
+        }
+      >
+        <div data-manual-id="sys-body">
           {tab === 'TEMPLATES' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               <div

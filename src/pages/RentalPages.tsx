@@ -5,6 +5,7 @@ import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId }
 import {
   addDaysIso,
   allocateNextContractNo,
+  allocateNextFulfillmentNos,
   allocateSequentialUnitCodes,
   calculateRentalProRataForMonth,
   completeFulfillment,
@@ -250,13 +251,13 @@ export const RentalContractsPage: React.FC = () => {
     }
     setBusy(true);
     try {
-      const baseTs = Date.now().toString(36).toUpperCase();
-      let seq = 1;
+      const fulNos = await allocateNextFulfillmentNos(today, targetLines.length);
+      let fulNoCursor = 0;
       for (const line of targetLines) {
         const ful: FlFulfillment = {
           id: newId('FUL'),
           tenantId: DEFAULT_TENANT_ID,
-          fulfillmentNo: `FUL-${baseTs}-${seq++}`,
+          fulfillmentNo: fulNos[fulNoCursor++] || newId('FUL'),
           fulfillmentDomain: 'RENTAL',
           actionType,
           contractId: selectedContract.id,

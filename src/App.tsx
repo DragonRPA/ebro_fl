@@ -95,6 +95,8 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
       return <OrganizationHrPage />;
     case 'operation_manual':
       return <OperationManualPage />;
+    case 'permission_settings':
+      return <SystemSettingsPage />;
     case 'system_settings':
       return <SystemSettingsPage />;
     default:

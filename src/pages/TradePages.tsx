@@ -6,6 +6,7 @@ import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId }
 import {
   addDaysIso,
   allocateNextContractNo,
+  allocateNextFulfillmentNos,
   completeFulfillment,
   executeAccountTransfer,
   recordTradeAftercare,
@@ -920,8 +921,12 @@ export const TradeContractsPage: React.FC = () => {
     }
     setBusy(true);
     try {
-      let seq = 1;
-      const baseTs = Date.now().toString(36).toUpperCase();
+      const totalFulNeeded = openLines.reduce((s, { line, remainingQty }) => {
+        const splitSerial = line.managementType === 'SERIAL' && remainingQty > 1;
+        return s + (splitSerial ? Math.round(remainingQty) : 1);
+      }, 0);
+      const fulNos = await allocateNextFulfillmentNos(today, totalFulNeeded);
+      let fulNoCursor = 0;
       for (const { line, remainingQty } of openLines) {
         const splitSerial = line.managementType === 'SERIAL' && remainingQty > 1;
         const count = splitSerial ? Math.round(remainingQty) : 1;
@@ -930,7 +935,7 @@ export const TradeContractsPage: React.FC = () => {
           const ful: FlFulfillment = {
             id: newId('FUL'),
             tenantId: DEFAULT_TENANT_ID,
-            fulfillmentNo: `FUL-${baseTs}-${seq++}`,
+            fulfillmentNo: fulNos[fulNoCursor++] || newId('FUL'),
             fulfillmentDomain: 'TRADE',
             actionType: '유통출고',
             contractId: selectedContract.id,
