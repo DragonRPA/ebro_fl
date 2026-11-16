@@ -1647,8 +1647,12 @@ export const TradeFulfillmentPage: React.FC = () => {
   const canEdit = canEditPage('trade_fulfillment');
   const today = new Date().toISOString().slice(0, 10);
 
+  const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY'>('PENDING');
   const [pendingKeyword, setPendingKeyword] = useState('');
   const [completedKeyword, setCompletedKeyword] = useState('');
+  const [historyStartDate, setHistoryStartDate] = useState('');
+  const [historyEndDate, setHistoryEndDate] = useState('');
+  const [historyPartnerId, setHistoryPartnerId] = useState('');
 
   const contractMap = useMemo(
     () => new Map(datasets.contracts.map((c) => [c.id, c])),
@@ -1678,8 +1682,30 @@ export const TradeFulfillmentPage: React.FC = () => {
     });
   }, [tradeFulfillments, pendingKeyword, contractMap, itemMap]);
 
+  const historyPartnerOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const f of tradeFulfillments) {
+      if (f.status === 'COMPLETED' && f.partnerId && !seen.has(f.partnerId)) {
+        seen.set(f.partnerId, f.partnerName);
+      }
+    }
+    return [
+      { value: '', label: '전체 매출처' },
+      ...[...seen.entries()]
+        .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
+        .map(([value, label]) => ({ value, label })),
+    ];
+  }, [tradeFulfillments]);
+
   const completedFulfillments = useMemo(() => {
-    const base = tradeFulfillments.filter((f) => f.status === 'COMPLETED');
+    const base = tradeFulfillments.filter((f) => {
+      if (f.status !== 'COMPLETED') return false;
+      const d = f.effectiveDate || '';
+      if (historyStartDate && d < historyStartDate) return false;
+      if (historyEndDate && d > historyEndDate) return false;
+      if (historyPartnerId && f.partnerId !== historyPartnerId) return false;
+      return true;
+    });
     const q = completedKeyword.trim();
     if (!q) return base;
     return base.filter((f) => {
@@ -1693,7 +1719,7 @@ export const TradeFulfillmentPage: React.FC = () => {
         q
       );
     });
-  }, [tradeFulfillments, completedKeyword, contractMap, itemMap, datasets.inventoryUnits]);
+  }, [tradeFulfillments, completedKeyword, contractMap, itemMap, datasets.inventoryUnits, historyStartDate, historyEndDate, historyPartnerId]);
 
   const [selectedFulId, setSelectedFulId] = useState<string | null>(null);
   const selectedFul =
@@ -1787,6 +1813,18 @@ export const TradeFulfillmentPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-stack-gap)' }}>
+        <SegmentedTabs
+          tabs={[
+            { id: 'PENDING', label: '유통출고', count: pendingFulfillments.length },
+            { id: 'HISTORY', label: '유통출고이력', count: completedFulfillments.length },
+          ]}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as 'PENDING' | 'HISTORY')}
+        />
+      </div>
+
+      {activeTab === 'PENDING' && (
       <SectionPanel
         title="출고 대기 유통 계약 · 초성·키워드 검색 및 출고 완료 처리"
         manualId="tful-exec"
@@ -1848,7 +1886,7 @@ export const TradeFulfillmentPage: React.FC = () => {
               setChosenUnitId('');
             }}
             emptyText="출고 대기 중인 유통 계약이 없습니다."
-            maxHeight="220px"
+            maxHeight="clamp(300px, calc(100vh - 380px), 700px)"
           />
 
           {canEdit && selectedFul && selectedLine && (
@@ -1934,30 +1972,78 @@ export const TradeFulfillmentPage: React.FC = () => {
             </div>
           )}
         </div>
-      </SectionPanel>
+        </SectionPanel>
+      )}
 
-      <SectionPanel
-        title="출고 완료 건 조회 · 공급사 정비중개 · 반품환불 · 반품교환"
-        manualId="tful-aftercare"
-        rightSlot={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <StatusBadge label={`완료 ${completedFulfillments.length}건`} tone="success" />
-          </div>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
-            <VerticalField label="출고 완료 건 검색" minWidth={280} flex={1}>
-              <input
-                type="text"
-                data-testid="tful-completed-search"
-                value={completedKeyword}
-                onChange={(e) => setCompletedKeyword(e.target.value)}
-                placeholder="매출처, 의뢰번호, 계약번호, 품목명, 제조번호, 초성 검색"
-                style={controlInputStyle}
-              />
-            </VerticalField>
-          </div>
+      {activeTab === 'HISTORY' && (
+        <SectionPanel
+          title="출고 완료 건 조회 · 공급사 정비중개 · 반품환불 · 반품교환"
+          manualId="tful-aftercare"
+          rightSlot={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {(historyStartDate || historyEndDate || historyPartnerId || completedKeyword) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHistoryStartDate('');
+                    setHistoryEndDate('');
+                    setHistoryPartnerId('');
+                    setCompletedKeyword('');
+                  }}
+                  style={actionBtnStyle('secondary', true)}
+                >
+                  필터 초기화
+                </button>
+              )}
+              <StatusBadge label={`완료 ${completedFulfillments.length}건`} tone="success" />
+            </div>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))',
+                gap: 'var(--space-field-grid-gap)',
+                alignItems: 'end',
+              }}
+            >
+              <VerticalField label="완료 시작일" minWidth={0}>
+                <input
+                  type="date"
+                  value={historyStartDate}
+                  onChange={(e) => setHistoryStartDate(e.target.value)}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="완료 종료일" minWidth={0}>
+                <input
+                  type="date"
+                  value={historyEndDate}
+                  onChange={(e) => setHistoryEndDate(e.target.value)}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="매출처" minWidth={0}>
+                <SearchableSelect
+                  value={historyPartnerId}
+                  onChange={setHistoryPartnerId}
+                  options={historyPartnerOptions}
+                  placeholder="전체 매출처"
+                  searchPlaceholder="매출처명 · 초성 검색"
+                />
+              </VerticalField>
+              <VerticalField label="출고 완료 건 검색" minWidth={0}>
+                <input
+                  type="text"
+                  data-testid="tful-completed-search"
+                  value={completedKeyword}
+                  onChange={(e) => setCompletedKeyword(e.target.value)}
+                  placeholder="매출처, 의뢰번호, 계약번호, 품목명, 제조번호, 초성"
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+            </div>
 
           <DataGrid
             columns={[
@@ -2167,6 +2253,7 @@ export const TradeFulfillmentPage: React.FC = () => {
           />
         </div>
       </SectionPanel>
+      )}
     </div>
   );
 };
