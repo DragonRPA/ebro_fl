@@ -464,11 +464,12 @@ export function DataGrid<T>({
 
 export const SectionPanel: React.FC<{
   title?: string;
+  titleSlot?: React.ReactNode;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
   manualId?: string;
   style?: React.CSSProperties;
-}> = ({ title, rightSlot, children, manualId, style }) => (
+}> = ({ title, titleSlot, rightSlot, children, manualId, style }) => (
   <div
     data-manual-id={manualId}
     style={{
@@ -480,7 +481,7 @@ export const SectionPanel: React.FC<{
       ...style,
     }}
   >
-    {(title || rightSlot) && (
+    {(title || titleSlot || rightSlot) && (
       <div
         style={{
           display: 'flex',
@@ -492,22 +493,23 @@ export const SectionPanel: React.FC<{
           borderBottom: '1px solid var(--table-row-border)',
         }}
       >
-        {title ? (
-          <h3
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              fontWeight: 700,
-              color: 'var(--text-main)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-          >
-            {title}
-          </h3>
-        ) : (
-          <span />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', minWidth: 0 }}>
+          {title ? (
+            <h3
+              style={{
+                margin: 0,
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--text-main)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {title}
+            </h3>
+          ) : null}
+          {titleSlot}
+        </div>
         {rightSlot && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {rightSlot}

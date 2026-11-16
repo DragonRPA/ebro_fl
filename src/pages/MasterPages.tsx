@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import { Upload } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import { upsertManagedExchangeRates } from '../services/domainEngine';
+import { analyzeBusinessLicenseFile } from '../services/businessLicenseOcrService';
 import {
   ConservationBar,
   DataGrid,
@@ -78,14 +80,74 @@ export const PartnersPage: React.FC = () => {
     contactEmail: '',
   });
   const [saving, setSaving] = useState(false);
+  const [isDraggingBizCert, setIsDraggingBizCert] = useState(false);
+  const [analyzingBizCert, setAnalyzingBizCert] = useState(false);
+  const [bizCertFileName, setBizCertFileName] = useState<string>('');
+  const bizCertInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleBizLicenseFile = async (file: File) => {
+    if (!canEdit) return;
+    const lowerName = file.name.toLowerCase();
+    const isSupported =
+      file.type.startsWith('image/') ||
+      file.type === 'application/pdf' ||
+      lowerName.endsWith('.pdf') ||
+      lowerName.endsWith('.jpg') ||
+      lowerName.endsWith('.jpeg') ||
+      lowerName.endsWith('.png') ||
+      lowerName.endsWith('.webp');
+
+    if (!isSupported) {
+      notifyToast('이미지 또는 PDF 형식의 사업자등록증 파일을 올려주세요.', 'error');
+      return;
+    }
+
+    setAnalyzingBizCert(true);
+    setBizCertFileName(file.name);
+    notifyToast(`사업자등록증 판독 중 · ${file.name}`, 'info');
+
+    try {
+      const res = await analyzeBusinessLicenseFile(file);
+      if (!res.success) {
+        notifyToast(res.error || '사업자등록증 판독에 실패했습니다.', 'error');
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        name: res.companyName || prev.name || '',
+        bizRegNo: res.bizRegNo || prev.bizRegNo || '',
+        representative: res.representative || prev.representative || '',
+        phone: res.repContact || prev.phone || '',
+        bizType: res.bizType || prev.bizType || '',
+        bizItem: res.bizItem || prev.bizItem || '',
+        taxEmail: res.taxEmail || prev.taxEmail || '',
+        address: res.address || res.headOfficeAddress || prev.address || '',
+      }));
+
+      notifyToast(
+        `${res.companyName || '사업자등록증'} 정보 자동 입력 완료 · 확인 후 거래처 저장을 눌러주세요.`,
+        'success'
+      );
+    } catch (err) {
+      notifyToast(
+        err instanceof Error ? err.message : '사업자등록증 판독 중 오류가 발생했습니다.',
+        'error'
+      );
+    } finally {
+      setAnalyzingBizCert(false);
+    }
+  };
 
   const selectPartner = (p: FlPartner) => {
     setSelectedId(p.id);
     setForm({ ...p });
+    setBizCertFileName('');
   };
 
   const resetToNew = () => {
     setSelectedId(null);
+    setBizCertFileName('');
     setForm({
       name: '',
       bizRegNo: '',
@@ -310,15 +372,109 @@ export const PartnersPage: React.FC = () => {
           maxHeight="620px"
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isDraggingBizCert) setIsDraggingBizCert(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+            setIsDraggingBizCert(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDraggingBizCert(false);
+            const file = e.dataTransfer?.files?.[0];
+            if (file) {
+              void handleBizLicenseFile(file);
+            }
+          }}
+        >
+          <input
+            ref={bizCertInputRef}
+            type="file"
+            accept="image/*,.pdf,application/pdf"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                void handleBizLicenseFile(file);
+              }
+              e.target.value = '';
+            }}
+          />
           <SectionPanel
             title={selectedId ? `거래처 상세 · ${form.name || ''}` : '신규 거래처 등록'}
+            style={
+              isDraggingBizCert
+                ? {
+                    border: '2px dashed var(--primary)',
+                    backgroundColor: 'var(--primary-light)',
+                  }
+                : undefined
+            }
+            titleSlot={
+              canEdit ? (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => bizCertInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      bizCertInputRef.current?.click();
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isDraggingBizCert) setIsDraggingBizCert(true);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingBizCert(false);
+                    const file = e.dataTransfer?.files?.[0];
+                    if (file) {
+                      void handleBizLicenseFile(file);
+                    }
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: `1px dashed ${isDraggingBizCert ? 'var(--primary)' : '#2563eb'}`,
+                    backgroundColor: isDraggingBizCert ? '#dbeafe' : '#eff6ff',
+                    color: '#1d4ed8',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: analyzingBizCert ? 'wait' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none',
+                  }}
+                >
+                  <Upload size={13} />
+                  <span>
+                    {analyzingBizCert
+                      ? `사업자등록증 판독 중 · ${bizCertFileName}`
+                      : '사업자등록증 파일을 끌어다 놓으세요'}
+                  </span>
+                </div>
+              ) : undefined
+            }
             rightSlot={
               canEdit && (
                 <button
                   type="button"
                   data-manual-id="prt-save"
-                  disabled={saving}
+                  disabled={saving || analyzingBizCert}
                   onClick={handleSavePartner}
                   style={actionBtnStyle('primary', true)}
                 >
