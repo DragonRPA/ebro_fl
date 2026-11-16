@@ -1354,6 +1354,22 @@ export const TradeContractsPage: React.FC = () => {
   );
 };
 
+function computeElapsedDays(acquisitionDate: string, refDate: string): number {
+  if (!acquisitionDate) return 0;
+  const start = Date.parse(acquisitionDate.slice(0, 10));
+  const end = Date.parse(refDate.slice(0, 10));
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 0;
+  return Math.max(0, Math.floor((end - start) / 86400000));
+}
+
+function agingTone(days: number): 'danger' | 'warning' | 'info' | 'primary' | 'neutral' {
+  if (days >= 180) return 'danger';
+  if (days >= 90) return 'warning';
+  if (days >= 60) return 'info';
+  if (days >= 30) return 'primary';
+  return 'neutral';
+}
+
 export const TradeInventoryPage: React.FC = () => {
   const { currentUser, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('trade_inventory');
@@ -1361,6 +1377,7 @@ export const TradeInventoryPage: React.FC = () => {
 
   const [catFilter, setCatFilter] = useState<'ALL' | ItemCategory>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | '보유중' | '판매완료'>('보유중');
+  const [agingFilter, setAgingFilter] = useState<'ALL' | '30' | '60' | '90' | '180'>('ALL');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
   const [filterItemId, setFilterItemId] = useState('');
@@ -1387,26 +1404,77 @@ export const TradeInventoryPage: React.FC = () => {
     ];
   }, [datasets.inventoryUnits]);
 
-  const tradeUnits = useMemo(() => {
-    const kw = filterKeyword.trim().toLowerCase();
+  const baseFilteredUnits = useMemo(() => {
+    const kw = filterKeyword.trim();
     const base = datasets.inventoryUnits.filter((u) => u.ownershipDomain === '유통재고');
-    const filtered = base.filter((u) => {
+    return base.filter((u) => {
       if (catFilter !== 'ALL' && u.itemCategory !== catFilter) return false;
       if (statusFilter !== 'ALL' && u.status !== statusFilter) return false;
       if (filterStartDate && u.acquisitionDate < filterStartDate) return false;
       if (filterEndDate && u.acquisitionDate > filterEndDate) return false;
       if (filterItemId && u.itemId !== filterItemId) return false;
       if (kw) {
-        const text = `${u.unitCode} ${u.sku} ${u.itemName} ${u.serialNo || ''} ${u.lotNo || ''}`.toLowerCase();
-        if (!text.includes(kw)) return false;
+        const text = `${u.unitCode} ${u.sku} ${u.itemName} ${u.serialNo || ''} ${u.lotNo || ''}`;
+        if (!matchesKoreanQuery(text, kw)) return false;
       }
       return true;
     });
-    return sortUnitsFifo(filtered);
   }, [catFilter, datasets.inventoryUnits, filterEndDate, filterItemId, filterKeyword, filterStartDate, statusFilter]);
+
+  const agingCounts = useMemo(() => {
+    let over30 = 0;
+    let over60 = 0;
+    let over90 = 0;
+    let over180 = 0;
+    for (const u of baseFilteredUnits) {
+      const days = computeElapsedDays(u.acquisitionDate, today);
+      if (days >= 30) over30 += 1;
+      if (days >= 60) over60 += 1;
+      if (days >= 90) over90 += 1;
+      if (days >= 180) over180 += 1;
+    }
+    return { all: baseFilteredUnits.length, over30, over60, over90, over180 };
+  }, [baseFilteredUnits, today]);
+
+  const tradeUnits = useMemo(() => {
+    const filtered =
+      agingFilter === 'ALL'
+        ? baseFilteredUnits
+        : baseFilteredUnits.filter(
+            (u) => computeElapsedDays(u.acquisitionDate, today) >= Number(agingFilter)
+          );
+    return sortUnitsFifo(filtered);
+  }, [agingFilter, baseFilteredUnits, today]);
+
+  const totalFilteredBookValue = useMemo(
+    () =>
+      tradeUnits.reduce(
+        (sum, u) => sum + Number(u.unitCostKrw || 0) * Math.max(1, Number(u.qtyOnHand || 0)),
+        0
+      ),
+    [tradeUnits]
+  );
+
+  const over90BookValue = useMemo(
+    () =>
+      tradeUnits
+        .filter((u) => computeElapsedDays(u.acquisitionDate, today) >= 90)
+        .reduce(
+          (sum, u) => sum + Number(u.unitCostKrw || 0) * Math.max(1, Number(u.qtyOnHand || 0)),
+          0
+        ),
+    [tradeUnits, today]
+  );
 
   const selectedUnit =
     tradeUnits.find((u) => u.id === selectedUnitId) || tradeUnits[0] || null;
+
+  const selectedUnitMovements = useMemo(() => {
+    if (!selectedUnit) return [];
+    return datasets.stockMovements
+      .filter((m) => m.unitId === selectedUnit.id)
+      .sort((a, b) => (b.effectiveDate || '').localeCompare(a.effectiveDate || ''));
+  }, [datasets.stockMovements, selectedUnit]);
 
   const canTransfer =
     canEdit &&
@@ -1417,10 +1485,10 @@ export const TradeInventoryPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
-        title="유통재고 선입선출 조회 · 계정대체"
+        title="유통재고 선입선출 · 경과일수 현황 · 계정대체"
         manualId="tinv-filter"
         rightSlot={
-          (filterStartDate || filterEndDate || filterItemId || filterKeyword) ? (
+          (filterStartDate || filterEndDate || filterItemId || filterKeyword || agingFilter !== 'ALL') ? (
             <button
               type="button"
               onClick={() => {
@@ -1428,6 +1496,7 @@ export const TradeInventoryPage: React.FC = () => {
                 setFilterEndDate('');
                 setFilterItemId('');
                 setFilterKeyword('');
+                setAgingFilter('ALL');
               }}
               style={actionBtnStyle('secondary', true)}
             >
@@ -1457,6 +1526,17 @@ export const TradeInventoryPage: React.FC = () => {
               ]}
               activeId={statusFilter}
               onChange={(id) => setStatusFilter(id as typeof statusFilter)}
+            />
+            <SegmentedTabs
+              tabs={[
+                { id: 'ALL', label: '전체 기간', count: agingCounts.all },
+                { id: '30', label: '30일 이상', count: agingCounts.over30 },
+                { id: '60', label: '60일 이상', count: agingCounts.over60 },
+                { id: '90', label: '90일 이상', count: agingCounts.over90 },
+                { id: '180', label: '180일 이상', count: agingCounts.over180 },
+              ]}
+              activeId={agingFilter}
+              onChange={(id) => setAgingFilter(id as typeof agingFilter)}
             />
           </div>
           <div
@@ -1515,6 +1595,18 @@ export const TradeInventoryPage: React.FC = () => {
             sortable: true,
             sortValue: (u) => u.acquisitionDate,
             render: (u) => u.acquisitionDate,
+          },
+          {
+            key: 'elapsedDays',
+            header: '경과일',
+            width: 95,
+            align: 'center',
+            sortable: true,
+            sortValue: (u) => computeElapsedDays(u.acquisitionDate, today),
+            render: (u) => {
+              const days = computeElapsedDays(u.acquisitionDate, today);
+              return <StatusBadge label={`${days}일`} tone={agingTone(days)} />;
+            },
           },
           {
             key: 'unitCode',
@@ -1595,12 +1687,10 @@ export const TradeInventoryPage: React.FC = () => {
       <ConservationBar
         manualId="tinv-xfer"
         items={[
+          { label: '조회 건수', value: `${tradeUnits.length}건` },
+          { label: '조회 장부가액 합계', value: formatMoney(totalFilteredBookValue), tone: 'primary' },
+          { label: '90일 이상 장기재고', value: formatMoney(over90BookValue), tone: over90BookValue > 0 ? 'warning' : 'neutral' },
           { label: '선택 재고', value: selectedUnit ? `${selectedUnit.unitCode} · ${selectedUnit.itemName}` : '선택 없음' },
-          {
-            label: '보유 장부가액',
-            value: selectedUnit ? formatMoney(selectedUnit.unitCostKrw * Math.max(1, selectedUnit.qtyOnHand)) : '₩0',
-            tone: 'primary',
-          },
         ]}
       >
         {canTransfer && selectedUnit && (
@@ -1638,6 +1728,76 @@ export const TradeInventoryPage: React.FC = () => {
           </div>
         )}
       </ConservationBar>
+
+      {selectedUnit && (
+        <SectionPanel
+          title={`차대번호별 입출고 이력 · ${selectedUnit.serialNo || selectedUnit.lotNo || selectedUnit.unitCode}`}
+          manualId="tinv-history"
+          rightSlot={
+            <StatusBadge
+              label={`이력 ${selectedUnitMovements.length}건`}
+              tone={selectedUnitMovements.length > 0 ? 'primary' : 'neutral'}
+            />
+          }
+        >
+          <DataGrid
+            columns={[
+              {
+                key: 'effDate',
+                header: '발생일',
+                width: 110,
+                render: (m) => m.effectiveDate || '-',
+              },
+              {
+                key: 'mType',
+                header: '구분',
+                width: 110,
+                align: 'center',
+                render: (m) => (
+                  <StatusBadge
+                    label={formatKoStatus(m.movementType)}
+                    tone={m.qtyDelta >= 0 ? 'success' : 'warning'}
+                  />
+                ),
+              },
+              {
+                key: 'qtyDelta',
+                header: '변동수량',
+                width: 90,
+                align: 'right',
+                render: (m) => (
+                  <span style={{ fontWeight: 700 }}>
+                    {m.qtyDelta > 0 ? `+${m.qtyDelta}` : m.qtyDelta}
+                  </span>
+                ),
+              },
+              {
+                key: 'unitCost',
+                header: '단가',
+                width: 120,
+                align: 'right',
+                render: (m) => formatMoney(m.unitCostKrw),
+              },
+              {
+                key: 'totalCost',
+                header: '금액',
+                width: 130,
+                align: 'right',
+                render: (m) => formatMoney(m.amountKrw),
+              },
+              {
+                key: 'memo',
+                header: '적요',
+                render: (m) => m.memo || '-',
+              },
+            ]}
+            rows={selectedUnitMovements}
+            rowKey={(m) => m.id}
+            emptyText="선택한 재고의 입출고 이력이 없습니다."
+            maxHeight="200px"
+          />
+        </SectionPanel>
+      )}
     </div>
   );
 };

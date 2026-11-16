@@ -33,6 +33,7 @@ import {
   ApSettlementsPage,
   ArBillingCollectionPage,
   BankMatchingPage,
+  CashCalendarPage,
   FinancialStatementsPage,
   OperationManualPage,
   SystemSettingsPage,
@@ -86,6 +87,8 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
       return <ApSettlementsPage />;
     case 'bank_matching':
       return <BankMatchingPage />;
+    case 'cash_calendar':
+      return <CashCalendarPage />;
     case 'financial_statements':
       return <FinancialStatementsPage />;
     case 'organization_hr':

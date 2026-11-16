@@ -36,6 +36,7 @@ export type FlPageId =
   | 'ar_billing_collection'
   | 'ap_settlements'
   | 'bank_matching'
+  | 'cash_calendar'
   | 'financial_statements'
   | 'organization_hr'
   | 'operation_manual'
@@ -104,6 +105,7 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'ar_billing_collection', label: '청구 수납 관리', shortDesc: '청구 생성 · 세금계산서 · 수납 · 거래명세서' },
       { pageId: 'ap_settlements', label: '매입 비용 정산', shortDesc: '매입채무 · 물류비 · 외주비 · 리스이자 정산' },
       { pageId: 'bank_matching', label: '통장 입출금 대사', shortDesc: '통장 거래내역과 청구 · 채무 대사' },
+      { pageId: 'cash_calendar', label: '자금 일정 캘린더', shortDesc: '매입 지급일 · 매출 납기일 기반 입출금 일정' },
       { pageId: 'financial_statements', label: '재무제표 조회', shortDesc: '재무상태표 · 손익계산서 · 리스명세 · 회계기준' },
       { pageId: 'organization_hr', label: '조직 인사 관리', shortDesc: '부서 조직도 · 임직원 인사원장 · 발령 이력' },
       { pageId: 'operation_manual', label: '업무 매뉴얼', shortDesc: '화면별 기본기능 · 조작순서 검색' },

@@ -550,6 +550,20 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
       },
     ],
   },
+  cash_calendar: {
+    pageId: 'cash_calendar',
+    pageTitle: '자금 일정 캘린더',
+    groupLabel: '정산 · 회계 · 설정',
+    basicDescription: '매출거래처 납기일자와 매입거래처 지급일자, 금융리스 납입일을 기준으로 월간 입금예정·지출예정 자금 일정을 달력으로 조망합니다.',
+    anchors: [],
+    processes: [
+      {
+        processName: '일자별 입출금 예정 내역 조회',
+        purpose: '월간 달력에서 특정 일자의 입금예정 및 지출예정 상세 내역을 확인합니다.',
+        steps: [],
+      },
+    ],
+  },
   financial_statements: {
     pageId: 'financial_statements',
     pageTitle: '재무제표 조회',
