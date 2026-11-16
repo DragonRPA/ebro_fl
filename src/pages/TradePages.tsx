@@ -1347,7 +1347,7 @@ export const TradeContractsPage: React.FC = () => {
           rowKey={(r) => r.id}
           selectedRowId={selectedContract?.id || null}
           onRowClick={(r) => setSelectedId(r.id)}
-          maxHeight="clamp(280px, calc(100vh - 440px), 680px)"
+          maxHeight="clamp(240px, calc(100vh - 495px), 680px)"
         />
       </SectionPanel>
     </div>

@@ -19,6 +19,24 @@ function readSavedLoginId(): string {
   }
 }
 
+function parseAgentVersionNums(ver?: string | null): number[] {
+  if (!ver) return [];
+  return (String(ver).match(/\d+/g) || []).map(Number);
+}
+
+function isAgentVersionLower(localVer: string, expectedVer: string): boolean {
+  const a = parseAgentVersionNums(localVer);
+  const b = parseAgentVersionNums(expectedVer);
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av < bv) return true;
+    if (av > bv) return false;
+  }
+  return false;
+}
+
 export const LoginView: React.FC = () => {
   const { tenantProfile, agentOnline, agentInfo, loginWithCredentials, notifyToast } = useAppShell();
   const initialSavedId = readSavedLoginId();
@@ -33,8 +51,8 @@ export const LoginView: React.FC = () => {
 
   const latestAgentVer = EXPECTED_AGENT_VERSION;
   const localAgentVer = agentInfo?.version || '';
-  const isVerMatch = agentOnline && Boolean(localAgentVer) && localAgentVer === latestAgentVer;
-  const isVerMismatch = agentOnline && Boolean(localAgentVer) && localAgentVer !== latestAgentVer;
+  const isVerMismatch = agentOnline && Boolean(localAgentVer) && isAgentVersionLower(localAgentVer, latestAgentVer);
+  const isVerMatch = agentOnline && Boolean(localAgentVer) && !isVerMismatch;
 
   const handleAgentDownload = () => {
     triggerTenantAgentDownload({

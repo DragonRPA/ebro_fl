@@ -1,6 +1,6 @@
 import type { TenantFeatures, TenantR2Config } from '../types/domain';
 
-export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.49';
+export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.52';
 export const EXPECTED_CORE_HASH: string = '5541aa41dce3';
 // GitHub Releases CDN
 export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
