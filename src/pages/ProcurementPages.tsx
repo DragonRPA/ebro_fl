@@ -7,12 +7,14 @@ import {
   ConservationBar,
   DataGrid,
   ModalDialog,
+  SearchableSelect,
   SectionPanel,
   StatusBadge,
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
   type GridColumn,
+  type SearchableSelectOption,
 } from '../components/UiPrimitives';
 import type {
   CurrencyCode,
@@ -97,6 +99,30 @@ export const PurchasesPage: React.FC = () => {
     );
     return matched.length > 0 ? matched : datasets.partners;
   }, [datasets.partners]);
+
+  const supplierOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      suppliers.map((s) => ({
+        value: s.id,
+        label: s.name,
+        subLabel: s.bizRegNo || undefined,
+        searchText: [s.name, s.bizRegNo, s.representative].filter(Boolean).join(' '),
+      })),
+    [suppliers]
+  );
+
+  const itemOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      datasets.itemMasters.map((it) => ({
+        value: it.id,
+        label: `${it.sku} · ${it.name} [${it.managementType === 'SERIAL' ? '시리얼' : '로트'}]`,
+        subLabel: it.manufacturer || it.itemCategory,
+        searchText: [it.sku, it.name, it.manufacturer, it.modelName, it.itemCategory]
+          .filter(Boolean)
+          .join(' '),
+      })),
+    [datasets.itemMasters]
+  );
 
   const [purchaseType, setPurchaseType] = useState<'IMPORT' | 'DOMESTIC'>('IMPORT');
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
@@ -393,17 +419,14 @@ export const PurchasesPage: React.FC = () => {
                 </select>
               </VerticalField>
               <VerticalField label="매입처" minWidth={0} required>
-                <select
+                <SearchableSelect
                   value={supplierId || suppliers[0]?.id || ''}
-                  onChange={(e) => setSupplierId(e.target.value)}
-                  style={controlInputStyle}
-                >
-                  {suppliers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  options={supplierOptions}
+                  onChange={(nextId) => setSupplierId(nextId)}
+                  placeholder="매입처 선택"
+                  searchPlaceholder="매입처명 · 초성 · 사업자번호 검색"
+                  minDropdownWidth={280}
+                />
               </VerticalField>
               <VerticalField label="귀속계정" minWidth={0} required>
                 <select
@@ -540,17 +563,14 @@ export const PurchasesPage: React.FC = () => {
                   }}
                 >
                   <VerticalField label="입고 품목" minWidth={0}>
-                    <select
+                    <SearchableSelect
                       value={l.itemId}
-                      onChange={(e) => updateLineItem(l.key, e.target.value)}
-                      style={controlInputStyle}
-                    >
-                      {datasets.itemMasters.map((it) => (
-                        <option key={it.id} value={it.id}>
-                          {it.sku} · {it.name} [{it.managementType === 'SERIAL' ? '시리얼' : '로트'}]
-                        </option>
-                      ))}
-                    </select>
+                      options={itemOptions}
+                      onChange={(nextItemId) => updateLineItem(l.key, nextItemId)}
+                      placeholder="입고 품목 선택"
+                      searchPlaceholder="품명 · 초성 · 품번 · 제조사 검색"
+                      minDropdownWidth={360}
+                    />
                   </VerticalField>
                   <VerticalField label="수량" minWidth={0}>
                     <CommaNumberInput
