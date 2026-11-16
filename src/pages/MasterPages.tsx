@@ -1,9 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import { upsertManagedExchangeRates } from '../services/domainEngine';
-import { analyzeBusinessLicenseFile } from '../services/businessLicenseOcrService';
+import {
+  analyzeBusinessLicenseFile,
+  uploadBusinessLicenseImageToR2,
+} from '../services/businessLicenseOcrService';
 import {
   ConservationBar,
   DataGrid,
@@ -83,6 +86,9 @@ export const PartnersPage: React.FC = () => {
   const [isDraggingBizCert, setIsDraggingBizCert] = useState(false);
   const [analyzingBizCert, setAnalyzingBizCert] = useState(false);
   const [bizCertFileName, setBizCertFileName] = useState<string>('');
+  const [isBizCertModalOpen, setIsBizCertModalOpen] = useState(false);
+  const [bizCertZoom, setBizCertZoom] = useState(100);
+  const [modalForm, setModalForm] = useState<Partial<FlPartner>>({});
   const bizCertInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleBizLicenseFile = async (file: File) => {
@@ -108,12 +114,41 @@ export const PartnersPage: React.FC = () => {
 
     try {
       const res = await analyzeBusinessLicenseFile(file);
+      const previewUrl = res.previewImageDataUrl;
+
+      if (previewUrl) {
+        setForm((prev) => ({
+          ...prev,
+          bizCertUrl: previewUrl,
+          bizCertName: file.name,
+        }));
+        setModalForm((prev) => ({
+          ...prev,
+          bizCertUrl: previewUrl,
+          bizCertName: file.name,
+        }));
+
+        void uploadBusinessLicenseImageToR2(file.name, previewUrl).then((storedUrl) => {
+          if (storedUrl && storedUrl !== previewUrl) {
+            setForm((prev) =>
+              prev.bizCertUrl === previewUrl ? { ...prev, bizCertUrl: storedUrl } : prev
+            );
+            setModalForm((prev) =>
+              prev.bizCertUrl === previewUrl ? { ...prev, bizCertUrl: storedUrl } : prev
+            );
+          }
+        });
+      }
+
       if (!res.success) {
-        notifyToast(res.error || '사업자등록증 판독에 실패했습니다.', 'error');
+        notifyToast(
+          res.error || '사업자등록증 판독에 실패했습니다. 모달에서 직접 수정할 수 있습니다.',
+          'error'
+        );
         return;
       }
 
-      setForm((prev) => ({
+      const applyOcr = (prev: Partial<FlPartner>): Partial<FlPartner> => ({
         ...prev,
         name: res.companyName || prev.name || '',
         bizRegNo: res.bizRegNo || prev.bizRegNo || '',
@@ -123,10 +158,13 @@ export const PartnersPage: React.FC = () => {
         bizItem: res.bizItem || prev.bizItem || '',
         taxEmail: res.taxEmail || prev.taxEmail || '',
         address: res.address || res.headOfficeAddress || prev.address || '',
-      }));
+      });
+
+      setForm(applyOcr);
+      setModalForm(applyOcr);
 
       notifyToast(
-        `${res.companyName || '사업자등록증'} 정보 자동 입력 완료 · 확인 후 거래처 저장을 눌러주세요.`,
+        `${res.companyName || '사업자등록증'} 정보 자동 입력 완료 · 확인 후 저장해 주세요.`,
         'success'
       );
     } catch (err) {
@@ -142,7 +180,7 @@ export const PartnersPage: React.FC = () => {
   const selectPartner = (p: FlPartner) => {
     setSelectedId(p.id);
     setForm({ ...p });
-    setBizCertFileName('');
+    setBizCertFileName(p.bizCertName || '');
   };
 
   const resetToNew = () => {
@@ -168,6 +206,8 @@ export const PartnersPage: React.FC = () => {
       bankHolder: '',
       creditGrade: '정상',
       memo: '',
+      bizCertUrl: null,
+      bizCertName: null,
       isActive: true,
     });
   };
@@ -178,39 +218,39 @@ export const PartnersPage: React.FC = () => {
     setForm((p) => ({ ...p, partnerRoles: next }));
   };
 
-  const handleSavePartner = async () => {
-    if (!form.name?.trim()) {
+  const handleSavePartner = async (overrideForm?: Partial<FlPartner>): Promise<boolean> => {
+    const target = overrideForm || form;
+    if (!target.name?.trim()) {
       notifyToast('상호명을 입력해 주세요.', 'error');
-      return;
+      return false;
     }
-    if (!form.partnerRoles || form.partnerRoles.length === 0) {
-      notifyToast('최소 1개 이상의 거래처 역할을 선택해 주세요.', 'error');
-      return;
-    }
+    const roles = target.partnerRoles && target.partnerRoles.length > 0 ? target.partnerRoles : ['매출처' as PartnerRole];
     setSaving(true);
     try {
       const payload = {
         tenantId: DEFAULT_TENANT_ID,
-        name: form.name.trim(),
-        bizRegNo: form.bizRegNo || null,
-        representative: form.representative || null,
-        bizType: form.bizType || null,
-        bizItem: form.bizItem || null,
-        address: form.address || null,
-        phone: form.phone || null,
-        email: form.email || null,
-        taxEmail: form.taxEmail || null,
-        partnerRoles: form.partnerRoles,
-        defaultClosingDay: Number(form.defaultClosingDay || 31),
-        defaultPaymentDueDay: Number(form.defaultPaymentDueDay || 15),
-        defaultPaymentMonthOffset: Number(form.defaultPaymentMonthOffset || 1),
-        paymentMethod: form.paymentMethod || '계좌이체',
-        bankName: form.bankName || null,
-        bankAccount: form.bankAccount || null,
-        bankHolder: form.bankHolder || null,
-        creditGrade: form.creditGrade || '정상',
-        memo: form.memo || null,
-        isActive: form.isActive ?? true,
+        name: target.name.trim(),
+        bizRegNo: target.bizRegNo || null,
+        representative: target.representative || null,
+        bizType: target.bizType || null,
+        bizItem: target.bizItem || null,
+        address: target.address || null,
+        phone: target.phone || null,
+        email: target.email || null,
+        taxEmail: target.taxEmail || null,
+        partnerRoles: roles,
+        defaultClosingDay: Number(target.defaultClosingDay || 31),
+        defaultPaymentDueDay: Number(target.defaultPaymentDueDay || 15),
+        defaultPaymentMonthOffset: Number(target.defaultPaymentMonthOffset || 1),
+        paymentMethod: target.paymentMethod || '계좌이체',
+        bankName: target.bankName || null,
+        bankAccount: target.bankAccount || null,
+        bankHolder: target.bankHolder || null,
+        creditGrade: target.creditGrade || '정상',
+        memo: target.memo || null,
+        bizCertUrl: target.bizCertUrl || null,
+        bizCertName: target.bizCertName || null,
+        isActive: target.isActive ?? true,
         updatedAt: new Date().toISOString(),
       };
       if (selectedId) {
@@ -224,13 +264,22 @@ export const PartnersPage: React.FC = () => {
         );
         setSelectedId(id);
       }
+      setForm((prev) => ({ ...prev, ...target, partnerRoles: roles }));
       await refreshAll();
       notifyToast('거래처 저장 완료', 'success');
+      return true;
     } catch (err) {
       notifyToast(err instanceof Error ? err.message : '거래처 저장 실패', 'error');
+      return false;
     } finally {
       setSaving(false);
     }
+  };
+
+  const openBizCertModal = () => {
+    setModalForm({ ...form });
+    setBizCertZoom(100);
+    setIsBizCertModalOpen(true);
   };
 
   const handleAddSite = async () => {
@@ -470,17 +519,35 @@ export const PartnersPage: React.FC = () => {
               ) : undefined
             }
             rightSlot={
-              canEdit && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <button
                   type="button"
-                  data-manual-id="prt-save"
-                  disabled={saving || analyzingBizCert}
-                  onClick={handleSavePartner}
-                  style={actionBtnStyle('primary', true)}
+                  data-manual-id="prt-view-bizcert"
+                  onClick={openBizCertModal}
+                  style={{
+                    ...actionBtnStyle('secondary', true),
+                    borderColor: form.bizCertUrl ? '#2563eb' : 'var(--border-color)',
+                    backgroundColor: form.bizCertUrl ? '#eff6ff' : 'var(--bg-card)',
+                    color: form.bizCertUrl ? '#1d4ed8' : 'var(--text-secondary)',
+                  }}
                 >
-                  {saving ? '저장중' : '거래처 저장'}
+                  <Eye size={13} />
+                  사업자등록증 보기
                 </button>
-              )
+                {canEdit && (
+                  <button
+                    type="button"
+                    data-manual-id="prt-save"
+                    disabled={saving || analyzingBizCert}
+                    onClick={() => {
+                      void handleSavePartner();
+                    }}
+                    style={actionBtnStyle('primary', true)}
+                  >
+                    {saving ? '저장중' : '거래처 저장'}
+                  </button>
+                )}
+              </div>
             }
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -684,6 +751,303 @@ export const PartnersPage: React.FC = () => {
           </SectionPanel>
         </div>
       </div>
+
+      <ModalDialog
+        open={isBizCertModalOpen}
+        title={`사업자등록증 보기 · ${modalForm.name || form.name || '신규 거래처'}`}
+        onClose={() => setIsBizCertModalOpen(false)}
+        width={1020}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(360px, 1.15fr) minmax(320px, 1fr)',
+            gap: '16px',
+            alignItems: 'start',
+          }}
+        >
+          {/* 좌측: 사업자등록증 원본 뷰어 */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = e.dataTransfer?.files?.[0];
+              if (file) {
+                void handleBizLicenseFile(file);
+              }
+            }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              padding: '10px',
+              backgroundColor: 'var(--bg-app)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '6px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {modalForm.bizCertName || form.bizCertName || '사업자등록증 사본'}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setBizCertZoom((z) => Math.max(50, z - 25))}
+                  style={actionBtnStyle('secondary', true)}
+                  title="축소"
+                >
+                  <ZoomOut size={13} />
+                </button>
+                <span
+                  style={{
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    minWidth: '42px',
+                    textAlign: 'center',
+                    color: 'var(--text-main)',
+                  }}
+                >
+                  {bizCertZoom}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setBizCertZoom((z) => Math.min(250, z + 25))}
+                  style={actionBtnStyle('secondary', true)}
+                  title="확대"
+                >
+                  <ZoomIn size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBizCertZoom(100)}
+                  style={actionBtnStyle('secondary', true)}
+                  title="원래 크기"
+                >
+                  <RotateCcw size={12} />
+                </button>
+                {(modalForm.bizCertUrl || form.bizCertUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = modalForm.bizCertUrl || form.bizCertUrl;
+                      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                    style={actionBtnStyle('secondary', true)}
+                  >
+                    <ExternalLink size={12} />
+                    새창
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => bizCertInputRef.current?.click()}
+                    disabled={analyzingBizCert}
+                    style={actionBtnStyle('secondary', true)}
+                  >
+                    <Upload size={12} />
+                    {analyzingBizCert ? '판독중' : '파일 등록'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                height: '470px',
+                overflow: 'auto',
+                border: '1px solid var(--table-border-color)',
+                borderRadius: '6px',
+                backgroundColor: '#f8fafc',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+              }}
+            >
+              {modalForm.bizCertUrl || form.bizCertUrl ? (
+                <img
+                  src={modalForm.bizCertUrl || form.bizCertUrl || ''}
+                  alt="사업자등록증 사본"
+                  style={{
+                    width: `${bizCertZoom}%`,
+                    maxWidth: 'none',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    borderRadius: '4px',
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    color: 'var(--text-muted)',
+                    fontSize: '12.5px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '24px',
+                  }}
+                >
+                  <span>등록된 사업자등록증 파일이 없습니다.</span>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => bizCertInputRef.current?.click()}
+                      style={actionBtnStyle('primary', true)}
+                    >
+                      <Upload size={13} />
+                      사업자등록증 파일 선택
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 우측: 거래처 정보 수정 · 저장 폼 (판독 오류 대비) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <VerticalField label="상호" required>
+                <input
+                  type="text"
+                  value={modalForm.name || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, name: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="사업자등록번호">
+                <input
+                  type="text"
+                  value={modalForm.bizRegNo || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bizRegNo: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="대표자">
+                <input
+                  type="text"
+                  value={modalForm.representative || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, representative: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="대표 전화">
+                <input
+                  type="text"
+                  value={modalForm.phone || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, phone: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="업태">
+                <input
+                  type="text"
+                  value={modalForm.bizType || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bizType: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="종목">
+                <input
+                  type="text"
+                  value={modalForm.bizItem || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, bizItem: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="계산서 이메일">
+                <input
+                  type="email"
+                  value={modalForm.taxEmail || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, taxEmail: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="결제수단">
+                <input
+                  type="text"
+                  value={modalForm.paymentMethod || ''}
+                  onChange={(e) => setModalForm((p) => ({ ...p, paymentMethod: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+            </div>
+
+            <VerticalField label="주소">
+              <input
+                type="text"
+                value={modalForm.address || ''}
+                onChange={(e) => setModalForm((p) => ({ ...p, address: e.target.value }))}
+                style={controlInputStyle}
+              />
+            </VerticalField>
+
+            <VerticalField label="특이 메모">
+              <textarea
+                rows={3}
+                value={modalForm.memo || ''}
+                onChange={(e) => setModalForm((p) => ({ ...p, memo: e.target.value }))}
+                style={controlTextareaStyle}
+              />
+            </VerticalField>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '8px',
+                paddingTop: '10px',
+                borderTop: '1px solid var(--table-row-border)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsBizCertModalOpen(false)}
+                style={actionBtnStyle('secondary')}
+              >
+                닫기
+              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  disabled={saving || analyzingBizCert}
+                  onClick={async () => {
+                    const ok = await handleSavePartner(modalForm);
+                    if (ok) {
+                      setIsBizCertModalOpen(false);
+                    }
+                  }}
+                  style={actionBtnStyle('primary')}
+                >
+                  {saving ? '저장중' : '수정 내용 저장'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </ModalDialog>
     </div>
   );
 };

@@ -405,6 +405,8 @@ export interface FlPartner {
   creditGrade?: string | null;
   isActive: boolean;
   memo?: string | null;
+  bizCertUrl?: string | null;
+  bizCertName?: string | null;
 }
 
 export interface FlPartnerSite {

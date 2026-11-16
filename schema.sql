@@ -171,6 +171,8 @@ CREATE TABLE IF NOT EXISTS public.fl_partners (
   credit_grade TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
   memo TEXT,
+  biz_cert_url TEXT,
+  biz_cert_name TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

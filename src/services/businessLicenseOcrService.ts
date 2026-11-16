@@ -21,7 +21,40 @@ export interface BusinessLicenseOcrResult {
   taxEmail?: string;
   repContact?: string;
   isCorporate?: boolean;
+  previewImageDataUrl?: string;
   error?: string;
+}
+
+const R2_PUBLIC_BASE = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev';
+
+export async function uploadBusinessLicenseImageToR2(
+  fileName: string,
+  dataUrl: string
+): Promise<string> {
+  try {
+    const base64Part = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.pdf$/i, '.jpg');
+    const key = `fl_partners/bizcert_${Date.now()}_${safeName || 'license.jpg'}`;
+    const res = await fetch('/api/r2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'upload',
+        key,
+        contentBase64: base64Part,
+        contentType: 'image/jpeg',
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return `${R2_PUBLIC_BASE}/${key}`;
+      }
+    }
+  } catch {
+    // R2 업로드 실패 시 DataURL 폴백 사용
+  }
+  return dataUrl;
 }
 
 export function formatBizRegNo(raw: string): string {
@@ -210,7 +243,11 @@ export async function analyzeBusinessLicenseFile(file: File): Promise<BusinessLi
     }
 
     if (!data) {
-      return { success: false, error: '사업자등록증 판독에 실패했습니다.' };
+      return {
+        success: false,
+        previewImageDataUrl: imageBase64 || undefined,
+        error: '사업자등록증 판독에 실패했습니다.',
+      };
     }
 
     const cleanBizNo = formatBizRegNo(data.bizRegNo || '');
@@ -228,6 +265,7 @@ export async function analyzeBusinessLicenseFile(file: File): Promise<BusinessLi
       taxEmail: data.taxEmail ? String(data.taxEmail).trim() : undefined,
       repContact: data.repContact ? String(data.repContact).trim() : undefined,
       isCorporate: typeof data.isCorporate === 'boolean' ? data.isCorporate : undefined,
+      previewImageDataUrl: imageBase64 || undefined,
     };
   } catch (err) {
     return {
