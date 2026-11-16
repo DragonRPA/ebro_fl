@@ -1124,7 +1124,7 @@ export const PartnersPage: React.FC = () => {
           rowKey={(r) => r.id}
           selectedRowId={selectedId}
           onRowClick={selectPartner}
-          maxHeight="620px"
+          maxHeight="calc(100vh - 200px)"
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
@@ -2211,7 +2211,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
         columns={columns}
         rows={filtered}
         rowKey={(r) => r.id}
-        maxHeight="580px"
+        maxHeight="calc(100vh - 200px)"
       />
 
       <ConservationBar
@@ -3329,7 +3329,7 @@ export const ExchangeRatesPage: React.FC = () => {
             setSource(r.source);
             setHoverIdx(null);
           }}
-          maxHeight="420px"
+          maxHeight="calc(100vh - 230px)"
         />
       </SectionPanel>
 
@@ -3852,7 +3852,7 @@ export const CatalogsPage: React.FC = () => {
                   setSelectedSpecId(r.id);
                   setVdiCatFilter('ALL');
                 }}
-                maxHeight="780px"
+                maxHeight="calc(100vh - 200px)"
               />
 
               {activeSpec && (
@@ -4090,7 +4090,7 @@ export const CatalogsPage: React.FC = () => {
                           ]}
                           rows={filteredVdiRows}
                           rowKey={(r, i) => `${r.code}-${i}`}
-                          maxHeight="380px"
+                          maxHeight="calc(100vh - 260px)"
                         />
                       </div>
                     )}
@@ -4683,7 +4683,7 @@ export const CatalogsPage: React.FC = () => {
                 rowKey={(r) => r.id}
                 selectedRowId={activePart?.id || null}
                 onRowClick={(r) => setSelectedPartId(r.id)}
-                maxHeight="580px"
+                maxHeight="calc(100vh - 200px)"
               />
 
               {activePart && (
@@ -4819,7 +4819,7 @@ export const CatalogsPage: React.FC = () => {
               ]}
               rows={datasets.catalogPackages}
               rowKey={(r) => r.id}
-              maxHeight="400px"
+              maxHeight="calc(100vh - 260px)"
             />
           </div>
         )}

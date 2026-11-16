@@ -957,7 +957,7 @@ export const PurchasesPage: React.FC = () => {
           columns={purchaseCols}
           rows={filteredPurchases}
           rowKey={(r) => r.id}
-          maxHeight="420px"
+          maxHeight="calc(100vh - 230px)"
         />
       </SectionPanel>
 
@@ -1017,7 +1017,7 @@ export const PurchasesPage: React.FC = () => {
             ]}
             rows={detailLines}
             rowKey={(l) => l.id}
-            maxHeight="340px"
+            maxHeight="calc(100vh - 260px)"
           />
         )}
       </ModalDialog>
@@ -1457,7 +1457,7 @@ export const LogisticsCostsPage: React.FC = () => {
           ]}
           rows={filteredDispatches}
           rowKey={(r) => r.id}
-          maxHeight="430px"
+          maxHeight="calc(100vh - 230px)"
         />
       </SectionPanel>
 

@@ -202,7 +202,7 @@ export const DashboardPage: React.FC = () => {
           rows={filtered}
           rowKey={(r) => r.id}
           emptyText="처리 대기중인 당면 과제가 없습니다."
-          maxHeight="580px"
+          maxHeight="calc(100vh - 200px)"
         />
       </SectionPanel>
 
@@ -389,7 +389,7 @@ export const ApprovalInboxPage: React.FC = () => {
           rows={filtered}
           rowKey={(r) => r.id}
           emptyText="해당 상태의 결재 요청 내역이 없습니다."
-          maxHeight="580px"
+          maxHeight="calc(100vh - 200px)"
         />
       </SectionPanel>
 

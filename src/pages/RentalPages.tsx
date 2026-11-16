@@ -602,7 +602,7 @@ export const RentalContractsPage: React.FC = () => {
         rowKey={(r) => r.id}
         selectedRowId={selectedContract?.id || null}
         onRowClick={(r) => setSelectedId(r.id)}
-        maxHeight="340px"
+        maxHeight="calc(100vh - 260px)"
       />
     </div>
   );
@@ -879,7 +879,7 @@ export const RentalAssetsPage: React.FC = () => {
               rowKey={(u) => u.id}
               selectedRowId={selectedAsset?.id || null}
               onRowClick={(u) => setSelectedAssetId(u.id)}
-              maxHeight="470px"
+              maxHeight="calc(100vh - 230px)"
             />
 
             <ConservationBar
@@ -1090,7 +1090,7 @@ export const RentalAssetsPage: React.FC = () => {
                 rowKey={(l) => l.id}
                 selectedRowId={activeLease?.id || null}
                 onRowClick={(l) => setSelectedLeaseId(l.id)}
-                maxHeight="390px"
+                maxHeight="calc(100vh - 260px)"
               />
 
               <DataGrid
@@ -1137,7 +1137,7 @@ export const RentalAssetsPage: React.FC = () => {
                 ]}
                 rows={activeSchedules}
                 rowKey={(s) => s.id}
-                maxHeight="390px"
+                maxHeight="calc(100vh - 260px)"
               />
             </div>
           </div>
@@ -1788,7 +1788,7 @@ export const RentalMaintenancePage: React.FC = () => {
           b.effectiveDate.localeCompare(a.effectiveDate)
         )}
         rowKey={(m) => m.id}
-        maxHeight="420px"
+        maxHeight="calc(100vh - 230px)"
       />
 
       <ConservationBar
@@ -1968,7 +1968,7 @@ export const RentalPerformancePage: React.FC = () => {
         ]}
         rows={rows}
         rowKey={(r) => r.id}
-        maxHeight="470px"
+        maxHeight="calc(100vh - 230px)"
       />
 
       <ConservationBar

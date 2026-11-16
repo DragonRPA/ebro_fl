@@ -364,7 +364,7 @@ export function DataGrid<T>({
   onRowClick,
   selectedRowId,
   emptyText = '조회된 데이터가 없습니다.',
-  maxHeight = '600px',
+  maxHeight = 'calc(100vh - 210px)',
   manualId,
 }: DataGridProps<T>) {
   const [sortState, setSortState] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
