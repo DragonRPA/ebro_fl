@@ -13,6 +13,7 @@ import {
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
+  toPartnerSelectOptions,
   type GridColumn,
   type SearchableSelectOption,
 } from '../components/UiPrimitives';
@@ -101,13 +102,7 @@ export const PurchasesPage: React.FC = () => {
   }, [datasets.partners]);
 
   const supplierOptions = useMemo<SearchableSelectOption[]>(
-    () =>
-      suppliers.map((s) => ({
-        value: s.id,
-        label: s.name,
-        subLabel: s.bizRegNo || undefined,
-        searchText: [s.name, s.bizRegNo, s.representative].filter(Boolean).join(' '),
-      })),
+    () => toPartnerSelectOptions(suppliers),
     [suppliers]
   );
 
@@ -864,17 +859,14 @@ export const LogisticsCostsPage: React.FC = () => {
               </select>
             </VerticalField>
             <VerticalField label="운송사" required>
-              <select
+              <SearchableSelect
                 value={carrierPartnerId || carriers[0]?.id || ''}
-                onChange={(e) => setCarrierPartnerId(e.target.value)}
-                style={controlInputStyle}
-              >
-                {carriers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                options={toPartnerSelectOptions(carriers)}
+                onChange={(nextId) => setCarrierPartnerId(nextId)}
+                placeholder="운송사 선택"
+                searchPlaceholder="운송사명 · 초성 · 사업자번호 검색"
+                minDropdownWidth={260}
+              />
             </VerticalField>
             <VerticalField label="배차일자" required>
               <input

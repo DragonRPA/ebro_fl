@@ -18,12 +18,14 @@ import {
   DataGrid,
   DocumentActionBar,
   ModalDialog,
+  SearchableSelect,
   SectionPanel,
   SegmentedTabs,
   StatusBadge,
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
+  toPartnerSelectOptions,
 } from '../components/UiPrimitives';
 import type {
   FlContract,
@@ -264,10 +266,10 @@ export const RentalContractsPage: React.FC = () => {
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '10px' }}>
             <VerticalField label="임차 거래처" required>
-              <select
+              <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
-                onChange={(e) => {
-                  const id = e.target.value;
+                options={toPartnerSelectOptions(customers)}
+                onChange={(id) => {
                   setPartnerId(id);
                   const pt = customers.find((p) => p.id === id);
                   if (pt) {
@@ -275,14 +277,10 @@ export const RentalContractsPage: React.FC = () => {
                     setPaymentDueDay(pt.defaultPaymentDueDay || 15);
                   }
                 }}
-                style={controlInputStyle}
-              >
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="임차 거래처 선택"
+                searchPlaceholder="거래처명 · 초성 · 사업자번호 검색"
+                minDropdownWidth={280}
+              />
             </VerticalField>
             <VerticalField label="계약 기종 품목" required minWidth={210}>
               <select
@@ -829,17 +827,14 @@ export const RentalAssetsPage: React.FC = () => {
                 }}
               >
                 <VerticalField label="금융사" required>
-                  <select
+                  <SearchableSelect
                     value={lenderId || lenders[0]?.id || ''}
-                    onChange={(e) => setLenderId(e.target.value)}
-                    style={controlInputStyle}
-                  >
-                    {lenders.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={toPartnerSelectOptions(lenders)}
+                    onChange={(nextId) => setLenderId(nextId)}
+                    placeholder="금융사 선택"
+                    searchPlaceholder="금융사명 · 초성 · 사업자번호 검색"
+                    minDropdownWidth={260}
+                  />
                 </VerticalField>
                 <VerticalField label="취득 장비 기종" required>
                   <select
@@ -1041,17 +1036,14 @@ export const RentalAssetsPage: React.FC = () => {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <VerticalField label="전대공급처" required>
-            <select
+            <SearchableSelect
               value={subSupplierId || subleaseSuppliers[0]?.id || ''}
-              onChange={(e) => setSubSupplierId(e.target.value)}
-              style={controlInputStyle}
-            >
-              {subleaseSuppliers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              options={toPartnerSelectOptions(subleaseSuppliers)}
+              onChange={(nextId) => setSubSupplierId(nextId)}
+              placeholder="전대공급처 선택"
+              searchPlaceholder="전대공급처명 · 초성 · 사업자번호 검색"
+              minDropdownWidth={280}
+            />
           </VerticalField>
           <VerticalField label="기종 품목" required>
             <select
@@ -1631,17 +1623,14 @@ export const RentalMaintenancePage: React.FC = () => {
             </VerticalField>
             {externalCostKrw > 0 && (
               <VerticalField label="외주정비처">
-                <select
+                <SearchableSelect
                   value={vendorPartnerId || externalVendors[0]?.id || ''}
-                  onChange={(e) => setVendorPartnerId(e.target.value)}
-                  style={controlInputStyle}
-                >
-                  {externalVendors.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
+                  options={toPartnerSelectOptions(externalVendors)}
+                  onChange={(nextId) => setVendorPartnerId(nextId)}
+                  placeholder="외주정비처 선택"
+                  searchPlaceholder="정비처명 · 초성 · 사업자번호 검색"
+                  minDropdownWidth={260}
+                />
               </VerticalField>
             )}
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px', fontSize: '13px' }}>

@@ -17,12 +17,14 @@ import {
   ConservationBar,
   DataGrid,
   DocumentActionBar,
+  SearchableSelect,
   SectionPanel,
   SegmentedTabs,
   StatusBadge,
   VerticalField,
   actionBtnStyle,
   controlInputStyle,
+  toPartnerSelectOptions,
 } from '../components/UiPrimitives';
 import type {
   FlContract,
@@ -328,17 +330,14 @@ export const QuotationsPage: React.FC = () => {
               </select>
             </VerticalField>
             <VerticalField label="거래처" required>
-              <select
+              <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
-                onChange={(e) => setPartnerId(e.target.value)}
-                style={controlInputStyle}
-              >
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                options={toPartnerSelectOptions(customers)}
+                onChange={(nextId) => setPartnerId(nextId)}
+                placeholder="거래처 선택"
+                searchPlaceholder="거래처명 · 초성 · 사업자번호 검색"
+                minDropdownWidth={280}
+              />
             </VerticalField>
             <VerticalField label="견적일자" required>
               <input
@@ -685,17 +684,14 @@ export const TradeContractsPage: React.FC = () => {
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
             <VerticalField label="매출처" required>
-              <select
+              <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
-                onChange={(e) => setPartnerId(e.target.value)}
-                style={controlInputStyle}
-              >
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                options={toPartnerSelectOptions(customers)}
+                onChange={(nextId) => setPartnerId(nextId)}
+                placeholder="매출처 선택"
+                searchPlaceholder="매출처명 · 초성 · 사업자번호 검색"
+                minDropdownWidth={280}
+              />
             </VerticalField>
             <VerticalField label="품목" required minWidth={220}>
               <select
@@ -1241,17 +1237,14 @@ export const TradeFulfillmentPage: React.FC = () => {
               </VerticalField>
               {acCaseType === '공급사 정비중개' && (
                 <VerticalField label="연결 대리점·공급사">
-                  <select
+                  <SearchableSelect
                     value={acSupplierId || dealers[0]?.id || ''}
-                    onChange={(e) => setAcSupplierId(e.target.value)}
-                    style={controlInputStyle}
-                  >
-                    {dealers.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={toPartnerSelectOptions(dealers)}
+                    onChange={(nextId) => setAcSupplierId(nextId)}
+                    placeholder="대리점·공급사 선택"
+                    searchPlaceholder="거래처명 · 초성 · 사업자번호 검색"
+                    minDropdownWidth={280}
+                  />
                 </VerticalField>
               )}
               {acCaseType === '반품환불' && (

@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS public.fl_item_masters (
   sku TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   item_category TEXT NOT NULL CHECK (item_category IN ('완제품', '어태치먼트', '부품', '소모품')),
+  item_domain TEXT NOT NULL DEFAULT 'TRADE' CHECK (item_domain IN ('TRADE', 'RENTAL', 'BOTH')),
   management_type TEXT NOT NULL CHECK (management_type IN ('SERIAL', 'LOT')),
   manufacturer TEXT,
   model_name TEXT,

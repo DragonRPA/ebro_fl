@@ -9,11 +9,11 @@ const SYSTEM_SALT = 'ebro_erp_secure_salt_2026';
 
 const CANONICAL_FL_PAGES = [
   'dashboard', 'approval_inbox',
-  'partners', 'item_masters', 'exchange_rates', 'catalogs',
+  'partners', 'trade_item_masters', 'rental_item_masters', 'exchange_rates', 'catalogs',
   'purchases', 'logistics_costs',
   'quotations', 'trade_contracts', 'trade_inventory', 'trade_fulfillment', 'trade_performance',
   'rental_contracts', 'rental_assets', 'rental_fulfillment', 'rental_maintenance', 'rental_performance',
-  'ar_billing_collection', 'ap_settlements', 'bank_matching', 'financial_statements', 'operation_manual', 'system_settings',
+  'ar_billing_collection', 'ap_settlements', 'bank_matching', 'financial_statements', 'organization_hr', 'operation_manual', 'system_settings',
 ];
 
 function hashPassword(plain) {
@@ -655,19 +655,24 @@ async function main() {
 
   const itemsList = Array.from(itemBySku.values());
   for (const it of itemsList) {
+    const hasTradePrice = Number(it.retail_price_krw || 0) > 0 || Number(it.dealer_price_krw || 0) > 0;
+    const hasRentalPrice = Number(it.standard_monthly_rental_krw || 0) > 0 || Number(it.standard_daily_rental_krw || 0) > 0;
+    const derivedDomain =
+      it.item_domain ||
+      (hasTradePrice && hasRentalPrice ? 'BOTH' : hasRentalPrice ? 'RENTAL' : 'TRADE');
     await client.query(
       `INSERT INTO public.fl_item_masters (
-        id, tenant_id, sku, name, item_category, management_type, manufacturer, model_name,
+        id, tenant_id, sku, name, item_category, item_domain, management_type, manufacturer, model_name,
         tonnage, power_type, spec_summary, unit_name, standard_cost_krw, dealer_price_krw,
         retail_price_krw, standard_monthly_rental_krw, standard_daily_rental_krw,
         safety_stock, warehouse_location, diagram_type, image_url, spec_sheet_url, manual_url,
         vdi_specs, mast_specs, battery_options, oem_cross_ref_codes, compatible_models, memo
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
-        $24::jsonb,$25::jsonb,$26::jsonb,$27::jsonb,$28::jsonb,$29
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,
+        $25::jsonb,$26::jsonb,$27::jsonb,$28::jsonb,$29::jsonb,$30
       )`,
       [
-        it.id, TENANT_ID, it.sku, it.name, it.item_category, it.management_type,
+        it.id, TENANT_ID, it.sku, it.name, it.item_category, derivedDomain, it.management_type,
         it.manufacturer || null, it.model_name || null, it.tonnage || null, it.power_type || null,
         it.spec_summary || '', it.unit_name || 'EA',
         it.standard_cost_krw || 0, it.dealer_price_krw || 0, it.retail_price_krw || 0,

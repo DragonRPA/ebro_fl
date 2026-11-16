@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
+import type { FlPartner } from '../types/domain';
 import {
   downloadExcelFile,
   openExcelInAgent,
@@ -904,6 +905,17 @@ export interface SearchableSelectOption {
   label: string;
   subLabel?: string;
   searchText?: string;
+}
+
+export function toPartnerSelectOptions(partners: FlPartner[]): SearchableSelectOption[] {
+  return partners.map((p) => ({
+    value: p.id,
+    label: p.name,
+    subLabel: p.bizRegNo || p.partnerRoles?.[0] || undefined,
+    searchText: [p.name, p.bizRegNo, p.representative, ...(p.partnerRoles || [])]
+      .filter(Boolean)
+      .join(' '),
+  }));
 }
 
 export interface SearchableSelectProps {
