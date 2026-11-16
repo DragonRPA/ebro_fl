@@ -328,19 +328,49 @@ async function main() {
     await page.locator('[data-testid="cat-vdi-section"]').getByText('55항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     await specSearchInput.fill('');
 
-    // Compare tab
+    // Compare tab (up to 5 models, recipient/note authoring, PDF preview & PDF download)
     const catTabs = page.locator('[data-manual-id="cat-tabs"]');
     await catTabs.locator('button', { hasText: '모델 제원 비교' }).first().click();
     await page.getByText('비교 제원 항목', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByText('비교 기종 추가 · 4/5종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     const cmpColCount = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
-    assert(cmpColCount >= 4, `Expected >=4 columns in compare table, got ${cmpColCount}`);
+    assert.strictEqual(cmpColCount, 5, `Expected 1 label + 4 default model columns, got ${cmpColCount}`);
+
+    const cmpSelectBtn = page.locator('[data-testid="cat-compare-select"]').first();
+    await cmpSelectBtn.click();
+    await page.locator('div[style*="z-index: 9500"] div[style*="max-height: 250px"] button').first().click();
+    await page.getByText('비교 기종 추가 · 5/5종', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
+    assert.strictEqual(await cmpSelectBtn.isDisabled(), true, 'Compare model selector must disable when 5/5 models reached');
+    const cmpColCount5 = await page.locator('[data-manual-id="cat-detail"] table thead th').count();
+    assert.strictEqual(cmpColCount5, 6, `Expected 1 label + 5 model columns, got ${cmpColCount5}`);
+
+    await page.locator('input[data-testid="cat-compare-recipient"]').first().fill('동성물류 평택센터');
+    await page.locator('input[data-testid="cat-compare-note"]').first().fill('전동 2.5톤~3.0톤 실내 주력 기종 비교');
+
+    await page.locator('button[data-testid="cat-compare-pdf-preview"]').first().click();
+    const previewIframe = page.locator('iframe[src^="blob:"]').first();
+    await previewIframe.waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('button', { hasText: '닫기' }).last().click();
+    await previewIframe.waitFor({ state: 'hidden', timeout: 5000 });
+
+    const [cmpPdfDownload] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      page.locator('button[data-testid="cat-compare-pdf-download"]').first().click(),
+    ]);
+    const dlPath = await cmpPdfDownload.path();
+    const pdfBuf = require('fs').readFileSync(dlPath);
+    assert(cmpPdfDownload.suggestedFilename().endsWith('.pdf'), `Expected .pdf filename, got ${cmpPdfDownload.suggestedFilename()}`);
+    assert(
+      pdfBuf.length > 10000 && pdfBuf.subarray(0, 5).toString('ascii') === '%PDF-',
+      `Expected valid PDF bytes >10KB, got ${pdfBuf.length} bytes`
+    );
 
     // Parts tab
     await catTabs.locator('button', { hasText: '호환부품 카탈로그' }).first().click();
     await page.getByText('부품명 · 품번 · OEM 교차코드 검색', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     await page.locator('[data-testid="part-detail-specs"]').getByText('실측 치수 · 상세 규격표', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
     await page.locator('[data-testid="part-detail-specs"]').getByText('OEM 교차품번 목록', { exact: false }).first().waitFor({ state: 'visible', timeout: 5000 });
-    console.log(`[E2E 7h PASS] Restored 제원 카탈로그 (${leftModelRows} models, ${coreCardCount} spec cells, VDI 2198/kg/mm/OEM, mast/battery, compare & parts detail) verified.`);
+    console.log(`[E2E 7h PASS] Restored 제원 카탈로그 (${leftModelRows} models, ${coreCardCount} spec cells, 5-model compare & PDF ${pdfBuf.length} bytes) verified.`);
 
     // [E2E 7i] Verify 거래처 관리 bankbook viewer modal, separated 결제수단, and 월구분/일자 지급기일 controls
     await page.locator('aside nav button', { hasText: '거래처 관리' }).first().click();

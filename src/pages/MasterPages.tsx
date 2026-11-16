@@ -1,5 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, ExternalLink, Eye, RotateCcw, Upload, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  RotateCcw,
+  Upload,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
 import { syncPartnerNameAcrossTables, upsertManagedExchangeRates } from '../services/domainEngine';
@@ -10,14 +22,18 @@ import {
   uploadBusinessLicenseImageToR2,
 } from '../services/businessLicenseOcrService';
 import {
+  downloadPdfFile,
   generateCompareSpecsExcel,
+  generateCompareSpecsPdf,
   generateModelSpecExcel,
+  generateModelSpecPdf,
 } from '../services/documentService';
 import {
   CommaNumberInput,
   ConservationBar,
   DataGrid,
   ModalDialog,
+  SearchableSelect,
   SectionPanel,
   SegmentedTabs,
   StatusBadge,
@@ -3078,7 +3094,7 @@ export const ExchangeRatesPage: React.FC = () => {
   );
 };
 
-const MAX_COMPARE_MODELS = 6;
+const MAX_COMPARE_MODELS = 5;
 
 function buildCoreSpecCells(spec: FlModelTechnicalSpec): { label: string; value: string }[] {
   const cells: { label: string; value: string }[] = [
@@ -3139,7 +3155,7 @@ function buildCoreSpecCells(spec: FlModelTechnicalSpec): { label: string; value:
 }
 
 export const CatalogsPage: React.FC = () => {
-  const { datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { datasets, tenantProfile, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('catalogs');
 
   const [subTab, setSubTab] = useState<'SPECS' | 'COMPARE' | 'PARTS' | 'PACKAGES'>('SPECS');
@@ -3155,8 +3171,31 @@ export const CatalogsPage: React.FC = () => {
     'FL-SPEC-BYD-ECB30C',
     'FL-SPEC-HANGCHA-CPD25-XEY2',
     'ARC-MJ-CPD25-K3',
-  ].filter((id) => FL_TECHNICAL_ARCHIVE.some((m) => m.id === id)));
-  const [previewDoc, setPreviewDoc] = useState<{ title: string; url: string; r2Url: string } | null>(null);
+  ]
+    .filter((id) => FL_TECHNICAL_ARCHIVE.some((m) => m.id === id))
+    .slice(0, MAX_COMPARE_MODELS));
+  const [compareMode, setCompareMode] = useState<'FULL' | 'SUMMARY'>('FULL');
+  const [excludedCompareLabels, setExcludedCompareLabels] = useState<string[]>([]);
+  const [compareTitle, setCompareTitle] = useState('지게차 모델별 상세 제원 비교표');
+  const [compareRecipient, setCompareRecipient] = useState('');
+  const [compareNote, setCompareNote] = useState('');
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{
+    title: string;
+    url: string;
+    r2Url?: string;
+    downloadFileName?: string;
+    isBlob?: boolean;
+  } | null>(null);
+
+  const closePreviewDoc = () => {
+    setPreviewDoc((prev) => {
+      if (prev?.isBlob && prev.url) {
+        URL.revokeObjectURL(prev.url);
+      }
+      return null;
+    });
+  };
 
   const [partCategory, setPartCategory] = useState('ALL');
   const [partKeyword, setPartKeyword] = useState('');
@@ -3233,32 +3272,67 @@ export const CatalogsPage: React.FC = () => {
     });
   };
 
+  const moveCompareId = (id: string, dir: -1 | 1) => {
+    setCompareIds((prev) => {
+      const idx = prev.indexOf(id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      const tmp = next[idx];
+      next[idx] = next[target];
+      next[target] = tmp;
+      return next;
+    });
+  };
+
   const compareRows = useMemo(
     () => [
-      { label: '시리즈명', render: (m: FlModelTechnicalSpec) => m.seriesName },
-      { label: '차종 · 동력방식', render: (m: FlModelTechnicalSpec) => `${m.equipmentClass} · ${m.powerType}` },
-      { label: '정격하중 Q · 하중중심 c', render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString('ko-KR')} kg · ${m.loadCenterMm} mm` },
-      { label: '축거 y · 하중거리 x', render: (m: FlModelTechnicalSpec) => `${m.wheelbaseMm || '-'} mm · ${m.loadDistanceXMm || '-'} mm` },
-      { label: '표준 · 최대 인상고 h3', render: (m: FlModelTechnicalSpec) => `${m.standardLiftHeightMm.toLocaleString('ko-KR')} mm · ${m.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
-      { label: '자유인상고 h2 · 전고 h1', render: (m: FlModelTechnicalSpec) => `${m.freeLiftHeightMm.toLocaleString('ko-KR')} mm · ${(m.mastLoweredH1Mm || m.overheadGuardHeightMm).toLocaleString('ko-KR')} mm` },
-      { label: '포크 규격 s×e×l', render: (m: FlModelTechnicalSpec) => `${m.forkDimensionsMm} mm` },
-      { label: '본체 전장×전폭×헤드가드고', render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
-      { label: '포크포함 전장 l1', render: (m: FlModelTechnicalSpec) => `${m.overallLengthWithForkL1Mm ? m.overallLengthWithForkL1Mm.toLocaleString('ko-KR') : '-'} mm` },
-      { label: '최소 회전반경 Wa', render: (m: FlModelTechnicalSpec) => `${m.turningRadiusMm.toLocaleString('ko-KR')} mm` },
-      { label: '직각 적재 통로폭 Ast', render: (m: FlModelTechnicalSpec) => `${m.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
-      { label: '주행속도 · 인상속도', render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h · ${m.liftingSpeedMms} mm/s` },
-      { label: '하강속도 · 최대 견인력', render: (m: FlModelTechnicalSpec) => `${m.loweringSpeedMms || '-'} mm/s · ${m.maxDrawbarPullN || '-'} N` },
-      { label: '최대 등판능력', render: (m: FlModelTechnicalSpec) => `${m.maxGradeabilityPercent || m.gradeabilityPercent} %` },
-      { label: '장비 자중 · 적재·공차 축중', render: (m: FlModelTechnicalSpec) => `${m.serviceWeightKg.toLocaleString('ko-KR')} kg · ${m.axleLoadingLadenKg || '-'}` },
-      { label: '배터리 · 엔진 상세 사양', render: (m: FlModelTechnicalSpec) => m.powerSpecDetail },
-      { label: '주행·인양 출력 · 제어', render: (m: FlModelTechnicalSpec) => `${m.motorOrEngineDetail}${m.controllerMaker ? ` · ${m.controllerMaker}` : ''}` },
-      { label: '충전기 · 연료계통', render: (m: FlModelTechnicalSpec) => m.chargerOrFuelDetail },
-      { label: '타이어 규격 전/후', render: (m: FlModelTechnicalSpec) => m.tireSpecFrontRear },
-      { label: '작동압력 · 유량 · 소음도', render: (m: FlModelTechnicalSpec) => `${m.operatingPressureMpa || '-'} MPa · ${m.oilFlowLmin || '-'} l/min · ${m.soundLevelDb || '-'} dB` },
-      { label: '제동장치 · 방수등급', render: (m: FlModelTechnicalSpec) => `${m.brakeType} · ${m.waterproofRating}` },
-      { label: '공식 보증기간', render: (m: FlModelTechnicalSpec) => m.warrantyTerms },
+      { label: '시리즈명', core: true, render: (m: FlModelTechnicalSpec) => m.seriesName },
+      { label: '차종 · 동력방식', core: true, render: (m: FlModelTechnicalSpec) => `${m.equipmentClass} · ${m.powerType}` },
+      { label: '정격하중 Q · 하중중심 c', core: true, render: (m: FlModelTechnicalSpec) => `${m.ratedCapacityKg.toLocaleString('ko-KR')} kg · ${m.loadCenterMm} mm` },
+      { label: '축거 y · 하중거리 x', core: false, render: (m: FlModelTechnicalSpec) => `${m.wheelbaseMm || '-'} mm · ${m.loadDistanceXMm || '-'} mm` },
+      { label: '표준 · 최대 인상고 h3', core: true, render: (m: FlModelTechnicalSpec) => `${m.standardLiftHeightMm.toLocaleString('ko-KR')} mm · ${m.maxOptionLiftHeightMm.toLocaleString('ko-KR')} mm` },
+      { label: '자유인상고 h2 · 전고 h1', core: false, render: (m: FlModelTechnicalSpec) => `${m.freeLiftHeightMm.toLocaleString('ko-KR')} mm · ${(m.mastLoweredH1Mm || m.overheadGuardHeightMm).toLocaleString('ko-KR')} mm` },
+      { label: '포크 규격 s×e×l', core: true, render: (m: FlModelTechnicalSpec) => `${m.forkDimensionsMm} mm` },
+      { label: '본체 전장×전폭×헤드가드고', core: true, render: (m: FlModelTechnicalSpec) => `${m.overallLengthMm} × ${m.overallWidthMm} × ${m.overheadGuardHeightMm} mm` },
+      { label: '포크포함 전장 l1', core: false, render: (m: FlModelTechnicalSpec) => `${m.overallLengthWithForkL1Mm ? m.overallLengthWithForkL1Mm.toLocaleString('ko-KR') : '-'} mm` },
+      { label: '최소 회전반경 Wa', core: true, render: (m: FlModelTechnicalSpec) => `${m.turningRadiusMm.toLocaleString('ko-KR')} mm` },
+      { label: '직각 적재 통로폭 Ast', core: true, render: (m: FlModelTechnicalSpec) => `${m.aisleWidth1000x1200Mm.toLocaleString('ko-KR')} mm` },
+      { label: '주행속도 · 인상속도', core: true, render: (m: FlModelTechnicalSpec) => `${m.travelSpeedKmh} km/h · ${m.liftingSpeedMms} mm/s` },
+      { label: '하강속도 · 최대 견인력', core: false, render: (m: FlModelTechnicalSpec) => `${m.loweringSpeedMms || '-'} mm/s · ${m.maxDrawbarPullN || '-'} N` },
+      { label: '최대 등판능력', core: true, render: (m: FlModelTechnicalSpec) => `${m.maxGradeabilityPercent || m.gradeabilityPercent} %` },
+      { label: '장비 자중 · 적재·공차 축중', core: true, render: (m: FlModelTechnicalSpec) => `${m.serviceWeightKg.toLocaleString('ko-KR')} kg · ${m.axleLoadingLadenKg || '-'}` },
+      { label: '배터리 · 엔진 상세 사양', core: true, render: (m: FlModelTechnicalSpec) => m.powerSpecDetail },
+      { label: '주행·인양 출력 · 제어', core: false, render: (m: FlModelTechnicalSpec) => `${m.motorOrEngineDetail}${m.controllerMaker ? ` · ${m.controllerMaker}` : ''}` },
+      { label: '충전기 · 연료계통', core: true, render: (m: FlModelTechnicalSpec) => m.chargerOrFuelDetail },
+      { label: '타이어 규격 전/후', core: false, render: (m: FlModelTechnicalSpec) => m.tireSpecFrontRear },
+      { label: '작동압력 · 유량 · 소음도', core: false, render: (m: FlModelTechnicalSpec) => `${m.operatingPressureMpa || '-'} MPa · ${m.oilFlowLmin || '-'} l/min · ${m.soundLevelDb || '-'} dB` },
+      { label: '제동장치 · 방수등급', core: true, render: (m: FlModelTechnicalSpec) => `${m.brakeType} · ${m.waterproofRating}` },
+      { label: '공식 보증기간', core: true, render: (m: FlModelTechnicalSpec) => m.warrantyTerms },
     ],
     []
+  );
+
+  const summaryCompareRowCount = useMemo(() => compareRows.filter((r) => r.core).length, [compareRows]);
+
+  const activeCompareRows = useMemo(
+    () =>
+      compareRows.filter(
+        (r) => (compareMode === 'FULL' || r.core) && !excludedCompareLabels.includes(r.label)
+      ),
+    [compareMode, compareRows, excludedCompareLabels]
+  );
+
+  const compareCandidateOptions = useMemo(
+    () =>
+      FL_TECHNICAL_ARCHIVE.filter((m) => !compareIds.includes(m.id)).map((m) => ({
+        value: m.id,
+        label: `${m.manufacturerName} · ${m.modelName}`,
+        subLabel: `${m.ratedCapacityKg.toLocaleString('ko-KR')} kg · ${m.powerType}`,
+        searchText: `${m.manufacturerName} ${m.modelName} ${m.seriesName} ${m.powerType} ${m.ratedCapacityKg}`,
+      })),
+    [compareIds]
   );
 
   const filteredParts = useMemo(() => {
@@ -3310,6 +3384,51 @@ export const CatalogsPage: React.FC = () => {
       notifyToast(err instanceof Error ? err.message : '패키지 저장 실패', 'error');
     } finally {
       setPkgSaving(false);
+    }
+  };
+
+  const handleExportComparePdf = async (previewOnly: boolean) => {
+    if (comparedModels.length === 0) {
+      notifyToast('비교할 장비 기종을 1종 이상 선택해 주세요.', 'error');
+      return;
+    }
+    if (activeCompareRows.length === 0) {
+      notifyToast('출력할 비교 제원 항목이 1개 이상 필요합니다.', 'error');
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const { fileName, bytes } = await generateCompareSpecsPdf({
+        models: comparedModels,
+        rows: activeCompareRows.map((r) => ({
+          label: r.label,
+          values: comparedModels.map((m) => r.render(m)),
+        })),
+        tenant: tenantProfile,
+        title: compareTitle,
+        recipientName: compareRecipient,
+        authorNote: compareNote,
+      });
+      if (previewOnly) {
+        const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        setPreviewDoc((prev) => {
+          if (prev?.isBlob && prev.url) URL.revokeObjectURL(prev.url);
+          return {
+            title: `${compareTitle.trim() || '지게차 모델별 상세 제원 비교표'} · PDF`,
+            url: blobUrl,
+            downloadFileName: fileName,
+            isBlob: true,
+          };
+        });
+      } else {
+        downloadPdfFile(fileName, bytes);
+        notifyToast(`제원비교표 PDF 출력 완료 · ${comparedModels.length}종`, 'success');
+      }
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '제원비교표 PDF 생성 실패', 'error');
+    } finally {
+      setPdfBusy(false);
     }
   };
 
@@ -3477,6 +3596,31 @@ export const CatalogsPage: React.FC = () => {
                           문서 미리보기
                         </button>
                       )}
+                      <button
+                        type="button"
+                        data-testid="cat-single-pdf-btn"
+                        disabled={pdfBusy}
+                        onClick={async () => {
+                          setPdfBusy(true);
+                          try {
+                            const { fileName, bytes } = await generateModelSpecPdf({
+                              spec: activeSpec,
+                              coreRows: activeCoreCells,
+                              tenant: tenantProfile,
+                            });
+                            downloadPdfFile(fileName, bytes);
+                            notifyToast(`${activeSpec.modelName} 공식 제원표 PDF 생성 완료`, 'success');
+                          } catch (err) {
+                            notifyToast(err instanceof Error ? err.message : '공식 제원표 PDF 출력 실패', 'error');
+                          } finally {
+                            setPdfBusy(false);
+                          }
+                        }}
+                        style={actionBtnStyle('secondary', true)}
+                      >
+                        <FileText size={13} />
+                        공식 제원표 PDF
+                      </button>
                       <button
                         type="button"
                         onClick={async () => {
@@ -3855,68 +3999,240 @@ export const CatalogsPage: React.FC = () => {
 
         {subTab === 'COMPARE' && (
           <div data-manual-id="cat-detail" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '10px' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end', flex: 1 }}>
-                <VerticalField label={`비교 기종 추가 · ${comparedModels.length}/${MAX_COMPARE_MODELS}종`} width={290}>
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) toggleCompareId(e.target.value);
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
+              <VerticalField label={`비교 기종 추가 · ${comparedModels.length}/${MAX_COMPARE_MODELS}종`} width={300}>
+                <SearchableSelect
+                  value=""
+                  disabled={comparedModels.length >= MAX_COMPARE_MODELS}
+                  dataTestId="cat-compare-select"
+                  options={compareCandidateOptions}
+                  onChange={(id) => {
+                    if (id) toggleCompareId(id);
+                  }}
+                  placeholder={
+                    comparedModels.length >= MAX_COMPARE_MODELS
+                      ? '최대 5개 기종 선택 완료'
+                      : '비교할 장비 기종 검색 · 추가'
+                  }
+                  searchPlaceholder="제조사 · 모델명 · 초성 · 적재하중 검색"
+                  minDropdownWidth={360}
+                />
+              </VerticalField>
+              <VerticalField label="제원비교표 제목" minWidth={210} flex={1}>
+                <input
+                  type="text"
+                  data-testid="cat-compare-title"
+                  value={compareTitle}
+                  onChange={(e) => setCompareTitle(e.target.value)}
+                  placeholder="예: 2.5톤~3.0톤 전동지게차 제안 비교표"
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+              <VerticalField label="수신처 · 고객사" minWidth={180} flex={1}>
+                <input
+                  type="text"
+                  data-testid="cat-compare-recipient"
+                  list="cat-compare-partners"
+                  value={compareRecipient}
+                  onChange={(e) => setCompareRecipient(e.target.value)}
+                  placeholder="거래처 또는 현장명 입력"
+                  style={controlInputStyle}
+                />
+                <datalist id="cat-compare-partners">
+                  {datasets.partners.map((p) => (
+                    <option key={p.id} value={p.name} />
+                  ))}
+                </datalist>
+              </VerticalField>
+              <VerticalField label="검토 의견 · 특기사항" minWidth={220} flex={1.3}>
+                <input
+                  type="text"
+                  data-testid="cat-compare-note"
+                  value={compareNote}
+                  onChange={(e) => setCompareNote(e.target.value)}
+                  placeholder="추천 기종 사유, 통로폭·배터리 특기사항 입력"
+                  style={controlInputStyle}
+                />
+              </VerticalField>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--table-row-border)',
+                backgroundColor: 'var(--bg-header)',
+              }}
+            >
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', flex: 1 }}>
+                {comparedModels.map((m, idx) => (
+                  <div
+                    key={m.id}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--primary)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--text-main)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
                     }}
-                    style={controlInputStyle}
                   >
-                    <option value="">비교할 장비 기종 선택</option>
-                    {FL_TECHNICAL_ARCHIVE.filter((m) => !compareIds.includes(m.id)).map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.manufacturerName} · {m.modelName} · {m.ratedCapacityKg.toLocaleString('ko-KR')} kg
-                      </option>
-                    ))}
-                  </select>
-                </VerticalField>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                  {comparedModels.map((m) => (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '4px',
+                        backgroundColor: 'var(--primary)',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span>
+                      {m.manufacturerName} {m.modelName}
+                    </span>
                     <button
-                      key={m.id}
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => moveCompareId(m.id, -1)}
+                      title="앞으로 이동"
+                      style={{
+                        border: 'none',
+                        background: 'none',
+                        padding: '0 2px',
+                        cursor: idx === 0 ? 'default' : 'pointer',
+                        color: idx === 0 ? 'var(--text-muted)' : 'var(--text-secondary)',
+                        opacity: idx === 0 ? 0.35 : 1,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === comparedModels.length - 1}
+                      onClick={() => moveCompareId(m.id, 1)}
+                      title="뒤로 이동"
+                      style={{
+                        border: 'none',
+                        background: 'none',
+                        padding: '0 2px',
+                        cursor: idx === comparedModels.length - 1 ? 'default' : 'pointer',
+                        color: idx === comparedModels.length - 1 ? 'var(--text-muted)' : 'var(--text-secondary)',
+                        opacity: idx === comparedModels.length - 1 ? 0.35 : 1,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                    <button
                       type="button"
                       onClick={() => toggleCompareId(m.id)}
-                      style={actionBtnStyle('primary', true)}
+                      title="비교 대상에서 제외"
+                      style={{
+                        border: 'none',
+                        background: 'none',
+                        padding: '0 2px',
+                        cursor: 'pointer',
+                        color: 'var(--danger)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
                     >
-                      {m.manufacturerName} {m.modelName} ×
+                      <X size={13} />
                     </button>
-                  ))}
-                  {comparedModels.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setCompareIds([])}
-                      style={actionBtnStyle('secondary', true)}
-                    >
-                      선택 초기화
-                    </button>
-                  )}
-                </div>
+                  </div>
+                ))}
+                {comparedModels.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCompareIds([])}
+                    style={actionBtnStyle('secondary', true)}
+                  >
+                    선택 초기화
+                  </button>
+                )}
+                {excludedCompareLabels.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setExcludedCompareLabels([])}
+                    style={actionBtnStyle('secondary', true)}
+                  >
+                    <RotateCcw size={12} />
+                    제외 항목 복원 · {excludedCompareLabels.length}
+                  </button>
+                )}
               </div>
-              <button
-                type="button"
-                disabled={comparedModels.length === 0}
-                onClick={async () => {
-                  try {
-                    await generateCompareSpecsExcel({
-                      models: comparedModels,
-                      rows: compareRows.map((r) => ({
-                        label: r.label,
-                        values: comparedModels.map((m) => r.render(m)),
-                      })),
-                    });
-                    notifyToast('모델 제원 비교표 엑셀 생성 완료', 'success');
-                  } catch (err) {
-                    notifyToast(err instanceof Error ? err.message : '비교표 엑셀 출력 실패', 'error');
-                  }
-                }}
-                style={actionBtnStyle('primary')}
-              >
-                <Download size={14} />
-                비교표 엑셀 다운로드
-              </button>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <SegmentedTabs
+                  tabs={[
+                    { id: 'FULL', label: '전체 상세', count: compareRows.length },
+                    { id: 'SUMMARY', label: '핵심 요약', count: summaryCompareRowCount },
+                  ]}
+                  activeId={compareMode}
+                  onChange={(id) => setCompareMode(id as 'FULL' | 'SUMMARY')}
+                />
+                <button
+                  type="button"
+                  data-testid="cat-compare-pdf-preview"
+                  disabled={comparedModels.length === 0 || activeCompareRows.length === 0 || pdfBusy}
+                  onClick={() => handleExportComparePdf(true)}
+                  style={actionBtnStyle('secondary')}
+                >
+                  <Eye size={14} />
+                  PDF 미리보기
+                </button>
+                <button
+                  type="button"
+                  data-testid="cat-compare-pdf-download"
+                  disabled={comparedModels.length === 0 || activeCompareRows.length === 0 || pdfBusy}
+                  onClick={() => handleExportComparePdf(false)}
+                  style={actionBtnStyle('primary')}
+                >
+                  <FileText size={14} />
+                  제원비교표 PDF 출력
+                </button>
+                <button
+                  type="button"
+                  disabled={comparedModels.length === 0 || activeCompareRows.length === 0}
+                  onClick={async () => {
+                    try {
+                      await generateCompareSpecsExcel({
+                        models: comparedModels,
+                        rows: activeCompareRows.map((r) => ({
+                          label: r.label,
+                          values: comparedModels.map((m) => r.render(m)),
+                        })),
+                      });
+                      notifyToast('모델 제원 비교표 엑셀 생성 완료', 'success');
+                    } catch (err) {
+                      notifyToast(err instanceof Error ? err.message : '비교표 엑셀 출력 실패', 'error');
+                    }
+                  }}
+                  style={actionBtnStyle('secondary')}
+                >
+                  <Download size={14} />
+                  비교표 엑셀 다운로드
+                </button>
+              </div>
             </div>
 
             {comparedModels.length === 0 ? (
@@ -3928,22 +4244,67 @@ export const CatalogsPage: React.FC = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', color: 'var(--text-main)' }}>
                   <thead>
                     <tr style={{ backgroundColor: 'var(--bg-header)', borderBottom: '1px solid var(--table-border-color)' }}>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', width: '210px', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
-                        비교 제원 항목
+                      <th style={{ padding: '10px 12px', textAlign: 'left', width: '220px', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
+                        비교 제원 항목 · {activeCompareRows.length}행
                       </th>
-                      {comparedModels.map((m) => (
+                      {comparedModels.map((m, idx) => (
                         <th key={m.id} style={{ padding: '10px 12px', textAlign: 'left', minWidth: '210px', whiteSpace: 'nowrap', borderRight: '1px solid var(--table-row-border)' }}>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{m.manufacturerName} · {m.originCountry}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              {idx + 1}열 · {m.manufacturerName} · {m.originCountry}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleCompareId(m.id)}
+                              title="비교 대상에서 제외"
+                              style={{
+                                border: 'none',
+                                background: 'none',
+                                padding: '0 2px',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
                           <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--primary)' }}>{m.modelName}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                            {m.ratedCapacityKg.toLocaleString('ko-KR')} kg · {m.powerType}
+                          </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {compareRows.map((row) => (
+                    {activeCompareRows.map((row) => (
                       <tr key={row.label} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
                         <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--text-secondary)', whiteSpace: 'nowrap', position: 'sticky', left: 0, backgroundColor: 'var(--bg-header)', borderRight: '1px solid var(--table-row-border)' }}>
-                          {row.label}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                            <span>{row.label}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExcludedCompareLabels((prev) =>
+                                  prev.includes(row.label) ? prev : [...prev, row.label]
+                                )
+                              }
+                              title="비교표에서 항목 제외"
+                              style={{
+                                border: 'none',
+                                background: 'none',
+                                padding: '0 2px',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
                         </td>
                         {comparedModels.map((m) => (
                           <td key={`${row.label}-${m.id}`} style={{ padding: '8px 12px', borderRight: '1px solid var(--table-row-border)' }}>
@@ -4177,21 +4538,34 @@ export const CatalogsPage: React.FC = () => {
       <ModalDialog
         open={Boolean(previewDoc)}
         title={previewDoc ? previewDoc.title : ''}
-        onClose={() => setPreviewDoc(null)}
-        width={900}
+        onClose={closePreviewDoc}
+        width={960}
       >
         {previewDoc && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <a
-                href={previewDoc.r2Url}
-                target="_blank"
-                rel="noreferrer"
-                style={actionBtnStyle('primary', true)}
-              >
-                <ExternalLink size={13} />
-                새 창에서 열기
-              </a>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              {previewDoc.isBlob && previewDoc.downloadFileName ? (
+                <a
+                  href={previewDoc.url}
+                  download={previewDoc.downloadFileName}
+                  style={actionBtnStyle('primary', true)}
+                >
+                  <Download size={13} />
+                  PDF 파일 저장
+                </a>
+              ) : (
+                previewDoc.r2Url && (
+                  <a
+                    href={previewDoc.r2Url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={actionBtnStyle('primary', true)}
+                  >
+                    <ExternalLink size={13} />
+                    새 창에서 열기
+                  </a>
+                )
+              )}
             </div>
             <iframe
               src={previewDoc.url}
