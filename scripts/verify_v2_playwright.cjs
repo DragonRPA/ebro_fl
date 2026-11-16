@@ -190,6 +190,22 @@ async function main() {
     await page.locator('aside nav button', { hasText: '조직 인사 관리' }).first().waitFor({ state: 'visible', timeout: 8000 });
     console.log('[E2E 7c PASS] EmployeeNo (EMP-2601) login, password show/hide toggle, and saved ID verified.');
 
+    // Visit 환율 관리 and verify 3-month managed FX trend chart + currency & period switches
+    await page.locator('aside nav button', { hasText: '환율 관리' }).first().click();
+    await page.getByText('관리 환율 3개월 추이 차트', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    const chartSvg = page.locator('svg[data-fx-chart="svg"]').first();
+    await chartSvg.waitFor({ state: 'visible', timeout: 5000 });
+    const polylineCount = await chartSvg.locator('polyline').count();
+    assert(polylineCount >= 1, `Expected >=1 SVG polyline in 3-month FX chart, got ${polylineCount}`);
+    const fxChartSection = page.locator('[data-manual-id="fx-chart"]');
+    await fxChartSection.locator('button', { hasText: 'JPY' }).first().click();
+    await fxChartSection.getByText('일본 엔', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    await fxChartSection.locator('button', { hasText: '1개월' }).first().click();
+    await fxChartSection.getByText('관리 환율 1개월 추이 차트', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    await fxChartSection.locator('button', { hasText: '3개월' }).first().click();
+    await page.getByText('관리 환율 원장 정상', { exact: false }).first().waitFor({ state: 'visible', timeout: 3000 });
+    console.log('[E2E 7d PASS] 환율 관리 3-month chart, currency/period tabs, and conservation bar verified.');
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');

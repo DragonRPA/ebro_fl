@@ -2253,3 +2253,56 @@ export async function adminResetUserPassword(params: {
     )
   );
 }
+
+export interface ManagedExchangeRateInput {
+  rateDate: string;
+  currencyCode: Exclude<CurrencyCode, 'KRW'>;
+  baseRateKrw: number;
+  ttSellingRate?: number | null;
+  source: string;
+}
+
+export async function upsertManagedExchangeRates(params: {
+  rows: ManagedExchangeRateInput[];
+}): Promise<number> {
+  const validRows = params.rows.filter(
+    (r) => /^\d{4}-\d{2}-\d{2}$/.test((r.rateDate || '').trim()) && Number(r.baseRateKrw) > 0
+  );
+  if (validRows.length === 0) {
+    throw new Error('적재할 유효한 환율 데이터가 없습니다.');
+  }
+
+  const dedupMap = new Map<string, Record<string, unknown>>();
+  for (const r of validRows) {
+    const rateDate = r.rateDate.trim();
+    const factor = r.currencyCode === 'JPY' ? 10000 : 100;
+    const baseRateKrw = Math.round(Number(r.baseRateKrw) * factor) / factor;
+    const rawTts =
+      r.ttSellingRate !== undefined && r.ttSellingRate !== null && Number(r.ttSellingRate) > 0
+        ? Number(r.ttSellingRate)
+        : baseRateKrw * 1.01;
+    const ttSellingRate = Math.round(rawTts * factor) / factor;
+    const compactDate = rateDate.replace(/-/g, '');
+    const key = `${rateDate}__${r.currencyCode}`;
+    dedupMap.set(
+      key,
+      camelToSnakeRow({
+        id: `FX-${compactDate}-${r.currencyCode}`,
+        tenantId: DEFAULT_TENANT_ID,
+        rateDate,
+        currencyCode: r.currencyCode,
+        baseRateKrw,
+        ttSellingRate,
+        source: (r.source || '').trim() || '외환시장 고시환율',
+      })
+    );
+  }
+
+  const snakeRows = Array.from(dedupMap.values());
+  await execDbMutation('3개월 관리 환율 적재', () =>
+    flSupabase
+      .from('exchange_rates')
+      .upsert(snakeRows, { onConflict: 'tenant_id,rate_date,currency_code' })
+  );
+  return snakeRows.length;
+}

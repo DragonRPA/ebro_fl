@@ -42,6 +42,48 @@ function developerDevicePlugin(): Plugin {
           }
         }
 
+        if (req.url && req.url.startsWith('/api/exchange-rate')) {
+          (async () => {
+            try {
+              const urlObj = new URL(req.url!, 'http://localhost');
+              const query: Record<string, string> = {};
+              urlObj.searchParams.forEach((v, k) => {
+                query[k] = v;
+              });
+              const mod = (await server.ssrLoadModule('./api/exchange-rate.ts')) as {
+                default: (mockReq: unknown, mockRes: unknown) => Promise<void>;
+              };
+              let statusCode = 200;
+              const headers: Record<string, string> = { 'Content-Type': 'application/json; charset=utf-8' };
+              const mockRes = {
+                setHeader: (k: string, v: string) => {
+                  headers[k] = v;
+                },
+                status: (code: number) => {
+                  statusCode = code;
+                  return mockRes;
+                },
+                json: (data: unknown) => {
+                  Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+                  res.statusCode = statusCode;
+                  res.end(JSON.stringify(data));
+                },
+                end: (chunk?: string) => {
+                  Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
+                  res.statusCode = statusCode;
+                  res.end(chunk);
+                },
+              };
+              await mod.default({ method: req.method || 'GET', query }, mockRes);
+            } catch (e: any) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.statusCode = 500;
+              res.end(JSON.stringify({ success: false, error: e?.message || String(e) }));
+            }
+          })();
+          return;
+        }
+
         if (req.url && req.url.startsWith('/api/popbill-taxinvoice')) {
           let body = '';
           req.on('data', chunk => { body += chunk; });

@@ -119,6 +119,7 @@ async function main() {
     approvalIds: [],
     hrDeptIds: [],
     hrUserIds: [],
+    fxRateIds: [],
   };
 
   let preCounts = {};
@@ -143,6 +144,7 @@ async function main() {
       createEmployeeUser,
       updateEmployeeHrRecord,
       adminResetUserPassword,
+      upsertManagedExchangeRates,
     } = domainEngine;
     const { generateFinancialStatements } = fsEngine;
     const { DEFAULT_TENANT_ID, flSupabase, snakeToCamelRow, camelToSnakeRow, newId } = supabaseMod;
@@ -760,6 +762,51 @@ async function main() {
     console.log(`[WTT 8 PASS] Org & HR lifecycle (${histTypes.length} audit history events + password reset + retirement) verified.`);
 
     // =========================================================================
+    // Test 9: Managed Exchange Rates 3-Month Coverage & 1-Unit KRW Consistency
+    // =========================================================================
+    const fxCovRes = await pgClient.query(`
+      SELECT currency_code,
+             COUNT(*)::int AS cnt,
+             MIN(base_rate_krw)::float8 AS min_rate,
+             MAX(base_rate_krw)::float8 AS max_rate
+      FROM public.fl_exchange_rates
+      GROUP BY currency_code
+      ORDER BY currency_code
+    `);
+    const covMap = new Map(fxCovRes.rows.map((r) => [r.currency_code, r]));
+    for (const cur of ['USD', 'CNY', 'EUR', 'JPY']) {
+      const info = covMap.get(cur);
+      assert(info && info.cnt >= 40, `Expected >=40 3-month managed FX rows for ${cur}, got ${info?.cnt || 0}`);
+    }
+    const jpyInfo = covMap.get('JPY');
+    assert(
+      jpyInfo.min_rate > 5 && jpyInfo.max_rate < 20,
+      `JPY managed rates must use 1-yen per KRW basis (expected 5..20), got ${jpyInfo.min_rate}..${jpyInfo.max_rate}`
+    );
+
+    const wttFxCount = await upsertManagedExchangeRates({
+      rows: [
+        {
+          rateDate: '2025-01-02',
+          currencyCode: 'JPY',
+          baseRateKrw: 9.3542,
+          ttSellingRate: 9.4477,
+          source: 'WTT 검증',
+        },
+      ],
+    });
+    assert.strictEqual(wttFxCount, 1);
+    tracked.fxRateIds.push('FX-20250102-JPY');
+    const fxCheckRow = (
+      await pgClient.query(
+        'SELECT base_rate_krw::float8 AS base, tt_selling_rate::float8 AS tts FROM public.fl_exchange_rates WHERE id = $1',
+        ['FX-20250102-JPY']
+      )
+    ).rows[0];
+    assert(Math.abs(fxCheckRow.base - 9.3542) < 0.0005, `Expected JPY 4-decimal precision, got ${fxCheckRow.base}`);
+    console.log(`[WTT 9 PASS] Managed FX 3-month series (${fxCovRes.rows.map((r) => `${r.currency_code}:${r.cnt}`).join(', ')}) & 1-JPY precision verified.`);
+
+    // =========================================================================
     // Test 7: Balanced Financial Statements (with WTT mutations active)
     // =========================================================================
     const dsActive = await loadFinancialDataset(flSupabase, snakeToCamelRow);
@@ -790,6 +837,7 @@ async function main() {
     };
 
     try {
+      await safeDel(`DELETE FROM public.fl_exchange_rates WHERE id = ANY($1)`, tracked.fxRateIds);
       await safeDel(`DELETE FROM public.fl_approval_requests WHERE id = ANY($1)`, tracked.approvalIds);
       await safeDel(`DELETE FROM public.fl_hr_histories WHERE user_id = ANY($1)`, tracked.hrUserIds);
       await safeDel(`DELETE FROM public.fl_users WHERE id = ANY($1)`, tracked.hrUserIds);

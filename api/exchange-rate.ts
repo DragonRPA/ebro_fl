@@ -5,11 +5,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 interface RateResult {
   currency: 'CNY' | 'USD' | 'JPY' | 'EUR' | 'KRW';
   baseDate: string;
-  baseRate: number;      // 매매기준율 (1 외화당 원화, 엔화는 100엔당 원화)
+  baseRate: number;      // 매매기준율 (모든 외화 1단위당 원화 통일: JPY도 1엔당 원화)
   ttsRate: number;       // 전신환매도율 (송금 보낼 때 환율, 약 +1.0% 스프레드)
   customsRate: number;   // 관세 과세 참고환율
   source: string;
 }
+
+function roundRateByCurrency(currency: 'CNY' | 'USD' | 'JPY' | 'EUR', val: number): number {
+  const factor = currency === 'JPY' ? 10000 : 100;
+  return Math.round(val * factor) / factor;
+}
+
+const FALLBACK_BASE_RATES: Record<'CNY' | 'USD' | 'JPY' | 'EUR', number> = {
+  USD: 1395.5,
+  CNY: 196.8,
+  EUR: 1518.0,
+  JPY: 9.24,
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -48,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  // 시계열(최근 N일, 기본 90일) 요청 처리
+  // 시계열(최근 N일, 기본 90일) 요청 처리 — fl_exchange_rates와 동일하게 모든 외화 1단위당 원화(JPY 1엔당) 기준 유지
   if (daysParam > 0) {
     try {
       const todayStr = new Date().toISOString().split('T')[0];
@@ -56,26 +68,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const endObj = new Date(endDateStr);
       const startObj = new Date(endObj.getTime() - daysParam * 24 * 60 * 60 * 1000);
       const startDateStr = startObj.toISOString().split('T')[0];
-      const unitMultiplier = targetCurrency === 'JPY' ? 100 : 1;
 
       const tsUrl = `https://api.frankfurter.dev/v1/${startDateStr}..${endDateStr}?base=${targetCurrency}&symbols=KRW`;
       const tsRes = await fetch(tsUrl);
       if (tsRes.ok) {
-        const tsJson: any = await tsRes.json();
+        const tsJson = (await tsRes.json()) as { rates?: Record<string, { KRW?: number }> };
         const rateMap = tsJson?.rates || {};
         const dates = Object.keys(rateMap).sort();
         if (dates.length > 0) {
-          const series = dates.map(d => {
-            const rawKrw = Number(rateMap[d]?.KRW || 0) * unitMultiplier;
-            const baseRate = Math.round(rawKrw * 100) / 100;
-            return {
-              date: d,
-              baseRate,
-              ttsRate: Math.round(baseRate * 1.01 * 100) / 100,
-              ttbRate: Math.round(baseRate * 0.99 * 100) / 100,
-              customsRate: Math.round(baseRate * 1.003 * 100) / 100
-            };
-          });
+          const series = dates
+            .map((d) => {
+              const rawKrw = Number(rateMap[d]?.KRW || 0);
+              const baseRate = roundRateByCurrency(targetCurrency, rawKrw);
+              return {
+                date: d,
+                baseRate,
+                ttsRate: roundRateByCurrency(targetCurrency, baseRate * 1.01),
+                ttbRate: roundRateByCurrency(targetCurrency, baseRate * 0.99),
+                customsRate: roundRateByCurrency(targetCurrency, baseRate * 1.003),
+              };
+            })
+            .filter((pt) => pt.baseRate > 0);
           return res.status(200).json({
             success: true,
             data: {
@@ -83,13 +96,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               startDate: startDateStr,
               endDate: endDateStr,
               source: '국제외환시장 일별 고시 시계열',
-              series
-            }
+              series,
+            },
           });
         }
       }
     } catch {
-      // 시계열 조회 실패 시 클라이언트 폴백 시계열 사용
+      // 시계열 조회 실패 시 아래 단건/폴백으로 진행
     }
   }
 
@@ -101,15 +114,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const eximUrl = `https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=${encodeURIComponent(eximKey)}&searchdate=${searchDate}&data=AP01`;
       const eximRes = await fetch(eximUrl);
       if (eximRes.ok) {
-        const list = await eximRes.json();
+        const list = (await eximRes.json()) as Array<{ cur_unit?: string; deal_bas_r?: string; tts?: string }>;
         if (Array.isArray(list) && list.length > 0) {
-          const code = targetCurrency === 'CNY' ? 'CNH' : 'USD';
-          const found = list.find((item: any) => item.cur_unit === code);
+          const eximCode =
+            targetCurrency === 'CNY'
+              ? 'CNH'
+              : targetCurrency === 'JPY'
+              ? 'JPY(100)'
+              : targetCurrency;
+          const found = list.find((item) => item.cur_unit === eximCode);
           if (found && found.deal_bas_r) {
-            const baseRate = Number(String(found.deal_bas_r).replace(/,/g, ''));
+            const divisor = targetCurrency === 'JPY' ? 100 : 1;
+            const rawBase = Number(String(found.deal_bas_r).replace(/,/g, '')) / divisor;
+            const baseRate = roundRateByCurrency(targetCurrency, rawBase);
             const ttsRate = found.tts
-              ? Number(String(found.tts).replace(/,/g, ''))
-              : Math.round(baseRate * 1.01 * 100) / 100;
+              ? roundRateByCurrency(targetCurrency, Number(String(found.tts).replace(/,/g, '')) / divisor)
+              : roundRateByCurrency(targetCurrency, baseRate * 1.01);
             if (baseRate > 0) {
               return res.status(200).json({
                 success: true,
@@ -118,9 +138,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   baseDate: requestedDate,
                   baseRate,
                   ttsRate,
-                  customsRate: Math.round(baseRate * 1.003 * 100) / 100,
-                  source: '한국수출입은행 공식 고시환율'
-                } as RateResult
+                  customsRate: roundRateByCurrency(targetCurrency, baseRate * 1.003),
+                  source: '한국수출입은행 공식 고시환율',
+                } as RateResult,
               });
             }
           }
@@ -138,11 +158,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const frankUrl = `https://api.frankfurter.dev/v1/${dateSegment}?base=${targetCurrency}&symbols=KRW`;
     const frankRes = await fetch(frankUrl);
     if (frankRes.ok) {
-      const json: any = await frankRes.json();
+      const json = (await frankRes.json()) as { date?: string; rates?: { KRW?: number } };
       const krwRate = Number(json?.rates?.KRW);
       if (krwRate > 0) {
-        const baseRate = Math.round(krwRate * 100) / 100;
-        const ttsRate = Math.round(baseRate * 1.01 * 100) / 100;
+        const baseRate = roundRateByCurrency(targetCurrency, krwRate);
+        const ttsRate = roundRateByCurrency(targetCurrency, baseRate * 1.01);
         return res.status(200).json({
           success: true,
           data: {
@@ -150,9 +170,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             baseDate: json.date || requestedDate,
             baseRate,
             ttsRate,
-            customsRate: Math.round(baseRate * 1.002 * 100) / 100,
-            source: '국제외환시장 일일 매매기준율'
-          } as RateResult
+            customsRate: roundRateByCurrency(targetCurrency, baseRate * 1.002),
+            source: '국제외환시장 일일 매매기준율',
+          } as RateResult,
         });
       }
     }
@@ -165,11 +185,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const openUrl = `https://open.er-api.com/v6/latest/${targetCurrency}`;
     const openRes = await fetch(openUrl);
     if (openRes.ok) {
-      const json: any = await openRes.json();
+      const json = (await openRes.json()) as { rates?: { KRW?: number } };
       const krwRate = Number(json?.rates?.KRW);
       if (krwRate > 0) {
-        const baseRate = Math.round(krwRate * 100) / 100;
-        const ttsRate = Math.round(baseRate * 1.01 * 100) / 100;
+        const baseRate = roundRateByCurrency(targetCurrency, krwRate);
+        const ttsRate = roundRateByCurrency(targetCurrency, baseRate * 1.01);
         return res.status(200).json({
           success: true,
           data: {
@@ -177,9 +197,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             baseDate: requestedDate,
             baseRate,
             ttsRate,
-            customsRate: Math.round(baseRate * 1.002 * 100) / 100,
-            source: '글로벌 외환 고시환율'
-          } as RateResult
+            customsRate: roundRateByCurrency(targetCurrency, baseRate * 1.002),
+            source: '글로벌 외환 고시환율',
+          } as RateResult,
         });
       }
     }
@@ -187,16 +207,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 안전 기본값 폴백
   }
 
-  const fallbackBase = targetCurrency === 'USD' ? 1385.0 : 193.5;
+  const fallbackBase = FALLBACK_BASE_RATES[targetCurrency];
   return res.status(200).json({
     success: true,
     data: {
       currency: targetCurrency,
       baseDate: requestedDate,
       baseRate: fallbackBase,
-      ttsRate: Math.round(fallbackBase * 1.01 * 100) / 100,
+      ttsRate: roundRateByCurrency(targetCurrency, fallbackBase * 1.01),
       customsRate: fallbackBase,
-      source: '표준 기준환율'
-    } as RateResult
+      source: '표준 기준환율',
+    } as RateResult,
   });
 }

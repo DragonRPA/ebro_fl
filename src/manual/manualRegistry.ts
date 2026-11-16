@@ -134,18 +134,28 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'exchange_rates',
     pageTitle: '환율 관리',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '통화별 일자 기준환율과 전신환매도율을 조회·등록하여 수입 매입원가 및 외화채무 결제 손익 산정의 기준으로 사용한다.',
+    basicDescription: '통화별 일자 기준환율과 전신환매도율을 조회·등록하고 관리 환율 3개월 추이 차트를 검토하여 수입 매입원가 및 외화채무 결제 손익 산정의 기준으로 사용한다.',
     anchors: [
-      { anchorId: 'fx-fetch', title: '환율 조회·수집 실행', summary: '한국수출입은행 고시환율 조회 또는 수동 환율 등록을 수행한다.' },
-      { anchorId: 'fx-grid', title: '고시환율 원장', summary: '일자별 통화 기준환율과 전신환매도율 이력을 확인한다.' },
+      { anchorId: 'fx-fetch', title: '환율 조회 · 3개월 적재 · 등록', summary: '단건 고시환율 조회, 3개월 고시환율 일괄 적재 또는 수동 환율 저장을 수행한다.' },
+      { anchorId: 'fx-chart', title: '관리 환율 3개월 추이 차트', summary: '통화별 1개월·2개월·3개월 매매기준율 및 전신환매도율 추이와 최고·최저·평균 변동폭을 확인한다.' },
+      { anchorId: 'fx-grid', title: '고시환율 원장', summary: '일자별 통화 기준환율과 전신환매도율 이력을 확인하고 행 선택 시 편집칸에 반영한다.' },
+      { anchorId: 'fx-conservation', title: '환율 원장 집계 바', summary: '관리 통화 수, 전체 원장 건수, 선택 통화 구간 건수 및 최신 매매기준율을 대조한다.' },
     ],
     processes: [
       {
-        processName: '일자별 기준환율 등록',
-        purpose: '수입 통관 및 외화 지급 시 적용할 공식 환율을 적재한다.',
+        processName: '일자별 기준환율 등록 및 3개월 시계열 적재',
+        purpose: '수입 통관 및 외화 지급 시 적용할 공식 환율과 최근 3개월 관리 환율 원장을 적재한다.',
         steps: [
-          { stepNo: 1, targetLabel: '기준일·통화 입력칸', manualAnchorId: 'fx-fetch', actionDetail: '적용일자, 통화코드, 기준환율을 입력하거나 환율 조회 버튼을 누른다.' },
-          { stepNo: 2, targetLabel: '환율 저장 버튼', manualAnchorId: 'fx-fetch', actionDetail: '저장 버튼을 눌러 환율 원장에 등록한다.' },
+          { stepNo: 1, targetLabel: '기준일·통화 입력칸', manualAnchorId: 'fx-fetch', actionDetail: '적용일자, 통화코드를 선택한 뒤 환율 조회 또는 3개월 고시환율 적재 버튼을 누른다.' },
+          { stepNo: 2, targetLabel: '환율 저장 버튼', manualAnchorId: 'fx-fetch', actionDetail: '단건 수정·등록이 필요한 경우 기준율과 매도율을 입력하고 환율 저장 버튼을 누른다.' },
+        ],
+      },
+      {
+        processName: '관리 환율 3개월 추이 차트 검토',
+        purpose: '통화별 최근 3개월 환율 변동폭, 최저·최고점, 평균선 및 매매기준율·전신환매도율 격차를 점검한다.',
+        steps: [
+          { stepNo: 1, targetLabel: '통화 · 기간 전환 탭', manualAnchorId: 'fx-chart', actionDetail: '차트 우측 통화 탭과 1개월·2개월·3개월 기간 탭으로 비교 대상을 전환한다.' },
+          { stepNo: 2, targetLabel: '차트 포인트 및 원장 행', manualAnchorId: 'fx-chart', actionDetail: '차트 포인트를 가리켜 일자별 대비를 확인하고 클릭 시 상단 입력칸으로 불러온다.' },
         ],
       },
     ],

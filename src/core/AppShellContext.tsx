@@ -333,7 +333,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       flSupabase.from('partner_sites').select('*').order('id'),
       flSupabase.from('item_masters').select('*').order('item_category'),
       flSupabase.from('catalog_packages').select('*').order('id'),
-      flSupabase.from('exchange_rates').select('*').order('rate_date', { ascending: false }),
+      flSupabase.from('exchange_rates').select('*').order('rate_date', { ascending: false }).limit(2000),
       flSupabase.from('purchases').select('*').order('effective_date', { ascending: false }),
       flSupabase.from('purchase_lines').select('*'),
       flSupabase.from('logistics_dispatches').select('*').order('dispatch_date', { ascending: false }),

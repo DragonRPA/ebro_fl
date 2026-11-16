@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useAppShell } from '../core/AppShellContext';
 import { DEFAULT_TENANT_ID, camelToSnakeRow, execDbMutation, flSupabase, newId } from '../core/supabase';
+import { upsertManagedExchangeRates } from '../services/domainEngine';
 import {
+  ConservationBar,
   DataGrid,
   ModalDialog,
   SectionPanel,
@@ -892,6 +894,38 @@ export const ItemMastersPage: React.FC = () => {
   );
 };
 
+const FX_CURRENCIES: Array<{
+  code: Exclude<CurrencyCode, 'KRW'>;
+  name: string;
+  decimals: number;
+}> = [
+  { code: 'USD', name: '미국 달러', decimals: 2 },
+  { code: 'CNY', name: '중국 위안', decimals: 2 },
+  { code: 'EUR', name: '유럽 유로', decimals: 2 },
+  { code: 'JPY', name: '일본 엔', decimals: 4 },
+];
+
+const FX_PERIOD_OPTIONS: Array<{ days: 30 | 60 | 90; label: string }> = [
+  { days: 30, label: '1개월' },
+  { days: 60, label: '2개월' },
+  { days: 90, label: '3개월' },
+];
+
+function formatFxRate(value: number, currencyCode: Exclude<CurrencyCode, 'KRW'>): string {
+  const maxFrac = currencyCode === 'JPY' ? 4 : 2;
+  return Number(value || 0).toLocaleString('ko-KR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: maxFrac,
+  });
+}
+
+function shiftIsoDays(baseIso: string, deltaDays: number): string {
+  const parts = baseIso.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return baseIso;
+  const dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + deltaDays));
+  return dt.toISOString().slice(0, 10);
+}
+
 export const ExchangeRatesPage: React.FC = () => {
   const { datasets, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('exchange_rates');
@@ -899,10 +933,34 @@ export const ExchangeRatesPage: React.FC = () => {
   const today = new Date().toISOString().slice(0, 10);
   const [rateDate, setRateDate] = useState(today);
   const [currencyCode, setCurrencyCode] = useState<Exclude<CurrencyCode, 'KRW'>>('USD');
-  const [baseRateKrw, setBaseRateKrw] = useState<number>(1380);
-  const [ttSellingRate, setTtSellingRate] = useState<number>(1394);
-  const [source, setSource] = useState('수동등록');
+  const [baseRateKrw, setBaseRateKrw] = useState<number>(1395.5);
+  const [ttSellingRate, setTtSellingRate] = useState<number>(1409.5);
+  const [source, setSource] = useState('한국수출입은행');
+  const [periodDays, setPeriodDays] = useState<30 | 60 | 90>(90);
+  const [showTtsLine, setShowTtsLine] = useState(true);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [gridFilter, setGridFilter] = useState<'ALL' | Exclude<CurrencyCode, 'KRW'>>('ALL');
   const [busy, setBusy] = useState(false);
+
+  const selectCurrency = (nextCode: Exclude<CurrencyCode, 'KRW'>) => {
+    setCurrencyCode(nextCode);
+    setHoverIdx(null);
+    const sameDateRow = datasets.exchangeRates.find(
+      (r) => r.currencyCode === nextCode && r.rateDate === rateDate
+    );
+    const latestRow =
+      sameDateRow ||
+      [...datasets.exchangeRates]
+        .filter((r) => r.currencyCode === nextCode)
+        .sort((a, b) => b.rateDate.localeCompare(a.rateDate))[0];
+    if (latestRow) {
+      setBaseRateKrw(Number(latestRow.baseRateKrw));
+      setTtSellingRate(
+        Number(latestRow.ttSellingRate || Math.round(Number(latestRow.baseRateKrw) * 101) / 100)
+      );
+      setSource(latestRow.source || '외환시장 고시환율');
+    }
+  };
 
   const handleFetchRate = async () => {
     setBusy(true);
@@ -923,6 +981,90 @@ export const ExchangeRatesPage: React.FC = () => {
       }
     } catch (err) {
       notifyToast(err instanceof Error ? err.message : '환율 조회 실패', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSync3MonthRates = async () => {
+    setBusy(true);
+    try {
+      const endDateStr = rateDate <= today ? rateDate : today;
+      const startDateStr = shiftIsoDays(endDateStr, -90);
+      let series: Array<{ date: string; baseRate: number; ttsRate: number }> = [];
+      let fetchedSource = '국제외환시장 고시환율';
+
+      try {
+        const apiResp = await fetch(
+          `/api/exchange-rate?currency=${encodeURIComponent(currencyCode)}&date=${encodeURIComponent(endDateStr)}&days=90`
+        );
+        if (apiResp.ok) {
+          const apiJson = (await apiResp.json()) as {
+            success?: boolean;
+            data?: {
+              source?: string;
+              series?: Array<{ date: string; baseRate: number; ttsRate?: number }>;
+            };
+          };
+          if (apiJson.success && Array.isArray(apiJson.data?.series) && apiJson.data.series.length > 0) {
+            series = apiJson.data.series.map((pt) => ({
+              date: pt.date,
+              baseRate: Number(pt.baseRate),
+              ttsRate: Number(pt.ttsRate || Number(pt.baseRate) * 1.01),
+            }));
+            if (apiJson.data.source) fetchedSource = apiJson.data.source;
+          }
+        }
+      } catch {
+        // 정적 프리뷰 등 로컬 API 미지원 환경에서는 직접 시계열 조회
+      }
+
+      if (series.length === 0) {
+        const directResp = await fetch(
+          `https://api.frankfurter.dev/v1/${startDateStr}..${endDateStr}?base=${encodeURIComponent(currencyCode)}&symbols=KRW`
+        );
+        if (directResp.ok) {
+          const directJson = (await directResp.json()) as {
+            rates?: Record<string, { KRW?: number }>;
+          };
+          const rateMap = directJson?.rates || {};
+          const factor = currencyCode === 'JPY' ? 10000 : 100;
+          series = Object.keys(rateMap)
+            .sort()
+            .map((dt) => {
+              const baseRate = Math.round(Number(rateMap[dt]?.KRW || 0) * factor) / factor;
+              return {
+                date: dt,
+                baseRate,
+                ttsRate: Math.round(baseRate * 1.01 * factor) / factor,
+              };
+            })
+            .filter((pt) => pt.baseRate > 0);
+        }
+      }
+
+      if (series.length === 0) {
+        throw new Error('3개월 고시환율 시계열 데이터를 수신하지 못했습니다.');
+      }
+
+      const savedCount = await upsertManagedExchangeRates({
+        rows: series.map((pt) => ({
+          rateDate: pt.date,
+          currencyCode,
+          baseRateKrw: pt.baseRate,
+          ttSellingRate: pt.ttsRate,
+          source: fetchedSource,
+        })),
+      });
+      const lastPt = series[series.length - 1];
+      setRateDate(lastPt.date);
+      setBaseRateKrw(lastPt.baseRate);
+      setTtSellingRate(lastPt.ttsRate);
+      setSource(fetchedSource);
+      await refreshAll();
+      notifyToast(`${currencyCode} 최근 3개월 관리 환율 ${savedCount}건 적재 완료`, 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '3개월 환율 적재 실패', 'error');
     } finally {
       setBusy(false);
     }
@@ -968,10 +1110,161 @@ export const ExchangeRatesPage: React.FC = () => {
     }
   };
 
-  const sorted = useMemo(
-    () => [...datasets.exchangeRates].sort((a, b) => b.rateDate.localeCompare(a.rateDate)),
-    [datasets.exchangeRates]
-  );
+  const currencySeriesMap = useMemo(() => {
+    const grouped: Record<Exclude<CurrencyCode, 'KRW'>, FlExchangeRate[]> = {
+      USD: [],
+      CNY: [],
+      EUR: [],
+      JPY: [],
+    };
+    const byKey = new Map<string, FlExchangeRate>();
+    for (const r of datasets.exchangeRates) {
+      const key = `${r.currencyCode}__${r.rateDate}`;
+      if (!byKey.has(key)) byKey.set(key, r);
+    }
+    for (const r of byKey.values()) {
+      if (grouped[r.currencyCode]) {
+        grouped[r.currencyCode].push(r);
+      }
+    }
+    for (const cur of Object.keys(grouped) as Array<Exclude<CurrencyCode, 'KRW'>>) {
+      grouped[cur].sort((a, b) => a.rateDate.localeCompare(b.rateDate));
+    }
+    return grouped;
+  }, [datasets.exchangeRates]);
+
+  const currencyCountsInPeriod = useMemo(() => {
+    const out: Record<Exclude<CurrencyCode, 'KRW'>, number> = {
+      USD: 0,
+      CNY: 0,
+      EUR: 0,
+      JPY: 0,
+    };
+    for (const cur of FX_CURRENCIES) {
+      const rows = currencySeriesMap[cur.code];
+      if (rows.length === 0) continue;
+      const latestDt = rows[rows.length - 1].rateDate;
+      const cutoff = shiftIsoDays(latestDt, -(periodDays - 1));
+      out[cur.code] = rows.filter((r) => r.rateDate >= cutoff).length;
+    }
+    return out;
+  }, [currencySeriesMap, periodDays]);
+
+  const activeChartSeries = useMemo(() => {
+    const rows = currencySeriesMap[currencyCode] || [];
+    if (rows.length === 0) return [];
+    const latestDt = rows[rows.length - 1].rateDate;
+    const cutoff = shiftIsoDays(latestDt, -(periodDays - 1));
+    return rows.filter((r) => r.rateDate >= cutoff).map((r) => {
+      const base = Number(r.baseRateKrw || 0);
+      const tts = Number(r.ttSellingRate || Math.round(base * 101) / 100);
+      return {
+        rateDate: r.rateDate,
+        baseRate: base,
+        ttsRate: tts,
+        source: r.source,
+      };
+    });
+  }, [currencyCode, currencySeriesMap, periodDays]);
+
+  const chartStats = useMemo(() => {
+    if (activeChartSeries.length === 0) {
+      return null;
+    }
+    let minIdx = 0;
+    let maxIdx = 0;
+    let sum = 0;
+    activeChartSeries.forEach((pt, idx) => {
+      sum += pt.baseRate;
+      if (pt.baseRate < activeChartSeries[minIdx].baseRate) minIdx = idx;
+      if (pt.baseRate > activeChartSeries[maxIdx].baseRate) maxIdx = idx;
+    });
+    const factor = currencyCode === 'JPY' ? 10000 : 100;
+    const avgRate = Math.round((sum / activeChartSeries.length) * factor) / factor;
+    const startRate = activeChartSeries[0].baseRate;
+    const endRate = activeChartSeries[activeChartSeries.length - 1].baseRate;
+    const diffRate = Math.round((endRate - startRate) * factor) / factor;
+    const diffPct = startRate > 0 ? Math.round(((endRate - startRate) / startRate) * 10000) / 100 : 0;
+    return {
+      minPoint: { ...activeChartSeries[minIdx], index: minIdx },
+      maxPoint: { ...activeChartSeries[maxIdx], index: maxIdx },
+      avgRate,
+      startRate,
+      endRate,
+      diffRate,
+      diffPct,
+    };
+  }, [activeChartSeries, currencyCode]);
+
+  const svgWidth = 960;
+  const svgHeight = 240;
+  const padLeft = 72;
+  const padRight = 24;
+  const padTop = 26;
+  const padBottom = 32;
+  const plotW = svgWidth - padLeft - padRight;
+  const plotH = svgHeight - padTop - padBottom;
+
+  const yDomain = useMemo(() => {
+    const vals: number[] = [];
+    for (const pt of activeChartSeries) {
+      vals.push(pt.baseRate);
+      if (showTtsLine) vals.push(pt.ttsRate);
+    }
+    const minVal = vals.length > 0 ? Math.min(...vals) : 0;
+    const maxVal = vals.length > 0 ? Math.max(...vals) : 100;
+    const minFloor = currencyCode === 'JPY' ? 0.05 : 1;
+    const span = Math.max(minFloor, maxVal - minVal);
+    const yMin = minVal - span * 0.16;
+    const yMax = maxVal + span * 0.16;
+    return { yMin, yMax, ySpan: Math.max(minFloor, yMax - yMin) };
+  }, [activeChartSeries, currencyCode, showTtsLine]);
+
+  const getX = (idx: number) => {
+    if (activeChartSeries.length <= 1) return padLeft + plotW / 2;
+    return padLeft + (idx / (activeChartSeries.length - 1)) * plotW;
+  };
+
+  const getY = (val: number) => padTop + plotH - ((val - yDomain.yMin) / yDomain.ySpan) * plotH;
+
+  const basePolyline = activeChartSeries
+    .map((pt, i) => `${getX(i).toFixed(1)},${getY(pt.baseRate).toFixed(1)}`)
+    .join(' ');
+
+  const ttsPolyline = activeChartSeries
+    .map((pt, i) => `${getX(i).toFixed(1)},${getY(pt.ttsRate).toFixed(1)}`)
+    .join(' ');
+
+  const baseAreaPath =
+    activeChartSeries.length < 2
+      ? ''
+      : `M ${getX(0).toFixed(1)},${(padTop + plotH).toFixed(1)} L ${activeChartSeries
+          .map((pt, i) => `${getX(i).toFixed(1)},${getY(pt.baseRate).toFixed(1)}`)
+          .join(' L ')} L ${getX(activeChartSeries.length - 1).toFixed(1)},${(padTop + plotH).toFixed(1)} Z`;
+
+  const inspectedPoint = useMemo(() => {
+    if (activeChartSeries.length === 0) return null;
+    const targetIdx =
+      hoverIdx !== null && activeChartSeries[hoverIdx]
+        ? hoverIdx
+        : activeChartSeries.length - 1;
+    const pt = activeChartSeries[targetIdx];
+    const prevPt = targetIdx > 0 ? activeChartSeries[targetIdx - 1] : null;
+    const factor = currencyCode === 'JPY' ? 10000 : 100;
+    const prevDiff = prevPt
+      ? Math.round((pt.baseRate - prevPt.baseRate) * factor) / factor
+      : 0;
+    return { ...pt, index: targetIdx, prevDiff };
+  }, [activeChartSeries, currencyCode, hoverIdx]);
+
+  const sorted = useMemo(() => {
+    return [...datasets.exchangeRates]
+      .filter((r) => gridFilter === 'ALL' || r.currencyCode === gridFilter)
+      .sort((a, b) => b.rateDate.localeCompare(a.rateDate) || a.currencyCode.localeCompare(b.currencyCode));
+  }, [datasets.exchangeRates, gridFilter]);
+
+  const currentCurrencyMeta = FX_CURRENCIES.find((c) => c.code === currencyCode) || FX_CURRENCIES[0];
+  const currentPeriodLabel = FX_PERIOD_OPTIONS.find((p) => p.days === periodDays)?.label || '3개월';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -985,24 +1278,25 @@ export const ExchangeRatesPage: React.FC = () => {
               style={controlInputStyle}
             />
           </VerticalField>
-          <VerticalField label="통화코드" width={110}>
+          <VerticalField label="통화코드" width={140}>
             <select
               value={currencyCode}
               onChange={(e) =>
-                setCurrencyCode(e.target.value as Exclude<CurrencyCode, 'KRW'>)
+                selectCurrency(e.target.value as Exclude<CurrencyCode, 'KRW'>)
               }
               style={controlInputStyle}
             >
-              <option value="USD">USD</option>
-              <option value="CNY">CNY</option>
-              <option value="EUR">EUR</option>
-              <option value="JPY">JPY</option>
+              {FX_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} · {c.name}
+                </option>
+              ))}
             </select>
           </VerticalField>
           <VerticalField label="매매기준율" width={135}>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               value={baseRateKrw}
               onChange={(e) => setBaseRateKrw(Number(e.target.value))}
               style={controlInputStyle}
@@ -1011,7 +1305,7 @@ export const ExchangeRatesPage: React.FC = () => {
           <VerticalField label="전신환매도율" width={135}>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               value={ttSellingRate}
               onChange={(e) => setTtSellingRate(Number(e.target.value))}
               style={controlInputStyle}
@@ -1034,49 +1328,485 @@ export const ExchangeRatesPage: React.FC = () => {
             환율 조회
           </button>
           {canEdit && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleSaveRate}
-              style={actionBtnStyle('primary')}
-            >
-              환율 저장
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleSync3MonthRates}
+                style={actionBtnStyle('secondary')}
+              >
+                3개월 고시환율 적재
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleSaveRate}
+                style={actionBtnStyle('primary')}
+              >
+                환율 저장
+              </button>
+            </>
           )}
         </div>
       </SectionPanel>
 
-      <DataGrid
-        manualId="fx-grid"
-        columns={[
-          { key: 'rateDate', header: '적용일자', width: 120, render: (r) => r.rateDate },
+      <SectionPanel
+        title={`관리 환율 ${currentPeriodLabel} 추이 차트 · ${currentCurrencyMeta.code} · ${currentCurrencyMeta.name}`}
+        manualId="fx-chart"
+        rightSlot={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <SegmentedTabs
+              tabs={FX_CURRENCIES.map((c) => ({
+                id: c.code,
+                label: c.code,
+                count: currencyCountsInPeriod[c.code],
+              }))}
+              activeId={currencyCode}
+              onChange={(id) => selectCurrency(id as Exclude<CurrencyCode, 'KRW'>)}
+            />
+            <SegmentedTabs
+              tabs={FX_PERIOD_OPTIONS.map((p) => ({
+                id: String(p.days),
+                label: p.label,
+              }))}
+              activeId={String(periodDays)}
+              onChange={(id) => {
+                setPeriodDays(Number(id) as 30 | 60 | 90);
+                setHoverIdx(null);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowTtsLine((v) => !v)}
+              style={actionBtnStyle(showTtsLine ? 'primary' : 'secondary', true)}
+            >
+              전신환매도율 {showTtsLine ? '표시' : '숨김'}
+            </button>
+          </div>
+        }
+      >
+        {activeChartSeries.length === 0 ? (
+          <div
+            style={{
+              padding: '32px 16px',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+            }}
+          >
+            등록된 관리 환율 데이터가 없습니다. 상단 3개월 고시환율 적재 또는 환율 저장을 실행하십시오.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                paddingBottom: '8px',
+                borderBottom: '1px solid var(--table-row-border)',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {chartStats && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    구간 {activeChartSeries[0].rateDate} ~ {activeChartSeries[activeChartSeries.length - 1].rateDate}
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    최저 <strong style={{ color: 'var(--success)' }}>{formatFxRate(chartStats.minPoint.baseRate, currencyCode)} 원</strong>
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    최고 <strong style={{ color: 'var(--danger)' }}>{formatFxRate(chartStats.maxPoint.baseRate, currencyCode)} 원</strong>
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    평균 <strong style={{ color: 'var(--primary)' }}>{formatFxRate(chartStats.avgRate, currencyCode)} 원</strong>
+                  </span>
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    변동{' '}
+                    <strong style={{ color: chartStats.diffRate >= 0 ? 'var(--danger)' : 'var(--primary)' }}>
+                      {chartStats.diffRate >= 0 ? '+' : ''}
+                      {formatFxRate(chartStats.diffRate, currencyCode)} 원 · {chartStats.diffPct >= 0 ? '+' : ''}
+                      {chartStats.diffPct.toFixed(2)}%
+                    </strong>
+                  </span>
+                </div>
+              )}
+
+              {inspectedPoint && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700, flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap' }}>일자 {inspectedPoint.rateDate}</span>
+                  <span style={{ color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+                    매매기준율 {formatFxRate(inspectedPoint.baseRate, currencyCode)} 원
+                  </span>
+                  <span style={{ color: 'var(--danger)', whiteSpace: 'nowrap' }}>
+                    전신환매도율 {formatFxRate(inspectedPoint.ttsRate, currencyCode)} 원
+                  </span>
+                  <span
+                    style={{
+                      color: inspectedPoint.prevDiff >= 0 ? 'var(--danger)' : 'var(--primary)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    직전대비 {inspectedPoint.prevDiff >= 0 ? '+' : ''}
+                    {formatFxRate(inspectedPoint.prevDiff, currencyCode)} 원
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <svg
+                data-fx-chart="svg"
+                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                style={{ width: '100%', minWidth: '640px', height: '240px', display: 'block', userSelect: 'none' }}
+                onMouseLeave={() => setHoverIdx(null)}
+              >
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                  const val = yDomain.yMax - ratio * yDomain.ySpan;
+                  const y = padTop + ratio * plotH;
+                  return (
+                    <g key={idx}>
+                      <line
+                        x1={padLeft}
+                        y1={y}
+                        x2={svgWidth - padRight}
+                        y2={y}
+                        stroke="var(--table-row-border)"
+                        strokeDasharray={ratio === 0 || ratio === 1 ? undefined : '3 3'}
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={padLeft - 8}
+                        y={y + 4}
+                        textAnchor="end"
+                        fontSize="11"
+                        fontWeight="600"
+                        fill="var(--text-secondary)"
+                      >
+                        {formatFxRate(val, currencyCode)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {chartStats && (
+                  <g>
+                    <line
+                      x1={padLeft}
+                      y1={getY(chartStats.avgRate)}
+                      x2={svgWidth - padRight}
+                      y2={getY(chartStats.avgRate)}
+                      stroke="var(--text-muted)"
+                      strokeDasharray="5 4"
+                      strokeWidth={1.2}
+                    />
+                    <text
+                      x={svgWidth - padRight - 4}
+                      y={Math.max(padTop + 12, getY(chartStats.avgRate) - 5)}
+                      textAnchor="end"
+                      fontSize="10.5"
+                      fontWeight="700"
+                      fill="var(--text-secondary)"
+                    >
+                      평균 {formatFxRate(chartStats.avgRate, currencyCode)}
+                    </text>
+                  </g>
+                )}
+
+                {baseAreaPath && (
+                  <path d={baseAreaPath} fill="var(--primary)" fillOpacity={0.09} />
+                )}
+
+                {showTtsLine && activeChartSeries.length > 1 && (
+                  <polyline
+                    fill="none"
+                    stroke="var(--danger)"
+                    strokeWidth="1.6"
+                    strokeDasharray="4 3"
+                    points={ttsPolyline}
+                  />
+                )}
+
+                {activeChartSeries.length > 1 && (
+                  <polyline
+                    fill="none"
+                    stroke="var(--primary)"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    points={basePolyline}
+                  />
+                )}
+
+                {activeChartSeries.length === 1 && (
+                  <circle
+                    cx={getX(0)}
+                    cy={getY(activeChartSeries[0].baseRate)}
+                    r={5}
+                    fill="var(--primary)"
+                    stroke="var(--bg-card)"
+                    strokeWidth={2}
+                  />
+                )}
+
+                {chartStats && activeChartSeries.length > 1 && (
+                  <>
+                    <g>
+                      <circle
+                        cx={getX(chartStats.minPoint.index)}
+                        cy={getY(chartStats.minPoint.baseRate)}
+                        r={4.5}
+                        fill="var(--success)"
+                        stroke="var(--bg-card)"
+                        strokeWidth={1.5}
+                      />
+                      <text
+                        x={Math.min(svgWidth - padRight - 36, Math.max(padLeft + 36, getX(chartStats.minPoint.index)))}
+                        y={Math.min(padTop + plotH - 4, getY(chartStats.minPoint.baseRate) + 15)}
+                        textAnchor="middle"
+                        fontSize="10.5"
+                        fontWeight="700"
+                        fill="var(--success)"
+                      >
+                        최저 {formatFxRate(chartStats.minPoint.baseRate, currencyCode)}
+                      </text>
+                    </g>
+                    <g>
+                      <circle
+                        cx={getX(chartStats.maxPoint.index)}
+                        cy={getY(chartStats.maxPoint.baseRate)}
+                        r={4.5}
+                        fill="var(--danger)"
+                        stroke="var(--bg-card)"
+                        strokeWidth={1.5}
+                      />
+                      <text
+                        x={Math.min(svgWidth - padRight - 36, Math.max(padLeft + 36, getX(chartStats.maxPoint.index)))}
+                        y={Math.max(padTop + 12, getY(chartStats.maxPoint.baseRate) - 8)}
+                        textAnchor="middle"
+                        fontSize="10.5"
+                        fontWeight="700"
+                        fill="var(--danger)"
+                      >
+                        최고 {formatFxRate(chartStats.maxPoint.baseRate, currencyCode)}
+                      </text>
+                    </g>
+                  </>
+                )}
+
+                {activeChartSeries.map((pt, idx) => {
+                  const step = Math.max(1, Math.floor((activeChartSeries.length - 1) / 6));
+                  const showLabel =
+                    activeChartSeries.length <= 7 ||
+                    idx === 0 ||
+                    idx === activeChartSeries.length - 1 ||
+                    idx % step === 0;
+                  if (!showLabel) return null;
+                  return (
+                    <text
+                      key={pt.rateDate}
+                      x={getX(idx)}
+                      y={svgHeight - 8}
+                      textAnchor="middle"
+                      fontSize="10.5"
+                      fontWeight="600"
+                      fill="var(--text-secondary)"
+                    >
+                      {pt.rateDate.slice(5)}
+                    </text>
+                  );
+                })}
+
+                {activeChartSeries.map((pt, idx) => {
+                  if (pt.rateDate !== rateDate) return null;
+                  return (
+                    <circle
+                      key={`selected-${pt.rateDate}`}
+                      cx={getX(idx)}
+                      cy={getY(pt.baseRate)}
+                      r={6.5}
+                      fill="none"
+                      stroke="var(--primary)"
+                      strokeWidth={1.8}
+                    />
+                  );
+                })}
+
+                {hoverIdx !== null && activeChartSeries[hoverIdx] && (
+                  <g>
+                    <line
+                      x1={getX(hoverIdx)}
+                      y1={padTop}
+                      x2={getX(hoverIdx)}
+                      y2={padTop + plotH}
+                      stroke="var(--text-secondary)"
+                      strokeWidth={1}
+                      strokeDasharray="2 2"
+                    />
+                    <circle
+                      cx={getX(hoverIdx)}
+                      cy={getY(activeChartSeries[hoverIdx].baseRate)}
+                      r={5}
+                      fill="var(--primary)"
+                      stroke="var(--bg-card)"
+                      strokeWidth={2}
+                    />
+                    {showTtsLine && (
+                      <circle
+                        cx={getX(hoverIdx)}
+                        cy={getY(activeChartSeries[hoverIdx].ttsRate)}
+                        r={4}
+                        fill="var(--danger)"
+                        stroke="var(--bg-card)"
+                        strokeWidth={1.5}
+                      />
+                    )}
+                  </g>
+                )}
+
+                {activeChartSeries.map((pt, idx) => {
+                  const sliceW = plotW / Math.max(1, activeChartSeries.length);
+                  const x = getX(idx) - sliceW / 2;
+                  return (
+                    <rect
+                      key={pt.rateDate}
+                      x={Math.max(padLeft, x)}
+                      y={padTop}
+                      width={Math.max(4, sliceW)}
+                      height={plotH}
+                      fill="transparent"
+                      style={{ cursor: 'crosshair' }}
+                      onMouseEnter={() => setHoverIdx(idx)}
+                      onClick={() => {
+                        setRateDate(pt.rateDate);
+                        setBaseRateKrw(pt.baseRate);
+                        setTtSellingRate(pt.ttsRate);
+                        setSource(pt.source);
+                      }}
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px',
+                fontSize: '11.5px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <span>기준 단위: 1 {currencyCode} 당 원화 · 차트 일자 클릭 시 상단 편집칸 반영</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--primary)' }}>
+                  <span style={{ width: '14px', height: '2.5px', backgroundColor: 'var(--primary)', display: 'inline-block' }} />
+                  매매기준율
+                </span>
+                {showTtsLine && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--danger)' }}>
+                    <span style={{ width: '14px', height: '2px', borderTop: '2px dashed var(--danger)', display: 'inline-block' }} />
+                    전신환매도율
+                  </span>
+                )}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  <span style={{ width: '14px', height: '2px', borderTop: '2px dashed var(--text-muted)', display: 'inline-block' }} />
+                  {currentPeriodLabel} 평균선
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </SectionPanel>
+
+      <SectionPanel
+        title="고시환율 원장"
+        rightSlot={
+          <SegmentedTabs
+            tabs={[
+              { id: 'ALL', label: '전체', count: datasets.exchangeRates.length },
+              ...FX_CURRENCIES.map((c) => ({
+                id: c.code,
+                label: c.code,
+                count: (currencySeriesMap[c.code] || []).length,
+              })),
+            ]}
+            activeId={gridFilter}
+            onChange={(id) => {
+              setGridFilter(id as typeof gridFilter);
+              if (id !== 'ALL') {
+                selectCurrency(id as Exclude<CurrencyCode, 'KRW'>);
+              }
+            }}
+          />
+        }
+      >
+        <DataGrid
+          manualId="fx-grid"
+          columns={[
+            { key: 'rateDate', header: '적용일자', width: 120, render: (r) => r.rateDate },
+            {
+              key: 'currencyCode',
+              header: '통화',
+              width: 90,
+              align: 'center',
+              render: (r) => <StatusBadge label={r.currencyCode} tone="primary" />,
+            },
+            {
+              key: 'baseRateKrw',
+              header: '매매기준율',
+              width: 140,
+              align: 'right',
+              render: (r) => `${formatFxRate(Number(r.baseRateKrw), r.currencyCode)} 원`,
+            },
+            {
+              key: 'ttSellingRate',
+              header: '전신환매도율',
+              width: 140,
+              align: 'right',
+              render: (r) =>
+                r.ttSellingRate ? `${formatFxRate(Number(r.ttSellingRate), r.currencyCode)} 원` : '-',
+            },
+            { key: 'source', header: '출처', render: (r) => r.source },
+          ]}
+          rows={sorted}
+          rowKey={(r) => r.id}
+          onRowClick={(r) => {
+            setCurrencyCode(r.currencyCode);
+            setRateDate(r.rateDate);
+            setBaseRateKrw(Number(r.baseRateKrw));
+            setTtSellingRate(Number(r.ttSellingRate || 0));
+            setSource(r.source);
+            setHoverIdx(null);
+          }}
+          maxHeight="420px"
+        />
+      </SectionPanel>
+
+      <ConservationBar
+        manualId="fx-conservation"
+        balanced={activeChartSeries.length > 0}
+        balanceMessage={activeChartSeries.length > 0 ? '관리 환율 원장 정상' : '환율 데이터 미등록'}
+        items={[
+          { label: '관리 통화', value: `${FX_CURRENCIES.length}종`, tone: 'neutral' },
+          { label: '전체 원장', value: `${datasets.exchangeRates.length}건`, tone: 'primary' },
+          { label: `${currencyCode} ${currentPeriodLabel}`, value: `${activeChartSeries.length}건`, tone: 'success' },
           {
-            key: 'currencyCode',
-            header: '통화',
-            width: 90,
-            align: 'center',
-            render: (r) => <StatusBadge label={r.currencyCode} tone="primary" />,
+            label: `${currencyCode} 최신 매매기준율`,
+            value:
+              chartStats
+                ? `${formatFxRate(chartStats.endRate, currencyCode)} 원`
+                : `${formatFxRate(baseRateKrw, currencyCode)} 원`,
+            tone: 'primary',
           },
-          {
-            key: 'baseRateKrw',
-            header: '매매기준율',
-            width: 140,
-            align: 'right',
-            render: (r) => `${Number(r.baseRateKrw).toLocaleString('ko-KR')} 원`,
-          },
-          {
-            key: 'ttSellingRate',
-            header: '전신환매도율',
-            width: 140,
-            align: 'right',
-            render: (r) =>
-              r.ttSellingRate ? `${Number(r.ttSellingRate).toLocaleString('ko-KR')} 원` : '-',
-          },
-          { key: 'source', header: '출처', render: (r) => r.source },
         ]}
-        rows={sorted}
-        rowKey={(r) => r.id}
-        maxHeight="520px"
       />
     </div>
   );
