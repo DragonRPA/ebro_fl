@@ -2514,6 +2514,7 @@ export const OrganizationHrPage: React.FC = () => {
                         value={Number(eHourlyWage || 0)}
                         onChange={(v) => setEHourlyWage(v > 0 ? String(v) : '')}
                         placeholder="시간당 통상임금 직접 입력"
+                        dataManualWage
                       />
                     </VerticalField>
                     <VerticalField label="용역계약금액">

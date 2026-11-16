@@ -78,6 +78,7 @@ export interface CommaNumberInputProps {
   placeholder?: string;
   style?: React.CSSProperties;
   dataTestId?: string;
+  dataManualWage?: boolean;
 }
 
 export const CommaNumberInput: React.FC<CommaNumberInputProps> = ({
@@ -90,6 +91,7 @@ export const CommaNumberInput: React.FC<CommaNumberInputProps> = ({
   placeholder,
   style,
   dataTestId,
+  dataManualWage,
 }) => {
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState('');
@@ -105,6 +107,7 @@ export const CommaNumberInput: React.FC<CommaNumberInputProps> = ({
       disabled={disabled}
       placeholder={placeholder}
       data-testid={dataTestId}
+      data-manual-wage={dataManualWage ? 'true' : undefined}
       value={displayValue}
       onFocus={() => {
         setFocused(true);
