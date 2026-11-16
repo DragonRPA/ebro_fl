@@ -59,14 +59,21 @@ export const QuotationsPage: React.FC = () => {
   }, [datasets.partners]);
 
   const [quoteDomain, setQuoteDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
+  const domainItems = useMemo(() => {
+    const matched = datasets.itemMasters.filter(
+      (it) => it.itemDomain === quoteDomain || it.itemDomain === 'BOTH'
+    );
+    return matched.length > 0 ? matched : datasets.itemMasters;
+  }, [datasets.itemMasters, quoteDomain]);
+
   const [partnerId, setPartnerId] = useState(customers[0]?.id || '');
   const [quoteDate, setQuoteDate] = useState(today);
   const [validUntil, setValidUntil] = useState(addDaysIso(today, 30));
   const [rentalMonths, setRentalMonths] = useState(12);
-  const [itemId, setItemId] = useState(datasets.itemMasters[0]?.id || '');
+  const [itemId, setItemId] = useState(domainItems[0]?.id || '');
   const [qty, setQty] = useState(1);
   const [unitPriceKrw, setUnitPriceKrw] = useState<number>(
-    datasets.itemMasters[0]?.retailPriceKrw || 0
+    domainItems[0]?.retailPriceKrw || 0
   );
   const [memo, setMemo] = useState('');
   const [draftLines, setDraftLines] = useState<QuotationLine[]>([]);
@@ -86,7 +93,7 @@ export const QuotationsPage: React.FC = () => {
   };
 
   const addLine = () => {
-    const it = datasets.itemMasters.find((x) => x.id === (itemId || datasets.itemMasters[0]?.id));
+    const it = domainItems.find((x) => x.id === (itemId || domainItems[0]?.id));
     if (!it) return;
     const supply = Math.round(Number(qty || 1) * Number(unitPriceKrw || 0));
     setDraftLines((prev) => [
@@ -115,8 +122,8 @@ export const QuotationsPage: React.FC = () => {
       draftLines.length > 0
         ? draftLines
         : (() => {
-            const it = datasets.itemMasters.find(
-              (x) => x.id === (itemId || datasets.itemMasters[0]?.id)
+            const it = domainItems.find(
+              (x) => x.id === (itemId || domainItems[0]?.id)
             );
             if (!it) return [];
             const supply = Math.round(Math.max(1, qty) * Number(unitPriceKrw || 0));
@@ -321,7 +328,12 @@ export const QuotationsPage: React.FC = () => {
                 onChange={(e) => {
                   const next = e.target.value as 'TRADE' | 'RENTAL';
                   setQuoteDomain(next);
-                  handleSelectItem(itemId || datasets.itemMasters[0]?.id || '', next);
+                  const nextItems = datasets.itemMasters.filter(
+                    (it) => it.itemDomain === next || it.itemDomain === 'BOTH'
+                  );
+                  const candidate =
+                    nextItems.find((it) => it.id === itemId) || nextItems[0] || datasets.itemMasters[0];
+                  handleSelectItem(candidate?.id || '', next);
                 }}
                 style={controlInputStyle}
               >
@@ -368,11 +380,11 @@ export const QuotationsPage: React.FC = () => {
             )}
             <VerticalField label="품목" minWidth={220}>
               <select
-                value={itemId || datasets.itemMasters[0]?.id || ''}
+                value={itemId || domainItems[0]?.id || ''}
                 onChange={(e) => handleSelectItem(e.target.value)}
                 style={controlInputStyle}
               >
-                {datasets.itemMasters.map((it) => (
+                {domainItems.map((it) => (
                   <option key={it.id} value={it.id}>
                     {it.sku} · {it.name}
                   </option>
@@ -519,12 +531,19 @@ export const TradeContractsPage: React.FC = () => {
     return matched.length > 0 ? matched : datasets.partners;
   }, [datasets.partners]);
 
+  const tradeItems = useMemo(() => {
+    const matched = datasets.itemMasters.filter(
+      (i) => i.itemDomain === 'TRADE' || i.itemDomain === 'BOTH'
+    );
+    return matched.length > 0 ? matched : datasets.itemMasters;
+  }, [datasets.itemMasters]);
+
   const [selectedId, setSelectedId] = useState<string | null>(tradeContracts[0]?.id || null);
   const [partnerId, setPartnerId] = useState(customers[0]?.id || '');
-  const [itemId, setItemId] = useState(datasets.itemMasters[0]?.id || '');
+  const [itemId, setItemId] = useState(tradeItems[0]?.id || '');
   const [qty, setQty] = useState(1);
   const [unitPriceKrw, setUnitPriceKrw] = useState(
-    datasets.itemMasters[0]?.retailPriceKrw || 0
+    tradeItems[0]?.retailPriceKrw || 0
   );
   const [contractDate, setContractDate] = useState(today);
   const [specialTerms, setSpecialTerms] = useState('');
@@ -532,7 +551,7 @@ export const TradeContractsPage: React.FC = () => {
 
   const handleCreateContract = async () => {
     const partner = customers.find((c) => c.id === (partnerId || customers[0]?.id));
-    const item = datasets.itemMasters.find((i) => i.id === (itemId || datasets.itemMasters[0]?.id));
+    const item = tradeItems.find((i) => i.id === (itemId || tradeItems[0]?.id));
     if (!partner || !item) {
       notifyToast('매출처와 품목을 선택해 주세요.', 'error');
       return;
@@ -695,16 +714,16 @@ export const TradeContractsPage: React.FC = () => {
             </VerticalField>
             <VerticalField label="품목" required minWidth={220}>
               <select
-                value={itemId || datasets.itemMasters[0]?.id || ''}
+                value={itemId || tradeItems[0]?.id || ''}
                 onChange={(e) => {
                   const id = e.target.value;
                   setItemId(id);
-                  const it = datasets.itemMasters.find((x) => x.id === id);
+                  const it = tradeItems.find((x) => x.id === id);
                   if (it) setUnitPriceKrw(it.retailPriceKrw);
                 }}
                 style={controlInputStyle}
               >
-                {datasets.itemMasters.map((it) => (
+                {tradeItems.map((it) => (
                   <option key={it.id} value={it.id}>
                     {it.sku} · {it.name}
                   </option>

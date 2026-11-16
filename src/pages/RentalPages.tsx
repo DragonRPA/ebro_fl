@@ -84,7 +84,9 @@ export const RentalContractsPage: React.FC = () => {
 
   const rentalItems = useMemo(() => {
     const matched = datasets.itemMasters.filter(
-      (i) => i.itemCategory === '완제품' || i.itemCategory === '어태치먼트'
+      (i) =>
+        (i.itemDomain === 'RENTAL' || i.itemDomain === 'BOTH') &&
+        (i.itemCategory === '완제품' || i.itemCategory === '어태치먼트')
     );
     return matched.length > 0 ? matched : datasets.itemMasters;
   }, [datasets.itemMasters]);
@@ -531,7 +533,9 @@ export const RentalAssetsPage: React.FC = () => {
     return matched.length > 0 ? matched : datasets.partners;
   }, [datasets.partners]);
   const equipItems = useMemo(() => {
-    const matched = datasets.itemMasters.filter((i) => i.itemCategory === '완제품');
+    const matched = datasets.itemMasters.filter(
+      (i) => (i.itemDomain === 'RENTAL' || i.itemDomain === 'BOTH') && i.itemCategory === '완제품'
+    );
     return matched.length > 0 ? matched : datasets.itemMasters;
   }, [datasets.itemMasters]);
 

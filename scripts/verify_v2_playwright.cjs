@@ -243,6 +243,22 @@ async function main() {
       `[E2E 7e PASS] 매입 통관 관리 fxDate auto-rate (${autoCnyRate}->198.5), comma format (1,250 / 158,240), and zero overlap (gap=${Math.round(priceBox.x - (qtyBox.x + qtyBox.width))}px) verified.`
     );
 
+    // Visit separated 유통 품목 관리 and 렌탈 품목 관리 menus
+    await page.locator('aside nav button', { hasText: '유통 품목 관리' }).first().click();
+    await page.getByText('유통 품목 · 판매단가 검색', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await page.locator('table thead th', { hasText: '대리점가' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('table thead th', { hasText: '판매정가' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const tradeHasRentalHeader = await page.locator('table thead th', { hasText: '월 렌탈료' }).count();
+    assert.strictEqual(tradeHasRentalHeader, 0, '유통 품목 관리 must NOT display 월 렌탈료 header');
+
+    await page.locator('aside nav button', { hasText: '렌탈 품목 관리' }).first().click();
+    await page.getByText('렌탈 품목 · 임대료 기준 검색', { exact: false }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await page.locator('table thead th', { hasText: '월 렌탈료' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('table thead th', { hasText: '일 렌탈료' }).first().waitFor({ state: 'visible', timeout: 5000 });
+    const rentalHasDealerHeader = await page.locator('table thead th', { hasText: '대리점가' }).count();
+    assert.strictEqual(rentalHasDealerHeader, 0, '렌탈 품목 관리 must NOT display 대리점가 header');
+    console.log('[E2E 7f PASS] Separated 유통 품목 관리 & 렌탈 품목 관리 columns verified.');
+
     assert.strictEqual(pageErrors.length, 0, `Uncaught pageerrors detected: ${pageErrors.join(' | ')}`);
     assert.strictEqual(consoleErrors.length, 0, `Console errors detected: ${consoleErrors.join(' | ')}`);
     console.log('[E2E 8 PASS] Zero uncaught pageerrors and zero console errors.');

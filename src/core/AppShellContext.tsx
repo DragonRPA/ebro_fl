@@ -560,7 +560,11 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'depreciationMonths',
         'residualValueKrw',
         'safetyStock',
-      ]),
+      ]).map((it) => ({
+        ...it,
+        itemDomain:
+          it.itemDomain === 'RENTAL' || it.itemDomain === 'BOTH' ? it.itemDomain : 'TRADE',
+      })),
       catalogPackages: mapRows<FlCatalogPackage>(catRes.data),
       exchangeRates: mapRows<FlExchangeRate>(fxRes.data, ['baseRateKrw', 'ttSellingRate']),
       purchases,
@@ -681,8 +685,14 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (pageId === 'bank_matching' && tenantProfile.features?.bankMatchingEnabled === false) {
         return false;
       }
-      if (tenantProfile.allowedPages.length > 0 && !tenantProfile.allowedPages.includes(pageId)) {
-        return false;
+      if (tenantProfile.allowedPages.length > 0) {
+        const isSplitItemPage = pageId === 'trade_item_masters' || pageId === 'rental_item_masters';
+        const hasAccess =
+          tenantProfile.allowedPages.includes(pageId) ||
+          (isSplitItemPage && tenantProfile.allowedPages.includes('item_masters'));
+        if (!hasAccess) {
+          return false;
+        }
       }
       if (!currentUser) return false;
       if (currentUser.tierLevel >= 7) return true;

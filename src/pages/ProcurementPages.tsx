@@ -106,9 +106,20 @@ export const PurchasesPage: React.FC = () => {
     [suppliers]
   );
 
+  const [purchaseType, setPurchaseType] = useState<'IMPORT' | 'DOMESTIC'>('IMPORT');
+  const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
+  const [targetDomain, setTargetDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
+
+  const scopedItems = useMemo(() => {
+    const matched = datasets.itemMasters.filter(
+      (it) => it.itemDomain === targetDomain || it.itemDomain === 'BOTH'
+    );
+    return matched.length > 0 ? matched : datasets.itemMasters;
+  }, [datasets.itemMasters, targetDomain]);
+
   const itemOptions = useMemo<SearchableSelectOption[]>(
     () =>
-      datasets.itemMasters.map((it) => ({
+      scopedItems.map((it) => ({
         value: it.id,
         label: `${it.sku} · ${it.name} [${it.managementType === 'SERIAL' ? '시리얼' : '로트'}]`,
         subLabel: it.manufacturer || it.itemCategory,
@@ -116,12 +127,9 @@ export const PurchasesPage: React.FC = () => {
           .filter(Boolean)
           .join(' '),
       })),
-    [datasets.itemMasters]
+    [scopedItems]
   );
 
-  const [purchaseType, setPurchaseType] = useState<'IMPORT' | 'DOMESTIC'>('IMPORT');
-  const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
-  const [targetDomain, setTargetDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>('USD');
   const [fxDate, setFxDate] = useState(today);
   const [fxRate, setFxRate] = useState<number>(() =>
@@ -139,7 +147,7 @@ export const PurchasesPage: React.FC = () => {
   const [memo, setMemo] = useState('');
 
   const [lines, setLines] = useState<DraftPurchaseLine[]>(() => {
-    const firstItem = datasets.itemMasters[0];
+    const firstItem = scopedItems[0];
     if (!firstItem) return [];
     return [
       {
@@ -204,7 +212,7 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const addDraftLine = () => {
-    const item = datasets.itemMasters[0];
+    const item = scopedItems[0];
     if (!item) return;
     setLines((prev) => [
       ...prev,
@@ -222,6 +230,32 @@ export const PurchasesPage: React.FC = () => {
         warehouseLocation: item.warehouseLocation || '본사창고',
       },
     ]);
+  };
+
+  const handleDomainChange = (nextDomain: 'TRADE' | 'RENTAL') => {
+    setTargetDomain(nextDomain);
+    const nextScoped = datasets.itemMasters.filter(
+      (it) => it.itemDomain === nextDomain || it.itemDomain === 'BOTH'
+    );
+    const fallbackItem = nextScoped[0];
+    if (!fallbackItem) return;
+    const validIds = new Set(nextScoped.map((i) => i.id));
+    setLines((prev) =>
+      prev.map((l) =>
+        validIds.has(l.itemId)
+          ? l
+          : {
+              ...l,
+              itemId: fallbackItem.id,
+              sku: fallbackItem.sku,
+              itemName: fallbackItem.name,
+              itemCategory: fallbackItem.itemCategory,
+              managementType: fallbackItem.managementType,
+              foreignUnitPrice: fallbackItem.standardCostKrw || l.foreignUnitPrice,
+              warehouseLocation: fallbackItem.warehouseLocation || '본사창고',
+            }
+      )
+    );
   };
 
   const updateLineItem = (key: string, itemId: string) => {
@@ -426,7 +460,7 @@ export const PurchasesPage: React.FC = () => {
               <VerticalField label="귀속계정" minWidth={0} required>
                 <select
                   value={targetDomain}
-                  onChange={(e) => setTargetDomain(e.target.value as 'TRADE' | 'RENTAL')}
+                  onChange={(e) => handleDomainChange(e.target.value as 'TRADE' | 'RENTAL')}
                   style={controlInputStyle}
                 >
                   <option value="TRADE">유통재고</option>

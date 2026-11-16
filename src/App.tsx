@@ -8,8 +8,9 @@ import { ApprovalInboxPage, DashboardPage } from './pages/PortalPages';
 import {
   CatalogsPage,
   ExchangeRatesPage,
-  ItemMastersPage,
   PartnersPage,
+  RentalItemMastersPage,
+  TradeItemMastersPage,
 } from './pages/MasterPages';
 import { LogisticsCostsPage, PurchasesPage } from './pages/ProcurementPages';
 import {
@@ -45,8 +46,10 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
       return <ApprovalInboxPage />;
     case 'partners':
       return <PartnersPage />;
-    case 'item_masters':
-      return <ItemMastersPage />;
+    case 'trade_item_masters':
+      return <TradeItemMastersPage />;
+    case 'rental_item_masters':
+      return <RentalItemMastersPage />;
     case 'exchange_rates':
       return <ExchangeRatesPage />;
     case 'catalogs':

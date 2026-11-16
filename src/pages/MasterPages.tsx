@@ -8,6 +8,7 @@ import {
   uploadBusinessLicenseImageToR2,
 } from '../services/businessLicenseOcrService';
 import {
+  CommaNumberInput,
   ConservationBar,
   DataGrid,
   ModalDialog,
@@ -28,9 +29,11 @@ import type {
   FlPartner,
   FlPartnerSite,
   ItemCategory,
+  ItemDomain,
   ManagementType,
   PartnerRole,
 } from '../types/domain';
+import { matchesKoreanQuery } from '../utils/hangulSearch';
 import { FL_TECHNICAL_ARCHIVE } from '../data/flTechnicalArchive';
 import { COMPATIBLE_PARTS_CATALOG, PART_CATEGORIES } from '../data/compatiblePartsCatalogData';
 
@@ -1061,52 +1064,95 @@ export const PartnersPage: React.FC = () => {
 };
 
 const ITEM_CATEGORIES: ItemCategory[] = ['완제품', '어태치먼트', '부품', '소모품'];
+const CATEGORY_PRIORITY: Record<ItemCategory, number> = {
+  완제품: 0,
+  어태치먼트: 1,
+  부품: 2,
+  소모품: 3,
+};
 
-export const ItemMastersPage: React.FC = () => {
+const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ domainMode }) => {
   const { datasets, currentUser, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
-  const canEdit = canEditPage('item_masters');
+  const pageId = domainMode === 'TRADE' ? 'trade_item_masters' : 'rental_item_masters';
+  const canEdit = canEditPage(pageId);
   const maskPrice = Boolean(currentUser?.maskSalesPrice);
+  const isTrade = domainMode === 'TRADE';
 
   const [catFilter, setCatFilter] = useState<'ALL' | ItemCategory>('ALL');
+  const [domainFilter, setDomainFilter] = useState<'ALL' | 'DEDICATED' | 'BOTH'>('ALL');
   const [keyword, setKeyword] = useState('');
   const [editing, setEditing] = useState<Partial<FlItemMaster> | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const domainScoped = useMemo(() => {
+    return [...datasets.itemMasters]
+      .filter((it) => it.itemDomain === domainMode || it.itemDomain === 'BOTH')
+      .sort((a, b) => {
+        const diff = (CATEGORY_PRIORITY[a.itemCategory] ?? 9) - (CATEGORY_PRIORITY[b.itemCategory] ?? 9);
+        return diff !== 0 ? diff : a.sku.localeCompare(b.sku);
+      });
+  }, [datasets.itemMasters, domainMode]);
+
   const filtered = useMemo(() => {
-    const q = keyword.trim().toLowerCase();
-    return datasets.itemMasters.filter((it) => {
+    const q = keyword.trim();
+    return domainScoped.filter((it) => {
+      if (domainFilter === 'DEDICATED' && it.itemDomain !== domainMode) return false;
+      if (domainFilter === 'BOTH' && it.itemDomain !== 'BOTH') return false;
       if (catFilter !== 'ALL' && it.itemCategory !== catFilter) return false;
       if (!q) return true;
-      return (
-        it.sku.toLowerCase().includes(q) ||
-        it.name.toLowerCase().includes(q) ||
-        (it.manufacturer || '').toLowerCase().includes(q) ||
-        (it.modelName || '').toLowerCase().includes(q)
-      );
+      const target = [it.sku, it.name, it.manufacturer, it.modelName, it.specSummary]
+        .filter(Boolean)
+        .join(' ');
+      return matchesKoreanQuery(target, q);
     });
-  }, [catFilter, datasets.itemMasters, keyword]);
+  }, [catFilter, domainFilter, domainMode, domainScoped, keyword]);
+
+  const summaryCounts = useMemo(() => {
+    let equip = 0;
+    let attach = 0;
+    let parts = 0;
+    for (const it of filtered) {
+      if (it.itemCategory === '완제품') equip++;
+      else if (it.itemCategory === '어태치먼트') attach++;
+      else parts++;
+    }
+    return { equip, attach, parts };
+  }, [filtered]);
 
   const openNew = () => {
     setEditing({
       sku: '',
       name: '',
-      itemCategory: '부품',
-      managementType: 'LOT',
+      itemCategory: '완제품',
+      itemDomain: domainMode,
+      managementType: 'SERIAL',
       manufacturer: '',
       modelName: '',
       powerType: '',
       specSummary: '',
-      unitName: 'EA',
+      unitName: '대',
       standardCostKrw: 0,
       dealerPriceKrw: 0,
       retailPriceKrw: 0,
       standardMonthlyRentalKrw: 0,
       standardDailyRentalKrw: 0,
       depreciationMonths: 60,
-      residualValueKrw: 1000,
-      safetyStock: 2,
-      warehouseLocation: '본사창고',
+      residualValueKrw: 0,
+      safetyStock: 1,
+      warehouseLocation: '평택 주기장',
       isActive: true,
+    });
+  };
+
+  const handleCategoryChange = (nextCat: ItemCategory) => {
+    setEditing((prev) => {
+      if (!prev) return prev;
+      if (prev.id) {
+        return { ...prev, itemCategory: nextCat };
+      }
+      const nextMgmt: ManagementType = nextCat === '완제품' ? 'SERIAL' : 'LOT';
+      const nextUnit = nextCat === '완제품' ? '대' : nextCat === '어태치먼트' ? '식' : 'EA';
+      return { ...prev, itemCategory: nextCat, managementType: nextMgmt, unitName: nextUnit };
     });
   };
 
@@ -1121,7 +1167,8 @@ export const ItemMastersPage: React.FC = () => {
         tenantId: DEFAULT_TENANT_ID,
         sku: editing.sku.trim(),
         name: editing.name.trim(),
-        itemCategory: editing.itemCategory || '부품',
+        itemCategory: editing.itemCategory || '완제품',
+        itemDomain: (editing.itemDomain as ItemDomain) || domainMode,
         managementType: (editing.managementType as ManagementType) || 'LOT',
         manufacturer: editing.manufacturer || null,
         modelName: editing.modelName || null,
@@ -1130,6 +1177,7 @@ export const ItemMastersPage: React.FC = () => {
         specSummary: editing.specSummary || null,
         unitName: editing.unitName || 'EA',
         standardCostKrw: Math.round(Number(editing.standardCostKrw || 0)),
+        // 유통 화면에서는 렌탈 단가·상각 속성을 보존하고, 렌탈 화면에서는 유통 판매가를 보존한다.
         dealerPriceKrw: Math.round(Number(editing.dealerPriceKrw || 0)),
         retailPriceKrw: Math.round(Number(editing.retailPriceKrw || 0)),
         standardMonthlyRentalKrw: Math.round(Number(editing.standardMonthlyRentalKrw || 0)),
@@ -1137,7 +1185,7 @@ export const ItemMastersPage: React.FC = () => {
         depreciationMonths: Number(editing.depreciationMonths || 60),
         residualValueKrw: Math.round(Number(editing.residualValueKrw || 0)),
         safetyStock: Number(editing.safetyStock || 0),
-        warehouseLocation: editing.warehouseLocation || '본사창고',
+        warehouseLocation: editing.warehouseLocation || '평택 주기장',
         vdiSpecs: editing.vdiSpecs || [],
         mastSpecs: editing.mastSpecs || [],
         batteryOptions: editing.batteryOptions || [],
@@ -1171,7 +1219,7 @@ export const ItemMastersPage: React.FC = () => {
     {
       key: 'edit',
       header: '관리',
-      width: 70,
+      width: 68,
       align: 'center',
       stickyLeft: true,
       render: (r) =>
@@ -1184,50 +1232,116 @@ export const ItemMastersPage: React.FC = () => {
         ),
     },
     { key: 'sku', header: '품목코드', width: 135, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
-    { key: 'itemCategory', header: '품목군', width: 95, render: (r) => <StatusBadge label={r.itemCategory} /> },
+    { key: 'itemCategory', header: '품목군', width: 92, render: (r) => <StatusBadge label={r.itemCategory} /> },
+    {
+      key: 'itemDomain',
+      header: '운용구분',
+      width: 112,
+      align: 'center',
+      render: (r) => (
+        <StatusBadge
+          label={
+            r.itemDomain === 'BOTH'
+              ? '유통·렌탈 공용'
+              : isTrade
+                ? '유통 전용'
+                : '렌탈 전용'
+          }
+          tone={r.itemDomain === 'BOTH' ? 'primary' : 'neutral'}
+        />
+      ),
+    },
     {
       key: 'managementType',
       header: '추적방식',
-      width: 90,
+      width: 86,
       align: 'center',
       render: (r) => <StatusBadge label={r.managementType === 'SERIAL' ? '시리얼' : '로트'} tone="info" />,
     },
     { key: 'name', header: '품명', render: (r) => r.name },
     { key: 'manufacturer', header: '제조사', width: 100, render: (r) => r.manufacturer || '-' },
-    {
-      key: 'standardCostKrw',
-      header: '표준원가',
-      width: 115,
-      align: 'right',
-      render: (r) => formatMoney(r.standardCostKrw),
-    },
-    {
-      key: 'dealerPriceKrw',
-      header: '대리점가',
-      width: 115,
-      align: 'right',
-      render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
-    },
-    {
-      key: 'retailPriceKrw',
-      header: '판매정가',
-      width: 115,
-      align: 'right',
-      render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
-    },
-    {
-      key: 'standardMonthlyRentalKrw',
-      header: '월렌탈표준단가',
-      width: 120,
-      align: 'right',
-      render: (r) => formatMoney(r.standardMonthlyRentalKrw, { salesSensitive: true }),
-    },
+    ...(isTrade
+      ? ([
+          {
+            key: 'standardCostKrw',
+            header: '표준원가',
+            width: 115,
+            align: 'right',
+            render: (r) => formatMoney(r.standardCostKrw),
+          },
+          {
+            key: 'dealerPriceKrw',
+            header: '대리점가',
+            width: 115,
+            align: 'right',
+            render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
+          },
+          {
+            key: 'retailPriceKrw',
+            header: '판매정가',
+            width: 115,
+            align: 'right',
+            render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
+          },
+          {
+            key: 'safetyStock',
+            header: '안전재고',
+            width: 90,
+            align: 'right',
+            render: (r) => `${Number(r.safetyStock || 0).toLocaleString('ko-KR')} ${r.unitName}`,
+          },
+        ] as GridColumn<FlItemMaster>[])
+      : ([
+          {
+            key: 'standardCostKrw',
+            header: '취득기준원가',
+            width: 120,
+            align: 'right',
+            render: (r) => formatMoney(r.standardCostKrw),
+          },
+          {
+            key: 'standardMonthlyRentalKrw',
+            header: '월 렌탈료',
+            width: 118,
+            align: 'right',
+            render: (r) => formatMoney(r.standardMonthlyRentalKrw, { salesSensitive: true }),
+          },
+          {
+            key: 'standardDailyRentalKrw',
+            header: '일 렌탈료',
+            width: 110,
+            align: 'right',
+            render: (r) => formatMoney(r.standardDailyRentalKrw, { salesSensitive: true }),
+          },
+          {
+            key: 'depreciationMonths',
+            header: '상각기간',
+            width: 85,
+            align: 'right',
+            render: (r) => `${Number(r.depreciationMonths || 60)}개월`,
+          },
+          {
+            key: 'residualValueKrw',
+            header: '잔존가치',
+            width: 110,
+            align: 'right',
+            render: (r) => formatMoney(r.residualValueKrw),
+          },
+        ] as GridColumn<FlItemMaster>[])),
   ];
+
+  const domainScopedCounts = useMemo(
+    () => ({
+      dedicated: domainScoped.filter((i) => i.itemDomain === domainMode).length,
+      both: domainScoped.filter((i) => i.itemDomain === 'BOTH').length,
+    }),
+    [domainMode, domainScoped]
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <SectionPanel
-        title="품목군 · 단가 검색"
+        title={isTrade ? '유통 품목 · 판매단가 검색' : '렌탈 품목 · 임대료 기준 검색'}
         manualId="itm-filter"
         rightSlot={
           canEdit && (
@@ -1237,28 +1351,41 @@ export const ItemMastersPage: React.FC = () => {
               onClick={openNew}
               style={actionBtnStyle('primary', true)}
             >
-              품목 추가
+              {isTrade ? '유통 품목 추가' : '렌탈 품목 추가'}
             </button>
           )
         }
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-          <VerticalField label="품명 · 품번 검색" minWidth={220} flex={1}>
+          <VerticalField label="품명 · 품번 · 초성 검색" minWidth={220} flex={1}>
             <input
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="품목코드, 품명, 제조사, 모델명"
+              placeholder="품목코드, 품명, 제조사, 모델명, 초성"
               style={controlInputStyle}
             />
           </VerticalField>
           <SegmentedTabs
             tabs={[
-              { id: 'ALL', label: '전체', count: datasets.itemMasters.length },
+              { id: 'ALL', label: '전체', count: domainScoped.length },
+              {
+                id: 'DEDICATED',
+                label: isTrade ? '유통 전용' : '렌탈 전용',
+                count: domainScopedCounts.dedicated,
+              },
+              { id: 'BOTH', label: '유통·렌탈 공용', count: domainScopedCounts.both },
+            ]}
+            activeId={domainFilter}
+            onChange={(id) => setDomainFilter(id as typeof domainFilter)}
+          />
+          <SegmentedTabs
+            tabs={[
+              { id: 'ALL', label: '전체 품목군', count: domainScoped.length },
               ...ITEM_CATEGORIES.map((c) => ({
                 id: c,
                 label: c,
-                count: datasets.itemMasters.filter((i) => i.itemCategory === c).length,
+                count: domainScoped.filter((i) => i.itemCategory === c).length,
               })),
             ]}
             activeId={catFilter}
@@ -1272,18 +1399,41 @@ export const ItemMastersPage: React.FC = () => {
         columns={columns}
         rows={filtered}
         rowKey={(r) => r.id}
-        maxHeight="600px"
+        maxHeight="580px"
+      />
+
+      <ConservationBar
+        manualId="itm-sum"
+        items={[
+          {
+            label: isTrade ? '조회 유통 품목' : '조회 렌탈 품목',
+            value: `${filtered.length.toLocaleString('ko-KR')}종`,
+            tone: 'primary',
+          },
+          { label: '완제품', value: `${summaryCounts.equip.toLocaleString('ko-KR')}종` },
+          { label: '어태치먼트', value: `${summaryCounts.attach.toLocaleString('ko-KR')}종` },
+          {
+            label: isTrade ? '부품·소모품' : '정비부품·소모품',
+            value: `${summaryCounts.parts.toLocaleString('ko-KR')}종`,
+          },
+        ]}
+        balanced
+        balanceMessage={isTrade ? '유통 품목 원장 정상' : '렌탈 품목 원장 정상'}
       />
 
       <ModalDialog
         open={Boolean(editing)}
-        title={editing?.id ? `품목 수정 · ${editing.name}` : '신규 품목 등록'}
+        title={
+          editing?.id
+            ? `${isTrade ? '유통' : '렌탈'} 품목 수정 · ${editing.name}`
+            : `신규 ${isTrade ? '유통' : '렌탈'} 품목 등록`
+        }
         onClose={() => setEditing(null)}
-        width={680}
+        width={720}
       >
         {editing && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
               <VerticalField label="품목코드" required>
                 <input
                   type="text"
@@ -1292,12 +1442,22 @@ export const ItemMastersPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
+              <VerticalField label="운용 구분" required>
+                <select
+                  value={editing.itemDomain || domainMode}
+                  onChange={(e) =>
+                    setEditing((p) => ({ ...p, itemDomain: e.target.value as ItemDomain }))
+                  }
+                  style={controlInputStyle}
+                >
+                  <option value={domainMode}>{isTrade ? '유통 전용' : '렌탈 전용'}</option>
+                  <option value="BOTH">유통·렌탈 공용</option>
+                </select>
+              </VerticalField>
               <VerticalField label="품목군" required>
                 <select
-                  value={editing.itemCategory || '부품'}
-                  onChange={(e) =>
-                    setEditing((p) => ({ ...p, itemCategory: e.target.value as ItemCategory }))
-                  }
+                  value={editing.itemCategory || '완제품'}
+                  onChange={(e) => handleCategoryChange(e.target.value as ItemCategory)}
                   style={controlInputStyle}
                 >
                   {ITEM_CATEGORIES.map((c) => (
@@ -1309,7 +1469,7 @@ export const ItemMastersPage: React.FC = () => {
               </VerticalField>
               <VerticalField label="추적방식" required>
                 <select
-                  value={editing.managementType || 'LOT'}
+                  value={editing.managementType || 'SERIAL'}
                   onChange={(e) =>
                     setEditing((p) => ({ ...p, managementType: e.target.value as ManagementType }))
                   }
@@ -1321,7 +1481,7 @@ export const ItemMastersPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: '10px' }}>
               <VerticalField label="품명" required>
                 <input
                   type="text"
@@ -1338,6 +1498,14 @@ export const ItemMastersPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
+              <VerticalField label="모델명">
+                <input
+                  type="text"
+                  value={editing.modelName || ''}
+                  onChange={(e) => setEditing((p) => ({ ...p, modelName: e.target.value }))}
+                  style={controlInputStyle}
+                />
+              </VerticalField>
               <VerticalField label="보관창고">
                 <input
                   type="text"
@@ -1348,55 +1516,94 @@ export const ItemMastersPage: React.FC = () => {
               </VerticalField>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-              <VerticalField label="표준원가">
-                <input
-                  type="number"
-                  value={editing.standardCostKrw ?? 0}
-                  onChange={(e) =>
-                    setEditing((p) => ({ ...p, standardCostKrw: Number(e.target.value) }))
-                  }
-                  style={controlInputStyle}
-                />
-              </VerticalField>
-              <VerticalField label="대리점가">
-                <input
-                  type="number"
-                  disabled={maskPrice}
-                  value={maskPrice ? 0 : (editing.dealerPriceKrw ?? 0)}
-                  onChange={(e) =>
-                    setEditing((p) => ({ ...p, dealerPriceKrw: Number(e.target.value) }))
-                  }
-                  style={controlInputStyle}
-                />
-              </VerticalField>
-              <VerticalField label="판매정가">
-                <input
-                  type="number"
-                  disabled={maskPrice}
-                  value={maskPrice ? 0 : (editing.retailPriceKrw ?? 0)}
-                  onChange={(e) =>
-                    setEditing((p) => ({ ...p, retailPriceKrw: Number(e.target.value) }))
-                  }
-                  style={controlInputStyle}
-                />
-              </VerticalField>
-              <VerticalField label="월렌탈표준단가">
-                <input
-                  type="number"
-                  disabled={maskPrice}
-                  value={maskPrice ? 0 : (editing.standardMonthlyRentalKrw ?? 0)}
-                  onChange={(e) =>
-                    setEditing((p) => ({
-                      ...p,
-                      standardMonthlyRentalKrw: Number(e.target.value),
-                      standardDailyRentalKrw: Math.round(Number(e.target.value) / 30),
-                    }))
-                  }
-                  style={controlInputStyle}
-                />
-              </VerticalField>
-            </div>
+            {isTrade ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                <VerticalField label="표준원가">
+                  <CommaNumberInput
+                    value={Number(editing.standardCostKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, standardCostKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="대리점가">
+                  <CommaNumberInput
+                    disabled={maskPrice}
+                    value={maskPrice ? 0 : Number(editing.dealerPriceKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, dealerPriceKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="판매정가">
+                  <CommaNumberInput
+                    disabled={maskPrice}
+                    value={maskPrice ? 0 : Number(editing.retailPriceKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, retailPriceKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="안전재고">
+                  <CommaNumberInput
+                    value={Number(editing.safetyStock ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, safetyStock: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                <VerticalField label="취득기준원가">
+                  <CommaNumberInput
+                    value={Number(editing.standardCostKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, standardCostKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="월 렌탈료">
+                  <CommaNumberInput
+                    disabled={maskPrice}
+                    value={maskPrice ? 0 : Number(editing.standardMonthlyRentalKrw ?? 0)}
+                    onChange={(val) =>
+                      setEditing((p) => {
+                        if (!p) return p;
+                        const prevAutoDaily = Math.round(Number(p.standardMonthlyRentalKrw || 0) / 30);
+                        const shouldAutoSync =
+                          !p.standardDailyRentalKrw || Number(p.standardDailyRentalKrw) === prevAutoDaily;
+                        return {
+                          ...p,
+                          standardMonthlyRentalKrw: val,
+                          standardDailyRentalKrw: shouldAutoSync
+                            ? Math.round(val / 30)
+                            : Number(p.standardDailyRentalKrw || 0),
+                        };
+                      })
+                    }
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="일 렌탈료">
+                  <CommaNumberInput
+                    disabled={maskPrice}
+                    value={maskPrice ? 0 : Number(editing.standardDailyRentalKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, standardDailyRentalKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+                <VerticalField label="상각기간 · 개월">
+                  <CommaNumberInput
+                    value={Number(editing.depreciationMonths ?? 60)}
+                    onChange={(val) => setEditing((p) => ({ ...p, depreciationMonths: Math.max(1, val) }))}
+                    min={1}
+                  />
+                </VerticalField>
+                <VerticalField label="잔존가치">
+                  <CommaNumberInput
+                    value={Number(editing.residualValueKrw ?? 0)}
+                    onChange={(val) => setEditing((p) => ({ ...p, residualValueKrw: val }))}
+                    min={0}
+                  />
+                </VerticalField>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
               <button
@@ -1421,6 +1628,9 @@ export const ItemMastersPage: React.FC = () => {
     </div>
   );
 };
+
+export const TradeItemMastersPage: React.FC = () => <ItemMastersWorkspace domainMode="TRADE" />;
+export const RentalItemMastersPage: React.FC = () => <ItemMastersWorkspace domainMode="RENTAL" />;
 
 const FX_CURRENCIES: Array<{
   code: Exclude<CurrencyCode, 'KRW'>;

@@ -108,24 +108,48 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
       },
     ],
   },
-  item_masters: {
-    pageId: 'item_masters',
-    pageTitle: '품목 단가 관리',
+  trade_item_masters: {
+    pageId: 'trade_item_masters',
+    pageTitle: '유통 품목 관리',
     groupLabel: '기준정보 · 카탈로그',
-    basicDescription: '완제품, 어태치먼트, 부품, 소모품 4대 품목군을 관리하고 시리얼·로트 추적방식과 원가·대리점가·소비자가·렌탈단가를 설정한다.',
+    basicDescription: '유통 판매 전용 및 공용 완제품·어태치먼트·부품·소모품의 표준원가, 대리점가, 판매정가와 안전재고를 관리한다.',
     anchors: [
-      { anchorId: 'itm-filter', title: '품목군 필터', summary: '완제품, 어태치먼트, 부품, 소모품별로 품목을 필터링한다.' },
-      { anchorId: 'itm-grid', title: '품목 단가 목록', summary: '품목코드, 규격, 추적방식, 매입가, 판매가, 렌탈단가를 확인한다.' },
-      { anchorId: 'itm-form', title: '품목 등록·수정 버튼', summary: '신규 품목을 추가하거나 선택 품목 단가를 수정한다.' },
+      { anchorId: 'itm-filter', title: '유통 품목 · 단가 필터', summary: '유통 전용/공용 구분 및 품목군, 키워드·초성으로 품목을 필터링한다.' },
+      { anchorId: 'itm-grid', title: '유통 품목 단가 목록', summary: '품목코드, 품목군, 추적방식, 표준원가, 대리점가, 판매정가, 안전재고를 확인한다.' },
+      { anchorId: 'itm-form', title: '유통 품목 등록·수정 버튼', summary: '신규 유통 품목을 추가하거나 선택 품목의 판매단가를 수정한다.' },
+      { anchorId: 'itm-sum', title: '유통 품목 원장 요약', summary: '조회된 유통 품목 수와 품목군별 구성 현황을 1줄로 검증한다.' },
     ],
     processes: [
       {
-        processName: '품목 마스터 등록 및 단가 설정',
-        purpose: '전 계층에서 공통 참조하는 품목코드와 기준 단가를 등록한다.',
+        processName: '유통 품목 마스터 등록 및 판매단가 설정',
+        purpose: '유통 매입·견적·계약에서 참조하는 판매 품목코드와 대리점가·판매정가를 관리한다.',
         steps: [
-          { stepNo: 1, targetLabel: '품목군 탭', manualAnchorId: 'itm-filter', actionDetail: '등록할 품목군과 추적방식을 확인한다.' },
-          { stepNo: 2, targetLabel: '품목 추가 버튼', manualAnchorId: 'itm-form', actionDetail: '품목코드, 품명, 규격, 표준원가, 대리점가, 소비자가, 월렌탈료를 입력한다.' },
-          { stepNo: 3, targetLabel: '저장 버튼', manualAnchorId: 'itm-form', actionDetail: '저장 버튼으로 품목 마스터를 확정한다.' },
+          { stepNo: 1, targetLabel: '유통 품목 검색 바', manualAnchorId: 'itm-filter', actionDetail: '운용구분과 품목군 탭에서 대상 품목군을 선택한다.' },
+          { stepNo: 2, targetLabel: '유통 품목 추가 버튼', manualAnchorId: 'itm-form', actionDetail: '품목코드, 품명, 표준원가, 대리점가, 판매정가, 안전재고를 입력한다.' },
+          { stepNo: 3, targetLabel: '품목 저장 버튼', manualAnchorId: 'itm-form', actionDetail: '저장 버튼으로 유통 품목 마스터를 확정한다.' },
+        ],
+      },
+    ],
+  },
+  rental_item_masters: {
+    pageId: 'rental_item_masters',
+    pageTitle: '렌탈 품목 관리',
+    groupLabel: '기준정보 · 카탈로그',
+    basicDescription: '렌탈 임대 전용 및 공용 지게차·어태치먼트의 취득기준원가, 월 렌탈료, 일 렌탈료 및 상각기준을 관리한다.',
+    anchors: [
+      { anchorId: 'itm-filter', title: '렌탈 품목 · 임대료 필터', summary: '렌탈 전용/공용 구분 및 품목군, 키워드·초성으로 임대 품목을 필터링한다.' },
+      { anchorId: 'itm-grid', title: '렌탈 품목 기준 목록', summary: '품목코드, 품목군, 추적방식, 취득기준원가, 월 렌탈료, 일 렌탈료, 상각기간을 확인한다.' },
+      { anchorId: 'itm-form', title: '렌탈 품목 등록·수정 버튼', summary: '신규 렌탈 품목을 추가하거나 임대료 및 상각기준을 수정한다.' },
+      { anchorId: 'itm-sum', title: '렌탈 품목 원장 요약', summary: '조회된 렌탈 품목 수와 품목군별 구성 현황을 1줄로 검증한다.' },
+    ],
+    processes: [
+      {
+        processName: '렌탈 품목 등록 및 임대료·상각기준 설정',
+        purpose: '렌탈 자산 취득·계약·일할 청구에서 사용하는 표준 월·일 렌탈료와 상각기간을 관리한다.',
+        steps: [
+          { stepNo: 1, targetLabel: '렌탈 품목 검색 바', manualAnchorId: 'itm-filter', actionDetail: '운용구분과 품목군 탭에서 대상 기종을 선택한다.' },
+          { stepNo: 2, targetLabel: '렌탈 품목 추가 버튼', manualAnchorId: 'itm-form', actionDetail: '품목코드, 품명, 취득기준원가, 월 렌탈료, 일 렌탈료, 상각기간을 입력한다.' },
+          { stepNo: 3, targetLabel: '품목 저장 버튼', manualAnchorId: 'itm-form', actionDetail: '저장 버튼으로 렌탈 품목 마스터를 확정한다.' },
         ],
       },
     ],

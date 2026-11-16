@@ -17,7 +17,8 @@ export type FlPageId =
   | 'dashboard'
   | 'approval_inbox'
   | 'partners'
-  | 'item_masters'
+  | 'trade_item_masters'
+  | 'rental_item_masters'
   | 'exchange_rates'
   | 'catalogs'
   | 'purchases'
@@ -60,7 +61,8 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
     groupLabel: '기준정보 · 카탈로그',
     items: [
       { pageId: 'partners', label: '거래처 관리', shortDesc: '통합 거래처 역할 및 사업장 · 담당자' },
-      { pageId: 'item_masters', label: '품목 단가 관리', shortDesc: '완제품 · 어태치먼트 · 부품 · 소모품' },
+      { pageId: 'trade_item_masters', label: '유통 품목 관리', shortDesc: '판매 완제품 · 부품 · 대리점가 · 판매정가' },
+      { pageId: 'rental_item_masters', label: '렌탈 품목 관리', shortDesc: '임대 기종 · 옵션 · 월·일 렌탈료 · 상각기준' },
       { pageId: 'exchange_rates', label: '환율 관리', shortDesc: '고시환율 등록 및 외화 환산 기준' },
       { pageId: 'catalogs', label: '제원 카탈로그', shortDesc: 'VDI 2198 제원 및 호환 부품 카탈로그' },
     ],
@@ -150,6 +152,7 @@ export type PartnerRole =
   | '외주정비처';
 
 export type ItemCategory = '완제품' | '어태치먼트' | '부품' | '소모품';
+export type ItemDomain = 'TRADE' | 'RENTAL' | 'BOTH';
 export type ManagementType = 'SERIAL' | 'LOT';
 export type OwnershipDomain = '유통재고' | '렌탈자산' | '전대자산';
 export type UnitStatus = '보유중' | '출고대기' | '대여중' | '정비중' | '판매완료' | '전대반납' | '폐기';
@@ -429,6 +432,7 @@ export interface FlItemMaster {
   sku: string;
   name: string;
   itemCategory: ItemCategory;
+  itemDomain: ItemDomain;
   managementType: ManagementType;
   manufacturer?: string | null;
   modelName?: string | null;
