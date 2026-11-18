@@ -14,7 +14,7 @@
 | 항목 | 집계 수치 | 설명 |
 |:---|---:|:---|
 | 총 활성 코드 파일 수 | 410개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
-| 총 소스 라인 / 용량 | 167,375줄 / 6.76 MB | AST 및 다중 언어 파서 기준 실측 |
+| 총 소스 라인 / 용량 | 167,434줄 / 6.76 MB | AST 및 다중 언어 파서 기준 실측 |
 | 초대형 모듈 (GOD_FILE) | 11개 | 1,500줄 이상 또는 80KB 초과 분할 우선 대상 |
 | 대형 모듈 (LARGE_FILE) | 15개 | 800줄~1,499줄 비대화 주의 대상 |
 | src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 0개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
@@ -270,7 +270,7 @@
 | `src/services/agentTransportCore.ts` | 526줄 (20.6KB) | - | `EXPECTED_AGENT_VERSION, EXPECTED_CORE_HASH, DEFAULT_GITHUB_RELEASE_BASE_URL, DEFAULT_CF_R2_BASE_URL, AGENT_INSTALLER_BASE_URL, AGENT_EXE_URL 외 35` | Out:0 / In:2 | 로컬 에이전트(포트 5175) 루프백·확장프록시 전송 계층, 설치 URL 생성 및 전역 상태 버스 코어 모듈 |
 | `src/services/businessLicenseOcrService.ts` | 375줄 (12.4KB) | - | `setR2TenantContext, BusinessLicenseOcrResult, uploadBusinessLicenseImageToR2, formatBizRegNo, uploadBankbookImageToR2, BankbookOcrResult 외 2` | Out:2 / In:1 · 동적패키지:pdfjs-dist | 사업자등록증·통장사본 이미지 및 동적 PDF 렌더링 Vision OCR 추출 및 Cloudflare R2 증빙 업로드 서비스 |
 | `src/services/catalogSpecDocumentService.ts` | 637줄 (23.6KB) | - | `generateModelSpecExcel, generateCompareSpecsExcel, downloadPdfFile, generateCompareSpecsPdf, generateModelSpecPdf` | Out:3 / In:2 · 동적패키지:pdf-lib | 제원 카탈로그 단건·비교표·호환부품·패키지 견적 Excel(ExcelJS) 및 PDF(pdf-lib) 문서 생성 전용 서비스 |
-| `src/services/documentService.ts` | 561줄 (21.2KB) | - | `loadExcelJs, generateQuotationExcel, generateContractExcel, generateTransactionStatementExcel, downloadExcelFile, openExcelInAgent 외 1` | Out:3 / In:7 · 동적패키지:exceljs | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 열기·이메일 발송 서비스 |
+| `src/services/documentService.ts` | 620줄 (22.5KB) | - | `loadExcelJs, generateQuotationExcel, generateContractExcel, generateTransactionStatementExcel, downloadExcelFile, openExcelInAgent 외 1` | Out:3 / In:7 · 동적패키지:exceljs | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 열기·이메일 발송 서비스 |
 | `src/services/domainAftercareMaintEngine.ts` | 300줄 (10.3KB) | - | `recordTradeAftercare, recordRentalMaintenance` | Out:3 / In:1 · DB:fl_ap_payables,fl_asset_events,fl_inventory_units,fl_rental_maintenances(+2) | 유통 사후처리(정비중개·반품환불·반품교환) 및 렌탈 정비 원가·재고차감·이력 기록 전용 엔진 |
 | `src/services/domainEngine.ts` | 6줄 (0.2KB) | - | `-` | Out:5 / In:3 | 분할된 도메인·재무수학·조달·입출고·인사·부트스트랩 서브엔진 통합 재노출(Barrel) 파사드 |
 | `src/services/domainFulfillmentEngine.ts` | 588줄 (19.8KB) | HIGH_COUPLING_HUB | `allocateNextFulfillmentNos, executeAccountTransfer, completeFulfillment, executeRentalExchange` | Out:4 / In:9 · DB:fl_asset_events,fl_contract_lines,fl_contracts,fl_fulfillments(+2) | 출고채번, 계정대체, 유통·렌탈 입출고 실행완료, 렌탈 교환(EXCHANGE) 및 사후정비 엔진 재노출(Barrel) |
@@ -509,7 +509,7 @@
 | `scripts/purge_all_vercel_projects.cjs` | 71줄 (2.6KB) | - | `-` | Out:0 / In:0 | Vercel 전체 프로젝트 목록 조회 및 구 배포 슬롯 일괄 정리 스크립트 |
 | `scripts/purge_vercel_deployments.cjs` | 41줄 (1.3KB) | - | `-` | Out:0 / In:0 | 현재 연결된 Vercel 프로젝트 최근 배포 슬롯 초과분 자동 삭제 스크립트 |
 | `scripts/read_pixels.ps1` | 29줄 (1.2KB) | - | `-` | Out:0 / In:0 | 캡처 PNG 이미지 특정 좌표 픽셀 RGB 값 판독 디버그 PowerShell 스크립트 |
-| `scripts/register_fl_tenant_central.cjs` | 186줄 (7.3KB) | - | `-` | Out:0 / In:0 · DB:tenants | 중앙 플랫폼 DB(core_tenants)에 eBroFL 데모 테넌트(tenant-ebro-fl) 등록·업서트 스크립트 |
+| `scripts/register_fl_tenant_central.cjs` | 186줄 (7.1KB) | - | `-` | Out:0 / In:0 · DB:tenants | 중앙 플랫폼 DB(core_tenants)에 eBroFL 데모 테넌트(tenant-ebro-fl) 등록·업서트 스크립트 |
 | `scripts/reload_schema_and_seed.cjs` | 57줄 (1.8KB) | - | `-` | Out:0 / In:0 · DB:agent_heartbeats | PostgREST 스키마 캐시 리로드 통지 및 에이전트 하트비트 시드 스크립트 |
 | `scripts/rename_and_sync_r2_folders.cjs` | 204줄 (8.2KB) | - | `-` | Out:0 / In:0 · DB:products | Cloudflare R2 장비 문서 폴더명 정규화 및 DB products 문서 경로 동기화 스크립트 |
 | `scripts/reorganize_tables_zero_loss.sql` | 610줄 (31.8KB) | - | `-` | Out:0 / In:0 · DB:assets,assets_new,deliveries,deliveries_new(+4) | 전사 4대 운영 테이블 무손실 컬럼 재배치 DDL 스크립트 |

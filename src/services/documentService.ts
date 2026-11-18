@@ -37,21 +37,72 @@ function base64ToUint8Array(b64: string): Uint8Array {
   return arr;
 }
 
-async function resolveStampBytes(tenant: TenantProfile): Promise<{ base64: string; ext: 'png' | 'jpeg' } | null> {
-  if (tenant.stampBase64) {
-    const clean = tenant.stampBase64.includes(',') ? tenant.stampBase64.split(',')[1] : tenant.stampBase64;
-    const ext = tenant.stampBase64.includes('jpeg') || tenant.stampBase64.includes('jpg') ? 'jpeg' : 'png';
-    return { base64: clean, ext };
+function detectImageExtFromHeader(
+  b0: number,
+  b1: number,
+  b2: number,
+  b3: number,
+  len: number
+): 'png' | 'jpeg' | null {
+  if (len >= 8 && b0 === 0x89 && b1 === 0x50 && b2 === 0x4e && b3 === 0x47) {
+    return 'png';
   }
+  if (len >= 3 && b0 === 0xff && b1 === 0xd8 && b2 === 0xff) {
+    return 'jpeg';
+  }
+  return null;
+}
+
+function parseValidatedStampBase64(
+  raw?: string | null
+): { base64: string; ext: 'png' | 'jpeg' } | null {
+  if (!raw) return null;
+  const stripped = raw.includes(',') ? raw.split(',')[1] || '' : raw;
+  const cleaned = stripped.replace(/\s+/g, '');
+  if (!cleaned || cleaned.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(cleaned)) {
+    return null;
+  }
+  try {
+    const decoded = atob(cleaned);
+    const ext = detectImageExtFromHeader(
+      decoded.charCodeAt(0),
+      decoded.charCodeAt(1),
+      decoded.charCodeAt(2),
+      decoded.charCodeAt(3),
+      decoded.length
+    );
+    if (!ext) return null;
+    return { base64: cleaned, ext };
+  } catch {
+    return null;
+  }
+}
+
+async function resolveStampBytes(
+  tenant: TenantProfile
+): Promise<{ base64: string; ext: 'png' | 'jpeg' } | null> {
+  const fromBase64 = parseValidatedStampBase64(tenant.stampBase64);
+  if (fromBase64) return fromBase64;
+
   if (tenant.stampImageUrl) {
+    if (tenant.stampImageUrl.trim().startsWith('data:')) {
+      return parseValidatedStampBase64(tenant.stampImageUrl);
+    }
     const ctrl = new AbortController();
     const tid = window.setTimeout(() => ctrl.abort(), 3000);
     try {
       const resp = await fetch(tenant.stampImageUrl, { signal: ctrl.signal });
       if (resp.ok) {
-        const ab = await resp.arrayBuffer();
-        const ext = tenant.stampImageUrl.toLowerCase().includes('.jpg') ? 'jpeg' : 'png';
-        return { base64: bufferToBase64(ab), ext };
+        const bytes = new Uint8Array(await resp.arrayBuffer());
+        const ext = detectImageExtFromHeader(
+          bytes[0],
+          bytes[1],
+          bytes[2],
+          bytes[3],
+          bytes.length
+        );
+        if (!ext) return null;
+        return { base64: bufferToBase64(bytes), ext };
       }
     } catch {
       return null;
@@ -78,29 +129,37 @@ function applyTokenReplacements(ws: ExcelJS.Worksheet, tokens: Record<string, st
   });
 }
 
+function renderStampFallbackCell(ws: ExcelJS.Worksheet, col: number, row: number) {
+  const cell = ws.getCell(Math.floor(row) + 1, Math.floor(col) + 1);
+  cell.value = '도장이미지';
+  cell.font = { size: 10, bold: true, color: { argb: 'FFDC2626' } };
+  cell.alignment = { horizontal: 'center', vertical: 'middle' };
+  cell.border = {
+    top: { style: 'thin', color: { argb: 'FFDC2626' } },
+    left: { style: 'thin', color: { argb: 'FFDC2626' } },
+    bottom: { style: 'thin', color: { argb: 'FFDC2626' } },
+    right: { style: 'thin', color: { argb: 'FFDC2626' } },
+  };
+}
+
 async function embedCorporateStamp(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, tenant: TenantProfile, col = 8, row = 4) {
   const stamp = await resolveStampBytes(tenant);
   if (!stamp) {
-    const cell = ws.getCell(Math.floor(row) + 1, Math.floor(col) + 1);
-    cell.value = '도장이미지';
-    cell.font = { size: 10, bold: true, color: { argb: 'FFDC2626' } };
-    cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FFDC2626' } },
-      left: { style: 'thin', color: { argb: 'FFDC2626' } },
-      bottom: { style: 'thin', color: { argb: 'FFDC2626' } },
-      right: { style: 'thin', color: { argb: 'FFDC2626' } },
-    };
+    renderStampFallbackCell(ws, col, row);
     return;
   }
-  const imgId = wb.addImage({
-    base64: stamp.base64,
-    extension: stamp.ext,
-  });
-  ws.addImage(imgId, {
-    tl: { col, row },
-    ext: { width: 64, height: 64 },
-  });
+  try {
+    const imgId = wb.addImage({
+      base64: stamp.base64,
+      extension: stamp.ext,
+    });
+    ws.addImage(imgId, {
+      tl: { col, row },
+      ext: { width: 64, height: 64 },
+    });
+  } catch {
+    renderStampFallbackCell(ws, col, row);
+  }
 }
 
 async function loadBaseTemplateWorkbook(

@@ -2,8 +2,8 @@
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
   "totalFiles": 410,
-  "totalLines": 167375,
-  "totalBytes": 7088527,
+  "totalLines": 167434,
+  "totalBytes": 7089623,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -5145,7 +5145,7 @@
       "layer": "L10_TESTS_SCRIPTS",
       "ext": ".cjs",
       "lines": 186,
-      "bytes": 7480,
+      "bytes": 7278,
       "menuInfo": null,
       "exports": [],
       "internalImports": [],
@@ -9960,8 +9960,8 @@
       "path": "src/services/documentService.ts",
       "layer": "L07_SERVICES_UTILS",
       "ext": ".ts",
-      "lines": 561,
-      "bytes": 21736,
+      "lines": 620,
+      "bytes": 23034,
       "menuInfo": null,
       "exports": [
         "loadExcelJs",

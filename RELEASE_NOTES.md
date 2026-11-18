@@ -1,3 +1,8 @@
+## [v2.2.1.Build.5] - 2026-11-19 07:58
+### 직인 Base64 사전 검증·폴백 추가 및 손상 직인 데이터 교정 (문서·이메일 첨부 타임아웃 해결)
+- **문서 생성 직인 Base64/매직헤더 검증 및 폴백 가드 (`src/services/documentService.ts`)**: `resolveStampBytes()`에 4배수 Base64 길이·문자 검증, `atob()` 디코딩, PNG/JPEG 매직 바이트 검사를 추가하고 `embedCorporateStamp()`에 예외 폴백(`도장이미지` 셀)을 적용해 손상된 직인 이미지가 ExcelJS `wb.xlsx.writeBuffer()` 내부 JSZip Promise를 영구 대기(Hang)시키는 문제를 원천 차단했습니다.
+- **라이브 테넌트 DB 및 시드 스크립트 직인 데이터 교정**: 1바이트 누락(`599자`)으로 손상되어 있던 `core_tenants`(`tenant-ebro-fl`)의 `stampBase64` · `stampImageUrl`과 `scripts/register_fl_tenant_central.cjs`를 정상 `64x64` RGBA PNG(`484자`)로 교정해 견적서·계약서·거래명세서 엑셀 생성 및 이메일 발송이 즉시 완료되도록 복구했습니다.
+
 ## [v2.2.1.Build.4] - 2026-11-19 07:14
 ### 재무제표 · 회계기준 조회 우측 상단 표시 항목 체크박스 구성
 - **표시 항목 선택 체크박스 그룹(`FinancialStatementsPage.tsx`)**: 우측 상단 `시작 연월` · `종료 연월` 좌측에 `표시 항목` 필터를 배치하고, 기본값을 **`손익계산서`만 `true`**로 설정해 초기 화면 진입 시 손익계산서만 집중 조망하도록 개선했습니다.
