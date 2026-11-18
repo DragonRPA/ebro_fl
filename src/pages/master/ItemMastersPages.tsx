@@ -193,8 +193,22 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
           '-'
         ),
     },
-    { key: 'sku', header: '품목코드', width: 135, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
-    { key: 'itemCategory', header: '품목군', width: 92, render: (r) => <StatusBadge label={r.itemCategory} /> },
+    {
+      key: 'sku',
+      header: '품목코드',
+      width: 135,
+      sortable: true,
+      sortValue: (r) => r.sku,
+      render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span>,
+    },
+    {
+      key: 'itemCategory',
+      header: '품목군',
+      width: 92,
+      sortable: true,
+      sortValue: (r) => r.itemCategory,
+      render: (r) => <StatusBadge label={r.itemCategory} />,
+    },
     ...(showDomainSplit
       ? ([
           {
@@ -202,6 +216,13 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '운용구분',
             width: 112,
             align: 'center',
+            sortable: true,
+            sortValue: (r) =>
+              r.itemDomain === 'BOTH'
+                ? '유통·렌탈 공용'
+                : isTrade
+                  ? '유통 전용'
+                  : '렌탈 전용',
             render: (r) => (
               <StatusBadge
                 label={
@@ -222,10 +243,25 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
       header: '추적방식',
       width: 86,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => (r.managementType === 'SERIAL' ? '시리얼' : '로트'),
       render: (r) => <StatusBadge label={r.managementType === 'SERIAL' ? '시리얼' : '로트'} tone="info" />,
     },
-    { key: 'name', header: '품명', render: (r) => r.name },
-    { key: 'manufacturer', header: '제조사', width: 100, render: (r) => r.manufacturer || '-' },
+    {
+      key: 'name',
+      header: '품명',
+      sortable: true,
+      sortValue: (r) => r.name,
+      render: (r) => r.name,
+    },
+    {
+      key: 'manufacturer',
+      header: '제조사',
+      width: 100,
+      sortable: true,
+      sortValue: (r) => r.manufacturer || null,
+      render: (r) => r.manufacturer || '-',
+    },
     ...(isTrade
       ? ([
           {
@@ -233,6 +269,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '표준원가',
             width: 115,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.standardCostKrw || 0),
             render: (r) => formatMoney(r.standardCostKrw),
           },
           {
@@ -240,6 +278,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '대리점가',
             width: 115,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.dealerPriceKrw || 0),
             render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
           },
           {
@@ -247,6 +287,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '판매정가',
             width: 115,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.retailPriceKrw || 0),
             render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
           },
         ] as GridColumn<FlItemMaster>[])
@@ -256,6 +298,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '취득기준원가',
             width: 120,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.standardCostKrw || 0),
             render: (r) => formatMoney(r.standardCostKrw),
           },
           {
@@ -263,6 +307,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '월 렌탈료',
             width: 118,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.standardMonthlyRentalKrw || 0),
             render: (r) => formatMoney(r.standardMonthlyRentalKrw, { salesSensitive: true }),
           },
           {
@@ -270,6 +316,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '일 렌탈료',
             width: 110,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.standardDailyRentalKrw || 0),
             render: (r) => formatMoney(r.standardDailyRentalKrw, { salesSensitive: true }),
           },
           {
@@ -277,6 +325,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '상각기간',
             width: 85,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.depreciationMonths || 60),
             render: (r) => `${Number(r.depreciationMonths || 60)}개월`,
           },
           {
@@ -284,6 +334,8 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
             header: '잔존가치',
             width: 110,
             align: 'right',
+            sortable: true,
+            sortValue: (r) => Number(r.residualValueKrw || 0),
             render: (r) => formatMoney(r.residualValueKrw),
           },
         ] as GridColumn<FlItemMaster>[])),

@@ -2,8 +2,8 @@
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
   "totalFiles": 410,
-  "totalLines": 167076,
-  "totalBytes": 7078392,
+  "totalLines": 167375,
+  "totalBytes": 7088527,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -2810,7 +2810,7 @@
       "layer": "L10_TESTS_SCRIPTS",
       "ext": ".cjs",
       "lines": 517,
-      "bytes": 63039,
+      "bytes": 63052,
       "menuInfo": null,
       "exports": [
         "PC_MOBILE_PAIRS",
@@ -7446,8 +7446,8 @@
       "path": "src/components/UiPrimitives.tsx",
       "layer": "L06_COMPONENTS",
       "ext": ".tsx",
-      "lines": 746,
-      "bytes": 26092,
+      "lines": 755,
+      "bytes": 26431,
       "menuInfo": null,
       "exports": [
         "controlInputStyle",
@@ -7534,7 +7534,7 @@
       "optimizationFlags": [
         "HIGH_COUPLING_HUB"
       ],
-      "description": "공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog)"
+      "description": "공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog)"
     },
     {
       "path": "src/components/WeatherWidget.tsx",
@@ -8253,7 +8253,7 @@
       "layer": "L04_TYPES_DATA_MANUAL",
       "ext": ".ts",
       "lines": 159,
-      "bytes": 9467,
+      "bytes": 9617,
       "menuInfo": null,
       "exports": [
         "ManualStepDef",
@@ -8346,7 +8346,7 @@
       "layer": "L04_TYPES_DATA_MANUAL",
       "ext": ".ts",
       "lines": 685,
-      "bytes": 50804,
+      "bytes": 50958,
       "menuInfo": null,
       "exports": [
         "ManualAnchorDef",
@@ -8417,8 +8417,8 @@
       "path": "src/pages/finance/ArBillingCollectionPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 552,
-      "bytes": 20441,
+      "lines": 588,
+      "bytes": 21279,
       "menuInfo": "ar_billing_collection (청구 수납 관리)",
       "exports": [
         "ArBillingCollectionPage"
@@ -8553,8 +8553,8 @@
       "path": "src/pages/finance/FinancialStatementsPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 227,
-      "bytes": 9508,
+      "lines": 321,
+      "bytes": 12633,
       "menuInfo": "financial_statements (재무제표 조회)",
       "exports": [
         "FinancialStatementsPage"
@@ -8879,8 +8879,8 @@
       "path": "src/pages/master/CatalogPartsAndPackagesTabs.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 366,
-      "bytes": 14638,
+      "lines": 397,
+      "bytes": 15389,
       "menuInfo": "subview:catalogs (호환부품 · 배포패키지 · 문서미리보기 하위 탭)",
       "exports": [
         "CatalogPreviewDoc",
@@ -9106,8 +9106,8 @@
       "path": "src/pages/master/ItemMastersPages.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 596,
-      "bytes": 23135,
+      "lines": 648,
+      "bytes": 24564,
       "menuInfo": "trade_item_masters (유통 품목 관리), rental_item_masters (렌탈 품목 관리)",
       "exports": [
         "TradeItemMastersPage",
@@ -9176,8 +9176,8 @@
       "path": "src/pages/master/PartnersPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 714,
-      "bytes": 24961,
+      "lines": 747,
+      "bytes": 25754,
       "menuInfo": "partners (거래처 관리)",
       "exports": [
         "PartnersPage"
@@ -9492,8 +9492,8 @@
       "path": "src/pages/rental/RentalFulfillmentPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 366,
-      "bytes": 14822,
+      "lines": 392,
+      "bytes": 15600,
       "menuInfo": "rental_fulfillment (렌탈 입출고 관리)",
       "exports": [
         "RentalFulfillmentPage"
@@ -9670,8 +9670,8 @@
       "path": "src/pages/trade/TradeFulfillmentPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 740,
-      "bytes": 29999,
+      "lines": 758,
+      "bytes": 31764,
       "menuInfo": "trade_fulfillment (유통 출고 관리)",
       "exports": [
         "TradeFulfillmentPage"

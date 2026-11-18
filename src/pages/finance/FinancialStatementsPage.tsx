@@ -14,6 +14,8 @@ import { formatKoAcquisitionType } from '../../types/domain';
 
 const AccountingStandardsTab = React.lazy(() => import('../../components/AccountingStandardsTab'));
 
+type StatementTabId = 'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD';
+
 export const FinancialStatementsPage: React.FC = () => {
   const { isRentalEnabled, datasets, formatMoney } = useAppShell();
   const curYm = currentYm();
@@ -21,9 +23,65 @@ export const FinancialStatementsPage: React.FC = () => {
 
   const [startYm, setStartYm] = useState(yearStartYm);
   const [endYm, setEndYm] = useState(curYm);
-  const [tab, setTab] = useState<'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD'>('BS');
-  const effectiveTab: 'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD' =
-    !isRentalEnabled && (tab === 'ASSET' || tab === 'LEASE') ? 'BS' : tab;
+  const [tab, setTab] = useState<StatementTabId>('PL');
+  const [visibleTabMap, setVisibleTabMap] = useState<Record<StatementTabId, boolean>>({
+    BS: false,
+    PL: true,
+    CF: false,
+    ASSET: false,
+    LEASE: false,
+    STANDARD: false,
+  });
+
+  const availableTabs = useMemo<{ id: StatementTabId; label: string }[]>(
+    () => [
+      { id: 'BS', label: '재무상태표' },
+      { id: 'PL', label: '손익계산서' },
+      { id: 'CF', label: '현금흐름표' },
+      ...(isRentalEnabled
+        ? [
+            { id: 'ASSET' as const, label: '렌탈자산 감가상각명세' },
+            { id: 'LEASE' as const, label: '금융리스 이자·원금명세' },
+          ]
+        : []),
+      { id: 'STANDARD', label: '중소기업회계기준 해설' },
+    ],
+    [isRentalEnabled]
+  );
+
+  const visibleTabs = useMemo(
+    () => availableTabs.filter((item) => visibleTabMap[item.id]),
+    [availableTabs, visibleTabMap]
+  );
+
+  const effectiveVisibleTabs = useMemo(
+    () =>
+      visibleTabs.length > 0
+        ? visibleTabs
+        : [{ id: 'PL' as StatementTabId, label: '손익계산서' }],
+    [visibleTabs]
+  );
+
+  const effectiveTab: StatementTabId = effectiveVisibleTabs.some((item) => item.id === tab)
+    ? tab
+    : effectiveVisibleTabs[0].id;
+
+  const handleToggleStatementTab = (id: StatementTabId, checked: boolean) => {
+    if (!checked && visibleTabs.length <= 1 && visibleTabMap[id]) {
+      return;
+    }
+    const nextMap: Record<StatementTabId, boolean> = {
+      ...visibleTabMap,
+      [id]: checked,
+    };
+    setVisibleTabMap(nextMap);
+    if (checked) {
+      setTab(id);
+    } else if (effectiveTab === id) {
+      const nextActive = availableTabs.find((item) => nextMap[item.id]);
+      if (nextActive) setTab(nextActive.id);
+    }
+  };
 
   const report = useMemo(
     () => generateFinancialStatements(datasets, startYm, endYm, { includeRental: isRentalEnabled }),
@@ -75,6 +133,53 @@ export const FinancialStatementsPage: React.FC = () => {
         manualId="fs-period"
         rightSlot={
           <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <VerticalField label="표시 항목" minWidth="auto">
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  minHeight: 'var(--space-control-h)',
+                  padding: '0 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-app)',
+                  boxSizing: 'border-box',
+                }}
+              >
+                {availableTabs.map((item) => {
+                  const checked = visibleTabMap[item.id];
+                  const isLastChecked = checked && visibleTabs.length <= 1;
+                  return (
+                    <label
+                      key={item.id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '12.5px',
+                        fontWeight: checked ? 700 : 500,
+                        color: checked ? 'var(--text-main)' : 'var(--text-secondary)',
+                        cursor: isLastChecked ? 'not-allowed' : 'pointer',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        userSelect: 'none',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={isLastChecked}
+                        onChange={(e) => handleToggleStatementTab(item.id, e.target.checked)}
+                        style={{ margin: 0, cursor: isLastChecked ? 'not-allowed' : 'pointer' }}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </VerticalField>
             <VerticalField label="시작 연월" width={140}>
               <input
                 type="month"
@@ -96,20 +201,9 @@ export const FinancialStatementsPage: React.FC = () => {
       >
         <div data-manual-id="fs-tabs" style={{ marginBottom: 'var(--space-panel-head-mb)' }}>
           <SegmentedTabs
-            tabs={[
-              { id: 'BS', label: '재무상태표' },
-              { id: 'PL', label: '손익계산서' },
-              { id: 'CF', label: '현금흐름표' },
-              ...(isRentalEnabled
-                ? [
-                    { id: 'ASSET', label: '렌탈자산 감가상각명세' },
-                    { id: 'LEASE', label: '금융리스 이자·원금명세' },
-                  ]
-                : []),
-              { id: 'STANDARD', label: '중소기업회계기준 해설' },
-            ]}
+            tabs={effectiveVisibleTabs}
             activeId={effectiveTab}
-            onChange={(id) => setTab(id as typeof tab)}
+            onChange={(id) => setTab(id as StatementTabId)}
           />
         </div>
 

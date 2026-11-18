@@ -387,7 +387,7 @@ export function DataGrid<T>({
       if (typeof va === 'number' && typeof vb === 'number') {
         return (va - vb) * factor;
       }
-      return String(va).localeCompare(String(vb), 'ko') * factor;
+      return String(va).localeCompare(String(vb), 'ko', { numeric: true }) * factor;
     });
   }, [columns, rows, sortState]);
 
@@ -480,6 +480,15 @@ export function DataGrid<T>({
               return (
                 <th
                   key={col.key}
+                  aria-sort={
+                    isSortable
+                      ? activeDir === 'asc'
+                        ? 'ascending'
+                        : activeDir === 'desc'
+                          ? 'descending'
+                          : 'none'
+                      : undefined
+                  }
                   onClick={isSortable ? () => toggleSort(col) : undefined}
                   title={isSortable ? '클릭하여 오름차순 · 내림차순 · 정렬안함 전환' : undefined}
                   style={{

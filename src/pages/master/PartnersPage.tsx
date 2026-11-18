@@ -484,12 +484,20 @@ export const PartnersPage: React.FC = () => {
         </button>
       ),
     },
-    { key: 'name', header: '상호명', render: (r) => <span style={{ fontWeight: 700 }}>{r.name}</span> },
+    {
+      key: 'name',
+      header: '상호명',
+      sortable: true,
+      sortValue: (r) => r.name,
+      render: (r) => <span style={{ fontWeight: 700 }}>{r.name}</span>,
+    },
     {
       key: 'ntsStatus',
       header: '사업자상태',
       width: 132,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => (r.ntsStatus ? formatPartnerNtsStatus(r.ntsStatus, r.ntsClosedDate) : null),
       render: (r) =>
         r.ntsStatus ? (
           <StatusBadge
@@ -503,6 +511,8 @@ export const PartnersPage: React.FC = () => {
     {
       key: 'roles',
       header: '역할',
+      sortable: true,
+      sortValue: (r) => r.partnerRoles.filter((role) => visibleRoleSet.has(role)).join(', ') || null,
       render: (r) => (
         <div style={{ display: 'flex', gap: 'var(--space-label-gap)' }}>
           {r.partnerRoles
@@ -519,6 +529,8 @@ export const PartnersPage: React.FC = () => {
       header: '결제수단',
       width: 82,
       align: 'center',
+      sortable: true,
+      sortValue: (r) => normalizePaymentMethod(r.paymentMethod),
       render: (r) => normalizePaymentMethod(r.paymentMethod),
     },
     {
@@ -526,6 +538,13 @@ export const PartnersPage: React.FC = () => {
       header: '지급기일',
       width: 96,
       align: 'center',
+      sortable: true,
+      sortValue: (r) =>
+        formatPaymentTermsLabel(
+          r.defaultPaymentCycle,
+          r.defaultPaymentDueDay,
+          r.defaultPaymentMonthOffset
+        ),
       render: (r) =>
         formatPaymentTermsLabel(
           r.defaultPaymentCycle,
@@ -533,8 +552,22 @@ export const PartnersPage: React.FC = () => {
           r.defaultPaymentMonthOffset
         ),
     },
-    { key: 'bizRegNo', header: '사업자번호', width: 120, render: (r) => r.bizRegNo || '-' },
-    { key: 'phone', header: '연락처', width: 120, render: (r) => r.phone || '-' },
+    {
+      key: 'bizRegNo',
+      header: '사업자번호',
+      width: 120,
+      sortable: true,
+      sortValue: (r) => r.bizRegNo || null,
+      render: (r) => r.bizRegNo || '-',
+    },
+    {
+      key: 'phone',
+      header: '연락처',
+      width: 120,
+      sortable: true,
+      sortValue: (r) => r.phone || null,
+      render: (r) => r.phone || '-',
+    },
   ];
 
   return (

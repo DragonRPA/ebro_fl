@@ -175,7 +175,7 @@ const FILE_DESCRIPTIONS = {
   'src/components/PrivacyPolicyModal.tsx': '테넌트별 개인정보 처리방침 열람 및 보호책임자 지정·편집 저장 모달',
   'src/components/SearchableSelect.tsx': '사전 초성 인덱싱, O(1) 선택 조회, 키보드 탐색 및 거래처·품목 옵션 매핑 검색형 드롭다운 공통 컴포넌트',
   'src/components/ShellLayout.tsx': '좌측 그룹 사이드바, 상단 헤더(뒤로/앞으로·테넌트·기상·에이전트·매뉴얼), 전역 오류 모달·토스트 및 내 정보 수정 셸 레이아웃',
-  'src/components/UiPrimitives.tsx': '공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog)',
+  'src/components/UiPrimitives.tsx': '공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog)',
   'src/components/WeatherWidget.tsx': '15분 세션 캐시·요청 취소 지원 전국 주요 권역 기상 데이터 조회 헤더 위젯 및 주간 예보·지역 선택 모달',
 
   // === L07. 비즈니스·재무·문서 서비스 및 보안·검색 유틸리티 ===

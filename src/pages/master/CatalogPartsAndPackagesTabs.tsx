@@ -85,15 +85,44 @@ export const CatalogPartsTab: React.FC<{
       >
         <DataGrid
           columns={[
-            { key: 'sku', header: '품목코드', width: 130, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
-            { key: 'category', header: '분류', width: 135, render: (r) => r.category },
-            { key: 'partName', header: '부품명', render: (r) => r.partName },
-            { key: 'tonnage', header: '적용톤수', width: 100, render: (r) => r.tonnageRange },
+            {
+              key: 'sku',
+              header: '품목코드',
+              width: 130,
+              sortable: true,
+              sortValue: (r) => r.sku,
+              render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span>,
+            },
+            {
+              key: 'category',
+              header: '분류',
+              width: 135,
+              sortable: true,
+              sortValue: (r) => r.category,
+              render: (r) => r.category,
+            },
+            {
+              key: 'partName',
+              header: '부품명',
+              sortable: true,
+              sortValue: (r) => r.partName,
+              render: (r) => r.partName,
+            },
+            {
+              key: 'tonnage',
+              header: '적용톤수',
+              width: 100,
+              sortable: true,
+              sortValue: (r) => r.tonnageRange || null,
+              render: (r) => r.tonnageRange,
+            },
             {
               key: 'dealerPriceKrw',
               header: '대리점가',
               width: 105,
               align: 'right',
+              sortable: true,
+              sortValue: (r) => Number(r.dealerPriceKrw || 0),
               render: (r) => formatMoney(r.dealerPriceKrw, { salesSensitive: true }),
             },
             {
@@ -101,6 +130,8 @@ export const CatalogPartsTab: React.FC<{
               header: '소비자가',
               width: 105,
               align: 'right',
+              sortable: true,
+              sortValue: (r) => Number(r.retailPriceKrw || 0),
               render: (r) => formatMoney(r.retailPriceKrw, { salesSensitive: true }),
             },
           ]}

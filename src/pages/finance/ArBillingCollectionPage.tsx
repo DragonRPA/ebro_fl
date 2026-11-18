@@ -56,6 +56,11 @@ export const ArBillingCollectionPage: React.FC = () => {
     [datasets.billings, isRentalEnabled]
   );
 
+  const sortedVisibleBillings = useMemo(
+    () => [...visibleBillings].sort((a, b) => b.billingDate.localeCompare(a.billingDate)),
+    [visibleBillings]
+  );
+
   const billableContracts = useMemo(() => {
     const active = datasets.contracts.filter(
       (c) =>
@@ -286,14 +291,37 @@ export const ArBillingCollectionPage: React.FC = () => {
         </button>
       ),
     },
-    { key: 'billingNo', header: '청구번호', width: 135, render: (b) => <span style={{ fontWeight: 700 }}>{b.billingNo}</span> },
-    { key: 'billingYm', header: '청구월', width: 85, align: 'center', render: (b) => b.billingYm },
-    { key: 'partnerName', header: '거래처', render: (b) => b.partnerName },
+    {
+      key: 'billingNo',
+      header: '청구번호',
+      width: 135,
+      sortable: true,
+      sortValue: (b) => b.billingNo,
+      render: (b) => <span style={{ fontWeight: 700 }}>{b.billingNo}</span>,
+    },
+    {
+      key: 'billingYm',
+      header: '청구월',
+      width: 85,
+      align: 'center',
+      sortable: true,
+      sortValue: (b) => b.billingYm,
+      render: (b) => b.billingYm,
+    },
+    {
+      key: 'partnerName',
+      header: '거래처',
+      sortable: true,
+      sortValue: (b) => b.partnerName,
+      render: (b) => b.partnerName,
+    },
     {
       key: 'totalAmountKrw',
       header: '청구합계',
       width: 120,
       align: 'right',
+      sortable: true,
+      sortValue: (b) => Number(b.totalAmountKrw || 0),
       render: (b) => formatMoney(b.totalAmountKrw, { salesSensitive: true }),
     },
     {
@@ -301,6 +329,8 @@ export const ArBillingCollectionPage: React.FC = () => {
       header: '수납액',
       width: 115,
       align: 'right',
+      sortable: true,
+      sortValue: (b) => Number(b.paidAmountKrw || 0),
       render: (b) => (
         <span style={{ color: 'var(--success)', fontWeight: 700 }}>
           {formatMoney(b.paidAmountKrw, { salesSensitive: true })}
@@ -312,6 +342,8 @@ export const ArBillingCollectionPage: React.FC = () => {
       header: '미수납잔액',
       width: 120,
       align: 'right',
+      sortable: true,
+      sortValue: (b) => Number(b.unpaidBalanceKrw || 0),
       render: (b) => (
         <span style={{ color: b.unpaidBalanceKrw > 0 ? 'var(--danger)' : 'var(--text-muted)', fontWeight: 700 }}>
           {formatMoney(b.unpaidBalanceKrw, { salesSensitive: true })}
@@ -322,6 +354,8 @@ export const ArBillingCollectionPage: React.FC = () => {
       key: 'taxInvoice',
       header: '세금계산서 발행',
       width: 245,
+      sortable: true,
+      sortValue: (b) => (b.taxInvoiceIssued ? `1:${b.taxInvoiceNo || ''}` : '0:'),
       render: (b) => (
         <div
           style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)' }}
@@ -360,6 +394,8 @@ export const ArBillingCollectionPage: React.FC = () => {
       header: '수납상태',
       width: 90,
       align: 'center',
+      sortable: true,
+      sortValue: (b) => (b.status === 'PAID' ? '완납' : b.status === 'PARTIAL' ? '부분수납' : '미수'),
       render: (b) => (
         <StatusBadge
           label={b.status === 'PAID' ? '완납' : b.status === 'PARTIAL' ? '부분수납' : '미수'}
@@ -458,7 +494,7 @@ export const ArBillingCollectionPage: React.FC = () => {
       <div data-manual-id="ar-grid">
         <DataGrid
           columns={billingCols}
-          rows={[...visibleBillings].sort((a, b) => b.billingDate.localeCompare(a.billingDate))}
+          rows={sortedVisibleBillings}
           rowKey={(b) => b.id}
           selectedRowId={selectedBilling?.id || null}
           onRowClick={(b) => {

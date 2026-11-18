@@ -127,8 +127,8 @@ export const NON_RENTAL_MANUAL_OVERRIDES: Partial<Record<FlPageId, Partial<Scree
     basicDescription:
       '조회 연월 범위에 따라 재무상태표, 손익계산서, 현금흐름표 및 중소기업회계기준 해설을 제공한다.',
     anchors: [
-      { anchorId: 'fs-period', title: '조회 기간 설정', summary: '시작 연월과 종료 연월을 지정하여 전체 장부를 재집계한다.' },
-      { anchorId: 'fs-tabs', title: '보고서 전환 탭', summary: '재무상태표, 손익계산서, 현금흐름표, 회계기준을 전환한다.' },
+      { anchorId: 'fs-period', title: '표시 항목 및 조회 기간 설정', summary: '우측 상단 표시 항목 체크박스(기본 손익계산서)로 노출 탭을 선택하고 시작·종료 연월로 장부를 재집계한다.' },
+      { anchorId: 'fs-tabs', title: '보고서 전환 탭', summary: '표시 항목에 선택된 재무상태표, 손익계산서, 현금흐름표, 회계기준을 전환한다.' },
       { anchorId: 'fs-verify', title: '대차 차액 0원 검증식', summary: '자산총계와 부채 및 자본총계의 일치를 최하단 검증 바에서 확인한다.' },
     ],
     processes: [
@@ -136,8 +136,8 @@ export const NON_RENTAL_MANUAL_OVERRIDES: Partial<Record<FlPageId, Partial<Scree
         processName: '기간별 재무상태표 · 손익계산서 검증',
         purpose: '유통 매출, 매출원가, 물류비, 외환차손익까지 반영된 대차 차액 0원 결산을 확인한다.',
         steps: [
-          { stepNo: 1, targetLabel: '시작·종료 연월 입력', manualAnchorId: 'fs-period', actionDetail: '조회할 시작 연월과 종료 연월을 입력한다.' },
-          { stepNo: 2, targetLabel: '보고서 탭 전환', manualAnchorId: 'fs-tabs', actionDetail: '재무상태표, 손익계산서, 현금흐름표 탭을 순차 검토한다.' },
+          { stepNo: 1, targetLabel: '표시 항목·연월 입력', manualAnchorId: 'fs-period', actionDetail: '표시할 재무제표 항목을 체크하고 시작 연월과 종료 연월을 입력한다.' },
+          { stepNo: 2, targetLabel: '보고서 탭 전환', manualAnchorId: 'fs-tabs', actionDetail: '선택된 손익계산서, 재무상태표, 현금흐름표 탭을 검토한다.' },
           { stepNo: 3, targetLabel: '대차 검증 바', manualAnchorId: 'fs-verify', actionDetail: '하단 검증 바의 대차 차액 0원 및 현금 차이 0원 상태를 확인한다.' },
         ],
       },

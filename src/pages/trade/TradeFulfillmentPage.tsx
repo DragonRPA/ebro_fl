@@ -301,26 +301,32 @@ export const TradeFulfillmentPage: React.FC = () => {
 
           <DataGrid
             columns={[
-              { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
+              { key: 'no', header: '의뢰번호', width: 140, sortable: true, sortValue: (f) => f.fulfillmentNo, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
               {
                 key: 'contractNo',
                 header: '계약번호',
                 width: 135,
+                sortable: true,
+                sortValue: (f) => contractMap.get(f.contractId)?.contractNo || null,
                 render: (f) => contractMap.get(f.contractId)?.contractNo || '-',
               },
-              { key: 'partnerName', header: '매출처', render: (f) => f.partnerName },
+              { key: 'partnerName', header: '매출처', sortable: true, sortValue: (f) => f.partnerName, render: (f) => f.partnerName },
               {
                 key: 'itemName',
                 header: '품목명',
+                sortable: true,
+                sortValue: (f) => itemMap.get(f.itemId)?.modelName || null,
                 render: (f) => itemMap.get(f.itemId)?.modelName || '-',
               },
-              { key: 'qty', header: '수량', width: 70, align: 'right', render: (f) => f.quantity },
-              { key: 'eff', header: '희망완료일', width: 110, render: (f) => f.effectiveDate || '-' },
+              { key: 'qty', header: '수량', width: 70, align: 'right', sortable: true, sortValue: (f) => Number(f.quantity || 0), render: (f) => f.quantity },
+              { key: 'eff', header: '희망완료일', width: 110, sortable: true, sortValue: (f) => f.effectiveDate || null, render: (f) => f.effectiveDate || '-' },
               {
                 key: 'st',
                 header: '상태',
                 width: 90,
                 align: 'center',
+                sortable: true,
+                sortValue: (f) => FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status),
                 render: (f) => (
                   <StatusBadge
                     label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
@@ -499,26 +505,32 @@ export const TradeFulfillmentPage: React.FC = () => {
 
           <DataGrid
             columns={[
-              { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
+              { key: 'no', header: '의뢰번호', width: 140, sortable: true, sortValue: (f) => f.fulfillmentNo, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
               {
                 key: 'contractNo',
                 header: '계약번호',
                 width: 135,
+                sortable: true,
+                sortValue: (f) => contractMap.get(f.contractId)?.contractNo || null,
                 render: (f) => contractMap.get(f.contractId)?.contractNo || '-',
               },
-              { key: 'partnerName', header: '매출처', render: (f) => f.partnerName },
+              { key: 'partnerName', header: '매출처', sortable: true, sortValue: (f) => f.partnerName, render: (f) => f.partnerName },
               {
                 key: 'itemName',
                 header: '품목명',
+                sortable: true,
+                sortValue: (f) => itemMap.get(f.itemId)?.modelName || null,
                 render: (f) => itemMap.get(f.itemId)?.modelName || '-',
               },
-              { key: 'qty', header: '수량', width: 65, align: 'right', render: (f) => f.quantity },
-              { key: 'eff', header: '완료기준일', width: 105, render: (f) => f.effectiveDate || '-' },
+              { key: 'qty', header: '수량', width: 65, align: 'right', sortable: true, sortValue: (f) => Number(f.quantity || 0), render: (f) => f.quantity },
+              { key: 'eff', header: '완료기준일', width: 105, sortable: true, sortValue: (f) => f.effectiveDate || null, render: (f) => f.effectiveDate || '-' },
               {
                 key: 'cogs',
                 header: '인식매출원가',
                 width: 115,
                 align: 'right',
+                sortable: true,
+                sortValue: (f) => Number(f.cogsAmountKrw || 0),
                 render: (f) => formatMoney(f.cogsAmountKrw),
               },
               {
@@ -526,6 +538,8 @@ export const TradeFulfillmentPage: React.FC = () => {
                 header: '상태',
                 width: 85,
                 align: 'center',
+                sortable: true,
+                sortValue: (f) => FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status),
                 render: (f) => (
                   <StatusBadge
                     label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
@@ -701,15 +715,17 @@ export const TradeFulfillmentPage: React.FC = () => {
 
           <DataGrid
             columns={[
-              { key: 'caseNo', header: '사건번호', width: 135, render: (r) => r.caseNo },
-              { key: 'serialNo', header: '차대번호', width: 130, render: (r) => r.serialNo || '-' },
-              { key: 'effectiveDate', header: '기준일', width: 100, render: (r) => r.effectiveDate },
-              { key: 'caseType', header: '처리유형', width: 120, render: (r) => <StatusBadge label={r.caseType} tone="info" /> },
+              { key: 'caseNo', header: '사건번호', width: 135, sortable: true, sortValue: (r) => r.caseNo, render: (r) => r.caseNo },
+              { key: 'serialNo', header: '차대번호', width: 130, sortable: true, sortValue: (r) => r.serialNo || null, render: (r) => r.serialNo || '-' },
+              { key: 'effectiveDate', header: '기준일', width: 100, sortable: true, sortValue: (r) => r.effectiveDate, render: (r) => r.effectiveDate },
+              { key: 'caseType', header: '처리유형', width: 120, sortable: true, sortValue: (r) => r.caseType, render: (r) => <StatusBadge label={r.caseType} tone="info" /> },
               {
                 key: 'warrantyApplied',
                 header: '보증적용',
                 width: 90,
                 align: 'center',
+                sortable: true,
+                sortValue: (r) => (r.warrantyApplied ? '무상보증' : '일반'),
                 render: (r) => (
                   <StatusBadge
                     label={r.warrantyApplied ? '무상보증' : '일반'}
@@ -717,13 +733,15 @@ export const TradeFulfillmentPage: React.FC = () => {
                   />
                 ),
               },
-              { key: 'partnerName', header: '고객사', render: (r) => r.partnerName },
-              { key: 'supplierName', header: '연결공급사', width: 135, render: (r) => r.supplierName || '-' },
+              { key: 'partnerName', header: '고객사', sortable: true, sortValue: (r) => r.partnerName, render: (r) => r.partnerName },
+              { key: 'supplierName', header: '연결공급사', width: 135, sortable: true, sortValue: (r) => r.supplierName || null, render: (r) => r.supplierName || '-' },
               {
                 key: 'refund',
                 header: '환불공급가',
                 width: 120,
                 align: 'right',
+                sortable: true,
+                sortValue: (r) => Number(r.refundSupplyKrw || 0),
                 render: (r) => formatMoney(r.refundSupplyKrw, { salesSensitive: true }),
               },
             ]}

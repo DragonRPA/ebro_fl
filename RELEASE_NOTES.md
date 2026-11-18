@@ -1,3 +1,9 @@
+## [v2.2.1.Build.3] - 2026-11-19 07:01
+### 5개 주요 조회 화면 · 유통↔렌탈 대칭 표 헤더 3단 정렬(오름차순 · 내림차순 · 정렬안함) 구현
+- **공용 `DataGrid` 정렬 엔진 보강 (`src/components/UiPrimitives.tsx`)**: 문자열 비교에 `localeCompare(..., 'ko', { numeric: true })` 자연 숫자·한국어 정렬을 적용하고, 정렬 가능 헤더 `<th>`에 `aria-sort`(`none`/`ascending`/`descending`) 상태 속성을 추가했습니다.
+- **5개 화면 + 유통↔렌탈 대칭 표 헤더 3단 정렬 일괄 적용**:
+  - 거래처 관리(`PartnersPage.tsx`), 유통·렌탈 품목 관리(`ItemMastersPages.tsx`), 호환부품 카탈로그(`CatalogPartsAndPackagesTabs.tsx`), 유통 출고·렌탈 입출고 관리(`TradeFulfillmentPage.tsx`, `RentalFulfillmentPage.tsx`), 청구 수납 관리(`ArBillingCollectionPage.tsx`, `sortedVisibleBillings` `useMemo` 안정화 포함) 데이터 컬럼에 `sortable: true` 및 `sortValue`를 구현하고, `spec:sync`·`oxlint --deny-warnings src`·`vite build`·Playwright 5개 화면 3단 정렬 E2E를 통과했습니다.
+
 ## [v2.2.1.Build.2] - 2026-11-19 04:04
 ### `main` 푸시 연동 Vercel 프로덕션 자동 배포 및 `.vercelignore` 최적화
 - **GitHub Actions `Vercel Deploy & Purge` 일원화 (`.github/workflows/vercel-purge.yml`)**: `main` 브랜치 push 시 Node.js 22 환경에서 `.vercel/project.json` 링크 후 `vercel deploy --prod --yes` 프로덕션 배포와 `auto_purge_vercel.cjs --keep=3` 슬롯 정리를 순차 일괄 실행하도록 전환했습니다.

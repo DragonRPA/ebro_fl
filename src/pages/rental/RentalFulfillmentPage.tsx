@@ -113,12 +113,21 @@ export const RentalFulfillmentPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
           <DataGrid
             columns={[
-              { key: 'no', header: '의뢰번호', width: 140, render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span> },
+              {
+                key: 'no',
+                header: '의뢰번호',
+                width: 140,
+                sortable: true,
+                sortValue: (f) => f.fulfillmentNo,
+                render: (f) => <span style={{ fontWeight: 700 }}>{f.fulfillmentNo}</span>,
+              },
               {
                 key: 'act',
                 header: '구분',
                 width: 90,
                 align: 'center',
+                sortable: true,
+                sortValue: (f) => f.actionType,
                 render: (f) => (
                   <StatusBadge
                     label={f.actionType}
@@ -126,12 +135,27 @@ export const RentalFulfillmentPage: React.FC = () => {
                   />
                 ),
               },
-              { key: 'partner', header: '임차 거래처', render: (f) => f.partnerName },
-              { key: 'eff', header: '희망완료일', width: 110, render: (f) => f.effectiveDate || '-' },
+              {
+                key: 'partner',
+                header: '임차 거래처',
+                sortable: true,
+                sortValue: (f) => f.partnerName,
+                render: (f) => f.partnerName,
+              },
+              {
+                key: 'eff',
+                header: '희망완료일',
+                width: 110,
+                sortable: true,
+                sortValue: (f) => f.effectiveDate || null,
+                render: (f) => f.effectiveDate || '-',
+              },
               {
                 key: 'rec',
                 header: '입력일시',
                 width: 150,
+                sortable: true,
+                sortValue: (f) => f.recordedAt || null,
                 render: (f) => (f.recordedAt ? f.recordedAt.slice(0, 16).replace('T', ' ') : '-'),
               },
               {
@@ -139,6 +163,8 @@ export const RentalFulfillmentPage: React.FC = () => {
                 header: '상태',
                 width: 95,
                 align: 'center',
+                sortable: true,
+                sortValue: (f) => FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status),
                 render: (f) => (
                   <StatusBadge
                     label={FULFILLMENT_STATUS_KO_LABELS[f.status] || formatKoStatus(f.status)}
