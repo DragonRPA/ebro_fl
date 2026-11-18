@@ -1,27 +1,33 @@
-name: Vercel Deployment Purge
+name: Vercel Deploy & Purge
 
 on:
   push:
     branches: [main]
 
 jobs:
-  purge:
+  deploy-and-purge:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_NynC1t2A3tuZxBbR6zZj9i1o
+      VERCEL_PROJECT_ID: prj_k3bjwBeQhlPV8jCUyk2p4wGtlwHG
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE: dragonrpa
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Run purge (ebro_fl - 최근 3개 보존)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_SCOPE: dragonrpa
+      - name: Link Vercel Project & Deploy Production
         run: |
-          sleep 20
-          node scripts/auto_purge_vercel.cjs --keep=3
+          mkdir -p .vercel
+          printf '{"projectId":"prj_k3bjwBeQhlPV8jCUyk2p4wGtlwHG","orgId":"team_NynC1t2A3tuZxBbR6zZj9i1o","projectName":"ebro_fl"}\n' > .vercel/project.json
+          vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+
+      - name: Run purge (ebro_fl - 최근 3개 보존)
+        run: node scripts/auto_purge_vercel.cjs --keep=3

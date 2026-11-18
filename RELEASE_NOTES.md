@@ -1,3 +1,8 @@
+## [v2.2.1.Build.2] - 2026-11-19 04:04
+### `main` 푸시 연동 Vercel 프로덕션 자동 배포 및 `.vercelignore` 최적화
+- **GitHub Actions `Vercel Deploy & Purge` 일원화 (`.github/workflows/vercel-purge.yml`)**: `main` 브랜치 push 시 Node.js 22 환경에서 `.vercel/project.json` 링크 후 `vercel deploy --prod --yes` 프로덕션 배포와 `auto_purge_vercel.cjs --keep=3` 슬롯 정리를 순차 일괄 실행하도록 전환했습니다.
+- **`.vercelignore` 배포 번들 경량화**: `docs`, `ebro-agent-core`, `ebro-web-agent`, `tools` 디렉토리를 업로드 제외 목록에 추가하고 Hobby 12개 함수 상한 준수(`api/gemini-stt.ts`, `api/developer-device.ts` 제외) 및 `!scripts/check-korean-ui.cjs` 빌드 게이트를 유지했습니다.
+
 ## [v2.2.1.Build.1] - 2026-11-19 03:53
 ### 전사 코드 파일 기능명세서(SSOT) 구축 및 5단계 번들 · 런타임 · 정적 품질 최적화
 - **전사 코드 파일 및 기능명세서 SSOT 구축 (`docs/CODE_FILE_SPECIFICATION.md`, `docs/code_file_manifest.json`, `scripts/generate_code_file_spec.cjs`, `scripts/code_file_descriptions.cjs`)**:

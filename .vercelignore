@@ -6,6 +6,10 @@ dist
 dist-ssr
 node_modules
 scratch
+docs
+ebro-agent-core
+ebro-web-agent
+tools
 scripts/*
 !scripts/check-korean-ui.cjs
 src/tests
