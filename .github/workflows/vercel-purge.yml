@@ -20,14 +20,14 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Link Vercel Project & Deploy Production
+      - name: Deploy & Purge (when VERCEL_TOKEN is configured)
         run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "[Skip] secrets.VERCEL_TOKEN 미설정 상태이므로 CI 배포 및 슬롯 정리를 건너뜁니다."
+            exit 0
+          fi
+          npm install -g vercel@latest
           mkdir -p .vercel
           printf '{"projectId":"prj_k3bjwBeQhlPV8jCUyk2p4wGtlwHG","orgId":"team_NynC1t2A3tuZxBbR6zZj9i1o","projectName":"ebro_fl"}\n' > .vercel/project.json
           vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-
-      - name: Run purge (ebro_fl - 최근 3개 보존)
-        run: node scripts/auto_purge_vercel.cjs --keep=3
+          node scripts/auto_purge_vercel.cjs --keep=3
