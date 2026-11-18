@@ -23,6 +23,7 @@ import {
   type StandardArticle,
   type CommentarySection,
 } from "../data/accountingStandardsData";
+import { useAppShell } from "../core/AppShellContext";
 
 const QUICK_KEYWORDS = [
   "유형자산",
@@ -126,6 +127,14 @@ function matchesCommentary(section: CommentarySection, query: string): boolean {
 }
 
 export default function AccountingStandardsTab() {
+  const { isRentalEnabled } = useAppShell();
+  const visibleQuickKeywords = useMemo(
+    () =>
+      isRentalEnabled
+        ? QUICK_KEYWORDS
+        : QUICK_KEYWORDS.filter((k) => k !== "리스거래" && k !== "감가상각"),
+    [isRentalEnabled]
+  );
   // 통합 검색어 및 좌/우 개별 검색어 상태
   const [unifiedQuery, setUnifiedQuery] = useState("");
   const [leftQuery, setLeftQuery] = useState("");
@@ -393,7 +402,11 @@ export default function AccountingStandardsTab() {
                 type="text"
                 value={unifiedQuery}
                 onChange={(e) => applyUnifiedSearch(e.target.value)}
-                placeholder="예: 감가상각, 유형자산, 리스, 수익인식, 대손충당금, 제38조..."
+                placeholder={
+                  isRentalEnabled
+                    ? "예: 감가상각, 유형자산, 리스, 수익인식, 대손충당금, 제38조..."
+                    : "예: 재고자산, 외화환산, 수익인식, 대손충당금, 제38조..."
+                }
                 className="w-full pl-9 pr-20 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-slate-900"
               />
               {unifiedQuery && (
@@ -413,7 +426,7 @@ export default function AccountingStandardsTab() {
               빈출 회계주제 바로가기
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
-              {QUICK_KEYWORDS.map((kw) => {
+              {visibleQuickKeywords.map((kw) => {
                 const isActive =
                   leftQuery.trim() === kw && rightQuery.trim() === kw;
                 return (

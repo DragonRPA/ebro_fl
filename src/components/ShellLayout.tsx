@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
+import { isApprovalRequestRentalRelated } from '../core/ActionCommandGateway';
 import { useManual } from '../manual/ManualContext';
 import { FL_MANUAL_REGISTRY } from '../manual/manualRegistry';
 import { EMPLOYMENT_STATUS_LABELS, formatKoStatus, type EmploymentStatus } from '../types/domain';
@@ -11,6 +12,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const {
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     activePage,
     agentOnline,
@@ -135,9 +137,12 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const pendingApprovals = useMemo(() => {
     if (!currentUser) return 0;
     return datasets.approvalRequests.filter(
-      (r) => r.status === 'PENDING' && currentUser.tierLevel >= r.requiredTier
+      (r) =>
+        r.status === 'PENDING' &&
+        currentUser.tierLevel >= r.requiredTier &&
+        (isRentalEnabled || !isApprovalRequestRentalRelated(r, datasets))
     ).length;
-  }, [datasets.approvalRequests, currentUser]);
+  }, [datasets, currentUser, isRentalEnabled]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

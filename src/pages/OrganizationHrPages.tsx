@@ -26,9 +26,9 @@ import {
   updateEmployeeHrRecord,
 } from '../services/domainEngine';
 import {
-  ALL_DEPARTMENT_FUNC_TAGS,
   EMPLOYMENT_STATUS_LABELS,
   TIER_LABELS,
+  getDepartmentFuncTagsForTenant,
   type EmploymentStatus,
   type FlDepartment,
   type FlHrHistory,
@@ -219,7 +219,12 @@ async function openAttachmentPreview(url: string, fileName?: string | null): Pro
 }
 
 export const OrganizationHrPage: React.FC = () => {
-  const { currentUser, datasets, refreshAll, notifyToast, canEditPage, formatMoney } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, refreshAll, notifyToast, canEditPage, formatMoney } = useAppShell();
+  const visibleDeptFuncTags = useMemo(
+    () => getDepartmentFuncTagsForTenant(isRentalEnabled),
+    [isRentalEnabled]
+  );
+  const visibleDeptFuncTagSet = useMemo(() => new Set<string>(visibleDeptFuncTags), [visibleDeptFuncTags]);
   const canEdit = canEditPage('organization_hr');
   const canViewPayroll = Boolean(currentUser && (currentUser.tierLevel >= 6 || currentUser.loginId === 'admin'));
   const canResetPassword = Boolean(currentUser && (currentUser.tierLevel >= 4 || currentUser.loginId === 'admin'));
@@ -531,9 +536,17 @@ export const OrganizationHrPage: React.FC = () => {
       setDMemo(dept.memo || '');
       setDActive(dept.isActive);
     } else {
+      const defaultRootDeptId =
+        datasets.departments.find((d) => !d.parentDepartmentId)?.id ||
+        datasets.departments[0]?.id ||
+        '';
       setEditDeptId(null);
       setDName('');
-      setDParentId(selectedDeptId !== 'ALL' && selectedDeptId !== 'UNASSIGNED' ? selectedDeptId : 'DEPT-0000001');
+      setDParentId(
+        selectedDeptId !== 'ALL' && selectedDeptId !== 'UNASSIGNED'
+          ? selectedDeptId
+          : defaultRootDeptId
+      );
       setDManagerId('');
       setDSortOrder(String((datasets.departments.length + 1) * 10));
       setDTags([]);
@@ -1053,16 +1066,18 @@ export const OrganizationHrPage: React.FC = () => {
       key: 'tags',
       header: '업무 기능',
       width: 280,
-      render: ({ dept }) =>
-        dept.functionalTags.length > 0 ? (
+      render: ({ dept }) => {
+        const shownTags = dept.functionalTags.filter((t) => visibleDeptFuncTagSet.has(t));
+        return shownTags.length > 0 ? (
           <div style={{ display: 'flex', gap: 'var(--space-label-gap)', alignItems: 'center' }}>
-            {dept.functionalTags.map((t) => (
+            {shownTags.map((t) => (
               <StatusBadge key={t} label={t} tone="info" />
             ))}
           </div>
         ) : (
           '-'
-        ),
+        );
+      },
     },
     {
       key: 'headcount',
@@ -1828,7 +1843,7 @@ export const OrganizationHrPage: React.FC = () => {
 
           <VerticalField label="담당 업무 기능">
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-inline-gap)', paddingTop: 'var(--space-label-gap)' }}>
-              {ALL_DEPARTMENT_FUNC_TAGS.map((tag) => {
+              {visibleDeptFuncTags.map((tag) => {
                 const checked = dTags.includes(tag);
                 return (
                   <label

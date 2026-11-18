@@ -111,12 +111,43 @@ export const FL_MENU_GROUPS: MenuGroupDef[] = [
       { pageId: 'organization_hr', label: '조직 인사 관리', shortDesc: '부서 조직도 · 임직원 인사원장 · 발령 이력' },
       { pageId: 'operation_manual', label: '업무 매뉴얼', shortDesc: '화면별 기본기능 · 조작순서 검색' },
       { pageId: 'permission_settings', label: '권한 설정', shortDesc: '7단계 티어 · 결재선 · 티어/개인별 화면 권한' },
-      { pageId: 'system_settings', label: '시스템 설정', shortDesc: '문서 양식 · 도장 · 공식 이메일 연동' },
+      { pageId: 'system_settings', label: '시스템 설정', shortDesc: '문서 양식 · 직인 도장 설정' },
     ],
   },
 ];
 
 export const ALL_FL_PAGE_IDS: FlPageId[] = FL_MENU_GROUPS.flatMap((g) => g.items.map((i) => i.pageId));
+
+export const RENTAL_ONLY_PAGE_IDS: readonly FlPageId[] = [
+  'rental_item_masters',
+  'rental_contracts',
+  'rental_assets',
+  'rental_fulfillment',
+  'rental_maintenance',
+  'rental_performance',
+] as const;
+
+const NON_RENTAL_MENU_SHORT_DESC_OVERRIDES: Partial<Record<FlPageId, string>> = {
+  dashboard: '결재 대기 · 출고 의뢰 · 미수 · 납기 요약',
+  quotations: '유통 견적 작성 및 계약 전환',
+  trade_inventory: '시리얼 · 로트 선입선출 및 경과일수 조회',
+  ap_settlements: '매입채무 · 물류비 정산',
+  financial_statements: '재무상태표 · 손익계산서 · 현금흐름표 · 회계기준',
+};
+
+export function getMenuGroupsForTenant(rentalEnabled: boolean): MenuGroupDef[] {
+  if (rentalEnabled) return FL_MENU_GROUPS;
+  const hidden = new Set<FlPageId>(RENTAL_ONLY_PAGE_IDS);
+  return FL_MENU_GROUPS.map((grp) => ({
+    ...grp,
+    items: grp.items
+      .filter((item) => !hidden.has(item.pageId))
+      .map((item) => ({
+        ...item,
+        shortDesc: NON_RENTAL_MENU_SHORT_DESC_OVERRIDES[item.pageId] || item.shortDesc,
+      })),
+  })).filter((grp) => grp.items.length > 0);
+}
 
 export function defaultTierPagePermission(
   pageId: FlPageId,
@@ -155,6 +186,28 @@ export type PartnerRole =
   | '운송사'
   | '외주정비처';
 
+export const ALL_PARTNER_ROLES: readonly PartnerRole[] = [
+  '매출처',
+  '대리점',
+  '금융사',
+  '매입처',
+  '전대공급처',
+  '운송사',
+  '외주정비처',
+] as const;
+
+export const RENTAL_ONLY_PARTNER_ROLES: readonly PartnerRole[] = [
+  '금융사',
+  '전대공급처',
+  '외주정비처',
+] as const;
+
+export function getPartnerRolesForTenant(rentalEnabled: boolean): PartnerRole[] {
+  if (rentalEnabled) return [...ALL_PARTNER_ROLES];
+  const hidden = new Set<PartnerRole>(RENTAL_ONLY_PARTNER_ROLES);
+  return ALL_PARTNER_ROLES.filter((r) => !hidden.has(r));
+}
+
 export type ItemCategory = '완제품' | '어태치먼트' | '부품' | '소모품';
 export type ItemDomain = 'TRADE' | 'RENTAL' | 'BOTH';
 export type ManagementType = 'SERIAL' | 'LOT';
@@ -162,6 +215,25 @@ export type OwnershipDomain = '유통재고' | '렌탈자산' | '전대자산';
 export type UnitStatus = '보유중' | '출고대기' | '대여중' | '정비중' | '판매완료' | '전대반납' | '폐기';
 export type CurrencyCode = 'KRW' | 'USD' | 'CNY' | 'EUR' | 'JPY';
 export type DocumentTemplateType = '견적서_유통' | '견적서_렌탈' | '계약서_유통' | '계약서_렌탈' | '거래명세서';
+
+export const ALL_DOCUMENT_TEMPLATE_TYPES: readonly DocumentTemplateType[] = [
+  '견적서_유통',
+  '견적서_렌탈',
+  '계약서_유통',
+  '계약서_렌탈',
+  '거래명세서',
+] as const;
+
+export const RENTAL_ONLY_DOC_TYPES: readonly DocumentTemplateType[] = [
+  '견적서_렌탈',
+  '계약서_렌탈',
+] as const;
+
+export function getDocTypesForTenant(rentalEnabled: boolean): DocumentTemplateType[] {
+  if (rentalEnabled) return [...ALL_DOCUMENT_TEMPLATE_TYPES];
+  const hidden = new Set<DocumentTemplateType>(RENTAL_ONLY_DOC_TYPES);
+  return ALL_DOCUMENT_TEMPLATE_TYPES.filter((d) => !hidden.has(d));
+}
 
 export interface TenantR2Config {
   r2AccountId?: string;
@@ -184,6 +256,7 @@ export interface OfficialMailConfig {
 
 export interface TenantFeatures {
   bankMatchingEnabled?: boolean;
+  rentalEnabled?: boolean;
   autoTaxInvoice?: boolean;
   agentAiEnabled?: boolean;
   tenantSupabaseUrl?: string;
@@ -192,6 +265,12 @@ export interface TenantFeatures {
   officialMailConfig?: OfficialMailConfig;
   specialFeatures?: string[];
   [key: string]: unknown;
+}
+
+export function isTenantRentalEnabled(
+  tenant?: { features?: TenantFeatures } | null
+): boolean {
+  return tenant?.features?.rentalEnabled !== false;
 }
 
 export interface TenantProfile {
@@ -246,6 +325,17 @@ export const ALL_DEPARTMENT_FUNC_TAGS: DepartmentFuncTag[] = [
   '물류',
   '재무회계',
 ];
+
+export const RENTAL_ONLY_DEPT_TAGS: readonly DepartmentFuncTag[] = [
+  '렌탈자산',
+  '정비',
+] as const;
+
+export function getDepartmentFuncTagsForTenant(rentalEnabled: boolean): DepartmentFuncTag[] {
+  if (rentalEnabled) return [...ALL_DEPARTMENT_FUNC_TAGS];
+  const hidden = new Set<DepartmentFuncTag>(RENTAL_ONLY_DEPT_TAGS);
+  return ALL_DEPARTMENT_FUNC_TAGS.filter((t) => !hidden.has(t));
+}
 
 export type HrEventType =
   | '입사등록'
@@ -806,6 +896,10 @@ export interface FlInventoryUnit {
   operatingHours: number;
   monthlyRentalFeeKrw: number;
   dailyRentalFeeKrw: number;
+  warrantyMonths?: number;
+  warrantyStartDate?: string | null;
+  warrantyEndDate?: string | null;
+  warrantyNote?: string | null;
   memo?: string | null;
 }
 
@@ -924,6 +1018,8 @@ export interface FlContractLine {
   vatAmountKrw: number;
   totalAmountKrw: number;
   optionSummary?: string | null;
+  warrantyMonths?: number;
+  warrantyNote?: string | null;
   assignedUnitId?: string | null;
   assignedSerialNo?: string | null;
   assignedLotNo?: string | null;
@@ -965,7 +1061,9 @@ export interface FlTradeAftercareCase {
   partnerId: string;
   partnerName: string;
   unitId: string;
+  serialNo?: string | null;
   caseType: '공급사 정비중개' | '반품환불' | '반품교환';
+  warrantyApplied?: boolean;
   supplierPartnerId?: string | null;
   supplierName?: string | null;
   refundSupplyKrw: number;
@@ -1252,6 +1350,20 @@ export const APPROVAL_STATUS_KO_LABELS: Record<FlApprovalRequest['status'], stri
   CANCELLED: '취소',
 };
 
+export const RENTAL_ONLY_ACTION_CODES: readonly ApprovalActionCode[] = [
+  'LEASE_CREATE',
+  'ACCOUNT_TRANSFER',
+  'RENTAL_CONTRACT_CONFIRM',
+  'EXCHANGE_EXECUTE',
+  'ASSET_DISPOSAL',
+] as const;
+
+export const RENTAL_ONLY_PAYABLE_TYPES: readonly FlApPayable['payableType'][] = [
+  'FINANCE_LEASE',
+  'SUBLEASE_RENT',
+  'EXTERNAL_REPAIR',
+] as const;
+
 export const ACTION_CODE_KO_LABELS: Record<ApprovalActionCode, string> = {
   PURCHASE_CONFIRM: '매입 입고 확정',
   LEASE_CREATE: '금융리스 등록',
@@ -1320,8 +1432,11 @@ export function formatKoAcquisitionType(code: string): string {
   return ACQUISITION_TYPE_KO_LABELS[key] || code;
 }
 
-export function formatKoActionCode(code: string): string {
+export function formatKoActionCode(code: string, rentalEnabled = true): string {
   const key = String(code || '').trim().toUpperCase() as ApprovalActionCode;
+  if (!rentalEnabled && key === 'FULFILLMENT_COMPLETE') {
+    return '출고 완료';
+  }
   return ACTION_CODE_KO_LABELS[key] || code;
 }
 
@@ -1372,4 +1487,61 @@ export function koStatusTone(code: string): KoBadgeTone {
     return 'danger';
   }
   return 'neutral';
+}
+
+export function filterPartnersForTenant(
+  partners: FlPartner[],
+  rentalEnabled: boolean
+): FlPartner[] {
+  if (rentalEnabled) return partners;
+  const rentalOnlyRoles = new Set<PartnerRole>(RENTAL_ONLY_PARTNER_ROLES);
+  return partners.filter(
+    (p) =>
+      !p.partnerRoles ||
+      p.partnerRoles.length === 0 ||
+      p.partnerRoles.some((r) => !rentalOnlyRoles.has(r))
+  );
+}
+
+export function filterItemMastersForTenant(
+  items: FlItemMaster[],
+  rentalEnabled: boolean
+): FlItemMaster[] {
+  if (rentalEnabled) return items;
+  return items.filter((it) => it.itemDomain !== 'RENTAL');
+}
+
+export function isEffectiveTradeUnitForTenant(
+  unit: FlInventoryUnit,
+  rentalEnabled: boolean,
+  stockMovements: FlStockMovement[],
+  purchases: FlPurchase[] = [],
+  purchaseLines: FlPurchaseLine[] = []
+): boolean {
+  if (rentalEnabled) {
+    return unit.ownershipDomain === '유통재고';
+  }
+  if (
+    unit.ownershipDomain === '전대자산' ||
+    unit.acquisitionType === 'FINANCE_LEASE' ||
+    unit.acquisitionType === 'SUBLEASE'
+  ) {
+    return false;
+  }
+  if (unit.purchaseLineId) {
+    const pl = purchaseLines.find((l) => l.id === unit.purchaseLineId);
+    const pur = pl ? purchases.find((p) => p.id === pl.purchaseId) : undefined;
+    if (pur) {
+      return pur.targetDomain !== 'RENTAL';
+    }
+  }
+  const firstTransfer = [...stockMovements]
+    .filter((m) => m.unitId === unit.id && m.movementType === 'ACCOUNT_TRANSFER')
+    .sort(
+      (a, b) =>
+        (a.effectiveDate || '').localeCompare(b.effectiveDate || '') ||
+        (a.recordedAt || '').localeCompare(b.recordedAt || '')
+    )[0];
+  const initialDomain = firstTransfer?.fromDomain || unit.ownershipDomain;
+  return initialDomain === '유통재고';
 }

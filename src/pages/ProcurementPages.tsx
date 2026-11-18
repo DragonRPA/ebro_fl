@@ -20,6 +20,8 @@ import {
 import {
   PURCHASE_STATUS_KO_LABELS,
   SETTLEMENT_STATUS_KO_LABELS,
+  filterItemMastersForTenant,
+  filterPartnersForTenant,
   formatKoCurrency,
   formatKoStatus,
   koStatusTone,
@@ -95,16 +97,21 @@ interface DraftPurchaseLine {
 }
 
 export const PurchasesPage: React.FC = () => {
-  const { currentUser, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('purchases');
   const today = new Date().toISOString().slice(0, 10);
 
+  const tenantPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
+
   const suppliers = useMemo(() => {
-    const matched = datasets.partners.filter(
+    const matched = tenantPartners.filter(
       (p) => p.partnerRoles.includes('매입처') || p.partnerRoles.includes('대리점')
     );
-    return matched.length > 0 ? matched : datasets.partners;
-  }, [datasets.partners]);
+    return matched.length > 0 ? matched : tenantPartners;
+  }, [tenantPartners]);
 
   const supplierOptions = useMemo<SearchableSelectOption[]>(
     () => toPartnerSelectOptions(suppliers),
@@ -114,13 +121,19 @@ export const PurchasesPage: React.FC = () => {
   const [purchaseType, setPurchaseType] = useState<'IMPORT' | 'DOMESTIC'>('IMPORT');
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
   const [targetDomain, setTargetDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
+  const effectiveDomain: 'TRADE' | 'RENTAL' = isRentalEnabled ? targetDomain : 'TRADE';
+
+  const tenantItems = useMemo(
+    () => filterItemMastersForTenant(datasets.itemMasters, isRentalEnabled),
+    [datasets.itemMasters, isRentalEnabled]
+  );
 
   const scopedItems = useMemo(() => {
-    const matched = datasets.itemMasters.filter(
-      (it) => it.itemDomain === targetDomain || it.itemDomain === 'BOTH'
+    const matched = tenantItems.filter(
+      (it) => it.itemDomain === effectiveDomain || it.itemDomain === 'BOTH'
     );
-    return matched.length > 0 ? matched : datasets.itemMasters;
-  }, [datasets.itemMasters, targetDomain]);
+    return matched.length > 0 ? matched : tenantItems;
+  }, [effectiveDomain, tenantItems]);
 
   const itemOptions = useMemo<SearchableSelectOption[]>(
     () =>
@@ -320,7 +333,7 @@ export const PurchasesPage: React.FC = () => {
     return {
       purchaseType,
       supplierId: sup.id,
-      targetDomain,
+      targetDomain: effectiveDomain,
       blNo: blNo.trim() || undefined,
       lcNo: lcNo.trim() || undefined,
       currencyCode,
@@ -407,9 +420,19 @@ export const PurchasesPage: React.FC = () => {
     return map;
   }, [datasets.purchases, itemMasterById, purchaseLinesByPurchaseId]);
 
+  const visiblePurchases = useMemo(
+    () => (isRentalEnabled ? datasets.purchases : datasets.purchases.filter((p) => p.targetDomain !== 'RENTAL')),
+    [datasets.purchases, isRentalEnabled]
+  );
+
+  const visiblePurchaseIds = useMemo(
+    () => new Set(visiblePurchases.map((p) => p.id)),
+    [visiblePurchases]
+  );
+
   const purchaseSupplierFilterOptions = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const p of datasets.purchases) {
+    for (const p of visiblePurchases) {
       if (p.supplierId && !seen.has(p.supplierId)) {
         seen.set(p.supplierId, p.supplierName);
       }
@@ -420,11 +443,12 @@ export const PurchasesPage: React.FC = () => {
         .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
         .map(([value, label]) => ({ value, label })),
     ];
-  }, [datasets.purchases]);
+  }, [visiblePurchases]);
 
   const purchaseModelFilterOptions = useMemo(() => {
     const seen = new Map<string, { label: string; searchText: string }>();
     for (const l of datasets.purchaseLines) {
+      if (!visiblePurchaseIds.has(l.purchaseId)) continue;
       if (l.itemId && !seen.has(l.itemId)) {
         const master = itemMasterById.get(l.itemId);
         const model = master?.modelName?.trim();
@@ -441,10 +465,10 @@ export const PurchasesPage: React.FC = () => {
         .sort((a, b) => a[1].label.localeCompare(b[1].label, 'ko'))
         .map(([value, info]) => ({ value, label: info.label, searchText: info.searchText })),
     ];
-  }, [datasets.purchaseLines, itemMasterById]);
+  }, [datasets.purchaseLines, itemMasterById, visiblePurchaseIds]);
 
   const filteredPurchases = useMemo(() => {
-    return datasets.purchases
+    return visiblePurchases
       .filter((p) => {
         if (filterStartDate && p.effectiveDate < filterStartDate) return false;
         if (filterEndDate && p.effectiveDate > filterEndDate) return false;
@@ -457,12 +481,12 @@ export const PurchasesPage: React.FC = () => {
       })
       .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
   }, [
-    datasets.purchases,
     filterEndDate,
     filterItemId,
     filterStartDate,
     filterSupplierId,
     purchaseLinesByPurchaseId,
+    visiblePurchases,
   ]);
 
   const purchaseCols: GridColumn<FlPurchase>[] = [
@@ -503,17 +527,21 @@ export const PurchasesPage: React.FC = () => {
       sortValue: (r) => (r.purchaseType === 'IMPORT' ? '수입' : '내수'),
       render: (r) => <StatusBadge label={r.purchaseType === 'IMPORT' ? '수입' : '내수'} tone="info" />,
     },
-    {
-      key: 'targetDomain',
-      header: '계정',
-      width: 90,
-      align: 'center',
-      sortable: true,
-      sortValue: (r) => (r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'),
-      render: (r) => (
-        <StatusBadge label={r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'} tone="primary" />
-      ),
-    },
+    ...(isRentalEnabled
+      ? ([
+          {
+            key: 'targetDomain',
+            header: '계정',
+            width: 90,
+            align: 'center',
+            sortable: true,
+            sortValue: (r) => (r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'),
+            render: (r) => (
+              <StatusBadge label={r.targetDomain === 'RENTAL' ? '렌탈자산' : '유통재고'} tone="primary" />
+            ),
+          },
+        ] as GridColumn<FlPurchase>[])
+      : []),
     {
       key: 'supplierName',
       header: '매입처',
@@ -635,16 +663,18 @@ export const PurchasesPage: React.FC = () => {
                   minDropdownWidth={280}
                 />
               </VerticalField>
-              <VerticalField label="귀속계정" minWidth={0} required>
-                <select
-                  value={targetDomain}
-                  onChange={(e) => handleDomainChange(e.target.value as 'TRADE' | 'RENTAL')}
-                  style={controlInputStyle}
-                >
-                  <option value="TRADE">유통재고</option>
-                  <option value="RENTAL">렌탈자산</option>
-                </select>
-              </VerticalField>
+              {isRentalEnabled && (
+                <VerticalField label="귀속계정" minWidth={0} required>
+                  <select
+                    value={targetDomain}
+                    onChange={(e) => handleDomainChange(e.target.value as 'TRADE' | 'RENTAL')}
+                    style={controlInputStyle}
+                  >
+                    <option value="TRADE">유통재고</option>
+                    <option value="RENTAL">렌탈자산</option>
+                  </select>
+                </VerticalField>
+              )}
               <VerticalField label="입고기준일" minWidth={0} required>
                 <input
                   type="date"
@@ -1026,14 +1056,37 @@ export const PurchasesPage: React.FC = () => {
 };
 
 export const LogisticsCostsPage: React.FC = () => {
-  const { datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('logistics_costs');
   const today = new Date().toISOString().slice(0, 10);
 
+  const rentalRelatedRefIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const c of datasets.contracts) {
+      if (c.contractDomain === 'RENTAL') ids.add(c.id);
+    }
+    for (const f of datasets.fulfillments) {
+      if (f.fulfillmentDomain === 'RENTAL') ids.add(f.id);
+    }
+    return ids;
+  }, [datasets.contracts, datasets.fulfillments]);
+
+  const visibleDispatches = useMemo(() => {
+    if (isRentalEnabled) return datasets.logisticsDispatches;
+    return datasets.logisticsDispatches.filter(
+      (d) => d.dispatchPurpose !== '교환' && !(d.relatedRefId && rentalRelatedRefIds.has(d.relatedRefId))
+    );
+  }, [datasets.logisticsDispatches, isRentalEnabled, rentalRelatedRefIds]);
+
+  const tenantLogisticsPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
+
   const carriers = useMemo(() => {
-    const matched = datasets.partners.filter((p) => p.partnerRoles.includes('운송사'));
-    return matched.length > 0 ? matched : datasets.partners;
-  }, [datasets.partners]);
+    const matched = tenantLogisticsPartners.filter((p) => p.partnerRoles.includes('운송사'));
+    return matched.length > 0 ? matched : tenantLogisticsPartners;
+  }, [tenantLogisticsPartners]);
 
   const [dispatchPurpose, setDispatchPurpose] =
     useState<FlLogisticsDispatch['dispatchPurpose']>('납품운송');
@@ -1067,7 +1120,7 @@ export const LogisticsCostsPage: React.FC = () => {
     setSaving(true);
     try {
       await recordLogisticsDispatch({
-        dispatchPurpose,
+        dispatchPurpose: !isRentalEnabled && dispatchPurpose === '교환' ? '납품운송' : dispatchPurpose,
         carrier,
         driverName: driverName.trim() || undefined,
         driverPhone: driverPhone.trim() || undefined,
@@ -1100,7 +1153,7 @@ export const LogisticsCostsPage: React.FC = () => {
 
   const carrierFilterOptions = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const d of datasets.logisticsDispatches) {
+    for (const d of visibleDispatches) {
       if (d.carrierPartnerId && !seen.has(d.carrierPartnerId)) {
         seen.set(d.carrierPartnerId, d.carrierName);
       }
@@ -1111,15 +1164,17 @@ export const LogisticsCostsPage: React.FC = () => {
         .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
         .map(([value, label]) => ({ value, label })),
     ];
-  }, [datasets.logisticsDispatches]);
+  }, [visibleDispatches]);
+
+  const effectiveFilterPurpose = !isRentalEnabled && filterPurpose === '교환' ? '' : filterPurpose;
 
   const filteredDispatches = useMemo(() => {
     const kw = filterRouteKeyword.trim().toLowerCase();
-    return datasets.logisticsDispatches
+    return visibleDispatches
       .filter((d) => {
         if (filterStartDate && d.dispatchDate < filterStartDate) return false;
         if (filterEndDate && d.dispatchDate > filterEndDate) return false;
-        if (filterPurpose && d.dispatchPurpose !== filterPurpose) return false;
+        if (effectiveFilterPurpose && d.dispatchPurpose !== effectiveFilterPurpose) return false;
         if (filterCarrierId && d.carrierPartnerId !== filterCarrierId) return false;
         if (filterBearer && d.costBearer !== filterBearer) return false;
         if (kw) {
@@ -1130,13 +1185,13 @@ export const LogisticsCostsPage: React.FC = () => {
       })
       .sort((a, b) => b.dispatchDate.localeCompare(a.dispatchDate));
   }, [
-    datasets.logisticsDispatches,
+    effectiveFilterPurpose,
     filterBearer,
     filterCarrierId,
     filterEndDate,
-    filterPurpose,
     filterRouteKeyword,
     filterStartDate,
+    visibleDispatches,
   ]);
 
   const totals = useMemo(() => {
@@ -1168,7 +1223,7 @@ export const LogisticsCostsPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
             <VerticalField label="운송목적" required>
               <select
-                value={dispatchPurpose}
+                value={!isRentalEnabled && dispatchPurpose === '교환' ? '납품운송' : dispatchPurpose}
                 onChange={(e) =>
                   setDispatchPurpose(e.target.value as FlLogisticsDispatch['dispatchPurpose'])
                 }
@@ -1176,7 +1231,7 @@ export const LogisticsCostsPage: React.FC = () => {
               >
                 <option value="납품운송">납품운송</option>
                 <option value="회수운송">회수운송</option>
-                <option value="교환">교환</option>
+                {isRentalEnabled && <option value="교환">교환</option>}
                 <option value="일반운송">일반운송</option>
                 <option value="자체이동">자체이동</option>
               </select>
@@ -1331,14 +1386,14 @@ export const LogisticsCostsPage: React.FC = () => {
           </VerticalField>
           <VerticalField label="운송목적" minWidth={0}>
             <select
-              value={filterPurpose}
+              value={effectiveFilterPurpose}
               onChange={(e) => setFilterPurpose(e.target.value)}
               style={controlInputStyle}
             >
               <option value="">전체 목적</option>
               <option value="납품운송">납품운송</option>
               <option value="회수운송">회수운송</option>
-              <option value="교환">교환</option>
+              {isRentalEnabled && <option value="교환">교환</option>}
               <option value="자체이동">자체이동</option>
               <option value="일반운송">일반운송</option>
             </select>

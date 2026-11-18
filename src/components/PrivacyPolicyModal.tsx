@@ -16,14 +16,18 @@ interface OfficerFormState {
 }
 
 export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen = true, onClose }) => {
-  const { tenantProfile, currentUser, canEditPage, updateTenantConfig } = useAppShell();
+  const { tenantProfile, isRentalEnabled, currentUser, canEditPage, updateTenantConfig } = useAppShell();
 
   const canEdit = Boolean(
     currentUser && (currentUser.tierLevel >= 7 || canEditPage('system_settings'))
   );
 
-  const companyName = tenantProfile.corporateName || tenantProfile.displayName || '이브로지게차 렌탈';
-  const businessItem = tenantProfile.businessItem || '지게차 렌탈';
+  const companyName =
+    tenantProfile.corporateName ||
+    tenantProfile.displayName ||
+    (isRentalEnabled ? '이브로지게차 렌탈' : '이브로지게차');
+  const businessItem =
+    tenantProfile.businessItem || (isRentalEnabled ? '지게차 렌탈' : '지게차 및 부품 도소매');
 
   const savedOfficer = (tenantProfile.features as Record<string, unknown> | undefined)?.privacyOfficer as
     | Partial<OfficerFormState>
@@ -166,7 +170,11 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen =
           </p>
           <ul style={{ margin: '0 0 12px 0', paddingLeft: '18px' }}>
             <li>임직원 인사·근태·급여 관리 및 시스템 접근 권한 인증</li>
-            <li>렌탈·유통 계약 체결, 장비 출고·배차·회수 및 정비 이력 관리</li>
+            <li>
+              {isRentalEnabled
+                ? '렌탈·유통 계약 체결, 장비 출고·배차·회수 및 정비 이력 관리'
+                : '유통 계약 체결, 장비·부품 출고·배차 및 사후처리 이력 관리'}
+            </li>
             <li>세금계산서·거래명세서 발행, 채권·채무 정산 및 수납 대사</li>
           </ul>
 

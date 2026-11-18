@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import * as XLSX from 'xlsx';
 import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { usePageActive } from '../core/PageActivityContext';
+import { FL_MANUAL_REGISTRY } from '../manual/manualRegistry';
 import { matchesKoreanQuery } from '../utils/hangulSearch';
 import { formatKoStatus, koStatusTone, type FlItemMaster, type FlPartner } from '../types/domain';
 import {
@@ -355,6 +357,20 @@ export interface DataGridProps<T> {
   emptyText?: string;
   maxHeight?: string;
   manualId?: string;
+  enableExcelExport?: boolean;
+  excelFileName?: string;
+}
+
+function extractReactNodeText(node: React.ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractReactNodeText).filter(Boolean).join(' ');
+  if (React.isValidElement(node)) {
+    const props = node.props as Record<string, unknown>;
+    if (typeof props.label === 'string') return props.label;
+    if (props.children !== undefined) return extractReactNodeText(props.children as React.ReactNode);
+  }
+  return '';
 }
 
 export function DataGrid<T>({
@@ -366,7 +382,10 @@ export function DataGrid<T>({
   emptyText = '조회된 데이터가 없습니다.',
   maxHeight = 'calc(100vh - 210px)',
   manualId,
+  enableExcelExport = true,
+  excelFileName,
 }: DataGridProps<T>) {
+  const { activePage } = useAppShell();
   const [sortState, setSortState] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
 
   const toggleSort = (col: GridColumn<T>) => {
@@ -399,19 +418,69 @@ export function DataGrid<T>({
     });
   }, [columns, rows, sortState]);
 
+  const handleExportExcel = () => {
+    if (sortedRows.length === 0) return;
+    const exportCols = columns.filter(
+      (c) =>
+        c.header &&
+        c.header.trim() !== '' &&
+        !['상세', '저장', '삭제', '작업', '처리'].includes(c.header.trim())
+    );
+    const sheetRows = sortedRows.map((row, idx) => {
+      const obj: Record<string, string | number> = {};
+      for (const col of exportCols) {
+        const rendered = extractReactNodeText(col.render(row, idx)).trim();
+        if (rendered) {
+          obj[col.header] = rendered;
+        } else if (col.sortValue) {
+          const sv = col.sortValue(row);
+          obj[col.header] = sv ?? '';
+        } else {
+          obj[col.header] = '';
+        }
+      }
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(sheetRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '목록');
+    const pageTitle = excelFileName || FL_MANUAL_REGISTRY[activePage]?.pageTitle || '목록';
+    const safeTitle = pageTitle.replace(/[\\/:*?"<>|]/g, '_');
+    const dateTag = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `${safeTitle}_${dateTag}.xlsx`);
+  };
+
   return (
-    <div
-      data-manual-id={manualId}
-      style={{
-        width: '100%',
-        overflow: 'auto',
-        maxHeight,
-        border: '1px solid var(--table-border-color)',
-        borderRadius: '8px',
-        backgroundColor: 'var(--bg-card)',
-        boxShadow: 'none',
-      }}
-    >
+    <div data-manual-id={manualId} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {enableExcelExport && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button
+            type="button"
+            data-testid="grid-excel-export-btn"
+            disabled={sortedRows.length === 0}
+            onClick={handleExportExcel}
+            style={{
+              ...actionBtnStyle('secondary', true),
+              opacity: sortedRows.length === 0 ? 0.5 : 1,
+              cursor: sortedRows.length === 0 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <FileSpreadsheet size={13} />
+            <span>엑셀 다운로드</span>
+          </button>
+        </div>
+      )}
+      <div
+        style={{
+          width: '100%',
+          overflow: 'auto',
+          maxHeight,
+          border: '1px solid var(--table-border-color)',
+          borderRadius: '8px',
+          backgroundColor: 'var(--bg-card)',
+          boxShadow: 'none',
+        }}
+      >
       <table
         style={{
           width: '100%',
@@ -531,6 +600,7 @@ export function DataGrid<T>({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -767,8 +837,10 @@ export const DocumentActionBar: React.FC<{
   disabled = false,
   manualId,
 }) => {
-  const { tenantProfile, notifyToast, agentOnline } = useAppShell();
+  const { tenantProfile, currentUser, notifyToast, agentOnline } = useAppShell();
   const [busy, setBusy] = useState(false);
+  const [mailStepMsg, setMailStepMsg] = useState<string | null>(null);
+  const [mailErrorMsg, setMailErrorMsg] = useState<string | null>(null);
   const [mailModalOpen, setMailModalOpen] = useState(false);
   const [editedPath, setEditedPath] = useState<string | null>(null);
   const [editedFileName, setEditedFileName] = useState<string | null>(null);
@@ -814,34 +886,106 @@ export const DocumentActionBar: React.FC<{
     }
   };
 
+  const mailHistoryKey = `ebro_fl_mail_log::${docLabel}::${defaultSubject}`;
+  const [lastMailLog, setLastMailLog] = useState<{ sentAt: string; senderName: string; toEmail: string } | null>(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(mailHistoryKey) : null;
+      return raw ? (JSON.parse(raw) as { sentAt: string; senderName: string; toEmail: string }) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const handleSendMail = async () => {
     if (!toEmail.trim()) {
       notifyToast('받는사람 이메일 주소를 입력해 주세요.', 'error');
       return;
     }
     setBusy(true);
+    setMailErrorMsg(null);
+    setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중');
+    const slowGenTimer = window.setTimeout(() => {
+      setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중 · 지연사유: 양식 및 도장 이미지 처리 대기');
+    }, 3500);
     try {
       let fileName = editedFileName || `${docLabel}.xlsx`;
       let base64Content: string | undefined;
       if (!editedPath) {
-        const res = await onGenerate();
+        const genPromise = onGenerate();
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          window.setTimeout(() => reject(new Error('첨부 문서 생성 시간 초과 (15초)')), 15000)
+        );
+        const res = await Promise.race([genPromise, timeoutPromise]);
         fileName = res.fileName;
         base64Content = res.base64;
       }
-      await sendDocumentEmailViaAgent({
-        tenant: tenantProfile,
-        to: toEmail.trim(),
-        cc: ccEmail.trim() || undefined,
-        subject: subject.trim(),
-        body,
-        fileName,
-        localEditedPath: editedPath,
-        base64Content,
-      });
+      window.clearTimeout(slowGenTimer);
+
+      const MAX_RETRY = 3;
+      const retryDelays = [1500, 3000];
+      let lastErr: unknown = null;
+      let sent = false;
+
+      for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
+        setMailStepMsg(`2/3 단계: 에이전트 메일 서버 연결 및 발송 중 (${attempt}/${MAX_RETRY}회 시도)`);
+        const slowSendTimer = window.setTimeout(() => {
+          setMailStepMsg(
+            `2/3 단계: 메일 발송 지연 (${attempt}/${MAX_RETRY}회) · 지연사유: 로컬 에이전트 또는 메일 서버 응답 대기`
+          );
+        }, 4000);
+        try {
+          await sendDocumentEmailViaAgent({
+            tenant: tenantProfile,
+            to: toEmail.trim(),
+            cc: ccEmail.trim() || undefined,
+            subject: subject.trim(),
+            body,
+            fileName,
+            localEditedPath: editedPath,
+            base64Content,
+          });
+          window.clearTimeout(slowSendTimer);
+          sent = true;
+          break;
+        } catch (err) {
+          window.clearTimeout(slowSendTimer);
+          lastErr = err;
+          const reason = err instanceof Error ? err.message : '에이전트 응답 지연 또는 연결 오류';
+          if (attempt < MAX_RETRY) {
+            const waitMs = retryDelays[attempt - 1] ?? 3000;
+            setMailStepMsg(
+              `재시도 대기 중 · 지연사유: ${reason} · ${(waitMs / 1000).toFixed(1)}초 후 재시도 (${attempt + 1}/${MAX_RETRY}회)`
+            );
+            await new Promise((r) => window.setTimeout(r, waitMs));
+          }
+        }
+      }
+
+      if (!sent) {
+        throw lastErr instanceof Error ? lastErr : new Error('이메일 발송에 최종 실패했습니다.');
+      }
+
+      const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      const logEntry = {
+        sentAt: nowStr,
+        senderName: currentUser?.name || '담당자',
+        toEmail: toEmail.trim(),
+      };
+      setLastMailLog(logEntry);
+      try {
+        window.localStorage.setItem(mailHistoryKey, JSON.stringify(logEntry));
+      } catch {
+        // 무시
+      }
+      setMailStepMsg('3/3 단계: 발송 완료');
       notifyToast(`${docLabel} 공식 이메일 발송 완료`, 'success');
       setMailModalOpen(false);
     } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '이메일 발송 실패', 'error');
+      window.clearTimeout(slowGenTimer);
+      const errMsg = err instanceof Error ? err.message : '이메일 발송에 최종 실패했습니다.';
+      setMailStepMsg(null);
+      setMailErrorMsg(`발송 최종 실패: ${errMsg}`);
+      notifyToast(`발송 최종 실패: ${errMsg}`, 'error');
     } finally {
       setBusy(false);
     }
@@ -940,6 +1084,52 @@ export const DocumentActionBar: React.FC<{
               ? `편집 파일 첨부 대상: ${editedFileName} · ${editedPath}`
               : `발송 시 ${docLabel} 최신 양식 파일 생성 후 첨부`}
           </div>
+          {mailStepMsg && (
+            <div
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--primary)',
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
+                fontSize: '12px',
+                fontWeight: 700,
+              }}
+            >
+              {mailStepMsg}
+            </div>
+          )}
+          {mailErrorMsg && (
+            <div
+              role="alert"
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--danger)',
+                backgroundColor: 'var(--danger-light)',
+                color: 'var(--danger)',
+                fontSize: '12px',
+                fontWeight: 700,
+              }}
+            >
+              {mailErrorMsg}
+            </div>
+          )}
+          {lastMailLog && (
+            <div
+              style={{
+                padding: '8px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-app)',
+                color: 'var(--text-secondary)',
+                fontSize: '11.5px',
+                fontWeight: 600,
+              }}
+            >
+              최근 발송: {lastMailLog.sentAt} · 발송자 {lastMailLog.senderName} · 수신 {lastMailLog.toEmail}
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
             {editedPath && (
               <button

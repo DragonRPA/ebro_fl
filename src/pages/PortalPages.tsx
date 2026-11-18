@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useAppShell } from '../core/AppShellContext';
-import { useActionGateway } from '../core/ActionCommandGateway';
+import { isApprovalRequestRentalRelated, useActionGateway } from '../core/ActionCommandGateway';
 import {
   ConservationBar,
   DataGrid,
@@ -16,6 +16,7 @@ import {
 import {
   TIER_LABELS,
   formatKoActionCode,
+  formatKoStatus,
   formatKoTargetTable,
   type FlApprovalRequest,
   type FlPageId,
@@ -36,7 +37,7 @@ interface TodoFeedRow {
 }
 
 export const DashboardPage: React.FC = () => {
-  const { currentUser, datasets, navigateTo, formatMoney, tierLabel } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, navigateTo, formatMoney, tierLabel } = useAppShell();
   const [tab, setTab] = useState<TodoCategory>('ALL');
 
   const today = new Date().toISOString().slice(0, 10);
@@ -46,11 +47,12 @@ export const DashboardPage: React.FC = () => {
 
     for (const r of datasets.approvalRequests) {
       if (r.status !== 'PENDING') continue;
+      if (!isRentalEnabled && isApprovalRequestRentalRelated(r, datasets)) continue;
       const canApprove = (currentUser?.tierLevel || 1) >= r.requiredTier;
       out.push({
         id: r.id,
         category: 'APPROVAL',
-        categoryLabel: '결재 대기',
+        categoryLabel: '결재',
         title: `${r.title} [${TIER_LABELS[r.requiredTier]}]`,
         counterparty: `${r.requesterName} · ${TIER_LABELS[r.requesterTier]}`,
         dueDate: r.requestedAt.slice(0, 10),
@@ -62,14 +64,19 @@ export const DashboardPage: React.FC = () => {
 
     for (const f of datasets.fulfillments) {
       if (f.status !== 'REQUESTED') continue;
+      if (!isRentalEnabled && f.fulfillmentDomain !== 'TRADE') continue;
       out.push({
         id: f.id,
         category: 'FULFILLMENT',
-        categoryLabel: `${f.actionType} 의뢰`,
+        categoryLabel: isRentalEnabled ? `${f.actionType} 의뢰` : '출고',
         title: `${f.fulfillmentNo} · 수량 ${f.quantity}`,
         counterparty: f.partnerName,
         dueDate: f.effectiveDate || today,
-        amountText: f.fulfillmentDomain === 'TRADE' ? '유통 출고' : '렌탈 입출고',
+        amountText: isRentalEnabled
+          ? f.fulfillmentDomain === 'TRADE'
+            ? '유통 출고'
+            : '렌탈 입출고'
+          : '출고 대기',
         urgencyTone: 'primary',
         targetPage: f.fulfillmentDomain === 'TRADE' ? 'trade_fulfillment' : 'rental_fulfillment',
       });
@@ -77,11 +84,12 @@ export const DashboardPage: React.FC = () => {
 
     for (const b of datasets.billings) {
       if (b.status === 'CANCELLED' || b.unpaidBalanceKrw <= 0) continue;
+      if (!isRentalEnabled && b.billingDomain === 'RENTAL') continue;
       const overdue = b.dueDate < today;
       out.push({
         id: b.id,
         category: 'BILLING',
-        categoryLabel: '미수 청구',
+        categoryLabel: '수금',
         title: `${b.billingNo} · ${b.billingYm}`,
         counterparty: b.partnerName,
         dueDate: b.dueDate,
@@ -94,12 +102,19 @@ export const DashboardPage: React.FC = () => {
     const cutoff = new Date(Date.now() + 45 * 86400000).toISOString().slice(0, 10);
     for (const c of datasets.contracts) {
       if (c.status !== 'ACTIVE' && c.status !== 'FULFILLING') continue;
+      if (!isRentalEnabled && c.contractDomain === 'RENTAL') continue;
       if (c.endDate <= cutoff) {
         out.push({
           id: c.id,
           category: 'CONTRACT',
-          categoryLabel: '만기 도래 계약',
-          title: `${c.contractNo} · ${c.contractDomain === 'RENTAL' ? '렌탈' : '유통'}`,
+          categoryLabel: isRentalEnabled
+            ? c.contractDomain === 'RENTAL'
+              ? '만기 계약'
+              : '납기 도래'
+            : '납기 도래',
+          title: isRentalEnabled
+            ? `${c.contractNo} · ${c.contractDomain === 'RENTAL' ? '렌탈' : '유통'}`
+            : c.contractNo,
           counterparty: c.partnerName,
           dueDate: c.endDate,
           amountText: formatMoney(c.totalAmountKrw, { salesSensitive: true }),
@@ -110,11 +125,13 @@ export const DashboardPage: React.FC = () => {
     }
 
     return out.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [currentUser?.tierLevel, datasets, formatMoney, today]);
+  }, [currentUser?.tierLevel, datasets, formatMoney, isRentalEnabled, today]);
+
+  const effectiveTab: TodoCategory = tab;
 
   const filtered = useMemo(
-    () => (tab === 'ALL' ? feedRows : feedRows.filter((r) => r.category === tab)),
-    [feedRows, tab]
+    () => (effectiveTab === 'ALL' ? feedRows : feedRows.filter((r) => r.category === effectiveTab)),
+    [effectiveTab, feedRows]
   );
 
   const columns: GridColumn<TodoFeedRow>[] = [
@@ -186,12 +203,12 @@ export const DashboardPage: React.FC = () => {
           <SegmentedTabs
             tabs={[
               { id: 'ALL', label: '전체', count: counts.ALL },
-              { id: 'APPROVAL', label: '결재대기', count: counts.APPROVAL },
-              { id: 'FULFILLMENT', label: '출고의뢰', count: counts.FULFILLMENT },
-              { id: 'BILLING', label: '미수청구', count: counts.BILLING },
-              { id: 'CONTRACT', label: '만기계약', count: counts.CONTRACT },
+              { id: 'APPROVAL', label: '결재', count: counts.APPROVAL },
+              { id: 'FULFILLMENT', label: '출고', count: counts.FULFILLMENT },
+              { id: 'BILLING', label: '수금', count: counts.BILLING },
+              { id: 'CONTRACT', label: isRentalEnabled ? '만기·납기' : '납기도래', count: counts.CONTRACT },
             ]}
-            activeId={tab}
+            activeId={effectiveTab}
             onChange={(id) => setTab(id as TodoCategory)}
           />
         }
@@ -211,15 +228,118 @@ export const DashboardPage: React.FC = () => {
           { label: '결재대기', value: `${counts.APPROVAL}건`, tone: counts.APPROVAL > 0 ? 'danger' : 'neutral' },
           { label: '출고의뢰', value: `${counts.FULFILLMENT}건`, tone: 'primary' },
           { label: '미수청구', value: `${counts.BILLING}건`, tone: counts.BILLING > 0 ? 'warning' : 'neutral' },
-          { label: '만기계약', value: `${counts.CONTRACT}건`, tone: 'neutral' },
+          { label: isRentalEnabled ? '만기·납기' : '납기도래', value: `${counts.CONTRACT}건`, tone: 'neutral' },
         ]}
       />
     </div>
   );
 };
 
+const PAYLOAD_KEY_LABELS: Record<string, string> = {
+  unitId: '대상 재고 ID',
+  contractId: '대상 계약 ID',
+  purchaseId: '대상 매입 ID',
+  payableId: '대상 채무 ID',
+  billingId: '대상 청구 ID',
+  fulfillmentId: '대상 출고의뢰 ID',
+  toDomain: '전환 대상 구분',
+  effectiveDate: '처리 기준일',
+  paidDate: '지급 일자',
+  settledFxRate: '결제 적용 환율',
+  paidAmountKrw: '지급 금액(원)',
+  billingYm: '청구 기준 연월',
+  memo: '적요 · 메모',
+  reason: '변경 사유',
+  caseType: '사후처리 유형',
+  refundSupplyKrw: '환불 공급가액',
+};
+
+function buildApprovalContextRows(
+  req: FlApprovalRequest,
+  datasets: ReturnType<typeof useAppShell>['datasets'],
+  formatMoney: (amount: number | null | undefined, options?: { salesSensitive?: boolean }) => string,
+  rentalEnabled: boolean
+): Array<{ label: string; value: string }> {
+  const out: Array<{ label: string; value: string }> = [];
+  const p = (req.payload || {}) as Record<string, unknown>;
+
+  const unitId = String(p.unitId || (req.targetTable === 'fl_inventory_units' ? req.targetId : '') || '');
+  const unit = unitId ? datasets.inventoryUnits.find((u) => u.id === unitId) : undefined;
+  if (unit) {
+    out.push(
+      { label: '재고번호 · 품목', value: `${unit.unitCode} · ${unit.itemName}` },
+      { label: '차대번호 · 로트', value: unit.serialNo || unit.lotNo || '-' },
+      rentalEnabled
+        ? { label: '현재 구분 · 상태', value: `${unit.ownershipDomain} · ${formatKoStatus(unit.status)}` }
+        : {
+            label: '현재 상태',
+            value: formatKoStatus(
+              unit.status === '대여중' || unit.status === '정비중' ? '보유중' : unit.status
+            ),
+          },
+      { label: '장부단가 · 입고일', value: `${formatMoney(unit.unitCostKrw)} · ${unit.acquisitionDate}` }
+    );
+  }
+
+  const contractId = String(p.contractId || (req.targetTable === 'fl_contracts' ? req.targetId : '') || '');
+  const contract = contractId ? datasets.contracts.find((c) => c.id === contractId) : undefined;
+  if (contract) {
+    out.push(
+      {
+        label: rentalEnabled ? '계약번호 · 구분' : '계약번호',
+        value: rentalEnabled
+          ? `${contract.contractNo} · ${contract.contractDomain === 'RENTAL' ? '렌탈' : '유통'}`
+          : contract.contractNo,
+      },
+      { label: '거래처', value: contract.partnerName },
+      { label: '계약기간', value: `${contract.contractDate} ~ ${contract.endDate}` },
+      { label: '계약 총액', value: formatMoney(contract.totalAmountKrw, { salesSensitive: true }) }
+    );
+  }
+
+  const payableId = String(p.payableId || (req.targetTable === 'fl_ap_payables' ? req.targetId : '') || '');
+  const payable = payableId ? datasets.apPayables.find((a) => a.id === payableId) : undefined;
+  if (payable) {
+    out.push(
+      { label: '채무번호 · 거래처', value: `${payable.payableNo} · ${payable.partnerName}` },
+      { label: '총 채무액 · 기지급', value: `${formatMoney(payable.totalAmountKrw)} / 기지급 ${formatMoney(payable.paidAmountKrw)}` },
+      { label: '발생환율 · 외화액', value: `${payable.bookedFxRate} · ${payable.foreignAmount.toLocaleString('ko-KR')} ${payable.currencyCode}` }
+    );
+  }
+
+  const purchaseId = String(p.purchaseId || (req.targetTable === 'fl_purchases' ? req.targetId : '') || '');
+  const purchase = purchaseId ? datasets.purchases.find((pu) => pu.id === purchaseId) : undefined;
+  if (purchase) {
+    out.push(
+      { label: '매입번호 · 매입처', value: `${purchase.purchaseNo} · ${purchase.supplierName || '-'}` },
+      { label: '매입일 · 총원가', value: `${purchase.effectiveDate} · ${formatMoney(purchase.totalLandedCostKrw)}` }
+    );
+  }
+
+  const billingId = String(p.billingId || (req.targetTable === 'fl_billings' ? req.targetId : '') || '');
+  const billing = billingId ? datasets.billings.find((b) => b.id === billingId) : undefined;
+  if (billing) {
+    out.push(
+      { label: '청구번호 · 청구월', value: `${billing.billingNo} · ${billing.billingYm}` },
+      { label: '매출처 · 납기일', value: `${billing.partnerName} · ${billing.dueDate}` },
+      { label: '청구총액 · 미수잔액', value: `${formatMoney(billing.totalAmountKrw)} / 미수 ${formatMoney(billing.unpaidBalanceKrw)}` }
+    );
+  }
+
+  const fulId = String(p.fulfillmentId || (req.targetTable === 'fl_fulfillments' ? req.targetId : '') || '');
+  const ful = fulId ? datasets.fulfillments.find((f) => f.id === fulId) : undefined;
+  if (ful) {
+    out.push(
+      { label: '출고의뢰 · 매출처', value: `${ful.fulfillmentNo} · ${ful.partnerName}` },
+      { label: '수량 · 희망완료일', value: `${ful.quantity}대 · ${ful.effectiveDate}` }
+    );
+  }
+
+  return out;
+}
+
 export const ApprovalInboxPage: React.FC = () => {
-  const { currentUser, datasets, notifyToast } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, notifyToast, formatMoney } = useAppShell();
   const { approveRequest, rejectRequest } = useActionGateway();
 
   const [statusTab, setStatusTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
@@ -228,22 +348,30 @@ export const ApprovalInboxPage: React.FC = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const visibleRequests = useMemo(
+    () =>
+      isRentalEnabled
+        ? datasets.approvalRequests
+        : datasets.approvalRequests.filter((r) => !isApprovalRequestRentalRelated(r, datasets)),
+    [datasets, isRentalEnabled]
+  );
+
   const filtered = useMemo(() => {
     const list =
       statusTab === 'ALL'
-        ? datasets.approvalRequests
-        : datasets.approvalRequests.filter((r) => r.status === statusTab);
+        ? visibleRequests
+        : visibleRequests.filter((r) => r.status === statusTab);
     return [...list].sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
-  }, [datasets.approvalRequests, statusTab]);
+  }, [statusTab, visibleRequests]);
 
   const counts = useMemo(
     () => ({
-      PENDING: datasets.approvalRequests.filter((r) => r.status === 'PENDING').length,
-      APPROVED: datasets.approvalRequests.filter((r) => r.status === 'APPROVED').length,
-      REJECTED: datasets.approvalRequests.filter((r) => r.status === 'REJECTED').length,
-      ALL: datasets.approvalRequests.length,
+      PENDING: visibleRequests.filter((r) => r.status === 'PENDING').length,
+      APPROVED: visibleRequests.filter((r) => r.status === 'APPROVED').length,
+      REJECTED: visibleRequests.filter((r) => r.status === 'REJECTED').length,
+      ALL: visibleRequests.length,
     }),
-    [datasets.approvalRequests]
+    [visibleRequests]
   );
 
   const handleApprove = async (req: FlApprovalRequest) => {
@@ -330,7 +458,7 @@ export const ApprovalInboxPage: React.FC = () => {
       },
     },
     { key: 'id', header: '요청번호', width: 140, render: (r) => r.id },
-    { key: 'actionCode', header: '업무구분', width: 155, render: (r) => formatKoActionCode(r.actionCode) },
+    { key: 'actionCode', header: '업무구분', width: 155, render: (r) => formatKoActionCode(r.actionCode, isRentalEnabled) },
     { key: 'title', header: '요청 제목', render: (r) => <span style={{ fontWeight: 700 }}>{r.title}</span> },
     {
       key: 'requester',
@@ -401,11 +529,42 @@ export const ApprovalInboxPage: React.FC = () => {
       >
         {selectedReq && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', fontSize: '13px' }}>
-              <span>요청번호: {selectedReq.id}</span>
-              <span>대상원장: {formatKoTargetTable(selectedReq.targetTable)}</span>
-              <span>필요티어: {TIER_LABELS[selectedReq.requiredTier]}</span>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+                gap: '8px',
+                padding: '10px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-header)',
+                fontSize: '12.5px',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>요청번호</div>
+                <div style={{ fontWeight: 700 }}>{selectedReq.id}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>업무구분 · 대상원장</div>
+                <div style={{ fontWeight: 700 }}>
+                  {formatKoActionCode(selectedReq.actionCode, isRentalEnabled)} · {formatKoTargetTable(selectedReq.targetTable)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>요청자 · 요청일시</div>
+                <div style={{ fontWeight: 700 }}>
+                  {selectedReq.requesterName} · {selectedReq.requestedAt.slice(0, 16).replace('T', ' ')}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>필요티어 · 상태</div>
+                <div style={{ fontWeight: 700 }}>
+                  {TIER_LABELS[selectedReq.requiredTier]} · {formatKoStatus(selectedReq.status)}
+                </div>
+              </div>
             </div>
+
             {selectedReq.rejectReason && (
               <div
                 style={{
@@ -419,36 +578,60 @@ export const ApprovalInboxPage: React.FC = () => {
                 반려사유: {selectedReq.rejectReason}
               </div>
             )}
-            <div
-              style={{
-                border: '1px solid var(--table-border-color)',
-                borderRadius: '6px',
-                overflow: 'hidden',
-              }}
-            >
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
-                <tbody>
-                  {Object.entries(selectedReq.payload || {}).map(([k, v]) => (
-                    <tr key={k} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
-                      <td
-                        style={{
-                          width: '180px',
-                          padding: 'calc(7px - 2pt) var(--space-compact-pad-x)',
-                          fontWeight: 700,
-                          backgroundColor: 'var(--bg-header)',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {k}
-                      </td>
-                      <td style={{ padding: 'calc(7px - 2pt) var(--space-compact-pad-x)', wordBreak: 'break-all' }}>
-                        {typeof v === 'object' ? JSON.stringify(v) : String(v ?? '-')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+            {(() => {
+              const contextRows = buildApprovalContextRows(selectedReq, datasets, formatMoney, isRentalEnabled);
+              const payloadEntries = Object.entries(selectedReq.payload || {}).filter(
+                ([k]) => k !== 'seq' && k !== 'source'
+              );
+              const allRows = [
+                ...contextRows,
+                ...payloadEntries.map(([k, v]) => ({
+                  label: PAYLOAD_KEY_LABELS[k] || k,
+                  value: typeof v === 'object' ? JSON.stringify(v) : String(v ?? '-'),
+                })),
+              ];
+              return (
+                <div
+                  style={{
+                    border: '1px solid var(--table-border-color)',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+                    <tbody>
+                      {allRows.length === 0 ? (
+                        <tr>
+                          <td style={{ padding: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                            연결된 상세 항목이 없습니다.
+                          </td>
+                        </tr>
+                      ) : (
+                        allRows.map((row, idx) => (
+                          <tr key={`${row.label}-${idx}`} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
+                            <td
+                              style={{
+                                width: '180px',
+                                padding: 'calc(7px - 2pt) var(--space-compact-pad-x)',
+                                fontWeight: 700,
+                                backgroundColor: 'var(--bg-header)',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {row.label}
+                            </td>
+                            <td style={{ padding: 'calc(7px - 2pt) var(--space-compact-pad-x)', wordBreak: 'break-all' }}>
+                              {row.value}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         )}
       </ModalDialog>

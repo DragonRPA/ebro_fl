@@ -14,7 +14,7 @@ import {
 import { generateFinancialStatements } from '../services/financialStatementEngine';
 import { generateTransactionStatementExcel } from '../services/documentService';
 import { useManual } from '../manual/ManualContext';
-import { ALL_MANUAL_ENTRIES } from '../manual/manualRegistry';
+import { getManualEntriesForTenant } from '../manual/manualRegistry';
 import AccountingStandardsTab from '../components/AccountingStandardsTab';
 import {
   CommaNumberInput,
@@ -33,8 +33,9 @@ import {
   AP_STATUS_KO_LABELS,
   BANK_MATCH_STATUS_KO_LABELS,
   BILLING_STATUS_KO_LABELS,
-  FL_MENU_GROUPS,
   PAYMENT_METHODS,
+  RENTAL_ONLY_ACTION_CODES,
+  RENTAL_ONLY_PAYABLE_TYPES,
   TIER_LABELS,
   computeDueDateFromCycle,
   defaultTierPagePermission,
@@ -44,22 +45,66 @@ import {
   formatKoPayableType,
   formatKoStatus,
   formatPaymentTermsLabel,
+  getDocTypesForTenant,
+  getMenuGroupsForTenant,
   koStatusTone,
   normalizePaymentMethod,
   type DocumentTemplateType,
+  type FlApPayable,
   type FlApprovalPolicy,
   type FlBankTransaction,
   type FlBilling,
+  type FlContract,
   type FlDocumentTemplate,
+  type FlFulfillment,
+  type FlLogisticsDispatch,
   type FlPageId,
+  type FlPurchase,
   type FlUser,
   type TierLevel,
 } from '../types/domain';
+
+function buildNonRentalPayables(datasets: {
+  apPayables: FlApPayable[];
+  purchases: FlPurchase[];
+  contracts: FlContract[];
+  fulfillments: FlFulfillment[];
+  logisticsDispatches: FlLogisticsDispatch[];
+}): FlApPayable[] {
+  const rentalPurchaseIds = new Set(
+    datasets.purchases.filter((p) => p.targetDomain === 'RENTAL').map((p) => p.id)
+  );
+  const rentalContractIds = new Set(
+    datasets.contracts.filter((c) => c.contractDomain === 'RENTAL').map((c) => c.id)
+  );
+  const rentalFulfillmentIds = new Set(
+    datasets.fulfillments.filter((f) => f.fulfillmentDomain === 'RENTAL').map((f) => f.id)
+  );
+  const rentalDispatchIds = new Set(
+    datasets.logisticsDispatches
+      .filter(
+        (d) =>
+          d.dispatchPurpose === '교환' ||
+          (d.relatedRefId
+            ? rentalContractIds.has(d.relatedRefId) || rentalFulfillmentIds.has(d.relatedRefId)
+            : false)
+      )
+      .map((d) => d.id)
+  );
+  const rentalPayableSet = new Set<FlApPayable['payableType']>(RENTAL_ONLY_PAYABLE_TYPES);
+  return datasets.apPayables.filter((ap) => {
+    if (rentalPayableSet.has(ap.payableType)) return false;
+    if (ap.payableType === 'PURCHASE' && ap.refId && rentalPurchaseIds.has(ap.refId)) return false;
+    if (ap.payableType === 'LOGISTICS' && ap.refId && rentalDispatchIds.has(ap.refId)) return false;
+    return true;
+  });
+}
 
 export const ArBillingCollectionPage: React.FC = () => {
   const {
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     formatMoney,
     refreshAll,
@@ -71,9 +116,19 @@ export const ArBillingCollectionPage: React.FC = () => {
   const curYm = today.slice(0, 7);
   const [billingYm, setBillingYm] = useState(curYm);
 
+  const visibleBillings = useMemo(
+    () =>
+      isRentalEnabled
+        ? datasets.billings
+        : datasets.billings.filter((b) => b.billingDomain !== 'RENTAL'),
+    [datasets.billings, isRentalEnabled]
+  );
+
   const billableContracts = useMemo(() => {
     const active = datasets.contracts.filter(
-      (c) => c.status === 'ACTIVE' || c.status === 'FULFILLING' || c.status === 'COMPLETED'
+      (c) =>
+        (c.status === 'ACTIVE' || c.status === 'FULFILLING' || c.status === 'COMPLETED') &&
+        (isRentalEnabled || c.contractDomain !== 'RENTAL')
     );
     return [...active].sort((a, b) => {
       const aAmt = buildContractBillingLines({
@@ -105,6 +160,7 @@ export const ArBillingCollectionPage: React.FC = () => {
     datasets.fulfillments,
     datasets.logisticsDispatches,
     datasets.rentalMaintenances,
+    isRentalEnabled,
   ]);
 
   const [contractId, setContractId] = useState(billableContracts[0]?.id || '');
@@ -117,7 +173,7 @@ export const ArBillingCollectionPage: React.FC = () => {
   });
 
   const [selectedBillingId, setSelectedBillingId] = useState<string | null>(
-    datasets.billings[0]?.id || null
+    visibleBillings[0]?.id || null
   );
   const [invoiceNoEdits, setInvoiceNoEdits] = useState<Record<string, string>>({});
   const [colAmount, setColAmount] = useState(0);
@@ -158,7 +214,7 @@ export const ArBillingCollectionPage: React.FC = () => {
   }, [billingYm, hasSelectedContract, scCycle, scDueDay, scOffset, today]);
 
   const selectedBilling =
-    datasets.billings.find((b) => b.id === selectedBillingId) || datasets.billings[0] || null;
+    visibleBillings.find((b) => b.id === selectedBillingId) || visibleBillings[0] || null;
   const selectedPartner = useMemo(
     () =>
       selectedBilling
@@ -271,12 +327,12 @@ export const ArBillingCollectionPage: React.FC = () => {
   };
 
   const totals = useMemo(() => {
-    const active = datasets.billings.filter((b) => b.status !== 'CANCELLED');
+    const active = visibleBillings.filter((b) => b.status !== 'CANCELLED');
     const total = active.reduce((s, b) => s + b.totalAmountKrw, 0);
     const paid = active.reduce((s, b) => s + b.paidAmountKrw, 0);
     const unpaid = active.reduce((s, b) => s + b.unpaidBalanceKrw, 0);
     return { total, paid, unpaid, diff: total - paid - unpaid };
-  }, [datasets.billings]);
+  }, [visibleBillings]);
 
   const billingCols: GridColumn<FlBilling>[] = [
     {
@@ -402,7 +458,8 @@ export const ArBillingCollectionPage: React.FC = () => {
               >
                 {billableContracts.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.contractNo} · {c.contractDomain === 'RENTAL' ? '렌탈' : '유통'} · {c.partnerName} · {formatPaymentTermsLabel(c.paymentCycle, c.paymentDueDay, c.paymentMonthOffset)}
+                    {c.contractNo}
+                    {isRentalEnabled ? ` · ${c.contractDomain === 'RENTAL' ? '렌탈' : '유통'}` : ''} · {c.partnerName} · {formatPaymentTermsLabel(c.paymentCycle, c.paymentDueDay, c.paymentMonthOffset)}
                   </option>
                 ))}
               </select>
@@ -469,7 +526,7 @@ export const ArBillingCollectionPage: React.FC = () => {
       <div data-manual-id="ar-grid">
         <DataGrid
           columns={billingCols}
-          rows={[...datasets.billings].sort((a, b) => b.billingDate.localeCompare(a.billingDate))}
+          rows={[...visibleBillings].sort((a, b) => b.billingDate.localeCompare(a.billingDate))}
           rowKey={(b) => b.id}
           selectedRowId={selectedBilling?.id || null}
           onRowClick={(b) => {
@@ -562,12 +619,18 @@ export const ArBillingCollectionPage: React.FC = () => {
 };
 
 export const ApSettlementsPage: React.FC = () => {
-  const { datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('ap_settlements');
   const today = new Date().toISOString().slice(0, 10);
 
+  const visiblePayables = useMemo(
+    () => (isRentalEnabled ? datasets.apPayables : buildNonRentalPayables(datasets)),
+    [datasets, isRentalEnabled]
+  );
+
   const [tab, setTab] = useState<'AP' | 'LEASE'>('AP');
-  const [selectedApId, setSelectedApId] = useState<string | null>(datasets.apPayables[0]?.id || null);
+  const effectiveTab: 'AP' | 'LEASE' = isRentalEnabled ? tab : 'AP';
+  const [selectedApId, setSelectedApId] = useState<string | null>(visiblePayables[0]?.id || null);
   const [settledFxRate, setSettledFxRate] = useState<number>(1380);
   const [settleAmount, setSettleAmount] = useState<number>(0);
   const [paidDate, setPaidDate] = useState(today);
@@ -575,7 +638,7 @@ export const ApSettlementsPage: React.FC = () => {
   const [selectedSchId, setSelectedSchId] = useState<string | null>(null);
 
   const selectedAp =
-    datasets.apPayables.find((a) => a.id === selectedApId) || datasets.apPayables[0] || null;
+    visiblePayables.find((a) => a.id === selectedApId) || visiblePayables[0] || null;
 
   const unpaidSchedules = useMemo(
     () =>
@@ -605,24 +668,26 @@ export const ApSettlementsPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
-        title="매입채무 · 금융리스 원리금 정산"
+        title={isRentalEnabled ? '매입채무 · 금융리스 원리금 정산' : '매입채무 · 물류운송비 정산'}
         manualId="ap-tabs"
         rightSlot={
-          <SegmentedTabs
-            tabs={[
-              { id: 'AP', label: '매입 · 물류 · 외주 채무', count: datasets.apPayables.length },
-              {
-                id: 'LEASE',
-                label: '금융리스 상환회차',
-                count: datasets.financeLeaseSchedules.filter((s) => !s.isPaid).length,
-              },
-            ]}
-            activeId={tab}
-            onChange={(id) => setTab(id as typeof tab)}
-          />
+          isRentalEnabled ? (
+            <SegmentedTabs
+              tabs={[
+                { id: 'AP', label: '매입 · 물류 · 외주 채무', count: visiblePayables.length },
+                {
+                  id: 'LEASE',
+                  label: '금융리스 상환회차',
+                  count: datasets.financeLeaseSchedules.filter((s) => !s.isPaid).length,
+                },
+              ]}
+              activeId={effectiveTab}
+              onChange={(id) => setTab(id as typeof tab)}
+            />
+          ) : undefined
         }
       >
-        {tab === 'AP' ? (
+        {effectiveTab === 'AP' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
             <DataGrid
               columns={[
@@ -647,7 +712,7 @@ export const ApSettlementsPage: React.FC = () => {
                   ),
                 },
               ]}
-              rows={datasets.apPayables}
+              rows={visiblePayables}
               rowKey={(a) => a.id}
               selectedRowId={selectedAp?.id || null}
               onRowClick={(a) => {
@@ -821,9 +886,33 @@ export const ApSettlementsPage: React.FC = () => {
 };
 
 export const BankMatchingPage: React.FC = () => {
-  const { currentUser, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('bank_matching');
   const today = new Date().toISOString().slice(0, 10);
+
+  const visibleBankTransactions = useMemo(() => {
+    if (isRentalEnabled) return datasets.bankTransactions;
+    const rentalBillingIds = new Set(
+      datasets.billings.filter((b) => b.billingDomain === 'RENTAL').map((b) => b.id)
+    );
+    const nonRentalPayableIds = new Set(buildNonRentalPayables(datasets).map((a) => a.id));
+    const allPayableIds = new Set(datasets.apPayables.map((a) => a.id));
+    return datasets.bankTransactions.filter((t) => {
+      if (t.matchedType === 'LEASE_INSTALLMENT') return false;
+      if (t.matchedType === 'AR_BILLING' && t.matchedId && rentalBillingIds.has(t.matchedId)) {
+        return false;
+      }
+      if (
+        t.matchedType === 'AP_PAYABLE' &&
+        t.matchedId &&
+        allPayableIds.has(t.matchedId) &&
+        !nonRentalPayableIds.has(t.matchedId)
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [datasets, isRentalEnabled]);
 
   const [txDate, setTxDate] = useState(today);
   const [txDirection, setTxDirection] = useState<'IN' | 'OUT'>('IN');
@@ -834,32 +923,39 @@ export const BankMatchingPage: React.FC = () => {
   const [memo, setMemo] = useState('');
 
   const [selectedTxId, setSelectedTxId] = useState<string | null>(
-    datasets.bankTransactions[0]?.id || null
+    visibleBankTransactions[0]?.id || null
   );
   const [targetMatchId, setTargetMatchId] = useState('');
   const [busy, setBusy] = useState(false);
 
   const selectedTx =
-    datasets.bankTransactions.find((t) => t.id === selectedTxId) ||
-    datasets.bankTransactions[0] ||
+    visibleBankTransactions.find((t) => t.id === selectedTxId) ||
+    visibleBankTransactions[0] ||
     null;
 
   const candidateTargets = useMemo(() => {
     if (!selectedTx) return [];
     if (selectedTx.txDirection === 'IN') {
       return datasets.billings
-        .filter((b) => b.unpaidBalanceKrw > 0 && b.status !== 'CANCELLED')
+        .filter(
+          (b) =>
+            b.unpaidBalanceKrw > 0 &&
+            b.status !== 'CANCELLED' &&
+            (isRentalEnabled || b.billingDomain !== 'RENTAL')
+        )
         .map((b) => ({
           id: b.id,
           label: `미수청구 · ${b.billingNo} · ${b.partnerName} · 미수 ${b.unpaidBalanceKrw.toLocaleString('ko-KR')}원`,
         }));
     }
-    const apOptions = datasets.apPayables
+    const payablePool = isRentalEnabled ? datasets.apPayables : buildNonRentalPayables(datasets);
+    const apOptions = payablePool
       .filter((a) => a.status !== 'PAID')
       .map((a) => ({
         id: `AP::${a.id}`,
         label: `매입채무 · ${a.payableNo} · ${a.partnerName} · ${(a.totalAmountKrw - a.paidAmountKrw).toLocaleString('ko-KR')}원`,
       }));
+    if (!isRentalEnabled) return apOptions;
     const leaseOptions = datasets.financeLeaseSchedules
       .filter((s) => !s.isPaid)
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
@@ -871,7 +967,7 @@ export const BankMatchingPage: React.FC = () => {
         };
       });
     return [...apOptions, ...leaseOptions];
-  }, [datasets.apPayables, datasets.billings, datasets.financeLeaseSchedules, datasets.financeLeases, selectedTx]);
+  }, [datasets, isRentalEnabled, selectedTx]);
 
   const handleAddTx = async () => {
     if (!counterpartyName.trim() || amountKrw <= 0) {
@@ -920,6 +1016,9 @@ export const BankMatchingPage: React.FC = () => {
       if (selectedTx.txDirection === 'IN') {
         const bill = datasets.billings.find((b) => b.id === matchId);
         if (!bill) throw new Error('청구 원장을 찾을 수 없습니다.');
+        if (!isRentalEnabled && bill.billingDomain === 'RENTAL') {
+          throw new Error('렌탈 영업을 영위하지 않는 테넌트에서는 실행할 수 없는 작업입니다.');
+        }
         await recordBillingCollection({
           billing: bill,
           amountKrw: Math.min(bill.unpaidBalanceKrw, selectedTx.amountKrw),
@@ -929,6 +1028,9 @@ export const BankMatchingPage: React.FC = () => {
           recordedBy: currentUser.name,
         });
       } else if (matchId.startsWith('LEASE::')) {
+        if (!isRentalEnabled) {
+          throw new Error('렌탈 영업을 영위하지 않는 테넌트에서는 실행할 수 없는 작업입니다.');
+        }
         const schId = matchId.slice('LEASE::'.length);
         const sch = datasets.financeLeaseSchedules.find((s) => s.id === schId);
         const lease = sch ? datasets.financeLeases.find((l) => l.id === sch.leaseId) : undefined;
@@ -1090,7 +1192,7 @@ export const BankMatchingPage: React.FC = () => {
                 ),
               },
             ]}
-            rows={[...datasets.bankTransactions].sort((a, b) => b.txDate.localeCompare(a.txDate))}
+            rows={[...visibleBankTransactions].sort((a, b) => b.txDate.localeCompare(a.txDate))}
             rowKey={(t) => t.id}
             selectedRowId={selectedTx?.id || null}
             onRowClick={(t) => {
@@ -1147,7 +1249,7 @@ interface CashScheduleItem {
 }
 
 export const CashCalendarPage: React.FC = () => {
-  const { datasets, formatMoney } = useAppShell();
+  const { isRentalEnabled, datasets, formatMoney } = useAppShell();
   const today = new Date().toISOString().slice(0, 10);
   const [currentYm, setCurrentYm] = useState(today.slice(0, 7));
   const [selectedDate, setSelectedDate] = useState(today);
@@ -1173,6 +1275,7 @@ export const CashCalendarPage: React.FC = () => {
     // 1. 입금예정 (미수납 청구 · 매출거래처 납기일자 기준)
     for (const b of datasets.billings) {
       if (b.status === 'CANCELLED' || b.unpaidBalanceKrw <= 0) continue;
+      if (!isRentalEnabled && b.billingDomain === 'RENTAL') continue;
       const partner = partnerMap.get(b.partnerId);
       const contract = contractMap.get(b.contractId);
       const dueDate =
@@ -1188,7 +1291,7 @@ export const CashCalendarPage: React.FC = () => {
         id: `IN-${b.id}`,
         date: dueDate,
         direction: 'IN',
-        category: b.billingDomain === 'RENTAL' ? '렌탈청구 입금' : '유통청구 입금',
+        category: !isRentalEnabled ? '청구 입금' : b.billingDomain === 'RENTAL' ? '렌탈청구 입금' : '유통청구 입금',
         docNo: b.billingNo,
         partnerName: b.partnerName,
         amountKrw: Math.round(b.unpaidBalanceKrw),
@@ -1197,7 +1300,8 @@ export const CashCalendarPage: React.FC = () => {
     }
 
     // 2. 지출예정 (미지급 매입·물류·외주 채무 · 매입거래처 지급일자 기준)
-    for (const ap of datasets.apPayables) {
+    const payablePool = isRentalEnabled ? datasets.apPayables : buildNonRentalPayables(datasets);
+    for (const ap of payablePool) {
       const rem = Math.round(ap.totalAmountKrw - ap.paidAmountKrw);
       if (ap.status === 'PAID' || rem <= 0) continue;
       const partner = partnerMap.get(ap.partnerId);
@@ -1223,23 +1327,25 @@ export const CashCalendarPage: React.FC = () => {
     }
 
     // 3. 지출예정 (미납 금융리스 회차)
-    for (const sch of datasets.financeLeaseSchedules) {
-      if (sch.isPaid || sch.totalInstallmentKrw <= 0) continue;
-      const lease = leaseMap.get(sch.leaseId);
-      out.push({
-        id: `LEASE-${sch.id}`,
-        date: sch.dueDate,
-        direction: 'OUT',
-        category: '금융리스 상환',
-        docNo: `${lease?.leaseNo || sch.leaseId} · ${sch.installmentNo}회`,
-        partnerName: lease?.lenderName || '금융사',
-        amountKrw: Math.round(sch.totalInstallmentKrw),
-        statusLabel: '납입예정',
-      });
+    if (isRentalEnabled) {
+      for (const sch of datasets.financeLeaseSchedules) {
+        if (sch.isPaid || sch.totalInstallmentKrw <= 0) continue;
+        const lease = leaseMap.get(sch.leaseId);
+        out.push({
+          id: `LEASE-${sch.id}`,
+          date: sch.dueDate,
+          direction: 'OUT',
+          category: '금융리스 상환',
+          docNo: `${lease?.leaseNo || sch.leaseId} · ${sch.installmentNo}회`,
+          partnerName: lease?.lenderName || '금융사',
+          amountKrw: Math.round(sch.totalInstallmentKrw),
+          statusLabel: '납입예정',
+        });
+      }
     }
 
     return out;
-  }, [contractMap, datasets.apPayables, datasets.billings, datasets.financeLeaseSchedules, leaseMap, partnerMap]);
+  }, [contractMap, datasets, isRentalEnabled, leaseMap, partnerMap]);
 
   const filteredItems = useMemo(() => {
     const kw = partnerKeyword.trim().toLowerCase();
@@ -1497,17 +1603,19 @@ export const CashCalendarPage: React.FC = () => {
 };
 
 export const FinancialStatementsPage: React.FC = () => {
-  const { datasets, formatMoney } = useAppShell();
+  const { isRentalEnabled, datasets, formatMoney } = useAppShell();
   const curYm = new Date().toISOString().slice(0, 7);
   const yearStartYm = `${curYm.slice(0, 4)}-01`;
 
   const [startYm, setStartYm] = useState(yearStartYm);
   const [endYm, setEndYm] = useState(curYm);
   const [tab, setTab] = useState<'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD'>('BS');
+  const effectiveTab: 'BS' | 'PL' | 'CF' | 'ASSET' | 'LEASE' | 'STANDARD' =
+    !isRentalEnabled && (tab === 'ASSET' || tab === 'LEASE') ? 'BS' : tab;
 
   const report = useMemo(
-    () => generateFinancialStatements(datasets, startYm, endYm),
-    [datasets, endYm, startYm]
+    () => generateFinancialStatements(datasets, startYm, endYm, { includeRental: isRentalEnabled }),
+    [datasets, endYm, isRentalEnabled, startYm]
   );
 
   const renderStatementRows = (
@@ -1580,16 +1688,20 @@ export const FinancialStatementsPage: React.FC = () => {
               { id: 'BS', label: '재무상태표' },
               { id: 'PL', label: '손익계산서' },
               { id: 'CF', label: '현금흐름표' },
-              { id: 'ASSET', label: '렌탈자산 감가상각명세' },
-              { id: 'LEASE', label: '금융리스 이자·원금명세' },
+              ...(isRentalEnabled
+                ? [
+                    { id: 'ASSET', label: '렌탈자산 감가상각명세' },
+                    { id: 'LEASE', label: '금융리스 이자·원금명세' },
+                  ]
+                : []),
               { id: 'STANDARD', label: '중소기업회계기준 해설' },
             ]}
-            activeId={tab}
+            activeId={effectiveTab}
             onChange={(id) => setTab(id as typeof tab)}
           />
         </div>
 
-        {tab === 'BS' && (
+        {effectiveTab === 'BS' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-page-gap)' }}>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: 'var(--space-tight-gap)' }}>
@@ -1610,11 +1722,11 @@ export const FinancialStatementsPage: React.FC = () => {
           </div>
         )}
 
-        {tab === 'PL' && renderStatementRows(report.incomeStatement.rows)}
+        {effectiveTab === 'PL' && renderStatementRows(report.incomeStatement.rows)}
 
-        {tab === 'CF' && renderStatementRows(report.cashFlow.rows)}
+        {effectiveTab === 'CF' && renderStatementRows(report.cashFlow.rows)}
 
-        {tab === 'ASSET' && (
+        {isRentalEnabled && effectiveTab === 'ASSET' && (
           <DataGrid
             columns={[
               { key: 'code', header: '자산번호', width: 120, render: (a) => a.unitCode },
@@ -1632,7 +1744,7 @@ export const FinancialStatementsPage: React.FC = () => {
           />
         )}
 
-        {tab === 'LEASE' && (
+        {isRentalEnabled && effectiveTab === 'LEASE' && (
           <DataGrid
             columns={[
               { key: 'leaseId', header: '리스번호', width: 120, render: (l) => l.leaseId },
@@ -1651,7 +1763,7 @@ export const FinancialStatementsPage: React.FC = () => {
           />
         )}
 
-        {tab === 'STANDARD' && <AccountingStandardsTab />}
+        {effectiveTab === 'STANDARD' && <AccountingStandardsTab />}
       </SectionPanel>
 
       <ConservationBar
@@ -1692,14 +1804,14 @@ export const FinancialStatementsPage: React.FC = () => {
 };
 
 export const OperationManualPage: React.FC = () => {
-  const { navigateTo, visiblePageSet } = useAppShell();
+  const { isRentalEnabled, navigateTo, visiblePageSet } = useAppShell();
   const { setOverlayOpen, customNotes } = useManual();
   const [query, setQuery] = useState('');
   const [selectedPageId, setSelectedPageId] = useState<FlPageId>('dashboard');
 
   const visibleEntries = useMemo(
-    () => ALL_MANUAL_ENTRIES.filter((e) => visiblePageSet.has(e.pageId)),
-    [visiblePageSet]
+    () => getManualEntriesForTenant(isRentalEnabled).filter((e) => visiblePageSet.has(e.pageId)),
+    [isRentalEnabled, visiblePageSet]
   );
 
   const filtered = useMemo(() => {
@@ -1733,7 +1845,11 @@ export const OperationManualPage: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="매입통관, 교환, 세금계산서, 금융리스 등"
+            placeholder={
+              isRentalEnabled
+                ? '매입통관, 교환, 세금계산서, 금융리스 등'
+                : '매입통관, 선입선출, 세금계산서, 외화결제 등'
+            }
             style={controlInputStyle}
           />
         </VerticalField>
@@ -1855,17 +1971,10 @@ export const OperationManualPage: React.FC = () => {
   );
 };
 
-const ALL_DOC_TYPES: DocumentTemplateType[] = [
-  '견적서_유통',
-  '견적서_렌탈',
-  '계약서_유통',
-  '계약서_렌탈',
-  '거래명세서',
-];
-
 export const PermissionSettingsPage: React.FC = () => {
   const {
     currentUser,
+    isRentalEnabled,
     datasets,
     refreshAll,
     notifyToast,
@@ -1873,6 +1982,23 @@ export const PermissionSettingsPage: React.FC = () => {
     navigateTo,
   } = useAppShell();
   const canEdit = canEditPage('permission_settings');
+
+  const visiblePolicies = useMemo(
+    () =>
+      isRentalEnabled
+        ? datasets.approvalPolicies
+        : datasets.approvalPolicies.filter(
+            (p) => !RENTAL_ONLY_ACTION_CODES.includes(p.actionCode)
+          ),
+    [datasets.approvalPolicies, isRentalEnabled]
+  );
+  const tenantMenuRows = useMemo(
+    () =>
+      getMenuGroupsForTenant(isRentalEnabled).flatMap((g) =>
+        g.items.map((it) => ({ ...it, groupLabel: g.groupLabel }))
+      ),
+    [isRentalEnabled]
+  );
 
   const [tab, setTab] = useState<'USERS' | 'POLICIES' | 'PERMS' | 'USER_PERMS'>('USERS');
   const [busy, setBusy] = useState(false);
@@ -2208,7 +2334,8 @@ export const PermissionSettingsPage: React.FC = () => {
 
           {tab === 'POLICIES' && (
             <PolicyEditorGrid
-              policies={datasets.approvalPolicies}
+              policies={visiblePolicies}
+              isRentalEnabled={isRentalEnabled}
               canEdit={canEdit}
               onRefresh={refreshAll}
               onToast={notifyToast}
@@ -2295,9 +2422,7 @@ export const PermissionSettingsPage: React.FC = () => {
                     },
                   },
                 ]}
-                rows={FL_MENU_GROUPS.flatMap((g) =>
-                  g.items.map((it) => ({ ...it, groupLabel: g.groupLabel }))
-                )}
+                rows={tenantMenuRows}
                 rowKey={(r) => r.pageId}
                 maxHeight="clamp(300px, calc(100vh - 300px), 760px)"
               />
@@ -2436,9 +2561,7 @@ export const PermissionSettingsPage: React.FC = () => {
                       },
                     },
                   ]}
-                  rows={FL_MENU_GROUPS.flatMap((g) =>
-                    g.items.map((it) => ({ ...it, groupLabel: g.groupLabel }))
-                  )}
+                  rows={tenantMenuRows}
                   rowKey={(r) => r.pageId}
                   maxHeight="clamp(300px, calc(100vh - 320px), 760px)"
                 />
@@ -2455,35 +2578,16 @@ export const SystemSettingsPage: React.FC = () => {
   const {
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     refreshAll,
     notifyToast,
-    updateTenantConfig,
     canEditPage,
   } = useAppShell();
   const canEdit = canEditPage('system_settings');
-  const [tab, setTab] = useState<'TEMPLATES' | 'MAIL'>('TEMPLATES');
+  const visibleDocTypes = useMemo(() => getDocTypesForTenant(isRentalEnabled), [isRentalEnabled]);
   const [busy, setBusy] = useState(false);
 
-  // 공식 이메일 연동 설정
-  const [smtpProvider, setSmtpProvider] = useState<'GMAIL' | 'NAVER' | 'OUTLOOK' | 'CUSTOM'>(
-    tenantProfile.features?.officialMailConfig?.smtpProvider || 'GMAIL'
-  );
-  const [smtpHost, setSmtpHost] = useState(
-    tenantProfile.features?.officialMailConfig?.smtpHost || 'smtp.gmail.com'
-  );
-  const [smtpPort, setSmtpPort] = useState(
-    tenantProfile.features?.officialMailConfig?.smtpPort || 465
-  );
-  const [googleEmail, setGoogleEmail] = useState(
-    tenantProfile.features?.officialMailConfig?.googleEmail || ''
-  );
-  const [gmailAppPassword, setGmailAppPassword] = useState(
-    tenantProfile.features?.officialMailConfig?.gmailAppPassword || ''
-  );
-  const [senderName, setSenderName] = useState(
-    tenantProfile.features?.officialMailConfig?.senderName || tenantProfile.corporateName
-  );
   const [tplNotes, setTplNotes] = useState<Record<string, { headerNote: string; footerNote: string }>>({});
 
   const handleUploadTemplateFile = async (docType: DocumentTemplateType, file: File) => {
@@ -2584,47 +2688,13 @@ export const SystemSettingsPage: React.FC = () => {
     }
   };
 
-  const handleSaveMailConfig = async () => {
-    setBusy(true);
-    try {
-      await updateTenantConfig({
-        features: {
-          ...tenantProfile.features,
-          officialMailConfig: {
-            smtpProvider,
-            smtpHost,
-            smtpPort,
-            googleEmail: googleEmail.trim(),
-            gmailAppPassword: gmailAppPassword.trim(),
-            senderName: senderName.trim() || tenantProfile.corporateName,
-          },
-        },
-      });
-    } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '메일 설정 저장 실패', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
-        title="시스템 설정 · 문서 양식 · 도장 · 공식 이메일 연동"
+        title="시스템 설정 · 문서 양식 · 도장"
         manualId="sys-tabs"
-        rightSlot={
-          <SegmentedTabs
-            tabs={[
-              { id: 'TEMPLATES', label: '문서 양식 · 도장' },
-              { id: 'MAIL', label: '공식 이메일 연동' },
-            ]}
-            activeId={tab}
-            onChange={(id) => setTab(id as typeof tab)}
-          />
-        }
       >
         <div data-manual-id="sys-body">
-          {tab === 'TEMPLATES' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
               <div
                 style={{
@@ -2642,9 +2712,10 @@ export const SystemSettingsPage: React.FC = () => {
                 <span>법인명: {tenantProfile.corporateName}</span>
                 <span>사업자번호: {tenantProfile.businessNumber}</span>
                 <span>도장이미지 연동: {tenantProfile.stampImageUrl || tenantProfile.stampBase64 ? '연동됨' : '미등록'}</span>
+                <span>영업범위: {isRentalEnabled ? '유통·렌탈 통합' : '유통 전용'}</span>
               </div>
 
-              {ALL_DOC_TYPES.map((dt) => {
+              {visibleDocTypes.map((dt) => {
                 const tpl = datasets.documentTemplates.find((t) => t.docType === dt);
                 const draft = tplNotes[dt] || {
                   headerNote: tpl?.headerNote || '',
@@ -2726,80 +2797,6 @@ export const SystemSettingsPage: React.FC = () => {
                 );
               })}
             </div>
-          )}
-
-          {tab === 'MAIL' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)', maxWidth: '640px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
-                <VerticalField label="메일 서버 구분">
-                  <select
-                    value={smtpProvider}
-                    onChange={(e) =>
-                      setSmtpProvider(e.target.value as 'GMAIL' | 'NAVER' | 'OUTLOOK' | 'CUSTOM')
-                    }
-                    style={controlInputStyle}
-                  >
-                    <option value="GMAIL">지메일</option>
-                    <option value="NAVER">네이버웍스 · 네이버</option>
-                    <option value="OUTLOOK">아웃룩</option>
-                    <option value="CUSTOM">사용자 지정 호스트</option>
-                  </select>
-                </VerticalField>
-                <VerticalField label="발신자 표시명">
-                  <input
-                    type="text"
-                    value={senderName}
-                    onChange={(e) => setSenderName(e.target.value)}
-                    style={controlInputStyle}
-                  />
-                </VerticalField>
-                <VerticalField label="공식 발신 이메일">
-                  <input
-                    type="email"
-                    value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
-                    style={controlInputStyle}
-                  />
-                </VerticalField>
-                <VerticalField label="앱 비밀번호">
-                  <input
-                    type="password"
-                    value={gmailAppPassword}
-                    onChange={(e) => setGmailAppPassword(e.target.value)}
-                    style={controlInputStyle}
-                  />
-                </VerticalField>
-                <VerticalField label="메일 호스트 주소">
-                  <input
-                    type="text"
-                    value={smtpHost}
-                    onChange={(e) => setSmtpHost(e.target.value)}
-                    style={controlInputStyle}
-                  />
-                </VerticalField>
-                <VerticalField label="포트번호">
-                  <input
-                    type="number"
-                    value={smtpPort}
-                    onChange={(e) => setSmtpPort(Number(e.target.value))}
-                    style={controlInputStyle}
-                  />
-                </VerticalField>
-              </div>
-              {canEdit && (
-                <div>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={handleSaveMailConfig}
-                    style={actionBtnStyle('primary')}
-                  >
-                    공식 이메일 연동 저장
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </SectionPanel>
     </div>
@@ -2808,18 +2805,45 @@ export const SystemSettingsPage: React.FC = () => {
 
 const PolicyEditorGrid: React.FC<{
   policies: FlApprovalPolicy[];
+  isRentalEnabled: boolean;
   canEdit: boolean;
   onRefresh: () => Promise<void>;
   onToast: (msg: string, kind?: 'info' | 'success' | 'error') => void;
-}> = ({ policies, canEdit, onRefresh, onToast }) => {
+}> = ({ policies, isRentalEnabled, canEdit, onRefresh, onToast }) => {
   const [drafts, setDrafts] = useState<Record<string, { requiredTier: TierLevel; requiresApproval: boolean }>>({});
 
   return (
     <DataGrid
       columns={[
-        { key: 'code', header: '업무구분', width: 155, render: (p) => formatKoActionCode(p.actionCode) },
-        { key: 'name', header: '업무행위', width: 170, render: (p) => <span style={{ fontWeight: 700 }}>{p.actionName}</span> },
-        { key: 'desc', header: '적용 설명', render: (p) => p.description || '-' },
+        {
+          key: 'code',
+          header: '업무구분',
+          width: 155,
+          render: (p) => formatKoActionCode(p.actionCode, isRentalEnabled),
+        },
+        {
+          key: 'name',
+          header: '업무행위',
+          width: 170,
+          render: (p) => (
+            <span style={{ fontWeight: 700 }}>
+              {!isRentalEnabled && p.actionCode === 'FULFILLMENT_COMPLETE'
+                ? '출고 실행완료'
+                : p.actionName}
+            </span>
+          ),
+        },
+        {
+          key: 'desc',
+          header: '적용 설명',
+          render: (p) => {
+            if (!isRentalEnabled) {
+              if (p.actionCode === 'FULFILLMENT_COMPLETE') return '희망완료일 기준 유통 출고 확정 처리';
+              if (p.actionCode === 'AP_SETTLEMENT_PAY') return '매입채무·운송비 지급 확정';
+            }
+            return p.description || '-';
+          },
+        },
         {
           key: 'req',
           header: '결재사용',

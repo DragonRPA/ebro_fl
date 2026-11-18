@@ -45,8 +45,10 @@ async function resolveStampBytes(tenant: TenantProfile): Promise<{ base64: strin
     return { base64: clean, ext };
   }
   if (tenant.stampImageUrl) {
+    const ctrl = new AbortController();
+    const tid = window.setTimeout(() => ctrl.abort(), 3000);
     try {
-      const resp = await fetch(tenant.stampImageUrl);
+      const resp = await fetch(tenant.stampImageUrl, { signal: ctrl.signal });
       if (resp.ok) {
         const ab = await resp.arrayBuffer();
         const ext = tenant.stampImageUrl.toLowerCase().includes('.jpg') ? 'jpeg' : 'png';
@@ -54,6 +56,8 @@ async function resolveStampBytes(tenant: TenantProfile): Promise<{ base64: strin
       }
     } catch {
       return null;
+    } finally {
+      window.clearTimeout(tid);
     }
   }
   return null;
@@ -77,7 +81,19 @@ function applyTokenReplacements(ws: ExcelJS.Worksheet, tokens: Record<string, st
 
 async function embedCorporateStamp(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, tenant: TenantProfile, col = 8, row = 4) {
   const stamp = await resolveStampBytes(tenant);
-  if (!stamp) return;
+  if (!stamp) {
+    const cell = ws.getCell(Math.floor(row) + 1, Math.floor(col) + 1);
+    cell.value = '도장이미지';
+    cell.font = { size: 10, bold: true, color: { argb: 'FFDC2626' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FFDC2626' } },
+      left: { style: 'thin', color: { argb: 'FFDC2626' } },
+      bottom: { style: 'thin', color: { argb: 'FFDC2626' } },
+      right: { style: 'thin', color: { argb: 'FFDC2626' } },
+    };
+    return;
+  }
   const imgId = wb.addImage({
     base64: stamp.base64,
     extension: stamp.ext,
@@ -129,6 +145,9 @@ export async function generateQuotationExcel(params: {
   const { quotation, partner, tenant, templates } = params;
   const docType: DocumentTemplateType = quotation.quoteDomain === 'TRADE' ? '견적서_유통' : '견적서_렌탈';
   const tplInfo = templates.find((t) => t.docType === docType);
+  if (!tplInfo) {
+    throw new Error(`${docType} 양식이 등록되어 있지 않습니다. 시스템 설정 > 문서 양식 · 도장 메뉴에서 양식을 먼저 등록해 주세요.`);
+  }
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet(quotation.quoteDomain === 'TRADE' ? '유통견적서' : '렌탈견적서');
@@ -510,6 +529,9 @@ export async function sendDocumentEmailViaAgent(params: {
   const resp = await fetchWithAgentFallback('/api/send-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    timeout: 25000,
+    requireAgent: true,
+    actionName: '공식 이메일 발송',
     body: JSON.stringify({
       tenantCode: params.tenant.tenantCode || getActiveAgentTenantCode(),
       to: params.to,

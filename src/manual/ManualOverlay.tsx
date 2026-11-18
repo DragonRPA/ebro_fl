@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Search, X } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { useManual } from './ManualContext';
-import { ALL_MANUAL_ENTRIES, type ScreenManualEntry } from './manualRegistry';
+import { getManualEntriesForTenant, type ScreenManualEntry } from './manualRegistry';
 
 interface AnchorRect {
   anchorId: string;
@@ -15,7 +15,7 @@ interface AnchorRect {
 }
 
 export const ManualOverlay: React.FC = () => {
-  const { activePage, navigateTo, currentUser, visiblePageSet } = useAppShell();
+  const { activePage, navigateTo, currentUser, isRentalEnabled, visiblePageSet } = useAppShell();
   const {
     overlayOpen,
     setOverlayOpen,
@@ -87,7 +87,7 @@ export const ManualOverlay: React.FC = () => {
 
   const searchResults = useMemo<ScreenManualEntry[]>(() => {
     const q = searchTerm.trim().toLowerCase();
-    const pool = ALL_MANUAL_ENTRIES.filter((e) => visiblePageSet.has(e.pageId));
+    const pool = getManualEntriesForTenant(isRentalEnabled).filter((e) => visiblePageSet.has(e.pageId));
     if (!q) return pool;
     return pool.filter((entry) => {
       if (entry.pageTitle.toLowerCase().includes(q)) return true;
@@ -101,7 +101,7 @@ export const ManualOverlay: React.FC = () => {
           )
       );
     });
-  }, [searchTerm, visiblePageSet]);
+  }, [isRentalEnabled, searchTerm, visiblePageSet]);
 
   const pageNotes = customNotes[activeEntry.pageId] || [];
   const activeProcess = activeEntry.processes[selectedProcessIdx] || activeEntry.processes[0];

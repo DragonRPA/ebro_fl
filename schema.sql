@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.fl_departments (
 CREATE TABLE IF NOT EXISTS public.fl_users (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  login_id TEXT NOT NULL UNIQUE,
+  login_id TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   employee_no TEXT,
@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS public.fl_users (
   status TEXT NOT NULL DEFAULT 'ACTIVE',
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_users_tenant_login_id_key UNIQUE (tenant_id, login_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_hr_histories (
@@ -97,14 +98,15 @@ CREATE TABLE IF NOT EXISTS public.fl_user_permissions (
 CREATE TABLE IF NOT EXISTS public.fl_approval_policies (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  action_code TEXT NOT NULL UNIQUE,
+  action_code TEXT NOT NULL,
   action_name TEXT NOT NULL,
   description TEXT,
   required_tier INTEGER NOT NULL DEFAULT 3 CHECK (required_tier BETWEEN 1 AND 7),
   requires_approval BOOLEAN NOT NULL DEFAULT true,
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_approval_policies_tenant_action_code_key UNIQUE (tenant_id, action_code)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_approval_requests (
@@ -141,7 +143,8 @@ CREATE TABLE IF NOT EXISTS public.fl_document_templates (
   is_default BOOLEAN NOT NULL DEFAULT true,
   updated_by TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_document_templates_tenant_doc_type_key UNIQUE (tenant_id, doc_type)
 );
 
 -- ============================================================================
@@ -207,7 +210,7 @@ CREATE TABLE IF NOT EXISTS public.fl_partner_sites (
 CREATE TABLE IF NOT EXISTS public.fl_item_masters (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  sku TEXT NOT NULL UNIQUE,
+  sku TEXT NOT NULL,
   name TEXT NOT NULL,
   item_category TEXT NOT NULL CHECK (item_category IN ('완제품', '어태치먼트', '부품', '소모품')),
   item_domain TEXT NOT NULL DEFAULT 'TRADE' CHECK (item_domain IN ('TRADE', 'RENTAL', 'BOTH')),
@@ -238,13 +241,14 @@ CREATE TABLE IF NOT EXISTS public.fl_item_masters (
   is_active BOOLEAN NOT NULL DEFAULT true,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_item_masters_tenant_sku_key UNIQUE (tenant_id, sku)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_catalog_packages (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  catalog_code TEXT NOT NULL UNIQUE,
+  catalog_code TEXT NOT NULL,
   title TEXT NOT NULL,
   subtitle TEXT,
   target_partner_role TEXT NOT NULL DEFAULT '대리점',
@@ -256,7 +260,8 @@ CREATE TABLE IF NOT EXISTS public.fl_catalog_packages (
   footer_contact TEXT,
   is_default BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_catalog_packages_tenant_catalog_code_key UNIQUE (tenant_id, catalog_code)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_exchange_rates (
@@ -278,7 +283,7 @@ CREATE TABLE IF NOT EXISTS public.fl_exchange_rates (
 CREATE TABLE IF NOT EXISTS public.fl_purchases (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  purchase_no TEXT NOT NULL UNIQUE,
+  purchase_no TEXT NOT NULL,
   purchase_type TEXT NOT NULL CHECK (purchase_type IN ('IMPORT', 'DOMESTIC')),
   supplier_id TEXT NOT NULL,
   supplier_name TEXT NOT NULL,
@@ -300,7 +305,8 @@ CREATE TABLE IF NOT EXISTS public.fl_purchases (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_purchases_tenant_purchase_no_key UNIQUE (tenant_id, purchase_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_purchase_lines (
@@ -328,7 +334,7 @@ CREATE TABLE IF NOT EXISTS public.fl_purchase_lines (
 CREATE TABLE IF NOT EXISTS public.fl_logistics_dispatches (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  dispatch_no TEXT NOT NULL UNIQUE,
+  dispatch_no TEXT NOT NULL,
   dispatch_purpose TEXT NOT NULL DEFAULT '일반운송' CHECK (dispatch_purpose IN ('일반운송', '납품운송', '회수운송', '교환', '자체이동')),
   carrier_partner_id TEXT,
   carrier_name TEXT NOT NULL,
@@ -349,13 +355,14 @@ CREATE TABLE IF NOT EXISTS public.fl_logistics_dispatches (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_logistics_dispatches_tenant_dispatch_no_key UNIQUE (tenant_id, dispatch_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_ap_payables (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  payable_no TEXT NOT NULL UNIQUE,
+  payable_no TEXT NOT NULL,
   payable_type TEXT NOT NULL CHECK (payable_type IN ('PURCHASE', 'LOGISTICS', 'FINANCE_LEASE', 'SUBLEASE_RENT', 'EXTERNAL_REPAIR')),
   partner_id TEXT NOT NULL,
   partner_name TEXT NOT NULL,
@@ -376,7 +383,8 @@ CREATE TABLE IF NOT EXISTS public.fl_ap_payables (
   paid_date DATE,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_ap_payables_tenant_payable_no_key UNIQUE (tenant_id, payable_no)
 );
 
 -- ============================================================================
@@ -386,7 +394,7 @@ CREATE TABLE IF NOT EXISTS public.fl_ap_payables (
 CREATE TABLE IF NOT EXISTS public.fl_inventory_units (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  unit_code TEXT NOT NULL UNIQUE,
+  unit_code TEXT NOT NULL,
   item_id TEXT NOT NULL,
   sku TEXT NOT NULL,
   item_name TEXT NOT NULL,
@@ -417,9 +425,14 @@ CREATE TABLE IF NOT EXISTS public.fl_inventory_units (
   operating_hours NUMERIC(10,1) NOT NULL DEFAULT 0,
   monthly_rental_fee_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   daily_rental_fee_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
+  warranty_months INTEGER NOT NULL DEFAULT 12,
+  warranty_start_date DATE,
+  warranty_end_date DATE,
+  warranty_note TEXT,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_inventory_units_tenant_unit_code_key UNIQUE (tenant_id, unit_code)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_stock_movements (
@@ -455,7 +468,7 @@ CREATE TABLE IF NOT EXISTS public.fl_stock_movements (
 CREATE TABLE IF NOT EXISTS public.fl_quotations (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  quote_no TEXT NOT NULL UNIQUE,
+  quote_no TEXT NOT NULL,
   quote_domain TEXT NOT NULL CHECK (quote_domain IN ('TRADE', 'RENTAL')),
   partner_id TEXT NOT NULL,
   partner_name TEXT NOT NULL,
@@ -473,13 +486,14 @@ CREATE TABLE IF NOT EXISTS public.fl_quotations (
   converted_contract_id TEXT,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_quotations_tenant_quote_no_key UNIQUE (tenant_id, quote_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_contracts (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  contract_no TEXT NOT NULL UNIQUE,
+  contract_no TEXT NOT NULL,
   contract_domain TEXT NOT NULL CHECK (contract_domain IN ('TRADE', 'RENTAL')),
   quotation_id TEXT,
   partner_id TEXT NOT NULL,
@@ -507,6 +521,7 @@ CREATE TABLE IF NOT EXISTS public.fl_contracts (
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_contracts_tenant_contract_no_key UNIQUE (tenant_id, contract_no),
   CONSTRAINT fl_contracts_payment_due_day_check CHECK (
     (payment_cycle = '선입금' AND payment_due_day = 0) OR
     (payment_cycle <> '선입금' AND payment_due_day BETWEEN 1 AND 31)
@@ -530,6 +545,8 @@ CREATE TABLE IF NOT EXISTS public.fl_contract_lines (
   vat_amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   total_amount_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
   option_summary TEXT,
+  warranty_months INTEGER NOT NULL DEFAULT 12,
+  warranty_note TEXT,
   assigned_unit_id TEXT,
   assigned_serial_no TEXT,
   assigned_lot_no TEXT,
@@ -545,7 +562,7 @@ CREATE TABLE IF NOT EXISTS public.fl_contract_lines (
 CREATE TABLE IF NOT EXISTS public.fl_fulfillments (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  fulfillment_no TEXT NOT NULL UNIQUE,
+  fulfillment_no TEXT NOT NULL,
   fulfillment_domain TEXT NOT NULL CHECK (fulfillment_domain IN ('TRADE', 'RENTAL')),
   action_type TEXT NOT NULL CHECK (action_type IN ('유통출고', '렌탈출고', '렌탈회수', '교환')),
   contract_id TEXT NOT NULL,
@@ -564,18 +581,21 @@ CREATE TABLE IF NOT EXISTS public.fl_fulfillments (
   executed_by TEXT,
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_fulfillments_tenant_fulfillment_no_key UNIQUE (tenant_id, fulfillment_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_trade_aftercare_cases (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  case_no TEXT NOT NULL UNIQUE,
+  case_no TEXT NOT NULL,
   contract_id TEXT NOT NULL,
   partner_id TEXT NOT NULL,
   partner_name TEXT NOT NULL,
   unit_id TEXT NOT NULL,
+  serial_no TEXT,
   case_type TEXT NOT NULL CHECK (case_type IN ('공급사 정비중개', '반품환불', '반품교환')),
+  warranty_applied BOOLEAN NOT NULL DEFAULT FALSE,
   supplier_partner_id TEXT,
   supplier_name TEXT,
   refund_supply_krw NUMERIC(18,2) NOT NULL DEFAULT 0,
@@ -586,13 +606,14 @@ CREATE TABLE IF NOT EXISTS public.fl_trade_aftercare_cases (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_trade_aftercare_cases_tenant_case_no_key UNIQUE (tenant_id, case_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_rental_maintenances (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  maint_no TEXT NOT NULL UNIQUE,
+  maint_no TEXT NOT NULL,
   maint_type TEXT NOT NULL CHECK (maint_type IN ('주기장정비', '현장정비', '순회정비')),
   unit_id TEXT NOT NULL,
   serial_no TEXT,
@@ -615,7 +636,8 @@ CREATE TABLE IF NOT EXISTS public.fl_rental_maintenances (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_rental_maintenances_tenant_maint_no_key UNIQUE (tenant_id, maint_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_asset_events (
@@ -645,7 +667,7 @@ CREATE TABLE IF NOT EXISTS public.fl_asset_events (
 CREATE TABLE IF NOT EXISTS public.fl_billings (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  billing_no TEXT NOT NULL UNIQUE,
+  billing_no TEXT NOT NULL,
   billing_ym TEXT NOT NULL,
   billing_domain TEXT NOT NULL CHECK (billing_domain IN ('TRADE', 'RENTAL', 'MIXED')),
   contract_id TEXT NOT NULL,
@@ -666,13 +688,14 @@ CREATE TABLE IF NOT EXISTS public.fl_billings (
   status TEXT NOT NULL DEFAULT 'UNPAID' CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'CANCELLED')),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_billings_tenant_billing_no_key UNIQUE (tenant_id, billing_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_collections (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  collection_no TEXT NOT NULL UNIQUE,
+  collection_no TEXT NOT NULL,
   billing_id TEXT NOT NULL,
   partner_id TEXT NOT NULL,
   partner_name TEXT NOT NULL,
@@ -682,7 +705,8 @@ CREATE TABLE IF NOT EXISTS public.fl_collections (
   bank_tx_id TEXT,
   recorded_by TEXT NOT NULL,
   memo TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_collections_tenant_collection_no_key UNIQUE (tenant_id, collection_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_bank_transactions (
@@ -705,7 +729,7 @@ CREATE TABLE IF NOT EXISTS public.fl_bank_transactions (
 CREATE TABLE IF NOT EXISTS public.fl_finance_leases (
   id TEXT PRIMARY KEY,
   tenant_id TEXT NOT NULL DEFAULT 'tenant-ebro-fl',
-  lease_no TEXT NOT NULL UNIQUE,
+  lease_no TEXT NOT NULL,
   lender_partner_id TEXT NOT NULL,
   lender_name TEXT NOT NULL,
   unit_id TEXT,
@@ -722,7 +746,8 @@ CREATE TABLE IF NOT EXISTS public.fl_finance_leases (
   status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'PAID_OFF', 'TERMINATED')),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fl_finance_leases_tenant_lease_no_key UNIQUE (tenant_id, lease_no)
 );
 
 CREATE TABLE IF NOT EXISTS public.fl_finance_lease_schedules (
@@ -760,6 +785,25 @@ CREATE INDEX IF NOT EXISTS idx_fl_fulfillments_domain ON public.fl_fulfillments 
 CREATE INDEX IF NOT EXISTS idx_fl_maintenances_unit ON public.fl_rental_maintenances (tenant_id, unit_id, effective_date);
 CREATE INDEX IF NOT EXISTS idx_fl_billings_ym ON public.fl_billings (tenant_id, billing_ym, status);
 CREATE INDEX IF NOT EXISTS idx_fl_lease_schedules_ym ON public.fl_finance_lease_schedules (lease_id, due_ym);
+CREATE INDEX IF NOT EXISTS idx_fl_departments_tenant ON public.fl_departments (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_hr_histories_tenant ON public.fl_hr_histories (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_user_permissions_tenant ON public.fl_user_permissions (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_approval_policies_tenant ON public.fl_approval_policies (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_document_templates_tenant ON public.fl_document_templates (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_partner_sites_tenant ON public.fl_partner_sites (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_catalog_packages_tenant ON public.fl_catalog_packages (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_exchange_rates_tenant ON public.fl_exchange_rates (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_purchase_lines_tenant ON public.fl_purchase_lines (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_logistics_dispatches_tenant ON public.fl_logistics_dispatches (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_ap_payables_tenant ON public.fl_ap_payables (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_quotations_tenant ON public.fl_quotations (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_contract_lines_tenant ON public.fl_contract_lines (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_trade_aftercare_cases_tenant ON public.fl_trade_aftercare_cases (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_asset_events_tenant ON public.fl_asset_events (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_collections_tenant ON public.fl_collections (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_bank_transactions_tenant ON public.fl_bank_transactions (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_finance_leases_tenant ON public.fl_finance_leases (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fl_finance_lease_schedules_tenant ON public.fl_finance_lease_schedules (tenant_id);
 
 -- ============================================================================
 -- Idempotent Row Level Security Policies (anon + authenticated)

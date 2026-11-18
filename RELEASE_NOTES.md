@@ -1,3 +1,14 @@
+## [v2.2.0.Build.1] - 2026-11-18 19:04
+### 비렌탈 테넌트 도메인 전면 차단 및 `fl_*` 멀티테넌트 행·제약조건 격리 아키텍처 구축
+- **비렌탈 테넌트(`rentalEnabled === false`) 전사 도메인·UI·회계·매뉴얼 전면 차단**:
+  - `types/domain.ts`, `AppShellContext.tsx`, `ActionCommandGateway.tsx`에서 렌탈 전용 메뉴 13종, 액션 코드(`LEASE_CREATE`, `ACCOUNT_TRANSFER`, `RENTAL_CONTRACT_CONFIRM`, `EXCHANGE_EXECUTE`, `BILLING_CREATE`), 매입채무 유형, 부서 기능 태그, 거래처 역할, 문서 양식을 전면 차단하고 URL 해시 직접 접근과 비허가 라우팅을 방어했습니다.
+  - `financialStatementEngine.ts`에 `{ includeRental }` 격리 옵션을 적용하여 비렌탈 모드에서도 자산=부채+자본 차액 `0원` · 현금흐름 검증 차액 `0원` 보존 법칙을 유지한 채 렌탈자산·감가상각·금융리스·이자비용·임대매출을 0원 격리했습니다.
+  - 기존 `ACCOUNT_TRANSFER` 유통 원천 재고의 비렌탈 모드 판매 전환·출고 완료(`completeFulfillment` + `isEffectiveTradeUnitForTenant`), 유통실적 매입·환차손익 필터링, 통장대사 렌탈 거래 배제, 대시보드 유통 납기 알림 복원 및 비렌탈 전용 화면 매뉴얼 오버라이드(`NON_RENTAL_MANUAL_OVERRIDES`)를 반영했습니다.
+- **`fl_*` 멀티테넌트 `tenant_id` 행 격리 및 PostgreSQL 복합 유니크 전환 (`supabase.ts`, `domainEngine.ts`, `schema.sql`, `ManualContext.tsx`)**:
+  - `flSupabase` 게이트웨이 프록시 단에 활성 테넌트별 `tenant_id` 자동 필터/스탬핑(`getActiveFlTenantId` / `setActiveFlTenantId`)을 구축해 전 90여 DB 호출처에서 타 테넌트 데이터 열람·변경·유출을 원천 차단했습니다.
+  - PostgreSQL `fl_*` 운영 테이블의 전역 단일 컬럼 `UNIQUE` 16종 및 `fl_document_templates(doc_type)`을 모두 `UNIQUE (tenant_id, ...)` 복합 제약으로 전환하고 30개 테이블 `tenant_id` 인덱스를 구축했습니다.
+  - `AppShellContext.refreshAll()` 순차 부팅(테넌트 식별 ➔ 신규 테넌트 자동 부트스트랩 `ensureFlTenantBootstrapped` ➔ 전 테이블 로드) 및 테넌트별 세션 키·매뉴얼 주석(`core_manual_annotations.tenant_id`) 격리, 하위 부서 기본 상위부서 동적 참조를 적용했습니다.
+
 ## [v2.1.0.Build.2] - 2026-11-17 02:11
 ### 원장 조회 필터 · 3단 정렬 및 중소기업회계기준·해설 복제 적용
 - **공용 `DataGrid` 3단 정렬(오름차 · 내림차 · 정렬안함)**: 컬럼 헤더 클릭 시 오름차순/내림차순/정렬안함 순환 및 정렬 아이콘 표시를 구현했습니다.

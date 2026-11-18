@@ -36,6 +36,7 @@ import {
   CashCalendarPage,
   FinancialStatementsPage,
   OperationManualPage,
+  PermissionSettingsPage,
   SystemSettingsPage,
 } from './pages/FinanceSystemPages';
 import { OrganizationHrPage } from './pages/OrganizationHrPages';
@@ -96,7 +97,7 @@ function renderActivePage(pageId: FlPageId): React.ReactNode {
     case 'operation_manual':
       return <OperationManualPage />;
     case 'permission_settings':
-      return <SystemSettingsPage />;
+      return <PermissionSettingsPage />;
     case 'system_settings':
       return <SystemSettingsPage />;
     default:

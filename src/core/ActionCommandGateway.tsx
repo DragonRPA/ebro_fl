@@ -8,6 +8,8 @@ import {
 } from './supabase';
 import { useAppShell, type FlDatasets } from './AppShellContext';
 import {
+  RENTAL_ONLY_ACTION_CODES,
+  RENTAL_ONLY_PAYABLE_TYPES,
   TIER_LABELS,
   type ApprovalActionCode,
   type FlApprovalPolicy,
@@ -29,8 +31,67 @@ import {
   updateEmployeeHrRecord,
 } from '../services/domainEngine';
 
+export function isActionPayloadRentalRelated(
+  actionCode: string,
+  targetId: string,
+  payload: Record<string, unknown> | null | undefined,
+  datasets: FlDatasets
+): boolean {
+  const p = payload || {};
+  if (RENTAL_ONLY_ACTION_CODES.includes(actionCode as ApprovalActionCode)) {
+    return true;
+  }
+  if (p.maintPayload) {
+    return true;
+  }
+  if (actionCode === 'PURCHASE_CONFIRM' && p.targetDomain === 'RENTAL') {
+    return true;
+  }
+  if (actionCode === 'FULFILLMENT_COMPLETE') {
+    const ful = datasets.fulfillments.find((f) => f.id === (p.fulfillmentId || targetId));
+    if (ful?.fulfillmentDomain === 'RENTAL') return true;
+  }
+  if (actionCode === 'BILLING_CREATE') {
+    const contract = datasets.contracts.find((c) => c.id === (p.contractId || targetId));
+    if (contract?.contractDomain === 'RENTAL') return true;
+  }
+  if (actionCode === 'AP_SETTLEMENT_PAY') {
+    if (p.kind === 'LEASE_SCHEDULE') return true;
+    const ap = datasets.apPayables.find((a) => a.id === (p.payableId || targetId));
+    if (ap) {
+      if (RENTAL_ONLY_PAYABLE_TYPES.includes(ap.payableType)) return true;
+      if (ap.payableType === 'PURCHASE' && ap.refId) {
+        const pur = datasets.purchases.find((x) => x.id === ap.refId);
+        if (pur?.targetDomain === 'RENTAL') return true;
+      }
+      if (ap.payableType === 'LOGISTICS' && ap.refId) {
+        const disp = datasets.logisticsDispatches.find((d) => d.id === ap.refId);
+        if (disp) {
+          if (disp.dispatchPurpose === '교환') return true;
+          if (disp.relatedRefId) {
+            const ctr = datasets.contracts.find((c) => c.id === disp.relatedRefId);
+            if (ctr?.contractDomain === 'RENTAL') return true;
+            const ful = datasets.fulfillments.find((f) => f.id === disp.relatedRefId);
+            if (ful?.fulfillmentDomain === 'RENTAL') return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+export function isApprovalRequestRentalRelated(
+  req: FlApprovalRequest,
+  datasets: FlDatasets
+): boolean {
+  return isActionPayloadRentalRelated(req.actionCode, req.targetId, req.payload, datasets);
+}
+
+const NON_RENTAL_BLOCKED_MSG = '렌탈 영업을 영위하지 않는 테넌트에서는 실행할 수 없는 작업입니다.';
+
 export function useActionGateway() {
-  const { currentUser, datasets, refreshAll, notifyToast } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, refreshAll, notifyToast } = useAppShell();
 
   const getPolicy = (actionCode: ApprovalActionCode): FlApprovalPolicy | undefined =>
     datasets.approvalPolicies.find((p) => p.actionCode === actionCode);
@@ -50,6 +111,9 @@ export function useActionGateway() {
     payload: Record<string, unknown>;
   }): Promise<FlApprovalRequest> => {
     if (!currentUser) throw new Error('로그인이 필요합니다.');
+    if (!isRentalEnabled && isActionPayloadRentalRelated(params.actionCode, params.targetId, params.payload, datasets)) {
+      throw new Error(NON_RENTAL_BLOCKED_MSG);
+    }
     const pol = getPolicy(params.actionCode);
     const requiredTier = (pol?.requiredTier || 3) as TierLevel;
 
@@ -85,6 +149,9 @@ export function useActionGateway() {
 
   const approveRequest = async (req: FlApprovalRequest): Promise<void> => {
     if (!currentUser) throw new Error('로그인이 필요합니다.');
+    if (!isRentalEnabled && isApprovalRequestRentalRelated(req, datasets)) {
+      throw new Error(NON_RENTAL_BLOCKED_MSG);
+    }
     if (req.status !== 'PENDING') {
       throw new Error('대기중인 결재 요청만 승인할 수 있습니다.');
     }
@@ -94,7 +161,7 @@ export function useActionGateway() {
       );
     }
 
-    await executeApprovedPayload(req, currentUser, datasets);
+    await executeApprovedPayload(req, currentUser, datasets, { rentalEnabled: isRentalEnabled });
 
     const nowIso = new Date().toISOString();
     await execDbMutation('결재 승인 확정', () =>
@@ -156,8 +223,12 @@ export function useActionGateway() {
 export async function executeApprovedPayload(
   req: FlApprovalRequest,
   approver: FlUser,
-  datasets: FlDatasets
+  datasets: FlDatasets,
+  options?: { rentalEnabled?: boolean }
 ): Promise<void> {
+  if (options?.rentalEnabled === false && isApprovalRequestRentalRelated(req, datasets)) {
+    throw new Error(NON_RENTAL_BLOCKED_MSG);
+  }
   const p = req.payload || {};
 
   switch (req.actionCode as ApprovalActionCode) {
@@ -247,6 +318,7 @@ export async function executeApprovedPayload(
         actorId: approver.id,
         actorName: approver.name,
         returnToRepair: Boolean(p.returnToRepair),
+        allowTradeOriginUnit: options?.rentalEnabled === false,
         memo: p.memo as string | undefined,
       });
       return;
@@ -464,9 +536,13 @@ export const CommitActionButton: React.FC<CommitActionButtonProps> = ({
   variant = 'primary',
   manualId,
 }) => {
-  const { currentUser, notifyToast } = useAppShell();
+  const { currentUser, isRentalEnabled, notifyToast } = useAppShell();
   const { requiresApprovalForUser, getPolicy, submitApprovalRequest } = useActionGateway();
   const [busy, setBusy] = useState(false);
+
+  if (!isRentalEnabled && RENTAL_ONLY_ACTION_CODES.includes(actionCode)) {
+    return null;
+  }
 
   const needsApproval = requiresApprovalForUser(actionCode, currentUser);
   const pol = getPolicy(actionCode);

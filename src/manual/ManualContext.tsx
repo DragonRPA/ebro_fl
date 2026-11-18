@@ -1,7 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { centralSupabase, execDbMutation, newId } from '../core/supabase';
 import { useAppShell } from '../core/AppShellContext';
-import { FL_MANUAL_REGISTRY, type ScreenManualEntry } from './manualRegistry';
+import {
+  FL_MANUAL_REGISTRY,
+  getManualEntryForTenant,
+  type ScreenManualEntry,
+} from './manualRegistry';
 import type { FlPageId } from '../types/domain';
 
 export interface CustomManualAnnotation {
@@ -25,7 +29,7 @@ interface ManualContextValue {
 const ManualContext = createContext<ManualContextValue | null>(null);
 
 export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { activePage, currentUser, notifyToast } = useAppShell();
+  const { activePage, currentUser, isRentalEnabled, notifyToast, tenantProfile } = useAppShell();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [highlightedAnchorId, setHighlightedAnchorId] = useState<string | null>(null);
@@ -54,8 +58,16 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .select('*')
         .eq('solution_type', 'FL');
       if (!alive || res.error || !Array.isArray(res.data)) return;
+      const rows = res.data as Record<string, unknown>[];
       const map: Record<string, CustomManualAnnotation[]> = {};
-      for (const row of res.data as Record<string, unknown>[]) {
+      for (const row of rows) {
+        if (row.tenant_id) continue;
+        const pid = String(row.page_id || '');
+        const anns = Array.isArray(row.annotations) ? (row.annotations as CustomManualAnnotation[]) : [];
+        if (pid) map[pid] = anns;
+      }
+      for (const row of rows) {
+        if (String(row.tenant_id || '') !== tenantProfile.id) continue;
         const pid = String(row.page_id || '');
         const anns = Array.isArray(row.annotations) ? (row.annotations as CustomManualAnnotation[]) : [];
         if (pid) map[pid] = anns;
@@ -65,7 +77,7 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       alive = false;
     };
-  }, []);
+  }, [tenantProfile.id]);
 
   const saveCustomAnnotation = useCallback(
     async (pageId: FlPageId, anchorId: string, note: string) => {
@@ -79,7 +91,8 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from('manual_annotations')
         .select('id')
         .eq('solution_type', 'FL')
-        .eq('page_id', pageId);
+        .eq('page_id', pageId)
+        .eq('tenant_id', tenantProfile.id);
 
       const entry = FL_MANUAL_REGISTRY[pageId];
       if (Array.isArray(existing.data) && existing.data.length > 0) {
@@ -89,6 +102,7 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .from('manual_annotations')
             .update({
               annotations: nextList,
+              tenant_id: tenantProfile.id,
               updated_by: currentUser?.name || '관리자',
               updated_at: new Date().toISOString(),
             })
@@ -98,6 +112,7 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await execDbMutation('매뉴얼 주석 등록', () =>
           centralSupabase.from('manual_annotations').insert({
             id: newId('MAN'),
+            tenant_id: tenantProfile.id,
             page_id: pageId,
             page_title: entry.pageTitle,
             menu_id: pageId,
@@ -113,7 +128,7 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCustomNotes((prev) => ({ ...prev, [pageId]: nextList }));
       notifyToast('화면 매뉴얼 현장 주석 저장 완료', 'success');
     },
-    [currentUser?.name, customNotes, notifyToast]
+    [currentUser?.name, customNotes, notifyToast, tenantProfile.id]
   );
 
   return (
@@ -124,7 +139,7 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toggleOverlay: () => setOverlayOpen((p) => !p),
         searchModalOpen,
         setSearchModalOpen,
-        activeEntry: FL_MANUAL_REGISTRY[activePage],
+        activeEntry: getManualEntryForTenant(activePage, isRentalEnabled),
         highlightedAnchorId,
         setHighlightedAnchorId,
         customNotes,

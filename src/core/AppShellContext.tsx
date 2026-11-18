@@ -8,8 +8,10 @@ import {
   newId,
   registerErrorModalHandler,
   selectAllFlRows,
+  setActiveFlTenantId,
   snakeToCamelRow,
 } from './supabase';
+import { ensureFlTenantBootstrapped } from '../services/domainEngine';
 import {
   decryptSecret,
   hashPassword,
@@ -28,9 +30,11 @@ import {
 import { setR2TenantContext } from '../services/businessLicenseOcrService';
 import {
   ALL_FL_PAGE_IDS,
-  FL_MENU_GROUPS,
+  RENTAL_ONLY_PAGE_IDS,
   TIER_LABELS,
   defaultTierPagePermission,
+  getMenuGroupsForTenant,
+  isTenantRentalEnabled,
   normalizePaymentMethod,
   offsetToPaymentCycle,
   type FlApPayable,
@@ -70,6 +74,13 @@ import {
 } from '../types/domain';
 
 const SESSION_STORAGE_KEY = 'ebro_fl_v2_session';
+const TENANT_OVERRIDE_STORAGE_KEY = 'ebro_fl_tenant_override';
+
+function getTenantSessionStorageKey(tenantId: string): string {
+  return tenantId === DEFAULT_TENANT_ID
+    ? SESSION_STORAGE_KEY
+    : `${SESSION_STORAGE_KEY}::${tenantId}`;
+}
 
 export interface ToastItem {
   id: string;
@@ -148,13 +159,13 @@ const DEFAULT_TENANT_PROFILE: TenantProfile = {
   tenantCode: 'EBRO_FL',
   subdomain: 'fl-demo',
   solutionType: 'FL',
-  displayName: '이브로지게차 렌탈',
-  corporateName: '주식회사 이브로지게차렌탈',
+  displayName: '이브로지게차',
+  corporateName: '주식회사 이브로지게차',
   businessNumber: '123-81-45678',
   representativeName: '이정용',
   businessAddress: '경기도 평택시 포승읍 평택항만길 100',
-  businessCategory: '도소매·임대업',
-  businessItem: '지게차 매매 및 임대·정비',
+  businessCategory: '도소매업',
+  businessItem: '지게차 및 부품 매매',
   tel: '031-681-8899',
   fax: '031-681-8890',
   taxEmail: 'fl-demo@ebro.run',
@@ -188,6 +199,7 @@ export interface AppShellContextValue {
   isLoading: boolean;
   currentUser: FlUser | null;
   tenantProfile: TenantProfile;
+  isRentalEnabled: boolean;
   datasets: FlDatasets;
   activePage: FlPageId;
   agentOnline: boolean;
@@ -302,13 +314,28 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 3600);
   }, []);
 
-  const fetchTenantProfile = useCallback(async () => {
+  const fetchTenantProfile = useCallback(async (): Promise<TenantProfile> => {
     const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
     const sub = host.includes('.ebro.run') ? host.split('.')[0] : 'fl-demo';
-    const tenantQuery =
-      typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('tenant')?.trim().toLowerCase() || ''
-        : '';
+    let tenantQuery = '';
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const rawParam = (sp.get('tenant') ?? sp.get('t') ?? '').trim().toLowerCase();
+      if (rawParam) {
+        if (rawParam === 'default' || rawParam === 'reset') {
+          window.sessionStorage.removeItem(TENANT_OVERRIDE_STORAGE_KEY);
+          tenantQuery = '';
+        } else {
+          window.sessionStorage.setItem(TENANT_OVERRIDE_STORAGE_KEY, rawParam);
+          tenantQuery = rawParam;
+        }
+      } else {
+        tenantQuery = (window.sessionStorage.getItem(TENANT_OVERRIDE_STORAGE_KEY) || '')
+          .trim()
+          .toLowerCase();
+      }
+    }
+
     const res = await centralSupabase.from('tenants').select('*');
     if (!res.error && Array.isArray(res.data)) {
       const flRows = res.data.filter(
@@ -335,21 +362,42 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (matched) {
         const rawCiUrl = typeof matched.ciUrl === 'string' ? matched.ciUrl.trim() : '';
         const rawLogoUrl = typeof matched.logoUrl === 'string' ? matched.logoUrl.trim() : '';
-        setTenantProfile({
+        const matchedFeatures = (matched.features || { bankMatchingEnabled: true }) as TenantProfile['features'];
+        const matchedRentalEnabled = matchedFeatures?.rentalEnabled !== false;
+        const rawDisp = String(matched.displayName || '').trim();
+        const rawCorp = String(matched.corporateName || '').trim();
+        const rawCat = String(matched.businessCategory || '').trim();
+        const rawItem = String(matched.businessItem || '').trim();
+        const resolvedProfile: TenantProfile = {
           id: String(matched.id || DEFAULT_TENANT_ID),
           tenantCode: String(matched.tenantCode || 'EBRO_FL'),
           subdomain: String(matched.subdomain || 'fl-demo'),
           solutionType: String(matched.solutionType || 'FL'),
-          displayName:
-            matched.displayName && matched.displayName !== 'eBroFL 렌탈'
-              ? String(matched.displayName)
-              : '이브로지게차 렌탈',
-          corporateName: String(matched.corporateName || DEFAULT_TENANT_PROFILE.corporateName),
+          displayName: matchedRentalEnabled
+            ? rawDisp && rawDisp !== 'eBroFL 렌탈'
+              ? rawDisp
+              : '이브로지게차 렌탈'
+            : rawDisp && rawDisp !== 'eBroFL 렌탈' && rawDisp !== '이브로지게차 렌탈'
+              ? rawDisp
+              : '이브로지게차',
+          corporateName: matchedRentalEnabled
+            ? rawCorp || '주식회사 이브로지게차렌탈'
+            : rawCorp && rawCorp !== '주식회사 이브로지게차렌탈'
+              ? rawCorp
+              : '주식회사 이브로지게차',
           businessNumber: String(matched.businessNumber || DEFAULT_TENANT_PROFILE.businessNumber),
           representativeName: String(matched.representativeName || DEFAULT_TENANT_PROFILE.representativeName),
           businessAddress: String(matched.businessAddress || DEFAULT_TENANT_PROFILE.businessAddress),
-          businessCategory: String(matched.businessCategory || DEFAULT_TENANT_PROFILE.businessCategory),
-          businessItem: String(matched.businessItem || DEFAULT_TENANT_PROFILE.businessItem),
+          businessCategory: matchedRentalEnabled
+            ? rawCat || '도소매·임대업'
+            : rawCat && rawCat !== '도소매·임대업'
+              ? rawCat
+              : '도소매업',
+          businessItem: matchedRentalEnabled
+            ? rawItem || '지게차 매매 및 임대·정비'
+            : rawItem && rawItem !== '지게차 매매 및 임대·정비'
+              ? rawItem
+              : '지게차 및 부품 매매',
           tel: String(matched.tel || DEFAULT_TENANT_PROFILE.tel),
           fax: String(matched.fax || DEFAULT_TENANT_PROFILE.fax),
           taxEmail: String(matched.taxEmail || DEFAULT_TENANT_PROFILE.taxEmail),
@@ -364,14 +412,22 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             : [...ALL_FL_PAGE_IDS],
           hiddenPages: Array.isArray(matched.hiddenPages) ? matched.hiddenPages : [],
           features: (matched.features || { bankMatchingEnabled: true }) as TenantProfile['features'],
-        });
+        };
+        setActiveFlTenantId(resolvedProfile.id);
+        setTenantProfile(resolvedProfile);
+        return resolvedProfile;
       }
     }
+    setActiveFlTenantId(DEFAULT_TENANT_PROFILE.id);
+    setTenantProfile(DEFAULT_TENANT_PROFILE);
+    return DEFAULT_TENANT_PROFILE;
   }, []);
 
   const refreshAll = useCallback(async () => {
+    const resolvedProfile = await fetchTenantProfile();
+    await ensureFlTenantBootstrapped(resolvedProfile);
+
     const [
-      ,
       deptRes,
       usrRes,
       permRes,
@@ -402,7 +458,6 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       flsRes,
       flschRes,
     ] = await Promise.all([
-      fetchTenantProfile(),
       selectAllFlRows('departments', { orderCol: 'id' }),
       selectAllFlRows('users', { orderCol: 'tier_level', ascending: false }),
       selectAllFlRows('user_permissions'),
@@ -541,6 +596,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       'operatingHours',
       'monthlyRentalFeeKrw',
       'dailyRentalFeeKrw',
+      'warrantyMonths',
     ]).map((r) => ({
       ...r,
       subleaseSupplierName:
@@ -695,19 +751,28 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ]),
     });
 
-    // 세션 유지 사용자 최신 DB 속성 동기화
-    const rawSess = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    // 세션 유지 사용자 최신 DB 속성 동기화 (테넌트별 격리 세션 키 + 기본 테넌트 레거시 호환)
+    const sessionKey = getTenantSessionStorageKey(resolvedProfile.id);
+    const rawSess =
+      window.localStorage.getItem(sessionKey) ||
+      (resolvedProfile.id === DEFAULT_TENANT_ID
+        ? window.localStorage.getItem(SESSION_STORAGE_KEY)
+        : null);
     if (rawSess) {
-      const parsed = verifySessionUser<{ id: string }>(rawSess);
-      if (parsed) {
+      const parsed = verifySessionUser<{ id: string; tenantId?: string }>(rawSess);
+      if (parsed && (!parsed.tenantId || parsed.tenantId === resolvedProfile.id)) {
         const fresh = users.find((u) => u.id === parsed.id && u.isActive && u.status === 'ACTIVE');
         if (fresh) {
           setCurrentUser(fresh);
         } else {
-          window.localStorage.removeItem(SESSION_STORAGE_KEY);
+          window.localStorage.removeItem(sessionKey);
           setCurrentUser(null);
         }
+      } else {
+        setCurrentUser(null);
       }
+    } else {
+      setCurrentUser(null);
     }
   }, [fetchTenantProfile]);
 
@@ -774,23 +839,40 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!ok) {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
-      const signed = signSessionUser({ id: target.id, role: `T${target.tierLevel}` });
-      safeLocalStorageSet(SESSION_STORAGE_KEY, signed);
+      const signed = signSessionUser({
+        id: target.id,
+        role: `T${target.tierLevel}`,
+        tenantId: tenantProfile.id,
+      });
+      safeLocalStorageSet(getTenantSessionStorageKey(tenantProfile.id), signed);
       setCurrentUser(target);
       resetNavHistory();
       notifyToast(`${target.name} · ${TIER_LABELS[target.tierLevel]} 로그인 완료`, 'success');
     },
-    [datasets.users, notifyToast, resetNavHistory]
+    [datasets.users, notifyToast, resetNavHistory, tenantProfile.id]
   );
 
   const logout = useCallback(() => {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.localStorage.removeItem(getTenantSessionStorageKey(tenantProfile.id));
+    if (tenantProfile.id === DEFAULT_TENANT_ID) {
+      window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
     setCurrentUser(null);
     resetNavHistory();
-  }, [resetNavHistory]);
+  }, [resetNavHistory, tenantProfile.id]);
+
+  const isRentalEnabled = useMemo(() => isTenantRentalEnabled(tenantProfile), [tenantProfile]);
+
+  useEffect(() => {
+    const scopeText = isRentalEnabled
+      ? '지게차 및 부품 유통·렌탈·재고·회계 관리 시스템'
+      : '지게차 및 부품 유통·재고·회계 관리 시스템';
+    document.title = `${tenantProfile.displayName || '이브로 지게차'} | ${scopeText}`;
+  }, [isRentalEnabled, tenantProfile.displayName]);
 
   const canViewPage = useCallback(
     (pageId: FlPageId): boolean => {
+      if (!isRentalEnabled && RENTAL_ONLY_PAGE_IDS.includes(pageId)) return false;
       if (tenantProfile.hiddenPages.includes(pageId)) return false;
       if (pageId === 'bank_matching' && tenantProfile.features?.bankMatchingEnabled === false) {
         return false;
@@ -813,11 +895,12 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
       return tierRule ? tierRule.canView : defaultTierPagePermission(pageId, currentUser.tierLevel).canView;
     },
-    [currentUser, datasets.userPermissions, tenantProfile]
+    [currentUser, datasets.userPermissions, isRentalEnabled, tenantProfile]
   );
 
   const canEditPage = useCallback(
     (pageId: FlPageId): boolean => {
+      if (!isRentalEnabled && RENTAL_ONLY_PAGE_IDS.includes(pageId)) return false;
       if (!currentUser) return false;
       if (currentUser.tierLevel >= 7) return true;
       const userRule = datasets.userPermissions.find((p) => p.userId === currentUser.id && p.pageId === pageId);
@@ -827,11 +910,12 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
       return tierRule ? tierRule.canEdit : defaultTierPagePermission(pageId, currentUser.tierLevel).canEdit;
     },
-    [currentUser, datasets.userPermissions]
+    [currentUser, datasets.userPermissions, isRentalEnabled]
   );
 
   const canApprovePage = useCallback(
     (pageId: FlPageId): boolean => {
+      if (!isRentalEnabled && RENTAL_ONLY_PAGE_IDS.includes(pageId)) return false;
       if (!currentUser) return false;
       if (currentUser.tierLevel >= 7) return true;
       const userRule = datasets.userPermissions.find((p) => p.userId === currentUser.id && p.pageId === pageId);
@@ -841,15 +925,23 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
       return tierRule ? tierRule.canApprove : defaultTierPagePermission(pageId, currentUser.tierLevel).canApprove;
     },
-    [currentUser, datasets.userPermissions]
+    [currentUser, datasets.userPermissions, isRentalEnabled]
   );
 
   const visibleMenuGroups = useMemo(() => {
-    return FL_MENU_GROUPS.map((grp) => ({
-      ...grp,
-      items: grp.items.filter((item) => canViewPage(item.pageId)),
-    })).filter((grp) => grp.items.length > 0);
-  }, [canViewPage]);
+    return getMenuGroupsForTenant(isRentalEnabled)
+      .map((grp) => ({
+        ...grp,
+        items: grp.items.filter((item) => canViewPage(item.pageId)),
+      }))
+      .filter((grp) => grp.items.length > 0);
+  }, [canViewPage, isRentalEnabled]);
+
+  useEffect(() => {
+    if (currentUser && !canViewPage(activePage)) {
+      resetNavHistory();
+    }
+  }, [activePage, canViewPage, currentUser, resetNavHistory]);
 
   const visiblePageSet = useMemo(() => {
     const s = new Set<FlPageId>();
@@ -1128,6 +1220,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     isLoading,
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     activePage,
     agentOnline,

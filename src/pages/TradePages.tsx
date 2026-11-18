@@ -40,8 +40,11 @@ import {
   PAYMENT_METHODS,
   QUOTATION_STATUS_KO_LABELS,
   cycleToMonthOffset,
+  filterItemMastersForTenant,
+  filterPartnersForTenant,
   formatKoStatus,
   formatPaymentTermsLabel,
+  isEffectiveTradeUnitForTenant,
   koStatusTone,
   normalizePaymentMethod,
   offsetToPaymentCycle,
@@ -61,6 +64,7 @@ export const QuotationsPage: React.FC = () => {
   const {
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     formatMoney,
     refreshAll,
@@ -71,20 +75,31 @@ export const QuotationsPage: React.FC = () => {
   const canEdit = canEditPage('quotations');
   const today = new Date().toISOString().slice(0, 10);
 
+  const tenantPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
+
   const customers = useMemo(() => {
-    const matched = datasets.partners.filter(
+    const matched = tenantPartners.filter(
       (p) => p.partnerRoles.includes('매출처') || p.partnerRoles.includes('대리점')
     );
-    return matched.length > 0 ? matched : datasets.partners;
-  }, [datasets.partners]);
+    return matched.length > 0 ? matched : tenantPartners;
+  }, [tenantPartners]);
+
+  const tenantItems = useMemo(
+    () => filterItemMastersForTenant(datasets.itemMasters, isRentalEnabled),
+    [datasets.itemMasters, isRentalEnabled]
+  );
 
   const [quoteDomain, setQuoteDomain] = useState<'TRADE' | 'RENTAL'>('TRADE');
+  const effectiveQuoteDomain: 'TRADE' | 'RENTAL' = isRentalEnabled ? quoteDomain : 'TRADE';
   const domainItems = useMemo(() => {
-    const matched = datasets.itemMasters.filter(
-      (it) => it.itemDomain === quoteDomain || it.itemDomain === 'BOTH'
+    const matched = tenantItems.filter(
+      (it) => it.itemDomain === effectiveQuoteDomain || it.itemDomain === 'BOTH'
     );
-    return matched.length > 0 ? matched : datasets.itemMasters;
-  }, [datasets.itemMasters, quoteDomain]);
+    return matched.length > 0 ? matched : tenantItems;
+  }, [effectiveQuoteDomain, tenantItems]);
 
   const [partnerId, setPartnerId] = useState(customers[0]?.id || '');
   const [quoteDate, setQuoteDate] = useState(today);
@@ -97,8 +112,15 @@ export const QuotationsPage: React.FC = () => {
   );
   const [memo, setMemo] = useState('');
   const [draftLines, setDraftLines] = useState<QuotationLine[]>([]);
+  const visibleQuotations = useMemo(
+    () =>
+      isRentalEnabled
+        ? datasets.quotations
+        : datasets.quotations.filter((q) => q.quoteDomain !== 'RENTAL'),
+    [datasets.quotations, isRentalEnabled]
+  );
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(
-    datasets.quotations[0]?.id || null
+    visibleQuotations[0]?.id || null
   );
   const [busy, setBusy] = useState(false);
   const [filterStartDate, setFilterStartDate] = useState('');
@@ -108,9 +130,11 @@ export const QuotationsPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterKeyword, setFilterKeyword] = useState('');
 
+  const effectiveFilterDomain = isRentalEnabled ? filterDomain : '';
+
   const quotePartnerFilterOptions = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const q of datasets.quotations) {
+    for (const q of visibleQuotations) {
       if (q.partnerId && !seen.has(q.partnerId)) {
         seen.set(q.partnerId, q.partnerName);
       }
@@ -121,15 +145,15 @@ export const QuotationsPage: React.FC = () => {
         .sort((a, b) => a[1].localeCompare(b[1], 'ko'))
         .map(([value, label]) => ({ value, label })),
     ];
-  }, [datasets.quotations]);
+  }, [visibleQuotations]);
 
   const filteredQuotations = useMemo(() => {
     const kw = filterKeyword.trim().toLowerCase();
-    return datasets.quotations
+    return visibleQuotations
       .filter((q) => {
         if (filterStartDate && q.quoteDate < filterStartDate) return false;
         if (filterEndDate && q.quoteDate > filterEndDate) return false;
-        if (filterDomain && q.quoteDomain !== filterDomain) return false;
+        if (effectiveFilterDomain && q.quoteDomain !== effectiveFilterDomain) return false;
         if (filterPartnerId && q.partnerId !== filterPartnerId) return false;
         if (filterStatus && q.status !== filterStatus) return false;
         if (kw) {
@@ -140,16 +164,19 @@ export const QuotationsPage: React.FC = () => {
       })
       .sort((a, b) => b.quoteDate.localeCompare(a.quoteDate));
   }, [
-    datasets.quotations,
-    filterDomain,
+    effectiveFilterDomain,
     filterEndDate,
     filterKeyword,
     filterPartnerId,
     filterStartDate,
     filterStatus,
+    visibleQuotations,
   ]);
 
-  const handleSelectItem = (nextId: string, nextDomain: 'TRADE' | 'RENTAL' = quoteDomain) => {
+  const handleSelectItem = (
+    nextId: string,
+    nextDomain: 'TRADE' | 'RENTAL' = effectiveQuoteDomain
+  ) => {
     setItemId(nextId);
     const it = datasets.itemMasters.find((x) => x.id === nextId);
     if (it) {
@@ -220,14 +247,14 @@ export const QuotationsPage: React.FC = () => {
       id,
       tenantId: DEFAULT_TENANT_ID,
       quoteNo: id,
-      quoteDomain,
+      quoteDomain: effectiveQuoteDomain,
       partnerId: partner.id,
       partnerName: partner.name,
       salespersonId: currentUser?.id || 'USR_ADMIN',
       salespersonName: currentUser?.name || '담당자',
       quoteDate,
       validUntil,
-      rentalMonths: quoteDomain === 'RENTAL' ? Math.max(1, rentalMonths) : 1,
+      rentalMonths: effectiveQuoteDomain === 'RENTAL' ? Math.max(1, rentalMonths) : 1,
       supplyAmountKrw: supply,
       vatAmountKrw: vat,
       totalAmountKrw: supply + vat,
@@ -253,10 +280,10 @@ export const QuotationsPage: React.FC = () => {
 
   const selectedQuote = useMemo(
     () =>
-      datasets.quotations.find((q) => q.id === selectedQuoteId) ||
-      datasets.quotations[0] ||
+      visibleQuotations.find((q) => q.id === selectedQuoteId) ||
+      visibleQuotations[0] ||
       null,
-    [datasets.quotations, selectedQuoteId]
+    [selectedQuoteId, visibleQuotations]
   );
 
   const selectedPartner = useMemo(
@@ -268,6 +295,10 @@ export const QuotationsPage: React.FC = () => {
   );
 
   const handleConvertToContract = async (qt: FlQuotation) => {
+    if (!isRentalEnabled && qt.quoteDomain === 'RENTAL') {
+      notifyToast('렌탈 영업을 영위하지 않는 테넌트에서는 실행할 수 없는 작업입니다.', 'error');
+      return;
+    }
     if (qt.status === 'CONVERTED') {
       notifyToast('이미 계약으로 전환된 견적서입니다.', 'error');
       return;
@@ -405,25 +436,27 @@ export const QuotationsPage: React.FC = () => {
           }
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-field-grid-gap)' }}>
-            <VerticalField label="견적 구분" required>
-              <select
-                value={quoteDomain}
-                onChange={(e) => {
-                  const next = e.target.value as 'TRADE' | 'RENTAL';
-                  setQuoteDomain(next);
-                  const nextItems = datasets.itemMasters.filter(
-                    (it) => it.itemDomain === next || it.itemDomain === 'BOTH'
-                  );
-                  const candidate =
-                    nextItems.find((it) => it.id === itemId) || nextItems[0] || datasets.itemMasters[0];
-                  handleSelectItem(candidate?.id || '', next);
-                }}
-                style={controlInputStyle}
-              >
-                <option value="TRADE">유통 판매</option>
-                <option value="RENTAL">렌탈 임대</option>
-              </select>
-            </VerticalField>
+            {isRentalEnabled && (
+              <VerticalField label="견적 구분" required>
+                <select
+                  value={effectiveQuoteDomain}
+                  onChange={(e) => {
+                    const next = e.target.value as 'TRADE' | 'RENTAL';
+                    setQuoteDomain(next);
+                    const nextItems = tenantItems.filter(
+                      (it) => it.itemDomain === next || it.itemDomain === 'BOTH'
+                    );
+                    const candidate =
+                      nextItems.find((it) => it.id === itemId) || nextItems[0] || tenantItems[0];
+                    handleSelectItem(candidate?.id || '', next);
+                  }}
+                  style={controlInputStyle}
+                >
+                  <option value="TRADE">유통 판매</option>
+                  <option value="RENTAL">렌탈 임대</option>
+                </select>
+              </VerticalField>
+            )}
             <VerticalField label="거래처" required>
               <SearchableSelect
                 value={partnerId || customers[0]?.id || ''}
@@ -450,7 +483,7 @@ export const QuotationsPage: React.FC = () => {
                 style={controlInputStyle}
               />
             </VerticalField>
-            {quoteDomain === 'RENTAL' && (
+            {isRentalEnabled && effectiveQuoteDomain === 'RENTAL' && (
               <VerticalField label="임대 개월수">
                 <CommaNumberInput
                   min={1}
@@ -472,7 +505,7 @@ export const QuotationsPage: React.FC = () => {
             <VerticalField label="수량">
               <CommaNumberInput min={1} value={qty} onChange={setQty} />
             </VerticalField>
-            <VerticalField label={quoteDomain === 'RENTAL' ? '월 임대단가' : '판매단가'}>
+            <VerticalField label={effectiveQuoteDomain === 'RENTAL' ? '월 임대단가' : '판매단가'}>
               <CommaNumberInput
                 disabled={Boolean(currentUser?.maskSalesPrice)}
                 value={currentUser?.maskSalesPrice ? 0 : unitPriceKrw}
@@ -504,10 +537,20 @@ export const QuotationsPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', flexWrap: 'wrap' }}>
               <DocumentActionBar
                 manualId="qt-docs"
-                docLabel={selectedQuote.quoteDomain === 'TRADE' ? '유통 견적서' : '렌탈 견적서'}
+                docLabel={
+                  !isRentalEnabled
+                    ? '유통 견적서'
+                    : selectedQuote.quoteDomain === 'TRADE'
+                      ? '유통 견적서'
+                      : '렌탈 견적서'
+                }
                 defaultEmail={selectedPartner?.email || selectedPartner?.taxEmail || ''}
                 defaultSubject={`[${tenantProfile.corporateName}] ${selectedQuote.quoteNo} 견적서 송부`}
-                defaultBody={`${selectedQuote.partnerName} 귀중\n\n요청하신 ${selectedQuote.quoteDomain === 'TRADE' ? '유통' : '렌탈'} 견적서를 첨부하여 송부드립니다.\n총 합계금액: ${selectedQuote.totalAmountKrw.toLocaleString('ko-KR')}원`}
+                defaultBody={
+                  isRentalEnabled
+                    ? `${selectedQuote.partnerName} 귀중\n\n요청하신 ${selectedQuote.quoteDomain === 'TRADE' ? '유통' : '렌탈'} 견적서를 첨부하여 송부드립니다.\n총 합계금액: ${selectedQuote.totalAmountKrw.toLocaleString('ko-KR')}원`
+                    : `${selectedQuote.partnerName} 귀중\n\n요청하신 유통 견적서를 첨부하여 송부드립니다.\n총 합계금액: ${selectedQuote.totalAmountKrw.toLocaleString('ko-KR')}원`
+                }
                 onGenerate={() =>
                   generateQuotationExcel({
                     quotation: selectedQuote,
@@ -532,7 +575,7 @@ export const QuotationsPage: React.FC = () => {
           }
         >
           <div style={{ display: 'flex', gap: 'var(--space-conservation-gap)', flexWrap: 'wrap', fontSize: '13px' }}>
-            <span>구분: {selectedQuote.quoteDomain === 'TRADE' ? '유통' : '렌탈'}</span>
+            {isRentalEnabled && <span>구분: {selectedQuote.quoteDomain === 'TRADE' ? '유통' : '렌탈'}</span>}
             <span>견적일자: {selectedQuote.quoteDate}</span>
             <span>공급가액: {formatMoney(selectedQuote.supplyAmountKrw, { salesSensitive: true })}</span>
             <span>합계금액: {formatMoney(selectedQuote.totalAmountKrw, { salesSensitive: true })}</span>
@@ -587,17 +630,19 @@ export const QuotationsPage: React.FC = () => {
               style={controlInputStyle}
             />
           </VerticalField>
-          <VerticalField label="견적 구분" minWidth={0}>
-            <select
-              value={filterDomain}
-              onChange={(e) => setFilterDomain(e.target.value)}
-              style={controlInputStyle}
-            >
-              <option value="">전체 구분</option>
-              <option value="TRADE">유통</option>
-              <option value="RENTAL">렌탈</option>
-            </select>
-          </VerticalField>
+          {isRentalEnabled && (
+            <VerticalField label="견적 구분" minWidth={0}>
+              <select
+                value={filterDomain}
+                onChange={(e) => setFilterDomain(e.target.value)}
+                style={controlInputStyle}
+              >
+                <option value="">전체 구분</option>
+                <option value="TRADE">유통</option>
+                <option value="RENTAL">렌탈</option>
+              </select>
+            </VerticalField>
+          )}
           <VerticalField label="거래처" minWidth={0}>
             <SearchableSelect
               value={filterPartnerId}
@@ -642,15 +687,21 @@ export const QuotationsPage: React.FC = () => {
               sortValue: (r) => r.quoteNo,
               render: (r) => <span style={{ fontWeight: 700 }}>{r.quoteNo}</span>,
             },
-            {
-              key: 'domain',
-              header: '구분',
-              width: 85,
-              align: 'center',
-              sortable: true,
-              sortValue: (r) => (r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'),
-              render: (r) => <StatusBadge label={r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'} tone="info" />,
-            },
+            ...(isRentalEnabled
+              ? [
+                  {
+                    key: 'domain',
+                    header: '구분',
+                    width: 85,
+                    align: 'center' as const,
+                    sortable: true,
+                    sortValue: (r: FlQuotation) => (r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'),
+                    render: (r: FlQuotation) => (
+                      <StatusBadge label={r.quoteDomain === 'RENTAL' ? '렌탈' : '유통'} tone="info" />
+                    ),
+                  },
+                ]
+              : []),
             {
               key: 'partnerName',
               header: '거래처',
@@ -705,6 +756,7 @@ export const TradeContractsPage: React.FC = () => {
   const {
     currentUser,
     tenantProfile,
+    isRentalEnabled,
     datasets,
     formatMoney,
     refreshAll,
@@ -723,19 +775,29 @@ export const TradeContractsPage: React.FC = () => {
     [datasets.contracts]
   );
 
+  const tenantPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
+
   const customers = useMemo(() => {
-    const matched = datasets.partners.filter(
+    const matched = tenantPartners.filter(
       (p) => p.partnerRoles.includes('매출처') || p.partnerRoles.includes('대리점')
     );
-    return matched.length > 0 ? matched : datasets.partners;
-  }, [datasets.partners]);
+    return matched.length > 0 ? matched : tenantPartners;
+  }, [tenantPartners]);
+
+  const tenantItems = useMemo(
+    () => filterItemMastersForTenant(datasets.itemMasters, isRentalEnabled),
+    [datasets.itemMasters, isRentalEnabled]
+  );
 
   const tradeItems = useMemo(() => {
-    const matched = datasets.itemMasters.filter(
+    const matched = tenantItems.filter(
       (i) => i.itemDomain === 'TRADE' || i.itemDomain === 'BOTH'
     );
-    return matched.length > 0 ? matched : datasets.itemMasters;
-  }, [datasets.itemMasters]);
+    return matched.length > 0 ? matched : tenantItems;
+  }, [tenantItems]);
 
   const [selectedId, setSelectedId] = useState<string | null>(tradeContracts[0]?.id || null);
   const [partnerId, setPartnerId] = useState(customers[0]?.id || '');
@@ -760,6 +822,8 @@ export const TradeContractsPage: React.FC = () => {
     return cy === '선입금' ? 0 : customers[0]?.defaultPaymentDueDay || 10;
   });
   const [specialTerms, setSpecialTerms] = useState('');
+  const [warrantyMonths, setWarrantyMonths] = useState<number>(12);
+  const [warrantyNote, setWarrantyNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
@@ -851,6 +915,8 @@ export const TradeContractsPage: React.FC = () => {
       supplyAmountKrw: supply,
       vatAmountKrw: vat,
       totalAmountKrw: supply + vat,
+      warrantyMonths: Math.max(0, Number(warrantyMonths || 0)),
+      warrantyNote: warrantyNote.trim() || null,
       lineStatus: 'ACTIVE',
       effectiveStartDate: contractDate,
       effectiveEndDate: addDaysIso(contractDate, 14),
@@ -1104,6 +1170,24 @@ export const TradeContractsPage: React.FC = () => {
                   ))
                 )}
               </select>
+            </VerticalField>
+            <VerticalField label="보증기간(개월)" width={115}>
+              <input
+                type="number"
+                min={0}
+                value={warrantyMonths}
+                onChange={(e) => setWarrantyMonths(Number(e.target.value))}
+                style={controlInputStyle}
+              />
+            </VerticalField>
+            <VerticalField label="보증 특약">
+              <input
+                type="text"
+                value={warrantyNote}
+                onChange={(e) => setWarrantyNote(e.target.value)}
+                placeholder="배터리 24개월 등"
+                style={controlInputStyle}
+              />
             </VerticalField>
             <VerticalField label="특약사항">
               <input
@@ -1378,8 +1462,15 @@ function agingTone(days: number): 'danger' | 'warning' | 'info' | 'primary' | 'n
   return 'neutral';
 }
 
+function getWarrantyStatus(u: FlInventoryUnit, today: string): { label: string; tone: 'success' | 'danger' | 'neutral' } {
+  if (!u.warrantyEndDate) return { label: '미개시', tone: 'neutral' };
+  return u.warrantyEndDate >= today
+    ? { label: '무상보증', tone: 'success' }
+    : { label: '보증만료', tone: 'danger' };
+}
+
 export const TradeInventoryPage: React.FC = () => {
-  const { currentUser, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('trade_inventory');
   const today = new Date().toISOString().slice(0, 10);
 
@@ -1392,11 +1483,41 @@ export const TradeInventoryPage: React.FC = () => {
   const [filterKeyword, setFilterKeyword] = useState('');
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [transferDate, setTransferDate] = useState(today);
+  const [warrantySaving, setWarrantySaving] = useState(false);
+  const [warrantyMonthsInput, setWarrantyMonthsInput] = useState<number>(12);
+  const [warrantyStartInput, setWarrantyStartInput] = useState<string>('');
+  const [warrantyEndInput, setWarrantyEndInput] = useState<string>('');
+  const [warrantyNoteInput, setWarrantyNoteInput] = useState<string>('');
+
+  const effectiveTradeUnits = useMemo(
+    () =>
+      datasets.inventoryUnits
+        .filter((u) =>
+          isEffectiveTradeUnitForTenant(
+            u,
+            isRentalEnabled,
+            datasets.stockMovements,
+            datasets.purchases,
+            datasets.purchaseLines
+          )
+        )
+        .map((u) =>
+          !isRentalEnabled && (u.status === '대여중' || u.status === '정비중')
+            ? { ...u, status: '보유중' as const }
+            : u
+        ),
+    [
+      datasets.inventoryUnits,
+      datasets.purchaseLines,
+      datasets.purchases,
+      datasets.stockMovements,
+      isRentalEnabled,
+    ]
+  );
 
   const tradeItemFilterOptions = useMemo(() => {
     const seen = new Map<string, { label: string; searchText: string }>();
-    for (const u of datasets.inventoryUnits) {
-      if (u.ownershipDomain !== '유통재고') continue;
+    for (const u of effectiveTradeUnits) {
       if (!seen.has(u.itemId)) {
         seen.set(u.itemId, {
           label: `${u.sku} · ${u.itemName}`,
@@ -1410,12 +1531,11 @@ export const TradeInventoryPage: React.FC = () => {
         .sort((a, b) => a[1].label.localeCompare(b[1].label, 'ko'))
         .map(([value, info]) => ({ value, label: info.label, searchText: info.searchText })),
     ];
-  }, [datasets.inventoryUnits]);
+  }, [effectiveTradeUnits]);
 
   const baseFilteredUnits = useMemo(() => {
     const kw = filterKeyword.trim();
-    const base = datasets.inventoryUnits.filter((u) => u.ownershipDomain === '유통재고');
-    return base.filter((u) => {
+    return effectiveTradeUnits.filter((u) => {
       if (catFilter !== 'ALL' && u.itemCategory !== catFilter) return false;
       if (statusFilter !== 'ALL' && u.status !== statusFilter) return false;
       if (filterStartDate && u.acquisitionDate < filterStartDate) return false;
@@ -1427,7 +1547,7 @@ export const TradeInventoryPage: React.FC = () => {
       }
       return true;
     });
-  }, [catFilter, datasets.inventoryUnits, filterEndDate, filterItemId, filterKeyword, filterStartDate, statusFilter]);
+  }, [catFilter, effectiveTradeUnits, filterEndDate, filterItemId, filterKeyword, filterStartDate, statusFilter]);
 
   const agingCounts = useMemo(() => {
     let over30 = 0;
@@ -1477,14 +1597,75 @@ export const TradeInventoryPage: React.FC = () => {
   const selectedUnit =
     tradeUnits.find((u) => u.id === selectedUnitId) || tradeUnits[0] || null;
 
+  const selectedUnitAftercares = useMemo(() => {
+    if (!selectedUnit) return [];
+    return datasets.tradeAftercareCases
+      .filter((c) => c.unitId === selectedUnit.id)
+      .sort((a, b) => (b.effectiveDate || '').localeCompare(a.effectiveDate || ''));
+  }, [datasets.tradeAftercareCases, selectedUnit]);
+
+  const handleSelectUnitRow = (u: FlInventoryUnit) => {
+    setSelectedUnitId(u.id);
+    setWarrantyMonthsInput(Number(u.warrantyMonths ?? 12));
+    setWarrantyStartInput(u.warrantyStartDate || '');
+    setWarrantyEndInput(u.warrantyEndDate || '');
+    setWarrantyNoteInput(u.warrantyNote || '');
+  };
+
+  const handleSaveWarranty = async () => {
+    if (!selectedUnit) return;
+    setWarrantySaving(true);
+    try {
+      let endDt = warrantyEndInput.trim();
+      if (!endDt && warrantyStartInput.trim() && warrantyMonthsInput > 0) {
+        const d = new Date(`${warrantyStartInput.trim().slice(0, 10)}T00:00:00Z`);
+        d.setUTCMonth(d.getUTCMonth() + Number(warrantyMonthsInput));
+        endDt = d.toISOString().slice(0, 10);
+      }
+      await execDbMutation('차대번호별 보증기간 저장', () =>
+        flSupabase
+          .from('inventory_units')
+          .update(
+            camelToSnakeRow({
+              warrantyMonths: Math.max(0, Number(warrantyMonthsInput || 0)),
+              warrantyStartDate: warrantyStartInput.trim() || null,
+              warrantyEndDate: endDt || null,
+              warrantyNote: warrantyNoteInput.trim() || null,
+              updatedAt: new Date().toISOString(),
+            })
+          )
+          .eq('id', selectedUnit.id)
+      );
+      await refreshAll();
+      notifyToast('차대번호별 보증기간이 저장되었습니다.', 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '보증기간 저장 실패', 'error');
+    } finally {
+      setWarrantySaving(false);
+    }
+  };
+
   const selectedUnitMovements = useMemo(() => {
     if (!selectedUnit) return [];
+    const rentalMovementTypes = new Set([
+      'ACCOUNT_TRANSFER',
+      'RENTAL_OUTBOUND',
+      'RENTAL_RETURN',
+      'EXCHANGE_OUT',
+      'EXCHANGE_IN',
+      'REPAIR_OUT',
+    ]);
     return datasets.stockMovements
-      .filter((m) => m.unitId === selectedUnit.id)
+      .filter(
+        (m) =>
+          m.unitId === selectedUnit.id &&
+          (isRentalEnabled || !rentalMovementTypes.has(m.movementType))
+      )
       .sort((a, b) => (b.effectiveDate || '').localeCompare(a.effectiveDate || ''));
-  }, [datasets.stockMovements, selectedUnit]);
+  }, [datasets.stockMovements, isRentalEnabled, selectedUnit]);
 
   const canTransfer =
+    isRentalEnabled &&
     canEdit &&
     selectedUnit &&
     selectedUnit.status === '보유중' &&
@@ -1493,7 +1674,11 @@ export const TradeInventoryPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-page-gap)' }}>
       <SectionPanel
-        title="유통재고 선입선출 · 경과일수 현황 · 계정대체"
+        title={
+          isRentalEnabled
+            ? '유통재고 선입선출 · 경과일수 현황 · 계정대체'
+            : '유통재고 선입선출 · 경과일수 현황'
+        }
         manualId="tinv-filter"
         rightSlot={
           (filterStartDate || filterEndDate || filterItemId || filterKeyword || agingFilter !== 'ALL') ? (
@@ -1684,11 +1869,29 @@ export const TradeInventoryPage: React.FC = () => {
               <StatusBadge label={formatKoStatus(u.status)} tone={u.status === '보유중' ? 'success' : 'neutral'} />
             ),
           },
+          {
+            key: 'warrantyEnd',
+            header: '보증만료일',
+            width: 105,
+            sortable: true,
+            sortValue: (u) => u.warrantyEndDate || '',
+            render: (u) => u.warrantyEndDate || '-',
+          },
+          {
+            key: 'warrantyStatus',
+            header: '보증상태',
+            width: 90,
+            align: 'center',
+            render: (u) => {
+              const ws = getWarrantyStatus(u, today);
+              return <StatusBadge label={ws.label} tone={ws.tone} />;
+            },
+          },
         ]}
         rows={tradeUnits}
         rowKey={(u) => u.id}
         selectedRowId={selectedUnit?.id || null}
-        onRowClick={(u) => setSelectedUnitId(u.id)}
+        onRowClick={handleSelectUnitRow}
         maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
 
@@ -1806,14 +2009,144 @@ export const TradeInventoryPage: React.FC = () => {
           />
         </SectionPanel>
       )}
+
+      {selectedUnit && (
+        <SectionPanel
+          title={`차대번호별 보증기간 및 사후관리 이력 · ${selectedUnit.serialNo || selectedUnit.lotNo || selectedUnit.unitCode}`}
+          manualId="tinv-warranty"
+          rightSlot={
+            <StatusBadge
+              label={`사후처리 ${selectedUnitAftercares.length}건`}
+              tone={selectedUnitAftercares.length > 0 ? 'info' : 'neutral'}
+            />
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+            {canEdit && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: 'var(--space-field-grid-gap)',
+                  alignItems: 'end',
+                  padding: 'var(--space-subbox-pad-x)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-header)',
+                }}
+              >
+                <VerticalField label="보증개월">
+                  <input
+                    type="number"
+                    min={0}
+                    value={warrantyMonthsInput}
+                    onChange={(e) => setWarrantyMonthsInput(Number(e.target.value))}
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="보증 시작일">
+                  <input
+                    type="date"
+                    value={warrantyStartInput}
+                    onChange={(e) => setWarrantyStartInput(e.target.value)}
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="보증 만료일">
+                  <input
+                    type="date"
+                    value={warrantyEndInput}
+                    onChange={(e) => setWarrantyEndInput(e.target.value)}
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <VerticalField label="보증 특약">
+                  <input
+                    type="text"
+                    value={warrantyNoteInput}
+                    onChange={(e) => setWarrantyNoteInput(e.target.value)}
+                    placeholder="배터리 24개월 등"
+                    style={controlInputStyle}
+                  />
+                </VerticalField>
+                <button
+                  type="button"
+                  disabled={warrantySaving}
+                  onClick={handleSaveWarranty}
+                  style={actionBtnStyle('primary')}
+                >
+                  {warrantySaving ? '저장 중' : '보증기간 저장'}
+                </button>
+              </div>
+            )}
+
+            <DataGrid
+              columns={[
+                { key: 'caseNo', header: '사건번호', width: 135, render: (c) => c.caseNo },
+                { key: 'eff', header: '기준일', width: 105, render: (c) => c.effectiveDate },
+                { key: 'type', header: '처리유형', width: 120, render: (c) => <StatusBadge label={c.caseType} tone="info" /> },
+                {
+                  key: 'warrantyApplied',
+                  header: '보증적용',
+                  width: 90,
+                  align: 'center',
+                  render: (c) => (
+                    <StatusBadge
+                      label={c.warrantyApplied ? '무상보증' : '일반'}
+                      tone={c.warrantyApplied ? 'success' : 'neutral'}
+                    />
+                  ),
+                },
+                { key: 'sup', header: '연결공급사', width: 140, render: (c) => c.supplierName || '-' },
+                { key: 'memo', header: '내용', render: (c) => c.memo || '-' },
+              ]}
+              rows={selectedUnitAftercares}
+              rowKey={(c) => c.id}
+              emptyText="선택한 차대번호의 사후관리 이력이 없습니다."
+              maxHeight="180px"
+            />
+          </div>
+        </SectionPanel>
+      )}
     </div>
   );
 };
 
 export const TradeFulfillmentPage: React.FC = () => {
-  const { currentUser, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { currentUser, isRentalEnabled, datasets, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('trade_fulfillment');
   const today = new Date().toISOString().slice(0, 10);
+
+  const effectiveTradeUnits = useMemo(
+    () =>
+      datasets.inventoryUnits
+        .filter((u) =>
+          isEffectiveTradeUnitForTenant(
+            u,
+            isRentalEnabled,
+            datasets.stockMovements,
+            datasets.purchases,
+            datasets.purchaseLines
+          )
+        )
+        .map((u) =>
+          !isRentalEnabled && (u.status === '대여중' || u.status === '정비중')
+            ? { ...u, status: '보유중' as const }
+            : u
+        ),
+    [
+      datasets.inventoryUnits,
+      datasets.purchaseLines,
+      datasets.purchases,
+      datasets.stockMovements,
+      isRentalEnabled,
+    ]
+  );
+
+  const tenantPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
 
   const [activeTab, setActiveTab] = useState<'PENDING' | 'HISTORY'>('PENDING');
   const [pendingKeyword, setPendingKeyword] = useState('');
@@ -1902,15 +2235,14 @@ export const TradeFulfillmentPage: React.FC = () => {
   const candidateUnits = useMemo<FlInventoryUnit[]>(() => {
     if (!selectedFul) return [];
     const reqQty = Math.max(1, Number(selectedFul.quantity || 1));
-    const matching = datasets.inventoryUnits.filter(
+    const matching = effectiveTradeUnits.filter(
       (u) =>
-        u.ownershipDomain === '유통재고' &&
         u.status === '보유중' &&
         u.itemId === selectedFul.itemId &&
         u.qtyOnHand >= reqQty
     );
     return sortUnitsFifo(matching);
-  }, [datasets.inventoryUnits, selectedFul]);
+  }, [effectiveTradeUnits, selectedFul]);
 
   const [chosenUnitId, setChosenUnitId] = useState<string>('');
   const resolvedUnit =
@@ -1921,24 +2253,22 @@ export const TradeFulfillmentPage: React.FC = () => {
 
   // 사후처리 상태 (출고완료된 건 기준 자동 매핑)
   const completedTradeUnits = useMemo(
-    () =>
-      datasets.inventoryUnits.filter(
-        (u) => u.ownershipDomain === '유통재고' && u.status === '판매완료'
-      ),
-    [datasets.inventoryUnits]
+    () => effectiveTradeUnits.filter((u) => u.status === '판매완료'),
+    [effectiveTradeUnits]
   );
   const dealers = useMemo(() => {
-    const matched = datasets.partners.filter(
+    const matched = tenantPartners.filter(
       (p) => p.partnerRoles.includes('대리점') || p.partnerRoles.includes('매입처')
     );
-    return matched.length > 0 ? matched : datasets.partners;
-  }, [datasets.partners]);
+    return matched.length > 0 ? matched : tenantPartners;
+  }, [tenantPartners]);
 
   const [acCaseType, setAcCaseType] =
     useState<FlTradeAftercareCase['caseType']>('공급사 정비중개');
   const [acSupplierId, setAcSupplierId] = useState(dealers[0]?.id || '');
   const [acRefundSupply, setAcRefundSupply] = useState(0);
   const [acReplacementId, setAcReplacementId] = useState('');
+  const [acWarrantyApplied, setAcWarrantyApplied] = useState(false);
   const [acDate, setAcDate] = useState(today);
   const [acMemo, setAcMemo] = useState('');
 
@@ -1968,11 +2298,9 @@ export const TradeFulfillmentPage: React.FC = () => {
   const replacementCandidates = useMemo(
     () =>
       sortUnitsFifo(
-        datasets.inventoryUnits.filter(
-          (u) => u.ownershipDomain === '유통재고' && u.status === '보유중' && u.qtyOnHand > 0
-        )
+        effectiveTradeUnits.filter((u) => u.status === '보유중' && u.qtyOnHand > 0)
       ),
-    [datasets.inventoryUnits]
+    [effectiveTradeUnits]
   );
 
   const selectedLine = selectedFul
@@ -2130,6 +2458,7 @@ export const TradeFulfillmentPage: React.FC = () => {
                     effectiveDate,
                     actorId: currentUser.id,
                     actorName: currentUser.name,
+                    allowTradeOriginUnit: !isRentalEnabled,
                     memo: fulMemo.trim() || undefined,
                   });
                   await refreshAll();
@@ -2349,6 +2678,25 @@ export const TradeFulfillmentPage: React.FC = () => {
                   style={controlInputStyle}
                 />
               </VerticalField>
+              <label
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  height: 'var(--space-control-h)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={acWarrantyApplied}
+                  onChange={(e) => setAcWarrantyApplied(e.target.checked)}
+                />
+                무상보증 적용
+              </label>
               <CommitActionButton
                 actionCode="TRADE_REFUND"
                 targetTable="fl_trade_aftercare_cases"
@@ -2364,6 +2712,7 @@ export const TradeFulfillmentPage: React.FC = () => {
                         supplierPartnerId: acSupplierId || undefined,
                         refundSupplyKrw: acRefundSupply,
                         replacementUnitId: acReplacementId || replacementCandidates[0]?.id,
+                        warrantyApplied: acWarrantyApplied,
                         effectiveDate: acDate,
                         memo: acMemo.trim() || undefined,
                       }
@@ -2385,6 +2734,7 @@ export const TradeFulfillmentPage: React.FC = () => {
                     supplier: sup,
                     refundSupplyKrw: acRefundSupply,
                     replacementUnit: rep,
+                    warrantyApplied: acWarrantyApplied,
                     effectiveDate: acDate,
                     actorId: currentUser.id,
                     actorName: currentUser.name,
@@ -2401,8 +2751,21 @@ export const TradeFulfillmentPage: React.FC = () => {
           <DataGrid
             columns={[
               { key: 'caseNo', header: '사건번호', width: 135, render: (r) => r.caseNo },
+              { key: 'serialNo', header: '차대번호', width: 130, render: (r) => r.serialNo || '-' },
               { key: 'effectiveDate', header: '기준일', width: 100, render: (r) => r.effectiveDate },
               { key: 'caseType', header: '처리유형', width: 120, render: (r) => <StatusBadge label={r.caseType} tone="info" /> },
+              {
+                key: 'warrantyApplied',
+                header: '보증적용',
+                width: 90,
+                align: 'center',
+                render: (r) => (
+                  <StatusBadge
+                    label={r.warrantyApplied ? '무상보증' : '일반'}
+                    tone={r.warrantyApplied ? 'success' : 'neutral'}
+                  />
+                ),
+              },
               { key: 'partnerName', header: '고객사', render: (r) => r.partnerName },
               { key: 'supplierName', header: '연결공급사', width: 135, render: (r) => r.supplierName || '-' },
               {
@@ -2431,10 +2794,35 @@ export const TradePerformancePage: React.FC = () => {
   const ymStart = `${new Date().toISOString().slice(0, 7)}-01`;
   const today = new Date().toISOString().slice(0, 10);
 
+  const [viewMode, setViewMode] = useState<'DETAIL' | 'MONTHLY' | 'YEARLY' | 'DIMENSION'>('DETAIL');
+  const [dimType, setDimType] = useState<'MANUFACTURER' | 'MODEL' | 'PARTNER'>('MANUFACTURER');
   const [startDate, setStartDate] = useState(ymStart);
   const [endDate, setEndDate] = useState(today);
   const [filterPartnerName, setFilterPartnerName] = useState('');
   const [filterKeyword, setFilterKeyword] = useState('');
+
+  const tradePurchaseIds = useMemo(
+    () =>
+      new Set(
+        datasets.purchases.filter((p) => p.targetDomain === 'TRADE').map((p) => p.id)
+      ),
+    [datasets.purchases]
+  );
+
+  const periodFxGainLoss = useMemo(() => {
+    let total = 0;
+    for (const ap of datasets.apPayables) {
+      if (ap.payableType !== 'PURCHASE') continue;
+      if (ap.refId && !tradePurchaseIds.has(ap.refId)) continue;
+      const fx = Number(ap.fxGainLossKrw || 0);
+      if (fx === 0) continue;
+      const dt = (ap.paidDate || ap.accrualDate || '').slice(0, 10);
+      if (startDate && dt < startDate) continue;
+      if (endDate && dt > endDate) continue;
+      total += fx;
+    }
+    return Math.round(total);
+  }, [datasets.apPayables, endDate, startDate, tradePurchaseIds]);
 
   const rows = useMemo(() => {
     const out: {
@@ -2548,6 +2936,122 @@ export const TradePerformancePage: React.FC = () => {
     });
   }, [filterKeyword, filterPartnerName, rows]);
 
+  const itemMasterMap = useMemo(
+    () => new Map(datasets.itemMasters.map((it) => [it.id, it])),
+    [datasets.itemMasters]
+  );
+
+  const periodSummaryRows = useMemo(() => {
+    const isYearly = viewMode === 'YEARLY';
+    const map = new Map<
+      string,
+      {
+        period: string;
+        purchaseKrw: number;
+        salesKrw: number;
+        refundKrw: number;
+        cogsKrw: number;
+        unitCount: number;
+      }
+    >();
+    const ensure = (p: string) => {
+      let cur = map.get(p);
+      if (!cur) {
+        cur = { period: p, purchaseKrw: 0, salesKrw: 0, refundKrw: 0, cogsKrw: 0, unitCount: 0 };
+        map.set(p, cur);
+      }
+      return cur;
+    };
+
+    for (const pur of datasets.purchases) {
+      if (pur.status !== 'CONFIRMED' || pur.targetDomain !== 'TRADE') continue;
+      const dt = (pur.effectiveDate || '').slice(0, 10);
+      if (startDate && dt < startDate) continue;
+      if (endDate && dt > endDate) continue;
+      const key = isYearly ? dt.slice(0, 4) : dt.slice(0, 7);
+      if (key) ensure(key).purchaseKrw += Number(pur.totalLandedCostKrw || 0);
+    }
+
+    for (const f of datasets.fulfillments) {
+      if (f.fulfillmentDomain !== 'TRADE' || f.status !== 'COMPLETED') continue;
+      const dt = (f.effectiveDate || '').slice(0, 10);
+      if (startDate && dt < startDate) continue;
+      if (endDate && dt > endDate) continue;
+      if (filterPartnerName && f.partnerName !== filterPartnerName) continue;
+      const key = isYearly ? dt.slice(0, 4) : dt.slice(0, 7);
+      if (key) ensure(key).unitCount += Number(f.quantity || 0);
+    }
+
+    for (const r of filteredRows) {
+      const key = isYearly ? r.date.slice(0, 4) : r.date.slice(0, 7);
+      if (!key) continue;
+      const cur = ensure(key);
+      cur.salesKrw += r.salesKrw;
+      cur.refundKrw += r.refundKrw;
+      cur.cogsKrw += r.cogsKrw;
+    }
+
+    return [...map.values()]
+      .map((x) => {
+        const netSales = x.salesKrw - x.refundKrw;
+        const grossProfit = netSales - x.cogsKrw;
+        const marginRate = netSales > 0 ? (grossProfit / netSales) * 100 : 0;
+        return { ...x, netSales, grossProfit, marginRate };
+      })
+      .sort((a, b) => b.period.localeCompare(a.period));
+  }, [datasets.fulfillments, datasets.purchases, endDate, filterPartnerName, filteredRows, startDate, viewMode]);
+
+  const dimensionRows = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        dimKey: string;
+        qty: number;
+        salesKrw: number;
+        refundKrw: number;
+        cogsKrw: number;
+      }
+    >();
+    const ensure = (k: string) => {
+      let cur = map.get(k);
+      if (!cur) {
+        cur = { dimKey: k, qty: 0, salesKrw: 0, refundKrw: 0, cogsKrw: 0 };
+        map.set(k, cur);
+      }
+      return cur;
+    };
+
+    for (const f of datasets.fulfillments) {
+      if (f.fulfillmentDomain !== 'TRADE' || f.status !== 'COMPLETED') continue;
+      const dt = (f.effectiveDate || '').slice(0, 10);
+      if (startDate && dt < startDate) continue;
+      if (endDate && dt > endDate) continue;
+      if (filterPartnerName && f.partnerName !== filterPartnerName) continue;
+      const it = itemMasterMap.get(f.itemId);
+      const key =
+        dimType === 'MANUFACTURER'
+          ? it?.manufacturer || '기타 제조사'
+          : dimType === 'MODEL'
+            ? it?.modelName || '기타 모델'
+            : f.partnerName;
+      const line = datasets.contractLines.find((l) => l.id === f.contractLineId);
+      const sales = line ? Math.round(Number(line.unitPriceKrw || 0) * Number(f.quantity || 0)) : 0;
+      const cur = ensure(key);
+      cur.qty += Number(f.quantity || 0);
+      cur.salesKrw += sales;
+      cur.cogsKrw += Number(f.cogsAmountKrw || 0);
+    }
+
+    return [...map.values()]
+      .map((x) => {
+        const netSales = x.salesKrw - x.refundKrw;
+        const grossProfit = netSales - x.cogsKrw;
+        const marginRate = netSales > 0 ? (grossProfit / netSales) * 100 : 0;
+        return { ...x, netSales, grossProfit, marginRate };
+      })
+      .sort((a, b) => b.netSales - a.netSales);
+  }, [datasets.contractLines, datasets.fulfillments, dimType, endDate, filterPartnerName, itemMasterMap, startDate]);
+
   const totals = useMemo(() => {
     const netSales = filteredRows.reduce((s, r) => s + r.salesKrw - r.refundKrw, 0);
     const netCogs = filteredRows.reduce((s, r) => s + r.cogsKrw, 0);
@@ -2579,7 +3083,31 @@ export const TradePerformancePage: React.FC = () => {
           ) : undefined
         }
       >
-        <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-stack-gap)', alignItems: 'center' }}>
+            <SegmentedTabs
+              tabs={[
+                { id: 'DETAIL', label: '건별 상세' },
+                { id: 'MONTHLY', label: '월별 매입·매출·판매대수' },
+                { id: 'YEARLY', label: '연도별 매입·매출' },
+                { id: 'DIMENSION', label: '제조사·모델·거래처별' },
+              ]}
+              activeId={viewMode}
+              onChange={(id) => setViewMode(id as typeof viewMode)}
+            />
+            {viewMode === 'DIMENSION' && (
+              <SegmentedTabs
+                tabs={[
+                  { id: 'MANUFACTURER', label: '제조사별 매출현황' },
+                  { id: 'MODEL', label: '모델별 매출현황' },
+                  { id: 'PARTNER', label: '거래처별 매출현황' },
+                ]}
+                activeId={dimType}
+                onChange={(id) => setDimType(id as typeof dimType)}
+              />
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--space-stack-gap)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <VerticalField label="시작일" width={150}>
             <input
               type="date"
@@ -2614,9 +3142,11 @@ export const TradePerformancePage: React.FC = () => {
               style={controlInputStyle}
             />
           </VerticalField>
+          </div>
         </div>
       </SectionPanel>
 
+      {viewMode === 'DETAIL' && (
       <DataGrid
         manualId="tperf-grid"
         columns={[
@@ -2708,6 +3238,95 @@ export const TradePerformancePage: React.FC = () => {
         rowKey={(r) => r.id}
         maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
       />
+      )}
+
+      {(viewMode === 'MONTHLY' || viewMode === 'YEARLY') && (
+        <DataGrid
+          manualId="tprf-period-grid"
+          excelFileName={viewMode === 'YEARLY' ? '유통실적_연도별_매입매출' : '유통실적_월별_매입매출_판매대수'}
+          columns={[
+            { key: 'period', header: viewMode === 'YEARLY' ? '기준연도' : '기준월', width: 110, render: (r) => <span style={{ fontWeight: 700 }}>{r.period}</span> },
+            { key: 'unitCount', header: '판매대수', width: 95, align: 'right', render: (r) => `${r.unitCount.toLocaleString('ko-KR')}대` },
+            { key: 'purchaseKrw', header: '매입실적', width: 135, align: 'right', render: (r) => formatMoney(r.purchaseKrw) },
+            { key: 'salesKrw', header: '유통매출액', width: 135, align: 'right', render: (r) => formatMoney(r.salesKrw, { salesSensitive: true }) },
+            { key: 'refundKrw', header: '반품차감', width: 115, align: 'right', render: (r) => formatMoney(r.refundKrw, { salesSensitive: true }) },
+            { key: 'cogsKrw', header: '매출원가', width: 130, align: 'right', render: (r) => formatMoney(r.cogsKrw) },
+            {
+              key: 'gp',
+              header: '매출총이익',
+              width: 130,
+              align: 'right',
+              render: (r) => (
+                <span style={{ fontWeight: 700, color: r.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {formatMoney(r.grossProfit, { salesSensitive: true })}
+                </span>
+              ),
+            },
+            {
+              key: 'marginRate',
+              header: '이익율',
+              width: 90,
+              align: 'right',
+              render: (r) => (
+                <span style={{ fontWeight: 700, color: r.marginRate >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {`${r.marginRate.toFixed(2)}%`}
+                </span>
+              ),
+            },
+          ]}
+          rows={periodSummaryRows}
+          rowKey={(r) => r.period}
+          maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
+        />
+      )}
+
+      {viewMode === 'DIMENSION' && (
+        <DataGrid
+          manualId="tprf-dim-grid"
+          excelFileName={
+            dimType === 'MANUFACTURER'
+              ? '유통실적_제조사별_매출현황'
+              : dimType === 'MODEL'
+                ? '유통실적_모델별_매출현황'
+                : '유통실적_거래처별_매출현황'
+          }
+          columns={[
+            {
+              key: 'dimKey',
+              header: dimType === 'MANUFACTURER' ? '제조사' : dimType === 'MODEL' ? '모델명' : '거래처',
+              render: (r) => <span style={{ fontWeight: 700 }}>{r.dimKey}</span>,
+            },
+            { key: 'qty', header: '판매수량', width: 95, align: 'right', render: (r) => `${r.qty.toLocaleString('ko-KR')}대` },
+            { key: 'salesKrw', header: '유통매출액', width: 140, align: 'right', render: (r) => formatMoney(r.salesKrw, { salesSensitive: true }) },
+            { key: 'cogsKrw', header: '매출원가', width: 135, align: 'right', render: (r) => formatMoney(r.cogsKrw) },
+            {
+              key: 'gp',
+              header: '매출총이익',
+              width: 135,
+              align: 'right',
+              render: (r) => (
+                <span style={{ fontWeight: 700, color: r.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {formatMoney(r.grossProfit, { salesSensitive: true })}
+                </span>
+              ),
+            },
+            {
+              key: 'marginRate',
+              header: '이익율',
+              width: 90,
+              align: 'right',
+              render: (r) => (
+                <span style={{ fontWeight: 700, color: r.marginRate >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {`${r.marginRate.toFixed(2)}%`}
+                </span>
+              ),
+            },
+          ]}
+          rows={dimensionRows}
+          rowKey={(r) => r.dimKey}
+          maxHeight="clamp(320px, calc(100vh - 300px), 780px)"
+        />
+      )}
 
       <ConservationBar
         items={[
@@ -2720,9 +3339,19 @@ export const TradePerformancePage: React.FC = () => {
             tone: totals.gp >= 0 ? 'success' : 'danger',
           },
           {
+            label: '환차손익',
+            value: formatMoney(periodFxGainLoss, { salesSensitive: true }),
+            tone: periodFxGainLoss > 0 ? 'success' : periodFxGainLoss < 0 ? 'danger' : 'neutral',
+          },
+          {
+            label: '실질손익',
+            value: formatMoney(totals.gp + periodFxGainLoss, { salesSensitive: true }),
+            tone: totals.gp + periodFxGainLoss >= 0 ? 'success' : 'danger',
+          },
+          {
             label: '이익율',
-            value: `${((totals.sales - totals.refund) > 0 ? (totals.gp / (totals.sales - totals.refund)) * 100 : 0).toFixed(2)}%`,
-            tone: totals.gp >= 0 ? 'success' : 'danger',
+            value: `${((totals.sales - totals.refund) > 0 ? ((totals.gp + periodFxGainLoss) / (totals.sales - totals.refund)) * 100 : 0).toFixed(2)}%`,
+            tone: totals.gp + periodFxGainLoss >= 0 ? 'success' : 'danger',
           },
         ]}
       />

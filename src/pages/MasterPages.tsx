@@ -54,10 +54,12 @@ import {
   PAYMENT_CYCLES,
   PAYMENT_METHODS,
   cycleToMonthOffset,
+  filterPartnersForTenant,
   formatClosingDayLabel,
   formatKoCurrency,
   formatPartnerNtsStatus,
   formatPaymentTermsLabel,
+  getPartnerRolesForTenant,
   normalizePaymentMethod,
   offsetToPaymentCycle,
   partnerNtsStatusTone,
@@ -87,16 +89,6 @@ import {
   PART_CATEGORIES,
   type CompatiblePartCatalogItem,
 } from '../data/compatiblePartsCatalogData';
-
-const ALL_ROLES: PartnerRole[] = [
-  '매출처',
-  '대리점',
-  '금융사',
-  '매입처',
-  '전대공급처',
-  '운송사',
-  '외주정비처',
-];
 
 const PartnerPaymentTermsRow: React.FC<{
   value: Partial<FlPartner>;
@@ -365,8 +357,14 @@ const PartnerDocViewerPane: React.FC<{
 );
 
 export const PartnersPage: React.FC = () => {
-  const { datasets, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { isRentalEnabled, datasets, refreshAll, notifyToast, canEditPage } = useAppShell();
   const canEdit = canEditPage('partners');
+  const visibleRoles = useMemo(() => getPartnerRolesForTenant(isRentalEnabled), [isRentalEnabled]);
+  const visibleRoleSet = useMemo(() => new Set<PartnerRole>(visibleRoles), [visibleRoles]);
+  const tenantPartners = useMemo(
+    () => filterPartnersForTenant(datasets.partners, isRentalEnabled),
+    [datasets.partners, isRentalEnabled]
+  );
 
   const [roleFilter, setRoleFilter] = useState<'ALL' | PartnerRole>('ALL');
   const [keyword, setKeyword] = useState('');
@@ -698,7 +696,12 @@ export const PartnersPage: React.FC = () => {
       notifyToast('상호명을 입력해 주세요.', 'error');
       return false;
     }
-    const roles = target.partnerRoles && target.partnerRoles.length > 0 ? target.partnerRoles : ['매출처' as PartnerRole];
+    const visibleSelectedRoles = (target.partnerRoles || []).filter((r) => visibleRoleSet.has(r));
+    if (visibleSelectedRoles.length === 0) {
+      notifyToast('거래처 역할을 최소 1개 이상 선택해 주세요.', 'error');
+      return false;
+    }
+    const roles = target.partnerRoles!;
     const resolvedCycle = offsetToPaymentCycle(
       target.defaultPaymentMonthOffset,
       target.defaultPaymentCycle
@@ -814,7 +817,7 @@ export const PartnersPage: React.FC = () => {
   };
 
   const handleBatchNtsCheck = async () => {
-    const targets = datasets.partners.filter((p) => String(p.bizRegNo || '').trim().length > 0);
+    const targets = tenantPartners.filter((p) => String(p.bizRegNo || '').trim().length > 0);
     if (targets.length === 0) {
       notifyToast('사업자등록번호가 등록된 거래처가 없습니다.', 'info');
       return;
@@ -961,10 +964,12 @@ export const PartnersPage: React.FC = () => {
     }
   };
 
+  const effectiveRoleFilter = roleFilter !== 'ALL' && !visibleRoleSet.has(roleFilter) ? 'ALL' : roleFilter;
+
   const filteredPartners = useMemo(() => {
     const q = keyword.trim().toLowerCase();
-    return datasets.partners.filter((p) => {
-      if (roleFilter !== 'ALL' && !p.partnerRoles.includes(roleFilter)) return false;
+    return tenantPartners.filter((p) => {
+      if (effectiveRoleFilter !== 'ALL' && !p.partnerRoles.includes(effectiveRoleFilter)) return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -972,7 +977,7 @@ export const PartnersPage: React.FC = () => {
         (p.representative || '').toLowerCase().includes(q)
       );
     });
-  }, [datasets.partners, keyword, roleFilter]);
+  }, [effectiveRoleFilter, keyword, tenantPartners]);
 
   const partnerSites = useMemo(
     () => datasets.partnerSites.filter((s) => s.partnerId === selectedId),
@@ -984,14 +989,14 @@ export const PartnersPage: React.FC = () => {
     let suspended = 0;
     let closed = 0;
     let other = 0;
-    for (const p of datasets.partners) {
+    for (const p of tenantPartners) {
       if (p.ntsStatus === '정상') normal += 1;
       else if (p.ntsStatus === '휴업') suspended += 1;
       else if (p.ntsStatus === '폐업') closed += 1;
       else other += 1;
     }
     return { normal, suspended, closed, other };
-  }, [datasets.partners]);
+  }, [tenantPartners]);
 
   const columns: GridColumn<FlPartner>[] = [
     {
@@ -1027,9 +1032,12 @@ export const PartnersPage: React.FC = () => {
       header: '역할',
       render: (r) => (
         <div style={{ display: 'flex', gap: 'var(--space-label-gap)' }}>
-          {r.partnerRoles.slice(0, 3).map((role) => (
-            <StatusBadge key={role} label={role} tone="neutral" />
-          ))}
+          {r.partnerRoles
+            .filter((role) => visibleRoleSet.has(role))
+            .slice(0, 3)
+            .map((role) => (
+              <StatusBadge key={role} label={role} tone="neutral" />
+            ))}
         </div>
       ),
     },
@@ -1096,14 +1104,14 @@ export const PartnersPage: React.FC = () => {
           </VerticalField>
           <SegmentedTabs
             tabs={[
-              { id: 'ALL', label: '전체', count: datasets.partners.length },
-              ...ALL_ROLES.map((r) => ({
+              { id: 'ALL', label: '전체', count: tenantPartners.length },
+              ...visibleRoles.map((r) => ({
                 id: r,
                 label: r,
-                count: datasets.partners.filter((p) => p.partnerRoles.includes(r)).length,
+                count: tenantPartners.filter((p) => p.partnerRoles.includes(r)).length,
               })),
             ]}
-            activeId={roleFilter}
+            activeId={effectiveRoleFilter}
             onChange={(id) => setRoleFilter(id as typeof roleFilter)}
           />
         </div>
@@ -1340,7 +1348,7 @@ export const PartnersPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-field-grid-gap)' }}>
               <VerticalField label="거래처 역할 다중선택" required>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-tight-gap)' }}>
-                  {ALL_ROLES.map((role) => {
+                  {visibleRoles.map((role) => {
                     const checked = (form.partnerRoles || []).includes(role);
                     return (
                       <button
@@ -1902,11 +1910,12 @@ const CATEGORY_PRIORITY: Record<ItemCategory, number> = {
 };
 
 const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ domainMode }) => {
-  const { datasets, currentUser, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
+  const { isRentalEnabled, datasets, currentUser, formatMoney, refreshAll, notifyToast, canEditPage } = useAppShell();
   const pageId = domainMode === 'TRADE' ? 'trade_item_masters' : 'rental_item_masters';
   const canEdit = canEditPage(pageId);
   const maskPrice = Boolean(currentUser?.maskSalesPrice);
   const isTrade = domainMode === 'TRADE';
+  const showDomainSplit = isRentalEnabled;
 
   const [catFilter, setCatFilter] = useState<'ALL' | ItemCategory>('ALL');
   const [domainFilter, setDomainFilter] = useState<'ALL' | 'DEDICATED' | 'BOTH'>('ALL');
@@ -1926,8 +1935,10 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
   const filtered = useMemo(() => {
     const q = keyword.trim();
     return domainScoped.filter((it) => {
-      if (domainFilter === 'DEDICATED' && it.itemDomain !== domainMode) return false;
-      if (domainFilter === 'BOTH' && it.itemDomain !== 'BOTH') return false;
+      if (showDomainSplit) {
+        if (domainFilter === 'DEDICATED' && it.itemDomain !== domainMode) return false;
+        if (domainFilter === 'BOTH' && it.itemDomain !== 'BOTH') return false;
+      }
       if (catFilter !== 'ALL' && it.itemCategory !== catFilter) return false;
       if (!q) return true;
       const target = [it.sku, it.name, it.manufacturer, it.modelName, it.specSummary]
@@ -1935,7 +1946,7 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
         .join(' ');
       return matchesKoreanQuery(target, q);
     });
-  }, [catFilter, domainFilter, domainMode, domainScoped, keyword]);
+  }, [catFilter, domainFilter, domainMode, domainScoped, keyword, showDomainSplit]);
 
   const summaryCounts = useMemo(() => {
     let equip = 0;
@@ -1997,7 +2008,9 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
         sku: editing.sku.trim(),
         name: editing.name.trim(),
         itemCategory: editing.itemCategory || '완제품',
-        itemDomain: (editing.itemDomain as ItemDomain) || domainMode,
+        itemDomain: showDomainSplit
+          ? ((editing.itemDomain as ItemDomain) || domainMode)
+          : (editing.id ? (editing.itemDomain as ItemDomain) || 'TRADE' : 'TRADE'),
         managementType: (editing.managementType as ManagementType) || 'LOT',
         manufacturer: editing.manufacturer || null,
         modelName: editing.modelName || null,
@@ -2061,24 +2074,28 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
     },
     { key: 'sku', header: '품목코드', width: 135, render: (r) => <span style={{ fontWeight: 700 }}>{r.sku}</span> },
     { key: 'itemCategory', header: '품목군', width: 92, render: (r) => <StatusBadge label={r.itemCategory} /> },
-    {
-      key: 'itemDomain',
-      header: '운용구분',
-      width: 112,
-      align: 'center',
-      render: (r) => (
-        <StatusBadge
-          label={
-            r.itemDomain === 'BOTH'
-              ? '유통·렌탈 공용'
-              : isTrade
-                ? '유통 전용'
-                : '렌탈 전용'
-          }
-          tone={r.itemDomain === 'BOTH' ? 'primary' : 'neutral'}
-        />
-      ),
-    },
+    ...(showDomainSplit
+      ? ([
+          {
+            key: 'itemDomain',
+            header: '운용구분',
+            width: 112,
+            align: 'center',
+            render: (r) => (
+              <StatusBadge
+                label={
+                  r.itemDomain === 'BOTH'
+                    ? '유통·렌탈 공용'
+                    : isTrade
+                      ? '유통 전용'
+                      : '렌탈 전용'
+                }
+                tone={r.itemDomain === 'BOTH' ? 'primary' : 'neutral'}
+              />
+            ),
+          },
+        ] as GridColumn<FlItemMaster>[])
+      : []),
     {
       key: 'managementType',
       header: '추적방식',
@@ -2187,19 +2204,21 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
               style={controlInputStyle}
             />
           </VerticalField>
-          <SegmentedTabs
-            tabs={[
-              { id: 'ALL', label: '전체', count: domainScoped.length },
-              {
-                id: 'DEDICATED',
-                label: isTrade ? '유통 전용' : '렌탈 전용',
-                count: domainScopedCounts.dedicated,
-              },
-              { id: 'BOTH', label: '유통·렌탈 공용', count: domainScopedCounts.both },
-            ]}
-            activeId={domainFilter}
-            onChange={(id) => setDomainFilter(id as typeof domainFilter)}
-          />
+          {showDomainSplit && (
+            <SegmentedTabs
+              tabs={[
+                { id: 'ALL', label: '전체', count: domainScoped.length },
+                {
+                  id: 'DEDICATED',
+                  label: isTrade ? '유통 전용' : '렌탈 전용',
+                  count: domainScopedCounts.dedicated,
+                },
+                { id: 'BOTH', label: '유통·렌탈 공용', count: domainScopedCounts.both },
+              ]}
+              activeId={domainFilter}
+              onChange={(id) => setDomainFilter(id as typeof domainFilter)}
+            />
+          )}
           <SegmentedTabs
             tabs={[
               { id: 'ALL', label: '전체 품목군', count: domainScoped.length },
@@ -2254,7 +2273,13 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
       >
         {editing && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--space-field-grid-gap)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: showDomainSplit ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr',
+                gap: 'var(--space-field-grid-gap)',
+              }}
+            >
               <VerticalField label="품목코드" required>
                 <input
                   type="text"
@@ -2263,18 +2288,20 @@ const ItemMastersWorkspace: React.FC<{ domainMode: 'TRADE' | 'RENTAL' }> = ({ do
                   style={controlInputStyle}
                 />
               </VerticalField>
-              <VerticalField label="운용 구분" required>
-                <select
-                  value={editing.itemDomain || domainMode}
-                  onChange={(e) =>
-                    setEditing((p) => ({ ...p, itemDomain: e.target.value as ItemDomain }))
-                  }
-                  style={controlInputStyle}
-                >
-                  <option value={domainMode}>{isTrade ? '유통 전용' : '렌탈 전용'}</option>
-                  <option value="BOTH">유통·렌탈 공용</option>
-                </select>
-              </VerticalField>
+              {showDomainSplit && (
+                <VerticalField label="운용 구분" required>
+                  <select
+                    value={editing.itemDomain || domainMode}
+                    onChange={(e) =>
+                      setEditing((p) => ({ ...p, itemDomain: e.target.value as ItemDomain }))
+                    }
+                    style={controlInputStyle}
+                  >
+                    <option value={domainMode}>{isTrade ? '유통 전용' : '렌탈 전용'}</option>
+                    <option value="BOTH">유통·렌탈 공용</option>
+                  </select>
+                </VerticalField>
+              )}
               <VerticalField label="품목군" required>
                 <select
                   value={editing.itemCategory || '완제품'}
