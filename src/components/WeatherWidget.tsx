@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ModalDialog, VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 
-export interface WeatherRegion {
+interface WeatherRegion {
   id: string;
   name: string;
   lat: number;
@@ -21,8 +21,10 @@ export interface WeatherRegion {
 }
 
 const WEATHER_STORAGE_KEY = 'ebro_fl_weather_region_id';
+const WEATHER_CACHE_STORAGE_KEY = 'ebro_fl_weather_cache_v1';
+const WEATHER_CACHE_TTL_MS = 15 * 60 * 1000;
 
-export const WEATHER_REGIONS: WeatherRegion[] = [
+const WEATHER_REGIONS: WeatherRegion[] = [
   { id: 'seoul', name: '서울', lat: 37.5665, lon: 126.978 },
   { id: 'pyeongtaek', name: '평택', lat: 36.9921, lon: 127.0858 },
   { id: 'suwon', name: '수원·경기', lat: 37.2636, lon: 127.0286 },
@@ -88,6 +90,50 @@ interface DailyForecast {
   popMax: number;
 }
 
+interface CachedWeatherEntry {
+  fetchedAt: number;
+  current: CurrentWeatherData | null;
+  hourly: HourlyForecast[];
+  daily: DailyForecast[];
+}
+
+const weatherMemoryCache = new Map<string, CachedWeatherEntry>();
+
+function readWeatherCache(regionId: string): CachedWeatherEntry | null {
+  const now = Date.now();
+  const mem = weatherMemoryCache.get(regionId);
+  if (mem && now - mem.fetchedAt < WEATHER_CACHE_TTL_MS) {
+    return mem;
+  }
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(WEATHER_CACHE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, CachedWeatherEntry>;
+    const entry = parsed[regionId];
+    if (entry && now - entry.fetchedAt < WEATHER_CACHE_TTL_MS) {
+      weatherMemoryCache.set(regionId, entry);
+      return entry;
+    }
+  } catch {
+    // 무시
+  }
+  return null;
+}
+
+function writeWeatherCache(regionId: string, entry: CachedWeatherEntry): void {
+  weatherMemoryCache.set(regionId, entry);
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = window.sessionStorage.getItem(WEATHER_CACHE_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, CachedWeatherEntry>) : {};
+    parsed[regionId] = entry;
+    window.sessionStorage.setItem(WEATHER_CACHE_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // 무시
+  }
+}
+
 export const WeatherWidget: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<WeatherRegion>(() => {
     try {
@@ -109,99 +155,131 @@ export const WeatherWidget: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchWeatherData = useCallback(async (region: WeatherRegion) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error('기상 정보 조회 실패');
+  const fetchWeatherData = useCallback(
+    async (region: WeatherRegion, forceRefresh = false, signal?: AbortSignal) => {
+      if (!forceRefresh) {
+        const cached = readWeatherCache(region.id);
+        if (cached) {
+          setCurrent(cached.current);
+          setHourly(cached.hourly);
+          setDaily(cached.daily);
+          setError(null);
+          setLoading(false);
+          return;
+        }
       }
-      const data = (await res.json()) as {
-        current?: {
-          temperature_2m: number;
-          apparent_temperature: number;
-          relative_humidity_2m: number;
-          wind_speed_10m: number;
-          precipitation: number;
-          weather_code: number;
-        };
-        hourly?: {
-          time: string[];
-          temperature_2m: number[];
-          weather_code: number[];
-          precipitation_probability?: number[];
-        };
-        daily?: {
-          time: string[];
-          temperature_2m_max: number[];
-          temperature_2m_min: number[];
-          weather_code: number[];
-          precipitation_probability_max?: number[];
-        };
-      };
 
-      if (data.current) {
-        setCurrent({
-          temp: Math.round(data.current.temperature_2m * 10) / 10,
-          apparentTemp: Math.round(data.current.apparent_temperature * 10) / 10,
-          humidity: data.current.relative_humidity_2m,
-          windSpeed: data.current.wind_speed_10m,
-          precipitation: data.current.precipitation,
-          weatherCode: data.current.weather_code,
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo`;
+        const res = await fetch(url, { signal });
+        if (!res.ok) {
+          throw new Error('기상 정보 조회 실패');
+        }
+        const data = (await res.json()) as {
+          current?: {
+            temperature_2m: number;
+            apparent_temperature: number;
+            relative_humidity_2m: number;
+            wind_speed_10m: number;
+            precipitation: number;
+            weather_code: number;
+          };
+          hourly?: {
+            time: string[];
+            temperature_2m: number[];
+            weather_code: number[];
+            precipitation_probability?: number[];
+          };
+          daily?: {
+            time: string[];
+            temperature_2m_max: number[];
+            temperature_2m_min: number[];
+            weather_code: number[];
+            precipitation_probability_max?: number[];
+          };
+        };
+
+        let nextCurrent: CurrentWeatherData | null = null;
+        if (data.current) {
+          nextCurrent = {
+            temp: Math.round(data.current.temperature_2m * 10) / 10,
+            apparentTemp: Math.round(data.current.apparent_temperature * 10) / 10,
+            humidity: data.current.relative_humidity_2m,
+            windSpeed: data.current.wind_speed_10m,
+            precipitation: data.current.precipitation,
+            weatherCode: data.current.weather_code,
+          };
+        }
+
+        const nextHourly: HourlyForecast[] = [];
+        if (data.hourly?.time) {
+          const nowHour = new Date().getHours();
+          for (let i = nowHour; i < Math.min(nowHour + 24, data.hourly.time.length); i += 3) {
+            const dateObj = new Date(data.hourly.time[i]);
+            nextHourly.push({
+              time: `${dateObj.getHours()}시`,
+              temp: Math.round(data.hourly.temperature_2m[i]),
+              weatherCode: data.hourly.weather_code[i],
+              pop: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : 0,
+            });
+          }
+        }
+
+        const nextDaily: DailyForecast[] = [];
+        if (data.daily?.time) {
+          const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+          for (let i = 0; i < Math.min(7, data.daily.time.length); i++) {
+            const dStr = data.daily.time[i];
+            const dateObj = new Date(dStr);
+            const dayLabel =
+              i === 0
+                ? '오늘'
+                : i === 1
+                  ? '내일'
+                  : `${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일 · ${dayNames[dateObj.getDay()]}`;
+            nextDaily.push({
+              date: dStr,
+              dayName: dayLabel,
+              maxTemp: Math.round(data.daily.temperature_2m_max[i]),
+              minTemp: Math.round(data.daily.temperature_2m_min[i]),
+              weatherCode: data.daily.weather_code[i],
+              popMax: data.daily.precipitation_probability_max
+                ? data.daily.precipitation_probability_max[i]
+                : 0,
+            });
+          }
+        }
+
+        if (signal?.aborted) return;
+        setCurrent(nextCurrent);
+        setHourly(nextHourly);
+        setDaily(nextDaily);
+        writeWeatherCache(region.id, {
+          fetchedAt: Date.now(),
+          current: nextCurrent,
+          hourly: nextHourly,
+          daily: nextDaily,
         });
-      }
-
-      if (data.hourly?.time) {
-        const hourlyArr: HourlyForecast[] = [];
-        const nowHour = new Date().getHours();
-        for (let i = nowHour; i < Math.min(nowHour + 24, data.hourly.time.length); i += 3) {
-          const dateObj = new Date(data.hourly.time[i]);
-          hourlyArr.push({
-            time: `${dateObj.getHours()}시`,
-            temp: Math.round(data.hourly.temperature_2m[i]),
-            weatherCode: data.hourly.weather_code[i],
-            pop: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : 0,
-          });
+      } catch (err) {
+        if (signal?.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
+          return;
         }
-        setHourly(hourlyArr);
-      }
-
-      if (data.daily?.time) {
-        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-        const dailyArr: DailyForecast[] = [];
-        for (let i = 0; i < Math.min(7, data.daily.time.length); i++) {
-          const dStr = data.daily.time[i];
-          const dateObj = new Date(dStr);
-          const dayLabel =
-            i === 0
-              ? '오늘'
-              : i === 1
-                ? '내일'
-                : `${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일 · ${dayNames[dateObj.getDay()]}`;
-          dailyArr.push({
-            date: dStr,
-            dayName: dayLabel,
-            maxTemp: Math.round(data.daily.temperature_2m_max[i]),
-            minTemp: Math.round(data.daily.temperature_2m_min[i]),
-            weatherCode: data.daily.weather_code[i],
-            popMax: data.daily.precipitation_probability_max
-              ? data.daily.precipitation_probability_max[i]
-              : 0,
-          });
+        setError('날씨 조회 실패');
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
         }
-        setDaily(dailyArr);
       }
-    } catch {
-      setError('날씨 조회 실패');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
-    void fetchWeatherData(selectedRegion);
+    const controller = new AbortController();
+    void fetchWeatherData(selectedRegion, false, controller.signal);
+    return () => controller.abort();
   }, [fetchWeatherData, selectedRegion]);
 
   const weatherMeta = current ? resolveWeatherMeta(current.weatherCode) : null;
@@ -291,7 +369,7 @@ export const WeatherWidget: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                void fetchWeatherData(selectedRegion);
+                void fetchWeatherData(selectedRegion, true);
               }}
               style={actionBtnStyle('secondary')}
             >

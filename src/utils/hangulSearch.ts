@@ -69,26 +69,40 @@ export function extractChosung(text: string): string {
   return out;
 }
 
-function matchExpandedToken(target: string, targetChosung: string, token: string): boolean {
-  const normTarget = target.toLowerCase();
-  const normToken = token.toLowerCase();
-  if (normTarget.includes(normToken)) return true;
+export interface KoreanSearchIndex {
+  raw: string;
+  normTarget: string;
+  targetChosung: string;
+  expandedTargetChosung: string;
+}
 
-  if (targetChosung.includes(normToken)) return true;
+export function buildKoreanSearchIndex(target: string): KoreanSearchIndex {
+  const raw = target || '';
+  const normTarget = raw.toLowerCase();
+  const targetChosung = extractChosung(raw);
+  const expandedTargetChosung = decomposeCompoundConsonants(targetChosung, true);
+  return { raw, normTarget, targetChosung, expandedTargetChosung };
+}
+
+function matchExpandedTokenIndexed(index: KoreanSearchIndex, token: string): boolean {
+  const normToken = token.toLowerCase();
+  if (index.normTarget.includes(normToken)) return true;
+
+  if (index.targetChosung.includes(normToken)) return true;
 
   // 타겟의 쌍자음을 단자음 2개로 펼친 경우에도 매칭 (예: "꼬올" -> "ㄱㄱㅇ" 매칭)
-  const expandedTargetChosung = decomposeCompoundConsonants(targetChosung, true);
-  if (expandedTargetChosung.includes(normToken)) return true;
+  if (index.expandedTargetChosung.includes(normToken)) return true;
 
   // 초성+완성형 혼합 입력 지원 (예: "넥ㅅ" -> "넥센")
-  if (normToken.length <= target.length) {
-    for (let start = 0; start <= target.length - normToken.length; start++) {
+  const limit = index.normTarget.length - normToken.length;
+  if (limit >= 0) {
+    for (let start = 0; start <= limit; start++) {
       let matched = true;
       for (let j = 0; j < normToken.length; j++) {
         const tc = normToken[j];
-        const sc = normTarget[start + j];
+        const sc = index.normTarget[start + j];
         if (isChosungChar(tc)) {
-          if (targetChosung[start + j] !== tc) {
+          if (index.targetChosung[start + j] !== tc) {
             matched = false;
             break;
           }
@@ -104,19 +118,30 @@ function matchExpandedToken(target: string, targetChosung: string, token: string
   return false;
 }
 
-function matchSingleToken(target: string, token: string): boolean {
-  const targetChosung = extractChosung(target);
+function matchSingleTokenIndexed(index: KoreanSearchIndex, token: string): boolean {
   // 1) 겹받침(ㄳ, ㄺ, ㅄ 등) 분리 버전으로 매칭
   const compoundSplit = decomposeCompoundConsonants(token, false);
-  if (matchExpandedToken(target, targetChosung, compoundSplit)) return true;
+  if (matchExpandedTokenIndexed(index, compoundSplit)) return true;
 
   // 2) 쌍자음(ㄲ, ㄸ, ㅃ, ㅆ, ㅉ)도 2자음(ㄱㄱ 등)으로 분리한 버전으로 추가 매칭
   const doubleSplit = decomposeCompoundConsonants(token, true);
-  if (doubleSplit !== compoundSplit && matchExpandedToken(target, targetChosung, doubleSplit)) {
+  if (doubleSplit !== compoundSplit && matchExpandedTokenIndexed(index, doubleSplit)) {
     return true;
   }
 
   return false;
+}
+
+/**
+ * 사전 인덱싱된 대상에 대해 공백 구분 다중 토큰 부분일치·복자음 분리 한글 초성 검색을 수행합니다.
+ */
+export function matchesIndexedKoreanQuery(index: KoreanSearchIndex, query: string): boolean {
+  const trimmed = query.trim();
+  if (!trimmed) return true;
+  if (!index.raw) return false;
+
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  return tokens.every((token) => matchSingleTokenIndexed(index, token));
 }
 
 /**
@@ -127,6 +152,7 @@ export function matchesKoreanQuery(target: string, query: string): boolean {
   if (!trimmed) return true;
   if (!target) return false;
 
+  const index = buildKoreanSearchIndex(target);
   const tokens = trimmed.split(/\s+/).filter(Boolean);
-  return tokens.every((token) => matchSingleToken(target, token));
+  return tokens.every((token) => matchSingleTokenIndexed(index, token));
 }

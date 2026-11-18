@@ -1,120 +1,21 @@
 import type { TenantFeatures, TenantR2Config } from '../types/domain';
+import {
+  EXPECTED_AGENT_VERSION,
+  EXPECTED_CORE_HASH,
+  appendTenantQueryParam,
+  fetchWithAgentFallback,
+  getActiveAgentTenantCode,
+  getLastKnownAgentInfo,
+  isExpectedNewer,
+  isLastKnownAgentOnline,
+  launchLocalAgentFromBrowser,
+  normalizeAgentTenantCode,
+  setActiveAgentTenantCode,
+  setGlobalAgentStatus,
+  type AgentHealthInfo,
+} from './agentTransportCore';
 
-export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.52';
-export const EXPECTED_CORE_HASH: string = '5541aa41dce3';
-// GitHub Releases CDN
-export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
-// Cloudflare R2 보조 엔드포인트
-export const DEFAULT_CF_R2_BASE_URL = 'https://pub-55a68547bdf24600b80d27782912c83e.r2.dev';
-
-export const AGENT_INSTALLER_BASE_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
-export const AGENT_EXE_URL = AGENT_INSTALLER_BASE_URL;
-export const AGENT_SILENT_INSTALL_CMD = 'eBroAgent_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART';
-export const AGENT_VERSION_CHECK_URL = '/downloads/version.json';
-export const AGENT_DOWNLOAD_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
-export const AGENT_BRO_JS_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
-export const AGENT_EBRO_JS_URL = `${DEFAULT_GITHUB_RELEASE_BASE_URL}/eBroAgent_Setup.exe`;
-export const AGENT_REG_BAT_URL = '/downloads/등록-실행.bat';       // 브라우저 실행 프로토콜 등록기
-export const AGENT_LAUNCHER_URL = '/downloads/start-agent.bat';        // 실행 배치 파일
-export const AGENT_KILL_BAT_URL = '/downloads/kill-agent.bat';
-export const AGENT_CERT_URL = '/downloads/eBroAgent_Root.cer'; // 보안 인증서
-export const AGENT_INSTALL_BAT_URL = '/downloads/install-cert.bat';     // 인증서 등록 배치 파일
-export const NODEJS_INSTALL_URL = 'https://nodejs.org/en/download/';
-export const AGENT_PROTOCOL_URI = 'broagent://run';
-
-export interface TenantAgentInstallerInfo {
-  downloadUrl: string;
-  fallbackUrl: string;
-  fileName: string;
-  tenantCode: string;
-  tenantName: string;
-  subdomain: string;
-  version: string;
-}
-
-/**
- *  깃허브 레포지토리 기반 에이전트 다운로드 URL 생성 헬퍼
- */
-export function getAgentDownloadUrl(targetRepo?: string, fileName: string = 'eBroAgent_Setup.exe'): string {
-  const repo = (targetRepo?.split(',')[0].trim()) || 'DragonRPA/ebro_awp';
-  return `https://github.com/${repo}/releases/download/agent-v2.0.0/${fileName}`;
-}
-
-/**
- *  접속 URL 및 테넌트 기준 맞춤형 eBroAgent 설치 프로그램 메타데이터 생성
- * 각 고객사(테넌트)별 서브도메인 및 상호가 바인딩된 전용 설치 파일명 및 초고속 CDN 다운로드 링크를 제공합니다.
- */
-export function getTenantAgentInstallerInfo(tenant?: {
-  tenantCode?: string;
-  displayName?: string;
-  tradeName?: string;
-  corporateName?: string;
-  subdomain?: string;
-  targetRepo?: string;
-} | null): TenantAgentInstallerInfo {
-  const code = normalizeAgentTenantCode(tenant?.tenantCode || 'EBRO_FL');
-  const name = tenant?.displayName || tenant?.tradeName || tenant?.corporateName || '이브로지게차';
-  const sub = tenant?.subdomain || (code === 'EBRO_FL' ? 'fl-demo' : code.toLowerCase());
-  
-  // 전 테넌트 공용 통합 에이전트 설치 파일명
-  const fileName = 'eBroAgent_Setup.exe';
-  
-  //  GitHub Releases 글로벌 초고속 CDN 기반 (8~10MB/s, 16MB를 3초 만에 다운로드 완료)
-  // currentTenant?.targetRepo가 존재하면 해당 레포지토리 동적 사용 (미지정 시 DragonRPA/ebro_awp 기본값)
-  const targetRepo = (tenant?.targetRepo?.split(',')[0].trim()) || 'DragonRPA/ebro_awp';
-  const downloadUrl = `https://github.com/${targetRepo}/releases/download/agent-v2.0.0/${fileName}`;
-  const fallbackUrl = `/downloads/${fileName}`;
-
-  return {
-    downloadUrl,
-    fallbackUrl,
-    fileName,
-    tenantCode: code,
-    tenantName: name,
-    subdomain: sub,
-    version: EXPECTED_AGENT_VERSION,
-  };
-}
-
-/**
- *  브라우저에서 테넌트 맞춤형 eBroAgent 설치 파일 다운로드 즉시 실행
- */
-export function triggerTenantAgentDownload(tenant?: {
-  tenantCode?: string;
-  displayName?: string;
-  tradeName?: string;
-  corporateName?: string;
-  subdomain?: string;
-  targetRepo?: string;
-} | null): void {
-  const info = getTenantAgentInstallerInfo(tenant);
-  const a = document.createElement('a');
-  a.href = info.downloadUrl;
-  a.download = info.fileName;
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    try { document.body.removeChild(a); } catch (e) {}
-  }, 1000);
-}
-
-/**
- *  브라우저(사이트)에서 로컬 에이전트 기동 트리거
- */
-export function launchLocalAgentFromBrowser(): void {
-  try {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = AGENT_PROTOCOL_URI;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      try { document.body.removeChild(iframe); } catch (e) {}
-    }, 2500);
-  } catch (e) {
-    window.location.href = AGENT_PROTOCOL_URI;
-  }
-}
+export * from './agentTransportCore';
 
 /**
  *  eBro AI Agent 독립 데스크톱 스튜디오 창 호출
@@ -125,69 +26,16 @@ export async function openAgentStudio(): Promise<boolean> {
       method: 'POST'
     });
     if (res.ok) return true;
-  } catch (e) {}
+  } catch {}
 
   // 브라우저 팝업/프로토콜 폴백
   try {
     window.open('http://127.0.0.1:5175/studio', '_blank', 'width=1020,height=740');
     return true;
-  } catch (e) {
+  } catch {
     launchLocalAgentFromBrowser();
     return false;
   }
-}
-
-
-export interface AgentHealthInfo {
-  status: 'ONLINE' | 'OFFLINE';
-  version?: string;
-  coreHash?: string;
-  callsign?: string;
-  machineName?: string;
-  archiveRoot?: string;
-  driveMirrorDir?: string;
-  uptimeSeconds?: number;
-  policy?: {
-    agentAiEnabled: boolean;
-    tenantCode?: string;
-    updatedAt?: string;
-  };
-  isAiEnabled?: boolean;
-  updateState?: {
-    status: string;
-    currentVersion: string;
-    targetVersion: string | null;
-    message: string;
-    lastChecked: string | null;
-  };
-  timestamp?: string;
-}
-
-let activeAgentTenantCode: string = 'EBRO_FL';
-
-export function normalizeAgentTenantCode(raw?: string | null): string {
-  const s = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_');
-  if (!s) return 'EBRO_FL';
-  if (s === 'GIYEUN' || s === 'GIYUEN' || s === 'KIYUEN' || s === 'GIYEON' || s === 'GIYEONLIFT') {
-    return 'GIYEONLIFT';
-  }
-  return s;
-}
-
-export function setActiveAgentTenantCode(code?: string | null): void {
-  if (!code || !String(code).trim()) return;
-  activeAgentTenantCode = normalizeAgentTenantCode(code);
-}
-
-export function getActiveAgentTenantCode(): string {
-  return activeAgentTenantCode;
-}
-
-export function appendTenantQueryParam(path: string, codeOverride?: string): string {
-  const code = normalizeAgentTenantCode(codeOverride || activeAgentTenantCode);
-  if (!path || /(?:[?&])tenantCode=/.test(path)) return path;
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}tenantCode=${encodeURIComponent(code)}`;
 }
 
 /**
@@ -227,7 +75,7 @@ export async function syncTenantPolicyToAgent(
   if (!tenant && !backupPolicy) return false;
   try {
     const payload: Record<string, any> = {};
-    const resolvedCode = normalizeAgentTenantCode(tenant?.tenantCode || activeAgentTenantCode);
+    const resolvedCode = normalizeAgentTenantCode(tenant?.tenantCode || getActiveAgentTenantCode());
     if (tenant) {
       if (tenant.tenantCode && options?.setAsActiveTabTenant !== false) {
         setActiveAgentTenantCode(resolvedCode);
@@ -274,327 +122,9 @@ export async function syncTenantPolicyToAgent(
       body: JSON.stringify(payload)
     });
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
-}
-
-// 활성 에이전트 베이스 URL (127.0.0.1  localhost 자동 동적 폴백)
-let activeAgentBaseUrl = 'http://localhost:5175';
-
-export function getAgentBaseUrl(): string {
-  return activeAgentBaseUrl;
-}
-
-// ──  전역 에이전트 상태 버스 및 실시간 동기화 ──
-let lastKnownAgentOnline: boolean = false;
-let lastKnownAgentInfo: AgentHealthInfo | null = null;
-const agentStatusListeners = new Set<(online: boolean, info: AgentHealthInfo | null) => void>();
-
-export function isAgentOnlineGlobal(): boolean {
-  if (lastKnownAgentOnline) return true;
-  if (typeof document !== 'undefined') {
-    return document.documentElement.getAttribute('data-ebro-agent-status') === 'online';
-  }
-  return false;
-}
-
-export function subscribeAgentStatus(listener: (online: boolean, info: AgentHealthInfo | null) => void): () => void {
-  agentStatusListeners.add(listener);
-  try {
-    listener(isAgentOnlineGlobal(), lastKnownAgentInfo);
-  } catch (e) {}
-  return () => { agentStatusListeners.delete(listener); };
-}
-
-export function setGlobalAgentStatus(online: boolean, info?: AgentHealthInfo | null): void {
-  lastKnownAgentOnline = online;
-  if (info !== undefined) lastKnownAgentInfo = info;
-  agentStatusListeners.forEach(cb => {
-    try { cb(online, lastKnownAgentInfo); } catch (e) {}
-  });
-}
-
-// 브라우저 런타임 이벤트 리스너 (확장 프로그램  ERP 실시간 수신)
-if (typeof window !== 'undefined') {
-  window.addEventListener('message', (event: MessageEvent) => {
-    if (event.source !== window || !event.data || event.data.source !== 'EBRO_EXTENSION') return;
-    if (event.data.type === 'AGENT_STATUS_UPDATE') {
-      const isOnline = Boolean(event.data.isConnected);
-      setGlobalAgentStatus(isOnline);
-    }
-  });
-
-  window.addEventListener('ebro:extension_agent_status', ((e: CustomEvent) => {
-    if (e.detail && typeof e.detail.isConnected === 'boolean') {
-      setGlobalAgentStatus(e.detail.isConnected);
-    }
-  }) as EventListener);
-}
-
-/**
- *  브라우저 확장 프로그램 존재 여부 감지
- */
-export function isExtensionBridgeAvailable(): boolean {
-  if (typeof document === 'undefined') return false;
-  return document.documentElement.getAttribute('data-ebro-extension-ready') === 'true' ||
-         document.documentElement.getAttribute('data-ebro-agent-status') !== null;
-}
-
-/**
- *  브라우저 확장 프로그램 프록시를 통한 에이전트 통신
- * Chrome Private Network Access (PNA) 및 Mixed Content 제약을 우회하여 로컬 에이전트와 완벽 통신
- */
-export async function fetchViaExtensionBridge(pathOrUrl: string, init?: RequestInit): Promise<Response> {
-  const url = pathOrUrl.startsWith('http') ? pathOrUrl : `${activeAgentBaseUrl}${pathOrUrl}`;
-  return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') {
-      return reject(new Error('Window context not available'));
-    }
-
-    const requestId = 'req_' + Math.random().toString(36).substring(2, 10);
-    const timeoutMs = (init as any)?.timeout;
-
-    let timer: any = null;
-
-    const handler = (event: MessageEvent) => {
-      if (event.source !== window || !event.data || event.data.source !== 'EBRO_EXTENSION') return;
-      if (event.data.type === 'PROXY_FETCH_RESPONSE' && event.data.requestId === requestId) {
-        window.removeEventListener('message', handler);
-        if (timer) clearTimeout(timer);
-
-        const res = event.data.response;
-        if (!res || !res.success) {
-          return reject(new Error(res?.error || '확장 프로그램 프록시 통신 실패'));
-        }
-
-        const rawData = res.data;
-        const bodyStr = typeof rawData === 'string' ? rawData : (rawData !== null && rawData !== undefined ? JSON.stringify(rawData) : '');
-
-        const responseObj = new Response(bodyStr, {
-          status: res.status || 200,
-          statusText: res.statusText || 'OK',
-          headers: new Headers(res.headers || {})
-        });
-
-        if (typeof rawData === 'object' && rawData !== null) {
-          responseObj.json = async () => rawData;
-        }
-
-        resolve(responseObj);
-      }
-    };
-
-    window.addEventListener('message', handler);
-
-    // 명시적 양수 timeoutMs가 지정된 경우(예: /health 핑)에만 타이머 작동, 본 작업(0 또는 미지정)은 완료까지 무제한 대기
-    if (typeof timeoutMs === 'number' && timeoutMs > 0) {
-      timer = setTimeout(() => {
-        window.removeEventListener('message', handler);
-        reject(new Error('확장 프로그램 프록시 응답 시간 초과'));
-      }, timeoutMs);
-    }
-
-    if (init?.signal) {
-      if (init.signal.aborted) {
-        window.removeEventListener('message', handler);
-        if (timer) clearTimeout(timer);
-        return reject(new DOMException('The user aborted a request.', 'AbortError'));
-      }
-      init.signal.addEventListener('abort', () => {
-        window.removeEventListener('message', handler);
-        if (timer) clearTimeout(timer);
-        reject(new DOMException('The user aborted a request.', 'AbortError'));
-      }, { once: true });
-    }
-
-    let headerObj: Record<string, string> = {};
-    if (init?.headers) {
-      if (init.headers instanceof Headers) {
-        init.headers.forEach((v, k) => { headerObj[k] = v; });
-      } else if (Array.isArray(init.headers)) {
-        init.headers.forEach(([k, v]) => { headerObj[k] = v; });
-      } else {
-        headerObj = { ...init.headers } as Record<string, string>;
-      }
-    }
-
-    window.postMessage({
-      source: 'EBRO_WEB_PAGE',
-      type: 'PROXY_FETCH',
-      requestId,
-      url,
-      options: {
-        method: init?.method || 'GET',
-        headers: headerObj,
-        body: typeof init?.body === 'string' ? init.body : undefined,
-        timeout: typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 0
-      }
-    }, '*');
-  });
-}
-
-export interface AgentFetchOptions extends RequestInit {
-  timeout?: number;       // /health 등 상태 핑에만 사용 (본 작업은 사전 생존 확인 후 완료 시까지 무제한 대기)
-  requireAgent?: boolean; // true인 경우 에이전트 미응답 시 즉시 AgentRequiredModal 표출 및 명확한 안내 에러 반환
-  actionName?: string;    // AgentRequiredModal에 표시할 작업명 (예: '계약서 패키지 생성', '이메일 발송')
-  skipPrecheck?: boolean; // true인 경우 사전 /health 핑 생략
-}
-
-export async function fetchWithAgentFallback(path: string, init?: AgentFetchOptions): Promise<Response> {
-  const scopedPath = appendTenantQueryParam(path);
-  const scopedHealthPath = appendTenantQueryParam('/health');
-  const isHealthCheck = scopedPath.startsWith('/health');
-  // 헬스체크만 빠른 응답 확인용 기본 타임아웃을 두고, 실제 본 작업은 타임아웃 제한을 두지 않음(0)
-  const effectiveTimeout = isHealthCheck ? (init?.timeout || 2500) : (init?.timeout ?? 0);
-  const requireAgent = Boolean(init?.requireAgent);
-  const actionName = init?.actionName || '로컬 연동 작업';
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:' && !window.location.hostname.includes('localhost');
-  const hasExtension = isExtensionBridgeAvailable();
-
-  //  [1단계: 사전 실행 상태 확인 (Pre-flight Health Check & 구버전 코어 즉시 핫패치 동기화 가드)]
-  // 본 작업을 실행하기 전에 먼저 짧은 /health 핑으로 로컬 에이전트가 실행 중인지, 코어가 최신인지 확인합니다.
-  if (!isHealthCheck && !init?.skipPrecheck) {
-    let alive = false;
-    let detectedOutdatedHost: string | null = null;
-
-    // 0-1. 직접 루프백 /health 핑 최우선 확인 (가장 빠르고 확실함, 2500ms 여유 부여)
-    const precheckHosts = ['http://127.0.0.1:5175', 'http://localhost:5175'];
-    for (const h of precheckHosts) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2500);
-        const pingRes = await fetch(`${h}${scopedHealthPath}`, { method: 'GET', signal: ctrl.signal, cache: 'no-store' });
-        clearTimeout(tid);
-        if (pingRes.ok) {
-          alive = true;
-          activeAgentBaseUrl = h;
-          setGlobalAgentStatus(true);
-          try {
-            const pingData = await pingRes.json();
-            const verOutdated = pingData?.version && isExpectedNewer(EXPECTED_AGENT_VERSION, pingData.version);
-            const agentAlreadyNewer = pingData?.version && isExpectedNewer(pingData.version, EXPECTED_AGENT_VERSION);
-            const hashMismatch = !agentAlreadyNewer && Boolean(EXPECTED_CORE_HASH && EXPECTED_CORE_HASH !== 'auto' && pingData?.coreHash !== EXPECTED_CORE_HASH);
-            if (verOutdated || hashMismatch) {
-              detectedOutdatedHost = h;
-            }
-          } catch {}
-          break;
-        }
-      } catch {}
-    }
-
-    // 0-1b. 작업 실행 직전에 구버전 코어가 감지된 경우, 즉시 핫패치를 트리거하고 재기동 완료까지 최대 6.5초 대기
-    const isUpdateCall = path.startsWith('/api/check-update');
-    const isCriticalCoreJob = path.startsWith('/api/generate-') || path.startsWith('/api/send-email') || path.startsWith('/api/trigger-sync') || path.startsWith('/api/policy/sync');
-    if (alive && detectedOutdatedHost && !isUpdateCall) {
-      try {
-        await fetch(`${detectedOutdatedHost}/api/check-update`, { method: 'POST', cache: 'no-store' }).catch(() => {});
-        if (isCriticalCoreJob) {
-          const waitStart = Date.now();
-          while (Date.now() - waitStart < 6500) {
-            await new Promise(r => setTimeout(r, 600));
-            try {
-              const c = new AbortController();
-              const t = setTimeout(() => c.abort(), 1500);
-              const checkRes = await fetch(`${detectedOutdatedHost}/health`, { method: 'GET', signal: c.signal, cache: 'no-store' });
-              clearTimeout(t);
-              if (checkRes.ok) {
-                const checkData = await checkRes.json();
-                const stillOldVer = checkData?.version && isExpectedNewer(EXPECTED_AGENT_VERSION, checkData.version);
-                const stillOldHash = Boolean(EXPECTED_CORE_HASH && EXPECTED_CORE_HASH !== 'auto' && checkData?.coreHash !== EXPECTED_CORE_HASH);
-                if (!stillOldVer && !stillOldHash) {
-                  break;
-                }
-              }
-            } catch {}
-          }
-        }
-      } catch {}
-    }
-
-    // 0-2. 직접 루프백이 PNA 등으로 차단된 경우 확장 프로그램 브리지로 보조 핑 확인
-    if (!alive && isHttps && hasExtension) {
-      try {
-        const extPing = await fetchViaExtensionBridge(scopedHealthPath, {
-          method: 'GET',
-          timeout: 2500
-        } as RequestInit & { timeout?: number });
-        if (extPing.ok) {
-          alive = true;
-          setGlobalAgentStatus(true);
-        }
-      } catch {}
-    }
-
-    if (!alive) {
-      setGlobalAgentStatus(false, null);
-      if (requireAgent) {
-        notifyAgentRequired(actionName);
-      }
-      throw new Error(`로컬 에이전트가 실행되고 있지 않습니다. PC에서 eBroAgent를 실행한 후 다시 시도해 주십시오.`);
-    }
-  }
-
-  //  [2단계: 에이전트 생존 확인 완료 -> 본 작업 실행]
-  //  에이전트로부터 HTTP 응답(200, 400, 404, 500 등 상태 코드 무관)을 수신했다면 에이전트는 정상 가동 중임.
-  //    500(SMTP 인증 오류, 파일 생성 오류 등)을 에이전트 미실행으로 오판하여 재시도하거나 AgentRequiredModal을 띄우지 않는다.
-
-  // 2-1. 직접 루프백 fetch 최우선 시도 (사전 점검에서 응답한 activeAgentBaseUrl 최우선, 확장 프로그램 워커 슬립 영향 없음)
-  const candidateHosts = activeAgentBaseUrl === 'http://localhost:5175'
-    ? ['http://localhost:5175', 'http://127.0.0.1:5175']
-    : ['http://127.0.0.1:5175', 'http://localhost:5175'];
-
-  let lastErr: any = null;
-  for (const host of candidateHosts) {
-    let timeoutTimer: any = null;
-    try {
-      const freshController = new AbortController();
-
-      if (init?.signal && !init.signal.aborted) {
-        init.signal.addEventListener('abort', () => freshController.abort(init.signal?.reason), { once: true });
-      } else if (effectiveTimeout > 0) {
-        timeoutTimer = setTimeout(() => {
-          freshController.abort(new DOMException('로컬 에이전트 상태 확인 응답 시간 초과', 'TimeoutError'));
-        }, effectiveTimeout);
-      }
-
-      const mergedInit: RequestInit = {
-        ...init,
-        signal: freshController.signal,
-      };
-
-      const res = await fetch(`${host}${scopedPath}`, mergedInit);
-      if (timeoutTimer) clearTimeout(timeoutTimer);
-
-      activeAgentBaseUrl = host;
-      setGlobalAgentStatus(true);
-      return res;
-    } catch (e: any) {
-      if (timeoutTimer) clearTimeout(timeoutTimer);
-      lastErr = e;
-    }
-  }
-
-  // 2-2. 직접 루프백 fetch가 브라우저 정책(PNA/CORS 등)으로 차단된 경우 확장 프로그램 브리지로 보조 시도
-  if (hasExtension) {
-    try {
-      const extRes = await fetchViaExtensionBridge(scopedPath, {
-        ...init,
-        timeout: effectiveTimeout
-      } as RequestInit & { timeout?: number });
-      setGlobalAgentStatus(true);
-      return extRes;
-    } catch (e: any) {
-      lastErr = e;
-    }
-  }
-
-  if (requireAgent) {
-    notifyAgentRequired(actionName);
-  }
-
-  throw lastErr || new Error('로컬 에이전트와 통신할 수 없습니다. 에이전트 실행 상태를 확인해 주십시오.');
 }
 
 // ──  단일 전역 에이전트 헬스체크 매니저 ──
@@ -615,26 +145,9 @@ export async function triggerAgentCloudflareSync(): Promise<boolean> {
       skipPrecheck: true
     });
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
-}
-
-function isExpectedNewer(expectedVer: string, currentVer: string): boolean {
-  const parse = (v: string) => {
-    const cleaned = String(v || '').trim().replace(/^v/i, '');
-    const parts = cleaned.split('.Build.');
-    const semver = (parts[0] || '0').split('.').map(n => parseInt(n, 10) || 0);
-    const build = parts[1] ? (parseInt(parts[1], 10) || 0) : 0;
-    return [semver[0] || 0, semver[1] || 0, semver[2] || 0, build];
-  };
-  const e = parse(expectedVer);
-  const c = parse(currentVer);
-  for (let i = 0; i < 4; i++) {
-    if (e[i] > c[i]) return true;
-    if (e[i] < c[i]) return false;
-  }
-  return false;
 }
 
 /**
@@ -642,7 +155,7 @@ function isExpectedNewer(expectedVer: string, currentVer: string): boolean {
  */
 export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<AgentHealthInfo> {
   if (isCheckingHealth) {
-    return lastKnownAgentInfo || { status: lastKnownAgentOnline ? 'ONLINE' : 'OFFLINE' };
+    return getLastKnownAgentInfo() || { status: isLastKnownAgentOnline() ? 'ONLINE' : 'OFFLINE' };
   }
   isCheckingHealth = true;
 
@@ -695,7 +208,7 @@ export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<
 
       return info;
     }
-  } catch (err) {
+  } catch {
     //  1회 실패 시 즉각 OFFLINE으로 단정하지 않고 400ms 후 즉시 1회 재시도
     consecutiveFailures++;
     if (consecutiveFailures === 1) {
@@ -721,7 +234,7 @@ export async function pingLocalAgentHealth(callsign: string = 'admin'): Promise<
           setGlobalAgentStatus(true, retryInfo);
           return retryInfo;
         }
-      } catch (retryErr) {
+      } catch {
         consecutiveFailures = 2;
       }
     }
@@ -792,7 +305,7 @@ export async function checkWebAgentHealth(): Promise<{ online: boolean; extensio
         version: data.version
       };
     }
-  } catch (e) {}
+  } catch {}
   return { online: false, extensionConnected: false };
 }
 
@@ -817,7 +330,7 @@ export async function restartLocalAgent(): Promise<boolean> {
       method: 'POST'
     });
     return res.ok;
-  } catch (e) {
+  } catch {
     launchLocalAgentFromBrowser();
     return true;
   }
@@ -838,15 +351,6 @@ export async function triggerAgentSelfUpdate(force: boolean = false): Promise<{ 
     return { success: false, message: `업데이트 요청 실패 (HTTP ${res.status})` };
   } catch (e: any) {
     return { success: false, message: e.message || '에이전트 통신 실패' };
-  }
-}
-
-/**
- *  에이전트가 필요한 시점에 응답하지 않을 때 전역 모달 표출 이벤트 디스패치
- */
-export function notifyAgentRequired(actionName: string = '로컬 연동 작업'): void {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('ebro:agent_required', { detail: { actionName } }));
   }
 }
 
@@ -933,9 +437,7 @@ export async function openAgentLocalBackupFolder(): Promise<boolean> {
       timeout: 3000
     });
     return res.ok;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
-
-

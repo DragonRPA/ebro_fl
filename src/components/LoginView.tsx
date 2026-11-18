@@ -6,8 +6,11 @@ import {
   triggerAgentSelfUpdate,
   triggerTenantAgentDownload,
 } from '../services/agentService';
-import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
+
+const PrivacyPolicyModal = React.lazy(() =>
+  import('./PrivacyPolicyModal').then((m) => ({ default: m.PrivacyPolicyModal }))
+);
 
 const SAVED_LOGIN_ID_KEY = 'ebro_fl_saved_login_id';
 
@@ -434,7 +437,9 @@ export const LoginView: React.FC = () => {
       </form>
 
       {showPrivacyPolicy && (
-        <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+        <React.Suspense fallback={null}>
+          <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+        </React.Suspense>
       )}
     </div>
   );

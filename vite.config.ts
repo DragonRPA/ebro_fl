@@ -130,7 +130,7 @@ function developerDevicePlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.url && (req.url === '/downloads/eBroDevPCRegister.exe' || req.url.startsWith('/downloads/eBroDevPCRegister.exe'))) {
-          const exePath = path.resolve(__dirname, 'public/downloads/eBroDevPCRegister.exe');
+          const exePath = path.resolve(import.meta.dirname, 'public/downloads/eBroDevPCRegister.exe');
           if (fs.existsSync(exePath)) {
             res.setHeader('Content-Type', 'application/vnd.microsoft.portable-executable');
             res.setHeader('Content-Disposition', 'attachment; filename="eBroDevPCRegister.exe"');
@@ -281,7 +281,7 @@ function developerDevicePlugin(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react(), r2DevPlugin(), ntsStatusPlugin(), developerDevicePlugin()],
   server: {
     port: 5174,
@@ -293,15 +293,40 @@ export default defineConfig({
   },
   build: {
     sourcemap: false, // 🛡️ 역공학 방어: 프로덕션 원본 TypeScript 소스맵 완전 배제
-    minify: 'esbuild',
+    minify: 'oxc',
     target: 'es2020',
     cssMinify: true,
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1500,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              debugName: 'vendor-core',
+              name(moduleId) {
+                if (/[\\/]node_modules[\\/](?:react|react-dom|scheduler)[\\/]/.test(moduleId)) {
+                  return 'vendor-react';
+                }
+                if (/[\\/]node_modules[\\/]@supabase[\\/]/.test(moduleId)) {
+                  return 'vendor-supabase';
+                }
+                return null;
+              },
+            },
+          ],
+        },
+        comments: false,
+        minify:
+          command === 'build'
+            ? {
+                compress: {
+                  dropConsole: true,
+                  dropDebugger: true,
+                },
+              }
+            : undefined,
+      },
+    },
   },
-  esbuild: {
-    // 🛡️ 프로덕션 번들에서 console.log, console.debug, debugger 구문 영구 드롭
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
-    legalComments: 'none',
-  }
-})
+}));

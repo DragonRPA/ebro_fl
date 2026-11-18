@@ -1,17 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import * as XLSX from 'xlsx';
-import { X, Download, FileSpreadsheet, Mail, Search, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { X, FileSpreadsheet, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import { usePageActive } from '../core/PageActivityContext';
-import { FL_MANUAL_REGISTRY } from '../manual/manualRegistry';
-import { matchesKoreanQuery } from '../utils/hangulSearch';
-import { formatKoStatus, koStatusTone, type FlItemMaster, type FlPartner } from '../types/domain';
-import {
-  downloadExcelFile,
-  openExcelInAgent,
-  sendDocumentEmailViaAgent,
-} from '../services/documentService';
+import { getPageTitleForTenant } from '../manual/manualPageTitles';
+import { formatKoStatus, koStatusTone } from '../types/domain';
 
 export const controlInputStyle: React.CSSProperties = {
   height: 'var(--space-control-h)',
@@ -275,45 +267,22 @@ export const SegmentedTabs: React.FC<{
 
 export type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 
-export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
+const BADGE_TONE_STYLES: Record<BadgeTone, { bg: string; fg: string; border: string }> = {
+  neutral: { bg: 'var(--bg-secondary)', fg: 'var(--text-secondary)', border: 'var(--border-color)' },
+  primary: { bg: 'var(--primary-light)', fg: 'var(--primary)', border: 'var(--primary)' },
+  success: { bg: 'var(--success-light)', fg: 'var(--success)', border: 'var(--success)' },
+  warning: { bg: 'var(--warning-light)', fg: 'var(--warning)', border: 'var(--warning)' },
+  danger: { bg: 'var(--danger-light)', fg: 'var(--danger)', border: 'var(--danger)' },
+  info: { bg: 'var(--info-light)', fg: 'var(--info)', border: 'var(--info)' },
+};
+
+export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = React.memo(({
   label,
   tone,
 }) => {
-  const toneStyles: Record<BadgeTone, { bg: string; fg: string; border: string }> = {
-    neutral: {
-      bg: 'var(--bg-secondary)',
-      fg: 'var(--text-secondary)',
-      border: 'var(--border-color)',
-    },
-    primary: {
-      bg: 'var(--primary-light)',
-      fg: 'var(--primary)',
-      border: 'var(--primary)',
-    },
-    success: {
-      bg: 'var(--success-light)',
-      fg: 'var(--success)',
-      border: 'var(--success)',
-    },
-    warning: {
-      bg: 'var(--warning-light)',
-      fg: 'var(--warning)',
-      border: 'var(--warning)',
-    },
-    danger: {
-      bg: 'var(--danger-light)',
-      fg: 'var(--danger)',
-      border: 'var(--danger)',
-    },
-    info: {
-      bg: 'var(--info-light)',
-      fg: 'var(--info)',
-      border: 'var(--info)',
-    },
-  };
   const displayLabel = formatKoStatus(label);
   const resolvedTone = tone ?? koStatusTone(label);
-  const palette = toneStyles[resolvedTone];
+  const palette = BADGE_TONE_STYLES[resolvedTone];
   return (
     <span
       data-ui="status-badge"
@@ -335,7 +304,7 @@ export const StatusBadge: React.FC<{ label: string; tone?: BadgeTone }> = ({
       {displayLabel}
     </span>
   );
-};
+});
 
 export interface GridColumn<T> {
   key: string;
@@ -373,6 +342,8 @@ function extractReactNodeText(node: React.ReactNode): string {
   return '';
 }
 
+const GRID_RENDER_STEP = 250;
+
 export function DataGrid<T>({
   columns,
   rows,
@@ -387,9 +358,11 @@ export function DataGrid<T>({
 }: DataGridProps<T>) {
   const { activePage } = useAppShell();
   const [sortState, setSortState] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
+  const [visibleLimit, setVisibleLimit] = useState(GRID_RENDER_STEP);
 
   const toggleSort = (col: GridColumn<T>) => {
     if (!col.sortable && !col.sortValue) return;
+    setVisibleLimit(GRID_RENDER_STEP);
     setSortState((prev) => {
       if (!prev || prev.key !== col.key) return { key: col.key, dir: 'asc' };
       if (prev.dir === 'asc') return { key: col.key, dir: 'desc' };
@@ -418,7 +391,7 @@ export function DataGrid<T>({
     });
   }, [columns, rows, sortState]);
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (sortedRows.length === 0) return;
     const exportCols = columns.filter(
       (c) =>
@@ -441,14 +414,17 @@ export function DataGrid<T>({
       }
       return obj;
     });
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet(sheetRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '목록');
-    const pageTitle = excelFileName || FL_MANUAL_REGISTRY[activePage]?.pageTitle || '목록';
+    const pageTitle = excelFileName || getPageTitleForTenant(activePage) || '목록';
     const safeTitle = pageTitle.replace(/[\\/:*?"<>|]/g, '_');
     const dateTag = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `${safeTitle}_${dateTag}.xlsx`);
   };
+
+  const renderedRows = sortedRows.length > visibleLimit ? sortedRows.slice(0, visibleLimit) : sortedRows;
 
   return (
     <div data-manual-id={manualId} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -471,6 +447,13 @@ export function DataGrid<T>({
         </div>
       )}
       <div
+        onScroll={(e) => {
+          if (visibleLimit >= sortedRows.length) return;
+          const el = e.currentTarget;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) {
+            setVisibleLimit((v) => Math.min(sortedRows.length, v + GRID_RENDER_STEP));
+          }
+        }}
         style={{
           width: '100%',
           overflow: 'auto',
@@ -561,42 +544,57 @@ export function DataGrid<T>({
               </td>
             </tr>
           ) : (
-            sortedRows.map((row, idx) => {
-              const id = rowKey(row, idx);
-              const isSelected = selectedRowId != null && selectedRowId === id;
-              const rowBg = isSelected ? 'var(--bg-active)' : 'var(--bg-card)';
-              return (
-                <tr
-                  key={id}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  style={{
-                    height: 'var(--space-table-row-h)',
-                    backgroundColor: rowBg,
-                    cursor: onRowClick ? 'pointer' : 'default',
-                  }}
-                >
-                  {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      style={{
-                        position: col.stickyLeft ? 'sticky' : undefined,
-                        left: col.stickyLeft ? 0 : undefined,
-                        zIndex: col.stickyLeft ? 2 : undefined,
-                        backgroundColor: col.stickyLeft ? rowBg : undefined,
-                        textAlign: col.align || 'left',
-                        padding: 'var(--space-table-td-pad-y) var(--space-table-td-pad-x)',
-                        borderBottom: '1px solid var(--table-row-border)',
-                        borderRight: '1px solid var(--table-row-border)',
-                        whiteSpace: 'nowrap',
-                        verticalAlign: 'middle',
-                      }}
+            <>
+              {renderedRows.map((row, idx) => {
+                const id = rowKey(row, idx);
+                const isSelected = selectedRowId != null && selectedRowId === id;
+                const rowBg = isSelected ? 'var(--bg-active)' : 'var(--bg-card)';
+                return (
+                  <tr
+                    key={id}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    style={{
+                      height: 'var(--space-table-row-h)',
+                      backgroundColor: rowBg,
+                      cursor: onRowClick ? 'pointer' : 'default',
+                    }}
+                  >
+                    {columns.map((col) => (
+                      <td
+                        key={col.key}
+                        style={{
+                          position: col.stickyLeft ? 'sticky' : undefined,
+                          left: col.stickyLeft ? 0 : undefined,
+                          zIndex: col.stickyLeft ? 2 : undefined,
+                          backgroundColor: col.stickyLeft ? rowBg : undefined,
+                          textAlign: col.align || 'left',
+                          padding: 'var(--space-table-td-pad-y) var(--space-table-td-pad-x)',
+                          borderBottom: '1px solid var(--table-row-border)',
+                          borderRight: '1px solid var(--table-row-border)',
+                          whiteSpace: 'nowrap',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        {col.render(row, idx)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+              {visibleLimit < sortedRows.length && (
+                <tr>
+                  <td colSpan={columns.length} style={{ padding: '8px var(--space-panel-pad-x)', textAlign: 'center', backgroundColor: 'var(--bg-header)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setVisibleLimit((v) => Math.min(sortedRows.length, v + GRID_RENDER_STEP))}
+                      style={actionBtnStyle('secondary', true)}
                     >
-                      {col.render(row, idx)}
-                    </td>
-                  ))}
+                      {`${renderedRows.length.toLocaleString('ko-KR')}/${sortedRows.length.toLocaleString('ko-KR')} · 더 보기`}
+                    </button>
+                  </td>
                 </tr>
-              );
-            })
+              )}
+            </>
           )}
         </tbody>
       </table>
@@ -691,62 +689,21 @@ export const ConservationBar: React.FC<{
     <div
       className="fl-conservation-bar"
       data-manual-id={manualId}
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 'var(--space-conservation-gap)',
-        padding: 'var(--space-conservation-pad-y) var(--space-conservation-pad-x)',
-        border: `1px solid ${balanced ? 'var(--border-color)' : 'var(--danger)'}`,
-        borderRadius: '8px',
-        backgroundColor: 'var(--bg-header)',
-        boxShadow: 'none',
-      }}
+      style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-conservation-gap)', padding: 'var(--space-conservation-pad-y) var(--space-conservation-pad-x)', border: `1px solid ${balanced ? 'var(--border-color)' : 'var(--danger)'}`, borderRadius: '8px', backgroundColor: 'var(--bg-header)', boxShadow: 'none' }}
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-conservation-item-gap)' }}>
         {items.map((item, idx) => (
           <div
             key={item.label}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 'var(--space-inline-gap)',
-              paddingRight: idx < items.length - 1 ? 'var(--space-conservation-item-gap)' : 0,
-              borderRight: idx < items.length - 1 ? '1px solid var(--table-row-border)' : 'none',
-            }}
+            style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-inline-gap)', paddingRight: idx < items.length - 1 ? 'var(--space-conservation-item-gap)' : 0, borderRight: idx < items.length - 1 ? '1px solid var(--table-row-border)' : 'none' }}
           >
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item.label}
-            </span>
-            <span
-              style={{
-                fontSize: '14px',
-                fontWeight: 800,
-                color: toneColor[item.tone || 'neutral'],
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item.value}
-            </span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{item.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: 800, color: toneColor[item.tone || 'neutral'], whiteSpace: 'nowrap' }}>{item.value}</span>
           </div>
         ))}
-        {balanceMessage && (
-          <StatusBadge label={balanceMessage} tone={balanced ? 'success' : 'danger'} />
-        )}
+        {balanceMessage && <StatusBadge label={balanceMessage} tone={balanced ? 'success' : 'danger'} />}
       </div>
-      {children && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', marginLeft: 'auto' }}>
-          {children}
-        </div>
-      )}
+      {children && <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-inline-gap)', marginLeft: 'auto' }}>{children}</div>}
     </div>
   );
 };
@@ -772,42 +729,9 @@ export const ModalDialog: React.FC<{
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 8800,
-        backgroundColor: 'rgba(15, 23, 42, 0.56)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 'var(--space-modal-backdrop-pad)',
-      }}
-    >
-      <div
-        style={{
-          width: `min(${width}px, 100%)`,
-          maxHeight: '88vh',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--bg-card)',
-          color: 'var(--text-main)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '10px',
-          overflow: 'hidden',
-          boxShadow: 'none',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: 'var(--space-modal-head-pad-y) var(--space-modal-head-pad-x)',
-            backgroundColor: 'var(--bg-header)',
-            borderBottom: '1px solid var(--border-color)',
-          }}
-        >
+    <div style={{ position: 'fixed', inset: 0, zIndex: 8800, backgroundColor: 'rgba(15, 23, 42, 0.56)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-modal-backdrop-pad)' }}>
+      <div style={{ width: `min(${width}px, 100%)`, maxHeight: '88vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '10px', overflow: 'hidden', boxShadow: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-modal-head-pad-y) var(--space-modal-head-pad-x)', backgroundColor: 'var(--bg-header)', borderBottom: '1px solid var(--border-color)' }}>
           <span style={{ fontSize: '14px', fontWeight: 700, whiteSpace: 'nowrap' }}>{title}</span>
           <button type="button" onClick={onClose} style={actionBtnStyle('secondary', true)}>
             <X size={14} />
@@ -817,699 +741,5 @@ export const ModalDialog: React.FC<{
         <div style={{ padding: 'var(--space-modal-body-pad)', overflowY: 'auto' }}>{children}</div>
       </div>
     </div>
-  );
-};
-
-export const DocumentActionBar: React.FC<{
-  docLabel: string;
-  defaultEmail?: string;
-  defaultSubject: string;
-  defaultBody: string;
-  onGenerate: () => Promise<{ fileName: string; base64: string; bytes: Uint8Array }>;
-  disabled?: boolean;
-  manualId?: string;
-}> = ({
-  docLabel,
-  defaultEmail = '',
-  defaultSubject,
-  defaultBody,
-  onGenerate,
-  disabled = false,
-  manualId,
-}) => {
-  const { tenantProfile, currentUser, notifyToast, agentOnline } = useAppShell();
-  const [busy, setBusy] = useState(false);
-  const [mailStepMsg, setMailStepMsg] = useState<string | null>(null);
-  const [mailErrorMsg, setMailErrorMsg] = useState<string | null>(null);
-  const [mailModalOpen, setMailModalOpen] = useState(false);
-  const [editedPath, setEditedPath] = useState<string | null>(null);
-  const [editedFileName, setEditedFileName] = useState<string | null>(null);
-
-  const [toEmail, setToEmail] = useState(defaultEmail);
-  const [ccEmail, setCcEmail] = useState('');
-  const [subject, setSubject] = useState(defaultSubject);
-  const [body, setBody] = useState(defaultBody);
-
-  useEffect(() => {
-    setToEmail(defaultEmail);
-    setSubject(defaultSubject);
-    setBody(defaultBody);
-  }, [defaultEmail, defaultSubject, defaultBody]);
-
-  const handleDownload = async () => {
-    if (busy || disabled) return;
-    setBusy(true);
-    try {
-      const res = await onGenerate();
-      downloadExcelFile(res.fileName, res.bytes);
-      notifyToast(`${docLabel} 엑셀 생성 완료`, 'success');
-    } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '문서 생성 실패', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleOpenInAgent = async () => {
-    if (busy || disabled) return;
-    setBusy(true);
-    try {
-      const res = await onGenerate();
-      const localPath = await openExcelInAgent(res.fileName, res.base64);
-      setEditedPath(localPath);
-      setEditedFileName(res.fileName);
-      notifyToast('로컬 엑셀 편집 실행 완료', 'success');
-    } catch (err) {
-      notifyToast(err instanceof Error ? err.message : '로컬 엑셀 편집 실패', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const mailHistoryKey = `ebro_fl_mail_log::${docLabel}::${defaultSubject}`;
-  const [lastMailLog, setLastMailLog] = useState<{ sentAt: string; senderName: string; toEmail: string } | null>(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(mailHistoryKey) : null;
-      return raw ? (JSON.parse(raw) as { sentAt: string; senderName: string; toEmail: string }) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const handleSendMail = async () => {
-    if (!toEmail.trim()) {
-      notifyToast('받는사람 이메일 주소를 입력해 주세요.', 'error');
-      return;
-    }
-    setBusy(true);
-    setMailErrorMsg(null);
-    setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중');
-    const slowGenTimer = window.setTimeout(() => {
-      setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중 · 지연사유: 양식 및 도장 이미지 처리 대기');
-    }, 3500);
-    try {
-      let fileName = editedFileName || `${docLabel}.xlsx`;
-      let base64Content: string | undefined;
-      if (!editedPath) {
-        const genPromise = onGenerate();
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          window.setTimeout(() => reject(new Error('첨부 문서 생성 시간 초과 (15초)')), 15000)
-        );
-        const res = await Promise.race([genPromise, timeoutPromise]);
-        fileName = res.fileName;
-        base64Content = res.base64;
-      }
-      window.clearTimeout(slowGenTimer);
-
-      const MAX_RETRY = 3;
-      const retryDelays = [1500, 3000];
-      let lastErr: unknown = null;
-      let sent = false;
-
-      for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
-        setMailStepMsg(`2/3 단계: 에이전트 메일 서버 연결 및 발송 중 (${attempt}/${MAX_RETRY}회 시도)`);
-        const slowSendTimer = window.setTimeout(() => {
-          setMailStepMsg(
-            `2/3 단계: 메일 발송 지연 (${attempt}/${MAX_RETRY}회) · 지연사유: 로컬 에이전트 또는 메일 서버 응답 대기`
-          );
-        }, 4000);
-        try {
-          await sendDocumentEmailViaAgent({
-            tenant: tenantProfile,
-            to: toEmail.trim(),
-            cc: ccEmail.trim() || undefined,
-            subject: subject.trim(),
-            body,
-            fileName,
-            localEditedPath: editedPath,
-            base64Content,
-          });
-          window.clearTimeout(slowSendTimer);
-          sent = true;
-          break;
-        } catch (err) {
-          window.clearTimeout(slowSendTimer);
-          lastErr = err;
-          const reason = err instanceof Error ? err.message : '에이전트 응답 지연 또는 연결 오류';
-          if (attempt < MAX_RETRY) {
-            const waitMs = retryDelays[attempt - 1] ?? 3000;
-            setMailStepMsg(
-              `재시도 대기 중 · 지연사유: ${reason} · ${(waitMs / 1000).toFixed(1)}초 후 재시도 (${attempt + 1}/${MAX_RETRY}회)`
-            );
-            await new Promise((r) => window.setTimeout(r, waitMs));
-          }
-        }
-      }
-
-      if (!sent) {
-        throw lastErr instanceof Error ? lastErr : new Error('이메일 발송에 최종 실패했습니다.');
-      }
-
-      const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
-      const logEntry = {
-        sentAt: nowStr,
-        senderName: currentUser?.name || '담당자',
-        toEmail: toEmail.trim(),
-      };
-      setLastMailLog(logEntry);
-      try {
-        window.localStorage.setItem(mailHistoryKey, JSON.stringify(logEntry));
-      } catch {
-        // 무시
-      }
-      setMailStepMsg('3/3 단계: 발송 완료');
-      notifyToast(`${docLabel} 공식 이메일 발송 완료`, 'success');
-      setMailModalOpen(false);
-    } catch (err) {
-      window.clearTimeout(slowGenTimer);
-      const errMsg = err instanceof Error ? err.message : '이메일 발송에 최종 실패했습니다.';
-      setMailStepMsg(null);
-      setMailErrorMsg(`발송 최종 실패: ${errMsg}`);
-      notifyToast(`발송 최종 실패: ${errMsg}`, 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <>
-      <div
-        data-manual-id={manualId}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', flexWrap: 'wrap' }}
-      >
-        <button
-          type="button"
-          disabled={busy || disabled}
-          onClick={handleDownload}
-          style={actionBtnStyle('secondary', true)}
-        >
-          <Download size={13} />
-          엑셀 다운로드
-        </button>
-        <button
-          type="button"
-          disabled={busy || disabled}
-          onClick={handleOpenInAgent}
-          title={agentOnline ? '로컬 엑셀 편집 열기' : '전용 에이전트 실행 필요'}
-          style={actionBtnStyle('secondary', true)}
-        >
-          <FileSpreadsheet size={13} />
-          에이전트 편집
-        </button>
-        <button
-          type="button"
-          disabled={busy || disabled}
-          onClick={() => setMailModalOpen(true)}
-          style={actionBtnStyle('primary', true)}
-        >
-          <Mail size={13} />
-          이메일 발송
-        </button>
-      </div>
-
-      <ModalDialog
-        open={mailModalOpen}
-        title={`${docLabel} 공식 이메일 발송`}
-        onClose={() => setMailModalOpen(false)}
-        width={560}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-stack-gap)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-field-grid-gap)', flexWrap: 'wrap' }}>
-            <VerticalField label="받는사람 이메일" required flex={1} minWidth={200}>
-              <input
-                type="email"
-                value={toEmail}
-                onChange={(e) => setToEmail(e.target.value)}
-                placeholder="수신자 이메일 주소 입력"
-                style={controlInputStyle}
-              />
-            </VerticalField>
-            <VerticalField label="참조 이메일" flex={1} minWidth={180}>
-              <input
-                type="email"
-                value={ccEmail}
-                onChange={(e) => setCcEmail(e.target.value)}
-                placeholder="선택 입력"
-                style={controlInputStyle}
-              />
-            </VerticalField>
-          </div>
-          <VerticalField label="메일 제목" required>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              style={controlInputStyle}
-            />
-          </VerticalField>
-          <VerticalField label="메일 본문" required>
-            <textarea
-              rows={5}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              style={controlTextareaStyle}
-            />
-          </VerticalField>
-          <div
-            style={{
-              padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-secondary)',
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            {editedPath
-              ? `편집 파일 첨부 대상: ${editedFileName} · ${editedPath}`
-              : `발송 시 ${docLabel} 최신 양식 파일 생성 후 첨부`}
-          </div>
-          {mailStepMsg && (
-            <div
-              style={{
-                padding: '8px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--primary)',
-                backgroundColor: 'var(--primary-light)',
-                color: 'var(--primary)',
-                fontSize: '12px',
-                fontWeight: 700,
-              }}
-            >
-              {mailStepMsg}
-            </div>
-          )}
-          {mailErrorMsg && (
-            <div
-              role="alert"
-              style={{
-                padding: '8px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--danger)',
-                backgroundColor: 'var(--danger-light)',
-                color: 'var(--danger)',
-                fontSize: '12px',
-                fontWeight: 700,
-              }}
-            >
-              {mailErrorMsg}
-            </div>
-          )}
-          {lastMailLog && (
-            <div
-              style={{
-                padding: '8px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-app)',
-                color: 'var(--text-secondary)',
-                fontSize: '11.5px',
-                fontWeight: 600,
-              }}
-            >
-              최근 발송: {lastMailLog.sentAt} · 발송자 {lastMailLog.senderName} · 수신 {lastMailLog.toEmail}
-            </div>
-          )}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-inline-gap)' }}>
-            {editedPath && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditedPath(null);
-                  setEditedFileName(null);
-                }}
-                style={actionBtnStyle('secondary')}
-              >
-                편집본 연결 해제
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setMailModalOpen(false)}
-              style={actionBtnStyle('secondary')}
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleSendMail}
-              style={actionBtnStyle('primary')}
-            >
-              {busy ? '발송중' : '발송 실행'}
-            </button>
-          </div>
-        </div>
-      </ModalDialog>
-    </>
-  );
-};
-
-export interface SearchableSelectOption {
-  value: string;
-  label: string;
-  subLabel?: string;
-  searchText?: string;
-}
-
-export function toPartnerSelectOptions(partners: FlPartner[]): SearchableSelectOption[] {
-  return partners.map((p) => ({
-    value: p.id,
-    label: p.name,
-    subLabel: p.bizRegNo || p.partnerRoles?.[0] || undefined,
-    searchText: [p.name, p.bizRegNo, p.representative, ...(p.partnerRoles || [])]
-      .filter(Boolean)
-      .join(' '),
-  }));
-}
-
-export function toItemMasterSelectOptions(items: FlItemMaster[]): SearchableSelectOption[] {
-  return items.map((it) => ({
-    value: it.id,
-    label: `${it.sku} · ${it.name}`,
-    subLabel: it.manufacturer || it.itemCategory,
-    searchText: [
-      it.sku,
-      it.name,
-      it.manufacturer,
-      it.modelName,
-      it.itemCategory,
-      it.specSummary,
-    ]
-      .filter(Boolean)
-      .join(' '),
-  }));
-}
-
-export interface SearchableSelectProps {
-  value: string;
-  options: SearchableSelectOption[];
-  onChange: (nextValue: string) => void;
-  placeholder?: string;
-  searchPlaceholder?: string;
-  emptyText?: string;
-  disabled?: boolean;
-  dataTestId?: string;
-  minDropdownWidth?: number;
-}
-
-export const SearchableSelect: React.FC<SearchableSelectProps> = ({
-  value,
-  options,
-  onChange,
-  placeholder = '선택',
-  searchPlaceholder = '초성 또는 키워드 검색',
-  emptyText = '일치하는 항목이 없습니다.',
-  disabled = false,
-  dataTestId,
-  minDropdownWidth = 280,
-}) => {
-  const isPageActive = usePageActive();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [highlightIdx, setHighlightIdx] = useState(0);
-  const [pos, setPos] = useState<{ top: number; left: number; width: number }>({
-    top: 0,
-    left: 0,
-    width: minDropdownWidth,
-  });
-
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const selectedOption = useMemo(
-    () => options.find((opt) => opt.value === value) || null,
-    [options, value]
-  );
-
-  const filteredOptions = useMemo(() => {
-    const q = query.trim();
-    if (!q) return options.slice(0, 120);
-    return options
-      .filter((opt) =>
-        matchesKoreanQuery(
-          `${opt.label} ${opt.subLabel || ''} ${opt.searchText || ''}`,
-          q
-        )
-      )
-      .slice(0, 120);
-  }, [options, query]);
-
-  const updatePosition = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const dropWidth = Math.max(rect.width, minDropdownWidth);
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const estimatedHeight = 310;
-    const top =
-      spaceBelow < estimatedHeight && rect.top > estimatedHeight
-        ? Math.max(8, rect.top - estimatedHeight - 4)
-        : rect.bottom + 4;
-    const left = Math.min(rect.left, Math.max(8, window.innerWidth - dropWidth - 12));
-    setPos({ top, left, width: dropWidth });
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    updatePosition();
-    setHighlightIdx(0);
-    const timer = setTimeout(() => inputRef.current?.focus(), 10);
-
-    const handleDocClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (triggerRef.current?.contains(target) || dropdownRef.current?.contains(target)) {
-        return;
-      }
-      setOpen(false);
-    };
-    const handleScrollOrResize = () => updatePosition();
-
-    document.addEventListener('mousedown', handleDocClick);
-    window.addEventListener('resize', handleScrollOrResize);
-    window.addEventListener('scroll', handleScrollOrResize, true);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleDocClick);
-      window.removeEventListener('resize', handleScrollOrResize);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!isPageActive && open) {
-      setOpen(false);
-    }
-  }, [isPageActive, open]);
-
-  const handleSelect = (opt: SearchableSelectOption) => {
-    onChange(opt.value);
-    setOpen(false);
-    setQuery('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightIdx((prev) =>
-        filteredOptions.length === 0 ? 0 : Math.min(prev + 1, filteredOptions.length - 1)
-      );
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightIdx((prev) => Math.max(0, prev - 1));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const targetOpt = filteredOptions[highlightIdx];
-      if (targetOpt) handleSelect(targetOpt);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      setOpen(false);
-    }
-  };
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        data-testid={dataTestId}
-        onClick={() => {
-          if (disabled) return;
-          setQuery('');
-          setOpen((prev) => !prev);
-        }}
-        style={{
-          ...controlInputStyle,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '6px',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          textAlign: 'left',
-          opacity: disabled ? 0.6 : 1,
-        }}
-      >
-        <span
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flex: 1,
-            color: selectedOption ? 'var(--text-main)' : 'var(--text-muted)',
-          }}
-        >
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-      </button>
-
-      {open &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              top: `${pos.top}px`,
-              left: `${pos.left}px`,
-              width: `${pos.width}px`,
-              zIndex: 9500,
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 8px 24px rgba(15, 23, 42, 0.16)',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-tight-gap)',
-                padding: 'var(--space-compact-pad-y) var(--space-compact-pad-x)',
-                borderBottom: '1px solid var(--table-row-border)',
-                backgroundColor: 'var(--bg-app)',
-              }}
-            >
-              <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setHighlightIdx(0);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={searchPlaceholder}
-                style={{
-                  border: 'none',
-                  outline: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'var(--text-main)',
-                  fontSize: '12.5px',
-                  width: '100%',
-                }}
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuery('');
-                    setHighlightIdx(0);
-                    inputRef.current?.focus();
-                  }}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    color: 'var(--text-muted)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div style={{ maxHeight: '250px', overflowY: 'auto', padding: 'max(1px, calc(4px - 2pt))' }}>
-              {filteredOptions.length === 0 ? (
-                <div
-                  style={{
-                    padding: 'var(--space-panel-pad-y) var(--space-compact-pad-x)',
-                    textAlign: 'center',
-                    fontSize: '12px',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  {emptyText}
-                </div>
-              ) : (
-                filteredOptions.map((opt, idx) => {
-                  const isSelected = opt.value === value;
-                  const isHighlighted = idx === highlightIdx;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onMouseEnter={() => setHighlightIdx(idx)}
-                      onClick={() => handleSelect(opt)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: 'calc(7px - 2pt) var(--space-compact-pad-x)',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 'var(--space-inline-gap)',
-                        backgroundColor: isSelected
-                          ? 'var(--primary-light)'
-                          : isHighlighted
-                          ? 'var(--bg-secondary)'
-                          : 'transparent',
-                        color: isSelected ? 'var(--primary)' : 'var(--text-main)',
-                        fontSize: '12.5px',
-                        fontWeight: isSelected ? 700 : 500,
-                      }}
-                    >
-                      <span
-                        style={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {opt.label}
-                      </span>
-                      {opt.subLabel && (
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            color: 'var(--text-muted)',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {opt.subLabel}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>,
-          document.body
-        )}
-    </>
   );
 };

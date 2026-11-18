@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, KeyRound, Menu, RefreshCw, Search, LogOut, UserCog } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
-import { isApprovalRequestRentalRelated } from '../core/ActionCommandGateway';
 import { useManual } from '../manual/ManualContext';
-import { FL_MANUAL_REGISTRY } from '../manual/manualRegistry';
-import { EMPLOYMENT_STATUS_LABELS, formatKoStatus, type EmploymentStatus } from '../types/domain';
+import { getPageTitleForTenant } from '../manual/manualPageTitles';
+import {
+  EMPLOYMENT_STATUS_LABELS,
+  formatKoStatus,
+  isApprovalRequestRentalRelated,
+  type EmploymentStatus,
+} from '../types/domain';
 import { ModalDialog, StatusBadge, VerticalField, actionBtnStyle, controlInputStyle } from './UiPrimitives';
 import { WeatherWidget } from './WeatherWidget';
 
@@ -50,8 +54,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const [myError, setMyError] = useState<string | null>(null);
   const [myBusy, setMyBusy] = useState(false);
 
-  const prevPageTitle = prevPageId ? FL_MANUAL_REGISTRY[prevPageId]?.pageTitle || '' : '';
-  const nextPageTitle = nextPageId ? FL_MANUAL_REGISTRY[nextPageId]?.pageTitle || '' : '';
+  const prevPageTitle = prevPageId ? getPageTitleForTenant(prevPageId, isRentalEnabled) : '';
+  const nextPageTitle = nextPageId ? getPageTitleForTenant(nextPageId, isRentalEnabled) : '';
 
   const rawCiUrl = (tenantProfile.ciUrl || tenantProfile.logoUrl || '').trim();
   const [ciFallbackStage, setCiFallbackStage] = useState<'PRIMARY' | 'HUB' | 'HIDDEN'>('PRIMARY');

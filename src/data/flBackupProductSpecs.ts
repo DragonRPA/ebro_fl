@@ -2,7 +2,7 @@
  * src/data/flBackupProductSpecs.ts
  * 백업 DB(fl_backup_products 42행 · fl_backup_assets)에서 복원한 전체 장비 VDI 2198 · 마스트 · 배터리 · 기본/선택 사양 아카이브
  */
-import type { FlModelTechnicalSpec } from './flTechnicalArchive';
+import type { FlModelTechnicalSpec } from './flTechnicalTypes';
 
 export const ECB30C_BACKUP_SPEC: Partial<FlModelTechnicalSpec> = {
   "loadDistanceXMm": 485,

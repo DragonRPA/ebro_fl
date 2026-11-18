@@ -8,7 +8,7 @@
     "check:korean": "node scripts/check-korean-ui.cjs",
     "build": "node -e \"if(require('fs').existsSync('scripts/check-korean-ui.cjs'))require('./scripts/check-korean-ui.cjs')\" && tsc -b && vite build",
     "build:agent": "node agent/encrypt_core.cjs",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings src",
     "preview": "vite preview",
     "db:backup": "node scripts/backup_fl_golden_snapshot.cjs",
     "db:restore": "node scripts/restore_fl_golden_snapshot.cjs",
@@ -16,7 +16,10 @@
     "devops:tenants-inspect": "node scripts/devops/sync_tenant_schemas.cjs",
     "purge:vercel": "node scripts/auto_purge_vercel.cjs --keep=3",
     "deploy": "npx vercel --prod --yes && node scripts/auto_purge_vercel.cjs --keep=3",
-    "deploy:prod": "npm run build && npx vercel --prod --yes && node scripts/auto_purge_vercel.cjs --keep=3"
+    "deploy:prod": "npm run build && npx vercel --prod --yes && node scripts/auto_purge_vercel.cjs --keep=3",
+    "spec:sync": "node scripts/generate_code_file_spec.cjs",
+    "spec:verify": "node scripts/generate_code_file_spec.cjs --verify",
+    "spec:query": "node scripts/generate_code_file_spec.cjs --query"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1112.0",

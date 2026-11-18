@@ -1,11 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { centralSupabase, execDbMutation, newId } from '../core/supabase';
 import { useAppShell } from '../core/AppShellContext';
-import {
-  FL_MANUAL_REGISTRY,
-  getManualEntryForTenant,
-  type ScreenManualEntry,
-} from './manualRegistry';
+import { getPageTitleForTenant } from './manualPageTitles';
+import type { ScreenManualEntry } from './manualRegistry';
 import type { FlPageId } from '../types/domain';
 
 export interface CustomManualAnnotation {
@@ -34,6 +31,9 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [highlightedAnchorId, setHighlightedAnchorId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Record<string, CustomManualAnnotation[]>>({});
+  const [manualRegistryMod, setManualRegistryMod] = useState<
+    typeof import('./manualRegistry') | null
+  >(null);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -49,6 +49,17 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if ((!overlayOpen && !searchModalOpen) || manualRegistryMod) return;
+    let alive = true;
+    void import('./manualRegistry').then((mod) => {
+      if (alive) setManualRegistryMod(mod);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [overlayOpen, searchModalOpen, manualRegistryMod]);
 
   useEffect(() => {
     let alive = true;
@@ -79,6 +90,8 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [tenantProfile.id]);
 
+  const toggleOverlay = useCallback(() => setOverlayOpen((p) => !p), []);
+
   const saveCustomAnnotation = useCallback(
     async (pageId: FlPageId, anchorId: string, note: string) => {
       const prevList = customNotes[pageId] || [];
@@ -94,7 +107,11 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('page_id', pageId)
         .eq('tenant_id', tenantProfile.id);
 
-      const entry = FL_MANUAL_REGISTRY[pageId];
+      const regMod = manualRegistryMod || (await import('./manualRegistry'));
+      if (!manualRegistryMod) {
+        setManualRegistryMod(regMod);
+      }
+      const entry = regMod.FL_MANUAL_REGISTRY[pageId];
       if (Array.isArray(existing.data) && existing.data.length > 0) {
         const rowId = String((existing.data[0] as Record<string, unknown>).id);
         await execDbMutation('매뉴얼 주석 저장', () =>
@@ -128,27 +145,48 @@ export const ManualProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCustomNotes((prev) => ({ ...prev, [pageId]: nextList }));
       notifyToast('화면 매뉴얼 현장 주석 저장 완료', 'success');
     },
-    [currentUser?.name, customNotes, notifyToast, tenantProfile.id]
+    [currentUser?.name, customNotes, manualRegistryMod, notifyToast, tenantProfile.id]
   );
 
-  return (
-    <ManualContext.Provider
-      value={{
-        overlayOpen,
-        setOverlayOpen,
-        toggleOverlay: () => setOverlayOpen((p) => !p),
-        searchModalOpen,
-        setSearchModalOpen,
-        activeEntry: getManualEntryForTenant(activePage, isRentalEnabled),
-        highlightedAnchorId,
-        setHighlightedAnchorId,
-        customNotes,
-        saveCustomAnnotation,
-      }}
-    >
-      {children}
-    </ManualContext.Provider>
+  const activeEntry = useMemo<ScreenManualEntry>(() => {
+    if (manualRegistryMod) {
+      return manualRegistryMod.getManualEntryForTenant(activePage, isRentalEnabled);
+    }
+    return {
+      pageId: activePage,
+      pageTitle: getPageTitleForTenant(activePage, isRentalEnabled),
+      groupLabel: '',
+      basicDescription: '',
+      processes: [],
+      anchors: [],
+    };
+  }, [activePage, isRentalEnabled, manualRegistryMod]);
+
+  const contextValue = useMemo<ManualContextValue>(
+    () => ({
+      overlayOpen,
+      setOverlayOpen,
+      toggleOverlay,
+      searchModalOpen,
+      setSearchModalOpen,
+      activeEntry,
+      highlightedAnchorId,
+      setHighlightedAnchorId,
+      customNotes,
+      saveCustomAnnotation,
+    }),
+    [
+      overlayOpen,
+      toggleOverlay,
+      searchModalOpen,
+      activeEntry,
+      highlightedAnchorId,
+      customNotes,
+      saveCustomAnnotation,
+    ]
   );
+
+  return <ManualContext.Provider value={contextValue}>{children}</ManualContext.Provider>;
 };
 
 export function useManual(): ManualContextValue {

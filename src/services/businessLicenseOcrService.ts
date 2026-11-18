@@ -1,15 +1,7 @@
-import * as pdfjsLib from 'pdfjs-dist';
 import { decryptSecret } from '../utils/cryptoVault';
-import { normalizeAgentTenantCode } from './agentService';
-import type { TenantR2Config } from '../types/domain';
+import { getR2TenantContext, setR2TenantContext } from '../core/r2TenantContext';
 
-if (
-  typeof window !== 'undefined' &&
-  pdfjsLib.GlobalWorkerOptions &&
-  !pdfjsLib.GlobalWorkerOptions.workerSrc
-) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-}
+export { setR2TenantContext };
 
 export interface BusinessLicenseOcrResult {
   success: boolean;
@@ -28,27 +20,6 @@ export interface BusinessLicenseOcrResult {
   error?: string;
 }
 
-let activeR2Context: {
-  tenantId: string;
-  tenantCode: string;
-  r2Config?: TenantR2Config;
-} = {
-  tenantId: 'ebro-fl',
-  tenantCode: 'EBRO_FL',
-};
-
-export function setR2TenantContext(ctx: {
-  tenantId?: string;
-  tenantCode?: string;
-  r2Config?: TenantR2Config;
-}): void {
-  activeR2Context = {
-    tenantId: ctx.tenantId || activeR2Context.tenantId || 'ebro-fl',
-    tenantCode: normalizeAgentTenantCode(ctx.tenantCode || activeR2Context.tenantCode || 'EBRO_FL'),
-    r2Config: ctx.r2Config,
-  };
-}
-
 async function uploadImageToTenantR2(
   keyPrefix: string,
   defaultName: string,
@@ -56,10 +27,11 @@ async function uploadImageToTenantR2(
   dataUrl: string
 ): Promise<string> {
   try {
+    const r2Context = getR2TenantContext();
     const base64Part = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
     const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.pdf$/i, '.jpg');
     const key = `${keyPrefix}_${Date.now()}_${safeName || defaultName}`;
-    const r2 = activeR2Context.r2Config;
+    const r2 = r2Context.r2Config;
     const rawSecret = r2?.r2SecretAccessKey?.trim();
     const secretAccessKey = rawSecret
       ? (rawSecret.startsWith('__EBRO_ENC__v1__') ? decryptSecret(rawSecret) : rawSecret)
@@ -70,8 +42,8 @@ async function uploadImageToTenantR2(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'upload',
-        tenantId: activeR2Context.tenantId,
-        tenantCode: activeR2Context.tenantCode,
+        tenantId: r2Context.tenantId,
+        tenantCode: r2Context.tenantCode,
         accountId: r2?.r2AccountId?.trim() || undefined,
         bucketName: r2?.r2BucketName?.trim() || undefined,
         accessKeyId: r2?.r2AccessKeyId?.trim() || undefined,
@@ -92,7 +64,7 @@ async function uploadImageToTenantR2(
         return (
           json.publicUrl ||
           json.url ||
-          `/api/r2?action=download&key=${encodeURIComponent(key)}&tenantCode=${encodeURIComponent(activeR2Context.tenantCode)}`
+          `/api/r2?action=download&key=${encodeURIComponent(key)}&tenantCode=${encodeURIComponent(r2Context.tenantCode)}`
         );
       }
     }
@@ -154,9 +126,8 @@ async function processImageFile(file: File, maxDim = 1600): Promise<string> {
 }
 
 async function processPdfFile(file: File): Promise<{ base64Image: string; textHint: string }> {
-  const pdfjs: any = (pdfjsLib as any).getDocument
-    ? pdfjsLib
-    : (pdfjsLib as any).default || pdfjsLib;
+  const pdfjsMod: any = await import('pdfjs-dist');
+  const pdfjs: any = pdfjsMod?.getDocument ? pdfjsMod : pdfjsMod?.default || pdfjsMod;
   const ver = pdfjs.version || '3.11.174';
   if (
     typeof window !== 'undefined' &&

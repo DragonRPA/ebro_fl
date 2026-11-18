@@ -184,11 +184,29 @@ export async function execDbMutation<T>(
   return res.data;
 }
 
+const snakeToCamelKeyCache = new Map<string, string>();
+const camelToSnakeKeyCache = new Map<string, string>();
+
+function toCamelColumnKey(key: string): string {
+  const cached = snakeToCamelKeyCache.get(key);
+  if (cached !== undefined) return cached;
+  const converted = key.replace(/_([a-z])/g, (_, ch: string) => ch.toUpperCase());
+  snakeToCamelKeyCache.set(key, converted);
+  return converted;
+}
+
+function toSnakeColumnKey(key: string): string {
+  const cached = camelToSnakeKeyCache.get(key);
+  if (cached !== undefined) return cached;
+  const converted = key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
+  camelToSnakeKeyCache.set(key, converted);
+  return converted;
+}
+
 export function snakeToCamelRow<T = Record<string, unknown>>(row: Record<string, unknown>): T {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(row)) {
-    const camelKey = k.replace(/_([a-z])/g, (_, ch: string) => ch.toUpperCase());
-    out[camelKey] = v;
+    out[toCamelColumnKey(k)] = v;
   }
   return out as T;
 }
@@ -197,7 +215,7 @@ export function camelToSnakeRow(obj: Record<string, unknown>): Record<string, un
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined) continue;
-    const snakeKey = k.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
+    const snakeKey = toSnakeColumnKey(k);
     if (snakeKey === 'tenant_id' && (v === DEFAULT_TENANT_ID || !v)) {
       out.tenant_id = getActiveFlTenantId();
     } else {

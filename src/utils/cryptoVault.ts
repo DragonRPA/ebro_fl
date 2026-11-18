@@ -305,7 +305,7 @@ export function safeLocalStorageSet(key: string, value: string): boolean {
   try {
     localStorage.setItem(key, value);
     return true;
-  } catch (err: any) {
+  } catch {
     console.warn(`[safeLocalStorageSet] '${key}' 저장 중 Quota 초과 감지 -> 비핵심 캐시 자동 소탕 실행`);
     purgeStorageQuotaOverflow();
     try {
@@ -343,7 +343,7 @@ export function getVaultItem(key: string, defaultValue: string = ''): string {
     const raw = localStorage.getItem(key);
     if (!raw) return defaultValue;
     return decryptSecret(raw) || defaultValue;
-  } catch (e) {
+  } catch {
     return defaultValue;
   }
 }
@@ -371,7 +371,7 @@ export function signSessionUser<T extends { id: string; role?: string }>(user: T
       signature
     };
     return encryptSecret(JSON.stringify(sessionObj));
-  } catch (e) {
+  } catch {
     return JSON.stringify(user);
   }
 }

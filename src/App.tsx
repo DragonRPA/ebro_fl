@@ -2,45 +2,103 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { createPortal } from 'react-dom';
 import { AppShellProvider, useAppShell } from './core/AppShellContext';
 import { PageActivityProvider } from './core/PageActivityContext';
-import { ManualProvider } from './manual/ManualContext';
-import { ManualOverlay } from './manual/ManualOverlay';
-import { LoginView } from './components/LoginView';
-import { ShellLayout } from './components/ShellLayout';
-import { ApprovalInboxPage, DashboardPage } from './pages/PortalPages';
-import {
-  CatalogsPage,
-  ExchangeRatesPage,
-  PartnersPage,
-  RentalItemMastersPage,
-  TradeItemMastersPage,
-} from './pages/MasterPages';
-import { LogisticsCostsPage, PurchasesPage } from './pages/ProcurementPages';
-import {
-  QuotationsPage,
-  TradeContractsPage,
-  TradeFulfillmentPage,
-  TradeInventoryPage,
-  TradePerformancePage,
-} from './pages/TradePages';
-import {
-  RentalAssetsPage,
-  RentalContractsPage,
-  RentalFulfillmentPage,
-  RentalMaintenancePage,
-  RentalPerformancePage,
-} from './pages/RentalPages';
-import {
-  ApSettlementsPage,
-  ArBillingCollectionPage,
-  BankMatchingPage,
-  CashCalendarPage,
-  FinancialStatementsPage,
-  OperationManualPage,
-  PermissionSettingsPage,
-  SystemSettingsPage,
-} from './pages/FinanceSystemPages';
-import { OrganizationHrPage } from './pages/OrganizationHrPages';
+import { ManualProvider, useManual } from './manual/ManualContext';
 import type { FlPageId } from './types/domain';
+
+const LoginView = React.lazy(() =>
+  import('./components/LoginView').then((m) => ({ default: m.LoginView }))
+);
+const ShellLayout = React.lazy(() =>
+  import('./components/ShellLayout').then((m) => ({ default: m.ShellLayout }))
+);
+const ManualOverlay = React.lazy(() =>
+  import('./manual/ManualOverlay').then((m) => ({ default: m.ManualOverlay }))
+);
+
+const DashboardPage = React.lazy(() =>
+  import('./pages/portal/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+);
+const ApprovalInboxPage = React.lazy(() =>
+  import('./pages/portal/ApprovalInboxPage').then((m) => ({ default: m.ApprovalInboxPage }))
+);
+const PartnersPage = React.lazy(() =>
+  import('./pages/master/PartnersPage').then((m) => ({ default: m.PartnersPage }))
+);
+const TradeItemMastersPage = React.lazy(() =>
+  import('./pages/master/ItemMastersPages').then((m) => ({ default: m.TradeItemMastersPage }))
+);
+const RentalItemMastersPage = React.lazy(() =>
+  import('./pages/master/ItemMastersPages').then((m) => ({ default: m.RentalItemMastersPage }))
+);
+const ExchangeRatesPage = React.lazy(() =>
+  import('./pages/master/ExchangeRatesPage').then((m) => ({ default: m.ExchangeRatesPage }))
+);
+const CatalogsPage = React.lazy(() =>
+  import('./pages/master/CatalogsPage').then((m) => ({ default: m.CatalogsPage }))
+);
+const PurchasesPage = React.lazy(() =>
+  import('./pages/procurement/PurchasesPage').then((m) => ({ default: m.PurchasesPage }))
+);
+const LogisticsCostsPage = React.lazy(() =>
+  import('./pages/procurement/LogisticsCostsPage').then((m) => ({ default: m.LogisticsCostsPage }))
+);
+const QuotationsPage = React.lazy(() =>
+  import('./pages/trade/QuotationsPage').then((m) => ({ default: m.QuotationsPage }))
+);
+const TradeContractsPage = React.lazy(() =>
+  import('./pages/trade/TradeContractsPage').then((m) => ({ default: m.TradeContractsPage }))
+);
+const TradeInventoryPage = React.lazy(() =>
+  import('./pages/trade/TradeInventoryPage').then((m) => ({ default: m.TradeInventoryPage }))
+);
+const TradeFulfillmentPage = React.lazy(() =>
+  import('./pages/trade/TradeFulfillmentPage').then((m) => ({ default: m.TradeFulfillmentPage }))
+);
+const TradePerformancePage = React.lazy(() =>
+  import('./pages/trade/TradePerformancePage').then((m) => ({ default: m.TradePerformancePage }))
+);
+const RentalContractsPage = React.lazy(() =>
+  import('./pages/rental/RentalContractsPage').then((m) => ({ default: m.RentalContractsPage }))
+);
+const RentalAssetsPage = React.lazy(() =>
+  import('./pages/rental/RentalAssetsPage').then((m) => ({ default: m.RentalAssetsPage }))
+);
+const RentalFulfillmentPage = React.lazy(() =>
+  import('./pages/rental/RentalFulfillmentPage').then((m) => ({ default: m.RentalFulfillmentPage }))
+);
+const RentalMaintenancePage = React.lazy(() =>
+  import('./pages/rental/RentalMaintenancePage').then((m) => ({ default: m.RentalMaintenancePage }))
+);
+const RentalPerformancePage = React.lazy(() =>
+  import('./pages/rental/RentalPerformancePage').then((m) => ({ default: m.RentalPerformancePage }))
+);
+const ArBillingCollectionPage = React.lazy(() =>
+  import('./pages/finance/ArBillingCollectionPage').then((m) => ({ default: m.ArBillingCollectionPage }))
+);
+const ApSettlementsPage = React.lazy(() =>
+  import('./pages/finance/ApSettlementsPage').then((m) => ({ default: m.ApSettlementsPage }))
+);
+const BankMatchingPage = React.lazy(() =>
+  import('./pages/finance/BankMatchingPage').then((m) => ({ default: m.BankMatchingPage }))
+);
+const CashCalendarPage = React.lazy(() =>
+  import('./pages/finance/CashCalendarPage').then((m) => ({ default: m.CashCalendarPage }))
+);
+const FinancialStatementsPage = React.lazy(() =>
+  import('./pages/finance/FinancialStatementsPage').then((m) => ({ default: m.FinancialStatementsPage }))
+);
+const OrganizationHrPage = React.lazy(() =>
+  import('./pages/hr/OrganizationHrPage').then((m) => ({ default: m.OrganizationHrPage }))
+);
+const OperationManualPage = React.lazy(() =>
+  import('./pages/finance/OperationManualPage').then((m) => ({ default: m.OperationManualPage }))
+);
+const PermissionSettingsPage = React.lazy(() =>
+  import('./pages/finance/PermissionSettingsPage').then((m) => ({ default: m.PermissionSettingsPage }))
+);
+const SystemSettingsPage = React.lazy(() =>
+  import('./pages/finance/SystemSettingsPage').then((m) => ({ default: m.SystemSettingsPage }))
+);
 
 function renderActivePage(pageId: FlPageId): React.ReactNode {
   switch (pageId) {
@@ -191,6 +249,8 @@ const ActiveHostSynchronizer: React.FC<{
   return null;
 };
 
+const MAX_KEEPALIVE_PAGES = 8;
+
 const KeepAlivePageOutlet: React.FC<{
   activePage: FlPageId;
   canViewPage: (pageId: FlPageId) => boolean;
@@ -217,26 +277,34 @@ const KeepAlivePageOutlet: React.FC<{
   const pagesToRender = useMemo(() => {
     const base = visitedPages.filter((p) => canViewPage(p));
     if (canViewPage(activePage) && !base.includes(activePage)) {
-      return [...base, activePage];
+      const combined = [...base, activePage];
+      return combined.length > MAX_KEEPALIVE_PAGES
+        ? combined.slice(combined.length - MAX_KEEPALIVE_PAGES)
+        : combined;
     }
-    return base;
+    return base.length > MAX_KEEPALIVE_PAGES
+      ? base.slice(base.length - MAX_KEEPALIVE_PAGES)
+      : base;
   }, [visitedPages, activePage, canViewPage]);
 
   useEffect(() => {
     setVisitedPages((prev) => {
-      const filtered = prev.filter((p) => canViewPage(p));
-      const next =
-        canViewPage(activePage) && !filtered.includes(activePage)
-          ? [...filtered, activePage]
-          : filtered;
+      const filtered = prev.filter((p) => canViewPage(p) && p !== activePage);
+      let next = canViewPage(activePage) ? [...filtered, activePage] : filtered;
+      if (next.length > MAX_KEEPALIVE_PAGES) {
+        next = next.slice(next.length - MAX_KEEPALIVE_PAGES);
+      }
       if (next.length === prev.length && next.every((v, idx) => v === prev[idx])) {
         return prev;
       }
       return next;
     });
+  }, [activePage, canViewPage]);
 
+  useEffect(() => {
+    const keepSet = new Set(pagesToRender);
     for (const pid of Array.from(hostMapRef.current.keys())) {
-      if (!canViewPage(pid)) {
+      if (!canViewPage(pid) || !keepSet.has(pid)) {
         const hostEl = hostMapRef.current.get(pid);
         if (hostEl && hostEl.parentNode) {
           hostEl.parentNode.removeChild(hostEl);
@@ -249,7 +317,7 @@ const KeepAlivePageOutlet: React.FC<{
         }
       }
     }
-  }, [activePage, canViewPage]);
+  }, [pagesToRender, canViewPage]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -285,13 +353,42 @@ const KeepAlivePageOutlet: React.FC<{
       {pagesToRender.map((pid) =>
         createPortal(
           <PageActivityProvider active={pid === activePage}>
-            {renderActivePage(pid)}
+            <React.Suspense
+              fallback={
+                <div style={{ padding: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  화면 불러오는 중
+                </div>
+              }
+            >
+              {renderActivePage(pid)}
+            </React.Suspense>
           </PageActivityProvider>,
           getOrCreateHost(pid),
           pid
         )
       )}
     </>
+  );
+};
+
+const ManualOverlayGate: React.FC = () => {
+  const { overlayOpen, searchModalOpen } = useManual();
+  const [everOpened, setEverOpened] = useState(false);
+
+  useEffect(() => {
+    if (overlayOpen || searchModalOpen) {
+      setEverOpened(true);
+    }
+  }, [overlayOpen, searchModalOpen]);
+
+  if (!everOpened && !overlayOpen && !searchModalOpen) {
+    return null;
+  }
+
+  return (
+    <React.Suspense fallback={null}>
+      <ManualOverlay />
+    </React.Suspense>
   );
 };
 
@@ -318,19 +415,37 @@ const AppRouter: React.FC = () => {
   }
 
   if (!currentUser) {
-    return <LoginView />;
+    return (
+      <React.Suspense
+        fallback={
+          <div style={{ padding: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            화면 불러오는 중
+          </div>
+        }
+      >
+        <LoginView />
+      </React.Suspense>
+    );
   }
 
   return (
     <>
-      <ShellLayout>
-        <KeepAlivePageOutlet
-          key={currentUser.id}
-          activePage={activePage}
-          canViewPage={canViewPage}
-        />
-      </ShellLayout>
-      <ManualOverlay />
+      <React.Suspense
+        fallback={
+          <div style={{ padding: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            화면 불러오는 중
+          </div>
+        }
+      >
+        <ShellLayout>
+          <KeepAlivePageOutlet
+            key={currentUser.id}
+            activePage={activePage}
+            canViewPage={canViewPage}
+          />
+        </ShellLayout>
+      </React.Suspense>
+      <ManualOverlayGate />
     </>
   );
 };

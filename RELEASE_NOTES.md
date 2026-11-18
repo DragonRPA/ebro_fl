@@ -1,3 +1,14 @@
+## [v2.2.1.Build.1] - 2026-11-19 03:53
+### 전사 코드 파일 기능명세서(SSOT) 구축 및 5단계 번들 · 런타임 · 정적 품질 최적화
+- **전사 코드 파일 및 기능명세서 SSOT 구축 (`docs/CODE_FILE_SPECIFICATION.md`, `docs/code_file_manifest.json`, `scripts/generate_code_file_spec.cjs`, `scripts/code_file_descriptions.cjs`)**:
+  - 410개 활성 코드 파일(167,076줄)의 AST 정·역방향 의존성(`Imports`/`Fan-In`), 접근 DB 테이블, 유통↔렌탈 대칭 쌍, Tarjan SCC 순환 참조(`CIRCULAR_DEP`), `SRC_LARGE_FILE` 자동 검증 체계를 구축하고 `spec:sync`·`spec:verify` 게이트로 상시 동기화했습니다.
+- **1~5차 모듈 경계 분리 · 코드 스플리팅 · 불변 벤더 청크 격리**:
+  - 7개 통합 페이지 및 대형 서비스/타입 모듈을 역할별로 분할해 `src/` 비데이터 800줄 이상 파일 `0개`(`SRC_LARGE_FILE = 0`), 순환 참조 `0건`, 미참조 후보 `0건`을 달성했습니다.
+  - 전 28개 메뉴 라우트·로그인·셸·매뉴얼·회계기준·제원아카이브에 `React.lazy`/동적 임포트를 적용하고 중량 패키지(`xlsx`, `exceljs`, `pdf-lib`, `pdfjs-dist`)를 클릭/사용 시점으로 격리(`HEAVY_STATIC_LIB = 0`)했으며, Rolldown `vendor-react`·`vendor-supabase` 분리(`debugName: 'vendor-core'`)로 엔트리 JS 청크를 `61.87 kB`까지 경량화했습니다.
+- **런타임 핫패스 · 초기 부팅 · 정적 품질(`oxlint` 0 경고) 고도화**:
+  - 비로그인 경량 인증 로더와 로그인 후 30개 테이블 단일 병렬 스냅샷 로더(`flDatasetLoader.ts`)를 분리하고, 테넌트 부트스트랩 세션 캐시, 에이전트 헬스 폴링 디듀플리케이션, `KeepAlivePageOutlet` LRU(최대 8화면), `DataGrid` 250행 점진 윈도잉을 적용했습니다.
+  - `supabase.ts` 행 키 변환 O(1) 캐시, `actionGatewayEngine.ts` 분리 및 결재정책 O(1) 맵 인덱싱, `hangulSearch.ts`·`SearchableSelect.tsx` 초성 사전 인덱싱 및 Hook 의존성 결함 수정, `WeatherWidget.tsx` 15분 세션 캐시, 고밀도 권한/출고 페이지 O(1) `Map` 조회 전환 및 `oxlint --deny-warnings src` 91파일 무경고·무오류(0 warnings / 0 errors)를 완료했습니다.
+
 ## [v2.2.0.Build.1] - 2026-11-18 19:04
 ### 비렌탈 테넌트 도메인 전면 차단 및 `fl_*` 멀티테넌트 행·제약조건 격리 아키텍처 구축
 - **비렌탈 테넌트(`rentalEnabled === false`) 전사 도메인·UI·회계·매뉴얼 전면 차단**:
