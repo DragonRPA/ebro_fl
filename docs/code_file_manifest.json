@@ -2,8 +2,8 @@
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
   "totalFiles": 413,
-  "totalLines": 169563,
-  "totalBytes": 7172846,
+  "totalLines": 169581,
+  "totalBytes": 7173687,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -839,8 +839,8 @@
       "path": "api/popbill-taxinvoice.ts",
       "layer": "L08_BACKEND_SQL_TEMPLATES",
       "ext": ".ts",
-      "lines": 908,
-      "bytes": 33741,
+      "lines": 926,
+      "bytes": 34582,
       "menuInfo": null,
       "exports": [
         "handler"

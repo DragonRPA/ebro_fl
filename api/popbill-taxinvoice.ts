@@ -13,11 +13,24 @@ const MGT_KEY_TYPE_SELL = popbill?.MgtKeyType?.SELL || 'SELL';
 const VAULT_PREFIX = '__EBRO_ENC__v1__';
 const VAULT_CIPHER_KEY = 0x4f;
 
-const CENTRAL_SUPABASE_URL =
-  process.env.VITE_CENTRAL_SUPABASE_URL || 'https://lkohpffieaanwhohttbu.supabase.co';
-const CENTRAL_SUPABASE_ANON_KEY =
-  process.env.VITE_CENTRAL_SUPABASE_ANON_KEY ||
+const HUB_SUPABASE_URL = 'https://lkohpffieaanwhohttbu.supabase.co';
+const HUB_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrb2hwZmZpZWFhbndob2h0dGJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5ODkxOTQsImV4cCI6MjEwODU2NTE5NH0.lOXz6JWfLNcfH4ApH74F7qtlPky8lVwGiAqY_ybSZ6E';
+const RETIRED_PROJECT_REFS = [
+  'nyfashwbdcepncpdwpdb',
+  'idfecoovqkjopgbezcpo',
+  'uvmhqwpkmzxrrlkeguul',
+  'mluhhrbcogvsalkchrdp',
+];
+
+function resolveCentralSupabaseConfig(): { url: string; anonKey: string } {
+  const rawUrl = String(process.env.VITE_CENTRAL_SUPABASE_URL || '').trim();
+  const rawKey = String(process.env.VITE_CENTRAL_SUPABASE_ANON_KEY || '').trim();
+  if (!rawUrl || !rawKey || RETIRED_PROJECT_REFS.some((ref) => rawUrl.includes(ref))) {
+    return { url: HUB_SUPABASE_URL, anonKey: HUB_SUPABASE_ANON_KEY };
+  }
+  return { url: rawUrl, anonKey: rawKey };
+}
 
 interface TenantPopbillConfig {
   corpNum?: string;
@@ -140,12 +153,13 @@ async function fetchCentralTenant(
     ? `id=eq.${encodeURIComponent(cleanId)}`
     : `tenantCode=eq.${encodeURIComponent(cleanCode)}`;
 
-  const url = `${CENTRAL_SUPABASE_URL}/rest/v1/core_tenants?select=id,tenantCode,corporateName,businessNumber,representativeName,businessAddress,businessCategory,businessItem,tel,taxEmail,specialFeatures,features&${filterExpr}&limit=1`;
+  const centralCfg = resolveCentralSupabaseConfig();
+  const url = `${centralCfg.url}/rest/v1/core_tenants?select=id,tenantCode,corporateName,businessNumber,representativeName,businessAddress,businessCategory,businessItem,tel,taxEmail,specialFeatures,features&${filterExpr}&limit=1`;
   const resp = await fetch(url, {
     method: 'GET',
     headers: {
-      apikey: CENTRAL_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${CENTRAL_SUPABASE_ANON_KEY}`,
+      apikey: centralCfg.anonKey,
+      Authorization: `Bearer ${centralCfg.anonKey}`,
       'Cache-Control': 'no-cache',
     },
   });
@@ -897,7 +911,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: `지원하지 않는 팝빌 작업입니다: ${action}`,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : '팝빌 연동 처리 중 오류가 발생했습니다.';
+    const rawMsg = err instanceof Error ? err.message : '팝빌 연동 처리 중 오류가 발생했습니다.';
+    const causeObj =
+      err && typeof err === 'object' && 'cause' in err ? (err as { cause?: { message?: string; code?: string } }).cause : undefined;
+    const causeDetail = causeObj?.message || causeObj?.code || '';
+    const message = causeDetail && !rawMsg.includes(causeDetail) ? `${rawMsg} (${causeDetail})` : rawMsg;
     const statusCode = (err as { code?: number })?.code ? 400 : 500;
     return res.status(statusCode).json({
       success: false,

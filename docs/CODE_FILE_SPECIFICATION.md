@@ -14,7 +14,7 @@
 | 항목 | 집계 수치 | 설명 |
 |:---|---:|:---|
 | 총 활성 코드 파일 수 | 413개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
-| 총 소스 라인 / 용량 | 169,563줄 / 6.84 MB | AST 및 다중 언어 파서 기준 실측 |
+| 총 소스 라인 / 용량 | 169,581줄 / 6.84 MB | AST 및 다중 언어 파서 기준 실측 |
 | 초대형 모듈 (GOD_FILE) | 11개 | 1,500줄 이상 또는 80KB 초과 분할 우선 대상 |
 | 대형 모듈 (LARGE_FILE) | 17개 | 800줄~1,499줄 비대화 주의 대상 |
 | src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 1개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
@@ -300,7 +300,7 @@
 | `api/manual-ai-indexer.ts` | 80줄 (3.3KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 장비 기술문서 메타데이터 자동 색인 Vercel 서버리스 API |
 | `api/nts-status.ts` | 135줄 (4.7KB) | - | `NtsBusinessStatusItem, validateBizRegNoChecksum, handler` | Out:0 / In:1 | 국세청 공공데이터포털 사업자 휴폐업 상태조회 프록시 Vercel 서버리스 API |
 | `api/nts-validate.ts` | 200줄 (7.0KB) | - | `NtsValidateInputItem, NtsValidateOutputItem, handler` | Out:0 / In:0 | 국세청 사업자등록정보 진위확인(상호·대표자·개업일 1:1 대조) Vercel 서버리스 API |
-| `api/popbill-taxinvoice.ts` | 908줄 (33.0KB) | LARGE_FILE | `handler` | Out:0 / In:1 | 테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API |
+| `api/popbill-taxinvoice.ts` | 926줄 (33.8KB) | LARGE_FILE | `handler` | Out:0 / In:1 | 테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API |
 | `api/popbill.d.ts` | 5줄 (0.1KB) | - | `default` | Out:0 / In:0 | popbill CommonJS SDK 모듈용 TypeScript 선언 파일 |
 | `api/r2.ts` | 576줄 (19.2KB) | - | `config, handler` | Out:0 / In:0 | Cloudflare R2 S3 호환 멀티테넌트 파일 목록·업로드·다운로드·삭제 Vercel 서버리스 API |
 | `api/sales-journal-ai.ts` | 126줄 (6.5KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 영업일지 상담 원문 4단계 구조화 추출 Vercel 서버리스 API |
