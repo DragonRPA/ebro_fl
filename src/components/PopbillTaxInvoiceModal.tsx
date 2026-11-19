@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  POPBILL_TEST_DEVELOPER_EMAIL,
   buildDefaultPopbillDraft,
   issuePopbillTaxInvoiceForBilling,
   type PopbillIssueDraft,
@@ -50,11 +51,14 @@ export const PopbillTaxInvoiceModal: React.FC<{
     setErrorMsg(null);
     setSubmitting(true);
     try {
+      const effectiveDraft: PopbillIssueDraft = isTestMode
+        ? { ...draft, customerEmail: POPBILL_TEST_DEVELOPER_EMAIL, customerEmail2: '' }
+        : draft;
       const res = await issuePopbillTaxInvoiceForBilling({
         tenant,
         billing,
         partner,
-        draft,
+        draft: effectiveDraft,
       });
       await onIssued(res);
       onClose();
@@ -112,7 +116,7 @@ export const PopbillTaxInvoiceModal: React.FC<{
           </div>
         </div>
 
-        {(isClosedBiz || !isBuyerBizValid || (liveStatus && !liveStatus.certRegistered)) && (
+        {(isClosedBiz || !isBuyerBizValid || (liveStatus && !liveStatus.certRegistered) || isTestMode) && (
           <div
             role="alert"
             style={{
@@ -128,6 +132,9 @@ export const PopbillTaxInvoiceModal: React.FC<{
               gap: '3px',
             }}
           >
+            {isTestMode && (
+              <span>테스트 연동 시 세금계산서 수신 이메일은 개발자 주소로 고정 발송됩니다.</span>
+            )}
             {isClosedBiz && <span>거래처가 폐업 상태로 확인되어 발행이 제한됩니다.</span>}
             {!isBuyerBizValid && <span>공급받는자 사업자등록번호 10자리를 정확히 입력해 주세요.</span>}
             {liveStatus && !liveStatus.certRegistered && (
@@ -218,19 +225,27 @@ export const PopbillTaxInvoiceModal: React.FC<{
           <VerticalField label="수신 이메일 기본" flex={1} minWidth={200}>
             <input
               type="email"
-              value={draft.customerEmail}
+              readOnly={isTestMode}
+              value={isTestMode ? POPBILL_TEST_DEVELOPER_EMAIL : draft.customerEmail}
               onChange={(e) => setDraft((prev) => (prev ? { ...prev, customerEmail: e.target.value } : prev))}
               placeholder="계산서 수신 이메일"
-              style={controlInputStyle}
+              style={{
+                ...controlInputStyle,
+                ...(isTestMode ? { backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' } : {}),
+              }}
             />
           </VerticalField>
           <VerticalField label="수신 이메일 참조" flex={1} minWidth={200}>
             <input
               type="email"
-              value={draft.customerEmail2}
+              readOnly={isTestMode}
+              value={isTestMode ? '' : draft.customerEmail2}
               onChange={(e) => setDraft((prev) => (prev ? { ...prev, customerEmail2: e.target.value } : prev))}
-              placeholder="선택 입력"
-              style={controlInputStyle}
+              placeholder={isTestMode ? '테스트 연동 중 미사용' : '선택 입력'}
+              style={{
+                ...controlInputStyle,
+                ...(isTestMode ? { backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' } : {}),
+              }}
             />
           </VerticalField>
           <VerticalField label="비고" flex={1} minWidth={180}>

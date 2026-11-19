@@ -12,6 +12,7 @@ const MGT_KEY_TYPE_SELL = popbill?.MgtKeyType?.SELL || 'SELL';
 
 const VAULT_PREFIX = '__EBRO_ENC__v1__';
 const VAULT_CIPHER_KEY = 0x4f;
+const POPBILL_TEST_DEVELOPER_EMAIL = '77.victor.lee@gmail.com';
 
 const HUB_SUPABASE_URL = 'https://lkohpffieaanwhohttbu.supabase.co';
 const HUB_SUPABASE_ANON_KEY =
@@ -359,7 +360,7 @@ function buildPopbillTaxinvoicePayload(ctx: ResolvedPopbillContext, input: Invoi
     invoicerBizClass: cutStr(t.businessItem || '', 100),
     invoicerContactName: cutStr(t.representativeName || '정산담당', 100),
     invoicerTEL: cutStr(t.tel || '', 20),
-    invoicerEmail: cutStr(t.taxEmail || '', 100),
+    invoicerEmail: ctx.isTest ? POPBILL_TEST_DEVELOPER_EMAIL : cutStr(t.taxEmail || '', 100),
 
     invoiceeType: '사업자',
     invoiceeCorpNum: buyerBizNo,
@@ -369,8 +370,10 @@ function buildPopbillTaxinvoicePayload(ctx: ResolvedPopbillContext, input: Invoi
     invoiceeBizType: cutStr(input.customerBizType || '', 100),
     invoiceeBizClass: cutStr(input.customerBizClass || '', 100),
     invoiceeContactName1: cutStr(input.customerCeoName || '담당자', 100),
-    invoiceeEmail1: cutStr(input.customerEmail || '', 100),
-    invoiceeEmail2: cutStr(input.customerEmail2 || '', 100),
+    invoiceeEmail1: ctx.isTest
+      ? POPBILL_TEST_DEVELOPER_EMAIL
+      : cutStr(input.customerEmail || '', 100),
+    invoiceeEmail2: ctx.isTest ? '' : cutStr(input.customerEmail2 || '', 100),
 
     supplyCostTotal: String(supplyTotal),
     taxTotal: String(vatTotal),
@@ -846,8 +849,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'SEND_EMAIL' || action === 'RESEND_EMAIL') {
       const mgtKey = String(body.mgtKey || '').trim();
-      const receiverEmail = String(body.receiverEmail || '').trim();
-      if (!mgtKey || !receiverEmail) {
+      const effectiveReceiverEmail = ctx.isTest
+        ? POPBILL_TEST_DEVELOPER_EMAIL
+        : String(body.receiverEmail || '').trim();
+      if (!mgtKey || !effectiveReceiverEmail) {
         return res.status(400).json({
           success: false,
           error: '관리번호(mgtKey)와 수신자 이메일(receiverEmail)이 필요합니다.',
@@ -856,14 +861,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
         const onOk = (r: Record<string, unknown>) => resolve(r || {});
         const onErr = (err: unknown) => reject(toPopbillError('팝빌 이메일 재전송 오류', err));
-        if (ctx.userId) svc.sendEmail(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, receiverEmail, ctx.userId, onOk, onErr);
-        else svc.sendEmail(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, receiverEmail, onOk, onErr);
+        if (ctx.userId)
+          svc.sendEmail(
+            ctx.corpNum,
+            MGT_KEY_TYPE_SELL,
+            mgtKey,
+            effectiveReceiverEmail,
+            ctx.userId,
+            onOk,
+            onErr
+          );
+        else
+          svc.sendEmail(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, effectiveReceiverEmail, onOk, onErr);
       }, ctx);
       return res.status(200).json({
         success: true,
         isTest: ctx.isTest,
-        receiverEmail,
-        message: `[${receiverEmail}]로 세금계산서 안내 이메일 발송 완료`,
+        receiverEmail: effectiveReceiverEmail,
+        message: `[${effectiveReceiverEmail}]로 세금계산서 안내 이메일 발송 완료${ctx.isTest ? ' (테스트 개발자 고정)' : ''}`,
       });
     }
 

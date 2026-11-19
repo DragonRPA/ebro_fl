@@ -2,8 +2,8 @@
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
   "totalFiles": 413,
-  "totalLines": 169581,
-  "totalBytes": 7173687,
+  "totalLines": 169624,
+  "totalBytes": 7175455,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -839,8 +839,8 @@
       "path": "api/popbill-taxinvoice.ts",
       "layer": "L08_BACKEND_SQL_TEMPLATES",
       "ext": ".ts",
-      "lines": 926,
-      "bytes": 34582,
+      "lines": 941,
+      "bytes": 35061,
       "menuInfo": null,
       "exports": [
         "handler"
@@ -7336,8 +7336,8 @@
       "path": "src/components/PopbillTaxInvoiceModal.tsx",
       "layer": "L06_COMPONENTS",
       "ext": ".tsx",
-      "lines": 336,
-      "bytes": 13219,
+      "lines": 351,
+      "bytes": 14107,
       "menuInfo": null,
       "exports": [
         "PopbillTaxInvoiceModal"
@@ -10481,10 +10481,11 @@
       "path": "src/services/popbillTaxInvoiceService.ts",
       "layer": "L07_SERVICES_UTILS",
       "ext": ".ts",
-      "lines": 463,
-      "bytes": 14978,
+      "lines": 476,
+      "bytes": 15379,
       "menuInfo": null,
       "exports": [
+        "POPBILL_TEST_DEVELOPER_EMAIL",
         "PopbillLiveStatus",
         "PopbillLineDraft",
         "PopbillIssueDraft",

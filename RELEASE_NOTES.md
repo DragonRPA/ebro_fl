@@ -1,3 +1,8 @@
+## [v2.2.2.Build.2] - 2026-11-19 15:04
+### 팝빌 테스트 모드(`isTest: true`) 세금계산서 수신 이메일 개발자 고정 강제 가드
+- **서버 API 강제 개발자 이메일 고정 (`api/popbill-taxinvoice.ts`)**: `ctx.isTest === true`일 때 `invoicerEmail`·`invoiceeEmail1` 및 `SEND_EMAIL`/`RESEND_EMAIL` 수신 이메일을 개발자 주소(`77.victor.lee@gmail.com`)로 하드코딩 고정하고 참조 이메일(`invoiceeEmail2`)을 공란 처리해 테스트 발행 시 고객사 오발송을 원천 차단했습니다.
+- **프론트엔드 기본 초안·재전송·모달 UI 동기화 (`src/services/popbillTaxInvoiceService.ts`, `src/components/PopbillTaxInvoiceModal.tsx`)**: 테스트 연동 시 수신 이메일 입력란을 개발자 주소 읽기전용(`readOnly`)으로 고정하고 안내 문구를 표시했습니다.
+
 ## [v2.2.2.Build.1] - 2026-11-19 14:28
 ### 팝빌(Popbill) 전자세금계산서 발행 연동 및 테넌트관리센터 활성 통제 구축
 - **멀티테넌트 팝빌 전자세금계산서 서버리스 엔진 (`api/popbill-taxinvoice.ts`, `supabase/migrations/20261119_fl_billings_popbill_columns.sql`)**:

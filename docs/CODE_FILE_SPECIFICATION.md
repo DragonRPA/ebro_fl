@@ -14,7 +14,7 @@
 | 항목 | 집계 수치 | 설명 |
 |:---|---:|:---|
 | 총 활성 코드 파일 수 | 413개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
-| 총 소스 라인 / 용량 | 169,581줄 / 6.84 MB | AST 및 다중 언어 파서 기준 실측 |
+| 총 소스 라인 / 용량 | 169,624줄 / 6.84 MB | AST 및 다중 언어 파서 기준 실측 |
 | 초대형 모듈 (GOD_FILE) | 11개 | 1,500줄 이상 또는 80KB 초과 분할 우선 대상 |
 | 대형 모듈 (LARGE_FILE) | 17개 | 800줄~1,499줄 비대화 주의 대상 |
 | src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 1개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
@@ -256,7 +256,7 @@
 | `src/components/AccountingStandardsTab.tsx` | 466줄 (17.6KB) | subview:financial_statements (중소기업회계기준·해설 뷰어 탭) | `AccountingStandardsTab` | Out:4(동적1) / In:1 | 중소기업회계기준 정적 데이터셋 동적 지연 로딩, 통합 검색 상태 관리 및 좌우 패인 호스트 뷰어 컴포넌트 |
 | `src/components/DocumentActionBar.tsx` | 372줄 (12.6KB) | - | `DocumentActionBar` | Out:3 / In:4 | 견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 에이전트 PDF 변환 이메일 발송 모달 액션 바 컴포넌트 |
 | `src/components/LoginView.tsx` | 447줄 (15.1KB) | - | `LoginView` | Out:4(동적1) / In:1 | 아이디·비밀번호 로그인 폼, 로컬 에이전트 설치·업데이트 제어 및 지연로딩 개인정보 처리방침 열람 화면 |
-| `src/components/PopbillTaxInvoiceModal.tsx` | 336줄 (12.9KB) | - | `PopbillTaxInvoiceModal` | Out:3 / In:1 | 청구 원장 기반 팝빌 전자세금계산서 공급받는자·품목 확인 및 즉시 발행 모달 컴포넌트 |
+| `src/components/PopbillTaxInvoiceModal.tsx` | 351줄 (13.8KB) | - | `PopbillTaxInvoiceModal` | Out:3 / In:1 | 청구 원장 기반 팝빌 전자세금계산서 공급받는자·품목 확인 및 즉시 발행 모달 컴포넌트 |
 | `src/components/PrivacyPolicyModal.tsx` | 362줄 (15.2KB) | - | `PrivacyPolicyModal` | Out:1 / In:1 | 테넌트별 개인정보 처리방침 열람 및 보호책임자 지정·편집 저장 모달 |
 | `src/components/SearchableSelect.tsx` | 373줄 (11.8KB) | HIGH_COUPLING_HUB | `SearchableSelectOption, toPartnerSelectOptions, toItemMasterSelectOptions, SearchableSelectProps, SearchableSelect` | Out:4 / In:12 | 사전 초성 인덱싱, O(1) 선택 조회, 키보드 탐색 및 거래처·품목 옵션 매핑 검색형 드롭다운 공통 컴포넌트 |
 | `src/components/ShellLayout.tsx` | 750줄 (27.0KB) | - | `ShellLayout` | Out:6 / In:1 | 좌측 그룹 사이드바, 상단 헤더(뒤로/앞으로·테넌트·기상·에이전트·매뉴얼), 전역 오류 모달·토스트 및 내 정보 수정 셸 레이아웃 |
@@ -282,7 +282,7 @@
 | `src/services/financialStatementEngine.ts` | 582줄 (20.5KB) | - | `generateFinancialStatements` | Out:3 / In:4 | 전 원장 복식부기 분개 생성기(비렌탈 격리 지원) 및 재무제표 포매터 재노출(Barrel) 엔진 |
 | `src/services/financialStatementFormatter.ts` | 402줄 (15.1KB) | - | `JournalPosting, StatementLineItem, AssetScheduleRow, LeaseScheduleSummaryRow, FinancialStatementsReport, FinancialDatasetInput 외 3` | Out:1 / In:1 | 복식부기 분개 집계 기반 재무상태표·손익계산서·현금흐름표·리스명세 조립 및 대차 차액 0원 검증 포매터 |
 | `src/services/ntsBusinessService.ts` | 212줄 (6.3KB) | - | `PartnerNtsCheckItem, formatNtsYmd, validateBizRegNoChecksum, parseRawNtsItem, queryBatchPartnerNtsStatus, querySinglePartnerNtsStatus` | Out:1 / In:2 | 국세청 사업자등록번호 체크섬 검증 및 휴폐업·과세유형 단건/다건(100건 청크) 상태조회 클라이언트 서비스 |
-| `src/services/popbillTaxInvoiceService.ts` | 463줄 (14.6KB) | - | `PopbillLiveStatus, PopbillLineDraft, PopbillIssueDraft, PopbillIssueResult, formatPopbillStatusLabel, generatePopbillMgtKey 외 10` | Out:2 / In:2 · DB:fl_billings | 팝빌 전자세금계산서 연동 상태 조회, 단건/일괄 발행, 국세청 즉시전송, 상태 동기화, 포털/뷰어 열기 및 DB 저장 서비스 |
+| `src/services/popbillTaxInvoiceService.ts` | 476줄 (15.0KB) | - | `POPBILL_TEST_DEVELOPER_EMAIL, PopbillLiveStatus, PopbillLineDraft, PopbillIssueDraft, PopbillIssueResult, formatPopbillStatusLabel 외 11` | Out:2 / In:2 · DB:fl_billings | 팝빌 전자세금계산서 연동 상태 조회, 단건/일괄 발행, 국세청 즉시전송, 상태 동기화, 포털/뷰어 열기 및 DB 저장 서비스 |
 | `src/services/tenantBootstrapService.ts` | 250줄 (8.1KB) | - | `clearBootstrappedTenantCache, ensureFlTenantBootstrapped` | Out:3 / In:2 · DB:fl_approval_policies,fl_departments,fl_document_templates,fl_users | 신규 테넌트 기본 부서·결재정책·관리자 계정 멱등 부트스트랩 초기화 및 세션 캐시 서비스 |
 | `src/utils/cryptoVault.ts` | 598줄 (20.7KB) | - | `hashPassword, verifyPassword, encryptSecret, decryptSecret, ESSENTIAL_STORAGE_KEYS, purgeStorageQuotaOverflow 외 16` | Out:0 / In:7 | SHA-256 비밀번호 해싱·검증, 로컬스토리지 암복호화, 세션 서명 검증 및 개인정보 필드 암복호화 볼트 |
 | `src/utils/fxRateUtils.ts` | 75줄 (2.1KB) | - | `FX_CURRENCIES, FX_PERIOD_OPTIONS, DEFAULT_FX_RATES, formatFxRate, resolveManagedRateForDate` | Out:1 / In:3 | 주요 4대 통화(USD·CNY·EUR·JPY) 기본환율 상수, 환율 포매터 및 기준일자 환율 조회 유틸리티 |
@@ -300,7 +300,7 @@
 | `api/manual-ai-indexer.ts` | 80줄 (3.3KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 장비 기술문서 메타데이터 자동 색인 Vercel 서버리스 API |
 | `api/nts-status.ts` | 135줄 (4.7KB) | - | `NtsBusinessStatusItem, validateBizRegNoChecksum, handler` | Out:0 / In:1 | 국세청 공공데이터포털 사업자 휴폐업 상태조회 프록시 Vercel 서버리스 API |
 | `api/nts-validate.ts` | 200줄 (7.0KB) | - | `NtsValidateInputItem, NtsValidateOutputItem, handler` | Out:0 / In:0 | 국세청 사업자등록정보 진위확인(상호·대표자·개업일 1:1 대조) Vercel 서버리스 API |
-| `api/popbill-taxinvoice.ts` | 926줄 (33.8KB) | LARGE_FILE | `handler` | Out:0 / In:1 | 테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API |
+| `api/popbill-taxinvoice.ts` | 941줄 (34.2KB) | LARGE_FILE | `handler` | Out:0 / In:1 | 테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API |
 | `api/popbill.d.ts` | 5줄 (0.1KB) | - | `default` | Out:0 / In:0 | popbill CommonJS SDK 모듈용 TypeScript 선언 파일 |
 | `api/r2.ts` | 576줄 (19.2KB) | - | `config, handler` | Out:0 / In:0 | Cloudflare R2 S3 호환 멀티테넌트 파일 목록·업로드·다운로드·삭제 Vercel 서버리스 API |
 | `api/sales-journal-ai.ts` | 126줄 (6.5KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 영업일지 상담 원문 4단계 구조화 추출 Vercel 서버리스 API |

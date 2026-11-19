@@ -1,6 +1,8 @@
 import { camelToSnakeRow, execDbMutation, flSupabase } from '../core/supabase';
 import type { FlBilling, FlPartner, TenantProfile } from '../types/domain';
 
+export const POPBILL_TEST_DEVELOPER_EMAIL = '77.victor.lee@gmail.com';
+
 export interface PopbillLiveStatus {
   isLiveProduction: boolean;
   isTest: boolean;
@@ -134,6 +136,8 @@ export function buildDefaultPopbillDraft(params: {
           },
         ];
 
+  const isTestMode = Boolean(tenant.features?.popbillConfig?.isTest);
+
   return {
     writeDate,
     purposeType: defaultPurpose,
@@ -143,9 +147,12 @@ export function buildDefaultPopbillDraft(params: {
     customerAddr: (partner?.address || '').trim(),
     customerBizType: (partner?.bizType || '').trim(),
     customerBizClass: (partner?.bizItem || '').trim(),
-    customerEmail: (partner?.taxEmail || partner?.email || '').trim(),
-    customerEmail2:
-      partner?.taxEmail && partner?.email && partner.taxEmail !== partner.email
+    customerEmail: isTestMode
+      ? POPBILL_TEST_DEVELOPER_EMAIL
+      : (partner?.taxEmail || partner?.email || '').trim(),
+    customerEmail2: isTestMode
+      ? ''
+      : partner?.taxEmail && partner?.email && partner.taxEmail !== partner.email
         ? partner.email.trim()
         : '',
     memo: `${billing.billingYm} ${billing.billingNo}`,
@@ -403,10 +410,16 @@ export async function resendPopbillTaxInvoiceEmail(
 ): Promise<string> {
   const mgtKey = billing.taxInvoiceMgtKey || billing.taxInvoiceNo;
   if (!mgtKey) throw new Error('팝빌 문서관리번호가 없습니다.');
-  const cleanEmail = receiverEmail.trim();
+  const isTestMode = Boolean(tenant.features?.popbillConfig?.isTest);
+  const cleanEmail = isTestMode ? POPBILL_TEST_DEVELOPER_EMAIL : receiverEmail.trim();
   if (!cleanEmail) throw new Error('수신 이메일 주소를 입력해 주세요.');
 
-  const res = await callPopbillApi<{ success: boolean; message: string; error?: string }>({
+  const res = await callPopbillApi<{
+    success: boolean;
+    receiverEmail?: string;
+    message: string;
+    error?: string;
+  }>({
     action: 'SEND_EMAIL',
     tenantId: tenant.id,
     tenantCode: tenant.tenantCode,
@@ -419,7 +432,7 @@ export async function resendPopbillTaxInvoiceEmail(
       .from('billings')
       .update(
         camelToSnakeRow({
-          taxInvoiceEmail: cleanEmail,
+          taxInvoiceEmail: res.receiverEmail || cleanEmail,
           updatedAt: new Date().toISOString(),
         })
       )
