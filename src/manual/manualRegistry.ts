@@ -472,19 +472,19 @@ export const FL_MANUAL_REGISTRY: Record<FlPageId, ScreenManualEntry> = {
     pageId: 'ar_billing_collection',
     pageTitle: '청구 수납 관리',
     groupLabel: '정산 · 회계 · 설정',
-    basicDescription: '계약 근거로 청구를 생성·조회하고 세금계산서 발행 여부, 수납액, 미수납잔액을 통합 관리하며 거래명세서 엑셀 편집 및 이메일 발송을 수행한다.',
+    basicDescription: '계약 근거로 청구를 생성·조회하고 팝빌 전자세금계산서 발행·국세청 즉시전송 또는 수동 승인번호 관리, 수납액, 미수납잔액 및 거래명세서 발송을 수행한다.',
     anchors: [
       { anchorId: 'ar-gen', title: '계약 근거 청구 생성', summary: '청구 연월과 계약을 선택하여 일할 또는 공급가 청구를 생성한다.' },
-      { anchorId: 'ar-grid', title: '청구·계산서·미수 원장', summary: '세금계산서 발행 토글, 수납액, 미수납잔액을 행 단위로 즉시 관리한다.' },
+      { anchorId: 'ar-grid', title: '청구·계산서·미수 원장', summary: '테넌트관리센터 팝빌 활성 여부에 따라 전자세금계산서 발행·조회·국세청 전송 또는 수동 승인번호를 관리한다.' },
       { anchorId: 'ar-docs', title: '수납 등록 · 거래명세서 발송', summary: '수납액을 입금 기록하거나 거래명세서를 엑셀 편집·발송한다.' },
     ],
     processes: [
       {
         processName: '계약 근거 청구 생성 및 세금계산서·수납 관리',
-        purpose: '청구금액 = 수납액 + 미수납잔액 보존 법칙과 계산서 발행 상태를 단일 화면에서 완결한다.',
+        purpose: '청구금액 = 수납액 + 미수납잔액 보존 법칙과 팝빌 전자세금계산서 발행을 단일 화면에서 완결한다.',
         steps: [
           { stepNo: 1, targetLabel: '청구 생성 바', manualAnchorId: 'ar-gen', actionDetail: '청구 연월과 대상 계약을 선택하고 청구 생성 버튼을 실행한다.' },
-          { stepNo: 2, targetLabel: '세금계산서 발행 체크 및 번호', manualAnchorId: 'ar-grid', actionDetail: '행 좌측 계산서 발행 여부 토글과 승인번호를 갱신한다.' },
+          { stepNo: 2, targetLabel: '팝빌 세금계산서 발행', manualAnchorId: 'ar-grid', actionDetail: '단건 팝빌 발행 또는 다중 선택 일괄 발행으로 전자세금계산서를 발행하고 국세청 전송 상태를 동기화한다.' },
           { stepNo: 3, targetLabel: '수납 등록 · 명세서 발송', manualAnchorId: 'ar-docs', actionDetail: '수납금액과 입금일을 입력해 수납 완료하고 거래명세서를 발송한다.' },
         ],
       },

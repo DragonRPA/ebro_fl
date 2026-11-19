@@ -10,7 +10,20 @@ import {
 } from '../../services/domainMath';
 import { recordBillingCollection } from '../../services/domainProcurementLeaseEngine';
 import { generateTransactionStatementExcel } from '../../services/documentService';
+import {
+  batchIssuePopbillTaxInvoices,
+  cancelPopbillTaxInvoice,
+  fetchPopbillLiveStatus,
+  formatPopbillStatusLabel,
+  openPopbillInvoicePopup,
+  openPopbillPortal,
+  resendPopbillTaxInvoiceEmail,
+  sendPopbillTaxInvoiceToNts,
+  syncPopbillTaxInvoiceStatus,
+  type PopbillLiveStatus,
+} from '../../services/popbillTaxInvoiceService';
 import { DocumentActionBar } from '../../components/DocumentActionBar';
+import { PopbillTaxInvoiceModal } from '../../components/PopbillTaxInvoiceModal';
 import {
   CommaNumberInput,
   ConservationBar,
@@ -37,6 +50,7 @@ export const ArBillingCollectionPage: React.FC = () => {
     currentUser,
     tenantProfile,
     isRentalEnabled,
+    isPopbillTaxInvoiceEnabled,
     datasets,
     formatMoney,
     refreshAll,
@@ -117,6 +131,12 @@ export const ArBillingCollectionPage: React.FC = () => {
   const [colDate, setColDate] = useState(today);
   const [colMethod, setColMethod] = useState('계좌이체');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [popbillLive, setPopbillLive] = useState<PopbillLiveStatus | null>(null);
+  const [popbillLiveLoading, setPopbillLiveLoading] = useState(false);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(new Set());
+  const [popbillModalBilling, setPopbillModalBilling] = useState<FlBilling | null>(null);
+  const [popbillBatchBusy, setPopbillBatchBusy] = useState(false);
+  const [resendEmailInput, setResendEmailInput] = useState('');
 
   const selectedContract =
     billableContracts.find((c) => c.id === (contractId || billableContracts[0]?.id)) || null;
@@ -152,13 +172,187 @@ export const ArBillingCollectionPage: React.FC = () => {
 
   const selectedBilling =
     visibleBillings.find((b) => b.id === selectedBillingId) || visibleBillings[0] || null;
-  const selectedPartner = useMemo(
-    () =>
-      selectedBilling
-        ? datasets.partners.find((p) => p.id === selectedBilling.partnerId)
-        : undefined,
-    [datasets.partners, selectedBilling]
+  const partnersById = useMemo(
+    () => new Map(datasets.partners.map((p) => [p.id, p])),
+    [datasets.partners]
   );
+  const selectedPartner = useMemo(
+    () => (selectedBilling ? partnersById.get(selectedBilling.partnerId) : undefined),
+    [partnersById, selectedBilling]
+  );
+
+  useEffect(() => {
+    if (!selectedBilling) {
+      setResendEmailInput('');
+      return;
+    }
+    setResendEmailInput(
+      selectedBilling.taxInvoiceEmail || selectedPartner?.taxEmail || selectedPartner?.email || ''
+    );
+  }, [selectedBilling, selectedPartner?.email, selectedPartner?.taxEmail]);
+
+  const loadPopbillStatus = async (silent = true) => {
+    if (!isPopbillTaxInvoiceEnabled) {
+      setPopbillLive(null);
+      return;
+    }
+    setPopbillLiveLoading(true);
+    try {
+      const status = await fetchPopbillLiveStatus(tenantProfile);
+      setPopbillLive(status);
+    } catch (err) {
+      if (!silent) {
+        notifyToast(err instanceof Error ? err.message : '팝빌 연동 상태 조회 실패', 'error');
+      }
+    } finally {
+      setPopbillLiveLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isPopbillTaxInvoiceEnabled) {
+      setPopbillLive(null);
+      setSelectedBatchIds(new Set());
+      setPopbillModalBilling(null);
+      return;
+    }
+    void fetchPopbillLiveStatus(tenantProfile)
+      .then((status) => setPopbillLive(status))
+      .catch(() => setPopbillLive(null));
+  }, [isPopbillTaxInvoiceEnabled, tenantProfile]);
+
+  const selectedBatchBillings = useMemo(
+    () =>
+      sortedVisibleBillings.filter(
+        (b) =>
+          selectedBatchIds.has(b.id) &&
+          b.status !== 'CANCELLED' &&
+          (!b.taxInvoiceIssued || b.taxInvoiceStatus === 'CANCELLED')
+      ),
+    [selectedBatchIds, sortedVisibleBillings]
+  );
+
+  const toggleBatchSelect = (billingId: string) => {
+    setSelectedBatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(billingId)) next.delete(billingId);
+      else next.add(billingId);
+      return next;
+    });
+  };
+
+  const handleBatchPopbillIssue = async () => {
+    if (selectedBatchBillings.length === 0 || popbillBatchBusy) return;
+    const totalAmt = selectedBatchBillings.reduce((s, b) => s + b.totalAmountKrw, 0);
+    if (
+      !window.confirm(
+        `선택한 ${selectedBatchBillings.length}건(합계 ₩${totalAmt.toLocaleString('ko-KR')})에 대해 팝빌 전자세금계산서를 일괄 발행하시겠습니까?`
+      )
+    ) {
+      return;
+    }
+    setPopbillBatchBusy(true);
+    try {
+      const res = await batchIssuePopbillTaxInvoices({
+        tenant: tenantProfile,
+        billings: selectedBatchBillings,
+        partnersById,
+      });
+      setSelectedBatchIds(new Set());
+      await refreshAll();
+      if (res.failed.length > 0) {
+        notifyToast(
+          `일괄 발행 결과: 성공 ${res.succeeded}건 · 임시저장 ${res.tempSaved}건 · 실패 ${res.failed.length}건 (${res.failed[0]})`,
+          res.succeeded + res.tempSaved > 0 ? 'info' : 'error'
+        );
+      } else {
+        notifyToast(
+          res.tempSaved > 0
+            ? `팝빌 처리 완료: 발행 ${res.succeeded}건 · 임시문서함 저장 ${res.tempSaved}건`
+            : `팝빌 전자세금계산서 ${res.succeeded}건 발행 완료`,
+          'success'
+        );
+      }
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '일괄 발행 실패', 'error');
+    } finally {
+      setPopbillBatchBusy(false);
+    }
+  };
+
+  const handleSendToNts = async (b: FlBilling) => {
+    if (!window.confirm(`[${b.billingNo}] ${b.partnerName} 세금계산서를 국세청으로 즉시 전송하시겠습니까?`)) {
+      return;
+    }
+    setBusyId(b.id);
+    try {
+      const res = await sendPopbillTaxInvoiceToNts(tenantProfile, b);
+      await refreshAll();
+      notifyToast(res.message || '국세청 즉시전송 완료', 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '국세청 전송 실패', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleSyncPopbillStatus = async (b: FlBilling) => {
+    setBusyId(b.id);
+    try {
+      const res = await syncPopbillTaxInvoiceStatus(tenantProfile, b);
+      await refreshAll();
+      notifyToast(`상태 동기화 완료 (${formatPopbillStatusLabel(res.status).label})`, 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '상태 동기화 실패', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleOpenPopbillDoc = async (b: FlBilling, mode: 'VIEW_URL' | 'PRINT_URL') => {
+    try {
+      await openPopbillInvoicePopup(tenantProfile, b, mode);
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '팝빌 문서 열기 실패', 'error');
+    }
+  };
+
+  const handleResendPopbillEmail = async (b: FlBilling) => {
+    setBusyId(b.id);
+    try {
+      const msg = await resendPopbillTaxInvoiceEmail(tenantProfile, b, resendEmailInput);
+      await refreshAll();
+      notifyToast(msg, 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '이메일 재전송 실패', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleCancelPopbillInvoice = async (b: FlBilling) => {
+    if (!window.confirm(`[${b.billingNo}] ${b.partnerName} 팝빌 세금계산서를 발행 취소하시겠습니까?`)) {
+      return;
+    }
+    setBusyId(b.id);
+    try {
+      const msg = await cancelPopbillTaxInvoice(tenantProfile, b);
+      await refreshAll();
+      notifyToast(msg, 'success');
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '발행 취소 실패', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleOpenPortalWindow = async (action: 'PORTAL_URL' | 'CERT_URL' | 'CHARGE_URL') => {
+    try {
+      await openPopbillPortal(tenantProfile, action);
+    } catch (err) {
+      notifyToast(err instanceof Error ? err.message : '팝빌 포털 열기 실패', 'error');
+    }
+  };
 
   const executeCreateBilling = async () => {
     if (!selectedContract) throw new Error('청구 대상 계약을 선택해 주세요.');
@@ -291,6 +485,30 @@ export const ArBillingCollectionPage: React.FC = () => {
         </button>
       ),
     },
+    ...(isPopbillTaxInvoiceEnabled
+      ? [
+          {
+            key: 'batchSelect',
+            header: '일괄',
+            width: 48,
+            align: 'center' as const,
+            render: (b: FlBilling) => {
+              const eligible =
+                b.status !== 'CANCELLED' && (!b.taxInvoiceIssued || b.taxInvoiceStatus === 'CANCELLED');
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    disabled={!canEdit || !eligible || popbillBatchBusy}
+                    checked={selectedBatchIds.has(b.id)}
+                    onChange={() => toggleBatchSelect(b.id)}
+                  />
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: 'billingNo',
       header: '청구번호',
@@ -353,41 +571,107 @@ export const ArBillingCollectionPage: React.FC = () => {
     {
       key: 'taxInvoice',
       header: '세금계산서 발행',
-      width: 245,
+      width: isPopbillTaxInvoiceEnabled ? 340 : 245,
       sortable: true,
       sortValue: (b) => (b.taxInvoiceIssued ? `1:${b.taxInvoiceNo || ''}` : '0:'),
-      render: (b) => (
-        <div
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            disabled={!canEdit || busyId === b.id}
-            checked={b.taxInvoiceIssued}
-            onChange={(e) => handleToggleTaxInvoice(b, e.target.checked)}
-          />
-          <input
-            type="text"
-            value={invoiceNoEdits[b.id] ?? b.taxInvoiceNo ?? ''}
-            onChange={(e) =>
-              setInvoiceNoEdits((prev) => ({ ...prev, [b.id]: e.target.value }))
-            }
-            placeholder="승인번호"
-            style={{ ...controlInputStyle, height: '26px', width: '130px', fontSize: '11.5px' }}
-          />
-          {canEdit && (
-            <button
-              type="button"
-              disabled={busyId === b.id}
-              onClick={() => handleToggleTaxInvoice(b, b.taxInvoiceIssued)}
-              style={actionBtnStyle('secondary', true)}
+      render: (b) => {
+        const isPopbillActiveDoc =
+          isPopbillTaxInvoiceEnabled &&
+          b.taxInvoiceChannel === 'POPBILL' &&
+          b.taxInvoiceStatus !== 'CANCELLED';
+
+        if (isPopbillActiveDoc) {
+          const stMeta = formatPopbillStatusLabel(b.taxInvoiceStatus);
+          return (
+            <div
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              저장
-            </button>
-          )}
-        </div>
-      ),
+              <StatusBadge label={stMeta.label} tone={stMeta.tone} />
+              <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                {b.taxInvoiceNo || b.taxInvoiceMgtKey || '-'}
+              </span>
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => void handleOpenPopbillDoc(b, 'VIEW_URL')}
+                style={actionBtnStyle('secondary', true)}
+              >
+                조회
+              </button>
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => void handleOpenPopbillDoc(b, 'PRINT_URL')}
+                style={actionBtnStyle('secondary', true)}
+              >
+                인쇄
+              </button>
+              {canEdit && b.taxInvoiceStatus !== 'SENT_NTS' && (
+                <button
+                  type="button"
+                  disabled={busyId === b.id}
+                  onClick={() => void handleSendToNts(b)}
+                  style={actionBtnStyle('primary', true)}
+                >
+                  전송
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => void handleSyncPopbillStatus(b)}
+                style={actionBtnStyle('secondary', true)}
+              >
+                동기화
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <div
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-tight-gap)', whiteSpace: 'nowrap' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isPopbillTaxInvoiceEnabled && canEdit && b.status !== 'CANCELLED' && (
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => setPopbillModalBilling(b)}
+                style={actionBtnStyle('primary', true)}
+              >
+                팝빌 발행
+              </button>
+            )}
+            <input
+              type="checkbox"
+              disabled={!canEdit || busyId === b.id}
+              checked={b.taxInvoiceIssued}
+              onChange={(e) => handleToggleTaxInvoice(b, e.target.checked)}
+            />
+            <input
+              type="text"
+              value={invoiceNoEdits[b.id] ?? b.taxInvoiceNo ?? ''}
+              onChange={(e) =>
+                setInvoiceNoEdits((prev) => ({ ...prev, [b.id]: e.target.value }))
+              }
+              placeholder="승인번호"
+              style={{ ...controlInputStyle, height: '26px', width: '125px', fontSize: '11.5px' }}
+            />
+            {canEdit && (
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => handleToggleTaxInvoice(b, b.taxInvoiceIssued)}
+                style={actionBtnStyle('secondary', true)}
+              >
+                저장
+              </button>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'status',
@@ -491,6 +775,92 @@ export const ArBillingCollectionPage: React.FC = () => {
         </SectionPanel>
       )}
 
+      {isPopbillTaxInvoiceEnabled && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 'var(--space-inline-gap)',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-card)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
+              팝빌 전자세금계산서 연동
+            </span>
+            <StatusBadge
+              label={
+                popbillLive
+                  ? popbillLive.isTest
+                    ? '테스트 서버'
+                    : '실운영 서버'
+                  : '연동 확인중'
+              }
+              tone={popbillLive?.isTest ? 'warning' : 'success'}
+            />
+            {popbillLive && (
+              <>
+                <StatusBadge
+                  label={popbillLive.certRegistered ? '인증서 등록' : '인증서 미등록'}
+                  tone={popbillLive.certRegistered ? 'success' : 'danger'}
+                />
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  사업자 {popbillLive.corpNum} · 잔여 포인트 {popbillLive.partnerBalance.toLocaleString('ko-KR')}원
+                </span>
+              </>
+            )}
+            {canEdit && selectedBatchBillings.length > 0 && (
+              <button
+                type="button"
+                disabled={popbillBatchBusy}
+                onClick={() => void handleBatchPopbillIssue()}
+                style={actionBtnStyle('primary', true)}
+              >
+                {popbillBatchBusy
+                  ? '일괄 발행중'
+                  : `선택 청구 일괄 발행 (${selectedBatchBillings.length}건)`}
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => void handleOpenPortalWindow('CHARGE_URL')}
+              style={actionBtnStyle('secondary', true)}
+            >
+              포인트 충전
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleOpenPortalWindow('CERT_URL')}
+              style={actionBtnStyle('secondary', true)}
+            >
+              인증서 관리
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleOpenPortalWindow('PORTAL_URL')}
+              style={actionBtnStyle('secondary', true)}
+            >
+              팝빌 포털
+            </button>
+            <button
+              type="button"
+              disabled={popbillLiveLoading}
+              onClick={() => void loadPopbillStatus(false)}
+              style={actionBtnStyle('secondary', true)}
+            >
+              {popbillLiveLoading ? '조회중' : '상태 새로고침'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div data-manual-id="ar-grid">
         <DataGrid
           columns={billingCols}
@@ -526,6 +896,117 @@ export const ArBillingCollectionPage: React.FC = () => {
             />
           }
         >
+          {isPopbillTaxInvoiceEnabled && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 'var(--space-inline-gap)',
+                padding: '10px 12px',
+                marginBottom: '12px',
+                borderRadius: '6px',
+                border: '1px solid var(--table-border-color)',
+                backgroundColor: 'var(--bg-app)',
+              }}
+            >
+              {selectedBilling.taxInvoiceChannel === 'POPBILL' &&
+              selectedBilling.taxInvoiceStatus !== 'CANCELLED' ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px', fontSize: '12.5px' }}>
+                    <StatusBadge
+                      label={formatPopbillStatusLabel(selectedBilling.taxInvoiceStatus).label}
+                      tone={formatPopbillStatusLabel(selectedBilling.taxInvoiceStatus).tone}
+                    />
+                    <span>관리번호: {selectedBilling.taxInvoiceMgtKey || '-'}</span>
+                    <span>국세청 승인번호: {selectedBilling.taxInvoiceNo || '-'}</span>
+                    <span>구분: {selectedBilling.taxInvoicePurpose || '청구'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '6px' }}>
+                    <VerticalField label="수신 이메일" width={200}>
+                      <input
+                        type="email"
+                        value={resendEmailInput}
+                        onChange={(e) => setResendEmailInput(e.target.value)}
+                        placeholder="재전송 이메일 입력"
+                        style={controlInputStyle}
+                      />
+                    </VerticalField>
+                    <button
+                      type="button"
+                      disabled={busyId === selectedBilling.id}
+                      onClick={() => void handleResendPopbillEmail(selectedBilling)}
+                      style={actionBtnStyle('secondary', true)}
+                    >
+                      메일 재전송
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === selectedBilling.id}
+                      onClick={() => void handleOpenPopbillDoc(selectedBilling, 'VIEW_URL')}
+                      style={actionBtnStyle('secondary', true)}
+                    >
+                      계산서 조회
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === selectedBilling.id}
+                      onClick={() => void handleOpenPopbillDoc(selectedBilling, 'PRINT_URL')}
+                      style={actionBtnStyle('secondary', true)}
+                    >
+                      인쇄
+                    </button>
+                    {canEdit && selectedBilling.taxInvoiceStatus !== 'SENT_NTS' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={busyId === selectedBilling.id}
+                          onClick={() => void handleSendToNts(selectedBilling)}
+                          style={actionBtnStyle('primary', true)}
+                        >
+                          국세청 즉시전송
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyId === selectedBilling.id}
+                          onClick={() => void handleCancelPopbillInvoice(selectedBilling)}
+                          style={actionBtnStyle('danger', true)}
+                        >
+                          발행 취소
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      disabled={busyId === selectedBilling.id}
+                      onClick={() => void handleSyncPopbillStatus(selectedBilling)}
+                      style={actionBtnStyle('secondary', true)}
+                    >
+                      상태 동기화
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '8px' }}>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                    팝빌 전자세금계산서 상태: {formatPopbillStatusLabel(selectedBilling.taxInvoiceStatus).label}
+                  </span>
+                  {canEdit && selectedBilling.status !== 'CANCELLED' && (
+                    <button
+                      type="button"
+                      disabled={busyId === selectedBilling.id}
+                      onClick={() => setPopbillModalBilling(selectedBilling)}
+                      style={actionBtnStyle('primary', true)}
+                    >
+                      팝빌 전자세금계산서 발행
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {canEdit && selectedBilling.unpaidBalanceKrw > 0 ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-field-grid-gap)', alignItems: 'flex-end' }}>
               <VerticalField label="수납 입금액" required width={160}>
@@ -582,6 +1063,21 @@ export const ArBillingCollectionPage: React.FC = () => {
         balanced={totals.diff === 0}
         balanceMessage={`청구 대차 차액 ${totals.diff.toLocaleString('ko-KR')}원`}
       />
+
+      {isPopbillTaxInvoiceEnabled && (
+        <PopbillTaxInvoiceModal
+          open={Boolean(popbillModalBilling)}
+          onClose={() => setPopbillModalBilling(null)}
+          billing={popbillModalBilling}
+          partner={popbillModalBilling ? partnersById.get(popbillModalBilling.partnerId) : undefined}
+          tenant={tenantProfile}
+          liveStatus={popbillLive}
+          onIssued={async (res) => {
+            await refreshAll();
+            notifyToast(res.message || '팝빌 전자세금계산서 발행 완료', 'success');
+          }}
+        />
+      )}
     </div>
   );
 };

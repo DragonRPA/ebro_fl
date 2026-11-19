@@ -18,6 +18,7 @@ export const SystemSettingsPage: React.FC = () => {
     currentUser,
     tenantProfile,
     isRentalEnabled,
+    isPopbillTaxInvoiceEnabled,
     datasets,
     refreshAll,
     notifyToast,
@@ -152,6 +153,7 @@ export const SystemSettingsPage: React.FC = () => {
               <span>사업자번호: {tenantProfile.businessNumber}</span>
               <span>도장이미지 연동: {tenantProfile.stampImageUrl || tenantProfile.stampBase64 ? '연동됨' : '미등록'}</span>
               <span>영업범위: {isRentalEnabled ? '유통·렌탈 통합' : '유통 전용'}</span>
+              <span>전자세금계산서 연동: {isPopbillTaxInvoiceEnabled ? '팝빌 활성' : '비활성'}</span>
             </div>
 
             {visibleDocTypes.map((dt) => {

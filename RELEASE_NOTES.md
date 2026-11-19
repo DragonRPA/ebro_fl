@@ -1,3 +1,12 @@
+## [v2.2.2.Build.1] - 2026-11-19 14:28
+### 팝빌(Popbill) 전자세금계산서 발행 연동 및 테넌트관리센터 활성 통제 구축
+- **멀티테넌트 팝빌 전자세금계산서 서버리스 엔진 (`api/popbill-taxinvoice.ts`, `supabase/migrations/20261119_fl_billings_popbill_columns.sql`)**:
+  - 테넌트관리센터(`core_tenants.features.popbillTaxInvoice` 및 `specialFeatures['feat:billings:popbill_tax_invoice']`) 활성 여부를 매 요청 서버에서 검증해 비인가 테넌트 호출을 HTTP `403`으로 차단하고, 테넌트별 `popbillConfig`(`isTest`, `corpNum`, `userId`, `useCustomKey`, `linkId`, `secretKey`, `defaultPurposeType`, `autoSendToNts`) 기반 동적 `TaxinvoiceService` 인스턴스를 구성했습니다.
+  - 정식 발행(`REGIST_ISSUE`), 국세청 즉시전송(`SEND_TO_NTS`), 상태 동기화(`SYNC_STATUS`), 뷰어·인쇄 URL(`VIEW_URL`·`PRINT_URL`), 메일 재전송(`SEND_EMAIL`), 발행취소(`CANCEL_ISSUE`), 포털·인증서·포인트 충전(`PORTAL_URL`·`CERT_URL`·`CHARGE_URL`)을 지원하며 공동인증서 미등록 시 임시문서함 등록 폴백으로 가짜 승인번호 생성을 방지했습니다.
+- **청구 수납 관리 팝빌 발행 UI 및 실시간 활성 통제 (`src/services/popbillTaxInvoiceService.ts`, `src/components/PopbillTaxInvoiceModal.tsx`, `src/pages/finance/ArBillingCollectionPage.tsx`, `src/core/AppShellContext.tsx`)**:
+  - `isPopbillTaxInvoiceEnabled` 실시간 플래그가 활성화된 테넌트에만 연동 상태 바, 단건 확인 모달 발행, 다중 선택 일괄 발행, 조회·인쇄·국세청 즉시전송·동기화·메일 재전송·취소 액션을 노출하고 비활성 시 기존 수동 승인번호 관리 UI만 유지하도록 구현했습니다.
+  - 전사 코드 파일 명세서(`spec:verify`), `oxlint`, `check-korean-ui`, `tsc -b && vite build`를 모두 통과했습니다.
+
 ## [v2.2.1.Build.6] - 2026-11-19 11:31
 ### 이메일 첨부 문서 `eBroAgent` 기반 범용 엑셀 ➔ PDF 변환 전환 및 중복 변환기 제거
 - **`eBroAgent` 기존 2단 벡터 PDF 엔진 통합 연동 (`src/services/documentService.ts`, `src/components/DocumentActionBar.tsx`, `src/services/agentTransportCore.ts`)**:

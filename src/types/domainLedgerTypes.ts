@@ -406,6 +406,12 @@ export interface FlBilling {
   taxInvoiceIssued: boolean;
   taxInvoiceNo?: string | null;
   taxInvoiceIssuedAt?: string | null;
+  taxInvoiceMgtKey?: string | null;
+  taxInvoiceStatus?: string | null;
+  taxInvoiceChannel?: string | null;
+  taxInvoicePurpose?: string | null;
+  taxInvoiceEmail?: string | null;
+  taxInvoiceNtsSentAt?: string | null;
   statementSentAt?: string | null;
   lines: BillingLine[];
   status: 'UNPAID' | 'PARTIAL' | 'PAID' | 'CANCELLED';

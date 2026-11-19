@@ -13,11 +13,11 @@
 
 | 항목 | 집계 수치 | 설명 |
 |:---|---:|:---|
-| 총 활성 코드 파일 수 | 410개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
-| 총 소스 라인 / 용량 | 167,898줄 / 6.78 MB | AST 및 다중 언어 파서 기준 실측 |
+| 총 활성 코드 파일 수 | 413개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
+| 총 소스 라인 / 용량 | 169,563줄 / 6.84 MB | AST 및 다중 언어 파서 기준 실측 |
 | 초대형 모듈 (GOD_FILE) | 11개 | 1,500줄 이상 또는 80KB 초과 분할 우선 대상 |
-| 대형 모듈 (LARGE_FILE) | 15개 | 800줄~1,499줄 비대화 주의 대상 |
-| src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 0개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
+| 대형 모듈 (LARGE_FILE) | 17개 | 800줄~1,499줄 비대화 주의 대상 |
+| src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 1개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
 | 고결합 핵심 허브 (HIGH_COUPLING_HUB) | 9개 | 역참조(Fan-In) 8개 이상 공유 모듈 |
 | 정적 라우트 임포트 (EAGER_ROUTE_IMPORT) | 0개 | App.tsx 내 React.lazy 미적용 페이지 모듈 |
 | 동적 코드 스플리팅 호스트 | 18개 | 내부 동적 임포트 59건 · 외부 동적 패키지 임포트 6건 |
@@ -42,11 +42,11 @@
 | L03_CORE_SHELL | 제5장. 코어 상태 컨텍스트 · 액션 게이트웨이 · 멀티테넌트 DB 프록시 (L03) | 8개 | L174 |
 | L04_TYPES_DATA_MANUAL | 제6장. 전사 도메인 타입 · 정적 제원/카탈로그 데이터 · 인앱 매뉴얼 레지스트리 (L04) | 14개 | L187 |
 | L05_PAGES | 제7장. 정규 28개 메뉴 도메인 페이지 스위트 (L05) | 39개 | L206 |
-| L06_COMPONENTS | 제8장. 공통 UI 프리미티브 · 레이아웃 셸 · 도메인 탭/모달 (L06) | 10개 | L250 |
-| L07_SERVICES_UTILS | 제9장. 도메인/재무제표 엔진 · 문서/OCR/국세청/에이전트 서비스 · 보안/검색 유틸리티 (L07) | 19개 | L265 |
-| L08_BACKEND_SQL_TEMPLATES | 제10장. 백엔드 서버리스 API · Edge Functions · SQL · 인쇄 양식 (L08) | 25개 | L289 |
-| L09_NATIVE_AGENTS_TOOLS | 제11장. 데스크톱 에이전트 · Python AI 코어 · 브라우저 확장 · 개발자 도구 (L09) | 51개 | L319 |
-| L10_TESTS_SCRIPTS | 제12장. 테스트(E2E·WTT·RWTT·보존법칙) · 마이그레이션 · DevOps 스크립트 (L10) | 219개 | L375 |
+| L06_COMPONENTS | 제8장. 공통 UI 프리미티브 · 레이아웃 셸 · 도메인 탭/모달 (L06) | 11개 | L250 |
+| L07_SERVICES_UTILS | 제9장. 도메인/재무제표 엔진 · 문서/OCR/국세청/에이전트 서비스 · 보안/검색 유틸리티 (L07) | 20개 | L266 |
+| L08_BACKEND_SQL_TEMPLATES | 제10장. 백엔드 서버리스 API · Edge Functions · SQL · 인쇄 양식 (L08) | 26개 | L291 |
+| L09_NATIVE_AGENTS_TOOLS | 제11장. 데스크톱 에이전트 · Python AI 코어 · 브라우저 확장 · 개발자 도구 (L09) | 51개 | L322 |
+| L10_TESTS_SCRIPTS | 제12장. 테스트(E2E·WTT·RWTT·보존법칙) · 마이그레이션 · DevOps 스크립트 (L10) | 219개 | L378 |
 
 ---
 
@@ -72,10 +72,10 @@
 
 | 순위 | 파일 경로 | Fan-In (피참조 수) | Outbound | 줄수 | 주요 Export | 핵심 역할 |
 |---:|:---|---:|---:|---:|:---|:---|
-| 1 | `src/types/domain.ts` | 64 | 3 | 5 | `-` | 1단어 1뜻 전사 단일 도메인 타입(domainCoreTypes·domainLedgerTypes·domainFormatters) 통합 배럴 SSOT |
-| 2 | `src/components/UiPrimitives.tsx` | 43 | 4 | 755 | `controlInputStyle, CommaNumberInputProps, CommaNumberInput, controlTextareaStyle, actionBtnStyle` | 공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog) |
-| 3 | `src/core/AppShellContext.tsx` | 43 | 6 | 780 | `FlDatasets, ToastItem, AppShellContextValue, AppShellProvider, useAppShell` | 세션 기반 비로그인·본적재 분리 부트스트랩, 에이전트 상태 디듀플리케이션, O(1) 화면권한 맵 및 메모이즈드 셸 컨텍스트 |
-| 4 | `src/core/supabase.ts` | 27 | 1 | 233 | `DEFAULT_TENANT_ID, getActiveFlTenantId, setActiveFlTenantId, flSupabase, centralSupabase` | fl_* 자동 접두사 및 활성 tenant_id 행 격리 프록시(flSupabase), 페이지네이션 전수 로더, 키 캐시 행 변환 및 변이 래퍼 |
+| 1 | `src/types/domain.ts` | 66 | 3 | 5 | `-` | 1단어 1뜻 전사 단일 도메인 타입(domainCoreTypes·domainLedgerTypes·domainFormatters) 통합 배럴 SSOT |
+| 2 | `src/components/UiPrimitives.tsx` | 44 | 4 | 755 | `controlInputStyle, CommaNumberInputProps, CommaNumberInput, controlTextareaStyle, actionBtnStyle` | 공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog) |
+| 3 | `src/core/AppShellContext.tsx` | 43 | 6 | 788 | `FlDatasets, ToastItem, AppShellContextValue, AppShellProvider, useAppShell` | 세션 기반 비로그인·본적재 분리 부트스트랩, 에이전트 상태 디듀플리케이션, O(1) 화면권한 맵 및 메모이즈드 셸 컨텍스트 |
+| 4 | `src/core/supabase.ts` | 28 | 1 | 233 | `DEFAULT_TENANT_ID, getActiveFlTenantId, setActiveFlTenantId, flSupabase, centralSupabase` | fl_* 자동 접두사 및 활성 tenant_id 행 격리 프록시(flSupabase), 페이지네이션 전수 로더, 키 캐시 행 변환 및 변이 래퍼 |
 | 5 | `src/services/domainMath.ts` | 26 | 2 | 509 | `todayIso, currentYm, addDaysIso, getDaysInMonth, getMonthBounds` | 날짜·월경계 연산, 선입선출 정렬, 월별 감가상각, 금융리스 상환표 및 일할 렌탈 청구 계산 순수 엔진 |
 | 6 | `src/components/SearchableSelect.tsx` | 12 | 4 | 373 | `SearchableSelectOption, toPartnerSelectOptions, toItemMasterSelectOptions, SearchableSelectProps, SearchableSelect` | 사전 초성 인덱싱, O(1) 선택 조회, 키보드 탐색 및 거래처·품목 옵션 매핑 검색형 드롭다운 공통 컴포넌트 |
 | 7 | `src/core/ActionCommandGateway.tsx` | 11 | 3 | 110 | `CommitActionButtonProps, CommitActionButton` | 결재 티어 판별 후 즉시 실행 또는 결재 상신을 분기하는 CommitActionButton UI 컴포넌트 |
@@ -177,11 +177,11 @@
 |:---|---:|:---|:---|:---|:---|
 | `src/core/ActionCommandGateway.tsx` | 110줄 (3.0KB) | HIGH_COUPLING_HUB | `CommitActionButtonProps, CommitActionButton` | Out:3 / In:11 | 결재 티어 판별 후 즉시 실행 또는 결재 상신을 분기하는 CommitActionButton UI 컴포넌트 |
 | `src/core/actionGatewayEngine.ts` | 485줄 (18.0KB) | - | `isActionPayloadRentalRelated, isApprovalRequestRentalRelated, useActionGateway, executeApprovedPayload` | Out:7(동적4) / In:2 · DB:fl_approval_policies,fl_approval_requests,fl_billings,fl_contracts(+1) | O(1) 결재정책 맵 기반 useActionGateway 훅 및 동적 도메인 엔진 분기 실행(executeApprovedPayload) 코어 |
-| `src/core/AppShellContext.tsx` | 780줄 (26.0KB) | HIGH_COUPLING_HUB | `FlDatasets, ToastItem, AppShellContextValue, AppShellProvider, useAppShell` | Out:6 / In:43 · DB:core_tenants,fl_hr_histories,fl_users | 세션 기반 비로그인·본적재 분리 부트스트랩, 에이전트 상태 디듀플리케이션, O(1) 화면권한 맵 및 메모이즈드 셸 컨텍스트 |
-| `src/core/flDatasetLoader.ts` | 622줄 (21.5KB) | - | `SESSION_STORAGE_KEY, TENANT_OVERRIDE_STORAGE_KEY, getTenantSessionStorageKey, FlDatasets, EMPTY_DATASETS, DEFAULT_TENANT_PROFILE 외 3` | Out:4 / In:1 · DB:core_tenants,fl_ap_payables,fl_approval_policies,fl_approval_requests(+27) | FL 테넌트 스코프 프로필 조회, 로그인전 사용자 경량 로더 및 30개 테이블 단일 병렬 스냅샷 조립 로더 모듈 |
+| `src/core/AppShellContext.tsx` | 788줄 (26.3KB) | HIGH_COUPLING_HUB | `FlDatasets, ToastItem, AppShellContextValue, AppShellProvider, useAppShell` | Out:6 / In:43 · DB:core_tenants,fl_hr_histories,fl_users | 세션 기반 비로그인·본적재 분리 부트스트랩, 에이전트 상태 디듀플리케이션, O(1) 화면권한 맵 및 메모이즈드 셸 컨텍스트 |
+| `src/core/flDatasetLoader.ts` | 625줄 (21.6KB) | - | `SESSION_STORAGE_KEY, TENANT_OVERRIDE_STORAGE_KEY, getTenantSessionStorageKey, FlDatasets, EMPTY_DATASETS, DEFAULT_TENANT_PROFILE 외 3` | Out:4 / In:1 · DB:core_tenants,fl_ap_payables,fl_approval_policies,fl_approval_requests(+27) | FL 테넌트 스코프 프로필 조회, 로그인전 사용자 경량 로더 및 30개 테이블 단일 병렬 스냅샷 조립 로더 모듈 |
 | `src/core/PageActivityContext.tsx` | 15줄 (0.4KB) | - | `PageActivityProvider, usePageActive` | Out:0 / In:3 | KeepAlive 페이지 활성 여부에 따른 비활성 화면 이벤트 차단 컨텍스트 |
 | `src/core/r2TenantContext.ts` | 30줄 (0.8KB) | - | `ActiveR2TenantContext, setR2TenantContext, getR2TenantContext` | Out:2 / In:2 | Cloudflare R2 업로드 대상 활성 테넌트 컨텍스트 저장·조회 경량 모듈 |
-| `src/core/supabase.ts` | 233줄 (8.1KB) | HIGH_COUPLING_HUB | `DEFAULT_TENANT_ID, getActiveFlTenantId, setActiveFlTenantId, flSupabase, centralSupabase, registerErrorModalHandler 외 7` | Out:1 / In:27 | fl_* 자동 접두사 및 활성 tenant_id 행 격리 프록시(flSupabase), 페이지네이션 전수 로더, 키 캐시 행 변환 및 변이 래퍼 |
+| `src/core/supabase.ts` | 233줄 (8.1KB) | HIGH_COUPLING_HUB | `DEFAULT_TENANT_ID, getActiveFlTenantId, setActiveFlTenantId, flSupabase, centralSupabase, registerErrorModalHandler 외 7` | Out:1 / In:28 | fl_* 자동 접두사 및 활성 tenant_id 행 격리 프록시(flSupabase), 페이지네이션 전수 로더, 키 캐시 행 변환 및 변이 래퍼 |
 | `src/lib/supabasePrefixProxy.ts` | 204줄 (6.8KB) | - | `DRAGONRPA_HUB_SUPABASE, resolvePrefixedTableName, rewriteDdlStatementsWithPrefix, resolveHubUrlAndKey, createPrefixedSupabaseClient` | Out:0 / In:1 | 다중 테넌트 논리 테이블 접두사(fl_·core_) 자동 변환 및 DDL 접두사 재작성 Supabase 프록시 클라이언트 |
 
 ## 제6장. 전사 도메인 타입 · 정적 제원/카탈로그 데이터 · 인앱 매뉴얼 레지스트리 (L04) — 14개 파일
@@ -197,25 +197,25 @@
 | `src/manual/manualNonRentalOverrides.ts` | 159줄 (9.4KB) | - | `ManualStepDef, ManualProcessDef, ManualAnchorDef, ScreenManualEntry, NON_RENTAL_MANUAL_OVERRIDES` | Out:1 / In:1 | 매뉴얼 엔트리 타입 인터페이스 및 비렌탈 테넌트 전용 화면 매뉴얼 오버라이드 사전 정의 모듈 |
 | `src/manual/ManualOverlay.tsx` | 603줄 (23.8KB) | - | `ManualOverlay` | Out:3 / In:1 | data-manual-id DOM 좌표 추적 번호 배지, 단계별 조작 절차 안내 패널 및 매뉴얼 통합 검색 모달 오버레이 |
 | `src/manual/manualPageTitles.ts` | 37줄 (1.4KB) | - | `FL_PAGE_TITLES, getPageTitleForTenant` | Out:1 / In:3 | 28개 메뉴 키별 국문 타이틀 매핑 테이블 및 비렌탈 업종별 타이틀 치환 경량 헬퍼 모듈 |
-| `src/manual/manualRegistry.ts` | 685줄 (49.8KB) | - | `ManualAnchorDef, ManualProcessDef, ManualStepDef, ScreenManualEntry, FL_MANUAL_REGISTRY, ALL_MANUAL_ENTRIES 외 2` | Out:2 / In:3 | 전사 28개 메뉴 화면 영역·조작 절차 레지스트리 및 테넌트별 매뉴얼 조회 엔트리 SSOT |
-| `src/types/domain.ts` | 5줄 (0.2KB) | HIGH_COUPLING_HUB | `-` | Out:3 / In:64 | 1단어 1뜻 전사 단일 도메인 타입(domainCoreTypes·domainLedgerTypes·domainFormatters) 통합 배럴 SSOT |
-| `src/types/domainCoreTypes.ts` | 624줄 (18.3KB) | - | `TierLevel, TIER_LABELS, FlPageId, MenuGroupDef, FL_MENU_GROUPS, ALL_FL_PAGE_IDS 외 44` | Out:0 / In:3 | 테넌트 프로필·28개 메뉴 정의·티어 결재권한·거래처·품목·환율 핵심 도메인 타입 및 필터 SSOT 모듈 |
+| `src/manual/manualRegistry.ts` | 685줄 (49.9KB) | - | `ManualAnchorDef, ManualProcessDef, ManualStepDef, ScreenManualEntry, FL_MANUAL_REGISTRY, ALL_MANUAL_ENTRIES 외 2` | Out:2 / In:3 | 전사 28개 메뉴 화면 영역·조작 절차 레지스트리 및 테넌트별 매뉴얼 조회 엔트리 SSOT |
+| `src/types/domain.ts` | 5줄 (0.2KB) | HIGH_COUPLING_HUB | `-` | Out:3 / In:66 | 1단어 1뜻 전사 단일 도메인 타입(domainCoreTypes·domainLedgerTypes·domainFormatters) 통합 배럴 SSOT |
+| `src/types/domainCoreTypes.ts` | 651줄 (19.1KB) | - | `TierLevel, TIER_LABELS, FlPageId, MenuGroupDef, FL_MENU_GROUPS, ALL_FL_PAGE_IDS 외 46` | Out:0 / In:3 | 테넌트 프로필·28개 메뉴 정의·티어 결재권한·거래처·품목·환율 핵심 도메인 타입 및 필터 SSOT 모듈 |
 | `src/types/domainFormatters.ts` | 573줄 (17.8KB) | - | `ALL_PARTNER_ROLES, RENTAL_ONLY_PARTNER_ROLES, getPartnerRolesForTenant, EMPLOYMENT_STATUS_LABELS, normalizePaymentMethod, cycleToMonthOffset 외 46` | Out:2 / In:1 | 결제·국세청·한국어 상태/통화 포매터, 비렌탈 테넌트 도메인 필터, 거래처 기본결제 및 결재범위 판별 순수 헬퍼 모듈 |
-| `src/types/domainLedgerTypes.ts` | 482줄 (12.0KB) | - | `FlPurchase, FlPurchaseLine, FlLogisticsDispatch, FlApPayable, FlInventoryUnit, FlStockMovement 외 14` | Out:1 / In:2 | 매입·물류배차·채무·재고단위·수불·견적·계약·입출고·정비·청구·수납·금융리스 원장 도메인 타입 모듈 |
+| `src/types/domainLedgerTypes.ts` | 488줄 (12.2KB) | - | `FlPurchase, FlPurchaseLine, FlLogisticsDispatch, FlApPayable, FlInventoryUnit, FlStockMovement 외 14` | Out:1 / In:2 | 매입·물류배차·채무·재고단위·수불·견적·계약·입출고·정비·청구·수납·금융리스 원장 도메인 타입 모듈 |
 
 ## 제7장. 정규 28개 메뉴 도메인 페이지 스위트 (L05) — 39개 파일
 
 | 파일 경로 | 규모 | 메뉴ID·구분 | 주요 Export | 의존(Out/In)·DB테이블 | 핵심 기능 및 책임 명세 |
 |:---|---:|:---|:---|:---|:---|
 | `src/pages/finance/ApSettlementsPage.tsx` | 290줄 (12.6KB) | ap_settlements (매입 비용 정산) / load:lazy | `ApSettlementsPage` | Out:7 / In:1 | 매입채무·물류비·외주정비비·금융리스 원리금 지급 정산 페이지 |
-| `src/pages/finance/ArBillingCollectionPage.tsx` | 588줄 (20.8KB) | ar_billing_collection (청구 수납 관리) / load:lazy | `ArBillingCollectionPage` | Out:9 / In:1 · DB:fl_billings | 일할·유통 청구 생성, 팝빌 전자세금계산서 발행, 거래명세서 발송 및 수납 관리 페이지 |
+| `src/pages/finance/ArBillingCollectionPage.tsx` | 1,084줄 (39.6KB) | ar_billing_collection (청구 수납 관리) / load:lazy / LARGE_FILE | `ArBillingCollectionPage` | Out:11 / In:1 · DB:fl_billings | 일할·유통 청구 생성, 팝빌 전자세금계산서 발행, 거래명세서 발송 및 수납 관리 페이지 |
 | `src/pages/finance/BankMatchingPage.tsx` | 378줄 (14.2KB) | bank_matching (통장 입출금 대사) / load:lazy | `BankMatchingPage` | Out:7 / In:1 · DB:fl_bank_transactions | 통장 입출금 거래내역과 청구·매입채무 1:1 대사 및 제외 관리 페이지 |
 | `src/pages/finance/CashCalendarPage.tsx` | 381줄 (14.4KB) | cash_calendar (자금 일정 캘린더) / load:lazy | `CashCalendarPage` | Out:5 / In:1 | 매출 납기일 및 매입·리스 지급일 기준 일별 자금 입출금 캘린더 페이지 |
 | `src/pages/finance/financeHelpers.ts` | 45줄 (1.5KB) | subview:finance (비렌탈 매입채무 파생 집계 헬퍼) | `buildNonRentalPayables` | Out:1 / In:3 | 비렌탈 테넌트 격리 기준 유효 매입채무 필터링 공통 헬퍼 |
 | `src/pages/finance/FinancialStatementsPage.tsx` | 321줄 (12.3KB) | financial_statements (재무제표 조회) / load:lazy | `FinancialStatementsPage` | Out:6(동적1) / In:1 | 재무상태표·손익계산서·현금흐름표·리스명세 및 지연로딩 중소기업회계기준 조회 페이지 |
 | `src/pages/finance/OperationManualPage.tsx` | 181줄 (6.9KB) | operation_manual (업무 매뉴얼) / load:lazy | `OperationManualPage` | Out:5 / In:1 | 화면별 기본기능·조작순서·전사 매뉴얼 통합 검색 열람 페이지 |
 | `src/pages/finance/PermissionSettingsPage.tsx` | 731줄 (25.8KB) | permission_settings (권한 설정) / load:lazy | `PermissionSettingsPage` | Out:6 / In:1 · DB:fl_approval_policies,fl_user_permissions | 7단계 티어 결재선 정책 및 O(1) 권한 맵 기반 티어별·개인별 메뉴 접근 권한·계정 관리 페이지 |
-| `src/pages/finance/SystemSettingsPage.tsx` | 244줄 (9.0KB) | system_settings (시스템 설정) / load:lazy | `SystemSettingsPage` | Out:4 / In:1 · DB:fl_document_templates | 테넌트 기업정보, 법인직인 도장 및 견적·계약·거래명세서 양식 파일 설정 페이지 |
+| `src/pages/finance/SystemSettingsPage.tsx` | 246줄 (9.2KB) | system_settings (시스템 설정) / load:lazy | `SystemSettingsPage` | Out:4 / In:1 · DB:fl_document_templates | 테넌트 기업정보, 법인직인 도장 및 견적·계약·거래명세서 양식 파일 설정 페이지 |
 | `src/pages/hr/HrDepartmentTreePanel.tsx` | 409줄 (13.2KB) | subview:organization_hr (부서 계층 트리 사이드바 · 부서 현황 패널) | `HrDepartmentTreePanelProps, HrDepartmentTreePanel, HrDepartmentOrgPanelProps, HrDepartmentOrgPanel` | Out:3 / In:1 | 부서 계층 트리 사이드바, 부서별 인원 집계 및 부서 현황 그리드 패널 컴포넌트 |
 | `src/pages/hr/HrEmployeeDetailModal.tsx` | 733줄 (35.9KB) | subview:organization_hr (임직원 상세 인사·급여·발령 모달) | `HrEmployeeDetailModalProps, HrEmployeeDetailModal` | Out:5 / In:1 | 임직원 상세 인사·급여·연차·비밀번호·발령이력 관리 모달 컴포넌트 |
 | `src/pages/hr/hrHelpers.ts` | 546줄 (15.9KB) | subview:organization_hr (조직도 트리·마스킹·엑셀 내보내기 헬퍼) | `DeptNode, buildDeptTreeOrder, collectDescendantDeptIds, statusBadgeTone, statusLabel, PAYROLL_BANK_OPTIONS 외 15` | Out:4 / In:4 · 동적패키지:exceljs | 조직도 트리 정렬, 주민번호 마스킹, 스캔 첨부 및 동적 ExcelJS 임직원 내보내기 헬퍼 |
@@ -247,7 +247,7 @@
 | `src/pages/trade/TradeInventoryPage.tsx` | 690줄 (25.0KB) | trade_inventory (유통 재고 조회) / load:lazy | `TradeInventoryPage` | Out:9 / In:1 · DB:fl_inventory_units | 시리얼·로트 유통 재고 선입선출, 경과일수, 보증기간 조회 및 계정대체 페이지 |
 | `src/pages/trade/TradePerformancePage.tsx` | 584줄 (21.4KB) | trade_performance (유통 실적 조회) / load:lazy | `TradePerformancePage` | Out:4 / In:1 | 유통 매출·매출원가·반품차감 순수익 기간별 실적 집계 페이지 |
 
-## 제8장. 공통 UI 프리미티브 · 레이아웃 셸 · 도메인 탭/모달 (L06) — 10개 파일
+## 제8장. 공통 UI 프리미티브 · 레이아웃 셸 · 도메인 탭/모달 (L06) — 11개 파일
 
 | 파일 경로 | 규모 | 메뉴ID·구분 | 주요 Export | 의존(Out/In)·DB테이블 | 핵심 기능 및 책임 명세 |
 |:---|---:|:---|:---|:---|:---|
@@ -256,13 +256,14 @@
 | `src/components/AccountingStandardsTab.tsx` | 466줄 (17.6KB) | subview:financial_statements (중소기업회계기준·해설 뷰어 탭) | `AccountingStandardsTab` | Out:4(동적1) / In:1 | 중소기업회계기준 정적 데이터셋 동적 지연 로딩, 통합 검색 상태 관리 및 좌우 패인 호스트 뷰어 컴포넌트 |
 | `src/components/DocumentActionBar.tsx` | 372줄 (12.6KB) | - | `DocumentActionBar` | Out:3 / In:4 | 견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 에이전트 PDF 변환 이메일 발송 모달 액션 바 컴포넌트 |
 | `src/components/LoginView.tsx` | 447줄 (15.1KB) | - | `LoginView` | Out:4(동적1) / In:1 | 아이디·비밀번호 로그인 폼, 로컬 에이전트 설치·업데이트 제어 및 지연로딩 개인정보 처리방침 열람 화면 |
+| `src/components/PopbillTaxInvoiceModal.tsx` | 336줄 (12.9KB) | - | `PopbillTaxInvoiceModal` | Out:3 / In:1 | 청구 원장 기반 팝빌 전자세금계산서 공급받는자·품목 확인 및 즉시 발행 모달 컴포넌트 |
 | `src/components/PrivacyPolicyModal.tsx` | 362줄 (15.2KB) | - | `PrivacyPolicyModal` | Out:1 / In:1 | 테넌트별 개인정보 처리방침 열람 및 보호책임자 지정·편집 저장 모달 |
 | `src/components/SearchableSelect.tsx` | 373줄 (11.8KB) | HIGH_COUPLING_HUB | `SearchableSelectOption, toPartnerSelectOptions, toItemMasterSelectOptions, SearchableSelectProps, SearchableSelect` | Out:4 / In:12 | 사전 초성 인덱싱, O(1) 선택 조회, 키보드 탐색 및 거래처·품목 옵션 매핑 검색형 드롭다운 공통 컴포넌트 |
 | `src/components/ShellLayout.tsx` | 750줄 (27.0KB) | - | `ShellLayout` | Out:6 / In:1 | 좌측 그룹 사이드바, 상단 헤더(뒤로/앞으로·테넌트·기상·에이전트·매뉴얼), 전역 오류 모달·토스트 및 내 정보 수정 셸 레이아웃 |
-| `src/components/UiPrimitives.tsx` | 755줄 (25.8KB) | HIGH_COUPLING_HUB | `controlInputStyle, CommaNumberInputProps, CommaNumberInput, controlTextareaStyle, actionBtnStyle, VerticalFieldProps 외 12` | Out:4 / In:43 · 동적패키지:xlsx | 공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog) |
+| `src/components/UiPrimitives.tsx` | 755줄 (25.8KB) | HIGH_COUPLING_HUB | `controlInputStyle, CommaNumberInputProps, CommaNumberInput, controlTextareaStyle, actionBtnStyle, VerticalFieldProps 외 12` | Out:4 / In:44 · 동적패키지:xlsx | 공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog) |
 | `src/components/WeatherWidget.tsx` | 551줄 (19.8KB) | - | `WeatherWidget` | Out:1 / In:1 | 15분 세션 캐시·요청 취소 지원 전국 주요 권역 기상 데이터 조회 헤더 위젯 및 주간 예보·지역 선택 모달 |
 
-## 제9장. 도메인/재무제표 엔진 · 문서/OCR/국세청/에이전트 서비스 · 보안/검색 유틸리티 (L07) — 19개 파일
+## 제9장. 도메인/재무제표 엔진 · 문서/OCR/국세청/에이전트 서비스 · 보안/검색 유틸리티 (L07) — 20개 파일
 
 | 파일 경로 | 규모 | 메뉴ID·구분 | 주요 Export | 의존(Out/In)·DB테이블 | 핵심 기능 및 책임 명세 |
 |:---|---:|:---|:---|:---|:---|
@@ -281,12 +282,13 @@
 | `src/services/financialStatementEngine.ts` | 582줄 (20.5KB) | - | `generateFinancialStatements` | Out:3 / In:4 | 전 원장 복식부기 분개 생성기(비렌탈 격리 지원) 및 재무제표 포매터 재노출(Barrel) 엔진 |
 | `src/services/financialStatementFormatter.ts` | 402줄 (15.1KB) | - | `JournalPosting, StatementLineItem, AssetScheduleRow, LeaseScheduleSummaryRow, FinancialStatementsReport, FinancialDatasetInput 외 3` | Out:1 / In:1 | 복식부기 분개 집계 기반 재무상태표·손익계산서·현금흐름표·리스명세 조립 및 대차 차액 0원 검증 포매터 |
 | `src/services/ntsBusinessService.ts` | 212줄 (6.3KB) | - | `PartnerNtsCheckItem, formatNtsYmd, validateBizRegNoChecksum, parseRawNtsItem, queryBatchPartnerNtsStatus, querySinglePartnerNtsStatus` | Out:1 / In:2 | 국세청 사업자등록번호 체크섬 검증 및 휴폐업·과세유형 단건/다건(100건 청크) 상태조회 클라이언트 서비스 |
+| `src/services/popbillTaxInvoiceService.ts` | 463줄 (14.6KB) | - | `PopbillLiveStatus, PopbillLineDraft, PopbillIssueDraft, PopbillIssueResult, formatPopbillStatusLabel, generatePopbillMgtKey 외 10` | Out:2 / In:2 · DB:fl_billings | 팝빌 전자세금계산서 연동 상태 조회, 단건/일괄 발행, 국세청 즉시전송, 상태 동기화, 포털/뷰어 열기 및 DB 저장 서비스 |
 | `src/services/tenantBootstrapService.ts` | 250줄 (8.1KB) | - | `clearBootstrappedTenantCache, ensureFlTenantBootstrapped` | Out:3 / In:2 · DB:fl_approval_policies,fl_departments,fl_document_templates,fl_users | 신규 테넌트 기본 부서·결재정책·관리자 계정 멱등 부트스트랩 초기화 및 세션 캐시 서비스 |
 | `src/utils/cryptoVault.ts` | 598줄 (20.7KB) | - | `hashPassword, verifyPassword, encryptSecret, decryptSecret, ESSENTIAL_STORAGE_KEYS, purgeStorageQuotaOverflow 외 16` | Out:0 / In:7 | SHA-256 비밀번호 해싱·검증, 로컬스토리지 암복호화, 세션 서명 검증 및 개인정보 필드 암복호화 볼트 |
 | `src/utils/fxRateUtils.ts` | 75줄 (2.1KB) | - | `FX_CURRENCIES, FX_PERIOD_OPTIONS, DEFAULT_FX_RATES, formatFxRate, resolveManagedRateForDate` | Out:1 / In:3 | 주요 4대 통화(USD·CNY·EUR·JPY) 기본환율 상수, 환율 포매터 및 기준일자 환율 조회 유틸리티 |
 | `src/utils/hangulSearch.ts` | 159줄 (4.9KB) | - | `isChosungChar, decomposeCompoundConsonants, extractChosung, KoreanSearchIndex, buildKoreanSearchIndex, matchesIndexedKoreanQuery 외 1` | Out:0 / In:5 | 한국어 초성·복합자모 분해, 사전 검색 인덱스 빌더 및 무의존성 부분·초성 매칭 검색 유틸리티 |
 
-## 제10장. 백엔드 서버리스 API · Edge Functions · SQL · 인쇄 양식 (L08) — 25개 파일
+## 제10장. 백엔드 서버리스 API · Edge Functions · SQL · 인쇄 양식 (L08) — 26개 파일
 
 | 파일 경로 | 규모 | 메뉴ID·구분 | 주요 Export | 의존(Out/In)·DB테이블 | 핵심 기능 및 책임 명세 |
 |:---|---:|:---|:---|:---|:---|
@@ -298,7 +300,7 @@
 | `api/manual-ai-indexer.ts` | 80줄 (3.3KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 장비 기술문서 메타데이터 자동 색인 Vercel 서버리스 API |
 | `api/nts-status.ts` | 135줄 (4.7KB) | - | `NtsBusinessStatusItem, validateBizRegNoChecksum, handler` | Out:0 / In:1 | 국세청 공공데이터포털 사업자 휴폐업 상태조회 프록시 Vercel 서버리스 API |
 | `api/nts-validate.ts` | 200줄 (7.0KB) | - | `NtsValidateInputItem, NtsValidateOutputItem, handler` | Out:0 / In:0 | 국세청 사업자등록정보 진위확인(상호·대표자·개업일 1:1 대조) Vercel 서버리스 API |
-| `api/popbill-taxinvoice.ts` | 594줄 (19.5KB) | - | `SanitizedPopbillInvoiceInput, buildZeroEmailPopbillPayload, executePopbillTestAction, handler` | Out:0 / In:1 | 팝빌 전자세금계산서 테스트 서버(IsTest 고정·이메일 발송 하드블록) 연동 발행·상태조회 Vercel 서버리스 API |
+| `api/popbill-taxinvoice.ts` | 908줄 (33.0KB) | LARGE_FILE | `handler` | Out:0 / In:1 | 테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API |
 | `api/popbill.d.ts` | 5줄 (0.1KB) | - | `default` | Out:0 / In:0 | popbill CommonJS SDK 모듈용 TypeScript 선언 파일 |
 | `api/r2.ts` | 576줄 (19.2KB) | - | `config, handler` | Out:0 / In:0 | Cloudflare R2 S3 호환 멀티테넌트 파일 목록·업로드·다운로드·삭제 Vercel 서버리스 API |
 | `api/sales-journal-ai.ts` | 126줄 (6.5KB) | - | `handler` | Out:0 / In:0 | Groq LLaMA 3.3 기반 영업일지 상담 원문 4단계 구조화 추출 Vercel 서버리스 API |
@@ -310,6 +312,7 @@
 | `supabase/functions/cleanup-expired-recordings/index.ts` | 58줄 (2.0KB) | - | `-` | Out:0 / In:0 · DB:call_uploads | 24시간 경과 통화 음성 파일 자동 삭제 크론용 Supabase Edge Function |
 | `supabase/functions/process-call-recording/index.ts` | 260줄 (9.5KB) | - | `-` | Out:0 / In:0 · DB:call_uploads,draft_dispatch_orders | 통화 녹음 업로드 트리거 STT 변환 및 LLM 필드 추출 Supabase Edge Function |
 | `supabase/migrations/20261012_hindsight_4_tier_memory.sql` | 156줄 (11.0KB) | - | `-` | Out:0 / In:0 · DB:hindsight_experiences,hindsight_mental_models,hindsight_observations,hindsight_world_facts | Hindsight 4계층 메모리(pgvector HNSW 인덱스·JSONB·RLS) DB 마이그레이션 DDL |
+| `supabase/migrations/20261119_fl_billings_popbill_columns.sql` | 7줄 (0.4KB) | - | `-` | Out:0 / In:0 · DB:fl_billings | fl_billings 테이블 팝빌 전자세금계산서 관리번호·상태·채널·영수청구·이메일·국세청전송일시 확장 DDL |
 | `templates/거래명세서_양식.html` | 139줄 (8.9KB) | - | `-` | Out:0 / In:0 | 표준 거래명세서 인쇄 및 PDF 생성용 HTML 마스터 템플릿 |
 | `templates/고소작업대_안전점검결과서_양식.html` | 175줄 (8.3KB) | - | `-` | Out:0 / In:0 | 고소작업대 안전점검결과서 인쇄용 HTML 마스터 템플릿 |
 | `templates/고소작업대_임대차계약서_양식.html` | 158줄 (8.9KB) | - | `-` | Out:0 / In:0 | 고소작업대 임대차계약서 인쇄용 HTML 마스터 템플릿 |
@@ -411,7 +414,7 @@
 | `scripts/check_stt_usage.cjs` | 104줄 (3.8KB) | - | `-` | Out:0 / In:0 | Groq Cloud Whisper STT API 상태 및 RateLimit 잔여량 점검 스크립트 |
 | `scripts/check-korean-ui.cjs` | 453줄 (16.0KB) | - | `-` | Out:0 / In:0 | 전사 UI 순수 한국어 표기(괄호 영문·이모지·금지 헤더 0건) 빌드 전 정적 검증 게이트 |
 | `scripts/clone_prod_to_demo_db.cjs` | 387줄 (14.5KB) | - | `-` | Out:0 / In:0 | 기연리프트 운영 DB 스키마·데이터를 데모 Supabase DB로 복제하는 스크립트 |
-| `scripts/code_file_descriptions.cjs` | 517줄 (61.6KB) | - | `PC_MOBILE_PAIRS, TRADE_RENTAL_PAIRS, MENU_ID_BY_FILE, FILE_DESCRIPTIONS` | Out:0 / In:1 | eBroFL 전사 코드 파일별 기능 명세 사전, 메뉴 매핑 및 기능 대칭 쌍 단일 원본(SSOT) |
+| `scripts/code_file_descriptions.cjs` | 520줄 (62.2KB) | - | `PC_MOBILE_PAIRS, TRADE_RENTAL_PAIRS, MENU_ID_BY_FILE, FILE_DESCRIPTIONS` | Out:0 / In:1 | eBroFL 전사 코드 파일별 기능 명세 사전, 메뉴 매핑 및 기능 대칭 쌍 단일 원본(SSOT) |
 | `scripts/create_agent_and_customization_tables.cjs` | 119줄 (4.2KB) | - | `-` | Out:0 / In:0 · DB:agent_heartbeats | 에이전트 하트비트·작업큐·테넌트 커스터마이징 테이블 생성 DDL 실행 스크립트 |
 | `scripts/create_approval_tables.cjs` | 136줄 (6.9KB) | - | `-` | Out:0 / In:0 | 전자결재 규칙·요청·이력 테이블 생성 DDL 일괄 실행 스크립트 |
 | `scripts/create_income_statements_table.cjs` | 73줄 (2.7KB) | - | `-` | Out:0 / In:0 · DB:monthly_income_statements | 월간 손익계산서 테이블(monthly_income_statements) 생성 DDL 실행 스크립트 |

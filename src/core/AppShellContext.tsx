@@ -29,6 +29,7 @@ import {
   TIER_LABELS,
   defaultTierPagePermission,
   getMenuGroupsForTenant,
+  isTenantPopbillEnabled,
   isTenantRentalEnabled,
   type FlPageId,
   type FlUser,
@@ -60,6 +61,7 @@ export interface AppShellContextValue {
   currentUser: FlUser | null;
   tenantProfile: TenantProfile;
   isRentalEnabled: boolean;
+  isPopbillTaxInvoiceEnabled: boolean;
   datasets: FlDatasets;
   activePage: FlPageId;
   agentOnline: boolean;
@@ -338,6 +340,10 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [resetNavHistory, tenantProfile.id]);
 
   const isRentalEnabled = useMemo(() => isTenantRentalEnabled(tenantProfile), [tenantProfile]);
+  const isPopbillTaxInvoiceEnabled = useMemo(
+    () => isTenantPopbillEnabled(tenantProfile),
+    [tenantProfile]
+  );
 
   useEffect(() => {
     const scopeText = isRentalEnabled
@@ -704,6 +710,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       currentUser,
       tenantProfile,
       isRentalEnabled,
+      isPopbillTaxInvoiceEnabled,
       datasets,
       activePage,
       agentOnline,
@@ -738,6 +745,7 @@ export const AppShellProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       currentUser,
       tenantProfile,
       isRentalEnabled,
+      isPopbillTaxInvoiceEnabled,
       datasets,
       activePage,
       agentOnline,

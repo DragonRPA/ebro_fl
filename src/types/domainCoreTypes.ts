@@ -231,10 +231,23 @@ export interface OfficialMailConfig {
   updatedAt?: string;
 }
 
+export interface TenantPopbillConfig {
+  corpNum?: string;
+  userId?: string;
+  isTest?: boolean;
+  useCustomKey?: boolean;
+  linkId?: string;
+  secretKey?: string;
+  defaultPurposeType?: '청구' | '영수';
+  autoSendToNts?: boolean;
+}
+
 export interface TenantFeatures {
   bankMatchingEnabled?: boolean;
   rentalEnabled?: boolean;
   autoTaxInvoice?: boolean;
+  popbillTaxInvoice?: boolean;
+  popbillConfig?: TenantPopbillConfig;
   agentAiEnabled?: boolean;
   tenantSupabaseUrl?: string;
   customDomain?: string;
@@ -248,6 +261,19 @@ export function isTenantRentalEnabled(
   tenant?: { features?: TenantFeatures } | null
 ): boolean {
   return tenant?.features?.rentalEnabled !== false;
+}
+
+export function isTenantPopbillEnabled(
+  tenant?: { features?: TenantFeatures; specialFeatures?: string[] } | null
+): boolean {
+  const explicit = tenant?.features?.popbillTaxInvoice;
+  if (typeof explicit === 'boolean') return explicit;
+  const sf = Array.isArray(tenant?.specialFeatures)
+    ? tenant.specialFeatures
+    : Array.isArray(tenant?.features?.specialFeatures)
+      ? tenant.features.specialFeatures
+      : [];
+  return sf.includes('feat:billings:popbill_tax_invoice');
 }
 
 export interface TenantProfile {
@@ -273,6 +299,7 @@ export interface TenantProfile {
   r2Config?: TenantR2Config;
   allowedPages: string[];
   hiddenPages: string[];
+  specialFeatures?: string[];
   features: TenantFeatures;
 }
 

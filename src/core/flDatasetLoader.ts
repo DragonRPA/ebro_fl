@@ -261,6 +261,9 @@ export async function fetchActiveTenantProfile(): Promise<TenantProfile> {
           ? matched.allowedPages
           : [...ALL_FL_PAGE_IDS],
         hiddenPages: Array.isArray(matched.hiddenPages) ? matched.hiddenPages : [],
+        specialFeatures: Array.isArray(matched.specialFeatures)
+          ? (matched.specialFeatures as string[])
+          : undefined,
         features: (matched.features || { bankMatchingEnabled: true }) as TenantProfile['features'],
       };
       setActiveFlTenantId(resolvedProfile.id);

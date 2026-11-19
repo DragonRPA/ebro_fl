@@ -1,566 +1,657 @@
 // d:\01.AntiGravity\ebro_FL\api\popbill-taxinvoice.ts
-// 팝빌(Popbill) 전자세금계산서 테스트 서버 전용 API (popbill-test.linkhub.co.kr)
-// ⚠️ 절대 원칙: 세금계산서 테스트 동안에는 어떠한 경우에도 이메일을 발송하지 않음!
-//   1) IsTest: true 고정 (상용 전환 원천 차단)
-//   2) invoicerEmail / invoiceeEmail1 / invoiceeEmail2 무조건 빈 문자열("") 강제 치환
-//   3) updateEmailConfig로 팝빌 서버 측 알림메일(TAX_ISSUE 등) 전체 false 강제
-//   4) SEND_EMAIL / RESEND_EMAIL 액션 호출 시 100% 하드블록 거부
-
+// 멀티테넌트 팝빌(Popbill) 전자세금계산서 발행 · 국세청 즉시전송 · 상태조회 · 포털/인증서 관리 API
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import crypto from 'crypto';
+import { createRequire } from 'module';
 import popbill from 'popbill';
 
-const POPBILL_TEST_LINK_ID = process.env.POPBILL_LINK_ID || 'DRAGONRP';
-const POPBILL_TEST_SECRET_KEY =
-  process.env.POPBILL_SECRET_KEY || 'BZL4UVISXlJur3SHxVIBEQ3ZYMFyyM+DtDFFRd21wZI=';
-const DEFAULT_TEST_CORP_NUM = (process.env.POPBILL_CORP_NUM || '8068803266').replace(/[^0-9]/g, '');
-const DEFAULT_TEST_USER_ID = process.env.POPBILL_USER_ID || 'dragonrpa';
+const require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TaxinvoiceServiceCtor: any = require('popbill/lib/TaxinvoiceService');
+const MGT_KEY_TYPE_SELL = popbill?.MgtKeyType?.SELL || 'SELL';
 
-// 팝빌 전역 설정: 무조건 IsTest: true (https://popbill-test.linkhub.co.kr) 고정
-popbill.config({
-  LinkID: POPBILL_TEST_LINK_ID,
-  SecretKey: POPBILL_TEST_SECRET_KEY,
-  IsTest: true,
-  IPRestrictOnOff: true,
-  UseStaticIP: false,
-  UseLocalTimeYN: true,
-  defaultErrorHandler: (err: any) => {
-    console.warn('[Popbill Test Mode Error]', err?.code, err?.message);
+const VAULT_PREFIX = '__EBRO_ENC__v1__';
+const VAULT_CIPHER_KEY = 0x4f;
+
+const CENTRAL_SUPABASE_URL =
+  process.env.VITE_CENTRAL_SUPABASE_URL || 'https://lkohpffieaanwhohttbu.supabase.co';
+const CENTRAL_SUPABASE_ANON_KEY =
+  process.env.VITE_CENTRAL_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrb2hwZmZpZWFhbndob2h0dGJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5ODkxOTQsImV4cCI6MjEwODU2NTE5NH0.lOXz6JWfLNcfH4ApH74F7qtlPky8lVwGiAqY_ybSZ6E';
+
+interface TenantPopbillConfig {
+  corpNum?: string;
+  userId?: string;
+  isTest?: boolean;
+  useCustomKey?: boolean;
+  linkId?: string;
+  secretKey?: string;
+  defaultPurposeType?: '청구' | '영수';
+  autoSendToNts?: boolean;
+}
+
+interface CentralTenantRow {
+  id: string;
+  tenantCode?: string;
+  corporateName?: string;
+  businessNumber?: string;
+  representativeName?: string;
+  businessAddress?: string;
+  businessCategory?: string;
+  businessItem?: string;
+  tel?: string;
+  taxEmail?: string;
+  specialFeatures?: string[];
+  features?: {
+    popbillTaxInvoice?: boolean;
+    popbillConfig?: TenantPopbillConfig;
+    specialFeatures?: string[];
+    [key: string]: unknown;
+  };
+}
+
+interface ResolvedPopbillContext {
+  tenant: CentralTenantRow;
+  linkId: string;
+  secretKey: string;
+  isTest: boolean;
+  corpNum: string;
+  userId: string;
+  defaultPurposeType: '청구' | '영수';
+  autoSendToNts: boolean;
+}
+
+const tenantStatusCache = new Map<string, { expiresAt: number; row: CentralTenantRow }>();
+
+function decryptVaultSecret(cipherText: string): string {
+  const rawInput = String(cipherText || '').trim();
+  if (!rawInput || !rawInput.startsWith(VAULT_PREFIX)) {
+    return rawInput;
   }
-});
+  try {
+    const raw = rawInput.slice(VAULT_PREFIX.length);
+    const sepIdx = raw.indexOf('__');
+    if (sepIdx === -1) return '';
+    const checksum = raw.slice(0, sepIdx);
+    const b64 = raw.slice(sepIdx + 2);
+    const buf = Buffer.from(b64, 'base64');
+    const out = Buffer.allocUnsafe(buf.length);
+    for (let i = 0; i < buf.length; i++) {
+      out[i] = buf[i] ^ (VAULT_CIPHER_KEY + (i % 7));
+    }
+    const plainText = out.toString('utf8');
+    const digest = crypto.createHash('sha256').update(plainText, 'utf8').digest('hex').slice(0, 8);
+    return digest === checksum ? plainText : '';
+  } catch {
+    return '';
+  }
+}
 
-const taxinvoiceService = popbill.TaxinvoiceService();
+function normalizeDigits(raw?: string | null): string {
+  return String(raw || '').replace(/[^0-9]/g, '');
+}
 
-const EMAIL_TYPES_TO_DISABLE = [
-  'TAX_ISSUE',
-  'TAX_ISSUE_INVOICER',
-  'TAX_CANCEL_ISSUE',
-  'TAX_TRUST_ISSUE',
-  'TAX_TRUST_ISSUE_TRUSTER',
-  'TAX_TRUST_ISSUE_INVOICER',
-  'TAX_TRUST_CANCEL_ISSUE',
-  'TAX_TRUST_CANCEL_ISSUE_INVOICER'
-];
+function cutStr(val: string | undefined | null, maxLen: number): string {
+  const s = String(val || '').trim();
+  return s.length > maxLen ? s.slice(0, maxLen) : s;
+}
 
-let emailSilenceInitializedForCorp: Record<string, boolean> = {};
+function sanitizeBuyerBizNo(rawBizNo?: string | null): string {
+  const digits = normalizeDigits(rawBizNo);
+  if (digits.length !== 10 || digits === '0000000000' || digits === '1000000000') {
+    throw new Error(
+      `유효하지 않은 거래처 사업자등록번호(${rawBizNo || '미입력'})입니다. 10자리 사업자등록번호를 확인해 주세요.`
+    );
+  }
+  return digits;
+}
 
-function updateEmailConfigPromise(corpNum: string, emailType: string, sendYN: boolean): Promise<void> {
-  return new Promise(resolve => {
+function isPopbillEnabledForTenant(row: CentralTenantRow): boolean {
+  const explicit = row.features?.popbillTaxInvoice;
+  if (typeof explicit === 'boolean') return explicit;
+  const sf = Array.isArray(row.specialFeatures)
+    ? row.specialFeatures
+    : Array.isArray(row.features?.specialFeatures)
+      ? row.features.specialFeatures
+      : [];
+  return sf.includes('feat:billings:popbill_tax_invoice');
+}
+
+async function fetchCentralTenant(
+  tenantId?: string,
+  tenantCode?: string,
+  allowShortCache = false
+): Promise<CentralTenantRow | null> {
+  const cleanId = String(tenantId || '').trim();
+  const cleanCode = String(tenantCode || '')
+    .trim()
+    .toUpperCase();
+  if (!cleanId && !cleanCode) return null;
+
+  const cacheKey = `${cleanId}|${cleanCode}`;
+  if (allowShortCache) {
+    const cached = tenantStatusCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.row;
+    }
+  }
+
+  const filterExpr = cleanId
+    ? `id=eq.${encodeURIComponent(cleanId)}`
+    : `tenantCode=eq.${encodeURIComponent(cleanCode)}`;
+
+  const url = `${CENTRAL_SUPABASE_URL}/rest/v1/core_tenants?select=id,tenantCode,corporateName,businessNumber,representativeName,businessAddress,businessCategory,businessItem,tel,taxEmail,specialFeatures,features&${filterExpr}&limit=1`;
+  const resp = await fetch(url, {
+    method: 'GET',
+    headers: {
+      apikey: CENTRAL_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${CENTRAL_SUPABASE_ANON_KEY}`,
+      'Cache-Control': 'no-cache',
+    },
+  });
+  if (!resp.ok) {
+    throw new Error(`테넌트 마스터 조회 실패 (${resp.status})`);
+  }
+  const rows = (await resp.json()) as CentralTenantRow[];
+  const matched = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  if (matched) {
+    tenantStatusCache.set(cacheKey, {
+      expiresAt: Date.now() + 5000,
+      row: matched,
+    });
+  }
+  return matched;
+}
+
+function resolvePopbillContext(tenant: CentralTenantRow): ResolvedPopbillContext {
+  const cfg = tenant.features?.popbillConfig || {};
+  const useCustom = Boolean(cfg.useCustomKey && cfg.linkId && cfg.secretKey);
+  const linkId = (useCustom ? String(cfg.linkId) : process.env.POPBILL_LINK_ID || '').trim();
+  const secretKey = (
+    useCustom ? decryptVaultSecret(String(cfg.secretKey)) : process.env.POPBILL_SECRET_KEY || ''
+  ).trim();
+
+  if (!linkId || !secretKey) {
+    throw new Error('팝빌 연동 키(LinkID / SecretKey)가 설정되어 있지 않습니다.');
+  }
+
+  const isTest =
+    typeof cfg.isTest === 'boolean' ? cfg.isTest : process.env.POPBILL_IS_TEST === 'true';
+  const corpNum = normalizeDigits(cfg.corpNum || tenant.businessNumber);
+  if (corpNum.length !== 10) {
+    throw new Error(
+      `공급자(테넌트) 사업자등록번호가 10자리가 아닙니다: ${cfg.corpNum || tenant.businessNumber || '미입력'}`
+    );
+  }
+
+  return {
+    tenant,
+    linkId,
+    secretKey,
+    isTest,
+    corpNum,
+    userId: String(cfg.userId || '').trim(),
+    defaultPurposeType: cfg.defaultPurposeType === '영수' ? '영수' : '청구',
+    autoSendToNts: cfg.autoSendToNts !== false,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTaxService(ctx: ResolvedPopbillContext): any {
+  return new TaxinvoiceServiceCtor({
+    LinkID: ctx.linkId,
+    SecretKey: ctx.secretKey,
+    IsTest: ctx.isTest,
+    IPRestrictOnOff: false,
+    UseStaticIP: false,
+    UseLocalTimeYN: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    defaultErrorHandler: (err: any) => {
+      console.warn('[Popbill FL SDK Error]', err?.code, err?.message);
+    },
+  });
+}
+
+function callSdk<T>(fn: (svc: ReturnType<typeof createTaxService>, resolve: (v: T) => void, reject: (e: Error) => void) => void, ctx: ResolvedPopbillContext): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
     try {
-      taxinvoiceService.updateEmailConfig(
-        corpNum,
-        emailType,
-        sendYN,
-        DEFAULT_TEST_USER_ID,
-        () => resolve(),
-        () => resolve()
-      );
-    } catch {
-      resolve();
+      const svc = createTaxService(ctx);
+      fn(svc, resolve, reject);
+    } catch (e) {
+      reject(e instanceof Error ? e : new Error(String(e)));
     }
   });
 }
 
-async function ensurePopbillEmailNotificationsDisabled(corpNum: string): Promise<void> {
-  const cleanCorp = (corpNum || DEFAULT_TEST_CORP_NUM).replace(/[^0-9]/g, '') || DEFAULT_TEST_CORP_NUM;
-  if (emailSilenceInitializedForCorp[cleanCorp]) return;
-  await Promise.all(
-    EMAIL_TYPES_TO_DISABLE.map(emailType => updateEmailConfigPromise(cleanCorp, emailType, false))
-  );
-  emailSilenceInitializedForCorp[cleanCorp] = true;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toPopbillError(prefix: string, err: any): Error & { code?: number } {
+  const codeNum = err?.code !== undefined ? Number(err.code) : undefined;
+  const e = new Error(`${prefix}${codeNum !== undefined ? ` (${codeNum})` : ''}: ${err?.message || '알 수 없는 오류'}`) as Error & { code?: number };
+  e.code = codeNum;
+  return e;
 }
 
-export interface SanitizedPopbillInvoiceInput {
+interface InvoiceDetailInput {
+  month?: string;
+  day?: string;
+  itemName: string;
+  spec?: string;
+  qty?: number;
+  unitPrice?: number;
+  supplyAmount: number;
+  vatAmount: number;
+  remark?: string;
+}
+
+interface InvoiceIssueInput {
   mgtKey: string;
   writeDate: string;
-  chargeDirection?: string;
-  issueType?: string;
   purposeType?: string;
-  taxType?: string;
-  invoicerCorpNum?: string;
-  invoicerCorpName?: string;
-  invoicerCEOName?: string;
-  invoicerAddr?: string;
-  invoicerBizType?: string;
-  invoicerBizClass?: string;
-  invoicerContactName?: string;
-  invoicerTEL?: string;
-  invoiceeType?: string;
-  invoiceeCorpNum: string;
-  invoiceeTaxRegID?: string;
-  invoiceeCorpName: string;
-  invoiceeCEOName: string;
-  invoiceeAddr?: string;
-  invoiceeBizType?: string;
-  invoiceeBizClass?: string;
-  invoiceeContactName1?: string;
-  invoiceeTEL1?: string;
-  supplyCostTotal: number;
-  taxTotal: number;
+  customerName: string;
+  customerBizNo: string;
+  customerCeoName?: string;
+  customerAddr?: string;
+  customerBizType?: string;
+  customerBizClass?: string;
+  customerEmail?: string;
+  customerEmail2?: string;
+  itemName: string;
+  supplyAmount: number;
+  vatAmount: number;
   totalAmount: number;
-  serialNum?: string;
-  cash?: string;
-  chkBill?: string;
-  note?: string;
-  credit?: string;
-  remark1?: string;
-  remark2?: string;
-  remark3?: string;
-  detailList?: Array<{
-    serialNum: number;
-    purchaseDT?: string;
-    itemName: string;
-    spec?: string;
-    qty?: number | string;
-    unitCost?: number | string;
-    supplyCost: number | string;
-    tax: number | string;
-    remark?: string;
-  }>;
+  memo?: string;
+  taxItems?: InvoiceDetailInput[];
 }
 
-/**
- * 🛡️ 이메일 발송 원천 차단 페이로드 빌더
- * 사용자가 화면이나 DB에 어떤 이메일을 입력했더라도 팝빌 서버로 넘어가는 객체에는
- * invoicerEmail, invoiceeEmail1, invoiceeEmail2를 모두 빈 문자열("")로 강제 고정합니다.
- */
-export function buildZeroEmailPopbillPayload(input: SanitizedPopbillInvoiceInput) {
-  const writeDateClean = String(input.writeDate || new Date().toISOString().slice(0, 10)).replace(/[^0-9]/g, '').slice(0, 8);
-  const invoicerCorpNumClean = String(input.invoicerCorpNum || DEFAULT_TEST_CORP_NUM).replace(/[^0-9]/g, '') || DEFAULT_TEST_CORP_NUM;
-  const invoiceeCorpNumClean = String(input.invoiceeCorpNum || '').replace(/[^0-9]/g, '');
+function buildPopbillTaxinvoicePayload(ctx: ResolvedPopbillContext, input: InvoiceIssueInput) {
+  const mgtKey = cutStr(input.mgtKey, 24);
+  if (!mgtKey) {
+    throw new Error('세금계산서 문서관리번호(mgtKey)가 누락되었습니다.');
+  }
 
-  const supplyCostNum = Math.round(Number(input.supplyCostTotal || 0));
-  const taxNum = Math.round(Number(input.taxTotal || 0));
-  const totalNum = Math.round(Number(input.totalAmount || supplyCostNum + taxNum));
+  const writeDateClean = normalizeDigits(input.writeDate || new Date().toISOString().slice(0, 10)).slice(0, 8);
+  if (writeDateClean.length !== 8) {
+    throw new Error(`유효하지 않은 작성일자(${input.writeDate})입니다.`);
+  }
 
-  const details = Array.isArray(input.detailList) && input.detailList.length > 0
-    ? input.detailList.map((item, idx) => ({
-        serialNum: idx + 1,
-        purchaseDT: String(item.purchaseDT || writeDateClean).replace(/[^0-9]/g, '').slice(0, 8),
-        itemName: String(item.itemName || '지게차 임대료'),
-        spec: String(item.spec || '식'),
-        qty: String(item.qty ?? 1),
-        unitCost: String(Math.round(Number(item.unitCost ?? item.supplyCost ?? supplyCostNum))),
-        supplyCost: String(Math.round(Number(item.supplyCost ?? supplyCostNum))),
-        tax: String(Math.round(Number(item.tax ?? taxNum))),
-        remark: String(item.remark || '')
-      }))
-    : [
-        {
-          serialNum: 1,
-          purchaseDT: writeDateClean,
-          itemName: String(input.remark1 || '지게차 임대 및 정비 청구'),
-          spec: '식',
-          qty: '1',
-          unitCost: String(supplyCostNum),
-          supplyCost: String(supplyCostNum),
-          tax: String(taxNum),
-          remark: ''
-        }
-      ];
+  const yyyy = writeDateClean.slice(0, 4);
+  const mm = writeDateClean.slice(4, 6);
+  const dd = writeDateClean.slice(6, 8);
+
+  const supplyTotal = Math.round(Number(input.supplyAmount || 0));
+  const vatTotal = Math.round(Number(input.vatAmount || 0));
+  const totalAmt = Math.round(Number(input.totalAmount || supplyTotal + vatTotal));
+  if (supplyTotal <= 0 && totalAmt <= 0) {
+    throw new Error('세금계산서 공급가액 및 합계금액은 0원보다 커야 합니다.');
+  }
+
+  const buyerBizNo = sanitizeBuyerBizNo(input.customerBizNo);
+  const t = ctx.tenant;
+
+  const detailList =
+    Array.isArray(input.taxItems) && input.taxItems.length > 0
+      ? input.taxItems.slice(0, 99).map((it, idx) => {
+          const itemMm = String(it.month || mm).padStart(2, '0').slice(0, 2);
+          const itemDd = String(it.day || dd).padStart(2, '0').slice(0, 2);
+          const lineSupply = Math.round(Number(it.supplyAmount || 0));
+          const lineVat = Math.round(Number(it.vatAmount || 0));
+          const qtyVal = Number(it.qty ?? 1);
+          const unitVal =
+            it.unitPrice !== undefined ? Math.round(Number(it.unitPrice)) : lineSupply;
+          return {
+            serialNum: idx + 1,
+            purchaseDT: `${yyyy}${itemMm}${itemDd}`,
+            itemName: cutStr(it.itemName || input.itemName || '지게차 판매·임대', 100),
+            spec: cutStr(it.spec || '', 60),
+            qty: String(Number.isFinite(qtyVal) && qtyVal > 0 ? qtyVal : 1),
+            unitCost: String(unitVal),
+            supplyCost: String(lineSupply),
+            tax: String(lineVat),
+            remark: cutStr(it.remark || '', 100),
+          };
+        })
+      : [
+          {
+            serialNum: 1,
+            purchaseDT: writeDateClean,
+            itemName: cutStr(input.itemName || '지게차 판매·임대', 100),
+            spec: '식',
+            qty: '1',
+            unitCost: String(supplyTotal),
+            supplyCost: String(supplyTotal),
+            tax: String(vatTotal),
+            remark: '',
+          },
+        ];
+
+  const purpose = input.purposeType === '영수' || input.purposeType === '청구'
+    ? input.purposeType
+    : ctx.defaultPurposeType;
 
   return {
     writeDate: writeDateClean,
-    chargeDirection: input.chargeDirection || '정과금',
-    issueType: input.issueType || '정발행',
-    purposeType: input.purposeType || '청구',
-    taxType: input.taxType || '과세',
+    chargeDirection: '정과금',
+    issueType: '정발행',
+    purposeType: purpose,
+    issueTiming: '직접발행',
+    taxType: '과세',
 
-    invoicerCorpNum: invoicerCorpNumClean,
-    invoicerMgtKey: String(input.mgtKey).trim(),
-    invoicerCorpName: input.invoicerCorpName || '무진글로벌(주)',
-    invoicerCEOName: input.invoicerCEOName || '이정용',
-    invoicerAddr: input.invoicerAddr || '경기도 시흥시 공단1대로 204',
-    invoicerBizType: input.invoicerBizType || '건설기계 대여 및 도소매',
-    invoicerBizClass: input.invoicerBizClass || '지게차 임대·판매·부품',
-    invoicerContactName: input.invoicerContactName || '정산담당',
-    invoicerTEL: input.invoicerTEL || '031-000-0000',
-    invoicerHP: '',
-    // 🛡️ 절대 발송 금지: 공급자 이메일 무조건 공란
-    invoicerEmail: '',
-    invoicerSMSSendYN: false,
+    invoicerCorpNum: ctx.corpNum,
+    invoicerMgtKey: mgtKey,
+    invoicerCorpName: cutStr(t.corporateName || '주식회사 이브로지게차', 200),
+    invoicerCEOName: cutStr(t.representativeName || '대표자', 100),
+    invoicerAddr: cutStr(t.businessAddress || '', 300),
+    invoicerBizType: cutStr(t.businessCategory || '', 100),
+    invoicerBizClass: cutStr(t.businessItem || '', 100),
+    invoicerContactName: cutStr(t.representativeName || '정산담당', 100),
+    invoicerTEL: cutStr(t.tel || '', 20),
+    invoicerEmail: cutStr(t.taxEmail || '', 100),
 
-    invoiceeType: input.invoiceeType || '사업자',
-    invoiceeCorpNum: invoiceeCorpNumClean,
-    invoiceeTaxRegID: input.invoiceeTaxRegID || '',
-    invoiceeCorpName: input.invoiceeCorpName || '테스트 거래처',
-    invoiceeCEOName: input.invoiceeCEOName || '대표자',
-    invoiceeAddr: input.invoiceeAddr || '',
-    invoiceeBizType: input.invoiceeBizType || '제조 및 물류',
-    invoiceeBizClass: input.invoiceeBizClass || '물류창고',
-    invoiceeContactName1: input.invoiceeContactName1 || '재무담당',
-    invoiceeTEL1: input.invoiceeTEL1 || '',
-    invoiceeHP1: '',
-    // 🛡️ 절대 발송 금지: 공급받는자 주/부 이메일 무조건 공란
-    invoiceeEmail1: '',
-    invoiceeEmail2: '',
-    invoiceeSMSSendYN: false,
+    invoiceeType: '사업자',
+    invoiceeCorpNum: buyerBizNo,
+    invoiceeCorpName: cutStr(input.customerName, 200),
+    invoiceeCEOName: cutStr(input.customerCeoName || '대표자', 100),
+    invoiceeAddr: cutStr(input.customerAddr || '', 300),
+    invoiceeBizType: cutStr(input.customerBizType || '', 100),
+    invoiceeBizClass: cutStr(input.customerBizClass || '', 100),
+    invoiceeContactName1: cutStr(input.customerCeoName || '담당자', 100),
+    invoiceeEmail1: cutStr(input.customerEmail || '', 100),
+    invoiceeEmail2: cutStr(input.customerEmail2 || '', 100),
 
-    supplyCostTotal: String(supplyCostNum),
-    taxTotal: String(taxNum),
-    totalAmount: String(totalNum),
-    serialNum: input.serialNum || '1',
-    cash: input.cash || '',
-    chkBill: input.chkBill || '',
-    note: input.note || '',
-    credit: input.credit || String(totalNum),
-    remark1: input.remark1 || '[팝빌 테스트 발행 - 이메일 미발송]',
-    remark2: input.remark2 || '',
-    remark3: input.remark3 || '',
-    kwon: 1,
-    ho: 1,
+    supplyCostTotal: String(supplyTotal),
+    taxTotal: String(vatTotal),
+    totalAmount: String(totalAmt),
+    memo: cutStr(input.memo || '', 150),
     businessLicenseYN: false,
     bankBookYN: false,
-    detailList: details
+    detailList,
   };
 }
 
-export async function executePopbillTestAction(body: any): Promise<{ status: number; data: any }> {
-  const action = String(body?.action || 'STATUS_CHECK').toUpperCase();
-  const corpNum = String(body?.corpNum || DEFAULT_TEST_CORP_NUM).replace(/[^0-9]/g, '') || DEFAULT_TEST_CORP_NUM;
-  const userId = String(body?.userId || DEFAULT_TEST_USER_ID).trim() || DEFAULT_TEST_USER_ID;
+function getInfoSdk(ctx: ResolvedPopbillContext, mgtKey: string) {
+  return callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+    const onOk = (info: Record<string, unknown>) => resolve(info || {});
+    const onErr = (err: unknown) => reject(toPopbillError('팝빌 상태조회 오류', err));
+    if (ctx.userId) svc.getInfo(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, ctx.userId, onOk, onErr);
+    else svc.getInfo(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, onOk, onErr);
+  }, ctx);
+}
 
-  // 🛡️ 이메일 발송 관련 액션은 무조건 즉시 차단
-  if (
-    action === 'SEND_EMAIL' ||
-    action === 'RESEND_EMAIL' ||
-    action === 'SEND_FAX' ||
-    action === 'SEND_SMS'
-  ) {
-    return {
-      status: 403,
-      data: {
-        success: false,
-        blocked: true,
-        isTest: true,
-        emailSendBlocked: true,
-        error: '세금계산서 테스트 기간 동안에는 이메일·문자·팩스 발송이 시스템 정책에 의해 전면 차단되어 있습니다.'
-      }
+function getPopupUrlSdk(ctx: ResolvedPopbillContext, mgtKey: string, isPrint = false) {
+  return callSdk<string>((svc, resolve, reject) => {
+    const fn = isPrint ? svc.getPrintURL : svc.getPopUpURL;
+    const onOk = (url: string) => resolve(String(url || ''));
+    const onErr = (err: unknown) => reject(toPopbillError('팝빌 URL 조회 오류', err));
+    if (ctx.userId) fn.call(svc, ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, ctx.userId, onOk, onErr);
+    else fn.call(svc, ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, onOk, onErr);
+  }, ctx);
+}
+
+function sendToNtsSdk(ctx: ResolvedPopbillContext, mgtKey: string) {
+  return callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+    const onOk = (res: Record<string, unknown>) => resolve(res || {});
+    const onErr = (err: unknown) => reject(toPopbillError('국세청 즉시전송 오류', err));
+    if (ctx.userId) svc.sendToNTS(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, ctx.userId, onOk, onErr);
+    else svc.sendToNTS(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, onOk, onErr);
+  }, ctx);
+}
+
+function issueTempSdk(ctx: ResolvedPopbillContext, mgtKey: string, memo: string) {
+  return callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+    svc.issue(
+      ctx.corpNum,
+      MGT_KEY_TYPE_SELL,
+      mgtKey,
+      memo || '전자서명 발행',
+      '',
+      false,
+      ctx.userId || '',
+      (res: Record<string, unknown>) => resolve(res || {}),
+      (err: unknown) => reject(toPopbillError('팝빌 전자서명 발행 오류', err))
+    );
+  }, ctx);
+}
+
+function mapStateCodeToStatus(stateCodeRaw: unknown, ntsResultRaw?: unknown): string {
+  const sc = Number(stateCodeRaw || 0);
+  const ntsRes = String(ntsResultRaw || '').trim();
+  if (sc >= 600) return 'CANCELLED';
+  if (ntsRes === '전송성공' || sc >= 301) return 'SENT_NTS';
+  if (sc === 300) return 'ISSUED';
+  return 'TEMP_SAVED';
+}
+
+async function getCertValidation(ctx: ResolvedPopbillContext) {
+  return callSdk<{ registered: boolean; validMessage: string; certInfo: unknown }>((svc, resolve) => {
+    const onValidOk = (validRes: Record<string, unknown>) => {
+      const onCertOk = (certInfo: unknown) => {
+        resolve({
+          registered: true,
+          validMessage: String(validRes?.message || '인증서 등록 정상'),
+          certInfo: certInfo || null,
+        });
+      };
+      const onCertErr = (err: { message?: string }) => {
+        resolve({
+          registered: false,
+          validMessage: String(err?.message || '공동인증서 미등록'),
+          certInfo: null,
+        });
+      };
+      if (ctx.userId) svc.getTaxCertInfo(ctx.corpNum, ctx.userId, onCertOk, onCertErr);
+      else svc.getTaxCertInfo(ctx.corpNum, onCertOk, onCertErr);
     };
-  }
+    const onValidErr = (err: { message?: string }) => {
+      resolve({
+        registered: false,
+        validMessage: String(err?.message || '공동인증서 미등록'),
+        certInfo: null,
+      });
+    };
+    if (ctx.userId) svc.checkCertValidation(ctx.corpNum, ctx.userId, onValidOk, onValidErr);
+    else svc.checkCertValidation(ctx.corpNum, onValidOk, onValidErr);
+  }, ctx);
+}
 
-  await ensurePopbillEmailNotificationsDisabled(corpNum);
-
-  if (action === 'STATUS_CHECK') {
-    return new Promise(resolve => {
-      taxinvoiceService.checkIsMember(
-        corpNum,
-        (res: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              endpoint: 'https://popbill-test.linkhub.co.kr',
-              linkId: POPBILL_TEST_LINK_ID,
-              corpNum,
-              isMember: Boolean(res?.exist),
-              emailSendBlocked: true,
-              message: '팝빌 테스트 서버 연결 정상 (이메일 발송 원천 차단 활성화)'
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              endpoint: 'https://popbill-test.linkhub.co.kr',
-              linkId: POPBILL_TEST_LINK_ID,
-              corpNum,
-              isMember: false,
-              emailSendBlocked: true,
-              sdkCode: err?.code,
-              message: `팝빌 테스트 서버 연결 대기 (${err?.message || '로컬 테스트베드 폴백 보호 중'})`
-            }
-          });
-        }
+async function handleLiveStatus(ctx: ResolvedPopbillContext) {
+  const [isMemberRes, partnerBalance, memberBalance, cert] = await Promise.all([
+    callSdk<boolean>((svc, resolve) => {
+      svc.checkIsMember(
+        ctx.corpNum,
+        (r: { exist?: boolean }) => resolve(Boolean(r?.exist)),
+        () => resolve(false)
       );
-    });
-  }
+    }, ctx),
+    callSdk<number>((svc, resolve) => {
+      svc.getPartnerBalance(
+        ctx.corpNum,
+        (bal: unknown) => resolve(Number(bal || 0)),
+        () => resolve(0)
+      );
+    }, ctx),
+    callSdk<number>((svc, resolve) => {
+      svc.getBalance(
+        ctx.corpNum,
+        (bal: unknown) => resolve(Number(bal || 0)),
+        () => resolve(0)
+      );
+    }, ctx),
+    getCertValidation(ctx),
+  ]);
 
-  if (action === 'REGISTER_TEMP') {
-    const invoiceInput: SanitizedPopbillInvoiceInput = body?.invoice || {};
-    if (!invoiceInput.mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
+  return {
+    success: true,
+    isLiveProduction: !ctx.isTest,
+    isTest: ctx.isTest,
+    serviceId: ctx.isTest ? 'POPBILL_TEST' : 'POPBILL',
+    baseUrl: ctx.isTest ? 'https://popbill-test.linkhub.co.kr' : 'https://popbill.linkhub.co.kr',
+    corpNum: ctx.corpNum,
+    isMember: isMemberRes,
+    partnerBalance,
+    memberBalance,
+    certRegistered: cert.registered,
+    certInfo: cert.certInfo,
+    certMessage: cert.validMessage,
+    defaultPurposeType: ctx.defaultPurposeType,
+    autoSendToNts: ctx.autoSendToNts,
+  };
+}
+
+async function handlePortalUrl(ctx: ResolvedPopbillContext, action: string) {
+  const url = await callSdk<string>((svc, resolve, reject) => {
+    const onOk = (u: string) => resolve(String(u || ''));
+    const onErr = (err: unknown) => reject(toPopbillError('팝빌 포털 URL 오류', err));
+    if (action === 'CERT_URL') {
+      if (ctx.userId) svc.getTaxCertURL(ctx.corpNum, ctx.userId, onOk, onErr);
+      else svc.getTaxCertURL(ctx.corpNum, onOk, onErr);
+      return;
     }
-    const payload = buildZeroEmailPopbillPayload({ ...invoiceInput, invoicerCorpNum: corpNum });
-    return new Promise(resolve => {
-      taxinvoiceService.register(
-        corpNum,
+    if (action === 'CHARGE_URL') {
+      svc.getPartnerURL(ctx.corpNum, 'CHRG', onOk, onErr);
+      return;
+    }
+    if (ctx.userId) svc.getPopbillURL(ctx.corpNum, ctx.userId, 'LOGIN', onOk, onErr);
+    else svc.getPopbillURL(ctx.corpNum, 'LOGIN', onOk, onErr);
+  }, ctx);
+
+  return { success: true, url, isTest: ctx.isTest };
+}
+
+async function handleRegistIssue(
+  ctx: ResolvedPopbillContext,
+  invoiceInput: InvoiceIssueInput,
+  memoInput?: string,
+  forceIssue = false
+) {
+  const payload = buildPopbillTaxinvoicePayload(ctx, invoiceInput);
+  const mgtKey = payload.invoicerMgtKey;
+  const memo = String(memoInput || '팝빌 전자세금계산서 발행').trim();
+
+  let status = 'ISSUED';
+  let mode = 'ISSUED';
+  let ntsConfirmNo: string | null = null;
+  let message = '';
+
+  try {
+    const res = await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+      svc.registIssue(
+        ctx.corpNum,
         payload,
         false,
-        userId,
-        (res: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_API',
-              stateCode: 100,
-              mgtKey: payload.invoicerMgtKey,
-              code: res?.code,
-              message: res?.message || '팝빌 테스트 임시저장 완료 (이메일 미발송)'
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
-              stateCode: 100,
-              mgtKey: payload.invoicerMgtKey,
-              sdkError: { code: err?.code, message: err?.message },
-              message: '팝빌 테스트베드 임시저장 완료 (이메일 발송 차단됨)'
-            }
-          });
-        }
-      );
-    });
-  }
-
-  if (action === 'REGIST_ISSUE') {
-    const invoiceInput: SanitizedPopbillInvoiceInput = body?.invoice || {};
-    if (!invoiceInput.mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
-    }
-    const payload = buildZeroEmailPopbillPayload({ ...invoiceInput, invoicerCorpNum: corpNum });
-    const memo = String(body?.memo || '팝빌 테스트 서버 발행 (이메일 미발송)');
-    const forceIssue = Boolean(body?.forceIssue ?? false);
-    const writeSpecification = false;
-    // 6번째 인자 emailSubject 무조건 빈 문자열("") 고정
-    return new Promise(resolve => {
-      taxinvoiceService.registIssue(
-        corpNum,
-        payload,
-        writeSpecification,
-        forceIssue,
+        Boolean(forceIssue),
         memo,
         '',
         '',
-        userId,
-        (res: any) => {
-          const fallbackNts = `${payload.writeDate}-TEST-${String(Math.floor(10000000 + Math.random() * 89999999))}`;
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_API',
-              stateCode: 300,
-              mgtKey: payload.invoicerMgtKey,
-              ntsConfirmNum: res?.ntsConfirmNum || fallbackNts,
-              code: res?.code,
-              message: res?.message || '팝빌 테스트 즉시발행 완료 (이메일 발송 0건)'
-            }
-          });
-        },
-        (err: any) => {
-          const fallbackNts = `${payload.writeDate}-TEST-${String(Math.floor(10000000 + Math.random() * 89999999))}`;
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
-              stateCode: 300,
-              mgtKey: payload.invoicerMgtKey,
-              ntsConfirmNum: fallbackNts,
-              sdkError: { code: err?.code, message: err?.message },
-              message: `팝빌 테스트베드 발행 처리 완료 (${err?.message ? `인증서 샌드박스 격리: ${err.message}` : '이메일 발송 차단됨'})`
-            }
-          });
-        }
+        ctx.userId || '',
+        (okRes: Record<string, unknown>) => resolve(okRes || {}),
+        (err: unknown) => reject(toPopbillError('팝빌 발행 오류', err))
       );
-    });
+    }, ctx);
+
+    ntsConfirmNo = String(res?.ntsConfirmNum || res?.ntsconfirmNum || '').trim() || null;
+
+    if (ctx.autoSendToNts) {
+      try {
+        await sendToNtsSdk(ctx, mgtKey);
+        status = 'SENT_NTS';
+        try {
+          const latest = await getInfoSdk(ctx, mgtKey);
+          ntsConfirmNo = String(latest?.ntsconfirmNum || latest?.ntsConfirmNum || ntsConfirmNo || '').trim() || ntsConfirmNo;
+        } catch {
+          // 상태 재조회 실패 시 기존 승인번호 유지
+        }
+        message = `[팝빌 정식 발행 및 국세청 즉시전송 완료]${ntsConfirmNo ? ` 승인번호: ${ntsConfirmNo}` : ''}`;
+      } catch {
+        status = 'ISSUED';
+        message = `[팝빌 발행 완료]${ntsConfirmNo ? ` 승인번호: ${ntsConfirmNo}` : ''}`;
+      }
+    } else {
+      status = 'ISSUED';
+      message = `[팝빌 발행 완료 (국세청 전송 대기)]${ntsConfirmNo ? ` 승인번호: ${ntsConfirmNo}` : ''}`;
+    }
+  } catch (rawErr) {
+    const sdkErr = rawErr as Error & { code?: number };
+    const code = Number(sdkErr?.code);
+    const errText = String(sdkErr?.message || '');
+
+    if (code === -10002009 || errText.includes('인증서')) {
+      try {
+        await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+          svc.register(
+            ctx.corpNum,
+            payload,
+            ctx.userId || '',
+            false,
+            (regRes: Record<string, unknown>) => resolve(regRes || {}),
+            (err: unknown) => reject(toPopbillError('팝빌 임시등록 오류', err))
+          );
+        }, ctx);
+        mode = 'REGISTERED_IN_POPBILL';
+        status = 'TEMP_SAVED';
+        ntsConfirmNo = null;
+        message =
+          '[팝빌 임시문서함 등록 완료] 공동인증서가 등록되지 않아 임시저장 상태로 보관되었습니다. 공동인증서 등록 후 발행해 주세요.';
+      } catch (regErrRaw) {
+        const regErr = regErrRaw as Error & { code?: number };
+        if (regErr?.code === -11000003 || String(regErr?.message || '').includes('이미')) {
+          const info = await getInfoSdk(ctx, mgtKey);
+          ntsConfirmNo = String(info?.ntsconfirmNum || info?.ntsConfirmNum || '').trim() || null;
+          status = mapStateCodeToStatus(info?.stateCode, info?.ntsresult);
+          mode = ntsConfirmNo ? 'ALREADY_IN_POPBILL' : 'REGISTERED_IN_POPBILL';
+          message = ntsConfirmNo
+            ? `[팝빌 기존 발행 확인] 승인번호: ${ntsConfirmNo}`
+            : '[팝빌 임시문서함 보관중] 공동인증서 서명 대기 상태입니다.';
+        } else {
+          throw regErrRaw;
+        }
+      }
+    } else if (code === -11000003 || errText.includes('이미')) {
+      const info = await getInfoSdk(ctx, mgtKey);
+      const existingNts = String(info?.ntsconfirmNum || info?.ntsConfirmNum || '').trim() || null;
+      if (existingNts) {
+        ntsConfirmNo = existingNts;
+        status = mapStateCodeToStatus(info?.stateCode, info?.ntsresult);
+        mode = 'ALREADY_IN_POPBILL';
+        message = `[팝빌 기존 발행 확인] 승인번호: ${existingNts}`;
+      } else {
+        const issueRes = await issueTempSdk(ctx, mgtKey, memo);
+        ntsConfirmNo = String(issueRes?.ntsConfirmNum || issueRes?.ntsconfirmNum || '').trim() || null;
+        mode = 'ISSUED_FROM_TEMP';
+        status = 'ISSUED';
+        if (ctx.autoSendToNts) {
+          try {
+            await sendToNtsSdk(ctx, mgtKey);
+            status = 'SENT_NTS';
+          } catch {
+            // 이미 자동전송 대기 중인 경우 무시
+          }
+        }
+        message = `[팝빌 임시문서 발행 완료]${ntsConfirmNo ? ` 승인번호: ${ntsConfirmNo}` : ''}`;
+      }
+    } else {
+      throw sdkErr;
+    }
   }
 
-  if (action === 'SEND_TO_NTS') {
-    const mgtKey = String(body?.mgtKey || '').trim();
-    if (!mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
-    }
-    return new Promise(resolve => {
-      taxinvoiceService.sendToNTS(
-        corpNum,
-        'SELL',
-        mgtKey,
-        userId,
-        (res: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_API',
-              stateCode: 304,
-              mgtKey,
-              code: res?.code,
-              message: res?.message || '팝빌 테스트 국세청 즉시전송 완료 (이메일 미발송)'
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
-              stateCode: 304,
-              mgtKey,
-              sdkError: { code: err?.code, message: err?.message },
-              message: '팝빌 테스트 국세청 전송 완료 처리 (이메일 미발송)'
-            }
-          });
-        }
-      );
-    });
-  }
-
-  if (action === 'CANCEL_ISSUE') {
-    const mgtKey = String(body?.mgtKey || '').trim();
-    const memo = String(body?.memo || '테스트 발행 취소 (이메일 미발송)');
-    if (!mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
-    }
-    return new Promise(resolve => {
-      taxinvoiceService.cancelIssue(
-        corpNum,
-        'SELL',
-        mgtKey,
-        memo,
-        userId,
-        (res: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_API',
-              stateCode: 600,
-              mgtKey,
-              code: res?.code,
-              message: res?.message || '팝빌 테스트 발행취소 완료 (이메일 미발송)'
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
-              stateCode: 600,
-              mgtKey,
-              sdkError: { code: err?.code, message: err?.message },
-              message: '팝빌 테스트 발행취소 완료 (이메일 미발송)'
-            }
-          });
-        }
-      );
-    });
-  }
-
-  if (action === 'GET_INFO') {
-    const mgtKey = String(body?.mgtKey || '').trim();
-    if (!mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
-    }
-    return new Promise(resolve => {
-      taxinvoiceService.getInfo(
-        corpNum,
-        'SELL',
-        mgtKey,
-        (res: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_API',
-              info: res
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              mode: 'POPBILL_TEST_SANDBOX_FALLBACK',
-              info: null,
-              sdkError: { code: err?.code, message: err?.message }
-            }
-          });
-        }
-      );
-    });
-  }
-
-  if (action === 'GET_POPUP_URL' || action === 'GET_PRINT_URL') {
-    const mgtKey = String(body?.mgtKey || '').trim();
-    if (!mgtKey) {
-      return { status: 400, data: { success: false, error: '문서번호(mgtKey)가 필요합니다.' } };
-    }
-    const fn = action === 'GET_PRINT_URL' ? taxinvoiceService.getPrintURL : taxinvoiceService.getPopUpURL;
-    return new Promise(resolve => {
-      fn.call(
-        taxinvoiceService,
-        corpNum,
-        'SELL',
-        mgtKey,
-        userId,
-        (url: string) => {
-          resolve({
-            status: 200,
-            data: {
-              success: true,
-              isTest: true,
-              emailSendBlocked: true,
-              url
-            }
-          });
-        },
-        (err: any) => {
-          resolve({
-            status: 200,
-            data: {
-              success: false,
-              isTest: true,
-              emailSendBlocked: true,
-              sdkError: { code: err?.code, message: err?.message }
-            }
-          });
-        }
-      );
-    });
+  let popupUrl = '';
+  try {
+    popupUrl = await getPopupUrlSdk(ctx, mgtKey, false);
+  } catch {
+    popupUrl = '';
   }
 
   return {
-    status: 400,
-    data: {
-      success: false,
-      isTest: true,
-      emailSendBlocked: true,
-      error: `지원하지 않는 팝빌 테스트 액션입니다: ${action}`
-    }
+    success: true,
+    isLiveProduction: !ctx.isTest,
+    isTest: ctx.isTest,
+    mgtKey,
+    ntsConfirmNo,
+    status,
+    mode,
+    purposeType: payload.purposeType,
+    receiverEmail: payload.invoiceeEmail1 || '',
+    popupUrl,
+    message,
   };
 }
 
@@ -574,20 +665,243 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST' && req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: '지원하지 않는 요청 방식입니다.' });
   }
 
   try {
-    const payload = req.method === 'GET' ? { action: 'STATUS_CHECK' } : (req.body || {});
-    const result = await executePopbillTestAction(payload);
-    return res.status(result.status).json(result.data);
-  } catch (err: any) {
-    return res.status(500).json({
+    const body = (req.body || {}) as Record<string, unknown>;
+    const action = String(body.action || 'LIVE_STATUS')
+      .trim()
+      .toUpperCase();
+    const tenantId = String(body.tenantId || '').trim();
+    const tenantCode = String(body.tenantCode || '').trim();
+
+    if (!tenantId && !tenantCode) {
+      return res.status(400).json({
+        success: false,
+        error: '테넌트 식별 정보(tenantId 또는 tenantCode)가 필요합니다.',
+      });
+    }
+
+    const tenant = await fetchCentralTenant(tenantId, tenantCode, action === 'LIVE_STATUS');
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        error: '테넌트 정보를 확인할 수 없습니다.',
+      });
+    }
+
+    if (!isPopbillEnabledForTenant(tenant)) {
+      return res.status(403).json({
+        success: false,
+        disabledByTenant: true,
+        error:
+          '해당 테넌트는 팝빌 전자세금계산서 발행 기능이 비활성화되어 있습니다. 테넌트관리센터에서 활성 여부를 확인해 주세요.',
+      });
+    }
+
+    const ctx = resolvePopbillContext(tenant);
+
+    if (action === 'LIVE_STATUS' || action === 'CERT_INFO' || action === 'STATUS_CHECK') {
+      const data = await handleLiveStatus(ctx);
+      return res.status(200).json(data);
+    }
+
+    if (action === 'PORTAL_URL' || action === 'CERT_URL' || action === 'CHARGE_URL') {
+      const data = await handlePortalUrl(ctx, action);
+      return res.status(200).json(data);
+    }
+
+    if (action === 'REGIST_ISSUE') {
+      const invoiceInput = (body.invoice || {}) as InvoiceIssueInput;
+      const result = await handleRegistIssue(
+        ctx,
+        invoiceInput,
+        typeof body.memo === 'string' ? body.memo : undefined,
+        Boolean(body.forceIssue)
+      );
+      return res.status(200).json(result);
+    }
+
+    if (action === 'REGISTER_TEMP') {
+      const invoiceInput = (body.invoice || {}) as InvoiceIssueInput;
+      const payload = buildPopbillTaxinvoicePayload(ctx, invoiceInput);
+      await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+        svc.register(
+          ctx.corpNum,
+          payload,
+          ctx.userId || '',
+          false,
+          (r: Record<string, unknown>) => resolve(r || {}),
+          (err: unknown) => reject(toPopbillError('팝빌 임시등록 오류', err))
+        );
+      }, ctx);
+      return res.status(200).json({
+        success: true,
+        isTest: ctx.isTest,
+        mgtKey: payload.invoicerMgtKey,
+        status: 'TEMP_SAVED',
+        ntsConfirmNo: null,
+        message: '팝빌 임시문서함 등록 완료',
+      });
+    }
+
+    if (action === 'SYNC_STATUS' || action === 'GET_INFO') {
+      const mgtKey = String(body.mgtKey || '').trim();
+      if (!mgtKey) {
+        return res.status(400).json({ success: false, error: '세금계산서 관리번호(mgtKey)가 필요합니다.' });
+      }
+      const info = await getInfoSdk(ctx, mgtKey);
+      const ntsConfirmNo = String(info?.ntsconfirmNum || info?.ntsConfirmNum || '').trim() || null;
+      const status = mapStateCodeToStatus(info?.stateCode, info?.ntsresult);
+      return res.status(200).json({
+        success: true,
+        isTest: ctx.isTest,
+        mgtKey,
+        status,
+        ntsConfirmNo,
+        info,
+      });
+    }
+
+    if (action === 'SEND_TO_NTS') {
+      const keys = Array.isArray(body.mgtKeys)
+        ? body.mgtKeys.map((k) => String(k || '').trim()).filter(Boolean)
+        : body.mgtKey
+          ? [String(body.mgtKey).trim()]
+          : [];
+      if (keys.length === 0) {
+        return res.status(400).json({ success: false, error: '국세청 전송할 관리번호가 필요합니다.' });
+      }
+
+      const results: Array<{ mgtKey: string; ntsConfirmNo: string | null; status: string }> = [];
+      const errors: string[] = [];
+
+      for (const k of keys) {
+        try {
+          try {
+            await sendToNtsSdk(ctx, k);
+          } catch (firstErr) {
+            const code = (firstErr as Error & { code?: number })?.code;
+            const msg = String((firstErr as Error)?.message || '');
+            if (code === -11000015 || msg.includes('발행')) {
+              await issueTempSdk(ctx, k, '전자서명 발행 후 국세청 전송');
+              await sendToNtsSdk(ctx, k);
+            } else {
+              throw firstErr;
+            }
+          }
+          const info = await getInfoSdk(ctx, k).catch(() => ({} as Record<string, unknown>));
+          const ntsNo = String(info?.ntsconfirmNum || info?.ntsConfirmNum || '').trim() || null;
+          results.push({ mgtKey: k, ntsConfirmNo: ntsNo, status: 'SENT_NTS' });
+        } catch (err) {
+          errors.push(`[${k}] ${err instanceof Error ? err.message : '전송 오류'}`);
+        }
+      }
+
+      if (results.length === 0 && errors.length > 0) {
+        return res.status(400).json({ success: false, error: errors.join('\n') });
+      }
+
+      return res.status(200).json({
+        success: true,
+        isTest: ctx.isTest,
+        sentCount: results.length,
+        errorCount: errors.length,
+        ntsConfirmNo: results[0]?.ntsConfirmNo || null,
+        status: 'SENT_NTS',
+        results,
+        errors,
+        message:
+          keys.length === 1
+            ? `[${keys[0]}] 국세청 즉시전송 요청 완료`
+            : `총 ${results.length}건 국세청 즉시전송 완료${errors.length > 0 ? ` (${errors.length}건 실패)` : ''}`,
+      });
+    }
+
+    if (action === 'VIEW_URL' || action === 'PRINT_URL' || action === 'GET_POPUP_URL' || action === 'GET_PRINT_URL') {
+      const mgtKey = String(body.mgtKey || '').trim();
+      if (!mgtKey) {
+        return res.status(400).json({ success: false, error: '세금계산서 관리번호(mgtKey)가 필요합니다.' });
+      }
+      const isPrint = action === 'PRINT_URL' || action === 'GET_PRINT_URL';
+      const url = await getPopupUrlSdk(ctx, mgtKey, isPrint);
+      return res.status(200).json({ success: true, isTest: ctx.isTest, url });
+    }
+
+    if (action === 'SEND_EMAIL' || action === 'RESEND_EMAIL') {
+      const mgtKey = String(body.mgtKey || '').trim();
+      const receiverEmail = String(body.receiverEmail || '').trim();
+      if (!mgtKey || !receiverEmail) {
+        return res.status(400).json({
+          success: false,
+          error: '관리번호(mgtKey)와 수신자 이메일(receiverEmail)이 필요합니다.',
+        });
+      }
+      await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+        const onOk = (r: Record<string, unknown>) => resolve(r || {});
+        const onErr = (err: unknown) => reject(toPopbillError('팝빌 이메일 재전송 오류', err));
+        if (ctx.userId) svc.sendEmail(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, receiverEmail, ctx.userId, onOk, onErr);
+        else svc.sendEmail(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, receiverEmail, onOk, onErr);
+      }, ctx);
+      return res.status(200).json({
+        success: true,
+        isTest: ctx.isTest,
+        receiverEmail,
+        message: `[${receiverEmail}]로 세금계산서 안내 이메일 발송 완료`,
+      });
+    }
+
+    if (action === 'CANCEL_ISSUE') {
+      const mgtKey = String(body.mgtKey || '').trim();
+      const memo = String(body.memo || '세금계산서 발행 취소').trim();
+      if (!mgtKey) {
+        return res.status(400).json({ success: false, error: '세금계산서 관리번호(mgtKey)가 필요합니다.' });
+      }
+      let cancelledByDelete = false;
+      try {
+        await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+          const onOk = (r: Record<string, unknown>) => resolve(r || {});
+          const onErr = (err: unknown) => reject(toPopbillError('팝빌 발행취소 오류', err));
+          if (ctx.userId) svc.cancelIssue(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, memo, ctx.userId, onOk, onErr);
+          else svc.cancelIssue(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, memo, onOk, onErr);
+        }, ctx);
+      } catch (cancelErr) {
+        const code = (cancelErr as Error & { code?: number })?.code;
+        if (code === -11000015 || code === -11000009 || String((cancelErr as Error)?.message || '').includes('임시저장')) {
+          await callSdk<Record<string, unknown>>((svc, resolve, reject) => {
+            const onOk = (r: Record<string, unknown>) => resolve(r || {});
+            const onErr = (err: unknown) => reject(toPopbillError('팝빌 임시문서 삭제 오류', err));
+            if (ctx.userId) svc.delete(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, ctx.userId, onOk, onErr);
+            else svc.delete(ctx.corpNum, MGT_KEY_TYPE_SELL, mgtKey, onOk, onErr);
+          }, ctx);
+          cancelledByDelete = true;
+        } else {
+          throw cancelErr;
+        }
+      }
+      return res.status(200).json({
+        success: true,
+        isTest: ctx.isTest,
+        mgtKey,
+        status: 'CANCELLED',
+        message: cancelledByDelete
+          ? `[${mgtKey}] 팝빌 임시문서 삭제 완료`
+          : `[${mgtKey}] 팝빌 세금계산서 발행 취소 완료`,
+      });
+    }
+
+    return res.status(400).json({
       success: false,
-      isTest: true,
-      emailSendBlocked: true,
-      error: err?.message || '팝빌 테스트 서버 연동 중 오류가 발생했습니다.'
+      error: `지원하지 않는 팝빌 작업입니다: ${action}`,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '팝빌 연동 처리 중 오류가 발생했습니다.';
+    const statusCode = (err as { code?: number })?.code ? 400 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: message,
     });
   }
 }

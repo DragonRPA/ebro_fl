@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
-  "totalFiles": 410,
-  "totalLines": 167898,
-  "totalBytes": 7108859,
+  "totalFiles": 413,
+  "totalLines": 169563,
+  "totalBytes": 7172846,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -52,9 +52,9 @@
     "L03_CORE_SHELL": 8,
     "L04_TYPES_DATA_MANUAL": 14,
     "L05_PAGES": 39,
-    "L06_COMPONENTS": 10,
-    "L07_SERVICES_UTILS": 19,
-    "L08_BACKEND_SQL_TEMPLATES": 25,
+    "L06_COMPONENTS": 11,
+    "L07_SERVICES_UTILS": 20,
+    "L08_BACKEND_SQL_TEMPLATES": 26,
     "L09_NATIVE_AGENTS_TOOLS": 51,
     "L10_TESTS_SCRIPTS": 219
   },
@@ -839,13 +839,10 @@
       "path": "api/popbill-taxinvoice.ts",
       "layer": "L08_BACKEND_SQL_TEMPLATES",
       "ext": ".ts",
-      "lines": 594,
-      "bytes": 19998,
+      "lines": 908,
+      "bytes": 33741,
       "menuInfo": null,
       "exports": [
-        "SanitizedPopbillInvoiceInput",
-        "buildZeroEmailPopbillPayload",
-        "executePopbillTestAction",
         "handler"
       ],
       "internalImports": [],
@@ -861,8 +858,10 @@
       "dbTables": [],
       "pcMobilePair": null,
       "loadMode": null,
-      "optimizationFlags": [],
-      "description": "팝빌 전자세금계산서 테스트 서버(IsTest 고정·이메일 발송 하드블록) 연동 발행·상태조회 Vercel 서버리스 API"
+      "optimizationFlags": [
+        "LARGE_FILE"
+      ],
+      "description": "테넌트관리센터 활성 여부 검증 및 테넌트별 팝빌 설정 기반 전자세금계산서 발행·국세청전송·상태조회·포털 연동 Vercel 서버리스 API"
     },
     {
       "path": "api/popbill.d.ts",
@@ -2809,8 +2808,8 @@
       "path": "scripts/code_file_descriptions.cjs",
       "layer": "L10_TESTS_SCRIPTS",
       "ext": ".cjs",
-      "lines": 517,
-      "bytes": 63080,
+      "lines": 520,
+      "bytes": 63702,
       "menuInfo": null,
       "exports": [
         "PC_MOBILE_PAIRS",
@@ -7334,6 +7333,36 @@
       "description": "아이디·비밀번호 로그인 폼, 로컬 에이전트 설치·업데이트 제어 및 지연로딩 개인정보 처리방침 열람 화면"
     },
     {
+      "path": "src/components/PopbillTaxInvoiceModal.tsx",
+      "layer": "L06_COMPONENTS",
+      "ext": ".tsx",
+      "lines": 336,
+      "bytes": 13219,
+      "menuInfo": null,
+      "exports": [
+        "PopbillTaxInvoiceModal"
+      ],
+      "internalImports": [
+        "src/components/UiPrimitives.tsx",
+        "src/services/popbillTaxInvoiceService.ts",
+        "src/types/domain.ts"
+      ],
+      "dynamicImports": [],
+      "importedBy": [
+        "src/pages/finance/ArBillingCollectionPage.tsx"
+      ],
+      "fanOut": 3,
+      "dynamicFanOut": 0,
+      "fanIn": 1,
+      "externalDynamicLibs": [],
+      "heavyStaticLibs": [],
+      "dbTables": [],
+      "pcMobilePair": null,
+      "loadMode": null,
+      "optimizationFlags": [],
+      "description": "청구 원장 기반 팝빌 전자세금계산서 공급받는자·품목 확인 및 즉시 발행 모달 컴포넌트"
+    },
+    {
       "path": "src/components/PrivacyPolicyModal.tsx",
       "layer": "L06_COMPONENTS",
       "ext": ".tsx",
@@ -7479,6 +7508,7 @@
       "importedBy": [
         "src/components/DocumentActionBar.tsx",
         "src/components/LoginView.tsx",
+        "src/components/PopbillTaxInvoiceModal.tsx",
         "src/components/SearchableSelect.tsx",
         "src/components/ShellLayout.tsx",
         "src/components/WeatherWidget.tsx",
@@ -7523,7 +7553,7 @@
       ],
       "fanOut": 4,
       "dynamicFanOut": 0,
-      "fanIn": 43,
+      "fanIn": 44,
       "externalDynamicLibs": [
         "xlsx"
       ],
@@ -7660,8 +7690,8 @@
       "path": "src/core/AppShellContext.tsx",
       "layer": "L03_CORE_SHELL",
       "ext": ".tsx",
-      "lines": 780,
-      "bytes": 26638,
+      "lines": 788,
+      "bytes": 26891,
       "menuInfo": null,
       "exports": [
         "FlDatasets",
@@ -7745,8 +7775,8 @@
       "path": "src/core/flDatasetLoader.ts",
       "layer": "L03_CORE_SHELL",
       "ext": ".ts",
-      "lines": 622,
-      "bytes": 21972,
+      "lines": 625,
+      "bytes": 22109,
       "menuInfo": null,
       "exports": [
         "SESSION_STORAGE_KEY",
@@ -7926,11 +7956,12 @@
         "src/services/domainMath.ts",
         "src/services/domainProcurementInboundEngine.ts",
         "src/services/domainProcurementLeaseEngine.ts",
+        "src/services/popbillTaxInvoiceService.ts",
         "src/services/tenantBootstrapService.ts"
       ],
       "fanOut": 1,
       "dynamicFanOut": 0,
-      "fanIn": 27,
+      "fanIn": 28,
       "externalDynamicLibs": [],
       "heavyStaticLibs": [],
       "dbTables": [],
@@ -8346,7 +8377,7 @@
       "layer": "L04_TYPES_DATA_MANUAL",
       "ext": ".ts",
       "lines": 685,
-      "bytes": 50958,
+      "bytes": 51101,
       "menuInfo": null,
       "exports": [
         "ManualAnchorDef",
@@ -8417,14 +8448,15 @@
       "path": "src/pages/finance/ArBillingCollectionPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 588,
-      "bytes": 21279,
+      "lines": 1084,
+      "bytes": 40515,
       "menuInfo": "ar_billing_collection (청구 수납 관리)",
       "exports": [
         "ArBillingCollectionPage"
       ],
       "internalImports": [
         "src/components/DocumentActionBar.tsx",
+        "src/components/PopbillTaxInvoiceModal.tsx",
         "src/components/UiPrimitives.tsx",
         "src/core/ActionCommandGateway.tsx",
         "src/core/AppShellContext.tsx",
@@ -8432,13 +8464,14 @@
         "src/services/documentService.ts",
         "src/services/domainMath.ts",
         "src/services/domainProcurementLeaseEngine.ts",
+        "src/services/popbillTaxInvoiceService.ts",
         "src/types/domain.ts"
       ],
       "dynamicImports": [],
       "importedBy": [
         "src/App.tsx"
       ],
-      "fanOut": 9,
+      "fanOut": 11,
       "dynamicFanOut": 0,
       "fanIn": 1,
       "externalDynamicLibs": [],
@@ -8448,7 +8481,9 @@
       ],
       "pcMobilePair": null,
       "loadMode": "lazy",
-      "optimizationFlags": [],
+      "optimizationFlags": [
+        "LARGE_FILE"
+      ],
       "description": "일할·유통 청구 생성, 팝빌 전자세금계산서 발행, 거래명세서 발송 및 수납 관리 페이지"
     },
     {
@@ -8656,8 +8691,8 @@
       "path": "src/pages/finance/SystemSettingsPage.tsx",
       "layer": "L05_PAGES",
       "ext": ".tsx",
-      "lines": 244,
-      "bytes": 9257,
+      "lines": 246,
+      "bytes": 9407,
       "menuInfo": "system_settings (시스템 설정)",
       "exports": [
         "SystemSettingsPage"
@@ -10443,6 +10478,53 @@
       "description": "국세청 사업자등록번호 체크섬 검증 및 휴폐업·과세유형 단건/다건(100건 청크) 상태조회 클라이언트 서비스"
     },
     {
+      "path": "src/services/popbillTaxInvoiceService.ts",
+      "layer": "L07_SERVICES_UTILS",
+      "ext": ".ts",
+      "lines": 463,
+      "bytes": 14978,
+      "menuInfo": null,
+      "exports": [
+        "PopbillLiveStatus",
+        "PopbillLineDraft",
+        "PopbillIssueDraft",
+        "PopbillIssueResult",
+        "formatPopbillStatusLabel",
+        "generatePopbillMgtKey",
+        "buildDefaultPopbillDraft",
+        "fetchPopbillLiveStatus",
+        "openPopbillPortal",
+        "issuePopbillTaxInvoiceForBilling",
+        "batchIssuePopbillTaxInvoices",
+        "syncPopbillTaxInvoiceStatus",
+        "sendPopbillTaxInvoiceToNts",
+        "openPopbillInvoicePopup",
+        "resendPopbillTaxInvoiceEmail",
+        "cancelPopbillTaxInvoice"
+      ],
+      "internalImports": [
+        "src/core/supabase.ts",
+        "src/types/domain.ts"
+      ],
+      "dynamicImports": [],
+      "importedBy": [
+        "src/components/PopbillTaxInvoiceModal.tsx",
+        "src/pages/finance/ArBillingCollectionPage.tsx"
+      ],
+      "fanOut": 2,
+      "dynamicFanOut": 0,
+      "fanIn": 2,
+      "externalDynamicLibs": [],
+      "heavyStaticLibs": [],
+      "dbTables": [
+        "fl_billings"
+      ],
+      "pcMobilePair": null,
+      "loadMode": null,
+      "optimizationFlags": [],
+      "description": "팝빌 전자세금계산서 연동 상태 조회, 단건/일괄 발행, 국세청 즉시전송, 상태 동기화, 포털/뷰어 열기 및 DB 저장 서비스"
+    },
+    {
       "path": "src/services/tenantBootstrapService.ts",
       "layer": "L07_SERVICES_UTILS",
       "ext": ".ts",
@@ -10544,6 +10626,7 @@
       "importedBy": [
         "scripts/verify_v2_conservation.cjs",
         "src/App.tsx",
+        "src/components/PopbillTaxInvoiceModal.tsx",
         "src/components/SearchableSelect.tsx",
         "src/components/ShellLayout.tsx",
         "src/components/UiPrimitives.tsx",
@@ -10604,12 +10687,13 @@
         "src/services/financialStatementEngine.ts",
         "src/services/financialStatementFormatter.ts",
         "src/services/ntsBusinessService.ts",
+        "src/services/popbillTaxInvoiceService.ts",
         "src/services/tenantBootstrapService.ts",
         "src/utils/fxRateUtils.ts"
       ],
       "fanOut": 3,
       "dynamicFanOut": 0,
-      "fanIn": 64,
+      "fanIn": 66,
       "externalDynamicLibs": [],
       "heavyStaticLibs": [],
       "dbTables": [],
@@ -10624,8 +10708,8 @@
       "path": "src/types/domainCoreTypes.ts",
       "layer": "L04_TYPES_DATA_MANUAL",
       "ext": ".ts",
-      "lines": 624,
-      "bytes": 18763,
+      "lines": 651,
+      "bytes": 19591,
       "menuInfo": null,
       "exports": [
         "TierLevel",
@@ -10650,8 +10734,10 @@
         "getDocTypesForTenant",
         "TenantR2Config",
         "OfficialMailConfig",
+        "TenantPopbillConfig",
         "TenantFeatures",
         "isTenantRentalEnabled",
+        "isTenantPopbillEnabled",
         "TenantProfile",
         "EmploymentStatus",
         "DepartmentFuncTag",
@@ -10781,8 +10867,8 @@
       "path": "src/types/domainLedgerTypes.ts",
       "layer": "L04_TYPES_DATA_MANUAL",
       "ext": ".ts",
-      "lines": 482,
-      "bytes": 12238,
+      "lines": 488,
+      "bytes": 12458,
       "menuInfo": null,
       "exports": [
         "FlPurchase",
@@ -11023,6 +11109,30 @@
       "loadMode": null,
       "optimizationFlags": [],
       "description": "Hindsight 4계층 메모리(pgvector HNSW 인덱스·JSONB·RLS) DB 마이그레이션 DDL"
+    },
+    {
+      "path": "supabase/migrations/20261119_fl_billings_popbill_columns.sql",
+      "layer": "L08_BACKEND_SQL_TEMPLATES",
+      "ext": ".sql",
+      "lines": 7,
+      "bytes": 458,
+      "menuInfo": null,
+      "exports": [],
+      "internalImports": [],
+      "dynamicImports": [],
+      "importedBy": [],
+      "fanOut": 0,
+      "dynamicFanOut": 0,
+      "fanIn": 0,
+      "externalDynamicLibs": [],
+      "heavyStaticLibs": [],
+      "dbTables": [
+        "fl_billings"
+      ],
+      "pcMobilePair": null,
+      "loadMode": null,
+      "optimizationFlags": [],
+      "description": "fl_billings 테이블 팝빌 전자세금계산서 관리번호·상태·채널·영수청구·이메일·국세청전송일시 확장 DDL"
     },
     {
       "path": "templates/거래명세서_양식.html",
