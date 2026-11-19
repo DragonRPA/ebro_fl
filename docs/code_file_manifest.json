@@ -2,8 +2,8 @@
   "schemaVersion": "1.1.0",
   "project": "ebro_fl",
   "totalFiles": 410,
-  "totalLines": 167434,
-  "totalBytes": 7089623,
+  "totalLines": 167898,
+  "totalBytes": 7108859,
   "layers": [
     {
       "id": "L01_ROOT_BUILD",
@@ -156,8 +156,8 @@
       "path": "agent/agent.js",
       "layer": "L09_NATIVE_AGENTS_TOOLS",
       "ext": ".js",
-      "lines": 1428,
-      "bytes": 65440,
+      "lines": 1444,
+      "bytes": 66676,
       "menuInfo": null,
       "exports": [],
       "internalImports": [],
@@ -180,8 +180,8 @@
       "path": "agent/BroAgent.js",
       "layer": "L09_NATIVE_AGENTS_TOOLS",
       "ext": ".js",
-      "lines": 1440,
-      "bytes": 66640,
+      "lines": 1456,
+      "bytes": 67869,
       "menuInfo": null,
       "exports": [],
       "internalImports": [],
@@ -314,8 +314,8 @@
       "path": "agent/eBroAgent.js",
       "layer": "L09_NATIVE_AGENTS_TOOLS",
       "ext": ".js",
-      "lines": 5699,
-      "bytes": 246588,
+      "lines": 6065,
+      "bytes": 260900,
       "menuInfo": null,
       "exports": [],
       "internalImports": [
@@ -2810,7 +2810,7 @@
       "layer": "L10_TESTS_SCRIPTS",
       "ext": ".cjs",
       "lines": 517,
-      "bytes": 63052,
+      "bytes": 63080,
       "menuInfo": null,
       "exports": [
         "PC_MOBILE_PAIRS",
@@ -7271,8 +7271,8 @@
       "path": "src/components/DocumentActionBar.tsx",
       "layer": "L06_COMPONENTS",
       "ext": ".tsx",
-      "lines": 361,
-      "bytes": 12520,
+      "lines": 372,
+      "bytes": 12940,
       "menuInfo": null,
       "exports": [
         "DocumentActionBar"
@@ -7298,7 +7298,7 @@
       "pcMobilePair": null,
       "loadMode": null,
       "optimizationFlags": [],
-      "description": "견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 이메일 발송 모달 액션 바 컴포넌트"
+      "description": "견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 에이전트 PDF 변환 이메일 발송 모달 액션 바 컴포넌트"
     },
     {
       "path": "src/components/LoginView.tsx",
@@ -9819,7 +9819,7 @@
       "layer": "L07_SERVICES_UTILS",
       "ext": ".ts",
       "lines": 526,
-      "bytes": 21092,
+      "bytes": 21128,
       "menuInfo": null,
       "exports": [
         "EXPECTED_AGENT_VERSION",
@@ -9960,8 +9960,8 @@
       "path": "src/services/documentService.ts",
       "layer": "L07_SERVICES_UTILS",
       "ext": ".ts",
-      "lines": 620,
-      "bytes": 23034,
+      "lines": 675,
+      "bytes": 25009,
       "menuInfo": null,
       "exports": [
         "loadExcelJs",
@@ -9970,6 +9970,7 @@
         "generateTransactionStatementExcel",
         "downloadExcelFile",
         "openExcelInAgent",
+        "convertExcelToPdfViaAgent",
         "sendDocumentEmailViaAgent"
       ],
       "internalImports": [
@@ -9998,7 +9999,7 @@
       "pcMobilePair": null,
       "loadMode": null,
       "optimizationFlags": [],
-      "description": "동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 열기·이메일 발송 서비스"
+      "description": "동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 PDF 변환·이메일 발송 서비스"
     },
     {
       "path": "src/services/domainAftercareMaintEngine.ts",

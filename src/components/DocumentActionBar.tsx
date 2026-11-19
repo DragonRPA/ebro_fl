@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Download, FileSpreadsheet, Mail } from 'lucide-react';
 import { useAppShell } from '../core/AppShellContext';
 import {
+  convertExcelToPdfViaAgent,
   downloadExcelFile,
   openExcelInAgent,
   sendDocumentEmailViaAgent,
@@ -97,22 +98,32 @@ export const DocumentActionBar: React.FC<{
     }
     setBusy(true);
     setMailErrorMsg(null);
-    setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중');
+    setMailStepMsg(
+      editedPath ? '1/3 단계: 편집본 로컬 에이전트 PDF 변환 중' : '1/3 단계: 첨부 양식 생성 중'
+    );
     const slowGenTimer = window.setTimeout(() => {
-      setMailStepMsg('1/3 단계: 첨부 문서 파일 생성 중 · 지연사유: 양식 및 도장 이미지 처리 대기');
-    }, 3500);
+      setMailStepMsg('1/3 단계: 로컬 에이전트 PDF 변환 중 · 지연사유: 엑셀 양식 렌더링 대기');
+    }, 5000);
     try {
-      let fileName = editedFileName || `${docLabel}.xlsx`;
-      let base64Content: string | undefined;
-      if (!editedPath) {
-        const genPromise = onGenerate();
-        const timeoutPromise = new Promise<never>((_, reject) =>
+      let pdfRes: { fileName: string; base64: string; engine?: string };
+      if (editedPath) {
+        pdfRes = await convertExcelToPdfViaAgent({
+          fileName: editedFileName || `${docLabel}.xlsx`,
+          localEditedPath: editedPath,
+        });
+      } else {
+        const genTimeout = new Promise<never>((_, reject) =>
           window.setTimeout(() => reject(new Error('첨부 문서 생성 시간 초과 (15초)')), 15000)
         );
-        const res = await Promise.race([genPromise, timeoutPromise]);
-        fileName = res.fileName;
-        base64Content = res.base64;
+        const res = await Promise.race([onGenerate(), genTimeout]);
+        setMailStepMsg('1/3 단계: 로컬 에이전트 PDF 변환 중');
+        pdfRes = await convertExcelToPdfViaAgent({
+          fileName: res.fileName,
+          base64Content: res.base64,
+        });
       }
+      const fileName = pdfRes.fileName;
+      const base64Content = pdfRes.base64;
       window.clearTimeout(slowGenTimer);
 
       const MAX_RETRY = 3;
@@ -135,7 +146,7 @@ export const DocumentActionBar: React.FC<{
             subject: subject.trim(),
             body,
             fileName,
-            localEditedPath: editedPath,
+            localEditedPath: null,
             base64Content,
           });
           window.clearTimeout(slowSendTimer);
@@ -275,8 +286,8 @@ export const DocumentActionBar: React.FC<{
             }}
           >
             {editedPath
-              ? `편집 파일 첨부 대상: ${editedFileName} · ${editedPath}`
-              : `발송 시 ${docLabel} 최신 양식 파일 생성 후 첨부`}
+              ? `편집 파일 PDF 변환 첨부 대상: ${editedFileName} · ${editedPath}`
+              : `발송 시 ${docLabel} 최신 양식 PDF 변환 후 첨부`}
           </div>
           {mailStepMsg && (
             <div

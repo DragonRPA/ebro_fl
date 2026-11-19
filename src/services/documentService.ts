@@ -567,6 +567,59 @@ export async function openExcelInAgent(fileName: string, base64Content: string):
   return json.filePath;
 }
 
+export async function convertExcelToPdfViaAgent(params: {
+  fileName: string;
+  base64Content?: string;
+  localEditedPath?: string | null;
+}): Promise<{ fileName: string; base64: string; engine?: string }> {
+  const resp = await fetchWithAgentFallback('/api/convert-excel-to-pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 45000,
+    requireAgent: true,
+    actionName: 'PDF 문서 변환',
+    body: JSON.stringify({
+      tenantCode: getActiveAgentTenantCode(),
+      fileName: params.fileName,
+      ...(params.localEditedPath
+        ? { localPath: params.localEditedPath }
+        : { fileContent: params.base64Content || '' }),
+    }),
+  });
+  if (resp.status === 404) {
+    throw new Error('로컬 에이전트 PDF 변환 모듈 업데이트가 필요합니다. 에이전트를 재시작한 뒤 다시 시도해 주세요.');
+  }
+  if (!resp.ok) {
+    const raw = await resp.text().catch(() => '');
+    let detail = raw || resp.statusText;
+    try {
+      const errJson = JSON.parse(raw) as { error?: string; message?: string };
+      if (errJson.error || errJson.message) {
+        detail = errJson.error || errJson.message || detail;
+      }
+    } catch {
+      // 원문 텍스트 유지
+    }
+    throw new Error(`PDF 변환 실패: ${detail}`);
+  }
+  const json = (await resp.json()) as {
+    success?: boolean;
+    fileName?: string;
+    pdfBase64?: string;
+    engine?: string;
+    error?: string;
+    message?: string;
+  };
+  if (!json.success || !json.pdfBase64) {
+    throw new Error(json.error || json.message || '로컬 에이전트 PDF 변환 결과를 수신하지 못했습니다.');
+  }
+  return {
+    fileName: json.fileName || params.fileName.replace(/\.(xlsx|xls|xlsm)$/i, '.pdf'),
+    base64: json.pdfBase64,
+    engine: json.engine,
+  };
+}
+
 export async function sendDocumentEmailViaAgent(params: {
   tenant: TenantProfile;
   to: string;
@@ -581,10 +634,11 @@ export async function sendDocumentEmailViaAgent(params: {
   if (!mail?.googleEmail || !mail?.gmailAppPassword) {
     throw new Error('테넌트 공식 이메일 계정 설정이 누락되어 있습니다. 시스템 설정 또는 테넌트 관리센터를 확인해 주세요.');
   }
+  const contentType = params.fileName.toLowerCase().endsWith('.pdf') ? 'application/pdf' : undefined;
   const attachments = params.localEditedPath
-    ? [{ filename: params.fileName, localPath: params.localEditedPath }]
+    ? [{ filename: params.fileName, localPath: params.localEditedPath, contentType }]
     : params.base64Content
-      ? [{ filename: params.fileName, content: params.base64Content }]
+      ? [{ filename: params.fileName, content: params.base64Content, contentType }]
       : [];
 
   const resolvedPassword = decryptSecret(mail.gmailAppPassword);
@@ -608,6 +662,7 @@ export async function sendDocumentEmailViaAgent(params: {
       smtpPort: mail.smtpPort || 465,
       fromName: mail.senderName || params.tenant.corporateName,
       attachments,
+      convertExcelToPdf: false,
       asyncQueue: false,
     }),
   });

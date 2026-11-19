@@ -137,10 +137,11 @@ function agentLog(type, message) {
 }
 
 
-const VERSION = 'v2.0.0.Build.49';
-const CORE_HASH = '5541aa41dce3';
+const VERSION = 'v2.0.0.Build.53';
+const CORE_HASH = 'e3ee2f5ea042';
 const PORT = process.env.PORT || 5175;
 const CALLSIGN = process.env.AGENT_CALLSIGN || 'admin';
+let activeCallsign = CALLSIGN;
 const MACHINE_NAME = os.hostname();
 const TENANT_CODE = process.env.AGENT_TENANT || 'GIYEONLIFT';
 
@@ -158,6 +159,17 @@ const STATION_CONFIG_FILE = path.join(AGENT_HOME, 'station_config.json');
 const VAULT_PREFIX = '__EBRO_ENC__v1__';
 const VAULT_CIPHER_KEY = 0x4f;
 const TENANT_NS_DIR_RE = /^(GIYEONLIFT|EBRO_FL|EBRO_AWP|EBRO_IT|TENANT_[A-Z0-9_-]+)$/i;
+
+function isDeveloperEnvironment() {
+  const currentCall = String(activeCallsign || CALLSIGN || '').toLowerCase();
+  const pol = typeof getAgentPolicy === 'function' ? (getAgentPolicy() || {}) : {};
+  return (
+    currentCall === 'admin' ||
+    Boolean(pol.isDeveloper) ||
+    fs.existsSync('d:\\01.AntiGravity\\eBro') ||
+    process.env.AGENT_ROLE === 'DEVELOPER'
+  );
+}
 
 function decryptVaultSecret(cipherText) {
   const rawInput = String(cipherText || '').trim();
@@ -288,6 +300,9 @@ function copyEntryPreserveTime(srcPath, dstPath) {
 
 function seedLegacyGiyeonDirsOnce() {
   try {
+    const activeCode = getEffectiveTenantCode();
+    const isDev = (typeof isDeveloperEnvironment === 'function') && isDeveloperEnvironment();
+    if (!isDev && activeCode !== 'GIYEONLIFT') return;
     const giyeonDirs = getTenantDirs('GIYEONLIFT');
     const markerFile = path.join(giyeonDirs.driveMirrorDir, '.legacy_seeded_v1');
     if (fs.existsSync(markerFile)) return;
@@ -899,7 +914,8 @@ function runCommandAsync(cmd, options = {}) {
       cwd: options.cwd,
       encoding: 'utf8',
       windowsHide: true,
-      maxBuffer: 50 * 1024 * 1024
+      maxBuffer: 50 * 1024 * 1024,
+      ...(options.timeout ? { timeout: options.timeout } : {})
     }, (err, stdout, stderr) => {
       if (err) {
         return reject(new Error(stderr?.trim() || err.message || '프로세스 실행 오류'));
@@ -1315,6 +1331,187 @@ ${pageHtmlArray.join('\n')}
   throw new Error('Edge Headless PDF 파일 생성 실패');
 }
 
+function toPdfAttachmentFileName(rawName) {
+  const base = String(rawName || '문서.pdf').trim() || '문서.pdf';
+  if (/\.pdf$/i.test(base)) return base;
+  if (/\.(xlsx|xls|xlsm)$/i.test(base)) return base.replace(/\.(xlsx|xls|xlsm)$/i, '.pdf');
+  return `${base}.pdf`;
+}
+
+function excelColLettersToNumber(colStr) {
+  let num = 0;
+  const upper = String(colStr || '').toUpperCase();
+  for (let i = 0; i < upper.length; i++) {
+    const code = upper.charCodeAt(i);
+    if (code >= 65 && code <= 90) {
+      num = num * 26 + (code - 64);
+    }
+  }
+  return num;
+}
+
+function parsePrintAreaBounds(printAreaStr) {
+  const raw = String(printAreaStr || '').trim();
+  if (!raw) return null;
+  const segments = raw.split(',').map(s => s.trim()).filter(Boolean);
+  for (const seg of segments) {
+    const bangIdx = seg.lastIndexOf('!');
+    const rangePart = (bangIdx >= 0 ? seg.slice(bangIdx + 1) : seg).replace(/\$/g, '').trim();
+    const m = /^([A-Za-z]+)(\d+):([A-Za-z]+)(\d+)$/.exec(rangePart);
+    if (!m) continue;
+    const c1 = excelColLettersToNumber(m[1]);
+    const r1 = parseInt(m[2], 10);
+    const c2 = excelColLettersToNumber(m[3]);
+    const r2 = parseInt(m[4], 10);
+    if (c1 > 0 && r1 > 0 && c2 >= c1 && r2 >= r1) {
+      return { startRow: r1, endRow: r2, startCol: c1, endCol: c2 };
+    }
+  }
+  return null;
+}
+
+async function convertXlsxFileToPdf(sourceXlsxPath, outputPdfPath, tempBuildDir) {
+  if (!sourceXlsxPath || !fs.existsSync(sourceXlsxPath)) {
+    throw new Error('변환할 원본 엑셀 파일을 찾을 수 없습니다.');
+  }
+  if (!fs.existsSync(tempBuildDir)) {
+    fs.mkdirSync(tempBuildDir, { recursive: true });
+  }
+
+  const ext = path.extname(sourceXlsxPath) || '.xlsx';
+  const workXlsx = path.join(tempBuildDir, 'input' + ext);
+  fs.copyFileSync(sourceXlsxPath, workXlsx);
+
+  const psSrc = workXlsx.replace(/'/g, "''");
+  const psOut = outputPdfPath.replace(/'/g, "''");
+
+  const psScript = `\ufeff
+$ErrorActionPreference = 'Stop'
+$excel = $null
+$wb = $null
+try {
+${PS_INIT_EXCEL_COM_BLOCK}
+
+  $srcPath = '${psSrc}'
+  $outPdf = '${psOut}'
+  $wb = $excel.Workbooks.Open($srcPath, 0, $true)
+  try { $excel.CalculateFull() } catch {}
+
+  $exportedCount = 0
+  foreach ($ws in $wb.Worksheets) {
+    if ($ws.Visible -ne -1) { continue }
+    $ur = $null
+    try { $ur = $ws.UsedRange } catch {}
+    if ($null -eq $ur) { continue }
+    $hasPrintArea = $false
+    try {
+      $hasPrintArea = -not [string]::IsNullOrWhiteSpace([string]$ws.PageSetup.PrintArea)
+    } catch {}
+    if ((-not $hasPrintArea) -and $ur.Rows.Count -eq 1 -and $ur.Columns.Count -eq 1) {
+      $singleVal = ''
+      try { $singleVal = [string]$ur.Value2 } catch {}
+      if ([string]::IsNullOrWhiteSpace($singleVal)) { continue }
+    }
+    if (-not $hasPrintArea) {
+      try {
+        $ws.PageSetup.Zoom = $false
+        $ws.PageSetup.FitToPagesWide = 1
+        $ws.PageSetup.FitToPagesTall = $false
+      } catch {}
+    }
+    $exportedCount++
+  }
+
+  if ($exportedCount -le 0) {
+    throw "NO_VISIBLE_WORKSHEETS"
+  }
+
+  $wb.ExportAsFixedFormat(0, $outPdf, 0, $true, $false, [System.Reflection.Missing]::Value, [System.Reflection.Missing]::Value, $false)
+} finally {
+  if ($wb) { try { $wb.Close($false) } catch {} }
+  if ($excel) {
+    try { $excel.Quit() } catch {}
+    try { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($excel) | Out-Null } catch {}
+  }
+  [System.GC]::Collect()
+  [System.GC]::WaitForPendingFinalizers()
+}
+`;
+
+  const psFile = path.join(tempBuildDir, 'convert_to_pdf.ps1');
+  fs.writeFileSync(psFile, psScript, { encoding: 'utf8' });
+  const psExe = process.env.SystemRoot
+    ? path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+    : 'powershell.exe';
+
+  try {
+    await runCommandAsync(`"${psExe}" -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`, {
+      cwd: tempBuildDir,
+      timeout: 35000
+    });
+    if (!fs.existsSync(outputPdfPath) || fs.statSync(outputPdfPath).size === 0) {
+      throw new Error('EXCEL_COM_EMPTY_OUTPUT');
+    }
+    const comBuf = fs.readFileSync(outputPdfPath);
+    if (comBuf.length < 5 || comBuf.subarray(0, 5).toString('ascii') !== '%PDF-') {
+      throw new Error('EXCEL_COM_INVALID_PDF_HEADER');
+    }
+    return { engine: 'EXCEL_COM', pdfBuffer: comBuf };
+  } catch (comErr) {
+    agentLog('WARN', 'Excel COM PDF 변환 폴백(Edge Headless): ' + (comErr && comErr.message ? comErr.message : comErr));
+    const ExcelJS = require('exceljs');
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.readFile(workXlsx);
+
+    const pageHtmls = [];
+    for (const ws of wb.worksheets) {
+      if (ws.state && ws.state !== 'visible') continue;
+      let bounds = parsePrintAreaBounds(ws.pageSetup && ws.pageSetup.printArea);
+      if (!bounds) {
+        let maxRow = 0;
+        let maxCol = 0;
+        ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+          row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+            const v = cell.value;
+            if (v !== null && v !== undefined && v !== '') {
+              if (rowNumber > maxRow) maxRow = rowNumber;
+              if (colNumber > maxCol) maxCol = colNumber;
+            }
+          });
+        });
+        if (maxRow === 0 || maxCol === 0) continue;
+        for (const m of Object.values(ws._merges || {})) {
+          const model = m.model || m;
+          if (!model || !model.top) continue;
+          if (model.top <= maxRow && model.left <= maxCol) {
+            if (model.bottom > maxRow) maxRow = model.bottom;
+            if (model.right > maxCol) maxCol = model.right;
+          }
+        }
+        bounds = { startRow: 1, endRow: maxRow, startCol: 1, endCol: maxCol };
+      }
+      pageHtmls.push(
+        renderExcelWorksheetToHtmlPage(wb, ws, bounds.startRow, bounds.endRow, bounds.startCol, bounds.endCol)
+      );
+    }
+
+    if (pageHtmls.length === 0) {
+      throw new Error('PDF로 변환할 표시 시트 내용이 없습니다.');
+    }
+
+    const fallbackPdfPath = path.join(tempBuildDir, 'output_edge_fallback.pdf');
+    await convertHtmlPagesToPdfViaEdge(pageHtmls, fallbackPdfPath, tempBuildDir);
+    if (!fs.existsSync(fallbackPdfPath) || fs.statSync(fallbackPdfPath).size === 0) {
+      throw new Error('EDGE_HEADLESS_EMPTY_OUTPUT');
+    }
+    const edgeBuf = fs.readFileSync(fallbackPdfPath);
+    if (edgeBuf.length < 5 || edgeBuf.subarray(0, 5).toString('ascii') !== '%PDF-') {
+      throw new Error('EDGE_HEADLESS_INVALID_PDF_HEADER');
+    }
+    return { engine: 'EDGE_HEADLESS', pdfBuffer: edgeBuf };
+  }
+}
+
 // ── 하드웨어 다이렉트 프린터 출력 엔진 (Edge Headless PDF + 64비트 Sumatra 무인 스풀 — 100% 비동기 Non-blocking) ──
 async function sendHtmlToPhysicalPrinter(htmlContent, printerName, title = '기연리프트_출력물') {
   if (!htmlContent) {
@@ -1411,7 +1608,6 @@ async function sendHtmlToPhysicalPrinter(htmlContent, printerName, title = '기�
 }
 
 // ── HTTP 요청 핸들러 ──
-let activeCallsign = CALLSIGN;
 
 // ── [백그라운드 시스템 작업 큐 (Excel COM 조립 / 이메일 발송 비동기 완수 워커) - 모듈 전역 스코프 유지] ──
 const systemJobQueue = [];
@@ -1472,61 +1668,101 @@ async function executeSendEmailInternal(payload) {
     return 'application/pdf';
   };
 
-  const parsedAttachments = Array.isArray(attachments) ? attachments.map((att) => {
-    if (att.localPath) {
-      if (fs.existsSync(att.localPath)) {
-        return {
-          filename: att.filename || path.basename(att.localPath),
-          path: att.localPath,
-          contentType: att.contentType || inferContentType(att.filename || att.localPath)
-        };
+  const tempDirsToClean = [];
+  try {
+    let parsedAttachments;
+    if (Array.isArray(attachments)) {
+      parsedAttachments = [];
+      for (const att of attachments) {
+        const rawTargetName = String(att.filename || (att.localPath ? path.basename(att.localPath) : '') || '');
+        const shouldConvertExcel = Boolean(payload.convertExcelToPdf || att.convertToPdf) && /\.(xlsx|xls|xlsm)$/i.test(rawTargetName);
+
+        if (shouldConvertExcel) {
+          const tempDir = path.join(AGENT_HOME, 'temp_mail_pdf_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+          fs.mkdirSync(tempDir, { recursive: true });
+          tempDirsToClean.push(tempDir);
+
+          let srcXlsxPath = '';
+          if (att.localPath && fs.existsSync(att.localPath)) {
+            srcXlsxPath = att.localPath;
+          } else {
+            const base64Data = String(att.content || '').replace(/^data:.*?;base64,/, '');
+            const extMatch = /\.(xlsx|xls|xlsm)$/i.exec(rawTargetName);
+            srcXlsxPath = path.join(tempDir, 'src' + (extMatch ? extMatch[0].toLowerCase() : '.xlsx'));
+            fs.writeFileSync(srcXlsxPath, Buffer.from(base64Data, 'base64'));
+          }
+
+          const outPdfPath = path.join(tempDir, 'out.pdf');
+          const conv = await convertXlsxFileToPdf(srcXlsxPath, outPdfPath, tempDir);
+          parsedAttachments.push({
+            filename: toPdfAttachmentFileName(rawTargetName),
+            content: conv.pdfBuffer,
+            contentType: 'application/pdf'
+          });
+          continue;
+        }
+
+        if (att.localPath) {
+          if (fs.existsSync(att.localPath)) {
+            parsedAttachments.push({
+              filename: att.filename || path.basename(att.localPath),
+              path: att.localPath,
+              contentType: att.contentType || inferContentType(att.filename || att.localPath)
+            });
+            continue;
+          }
+        }
+        const base64Data = String(att.content || '').replace(/^data:.*?;base64,/, '');
+        parsedAttachments.push({
+          filename: att.filename || '계약서.pdf',
+          content: Buffer.from(base64Data, 'base64'),
+          contentType: att.contentType || inferContentType(att.filename)
+        });
       }
     }
-    const base64Data = String(att.content || '').replace(/^data:.*?;base64,/, '');
-    return {
-      filename: att.filename || '계약서.pdf',
-      content: Buffer.from(base64Data, 'base64'),
-      contentType: att.contentType || inferContentType(att.filename)
+
+    const policy = getTenantPolicy(payload.tenantCode);
+    const senderDisplayName = fromName || payload.tenantCorp || payload.tenantBrand || policy.tenantName || policy.corporateName || TENANT_CODE || 'e-Bro ERP';
+
+    const extractEmails = (raw) => {
+      if (!raw) return [];
+      const text = Array.isArray(raw) ? raw.join(', ') : String(raw);
+      const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+      const seen = new Set();
+      const out = [];
+      for (const m of matches) {
+        const clean = m.trim();
+        const lower = clean.toLowerCase();
+        if (clean && !seen.has(lower)) {
+          seen.add(lower);
+          out.push(clean);
+        }
+      }
+      return out;
     };
-  }) : undefined;
 
-  const policy = getTenantPolicy(payload.tenantCode);
-  const senderDisplayName = fromName || payload.tenantCorp || payload.tenantBrand || policy.tenantName || policy.corporateName || TENANT_CODE || 'e-Bro ERP';
+    const toEmails = extractEmails(to);
+    const toLowerSet = new Set(toEmails.map(e => e.toLowerCase()));
+    const ccEmails = extractEmails(cc).filter(e => !toLowerSet.has(e.toLowerCase()));
+    const normalizedTo = toEmails.length > 0 ? toEmails.join(', ') : String(to).trim();
+    const normalizedCc = ccEmails.length > 0 ? ccEmails.join(', ') : undefined;
 
-  const extractEmails = (raw) => {
-    if (!raw) return [];
-    const text = Array.isArray(raw) ? raw.join(', ') : String(raw);
-    const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
-    const seen = new Set();
-    const out = [];
-    for (const m of matches) {
-      const clean = m.trim();
-      const lower = clean.toLowerCase();
-      if (clean && !seen.has(lower)) {
-        seen.add(lower);
-        out.push(clean);
-      }
+    const info = await transporter.sendMail({
+      from: `"${senderDisplayName}" <${cleanEmail}>`,
+      to: normalizedTo,
+      cc: normalizedCc,
+      subject: String(subject).trim(),
+      text: String(body),
+      attachments: parsedAttachments
+    });
+
+    agentLog('SMTP', `메일 발송 완료: To=${to} (MessageId: ${info.messageId})`);
+    return { success: true, messageId: info.messageId, accepted: info.accepted };
+  } finally {
+    for (const d of tempDirsToClean) {
+      try { fs.rmSync(d, { recursive: true, force: true }); } catch {}
     }
-    return out;
-  };
-
-  const toEmails = extractEmails(to);
-  const toLowerSet = new Set(toEmails.map(e => e.toLowerCase()));
-  const ccEmails = extractEmails(cc).filter(e => !toLowerSet.has(e.toLowerCase()));
-  const normalizedTo = toEmails.length > 0 ? toEmails.join(', ') : String(to).trim();
-  const normalizedCc = ccEmails.length > 0 ? ccEmails.join(', ') : undefined;
-
-  const info = await transporter.sendMail({
-    from: `"${senderDisplayName}" <${cleanEmail}>`,
-    to: normalizedTo,
-    cc: normalizedCc,
-    subject: String(subject).trim(),
-    text: String(body),
-    attachments: parsedAttachments
-  });
-
-  agentLog('SMTP', `메일 발송 완료: To=${to} (MessageId: ${info.messageId})`);
-  return { success: true, messageId: info.messageId, accepted: info.accepted };
+  }
 }
 
 function extractTenantStampBuffer(payload, policy) {
@@ -2482,9 +2718,49 @@ $wb.ExportAsFixedFormat(0, $masterPdf)
       }
     }
 
-    pdfSources.push(resolveMirrorReadPath(effectiveCode, '08.생산물배상책임보험증권.pdf'));
-    pdfSources.push(resolveMirrorReadPath(effectiveCode, '09.사업자등록증.pdf'));
-    pdfSources.push(resolveMirrorReadPath(effectiveCode, '10.통장사본.pdf'));
+    const attachmentList = Array.isArray(payload.attachmentPdfs)
+      ? payload.attachmentPdfs
+      : (Array.isArray(payload.attachmentFiles)
+        ? payload.attachmentFiles
+        : (Array.isArray(policy.bundleAttachments) ? policy.bundleAttachments : null));
+
+    const resolveAttachmentPath = (fileEntry) => {
+      const name = typeof fileEntry === 'string' ? fileEntry.trim() : String(fileEntry?.fileName || fileEntry?.name || '').trim();
+      if (!name) return null;
+      const candidates = [
+        resolveMirrorReadPath(effectiveCode, name),
+        resolveMirrorReadPath(effectiveCode, path.join('attachments', name)),
+        resolveMirrorReadPath(effectiveCode, path.join('부가서류', name))
+      ];
+      return candidates.find(p => fs.existsSync(p)) || candidates[0];
+    };
+
+    if (attachmentList !== null) {
+      for (const entry of attachmentList) {
+        const resolved = resolveAttachmentPath(entry);
+        if (resolved && fs.existsSync(resolved)) {
+          pdfSources.push(resolved);
+        }
+      }
+    } else {
+      let folderFound = false;
+      for (const subDir of ['attachments', '부가서류']) {
+        const dirPath = resolveMirrorReadPath(effectiveCode, subDir);
+        if (fs.existsSync(dirPath)) {
+          const pdfs = fs.readdirSync(dirPath).filter(f => f.toLowerCase().endsWith('.pdf')).sort();
+          if (pdfs.length > 0) {
+            for (const f of pdfs) pdfSources.push(path.join(dirPath, f));
+            folderFound = true;
+            break;
+          }
+        }
+      }
+      if (!folderFound) {
+        pdfSources.push(resolveMirrorReadPath(effectiveCode, '08.생산물배상책임보험증권.pdf'));
+        pdfSources.push(resolveMirrorReadPath(effectiveCode, '09.사업자등록증.pdf'));
+        pdfSources.push(resolveMirrorReadPath(effectiveCode, '10.통장사본.pdf'));
+      }
+    }
 
     for (const p of pdfSources) {
       if (fs.existsSync(p)) {
@@ -3818,6 +4094,64 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 3-2-1-B2. 범용 엑셀 -> PDF 변환 API (/api/convert-excel-to-pdf) — Excel COM 우선, 무엑셀 시 Edge Headless 폴백
+  if (req.method === 'POST' && pathname === '/api/convert-excel-to-pdf') {
+    const tempBuildDir = path.join(AGENT_HOME, 'temp_pdf_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    try {
+      const payload = await readJsonBody(req);
+      if (!fs.existsSync(tempBuildDir)) fs.mkdirSync(tempBuildDir, { recursive: true });
+
+      let sourcePath = '';
+      let rawName = payload.fileName || '';
+      if (payload.localPath) {
+        if (!fs.existsSync(payload.localPath)) {
+          sendJson(res, 404, { success: false, error: '변환할 로컬 엑셀 파일을 찾을 수 없습니다.' });
+          return;
+        }
+        sourcePath = payload.localPath;
+        if (!rawName) rawName = path.basename(payload.localPath);
+      } else {
+        const b64 = String(payload.fileContent || '').replace(/^data:.*?;base64,/, '');
+        const buf = Buffer.from(b64, 'base64');
+        if (buf.length === 0) {
+          sendJson(res, 400, { success: false, error: '변환할 엑셀 파일 데이터가 비어 있습니다.' });
+          return;
+        }
+        const extMatch = /\.(xlsx|xls|xlsm)$/i.exec(String(rawName || ''));
+        const ext = extMatch ? extMatch[0].toLowerCase() : '.xlsx';
+        sourcePath = path.join(tempBuildDir, 'src' + ext);
+        fs.writeFileSync(sourcePath, buf);
+        if (!rawName) rawName = `문서_${Date.now()}${ext}`;
+      }
+
+      const outPdfPath = path.join(tempBuildDir, 'output.pdf');
+      const conv = await convertXlsxFileToPdf(sourcePath, outPdfPath, tempBuildDir);
+      let pageCount = 1;
+      try {
+        const { PDFDocument } = require('pdf-lib');
+        const parsedPdf = await PDFDocument.load(conv.pdfBuffer);
+        pageCount = parsedPdf.getPageCount() || 1;
+      } catch (e) {}
+
+      const pdfFileName = toPdfAttachmentFileName(rawName);
+      agentLog('PDF', `[${conv.engine}] 엑셀->PDF 변환 완료: ${pdfFileName} (${conv.pdfBuffer.length} bytes, ${pageCount}p)`);
+      sendJson(res, 200, {
+        success: true,
+        fileName: pdfFileName,
+        pdfBase64: conv.pdfBuffer.toString('base64'),
+        engine: conv.engine,
+        sizeBytes: conv.pdfBuffer.length,
+        pageCount
+      });
+    } catch (err) {
+      agentLog('ERROR', '엑셀->PDF 변환 실패: ' + (err && err.message ? err.message : err));
+      sendJson(res, 500, { success: false, error: (err && err.message) || '엑셀 PDF 변환에 실패했습니다.' });
+    } finally {
+      try { fs.rmSync(tempBuildDir, { recursive: true, force: true }); } catch {}
+    }
+    return;
+  }
+
   // 3-2-1-C. 백그라운드 시스템 작업 큐 등록 및 조회 API (/api/job-queue)
   if (pathname === '/api/job-queue') {
     if (req.method === 'GET') {
@@ -4542,15 +4876,43 @@ async function resolveTenantSupabaseConfig(hint) {
 }
 
 function getConfiguredTenantCodes() {
-  const codes = new Set(['GIYEONLIFT']);
+  const codes = new Set();
+  const effectiveCode = getEffectiveTenantCode();
+  if (effectiveCode) codes.add(effectiveCode);
   const pol = typeof getAgentPolicy === 'function' ? (getAgentPolicy() || {}) : {};
   if (pol.tenantCode) codes.add(normalizeTenantCode(pol.tenantCode));
-  if (pol.tenants && typeof pol.tenants === 'object') {
-    for (const k of Object.keys(pol.tenants)) {
-      codes.add(normalizeTenantCode(k));
+
+  // 로컬에 실제 인쇄 스테이션 설정 파일이 존재하는 테넌트만 큐 감시 대상에 포함
+  try {
+    if (fs.existsSync(STATION_CONFIG_FILE)) codes.add('GIYEONLIFT');
+    if (fs.existsSync(AGENT_HOME)) {
+      for (const ent of fs.readdirSync(AGENT_HOME)) {
+        const m = ent.match(/^station_config_([A-Za-z0-9_-]+)\.json$/i);
+        if (m && m[1]) {
+          codes.add(normalizeTenantCode(m[1]));
+        }
+      }
+    }
+  } catch (e) {}
+
+  return Array.from(codes);
+}
+
+async function getR2SyncTargetTenantCodes() {
+  if (isDeveloperEnvironment()) {
+    try {
+      const centralRows = await fetchCentralTenantsCached();
+      const allCodes = new Set(['GIYEONLIFT']);
+      for (const r of centralRows) {
+        const c = r.tenantCode || r.tenant_code || r.subdomain || r.id;
+        if (c) allCodes.add(normalizeTenantCode(c));
+      }
+      return Array.from(allCodes);
+    } catch (e) {
+      return ['GIYEONLIFT'];
     }
   }
-  return Array.from(codes);
+  return [getEffectiveTenantCode()];
 }
 
 function buildR2SignedRequestOptions(r2Cfg, method, canonicalUri, canonicalQuery = '') {
@@ -5648,35 +6010,39 @@ server.listen(PORT, '127.0.0.1', () => {
   setTimeout(() => { checkRemoteDevErrorFixQueue().catch(() => {}); }, 4000);
   setInterval(() => { checkRemoteDevErrorFixQueue().catch(() => {}); }, 10000);
 
-  // 🛡️ 매일 09:00 권한 기반 로컬 DB 자동백업 스케줄러 가동 (등록된 모든 테넌트 독립 백업)
-  const runAllTenantScheduledBackups = () => {
-    for (const code of getConfiguredTenantCodes()) {
+  // 🛡️ 매일 09:00 권한 기반 로컬 DB 자동백업 스케줄러 가동 (개발자 PC는 전체 테넌트, 일반 사용자는 활성 테넌트 1개)
+  const runScheduledDailyBackups = async () => {
+    const targets = await getR2SyncTargetTenantCodes();
+    for (const code of targets) {
       checkAndRunScheduledDailyBackup(code).catch(() => {});
     }
   };
-  setTimeout(runAllTenantScheduledBackups, 8000);
-  setInterval(runAllTenantScheduledBackups, 60 * 1000);
+  setTimeout(runScheduledDailyBackups, 8000);
+  setInterval(runScheduledDailyBackups, 60 * 1000);
 
-  // Cloudflare R2 원본 저장소 기동 즉시 동기화 (부팅 초기 DNS 지연 대비 자동 재시도 포함) 및 5분 주기 자동 미러링
-  const initialR2SyncedByTenant = new Set();
-  const runAllTenantR2Sync = async (isInitialSweep = false) => {
-    for (const code of getConfiguredTenantCodes()) {
-      if (isInitialSweep && initialR2SyncedByTenant.has(code)) continue;
+  // Cloudflare R2 원본 저장소 동기화:
+  // - 개발자 PC: 중앙 DB 기준 모든 관리 테넌트 버킷 자동 구성 및 미러링
+  // - 일반 사용자 PC: 오직 소속된 활성 테넌트(Active Tenant) 1개만 격리 동기화
+  const syncedTenantsSet = new Set();
+  const syncR2Buckets = async (isInitialSweep = false) => {
+    const targets = await getR2SyncTargetTenantCodes();
+    for (const code of targets) {
+      if (isInitialSweep && syncedTenantsSet.has(code)) continue;
       try {
         const res = await autoSyncFromCloudflare(code);
         if (res && (res.success || res.configured === false)) {
-          initialR2SyncedByTenant.add(code);
+          syncedTenantsSet.add(code);
         }
       } catch (e) {}
     }
   };
   [1500, 15000, 40000].forEach((delayMs) => {
     setTimeout(() => {
-      runAllTenantR2Sync(true).catch(() => {});
+      syncR2Buckets(true).catch(() => {});
     }, delayMs);
   });
   setInterval(() => {
-    runAllTenantR2Sync(false).catch(() => {});
+    syncR2Buckets(false).catch(() => {});
   }, 5 * 60 * 1000);
 
   // 순수 시스템 트레이 데몬 모드 상주 (스튜디오 창 자동 팝업 배제, 트레이 조작 시에만 실행)

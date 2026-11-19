@@ -1,5 +1,5 @@
-export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.52';
-export const EXPECTED_CORE_HASH: string = '5541aa41dce3';
+export const EXPECTED_AGENT_VERSION: string = 'v2.0.0.Build.53';
+export const EXPECTED_CORE_HASH: string = 'e3ee2f5ea042';
 // GitHub Releases CDN
 export const DEFAULT_GITHUB_RELEASE_BASE_URL = 'https://github.com/DragonRPA/ebro_awp/releases/download/agent-v2.0.0';
 // Cloudflare R2 보조 엔드포인트
@@ -387,7 +387,7 @@ export async function fetchWithAgentFallback(path: string, init?: AgentFetchOpti
 
     // 0-1b. 작업 실행 직전에 구버전 코어가 감지된 경우, 즉시 핫패치를 트리거하고 재기동 완료까지 최대 6.5초 대기
     const isUpdateCall = path.startsWith('/api/check-update');
-    const isCriticalCoreJob = path.startsWith('/api/generate-') || path.startsWith('/api/send-email') || path.startsWith('/api/trigger-sync') || path.startsWith('/api/policy/sync');
+    const isCriticalCoreJob = path.startsWith('/api/generate-') || path.startsWith('/api/convert-') || path.startsWith('/api/send-email') || path.startsWith('/api/trigger-sync') || path.startsWith('/api/policy/sync');
     if (alive && detectedOutdatedHost && !isUpdateCall) {
       try {
         await fetch(`${detectedOutdatedHost}/api/check-update`, { method: 'POST', cache: 'no-store' }).catch(() => {});

@@ -17,7 +17,7 @@ const os = require('os');
 const { spawn, execSync } = require('child_process');
 
 
-const VERSION = 'v2.0.0.Build.33';
+const VERSION = 'v2.0.0.Build.53';
 const PORT = process.env.PORT || 5175;
 const CALLSIGN = process.env.AGENT_CALLSIGN || 'admin';
 const MACHINE_NAME = os.hostname();
@@ -245,7 +245,7 @@ const server = http.createServer(async (req, res) => {
         }) : undefined;
 
         const info = await transporter.sendMail({
-          from: `"(주)기연리프트" <${cleanEmail}>`,
+          from: `"주식회사 기연리프트" <${cleanEmail}>`,
           to: String(to).trim(),
           cc: cc ? String(cc).trim() : undefined,
           subject: String(subject).trim(),
@@ -284,6 +284,9 @@ const server = http.createServer(async (req, res) => {
         const managerPhone = payload.managerPhone || '010-0000-0000';
         const salesRepName = String(payload.salesRepName || payload.salespersonName || '영업담당자').replace(/"/g, '""');
         const salesRepPhone = String(payload.salesRepPhone || payload.salespersonPhone || '010-0000-0000').replace(/"/g, '""');
+        const tenantCorp = String(payload.corporateName || payload.tenantName || '주식회사 기연리프트').trim().replace(/"/g, '""');
+        const tenantBizNo = String(payload.businessNumber || '138-81-83251').trim().replace(/"/g, '""');
+        const tenantRepName = (String(payload.representativeName || '이수용').replace(/\s+/g, '').trim() || '이수용').replace(/"/g, '""');
         const optionsText = payload.optionsText || '협착방지대, 튜브소화기';
         const remarksText = String(payload.remarksText || '').replace(/안전발판\s*지급/g, '').trim();
         const deliveryDate = payload.deliveryDate || payload.unloadingDate || payload.contractStartDate || contractDate;
@@ -333,6 +336,19 @@ $wsSafetyBase = Get-SheetByKeyword $wb "안전점검|결과서" 3
 
 # --- 2. 계약서 데이터 주입 (Sheet 1) ---
 Replace-Tag $wsContract "{Today}" "${contractDate}"
+Replace-Tag $wsContract "{테넌트사업자번호}" "${tenantBizNo}"
+Replace-Tag $wsContract "{테넌트사업자등록번호}" "${tenantBizNo}"
+Replace-Tag $wsContract "{테넌트상호}" "${tenantCorp}"
+Replace-Tag $wsContract "{테넌트명}" "${tenantCorp}"
+Replace-Tag $wsContract "{테넌트}" "${tenantCorp}"
+Replace-Tag $wsContract "(주)기연리프트" "${tenantCorp}"
+Replace-Tag $wsContract "주식회사 기연리프트" "${tenantCorp}"
+Replace-Tag $wsContract "{테넌트대표자}" "${tenantRepName}"
+Replace-Tag $wsContract "{테넌트대표}" "${tenantRepName}"
+Replace-Tag $wsContract "이 수 용" "${tenantRepName}"
+Replace-Tag $wsContract "이수용" "${tenantRepName}"
+try { $wsContract.Range("D32:F32").HorizontalAlignment = -4108 } catch {}
+Replace-Tag $wsContract "138-81-83251" "${tenantBizNo}"
 Replace-Tag $wsContract "{사업자등록번호}" "${bizRegNo}"
 Replace-Tag $wsContract "{고객명}" "${custName}"
 Replace-Tag $wsContract "{대표자}" "${ceoName}"

@@ -14,7 +14,7 @@
 | 항목 | 집계 수치 | 설명 |
 |:---|---:|:---|
 | 총 활성 코드 파일 수 | 410개 | 빌드 산출물(dist), 외부 모델, node_modules 제외 전수 스캔 |
-| 총 소스 라인 / 용량 | 167,434줄 / 6.76 MB | AST 및 다중 언어 파서 기준 실측 |
+| 총 소스 라인 / 용량 | 167,898줄 / 6.78 MB | AST 및 다중 언어 파서 기준 실측 |
 | 초대형 모듈 (GOD_FILE) | 11개 | 1,500줄 이상 또는 80KB 초과 분할 우선 대상 |
 | 대형 모듈 (LARGE_FILE) | 15개 | 800줄~1,499줄 비대화 주의 대상 |
 | src/ 비데이터 대형 모듈 (SRC_LARGE_FILE) | 0개 | src/ 하위(src/data 정적 데이터 제외) 800줄 이상 모듈 |
@@ -58,7 +58,7 @@
 |---:|:---|---:|---:|---:|:---|:---|
 | 1 | `src/data/flBackupProductSpecs.ts` | 37,439 | 1203.7 | 1 | L04_TYPES_DATA_MANUAL | 백업 원장(fl_backup_products·fl_backup_assets) 복원 42종 지게차 VDI 2198·마스트·배터리·옵션 제원 데이터셋 |
 | 2 | `scripts/migrate_run.cjs` | 6,101 | 219.0 | 0 | L10_TESTS_SCRIPTS | CLI 초기 DB 마이그레이션 번들 실행 스크립트(CommonJS 번들) |
-| 3 | `agent/eBroAgent.js` | 5,699 | 240.8 | 0 | L09_NATIVE_AGENTS_TOOLS | 로컬 비즈니스 코어 엔진(포트 5175 REST, PDF 무인인쇄, SMTP 메일, R2 미러링, 문서고) |
+| 3 | `agent/eBroAgent.js` | 6,065 | 254.8 | 0 | L09_NATIVE_AGENTS_TOOLS | 로컬 비즈니스 코어 엔진(포트 5175 REST, PDF 무인인쇄, SMTP 메일, R2 미러링, 문서고) |
 | 4 | `agent/studioEngine.js` | 3,146 | 112.3 | 1 | L09_NATIVE_AGENTS_TOOLS | 데스크톱 독립 스튜디오 및 자연어 업무 지시 큐 처리 엔진 |
 | 5 | `대시보드.html` | 2,346 | 174.7 | 0 | L01_ROOT_BUILD | 루트 보관용 네이버 밴드 3대 원천 데이터 분석 대시보드 HTML |
 | 6 | `public/대시보드.html` | 2,346 | 174.1 | 0 | L01_ROOT_BUILD | 배포 정적 경로용 네이버 밴드 3대 원천 데이터 분석 대시보드 HTML |
@@ -115,8 +115,8 @@
 | `scripts/seed_full_organic_fl_data.cjs` | 3 | 3 | - | eBroFL 전 도메인(매입·통관·수주·출고·렌탈·리스·정비·청구·수납) 유기적 실무 데이터셋 적재 및 대차 0원 검증 스크립트 |
 | `scripts/verify_full_organic_erp.cjs` | 3 | 3 | - | 전 원장 실데이터 기반 domainEngine 및 financialStatementEngine 대차·현금 0원 보존 법칙 검증 스크립트 |
 | `src/components/UiPrimitives.tsx` | 4 | 0 | `xlsx` | 공통 UI 프리미티브(VerticalField, 250행 점진 윈도잉·3단 정렬·동적 XLSX DataGrid, Memo StatusBadge, ConservationBar, ModalDialog) |
+| `src/services/documentService.ts` | 3 | 0 | `exceljs` | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 PDF 변환·이메일 발송 서비스 |
 | `src/services/catalogSpecDocumentService.ts` | 3 | 0 | `pdf-lib` | 제원 카탈로그 단건·비교표·호환부품·패키지 견적 Excel(ExcelJS) 및 PDF(pdf-lib) 문서 생성 전용 서비스 |
-| `src/services/documentService.ts` | 3 | 0 | `exceljs` | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 열기·이메일 발송 서비스 |
 | `src/pages/hr/hrHelpers.ts` | 4 | 0 | `exceljs` | 조직도 트리 정렬, 주민번호 마스킹, 스캔 첨부 및 동적 ExcelJS 임직원 내보내기 헬퍼 |
 | `src/pages/master/CatalogSubTabs.tsx` | 7 | 1 | - | 제원 카탈로그 멀티 기종 VDI 2198 비교표 및 클릭 시점 동적 비교표 엑셀·PDF 내보내기 지연로딩 탭 컴포넌트 |
 | `src/pages/master/CatalogSpecDetailPanel.tsx` | 6 | 1 | - | 선택 지게차 모델 VDI 2198·마스트·배터리·안전점검 조회 및 클릭 시점 동적 Excel·PDF 출력 상세 패널 컴포넌트 |
@@ -254,7 +254,7 @@
 | `src/components/AccountingStandardsPanes.tsx` | 731줄 (29.6KB) | subview:financial_statements (중소기업회계기준 조문 · 해설 좌우 스크롤 패인) | `matchesArticle, matchesCommentary, AccountingChapterOption, StandardArticlesPaneProps, CommentarySectionsPaneProps, StandardArticlesPane 외 1` | Out:1 / In:1 | 중소기업회계기준 조문(좌)·해설(우) 독립 스크롤, 키워드 하이라이트 및 양방향 교차점프 패인 컴포넌트 |
 | `src/components/AccountingStandardsTab.css` | 199줄 (9.6KB) | - | `-` | Out:0 / In:1 | 중소기업회계기준 뷰어 탭(.acc-std-root) 범위 지정 레이아웃·타이포그래피 스타일시트 |
 | `src/components/AccountingStandardsTab.tsx` | 466줄 (17.6KB) | subview:financial_statements (중소기업회계기준·해설 뷰어 탭) | `AccountingStandardsTab` | Out:4(동적1) / In:1 | 중소기업회계기준 정적 데이터셋 동적 지연 로딩, 통합 검색 상태 관리 및 좌우 패인 호스트 뷰어 컴포넌트 |
-| `src/components/DocumentActionBar.tsx` | 361줄 (12.2KB) | - | `DocumentActionBar` | Out:3 / In:4 | 견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 이메일 발송 모달 액션 바 컴포넌트 |
+| `src/components/DocumentActionBar.tsx` | 372줄 (12.6KB) | - | `DocumentActionBar` | Out:3 / In:4 | 견적서·계약서·거래명세서 엑셀 다운로드, 로컬 에이전트 편집 및 에이전트 PDF 변환 이메일 발송 모달 액션 바 컴포넌트 |
 | `src/components/LoginView.tsx` | 447줄 (15.1KB) | - | `LoginView` | Out:4(동적1) / In:1 | 아이디·비밀번호 로그인 폼, 로컬 에이전트 설치·업데이트 제어 및 지연로딩 개인정보 처리방침 열람 화면 |
 | `src/components/PrivacyPolicyModal.tsx` | 362줄 (15.2KB) | - | `PrivacyPolicyModal` | Out:1 / In:1 | 테넌트별 개인정보 처리방침 열람 및 보호책임자 지정·편집 저장 모달 |
 | `src/components/SearchableSelect.tsx` | 373줄 (11.8KB) | HIGH_COUPLING_HUB | `SearchableSelectOption, toPartnerSelectOptions, toItemMasterSelectOptions, SearchableSelectProps, SearchableSelect` | Out:4 / In:12 | 사전 초성 인덱싱, O(1) 선택 조회, 키보드 탐색 및 거래처·품목 옵션 매핑 검색형 드롭다운 공통 컴포넌트 |
@@ -270,7 +270,7 @@
 | `src/services/agentTransportCore.ts` | 526줄 (20.6KB) | - | `EXPECTED_AGENT_VERSION, EXPECTED_CORE_HASH, DEFAULT_GITHUB_RELEASE_BASE_URL, DEFAULT_CF_R2_BASE_URL, AGENT_INSTALLER_BASE_URL, AGENT_EXE_URL 외 35` | Out:0 / In:2 | 로컬 에이전트(포트 5175) 루프백·확장프록시 전송 계층, 설치 URL 생성 및 전역 상태 버스 코어 모듈 |
 | `src/services/businessLicenseOcrService.ts` | 375줄 (12.4KB) | - | `setR2TenantContext, BusinessLicenseOcrResult, uploadBusinessLicenseImageToR2, formatBizRegNo, uploadBankbookImageToR2, BankbookOcrResult 외 2` | Out:2 / In:1 · 동적패키지:pdfjs-dist | 사업자등록증·통장사본 이미지 및 동적 PDF 렌더링 Vision OCR 추출 및 Cloudflare R2 증빙 업로드 서비스 |
 | `src/services/catalogSpecDocumentService.ts` | 637줄 (23.6KB) | - | `generateModelSpecExcel, generateCompareSpecsExcel, downloadPdfFile, generateCompareSpecsPdf, generateModelSpecPdf` | Out:3 / In:2 · 동적패키지:pdf-lib | 제원 카탈로그 단건·비교표·호환부품·패키지 견적 Excel(ExcelJS) 및 PDF(pdf-lib) 문서 생성 전용 서비스 |
-| `src/services/documentService.ts` | 620줄 (22.5KB) | - | `loadExcelJs, generateQuotationExcel, generateContractExcel, generateTransactionStatementExcel, downloadExcelFile, openExcelInAgent 외 1` | Out:3 / In:7 · 동적패키지:exceljs | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 열기·이메일 발송 서비스 |
+| `src/services/documentService.ts` | 675줄 (24.4KB) | - | `loadExcelJs, generateQuotationExcel, generateContractExcel, generateTransactionStatementExcel, downloadExcelFile, openExcelInAgent 외 2` | Out:3 / In:7 · 동적패키지:exceljs | 동적 ExcelJS 기반 견적서·계약서·거래명세서 생성, 직인 합성 및 로컬 에이전트 PDF 변환·이메일 발송 서비스 |
 | `src/services/domainAftercareMaintEngine.ts` | 300줄 (10.3KB) | - | `recordTradeAftercare, recordRentalMaintenance` | Out:3 / In:1 · DB:fl_ap_payables,fl_asset_events,fl_inventory_units,fl_rental_maintenances(+2) | 유통 사후처리(정비중개·반품환불·반품교환) 및 렌탈 정비 원가·재고차감·이력 기록 전용 엔진 |
 | `src/services/domainEngine.ts` | 6줄 (0.2KB) | - | `-` | Out:5 / In:3 | 분할된 도메인·재무수학·조달·입출고·인사·부트스트랩 서브엔진 통합 재노출(Barrel) 파사드 |
 | `src/services/domainFulfillmentEngine.ts` | 588줄 (19.8KB) | HIGH_COUPLING_HUB | `allocateNextFulfillmentNos, executeAccountTransfer, completeFulfillment, executeRentalExchange` | Out:4 / In:9 · DB:fl_asset_events,fl_contract_lines,fl_contracts,fl_fulfillments(+2) | 출고채번, 계정대체, 유통·렌탈 입출고 실행완료, 렌탈 교환(EXCHANGE) 및 사후정비 엔진 재노출(Barrel) |
@@ -321,14 +321,14 @@
 | 파일 경로 | 규모 | 메뉴ID·구분 | 주요 Export | 의존(Out/In)·DB테이블 | 핵심 기능 및 책임 명세 |
 |:---|---:|:---|:---|:---|:---|
 | `agent/등록-원클릭실행.bat` | 64줄 (2.9KB) | - | `-` | Out:0 / In:0 | ebro:// 커스텀 프로토콜 및 로컬 에이전트 일괄 등록 배치 파일 |
-| `agent/agent.js` | 1,428줄 (63.9KB) | LARGE_FILE | `-` | Out:0 / In:0 | 초기 버전 로컬 사이드카 에이전트 스냅샷(호환 보관용) |
-| `agent/BroAgent.js` | 1,440줄 (65.1KB) | LARGE_FILE | `-` | Out:0 / In:0 | 구버전 로컬 사이드카 에이전트 스냅샷(호환 보관용) |
+| `agent/agent.js` | 1,444줄 (65.1KB) | LARGE_FILE | `-` | Out:0 / In:0 | 초기 버전 로컬 사이드카 에이전트 스냅샷(호환 보관용) |
+| `agent/BroAgent.js` | 1,456줄 (66.3KB) | LARGE_FILE | `-` | Out:0 / In:0 | 구버전 로컬 사이드카 에이전트 스냅샷(호환 보관용) |
 | `agent/build-agent.ps1` | 129줄 (7.2KB) | - | `-` | Out:0 / In:0 | 로컬 에이전트 코어 암호화, Node SEA 실행파일 빌드 및 코드서명 일괄 스크립트 |
 | `agent/build-tenants.cjs` | 53줄 (1.8KB) | - | `-` | Out:0 / In:0 | Inno Setup(ISCC) 기반 테넌트별 맞춤형 에이전트 인스톨러 일괄 빌드 스크립트 |
 | `agent/build-tenants.ps1` | 70줄 (2.4KB) | - | `-` | Out:0 / In:0 | 테넌트별 맞춤형 에이전트 인스톨러 빌드 PowerShell 스크립트(구버전 경로 참조) |
 | `agent/certs/create-codesign-cert.ps1` | 63줄 (3.5KB) | - | `-` | Out:0 / In:0 | 사내 자체 루트·코드서명 인증서(PFX/CER) 생성 및 로컬 신뢰 저장소 등록 스크립트 |
 | `agent/certs/sign-exe.ps1` | 10줄 (0.5KB) | - | `-` | Out:0 / In:0 | 생성된 코드서명 인증서로 eBroAgent.exe에 디지털 서명을 적용하는 스크립트 |
-| `agent/eBroAgent.js` | 5,699줄 (240.8KB) | GOD_FILE | `-` | Out:2 / In:0 | 로컬 비즈니스 코어 엔진(포트 5175 REST, PDF 무인인쇄, SMTP 메일, R2 미러링, 문서고) |
+| `agent/eBroAgent.js` | 6,065줄 (254.8KB) | GOD_FILE | `-` | Out:2 / In:0 | 로컬 비즈니스 코어 엔진(포트 5175 REST, PDF 무인인쇄, SMTP 메일, R2 미러링, 문서고) |
 | `agent/eBroHost.js` | 126줄 (4.7KB) | - | `-` | Out:0 / In:0 | 불변 윈도우 런타임 호스트(core/engine.dat AES-256-GCM 메모리 복호화·VM 실행) |
 | `agent/encrypt_core.cjs` | 258줄 (12.4KB) | - | `-` | Out:0 / In:0 | eBroAgent 코어 번들링, AES-256-GCM 암호화 및 버전·해시 SSOT 자동 동기화 스크립트 |
 | `agent/kill-agent.bat` | 24줄 (1.0KB) | - | `-` | Out:0 / In:0 | 실행 중인 로컬 에이전트 및 트레이 프로세스 강제 종료 배치 파일 |

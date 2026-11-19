@@ -1,3 +1,12 @@
+## [v2.2.1.Build.6] - 2026-11-19 11:31
+### 이메일 첨부 문서 `eBroAgent` 기반 범용 엑셀 ➔ PDF 변환 전환 및 중복 변환기 제거
+- **`eBroAgent` 기존 2단 벡터 PDF 엔진 통합 연동 (`src/services/documentService.ts`, `src/components/DocumentActionBar.tsx`, `src/services/agentTransportCore.ts`)**:
+  - 테넌트별 상이한 엑셀 양식·수식·인쇄영역을 일괄 수용하기 위해 브라우저 측 임시 Canvas/PNG 변환기(`excelToPdfConverter.ts`)를 전면 제거하고, `eBroAgent`의 Excel COM(`ExportAsFixedFormat`) 우선 · 무엑셀 Edge Headless 폴백 2단 벡터 PDF 변환 엔진(`/api/convert-excel-to-pdf`)을 직접 호출하도록 전환했습니다.
+  - 신규 생성 첨부(`onGenerate`) 및 로컬 편집본(`localEditedPath`) 모두 발송 전 에이전트가 벡터 `.pdf`로 변환한 뒤 `application/pdf` 첨부로 발송합니다.
+- **에이전트 코어 핫패치 동기화 (`v2.0.0.Build.53`, `e3ee2f5ea042`)**:
+  - `EXPECTED_AGENT_VERSION` · `EXPECTED_CORE_HASH`를 `v2.0.0.Build.53`으로 동기화하고 `isCriticalCoreJob`에 `/api/convert-` 경로를 포함해 구버전 에이전트 환경에서도 변환 전 자동 핫패치 및 재기동 대기 후 실행되도록 보강했습니다.
+  - 전사 코드 파일 명세서(`docs/CODE_FILE_SPECIFICATION.md`, `docs/code_file_manifest.json`)를 동기화했습니다 (`spec:verify` · `oxlint` · `vite build` 통과).
+
 ## [v2.2.1.Build.5] - 2026-11-19 07:58
 ### 직인 Base64 사전 검증·폴백 추가 및 손상 직인 데이터 교정 (문서·이메일 첨부 타임아웃 해결)
 - **문서 생성 직인 Base64/매직헤더 검증 및 폴백 가드 (`src/services/documentService.ts`)**: `resolveStampBytes()`에 4배수 Base64 길이·문자 검증, `atob()` 디코딩, PNG/JPEG 매직 바이트 검사를 추가하고 `embedCorporateStamp()`에 예외 폴백(`도장이미지` 셀)을 적용해 손상된 직인 이미지가 ExcelJS `wb.xlsx.writeBuffer()` 내부 JSZip Promise를 영구 대기(Hang)시키는 문제를 원천 차단했습니다.
